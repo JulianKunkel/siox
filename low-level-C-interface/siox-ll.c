@@ -1,6 +1,6 @@
 /**
- * @file siox-ll.c
- * Implementation des SIOX-Low-Level-Interfaces.
+ * @file 	siox-ll.c
+ * 			Implementation des SIOX-Low-Level-Interfaces.
  *
  * 
  * \mainpage Projekt SIOX - Das Low-Level Interface

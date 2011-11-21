@@ -1,6 +1,8 @@
 /**
- * @file siox.c
- * Beispiel für die Nutzung des SIOX-Low-Level-Interfaces.
+ * @file siox-hdf5-example.c
+ *
+ * Beispiel für die Nutzung des SIOX-Low-Level-Interfaces mit HDF5.
+ * Es demonstriert, wie ein Client für SIOX instrumentiert wird.
  *
  * @authors	Julian Kunkel & Michaela Zimmer
  * @date	2011
@@ -19,9 +21,11 @@
 
 
 /**
- * Using SIOX
+ * Using SIOX at Client Level
  *
- * An example of a client utilising the HDF5 High Level Interface.
+ * An example of a client utilising SIOX with the HDF5 High Level Interface.
+ *
+ * @return	EXIT_FAILURE, falls ein Fehler auftrat, sonst EXIT_SUCCESS.
  */
 int
 main(){
@@ -55,6 +59,14 @@ main(){
 	/* Find own PID and turn it into a string */
 	pid = getpid();
 	sprintf( pid_s, "%d", pid );
+	
+	
+	/*
+	 * Info Message
+	 * ============
+	 */
+	 printf( "SIOX HDF5 Example\n" );
+	 printf( "=================\n\n" );
 
 
 	/*
@@ -63,7 +75,7 @@ main(){
 	 */
 	
 	/* Register node itself */
-	unid = siox_register_node( "Michaelas T1500", "SIOX Test", pid_s );
+	unid = siox_register_node( "Michaelas T1500", "SIOX-HDF5-Example", pid_s );
 	
 	/* Register ability to map HDF5-FileName to HDF5-FileId */
 	dmid = siox_register_descriptor_map( unid, "HDF5-FileName", "HDF5-FileId" );
@@ -121,6 +133,8 @@ main(){
 	 
 	/* The actual call to close the file */
 	hdf5_status = H5Fclose( hdf5_file_id ); 
+	if( hdf5_status < 0 )
+		fprintf(stderr, "!!! Fehler beim Schreiben über HDF5! !!!\n");
 
 	/* After closing the file, we will not need the file id descriptor anymore */
 	siox_release_descriptor( unid, "HDF5-FileId", hdf5_file_id_s );
