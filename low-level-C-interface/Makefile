@@ -11,17 +11,18 @@ RM := -rm -f
 #=======
 # Flags
 #=======
-CFLAGS := -ansi -pedantic -Wall
+CFLAGS := -std=c99 -pedantic -Wall -I/usr/local/hdf5/include
 LIBFLAGS := $(CFLAGS) -shared -fPIC
+LDFLAGS := $(CFLAGS) -L/usr/local/hdf5/lib
 
 #=========
 # Targets
 #=========
 TARGET := siox
 OBJECTS := siox.o
-LIBS := libsiox-ll.sa
-HDF5PATH := /usr/lib/hdf5
-HDF5LIBS := $(HDF5PATH)/libhdf5.a $(HDF5PATH)/libhdf5_hl.a
+OWNLIBS := libsiox-ll.so
+LIBS := $(OWNLIBS) -lhdf5 -lhdf5_hl
+
 
 ##########
 # Regeln #
@@ -30,9 +31,9 @@ HDF5LIBS := $(HDF5PATH)/libhdf5.a $(HDF5PATH)/libhdf5_hl.a
 #=========
 # Endziel
 #=========
-all: $(OBJECTS) $(LIBS) Makefile
+all: $(OBJECTS) $(OWNLIBS) Makefile
 	@echo --------------------------------------------------
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS) $(HDF5LIBS)
+	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
 	@echo ==================================================
 	
 #===============
@@ -40,17 +41,17 @@ all: $(OBJECTS) $(LIBS) Makefile
 #===============
 debug: CFLAGS += -ggdb
 debug: LIBFLAGS += -ggdb
-debug: $(OBJECTS) $(LIBS) Makefile
+debug: $(OBJECTS) $(OWNLIBS) Makefile
 	@echo --------------------------------------------------
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS) $(HDF5LIBS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
 	@echo ==================================================
 
 #=========================
 # explizite Zwischenziele
 #=========================
-libsiox-ll.sa: siox-ll.c siox-ll.h
+libsiox-ll.so: siox-ll.c siox-ll.h
 	@echo --------------------------------------------------
-	$(CC) -c $(LIBFLAGS) -o libsiox-ll.sa siox-ll.c
+	$(CC) -c $(LIBFLAGS) -o $@ siox-ll.c
 	@echo --------------------------------------------------
 
 #=================
@@ -61,6 +62,7 @@ libsiox-ll.sa: siox-ll.c siox-ll.h
 	$(CC) -c $(CFLAGS) -o $@ $*.c
 	@echo --------------------------------------------------
 
+
 ###############
 # Pseudoziele #
 ###############
@@ -68,7 +70,7 @@ libsiox-ll.sa: siox-ll.c siox-ll.h
 .PHONY: clean
 clean:
 	@echo ==================================================
-	$(RM) $(TARGET) $(OBJECTS) $(LIBS) *~
+	$(RM) $(TARGET) $(OBJECTS) $(OWNLIBS) *~
 	@echo ==================================================
 	
 .PHONY: docs

@@ -202,11 +202,12 @@ void siox_release_descriptor(siox_unid unid, const char * descriptor_type, const
  * und alle Leistungsdaten, die für diese Aktivität künftig zugeordnet werden werden.
  *
  * @param[in]	unid	Die @em UNID des Knoten.
+ * @param[in]	comment	Ein Kommentar, der die Aktivität beschreibt, z.B. "Resultate von Lauf 17 speichern".
  *
  * @return		Eine frische @em AID, welche der Knoten für alle künftigen Meldungen,
  *				die diese Aktivität betreffen, angeben muß.
  */
-siox_aid siox_start_activity(siox_unid unid);
+siox_aid siox_start_activity(siox_unid unid, const char * comment);
 
 
 /**

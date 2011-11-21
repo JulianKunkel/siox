@@ -12,10 +12,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "hdf5/hdf5.h"
-#include "hdf5/hdf5_hl.h"
+#include <hdf5.h>
+#include <hdf5_hl.h>
 
 #include "siox-ll.h"
+
 
 /**
  * Using SIOX
@@ -78,13 +79,13 @@ main(){
 	 
 	/* Notify SIOX that we are starting an activity for which we may later collect performance data.
 	   To compare, we start one activity for the whole file access and one for the writing part only. */
-	aid_all = siox_start_activity( unid );
+	aid_all = siox_start_activity( unid, "Write whole file" );
 	 
 	/* Report creation of a new descriptor - the file name */
 	siox_create_descriptor( unid, "HDF5-FileName", hdf5_file_name );
 
 	/* Report the imminent transfer of the new descriptor to a node with SWID "HDF5" */
-	siox_send_descriptor( unid, "HDF5-FileName", hdf5_file_name, "HFD5");
+	siox_send_descriptor( unid, "HFD5", "HDF5-FileName", hdf5_file_name);
 
 	/* The actual call to HDF5 to create a file with the name "Datei.h5", returning a HDF5 file id */
 	hdf5_file_id = H5Fcreate ( hdf5_file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT ); 
@@ -101,10 +102,10 @@ main(){
 	 */
 	 
 	/* Start another activity which will cover only the writing part */
-	aid_write = siox_start_activity( unid );
+	aid_write = siox_start_activity( unid, "Write data" );
 	
 	/* Once again, a descriptor will be handed over; inform SIOX */
-	siox_send_descriptor( unid, "HDF5-FileId", "17", "HDF5" );
+	siox_send_descriptor( unid, "HDF5", "HDF5-FileId", "17" );
 
 	/* The actual call to create the file and write the dataset to it */
 	hdf5_status = H5LTmake_dataset( hdf5_file_id, "/dset", 2, dims, H5T_NATIVE_INT, data ); 
@@ -148,6 +149,7 @@ main(){
 						  "HDF5-FileName", hdf5_file_name,
 						  "Bytes Written", SIOX_TYPE_INTEGER, &bytes_written,
 						  "Including opening & closing the file." );
+
 	 
 	/* Notify SIOX that all pertinent data has been sent and the activities can be closed */
 	siox_end_activity( aid_write );

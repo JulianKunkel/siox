@@ -177,7 +177,8 @@ siox_release_descriptor( siox_unid		unid,
 
 
 siox_aid
-siox_start_activity( siox_unid	unid )
+siox_start_activity( siox_unid		unid,
+					 const char *	comment )
 {
 	/* Draw timestamp */
 	time_t 	timeStamp = time(NULL);
@@ -189,6 +190,8 @@ siox_start_activity( siox_unid	unid )
 	
 	printf( "UNID %ld started AID %ld at %s",
 		(*unid).id, (*aid).id, ctime( &timeStamp ));
+	if ( comment != NULL )
+		printf( "\tKommentar:\t%s\n", comment );
 	
 	return( aid );
 }
@@ -220,16 +223,16 @@ siox_report_activity( siox_aid aid,
 	printf( "\t%s:\t", measure );
 	switch ( value_type ){
 		case SIOX_TYPE_INTEGER:
-			printf( "%d", *((int*) value) );
+			printf( "%d\n", *((int*) value) );
 			break;
 		case SIOX_TYPE_LONG:
-			printf( "%ld", *((long*) value) );
+			printf( "%ld\n", *((long*) value) );
 			break;
 		case SIOX_TYPE_FLOAT:
-			printf( "%f", *((float*) value) );
+			printf( "%f\n", *((float*) value) );
 			break;
 		case SIOX_TYPE_STRING:
-			printf( "%s", (char*) value );
+			printf( "%s\n", (char*) value );
 			break;
 	}
 	if (details != NULL)
@@ -261,16 +264,16 @@ siox_report( siox_unid				unid,
 	printf( "\t%s:\t", measure );
 	switch ( value_type ){
 		case SIOX_TYPE_INTEGER:
-			printf( "%d", *((int*) value) );
+			printf( "%d\n", *((int*) value) );
 			break;
 		case SIOX_TYPE_LONG:
-			printf( "%ld", *((long*) value) );
+			printf( "%ld\n", *((long*) value) );
 			break;
 		case SIOX_TYPE_FLOAT:
-			printf( "%f", *((float*) value) );
+			printf( "%f\n", *((float*) value) );
 			break;
 		case SIOX_TYPE_STRING:
-			printf( "%s", (char*) value );
+			printf( "%s\n", (char*) value );
 			break;
 	}
 	if (details != NULL)
