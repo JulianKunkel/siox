@@ -111,10 +111,10 @@ main(){
 	aid_write = siox_start_activity( unid, "Write via MUFS" );
 	 
 	/* Report creation of a new descriptor - the file name */
-	siox_create_descriptor( unid, "MUFS-FileName", mufs_file_name );
+	siox_create_descriptor( unid, "FileName", mufs_file_name );
 
 	/* Report the imminent transfer of the new descriptor to a node with SWID "MUFS" */
-	siox_send_descriptor( unid, "MUFS", "MUFS-FileName", mufs_file_name);
+	siox_send_descriptor( unid, "MUFS", "FileName", mufs_file_name);
 
 
 	/* The actual call to MUFS to create a file with the given name and write the character data to it */
@@ -125,7 +125,6 @@ main(){
 		exit( EXIT_FAILURE );
 	}
 	
-
 	/* Stop the writing activity */
 	siox_stop_activity( aid_write );
 
@@ -138,7 +137,7 @@ main(){
 	/* Report the data we collected. This could take place anytime between siox_start_activity()
 	   and siox_end_activity() and happen more than once per activity.  */
 	siox_report_activity( aid_write,
-						  "MUFS-FileName", mufs_file_name,
+						  "FileName", mufs_file_name,
 						  "Bytes Written", SIOX_TYPE_INTEGER, &bytes_written,
 						  "Including opening & closing the file, as usual with MUFS." );
 	 
@@ -152,7 +151,7 @@ main(){
 	 */
 	 
 	/* Mark any descriptors left as unused */
-	siox_release_descriptor( unid, "MUFS-FileName", mufs_file_name );
+	siox_release_descriptor( unid, "FileName", mufs_file_name );
 	
 	/* Unregister node from SIOX */
 	siox_unregister_node( unid );

@@ -78,7 +78,7 @@ main(){
 	unid = siox_register_node( "Michaelas T1500", "SIOX-HDF5-Example", pid_s );
 	
 	/* Register ability to map HDF5-FileName to HDF5-FileId */
-	dmid = siox_register_descriptor_map( unid, "HDF5-FileName", "HDF5-FileId" );
+	dmid = siox_register_descriptor_map( unid, "FileName", "HDF5-FileId" );
 	
 	/* Register link to child node "HDF5" */
 	siox_register_edge( unid, "HDF5" );
@@ -94,10 +94,10 @@ main(){
 	aid_all = siox_start_activity( unid, "Write whole file" );
 	 
 	/* Report creation of a new descriptor - the file name */
-	siox_create_descriptor( unid, "HDF5-FileName", hdf5_file_name );
+	siox_create_descriptor( unid, "FileName", hdf5_file_name );
 
 	/* Report the imminent transfer of the new descriptor to a node with SWID "HDF5" */
-	siox_send_descriptor( unid, "HFD5", "HDF5-FileName", hdf5_file_name);
+	siox_send_descriptor( unid, "HFD5", "FileName", hdf5_file_name);
 
 	/* The actual call to HDF5 to create a file with the name "Datei.h5", returning a HDF5 file id */
 	hdf5_file_id = H5Fcreate ( hdf5_file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT ); 
@@ -176,7 +176,7 @@ main(){
 	 */
 	 
 	/* Mark any descriptors left as unused */
-	siox_release_descriptor( unid, "HDF5-FileName", hdf5_file_name );
+	siox_release_descriptor( unid, "FileName", hdf5_file_name );
 	
 	/* Unregister node from SIOX */
 	siox_unregister_node( unid );

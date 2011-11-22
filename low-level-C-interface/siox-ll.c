@@ -59,7 +59,7 @@ siox_register_node( const char * hwid,
 	(*unid).id = current_unid++;
 	
 	
-	printf( "Node registered as UNID %ld with hwid >%s<, swid >%s< and iid >%s<.\n",
+	printf( "\n# Node registered as UNID %ld with hwid >%s<, swid >%s< and iid >%s<.\n",
 		(*unid).id, hwid, swid, iid );
 	
 	return( unid );
@@ -69,7 +69,7 @@ siox_register_node( const char * hwid,
 void
 siox_unregister_node( siox_unid	unid )
 {
-	printf( "UNID %ld unregistered.\n", (*unid).id );
+	printf( "# UNID %ld unregistered.\n\n", (*unid).id );
 }
 
 
@@ -79,7 +79,7 @@ siox_register_attribute( siox_unid				unid,
 						 enum siox_value_type	value_type,
 						 void *					value )
 {
-	printf( "UNID %ld registered the following additional attributes:\n",
+	printf( "# UNID %ld registered the following additional attributes:\n",
 		(*unid).id );
 	printf( "\t%s:\t", key );
 	switch ( value_type ){
@@ -103,7 +103,7 @@ void
 siox_register_edge( siox_unid		unid,
 					const char *	child_swid )
 {
-	printf( "UNID %ld registered edge to child node >%s<.\n",	(*unid).id, child_swid );
+	printf( "# UNID %ld registered edge to child node >%s<.\n",	(*unid).id, child_swid );
 }
 
 
@@ -117,7 +117,7 @@ siox_register_descriptor_map( siox_unid		unid,
 	(*dmid).id = current_dmid++;
 	
 	
-	printf( "UNID %ld registered DMID %ld: %s -> %s.\n",
+	printf( "# UNID %ld registered DMID %ld: %s -> %s.\n",
 		(*unid).id, (*dmid).id, source_descriptor_type, target_descriptor_type );
 	
 	return( dmid );
@@ -129,7 +129,7 @@ siox_create_descriptor( siox_unid		unid,
 						const char *	descriptor_type,
 						const char *	descriptor )
 {
-	printf( "UNID %ld created descriptor >%s< of type >%s<.\n",
+	printf( "\n= UNID %ld created descriptor >%s< of type >%s<.\n",
 		(*unid).id, descriptor, descriptor_type );
 }
 
@@ -140,7 +140,7 @@ siox_send_descriptor( siox_unid		unid,
 					  const char *	descriptor_type,
 					  const char *	descriptor )
 {
-	printf( "UNID %ld sent descriptor >%s< of type >%s< to child node >%s<.\n",
+	printf( "= UNID %ld sent descriptor >%s< of type >%s< to child node >%s<.\n",
 		(*unid).id, descriptor, descriptor_type, child_swid );
 }
 
@@ -150,7 +150,7 @@ siox_receive_descriptor( siox_unid		unid,
 						 const char *	descriptor_type,
 						 const char *	descriptor )
 {
-	printf( "UNID %ld received descriptor >%s< of type >%s<.\n",
+	printf( "\n= UNID %ld received descriptor >%s< of type >%s<.\n",
 		(*unid).id, descriptor, descriptor_type );
 }
 
@@ -161,7 +161,7 @@ siox_map_descriptor( siox_unid		unid,
 					 const char *	source_descriptor,
 					 const char *	target_descriptor )
 {
-	printf( "UNID %ld applied DMID %ld: %s -> %s.\n",
+	printf( "= UNID %ld applied DMID %ld: %s -> %s.\n",
 		(*unid).id, (*dmid).id, source_descriptor, target_descriptor );
 }
 
@@ -171,7 +171,7 @@ siox_release_descriptor( siox_unid		unid,
 						 const char *	descriptor_type,
 						 const char *	descriptor )
 {
-	printf( "UNID %ld released descriptor >%s< of type >%s<.\n",
+	printf( "= UNID %ld released descriptor >%s< of type >%s<.\n\n",
 		(*unid).id, descriptor, descriptor_type );
 }
 
@@ -188,7 +188,7 @@ siox_start_activity( siox_unid		unid,
 	(*aid).id = current_aid++;
 	
 	
-	printf( "UNID %ld started AID %ld at %s",
+	printf( "- UNID %ld started AID %ld at %s",
 		(*unid).id, (*aid).id, ctime( &timeStamp ));
 	if ( comment != NULL )
 		printf( "\tKommentar:\t%s\n", comment );
@@ -204,7 +204,7 @@ siox_stop_activity( siox_aid	aid )
 	time_t	timeStamp = time(NULL);
 
 
-	printf( "AID %ld stopped at %s",
+	printf( "- AID %ld stopped at %s",
 		(*aid).id, ctime( &timeStamp ));
 }
 
@@ -218,7 +218,7 @@ siox_report_activity( siox_aid aid,
 					  void * 				value,
 					  const char * 			details )
 {
-	printf( "AID %ld, identified by the %s of %s, was measured as follows:\n",
+	printf( "- AID %ld, identified by the %s of %s, was measured as follows:\n",
 		(*aid).id, descriptor_type, descriptor );
 	printf( "\t%s:\t", measure );
 	switch ( value_type ){
@@ -247,7 +247,7 @@ siox_end_activity ( siox_aid	aid )
 	time_t	timeStamp = time(NULL);
 
 
-	printf( "AID %ld finally ended at %s",
+	printf( "- AID %ld finally ended at %s\n",
 		(*aid).id, ctime( &timeStamp ));
 }
 
@@ -259,7 +259,7 @@ siox_report( siox_unid				unid,
 			 void * 				value,
 			 const char *			details )
 {
-	printf( "UNID %ld was measured as follows:\n",
+	printf( "- UNID %ld was measured as follows:\n",
 		(*unid).id );
 	printf( "\t%s:\t", measure );
 	switch ( value_type ){

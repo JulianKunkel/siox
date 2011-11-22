@@ -18,7 +18,7 @@
 
 
 /** Größe der Blöcke, auf welche die zu schreibenden Daten aufgeteilt werden. */
-#define BLOCK_SIZE 100
+#define BLOCK_SIZE 400
 
 
 /** Statusvariable, die angibt, ob wir mufs_initialise() bereits durchlaufen haben. */
@@ -29,6 +29,7 @@ static int initialised = 0;
  */
 /** Die UNID der Bibliothek. */
 static siox_unid	unid;
+/** Die DMID der Deskriptorübersetzung, die MUFS ausführen kann. */
 static siox_dmid	dmid;
 
 
@@ -69,7 +70,7 @@ mufs_putfile(const char * filename, const char * contents )
 	 * SIOX - preliminary negotiations
 	 */
 	/* Report receiving a new descriptor */
-	siox_receive_descriptor( unid, "MUFS-FileName", filename);
+	siox_receive_descriptor( unid, "FileName", filename);
 
 	
 	/*
@@ -114,15 +115,16 @@ mufs_putfile(const char * filename, const char * contents )
 			{
 				siox_end_activity( aid );
 				
-				fprintf( stderr, "Fehler beim Schreiben von Block %d der Datei %s!\n", block, filename );
-				exit( EXIT_FAILURE );
+				fprintf( stderr, "!!! Fehler beim Schreiben von Block %d der Datei %s! !!!\n",
+						 block, filename );
+				return( 0 );
 			}
 
 		
 		/* Report the end of the activity, any performance data gathered and close bookkeeping for it. */
 		siox_stop_activity( aid );
 		siox_report_activity( aid,
-							  "MUFS-FileName", fp_s,
+							  "FileName", fp_s,
 							  "Bytes Written", SIOX_TYPE_INTEGER, &bytes_to_write,
 							  NULL );
 		siox_end_activity( aid );
@@ -140,8 +142,8 @@ mufs_putfile(const char * filename, const char * contents )
 		siox_end_activity( aid );
 		siox_release_descriptor( unid, "MUFS-FilePointer", fp_s );
 
-		fprintf( stderr, "Fehler beim Schließen der Datei %s!\n", filename );
-		exit( EXIT_FAILURE );
+		fprintf( stderr, "!!! Fehler beim Schließen der Datei %s! !!!\n", filename );
+		return( 0 );
 	}
 
 	siox_end_activity( aid );
@@ -152,7 +154,7 @@ mufs_putfile(const char * filename, const char * contents )
 	 */
 	/* Mark any descriptors left as unused */
 	siox_release_descriptor( unid, "MUFS-FilePointer", fp_s );
-	siox_release_descriptor( unid, "MUFS-FileName", filename );
+	siox_release_descriptor( unid, "FileName", filename );
 
 
 	/* Return number of bytes successfully written */
@@ -194,6 +196,6 @@ static void mufs_initialise()
 	/* Register node itself */
 	unid = siox_register_node( "Michaelas T1500", "MUFS", pid_s );
 	/* Register ability to map MUFS-FileName to MUFS-FilePointer */
-	dmid = siox_register_descriptor_map( unid, "MUFS-FileName", "MUFS-FilePointer" );
+	dmid = siox_register_descriptor_map( unid, "FileName", "MUFS-FilePointer" );
 	}
 
