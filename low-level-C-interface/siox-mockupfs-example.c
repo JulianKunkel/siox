@@ -84,8 +84,10 @@ main(){
 	 * Info Message
 	 * ============
 	 */
-	 printf( "SIOX Mock-Up File System Example\n" );
-	 printf( "================================\n\n" );
+	printf( "\n"
+			"SIOX Mock-Up File System Example\n"
+			"================================\n"
+			"\n" );
 
 
 	/*
@@ -133,16 +135,12 @@ main(){
 	 * =========================================
 	 */
 	 
-	/* Collect data */
-	bytes_written = sizeof( data );
-	
 	/* Report the data we collected. This could take place anytime between siox_start_activity()
 	   and siox_end_activity() and happen more than once per activity.  */
 	siox_report_activity( aid_write,
 						  "MUFS-FileName", mufs_file_name,
 						  "Bytes Written", SIOX_TYPE_INTEGER, &bytes_written,
 						  "Including opening & closing the file, as usual with MUFS." );
-
 	 
 	/* Notify SIOX that all pertinent data has been sent and the activities can be closed */
 	siox_end_activity( aid_write );

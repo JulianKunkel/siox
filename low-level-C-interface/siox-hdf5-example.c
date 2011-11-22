@@ -117,7 +117,7 @@ main(){
 	aid_write = siox_start_activity( unid, "Write data" );
 	
 	/* Once again, a descriptor will be handed over; inform SIOX */
-	siox_send_descriptor( unid, "HDF5", "HDF5-FileId", "17" );
+	siox_send_descriptor( unid, "HDF5", "HDF5-FileId", hdf5_file_id_s );
 
 	/* The actual call to create the file and write the dataset to it */
 	hdf5_status = H5LTmake_dataset( hdf5_file_id, "/dset", 2, dims, H5T_NATIVE_INT, data ); 

@@ -140,7 +140,7 @@ siox_send_descriptor( siox_unid		unid,
 					  const char *	descriptor_type,
 					  const char *	descriptor )
 {
-	printf( "UNID %ld sent descriptor >%s< of type >%s< to child node %s.\n",
+	printf( "UNID %ld sent descriptor >%s< of type >%s< to child node >%s<.\n",
 		(*unid).id, descriptor, descriptor_type, child_swid );
 }
 
@@ -161,7 +161,7 @@ siox_map_descriptor( siox_unid		unid,
 					 const char *	source_descriptor,
 					 const char *	target_descriptor )
 {
-	printf( "UNID %ld applied DMID %ld, mapping %s to %s.\n",
+	printf( "UNID %ld applied DMID %ld: %s -> %s.\n",
 		(*unid).id, (*dmid).id, source_descriptor, target_descriptor );
 }
 
