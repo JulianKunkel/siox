@@ -26,6 +26,7 @@ SIOXLIBS := libsiox-ll.so
 MUFSLIBS := libmufs.so
 HDF5LIBS := -lhdf5 -lhdf5_hl
 OWNLIBS := $(SIOXLIBS) $(MUFSLIBS)
+DOXYDIRS := html latex
 #LIBS := $(OWNLIBS) 
 
 
@@ -99,7 +100,8 @@ libmufs.so: mufs.c mufs.h
 clean:
 	@echo ==================================================
 	@echo Cleaning directory...
-	@$(RM) $(TARGETS) $(OBJECTS) $(OWNLIBS) *.log *~
+	@$(RM) $(TARGETS) $(OBJECTS) $(OWNLIBS) *.log *~ *.mufs
+	@$(RM) -r $(DOXYDIRS)
 	@echo ...done!
 	@echo ==================================================
 	
