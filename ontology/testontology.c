@@ -28,27 +28,22 @@
  * Global Variables
  */
 
-/** Test metric 1: name */
-char						name1[] = "Metrik 1";
-/** Test metric 1: description */
-char						description1[] = "Testmetrik für das Programm testontology.";
-/** Test metric 1: unit type */
-enum siox_ont_unit_type		unit1 = SIOX_UNIT_SECONDS;
-/** Test metric 1: storage type */
-enum siox_ont_storage_type	storage1 = SIOX_STORAGE_FLOAT;
-/** Test metric 1: scope type */
-enum siox_ont_scope_type	scope1 = SIOX_SCOPE_SUM;
-
+/* None yet... */
 
 /*
  * Function Prototypes
  */
+
+int failure( const char * message );
+int success( const char * message );
 
 int test1( void );
 int test2( void );
 int test3( void );
 int test4( void );
 int test5( void );
+int test6( void );
+int test7( void );
 
 
 
@@ -71,6 +66,8 @@ int main()
 	failures += test3();
 	failures += test4();
 	failures += test5();
+	failures += test6();
+	failures += test7();
 	
 	fclose( stderr );
 	
@@ -104,20 +101,13 @@ int test1( void )
 	/* Datei sicherheitshalber löschen. */
 	remove( ONTOLOGY );
 	
-	if( siox_ont_open_ontology( ONTOLOGY ) < 0)
-	{
-		printf( "FAILED Stage 1!\n" );
-		return( 1 );
-	}
+	if( !siox_ont_open_ontology( ONTOLOGY ) )
+		return( failure( "FAILED Stage 1 - opening empty ontology!\n" ) );
 		
-	if( siox_ont_close_ontology() < 0 )
-	{
-		printf( "FAILED Stage 2!\n" );
-		return( 1 );
-	}
+	if(! siox_ont_close_ontology() )
+		return( failure( "FAILED Stage 2 - closing empty ontology!\n" ) );
 
-	printf( "passed.\n" );
-	return( 0 );
+	return( success( "passed.\n" ) );
 }
 
 /**
@@ -133,16 +123,12 @@ int test2( void)
 {
 	printf( "==> Test  2..." );
 
-	if( siox_ont_close_ontology() >-1 )
-	{
-		printf( "FAILED!\n" );
-		return( 1 );
-	}
+	if( siox_ont_close_ontology() )
+		return( failure( "FAILED Stage 1 - closing an unopened ontology!\n" ) );
 	else
-		fprintf( stderr, "...but this is as it should be. :)\n" );
+		fprintf( stderr, "...but this is as it should be. :)\n\n" );
 	
-	printf( "passed.\n" );
-	return( 0 );
+	return( success( "passed.\n" ) );
 }
 
 /**
@@ -159,16 +145,11 @@ int test3( void )
 	printf( "==> Test  3..." );
 
 	if( siox_ont_count_metrics() > -1)
-	{
-		printf( "FAILED!\n" );
-		return( 1 );
-	}
+		return( failure( "FAILED Stage 1 - counting metrics in an unopened ontology!\n" ) );
 	else
-		fprintf( stderr, "...but this is as it should be. :)\n" );
+		fprintf( stderr, "...but this is as it should be. :)\n\n" );
 		
-
-	printf( "passed.\n" );
-	return( 0 );
+	return( success( "passed.\n" ) );
 }
 
 /**
@@ -185,46 +166,38 @@ int test3( void )
  */
 int test4( void )
 {
-	siox_mid	mid;
+	char						name1[] = "Metrik für Test 4";
+	char						description1[] = "Testmetrik für das Programm testontology, Test 4.";
+	enum siox_ont_unit_type		unit1 = SIOX_UNIT_SECONDS;
+	enum siox_ont_storage_type	storage1 = SIOX_STORAGE_FLOAT;
+	enum siox_ont_scope_type	scope1 = SIOX_SCOPE_SUM;
+	
+	siox_mid					mid;
+
 	
 	printf( "==> Test  4..." );
 	
 	/* Datei sicherheitshalber löschen. */
 	remove( ONTOLOGY );
 	
-	if( siox_ont_open_ontology( ONTOLOGY ) < 0)
-	{
-		printf( "FAILED Stage 1!\n" );
-		return( 1 );
-	}
+	if( !siox_ont_open_ontology( ONTOLOGY ) )
+		return( failure( "FAILED Stage 1 - opening empty ontology!\n" ) );
 
 	if( !(mid = siox_ont_register_metric( name1, description1, unit1, storage1, scope1 ) ) )
-	{
-		printf( "FAILED Stage 2!\n" );
-		return( 1 );
-	}
+		return( failure( "FAILED Stage 2 - registering metric!\n" ) );
 
 	if( siox_ont_count_metrics() != 1 )
-	{
-		printf( "FAILED Stage 3!\n" );
-		return( 1 );
-	}
+		return( failure( "FAILED Stage 3 - counting metrics!\n" ) );
 
-	if( siox_ont_write_ontology() < 0 )
-	{
-		printf( "FAILED Stage 4!\n" );
-		return( 1 );
-	}
+	if( !siox_ont_write_ontology() )
+		return( failure( "FAILED Stage 4 - writing ontology!\n" ) );
 
-	if( siox_ont_close_ontology() < 0 )
-	{
-		printf( "FAILED Stage 5!\n" );
-		return( 1 );
-	}
+	if( !siox_ont_close_ontology() )
+		return( failure( "FAILED Stage 5 - closing ontology!\n" ) );
 
-	printf( "passed.\n" );
 	remove( ONTOLOGY );
-	return( 0 );
+	
+	return( success( "passed.\n" ) );
 }
 
 /**
@@ -233,12 +206,8 @@ int test4( void )
  * <li> Ontologie öffnen
  * <li> Metrik erzeugen
  * <li> Anzahl der Metriken prüfen
- * <li> Ontologie schreiben
- * <li> Ontologie schließen
- * <li> Ontologie öffnen
- * <li> Anzahl der Metriken prüfen
- * <li> Metrik suchen
- * <li> Gefundene Metrik auf Übereinstimmung prüfen
+ * <li> Metrik aus MID holen
+ * <li> Metrikelemente auf korrekten Inhalt prüfen
  * <li> Ontologie schließen
  * </ol>
  *
@@ -246,96 +215,234 @@ int test4( void )
  */
 int test5( void )
 {
-	siox_mid	mid;
-	int			nLength;
-	char *		sBuffer;
+	char						name1[] = "Metrik für Test 5";
+	char						description1[] = "Testmetrik für das Programm testontology, Test 5.";
+	enum siox_ont_unit_type		unit1 = SIOX_UNIT_BYTES;
+	enum siox_ont_storage_type	storage1 = SIOX_STORAGE_32_BIT_INTEGER;
+	enum siox_ont_scope_type	scope1 = SIOX_SCOPE_MAXIMUM;
+	
+	siox_mid					mid;
+	siox_metric					metric;
 	
 	printf( "==> Test  5..." );
 	
 	/* Datei sicherheitshalber löschen. */
 	remove( ONTOLOGY );
 	
-	if( siox_ont_open_ontology( ONTOLOGY ) != 1)
-	{
-		printf( "FAILED Stage 1!\n" );
-		return( 1 );
-	}
+	if( !siox_ont_open_ontology( ONTOLOGY ) )
+		return( failure( "FAILED Stage 1 - opening empty ontology!\n" ) );
 
 	if( !(mid = siox_ont_register_metric( name1, description1, unit1, storage1, scope1 ) ) )
-	{
-		printf( "FAILED Stage 2!\n" );
-		return( 1 );
-	}
+		return( failure( "FAILED Stage 2 - registering metric!\n" ) );
 
 	if( siox_ont_count_metrics() != 1 )
-	{
-		printf( "FAILED Stage 3!\n" );
-		return( 1 );
-	}
-
-	if( siox_ont_write_ontology() < 0 )
-	{
-		printf( "FAILED Stage 4!\n" );
-		return( 1 );
-	}
-
-	if( siox_ont_close_ontology() < 0 )
-	{
-		printf( "FAILED Stage 5!\n" );
-		return( 1 );
-	}
+		return( failure( "FAILED Stage 3 - counting metrics!\n" ) );
 	
-	if( siox_ont_open_ontology( ONTOLOGY ) != 0)
-	{
-		printf( "FAILED Stage 6!\n" );
-		return( 1 );
-	}
+	if( !(metric = siox_ont_find_metric_by_mid( mid )) )
+		return( failure( "FAILED Stage 4 - getting metric from mid!\n" ) );
 		
-	if( siox_ont_count_metrics() != 1 )
-	{
-		printf( "FAILED Stage 7!\n" );
-		return( 1 );
-	}
+	if( !siox_ont_mid_is_equal( mid, siox_ont_metric_get_mid( metric ) ) )
+		return( failure( "FAILED Stage 5 - comparing ids!\n" ) );
 	
-	if( !( mid = siox_ont_find_metric( name1 ) ) )
-	{
-		printf( "FAILED Stage 8!\n" );
-		return( 1 );
-	}
+	if( strcmp( name1, siox_ont_metric_get_name( metric ) ) != 0 )
+		return( failure( "FAILED Stage 6 - comparing names!\n" ) );
 
-	/* Compare other data fields besides name with stored data. */
-	nLength = strlen( name1 ) + strlen( description1 ) + 50;
-	sBuffer = malloc( sizeof( char[nLength] ) );
-	if ( !sBuffer )
-	{
-		printf( "Memory allocation error in siox_ont_metric_to_string()!" );
-		return( 1 );
-	}
-	sprintf( sBuffer, "Metric:\t%s\n"
-					  "%s\n"
-					  "Unit:\t%u\n"
-					  "Storage:\t%u\n"
-					  "Scope:\t%u\n",
-					  name1,
-					  description1,
-					  unit1,
-					  storage1,
-					  scope1 );
-	if( strcmp( sBuffer, siox_ont_metric_to_string( siox_ont_get_metric( mid ) ) ) )
-	{
-		printf( "FAILED Stage 9!\n" );
-		return( 1 );
-	}
+	if( strcmp( description1, siox_ont_metric_get_description( metric ) ) != 0 )
+		return( failure( "FAILED Stage 7 - comparing descriptions!\n" ) );
+		
+	if( unit1 != siox_ont_metric_get_unit( metric ) )
+		return( failure( "FAILED Stage 8 - comparing units!\n" ) );
 
-	if( siox_ont_close_ontology() < 0 )
-	{
-		printf( "FAILED Stage 10!\n" );
-		return( 1 );
-	}
+	if( storage1 != siox_ont_metric_get_storage( metric ) )
+		return( failure( "FAILED Stage 9 - comparing storages!\n" ) );
 
-	printf( "passed.\n" );
+	if( scope1 != siox_ont_metric_get_scope( metric ) )
+		return( failure( "FAILED Stage 10 - comparing scopes!\n" ) );
+
+	if( !siox_ont_close_ontology() )
+		return( failure( "FAILED Stage 11 - closing ontology!\n" ) );
+
 	remove( ONTOLOGY );
-	return( 0 );
+
+	return( success( "passed.\n" ) );
 }
 
+
+/**
+ * Test 6:
+ * <ol>
+ * <li> Ontologie öffnen
+ * <li> Metriken erzeugen
+ * <li> Anzahl der Metriken prüfen
+ * <li> Ontologie schreiben
+ * <li> Ontologie schließen
+ * <li> Ontologie öffnen
+ * <li> Anzahl der Metriken prüfen
+ * <li> Metriken suchen
+ * <li> Gefundene Metriken auf identische IDs wie beim Erzeugen prüfen
+ * <li> Ontologie schließen
+ * </ol>
+ *
+ * @returns	Bei Erfolg 0, sonst 1.
+ */
+int test6( void )
+{
+	char						name1[] = "Metrik 1 für Test 6";
+	char						description1[] = "Testmetrik 1 für das Programm testontology, Test 6.";
+	enum siox_ont_unit_type		unit1 = SIOX_UNIT_UNITS;
+	enum siox_ont_storage_type	storage1 = SIOX_STORAGE_DOUBLE;
+	enum siox_ont_scope_type	scope1 = SIOX_SCOPE_SAMPLE;
+	
+	char						name2[] = "Metrik 2 für Test 6";
+	char						description2[] = "Testmetrik 2 für das Programm testontology, Test 6.";
+	enum siox_ont_unit_type		unit2 = SIOX_UNIT_SECONDS;
+	enum siox_ont_storage_type	storage2 = SIOX_STORAGE_64_BIT_INTEGER;
+	enum siox_ont_scope_type	scope2 = SIOX_SCOPE_DIFFERENCE;
+	
+	char						name3[] = "Metrik 3 für Test 6";
+	char						description3[] = "Testmetrik 3 für das Programm testontology, Test 6.";
+	enum siox_ont_unit_type		unit3 = SIOX_UNIT_FLOPS;
+	enum siox_ont_storage_type	storage3 = SIOX_STORAGE_STRING;
+	enum siox_ont_scope_type	scope3 = SIOX_SCOPE_MEDIAN;
+	
+	siox_mid					mid1, mid2, mid3;
+	
+	printf( "==> Test  6..." );
+	
+	/* Datei sicherheitshalber löschen. */
+	remove( ONTOLOGY );
+	
+	if( !siox_ont_open_ontology( ONTOLOGY ) )
+		return( failure( "FAILED Stage 1 - opening ontology!\n" ) );
+	else
+		printf( "passed Stage 1..." );
+
+	mid1 = siox_ont_register_metric( name1, description1, unit1, storage1, scope1 );
+	printf( "registered #1..." );
+	mid2 = siox_ont_register_metric( name2, description2, unit2, storage2, scope2 );
+	printf( "registered #2..." );
+	mid3 = siox_ont_register_metric( name3, description3, unit3, storage3, scope3 );
+	printf( "registered #3..." );
+	printf( "\n%p\t%p\t%p\n", (void *)mid1, (void *)mid2, (void *)mid3 );
+	if(    !mid1 || !mid2 || !mid3 )
+		return( failure( "FAILED Stage 2 - registering metrics!\n" ) );
+	else
+		printf( "passed Stage 2..." );
+
+	if( siox_ont_count_metrics() != 3 )
+		return( failure( "FAILED Stage 3 - counting metrics!\n" ) );
+	else
+		printf( "passed Stage 3..." );
+
+	if( !siox_ont_write_ontology() )
+		return( failure( "FAILED Stage 4 - writing ontology!\n" ) );
+	else
+		printf( "passed Stage 4..." );
+
+	if( !siox_ont_close_ontology() )
+		return( failure( "FAILED Stage 5 - closing ontology!\n" ) );
+	else
+		printf( "passed Stage 5..." );
+	
+	if( !siox_ont_open_ontology( ONTOLOGY ) )
+		return( failure( "FAILED Stage 6 - reopening ontology!\n" ) );
+	else
+		printf( "passed Stage 6..." );
+		
+	if( siox_ont_count_metrics() != 3 )
+		return( failure( "FAILED Stage 7 - counting metrics!\n" ) );
+	else
+		printf( "passed Stage 7..." );
+	
+	if(    !siox_ont_mid_is_equal( mid1, siox_ont_find_mid_by_name( name1 ) )
+		|| !siox_ont_mid_is_equal( mid2, siox_ont_find_mid_by_name( name2 ) )
+		|| !siox_ont_mid_is_equal( mid3, siox_ont_find_mid_by_name( name3 ) ) )
+		return( failure( "FAILED Stage 8 - looking up metrics, checking for consistent MIDs!\n" ) );
+	else
+		printf( "passed Stage 8..." );
+
+	if( !siox_ont_close_ontology() )
+		return( failure( "FAILED Stage 9 - closing ontology!\n" ) );
+	else
+		printf( "passed Stage 9..." );
+
+	remove( ONTOLOGY );
+
+	return( success( "passed.\n" ) );
+}
+
+
+/**
+ * Test 7:
+ * Fehler provozieren:
+ * <ol>
+ * <li> Ontologie öffnen
+ * <li> Metrik erzeugen
+ * <li> Metrik gleichen Namens erneut erzeugen
+ * <li> Ontologie schließen
+ * </ol>
+ *
+ * @returns	Bei Erfolg 0, sonst 1.
+ */
+int test7( void )
+{
+	char						name1[] = "Metrik für Test 7";
+	char						description1[] = "Testmetrik für das Programm testontology, Test 7.";
+	enum siox_ont_unit_type		unit1 = SIOX_UNIT_FLOPS;
+	enum siox_ont_storage_type	storage1 = SIOX_STORAGE_64_BIT_INTEGER;
+	enum siox_ont_scope_type	scope1 = SIOX_SCOPE_MINIMUM;
+	
+	siox_mid					mid;
+	
+	printf( "==> Test  7..." );
+	
+	/* Datei sicherheitshalber löschen. */
+	remove( ONTOLOGY );
+	
+	if( !siox_ont_open_ontology( ONTOLOGY ) )
+		return( failure( "FAILED Stage 1 - opening empty ontology!\n" ) );
+
+	if( !(mid = siox_ont_register_metric( name1, description1, unit1, storage1, scope1 ) ) )
+		return( failure( "FAILED Stage 2 - registering metric!\n" ) );
+
+	if( (mid = siox_ont_register_metric( name1, description1, unit1, storage1, scope1 ) ) )
+		return( failure( "FAILED Stage 3 - registering existing metric again!\n" ) );
+	else
+		fprintf( stderr, "...but this is as it should be. :)\n\n" );
+
+	if( !siox_ont_close_ontology() )
+		return( failure( "FAILED Stage 4 - closing ontology!\n" ) );
+
+	return( success( "passed.\n" ) );
+}
+
+/**
+ * Prints message and returns error code.
+ * 
+ * Pure convenience function to make tests look cleaner.
+ *
+ * @param[in]	message	The message to print.
+ *
+ * @returns				Always returns the error code 1.
+ */
+int failure( const char * message )
+{
+	printf( "%s", message );
+	return( 1 );
+}
+
+/**
+ * Prints message and returns error code.
+ * 
+ * Pure convenience function to make tests look cleaner.
+ *
+ * @param[in]	message	The message to print.
+ *
+ * @returns				Always returns the error code 0.
+ */
+int success( const char * message )
+{
+	printf( "%s", message );
+	return( 0 );
+}
 
