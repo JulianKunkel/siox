@@ -41,7 +41,7 @@ DOXYDIRS := html latex
 all: $(TARGETS)
 	@echo ==================================================
 	
-testontology: testontology.c $(ONTOLOGYLIBS) Makefile
+testontology: testontology.o $(ONTOLOGYLIBS) Makefile
 	@echo Making $@...
 	$(CC) $(LDFLAGS) -o $@ $< $(ONTOLOGYLIBS)
 	@echo ...done!
@@ -50,8 +50,8 @@ testontology: testontology.c $(ONTOLOGYLIBS) Makefile
 #===============
 # Debug-Version
 #===============
-debug: CFLAGS += -ggdb
-debug: LIBFLAGS += -ggdb
+debug: CFLAGS += -ggdb -DDEBUG
+debug: LIBFLAGS += -ggdb -DDEBUG
 debug: LDFLAGS += -ggdb
 debug: all
 
@@ -67,13 +67,15 @@ libsioxont.so: ontology.c ontology.h
 #=================
 # implizite Ziele
 #=================
-.c.o:
+%.o : %.c
 	@echo --------------------------------------------------
 	@echo Making $@...
-	$(CC) -c $(CFLAGS) -o $@ $*.c
+	@echo CPPFLAGS: $(CPPFLAGS)
+	$(CC) -c $(CFLAGS) $< -o $@
 	@echo ...done!
 	@echo --------------------------------------------------
 
+% : %.c
 
 ###############
 # Pseudoziele #

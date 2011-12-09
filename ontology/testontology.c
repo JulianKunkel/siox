@@ -314,57 +314,35 @@ int test6( void )
 	
 	if( !siox_ont_open_ontology( ONTOLOGY ) )
 		return( failure( "FAILED Stage 1 - opening ontology!\n" ) );
-	else
-		printf( "passed Stage 1..." );
 
 	mid1 = siox_ont_register_metric( name1, description1, unit1, storage1, scope1 );
-	printf( "registered #1..." );
 	mid2 = siox_ont_register_metric( name2, description2, unit2, storage2, scope2 );
-	printf( "registered #2..." );
 	mid3 = siox_ont_register_metric( name3, description3, unit3, storage3, scope3 );
-	printf( "registered #3..." );
-	printf( "\n%p\t%p\t%p\n", (void *)mid1, (void *)mid2, (void *)mid3 );
 	if(    !mid1 || !mid2 || !mid3 )
 		return( failure( "FAILED Stage 2 - registering metrics!\n" ) );
-	else
-		printf( "passed Stage 2..." );
 
 	if( siox_ont_count_metrics() != 3 )
 		return( failure( "FAILED Stage 3 - counting metrics!\n" ) );
-	else
-		printf( "passed Stage 3..." );
 
 	if( !siox_ont_write_ontology() )
 		return( failure( "FAILED Stage 4 - writing ontology!\n" ) );
-	else
-		printf( "passed Stage 4..." );
 
 	if( !siox_ont_close_ontology() )
 		return( failure( "FAILED Stage 5 - closing ontology!\n" ) );
-	else
-		printf( "passed Stage 5..." );
 	
 	if( !siox_ont_open_ontology( ONTOLOGY ) )
 		return( failure( "FAILED Stage 6 - reopening ontology!\n" ) );
-	else
-		printf( "passed Stage 6..." );
 		
 	if( siox_ont_count_metrics() != 3 )
 		return( failure( "FAILED Stage 7 - counting metrics!\n" ) );
-	else
-		printf( "passed Stage 7..." );
 	
 	if(    !siox_ont_mid_is_equal( mid1, siox_ont_find_mid_by_name( name1 ) )
 		|| !siox_ont_mid_is_equal( mid2, siox_ont_find_mid_by_name( name2 ) )
 		|| !siox_ont_mid_is_equal( mid3, siox_ont_find_mid_by_name( name3 ) ) )
 		return( failure( "FAILED Stage 8 - looking up metrics, checking for consistent MIDs!\n" ) );
-	else
-		printf( "passed Stage 8..." );
 
 	if( !siox_ont_close_ontology() )
 		return( failure( "FAILED Stage 9 - closing ontology!\n" ) );
-	else
-		printf( "passed Stage 9..." );
 
 	remove( ONTOLOGY );
 
@@ -415,6 +393,7 @@ int test7( void )
 
 	return( success( "passed.\n" ) );
 }
+
 
 /**
  * Prints message and returns error code.

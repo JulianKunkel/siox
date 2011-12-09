@@ -7,17 +7,22 @@
  * 			GNU Public License
  */
 
+/* Switch off assertions unless compiled with -DDEBUG */
+#define	NDEBUG
+#ifdef	DEBUG
+#undef	NDEBUG
+#endif
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "ontology.h"
 
-
-#define METRICS_ARRAY_START_SIZE	   1
-#define LINE_BUFFER_SIZE			2000
+#define MINIMUM_NAME_LENGTH	   5
+#define LINE_BUFFER_SIZE	2000
 
 
 /*
@@ -40,6 +45,15 @@ struct siox_metric_t
 	enum siox_ont_scope_type	scope;		/**< The temporal scope of the metric's data. */
 };
 
+/**
+ * A list element for a simple list of metrics.
+ */
+struct siox_ont_node_t
+{
+	siox_metric				metric;	/**< The metric's actual data. */
+	struct siox_ont_node_t	*next;	/**< The next list element. */
+};
+
 
 /*
  * Lib-local Variables
@@ -48,6 +62,7 @@ struct siox_metric_t
 
 /**
  * The current ontology file name.
+ * Alsoused to determine whether we have an open ontology (!= @c NULL) or not (== @c NULL ).
  */
 static const char *	current_ontology = NULL;
 
@@ -57,12 +72,12 @@ static const char *	current_ontology = NULL;
 static int	current_mid = 0;	
 
 /**
- * A field of pointers to the actual metrics data.
- * Simple first implementation, to be replaced by something better soon.
+ * A pointer to the head of the list of actual metrics data.
+ * Simple implementation for dynamic, eventually to be replaced by something better.
  *
- * @todo Replace the field of pointers with something more sophisticated, such as a btree.
+ * @todo Replace the list with something more sophisticated, such as a btree.
  */
-static siox_metric	(*metrics)[METRICS_ARRAY_START_SIZE];
+static struct siox_ont_node_t *	head;
 
 
 /*
@@ -72,8 +87,8 @@ static siox_metric	(*metrics)[METRICS_ARRAY_START_SIZE];
  
 static siox_mid		new_mid_from_id( int id );
 static siox_metric	new_metric( void);
+static bool			insert_into_list( siox_metric metric );
 
-static bool			resize_array( int size );
 
 /*
  * Function Definitions
@@ -83,30 +98,27 @@ static bool			resize_array( int size );
 bool
 siox_ont_open_ontology( const char * file )
 {
-	FILE *			fh;
-	char			sBuffer[LINE_BUFFER_SIZE];
-	siox_metric *	pMetric;
-	siox_metric		metric;
-	int				line;
-	int				id, unit, storage, scope;
-	int				length;
-	char 			*p, *q;
-
+	FILE *					fh;
+	char					sBuffer[LINE_BUFFER_SIZE];
+	siox_metric				metric;
+	int						line;
+	int						id, unit, storage, scope;
+	int						length;
+	char 					*p, *q;
+	
+	assert( 1 == 2 );
+	
+	/* Require no open ontology */
+	if( current_ontology )
+		siox_ont_close_ontology();
 
 	/* Memorise file name */
+	assert( current_ontology == NULL );
 	current_ontology = file;
 	
 	/* Initialise metrics field */
-	metrics = malloc( sizeof( struct siox_metric_t[METRICS_ARRAY_START_SIZE] ) );
-	if( metrics )
-		for( pMetric = (*metrics); pMetric < (*metrics) + METRICS_ARRAY_START_SIZE; pMetric++ )
-			(*pMetric) = NULL;
-	else
-	{
-		fprintf( stderr, "ERROR: Could not allocate initial metrics memory!\n" );
-		return( false );
-	}
-
+	assert( head == NULL );
+	
 	current_mid = 0;
 
 	/* Open file */
@@ -131,6 +143,7 @@ siox_ont_open_ontology( const char * file )
 						fprintf( stderr, "ERROR: Format error in file %s.\n", file );
 						fclose( fh );
 						siox_ont_free_metric( metric );
+						current_ontology = NULL;
 						return( false );
 					}
 					metric->id = id;
@@ -140,11 +153,13 @@ siox_ont_open_ontology( const char * file )
 					break;
 				case 1: /* Parse for name */
 					length = strlen( sBuffer );
-					if( length < 5 )
+					if( length < MINIMUM_NAME_LENGTH )
 					{
-						fprintf( stderr, "ERROR: Metric name too short (%d) in file %s.\n", length, file );
+						fprintf( stderr, "ERROR: Metric name too short (%d < %d) in file %s.\n",
+								 length, MINIMUM_NAME_LENGTH, file );
 						fclose( fh );
 						siox_ont_free_metric( metric );
+						current_ontology = NULL;
 						return( false );
 					}
 					metric->name = malloc( length );
@@ -153,6 +168,7 @@ siox_ont_open_ontology( const char * file )
 						fprintf( stderr, "ERROR: Memory allocation error in siox_ont_open_ontology()!\n" );
 						fclose( fh );
 						siox_ont_free_metric( metric );
+						current_ontology = NULL;
 						return( false );
 					}
 					p = metric->name + length - 2;
@@ -171,6 +187,7 @@ siox_ont_open_ontology( const char * file )
 						fprintf( stderr, "ERROR: Memory allocation error in siox_ont_open_ontology()!\n" );
 						fclose( fh );
 						siox_ont_free_metric( metric );
+						current_ontology = NULL;
 						return( false );
 					}
 					p = metric->description + length - 2;
@@ -180,24 +197,23 @@ siox_ont_open_ontology( const char * file )
 					metric->description[ length - 1 ] = '\0'; /* Cut off the \n */
 					break;
 				case 3:	/* Parse for empty line */
-					/* Resize array if necessary;
-					   false is returned if the new metric can't be accommodated. */
-					if( !resize_array( metric->id + 1 ) )
+					if( !insert_into_list( metric ) )
 					{
-						fprintf( stderr, "ERROR: Cannot register metric >%s< due to storage limitations.\n",
+						fprintf( stderr, "ERROR: Cannot store metric >%s< due to storage limitations.\n",
 										 metric->name );
 						fclose( fh );
 						siox_ont_free_metric( metric );
+						current_ontology = NULL;
 						return( false );
 					}
 					/* Insert metric into field */
-					(*metrics)[ metric->id ] = metric;
 					current_mid = metric->id + 1;
 					break;
 				default:	/* ERROR! */
 					/* This should never happen! */
 					fprintf( stderr, "ERROR: Format error in file %s.\n", file );
 					fclose( fh );
+					current_ontology = NULL;
 					return( false );
 			}
 		}
@@ -206,6 +222,7 @@ siox_ont_open_ontology( const char * file )
 		if( fclose( fh ) == EOF )
 		{
 			fprintf( stderr, "ERROR: Couldn't close file %s properly.\n", file );
+			current_ontology = NULL;
 			return( false );
 		}
 	}
@@ -217,10 +234,11 @@ siox_ont_open_ontology( const char * file )
 bool
 siox_ont_write_ontology()
 {
-	FILE *			fh;
-	char			sBuffer[LINE_BUFFER_SIZE];
-	siox_metric		*pMetric, metric;
-	int				iError;
+	FILE *								fh;
+	char								sBuffer[LINE_BUFFER_SIZE];
+	siox_metric							metric;
+	int									iError;
+	struct siox_ont_node_t	*current;
 
 	/* Require an open ontology */
 	if( !current_ontology )
@@ -235,11 +253,12 @@ siox_ont_write_ontology()
 		/** @todo Write file header comment */
 		
 		/* Write metrics to file */
-		for( iError = 0, pMetric = (*metrics);
-			 ( !iError ) && ( pMetric < (*metrics) + current_mid );
-			 pMetric++ )
+		for( current = head; current; current = current->next )
 		{
-			metric = (*pMetric);
+			iError = 0;
+			metric = current->metric;
+			assert( metric != NULL );
+			fprintf( stderr, "Writing to file:\n%s\n", siox_ont_metric_to_string( metric ) );
 			sprintf( sBuffer, "%d, %d, %d, %d\n",
 							  metric->id,
 							  metric->unit,
@@ -283,7 +302,7 @@ siox_ont_write_ontology()
 bool
 siox_ont_close_ontology()
 {
-	siox_metric	*pMetric;
+	struct siox_ont_node_t	*this, *next;
 	
 	/* Require an open ontology */
 	if( !current_ontology )
@@ -293,11 +312,16 @@ siox_ont_close_ontology()
 	}
 
 	/* Free metrics storage */
-	for( pMetric = (*metrics); pMetric < (*metrics) + current_mid; pMetric++ )
-		siox_ont_free_metric( *pMetric );
-		
-	free( metrics );
-
+	this = head;
+	while( this )
+	{
+		assert( this->metric != NULL);
+		next = this->next;
+		siox_ont_free_metric( this->metric );
+		this = next;
+	}
+	head = NULL;
+	
 	/* Forget file name */
 	current_ontology = NULL;
 	
@@ -308,11 +332,17 @@ siox_ont_close_ontology()
 siox_mid
 siox_ont_find_mid_by_name( const char * name)
 {
-	siox_metric		*pMetric;
+	struct siox_ont_node_t	*current;
 	
-	for( pMetric = (*metrics); pMetric < (*metrics) + current_mid; pMetric++ )
-		if( pMetric && (strcmp( name, (*pMetric)->name ) == 0) )
-			return new_mid_from_id( (*pMetric)->id );
+	current = head;
+	
+	while( current )
+	{
+		assert( current->metric != NULL );
+		if( strcmp( name, current->metric->name ) == 0 )
+			return( new_mid_from_id( current->metric->id ) );
+		current = current->next;
+	}
 
 	return( NULL );
 }
@@ -321,8 +351,7 @@ siox_ont_find_mid_by_name( const char * name)
 void
 siox_ont_free_mid( siox_mid mid )
 {
-	if( mid )
-		free( mid );
+	free( mid );
 
 	return;
 }
@@ -331,7 +360,8 @@ siox_ont_free_mid( siox_mid mid )
 siox_metric
 siox_ont_find_metric_by_mid( siox_mid mid )
 {
-	int id;
+	int 							id;
+	struct siox_ont_node_t	*current;
 	
 	/* Require an open ontology */
 	if( !current_ontology )
@@ -354,13 +384,14 @@ siox_ont_find_metric_by_mid( siox_mid mid )
 		return( NULL );
 	}
 	
-	if( !(*metrics)[id] )
+	for( current = head; current; current = current->next )
 	{
-		fprintf( stderr, "ERROR: MID does not exist (%d)!\n", id );
-		return( NULL );
+		assert( current->metric != NULL );
+		if( current->metric->id == id )
+			return( current->metric );
 	}
 	
-	return( (*metrics)[id] );
+	return( NULL );
 }
 
 
@@ -474,9 +505,9 @@ siox_ont_metric_to_string( siox_metric metric )
 	
 	sprintf( sResult, "Metric:\t%s\n"
 					  "%s\n"
-					  "Unit:\t%u\n"
-					  "Storage:\t%u\n"
-					  "Scope:\t%u\n",
+					  "Unit:    %u\n"
+					  "Storage: %u\n"
+					  "Scope:   %u\n",
 					  metric->name,
 					  metric->description,
 					  metric->unit,
@@ -490,6 +521,9 @@ siox_ont_metric_to_string( siox_metric metric )
 int
 siox_ont_count_metrics()
 {
+	struct siox_ont_node_t	*current;
+	int						result;
+
 	/* Require an open ontology */
 	if( !current_ontology )
 	{
@@ -497,7 +531,11 @@ siox_ont_count_metrics()
 		return( -1 );
 	}
 
-	return( current_mid );
+	result = 0;
+	for( current = head; current; current = current->next )
+		result++;
+		
+	return( result );
 }
 
 
@@ -526,13 +564,6 @@ siox_ont_register_metric( const char *					name,
 		return( NULL );
 	}
 	
-	/* Resize array if necessary; false is returned if the new metric can't be accommodated. */
-	if( !resize_array( current_mid + 1 ) )
-	{
-		fprintf( stderr, "ERROR: Cannot register metric >%s< due to storage limitations.\n", name );
-		return( NULL );
-	}
-		
 	mid = new_mid_from_id( current_mid );
 	if( !mid )
 	{
@@ -573,7 +604,13 @@ siox_ont_register_metric( const char *					name,
 	metric->scope = scope;
 	
 	/* Insert metric into field */
-	(*metrics)[ metric->id ] = metric;
+	if( !insert_into_list( metric ) )
+	{
+		fprintf( stderr, "ERROR: Cannot register metric >%s< due to storage limitations.\n",
+						 metric->name );
+		siox_ont_free_metric( metric );
+		return( NULL );
+	}
 	
 	return( mid );
 }
@@ -636,29 +673,61 @@ new_metric( void )
 
 
 /**
- * Resizes the array of pointers holding the metric structs, if necessary.
+ * Inserts a metric into the list of metrics according to ascending order of id.
  *
- * @param[in]	size	The required minimum size.
+ * @param[in]	metric	The metric to be inserted.
  *
- * @returns				@c true if array can now hold ( size ) objects, otherwise @c false.
+ * @returns				@c true if successfully inserted, otherwise @c false.
  */
 static bool
-resize_array( int size )
+insert_into_list( siox_metric metric )
 {
-	siox_metric	(* dummy)[];
+	struct siox_ont_node_t	*last, *this, *new;
 	
-	/* Dynamically grow array, if need be */
-	if( ( size > METRICS_ARRAY_START_SIZE ) && ( size > current_mid ) )
+	assert( metric != NULL );
+	
+	new = malloc( sizeof( struct siox_ont_node_t ) );
+	if( !new )
+		return( false );
+	new->metric = metric;
+	
+	/* Insert as only element */
+	if( !head )
 	{
-		dummy = realloc( metrics, sizeof( struct siox_metric_t[ size ] ) );
-		printf( "\nReallocated to size %d from %p to %p.\n", size, (void *)metrics, (void *)dummy );
-		if( !dummy )
-		{
-			fprintf( stderr, "ERROR: Memory reallocation error in resize_array()!\n" );
-			return( false );
-		}
-		printf( "\nArray size grown to %d entries...", size );
+		new->next = NULL;
+		head = new;
+		return( true );
+	}
+
+	assert( head->metric != NULL );
+	
+	/* Insert before first element */
+	if( metric->id < head->metric->id )
+	{
+		new->next = head;
+		head = new;
+		return( true );
 	}
 	
+	/* Insert between two elements */
+	last = head;
+	this = head->next;
+	while( this != NULL )
+	{
+		assert( this->metric != NULL );
+		if ( metric->id <= this->metric->id )
+		{
+			new->next = this;
+			last->next = new;
+			return( true );
+		}
+		last = this;
+		this = this->next;
+	}
+	
+	/* Insert behind last element */
+	new->next = NULL;
+	last->next = new;
 	return( true );
 }
+
