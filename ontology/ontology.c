@@ -1,5 +1,5 @@
 /**
- * @file	ontology.h
+ * @file	ontology.c
  *			Implementation des SIOX-Ontology-Interfaces
  * 
  * @authors	Michaela Zimmer
@@ -106,7 +106,6 @@ siox_ont_open_ontology( const char * file )
 	int						length;
 	char 					*p, *q;
 	
-	assert( 1 == 2 );
 	
 	/* Require no open ontology */
 	if( current_ontology )

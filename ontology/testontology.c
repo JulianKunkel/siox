@@ -195,6 +195,8 @@ int test4( void )
 	if( !siox_ont_close_ontology() )
 		return( failure( "FAILED Stage 5 - closing ontology!\n" ) );
 
+	siox_ont_free_mid( mid );
+	
 	remove( ONTOLOGY );
 	
 	return( success( "passed.\n" ) );
@@ -261,6 +263,9 @@ int test5( void )
 
 	if( !siox_ont_close_ontology() )
 		return( failure( "FAILED Stage 11 - closing ontology!\n" ) );
+
+	siox_ont_free_mid( mid );
+	siox_ont_free_metric( metric );
 
 	remove( ONTOLOGY );
 
@@ -344,6 +349,10 @@ int test6( void )
 	if( !siox_ont_close_ontology() )
 		return( failure( "FAILED Stage 9 - closing ontology!\n" ) );
 
+	siox_ont_free_mid( mid1 );
+	siox_ont_free_mid( mid2 );
+	siox_ont_free_mid( mid3 );
+
 	remove( ONTOLOGY );
 
 	return( success( "passed.\n" ) );
@@ -390,6 +399,8 @@ int test7( void )
 
 	if( !siox_ont_close_ontology() )
 		return( failure( "FAILED Stage 4 - closing ontology!\n" ) );
+
+	siox_ont_free_mid( mid );
 
 	return( success( "passed.\n" ) );
 }
