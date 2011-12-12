@@ -50,8 +50,8 @@ testontology: testontology.o $(ONTOLOGYLIBS) Makefile
 #===============
 # Debug-Version
 #===============
-debug: CFLAGS += -ggdb -DDEBUG
-debug: LIBFLAGS += -ggdb -DDEBUG
+debug: CFLAGS += -O0 -ggdb -DDEBUG
+debug: LIBFLAGS += -O0 -ggdb -DDEBUG
 debug: LDFLAGS += -ggdb
 debug: all
 

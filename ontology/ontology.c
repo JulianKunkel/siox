@@ -7,7 +7,7 @@
  * 			GNU Public License
  */
 
-/* Switch off assertions unless compiled with -DDEBUG */
+/** Switch off assertions unless compiled with -DDEBUG */
 #define	NDEBUG
 #ifdef	DEBUG
 #undef	NDEBUG
@@ -21,8 +21,8 @@
 
 #include "ontology.h"
 
-#define MINIMUM_NAME_LENGTH	   5
-#define LINE_BUFFER_SIZE	2000
+#define MINIMUM_NAME_LENGTH	   5	/**< Minimum length for a valid metric's name. */
+#define LINE_BUFFER_SIZE	2000	/**< Size for buffer to read lines into. */
 
 
 /*
