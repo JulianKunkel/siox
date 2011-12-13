@@ -265,7 +265,6 @@ int test5( void )
 		return( failure( "FAILED Stage 11 - closing ontology!\n" ) );
 
 	siox_ont_free_mid( mid );
-	siox_ont_free_metric( metric );
 
 	remove( ONTOLOGY );
 
