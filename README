@@ -1,0 +1,19 @@
+############################################################
+# SIOX Library Package
+############################################################
+# Written 2011 by Michaela Zimmer & Julia Kunkel
+############################################################
+
+To make the libraries and a test program:
+	make
+or
+	make all
+
+To make the debug version (without optimisation but with assertions):
+	make debug
+
+To make the documentation:
+	make docs
+	
+To remove all intermediate and target and documentation files:
+	make clean

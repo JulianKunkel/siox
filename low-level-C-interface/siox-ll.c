@@ -2,12 +2,12 @@
  * @file 	siox-ll.c
  * 			Implementation des SIOX-Low-Level-Interfaces.
  *
- * 
+ *
  * \mainpage Projekt SIOX - Das Low-Level Interface
  *
  * \section intro_sec Einführung
  * siox-ll wurde aus den Rahmenbedingungen entwickelt, die die Abstraktion
- * des I/O-Pfadmodell @em IOPm an das System stellt.
+ * des I/O-Pfadmodells @em IOPm an das System stellt.
  *
  * @authors	Julian Kunkel & Michaela Zimmer
  * @date	2011
@@ -20,17 +20,18 @@
 #include <time.h>
 
 #include "siox-ll.h"
+#include "../ontology/ontology.h"
 
 
-	
+
 /** The next unassigned UNID. */
 static unsigned long int	current_unid = 0L;
 
 struct siox_unid_t {
 	unsigned long int	id;	/**< The actual ID. */
 	};
-	
-	
+
+
 /** The next unassigned AID. */
 static unsigned long int	current_aid = 0L;
 
@@ -57,11 +58,11 @@ siox_register_node( const char * hwid,
 	/* Draw fresh UNID */
 	siox_unid unid = malloc( sizeof( struct siox_unid_t ) );
 	(*unid).id = current_unid++;
-	
-	
+
+
 	printf( "\n# Node registered as UNID %ld with hwid >%s<, swid >%s< and iid >%s<.\n",
 		(*unid).id, hwid, swid, iid );
-	
+
 	return( unid );
 }
 
@@ -115,11 +116,11 @@ siox_register_descriptor_map( siox_unid		unid,
 	/* Draw fresh DMID */
 	siox_dmid dmid = malloc( sizeof( struct siox_dmid_t ) );
 	(*dmid).id = current_dmid++;
-	
-	
+
+
 	printf( "# UNID %ld registered DMID %ld: %s -> %s.\n",
 		(*unid).id, (*dmid).id, source_descriptor_type, target_descriptor_type );
-	
+
 	return( dmid );
 }
 
@@ -182,17 +183,17 @@ siox_start_activity( siox_unid		unid,
 {
 	/* Draw timestamp */
 	time_t 	timeStamp = time(NULL);
-	
+
 	/* Draw fresh AID */
 	siox_aid aid = malloc( sizeof( struct siox_aid_t ) );
 	(*aid).id = current_aid++;
-	
-	
+
+
 	printf( "- UNID %ld started AID %ld at %s",
 		(*unid).id, (*aid).id, ctime( &timeStamp ));
 	if ( comment != NULL )
 		printf( "\tKommentar:\t%s\n", comment );
-	
+
 	return( aid );
 }
 
@@ -210,17 +211,18 @@ siox_stop_activity( siox_aid	aid )
 
 
 void
-siox_report_activity( siox_aid aid,
+siox_report_activity( siox_aid				aid,
 					  const char * 			descriptor_type,
 					  const char * 			descriptor,
-					  const char *  		measure,
+					  siox_mid				mid,
 					  enum siox_value_type	value_type,
 					  void * 				value,
 					  const char * 			details )
 {
 	printf( "- AID %ld, identified by the %s of %s, was measured as follows:\n",
 		(*aid).id, descriptor_type, descriptor );
-	printf( "\t%s:\t", measure );
+	printf( "\t%s:\t", siox_ont_metric_get_name(
+						siox_ont_find_metric_by_mid( mid ) ) );
 	switch ( value_type ){
 		case SIOX_TYPE_INTEGER:
 			printf( "%d\n", *((int*) value) );
@@ -254,14 +256,15 @@ siox_end_activity ( siox_aid	aid )
 
 void
 siox_report( siox_unid				unid,
-			 const char *  			measure,
+			 siox_mid	  			mid,
 			 enum siox_value_type	value_type,
 			 void * 				value,
 			 const char *			details )
 {
 	printf( "- UNID %ld was measured as follows:\n",
 		(*unid).id );
-	printf( "\t%s:\t", measure );
+	printf( "\t%s:\t", siox_ont_metric_get_name(
+						siox_ont_find_metric_by_mid( mid ) ) );
 	switch ( value_type ){
 		case SIOX_TYPE_INTEGER:
 			printf( "%d\n", *((int*) value) );

@@ -1,7 +1,7 @@
 /**
  * @file	ontology.c
  *			Implementation des SIOX-Ontology-Interfaces
- * 
+ *
  * @authors	Michaela Zimmer
  * @date	2011
  * 			GNU Public License
@@ -29,7 +29,8 @@
  * Type Definitions
  * ================
  */
- 
+
+
 struct siox_mid_t
 {
 	int		id;	/**< The actual MID. */
@@ -69,7 +70,7 @@ static const char *	current_ontology = NULL;
 /**
  * The next free MID to assign to a new metric. Also, the nuber of metrics in the current ontology.
  */
-static int	current_mid = 0;	
+static int	current_mid = 0;
 
 /**
  * A pointer to the head of the list of actual metrics data.
@@ -84,7 +85,7 @@ static struct siox_ont_node_t *	head;
  * Lib-local Function Declarations
  * ===============================
  */
- 
+
 static siox_mid		new_mid_from_id( int id );
 static siox_metric	new_metric( void);
 static bool			insert_into_list( siox_metric metric );
@@ -105,8 +106,8 @@ siox_ont_open_ontology( const char * file )
 	int						id, unit, storage, scope;
 	int						length;
 	char 					*p, *q;
-	
-	
+
+
 	/* Require no open ontology */
 	if( current_ontology )
 		siox_ont_close_ontology();
@@ -114,10 +115,10 @@ siox_ont_open_ontology( const char * file )
 	/* Memorise file name */
 	assert( current_ontology == NULL );
 	current_ontology = file;
-	
+
 	/* Initialise metrics field */
 	assert( head == NULL );
-	
+
 	current_mid = 0;
 
 	/* Open file */
@@ -216,7 +217,7 @@ siox_ont_open_ontology( const char * file )
 					return( false );
 			}
 		}
-		
+
 		/* Close file */
 		if( fclose( fh ) == EOF )
 		{
@@ -250,7 +251,7 @@ siox_ont_write_ontology()
 	if( ( fh = fopen( current_ontology, "wt" ) ) != NULL )
 	{
 		/** @todo Write file header comment */
-		
+
 		/* Write metrics to file */
 		for( current = head; current; current = current->next )
 		{
@@ -280,7 +281,7 @@ siox_ont_write_ontology()
 			fclose( fh );
 			return( false );
 		}
-		
+
 		/* Close file */
 		if( fclose( fh ) == EOF )
 		{
@@ -293,7 +294,7 @@ siox_ont_write_ontology()
 		fprintf( stderr, "ERROR: Could not open file %s for writing.\n", current_ontology );
 		return( false );
 	}
-	
+
 	return( true );
 }
 
@@ -302,7 +303,7 @@ bool
 siox_ont_close_ontology()
 {
 	struct siox_ont_node_t	*this, *next;
-	
+
 	/* Require an open ontology */
 	if( !current_ontology )
 	{
@@ -320,10 +321,10 @@ siox_ont_close_ontology()
 		this = next;
 	}
 	head = NULL;
-	
+
 	/* Forget file name */
 	current_ontology = NULL;
-	
+
 	return( true );
 }
 
@@ -332,9 +333,9 @@ siox_mid
 siox_ont_find_mid_by_name( const char * name)
 {
 	struct siox_ont_node_t	*current;
-	
+
 	current = head;
-	
+
 	while( current )
 	{
 		assert( current->metric != NULL );
@@ -361,7 +362,7 @@ siox_ont_find_metric_by_mid( siox_mid mid )
 {
 	int 							id;
 	struct siox_ont_node_t	*current;
-	
+
 	/* Require an open ontology */
 	if( !current_ontology )
 	{
@@ -376,20 +377,20 @@ siox_ont_find_metric_by_mid( siox_mid mid )
 		fprintf( stderr, "ERROR: Empty MID object!\n" );
 		return( NULL );
 	}
-	
+
 	if( id < 0  ||  current_mid <= id )
 	{
 		fprintf( stderr, "ERROR: MID %d out of range (0 - %d)!\n", id, current_mid );
 		return( NULL );
 	}
-	
+
 	for( current = head; current; current = current->next )
 	{
 		assert( current->metric != NULL );
 		if( current->metric->id == id )
 			return( current->metric );
 	}
-	
+
 	return( NULL );
 }
 
@@ -401,7 +402,7 @@ siox_ont_free_metric( siox_metric metric )
 	{
 		free( metric->name );
 		free( metric->description );
-	
+
 		free( metric );
 	}
 
@@ -484,7 +485,7 @@ siox_ont_metric_to_string( siox_metric metric )
 {
 	char*	sResult;
 	int		nLength;
-	
+
 
 	/* Require an open ontology */
 	if( !current_ontology )
@@ -495,13 +496,13 @@ siox_ont_metric_to_string( siox_metric metric )
 
 	nLength = strlen( metric->name ) + strlen( metric->description ) + 50;
 	sResult = malloc( sizeof( char[nLength] ) );
-	
+
 	if ( !sResult )
 	{
 		fprintf( stderr, "ERROR: Memory allocation error in siox_ont_metric_to_string()!\n" );
 		return( NULL );
 	}
-	
+
 	sprintf( sResult, "Metric:\t%s\n"
 					  "%s\n"
 					  "Unit:    %u\n"
@@ -512,8 +513,8 @@ siox_ont_metric_to_string( siox_metric metric )
 					  metric->unit,
 					  metric->storage,
 					  metric->scope );
-				
-	return( sResult );				
+
+	return( sResult );
 }
 
 
@@ -533,7 +534,7 @@ siox_ont_count_metrics()
 	result = 0;
 	for( current = head; current; current = current->next )
 		result++;
-		
+
 	return( result );
 }
 
@@ -547,7 +548,7 @@ siox_ont_register_metric( const char *					name,
 {
 	siox_mid	mid;
 	siox_metric	metric;
-	
+
 	/* Require an open ontology */
 	if( !current_ontology )
 	{
@@ -562,7 +563,7 @@ siox_ont_register_metric( const char *					name,
 		siox_ont_free_mid( mid );
 		return( NULL );
 	}
-	
+
 	mid = new_mid_from_id( current_mid );
 	if( !mid )
 	{
@@ -570,7 +571,7 @@ siox_ont_register_metric( const char *					name,
 		return( NULL );
 	}
 	current_mid++;
-	
+
 	/* Set up new metric object */
 	metric = new_metric();
 	if ( !metric )
@@ -601,7 +602,7 @@ siox_ont_register_metric( const char *					name,
 	metric->unit = unit;
 	metric->storage = storage;
 	metric->scope = scope;
-	
+
 	/* Insert metric into field */
 	if( !insert_into_list( metric ) )
 	{
@@ -610,7 +611,7 @@ siox_ont_register_metric( const char *					name,
 		siox_ont_free_metric( metric );
 		return( NULL );
 	}
-	
+
 	return( mid );
 }
 
@@ -626,7 +627,7 @@ static siox_mid
 new_mid_from_id( int id )
 {
 	siox_mid mid;
-	
+
 	/* Draw fresh MID */
 	mid = malloc( sizeof( struct siox_mid_t ) );
 	if ( !mid )
@@ -666,7 +667,7 @@ new_metric( void )
 	metric->unit = SIOX_UNIT_UNASSIGNED;
 	metric->storage = SIOX_STORAGE_UNASSIGNED;
 	metric->scope = SIOX_SCOPE_UNASSIGNED;
-	
+
 	return( metric );
 }
 
@@ -682,14 +683,14 @@ static bool
 insert_into_list( siox_metric metric )
 {
 	struct siox_ont_node_t	*last, *this, *new;
-	
+
 	assert( metric != NULL );
-	
+
 	new = malloc( sizeof( struct siox_ont_node_t ) );
 	if( !new )
 		return( false );
 	new->metric = metric;
-	
+
 	/* Insert as only element */
 	if( !head )
 	{
@@ -699,7 +700,7 @@ insert_into_list( siox_metric metric )
 	}
 
 	assert( head->metric != NULL );
-	
+
 	/* Insert before first element */
 	if( metric->id < head->metric->id )
 	{
@@ -707,7 +708,7 @@ insert_into_list( siox_metric metric )
 		head = new;
 		return( true );
 	}
-	
+
 	/* Insert between two elements */
 	last = head;
 	this = head->next;
@@ -723,7 +724,7 @@ insert_into_list( siox_metric metric )
 		last = this;
 		this = this->next;
 	}
-	
+
 	/* Insert behind last element */
 	new->next = NULL;
 	last->next = new;

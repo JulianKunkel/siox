@@ -1,7 +1,7 @@
 /**
  * @file	siox-ll.h
  *			Headerdatei für das SIOX-Low-Level-Interface
- * 
+ *
  * @authors	Julian Kunkel & Michaela Zimmer
  * @date	2011
  * 			GNU Public License
@@ -10,6 +10,8 @@
 
 #ifndef siox_LL_H
 #define siox_LL_H
+
+#include "../ontology/ontology.h"
 
 
 /**
@@ -50,7 +52,7 @@ enum siox_value_type{
 };
 
 
- 
+
 
 /**
  * Meldet den Knoten als Teilnehmer an SIOX an und teilt ihm eine frische @em UNID zu.
@@ -66,7 +68,7 @@ enum siox_value_type{
  *
  * @return	Eine frische @em UNID, die SIOX dem Knoten zuteilt und welche dieser im künftigen
  * 			Umgang mit SIOX verwenden muß.
- * 
+ *
  * @note Wo SIOX die nötigen Daten selbst herausfinden kann, darf statt des Parameters @c NULL stehen.
  */
 siox_unid siox_register_node(const char * hwid, const char * swid, const char * iid);
@@ -232,14 +234,14 @@ void siox_stop_activity(siox_aid aid);
  * @param[in]	aid				Die @em AID der Aktivität.
  * @param[in]	descriptor_type	Der Typ des Deskriptors, z.B. "Posix-FileHandle".
  * @param[in]	descriptor		Der eigentliche Deskriptor, z.B. "51773".
- * @param[in]	measure			Die Meßgröße, z.B. "Durchsatz in MiB/s".
+ * @param[in]	mid				Die @em MID der Meßgröße.
  * @param[in]	value_type		Der Typ des folgenden Wertes als siox_value_type.
  * @param[in]	value			Ein Zeiger auf den tatsächlichen Wert des Meßwerts (hier z.B.: 10.363).
  * @param[in]	details			Raum für Anmerkungen, weitere Spezifikationen oder Details.
  *
  * @todo	Woher weiß die Komponente, ob – und wenn ja, auf was – wir die Leistungsdaten beschränken wollen?
  */
-void siox_report_activity(siox_aid aid, const char * descriptor_type, const char * descriptor, const char *  measure, enum siox_value_type value_type, void * value, const char * details);
+void siox_report_activity(siox_aid aid, const char * descriptor_type, const char * descriptor, siox_mid mid, enum siox_value_type value_type, void * value, const char * details);
 
 
 /**
@@ -260,7 +262,7 @@ void siox_end_activity(siox_aid aid);
  *					während der letzten Sekunde.
  *
  * @param[in]	unid			Die @em UNID des Knoten.
- * @param[in]	measure			Die Meßgröße, z.B. "Maximale Prozessorlast in %".
+ * @param[in]	mid				Die @em MID der Meßgröße.
  * @param[in]	value_type		Der Typ des folgenden Wertes als siox_value_type.
  * @param[in]	value			Ein Zeiger auf den tatsächlichen Wert des Meßwerts (hier z.B.: 73,17).
  * @param[in]	details			Raum für Anmerkungen, weitere Spezifikationen oder Details.
@@ -268,7 +270,7 @@ void siox_end_activity(siox_aid aid);
  * @todo	Wann wird was gemeldet? Woher weiß die Komponente, ob – und wenn ja, auf was – wir
  *			die Leistungsdaten beschränken wollen?
  */
-void siox_report(siox_unid unid,  const char *  measure, enum siox_value_type value_type, void * value, const char * details);
+void siox_report(siox_unid unid,  siox_mid  mid, enum siox_value_type value_type, void * value, const char * details);
 
 
 #endif
