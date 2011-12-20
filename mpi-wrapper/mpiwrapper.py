@@ -120,4 +120,10 @@ for entry in files:
 	except SystemError:
 		exit(1)
 
+for file in cFiles:
 
+	cFileHandel = open(file)
+
+	src = cFileHandel.readlines()
+	
+	src.pre
