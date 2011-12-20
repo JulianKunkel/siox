@@ -107,3 +107,11 @@ for line in header:
 	function.append(returnPointer)
 	function.append(functionName)
 	function.append(signature)
+
+file = open(output)
+
+for function in functions:
+		file.write("static ")
+		file.write(function[0]+" (* static_")
+		file.write(function[2]+") ( ")
+		file.write(function[3]+" ) = NULL\n")
