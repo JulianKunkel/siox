@@ -108,10 +108,35 @@ for line in header:
 	function.append(functionName)
 	function.append(signature)
 
-file = open(output)
+file = open(output, "w")
 
 for function in functions:
-		file.write("static ")
-		file.write(function[0]+" (* static_")
-		file.write(function[2]+") ( ")
-		file.write(function[3]+" ) = NULL\n")
+	file.write("static ")
+	file.write(function[0]+" (* static_")
+	file.write(function[2]+") ( ")
+	file.write(function[3]+" ) = NULL;\n")
+
+file.write("""
+#define OPEN_DLL(defaultfile, libname) \
+  { \
+   char * file = getenv(libname); \
+  if (file == NULL)\
+	file = defaultfile;\
+  dllFile = dlopen(file, RTLD_LAZY); \
+  if (dllFile == NULL){ \
+    printf("[Error] dll not found %s\n", file); \
+    exit(1); \
+  } \
+  }
+
+#define ADD_SYMBOL(name) \
+  symbol = dlsym(dllFile, #name);\
+  if (symbol == NULL){ \
+     printf("[Error] trace wrapper - symbol not found %s\n", #name); \
+  }""")
+
+for function in functions:
+	file.write("ADD_SYMBOL("+function[2]+");\n")
+	file.write("static_"+function[2]+" = symbol;)
+	
+
