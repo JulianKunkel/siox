@@ -7,7 +7,7 @@ before = {
 	 }
 
 attributes = {
-		"init" : ["""
+		"_init" : ["""
 						SIOX_register_node( %(name)s );
 						SIOX_register_discriptor_map(s_unid, "FileName",
 						"FileHandle");
@@ -15,26 +15,26 @@ attributes = {
 						"""
 
 						"""]
-  "open" : ["""
+  "_open" : ["""
 						SIOX_recive_desriptor(s_unid, "FileName", name);
 						""", 
 						"""
 						SIOX_map_descriptor( s_unid, "FileName", name,
 						"FileHandle", returnValue );
 						"""]
-  "read" : ["""
+  "_read" : ["""
 						siox_aid s_aid = SIOX_start_activity(s_unid);
 						""", 
 						"""
 						SIOX_end_activity(s_aid)
 						"""],
-  "write" : ["""
+  "_write" : ["""
 						siox_aid s_aid = SIOX_start_activity(s_unid);
 						""", 
 						"""
 						SIOX_end_activity(s_aid);
 						"""],
-  "close" : ["""
+  "_close" : ["""
 
 						""",
 						"""

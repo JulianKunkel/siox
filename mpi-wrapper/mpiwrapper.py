@@ -6,9 +6,10 @@ import __future__
 import re
 import sys
 import argparse
+import re
 
-from wrapper_conf import (before, beforeTracing, after, attributes, conditions,
-Options)
+#from wrapper_conf import (before, beforeTracing, after, attributes, conditions,
+#Options)
 
 #files from argv
 files = None
@@ -35,32 +36,14 @@ def init():
 			around MPI function calls''')
 
 	argParser.add_argument('--output', '-o', action='store', nargs=1,
-			dest='output', help='''The path where the output will be stored.
-			If no path is provided ./ will be used. The output files will have the
-			same name as the parsed *.c files. (See --prefix or --suffix)''')
+			dest='output', help='out')
 	
-	argParser.add_argument('--prefix', '-p', action='store', nargs=1,
-			dest='prefix', help='''Add a prefix to the output files. --prefix wrap_
-			changes "foo.c" into "wrap_foo.c".''')
 
-	argParser.add_argument('--suffix', '-s', action='store', nargs=1, 
-			dest='suffix', help='''Add a suffix to every output file. Could be 
-			used to add a different file ending. --suffix .wrap would change 
-			"foo.c" into "foo.c.wrap".''')
-
-	argParser.add_argument('--force', action='store_true', default=False,
-			dest='force', help='''ONLY USE THIS IF YOU KNOW WHAT YOU ARE DOING! 
-			This will ignore warnings and errors. For example allow to override 
-			existing *.c files and replace them with the instrumented version of 
-			the *.c files or override the existing instrumented *.c files with 
-			new one. (There is no short parameter, for a reason!)''')
-	
 	argParser.add_argument('--debug', '-d', action='store_true', default=False,
 			dest='debug', help='''Print out debug information.''')
 
-	argParser.add_argument('files',metavar='files',action='store', nargs='+',
-			help='''A list of files containing the function signatures to instrument
-			(*.funcs) and the c-flies (*.c) to instrument (order can be mixed).''')
+	argParser.add_argument('header',metavar='files',action='store', nargs='+',
+			help='The header file to instrument.')
 	
 	return argParser
 
@@ -71,59 +54,56 @@ def add_function():
 #initialize the command line argument parser 
 argParser = init()
 
-#read the commandline arguments
+#read the command line arguments
 args = argParser.parse_args(sys.argv[1:])
 
 #get the parsed arguments
-files = args.files 
-cFiles = [] 
-functionFiles = []
-functions = [] 
+headerFile = args.header
 output = args.output 
-prefix = args.prefix 
-suffix = args.suffix
-force = args.force 
 debug = args.debug
 
-#print the debug messages to sdterr
-if debug: print >> sys.stderr, 'DEBUG: Searching for c- and func-files in the command line arguments:'
 
-#FIXME: Use regex matching, maybe wirte its own function for sorting
+headerFH = open(headerFile[0])
+header = headerFH.readlines()
 
-#loop over the provided files and sort them to *.c and *.func files
-for entry in files:
-	try:
+functions = []
+for line in header:
 
-		if entry.find('.c') is not -1:
+	# ^\s* -> leading white space
+	# (?!(//)|(/\*))\s* -> exclude comments // or /*
+	# (\w+)\s* -> the return value
+	# (\*)?\s* -> matches a * if the return value is a pointer don't have to
+	#		appear 
+	# (\w+)\s* -> matches the function name
+	# \( -> matches opening parentheses for the signature
+	# (.+) -> matches the parameters of the function 
+	# \) -> matches the closing parentheses for the signature
+	# \s*;\s*$ -> matches the colon and the trailing white space
+	regex = re.match("^\s*(?!(//)|(/\*))\s*(\w+)\s*(\*)?\s*(\w+)\s*\((.+)\)\s*;\s*$", line)
 
-			if debug: print >> sys.stderr, '\tDEBUG: Found c-fiel: %s' % entry
-			cFiles.append(entry)
-
-		elif entry.find('.func') is not -1: 
-		
-			if debug: print >> sys.stderr, '\tDEBUG: Found func-fiel: %s' % entry 
-			functionFiles.append(entry)
-
-		else:
-		
-			print >> sys.stderr, 'ERROR: Unreconised file format: %s' % entry
-			
-			#if the force option is True skip the exeption
-			if force:
-					
-				print >> sys.stderr, 'Appending the unknown file to the func-files.'
-				functionFiles.append(entry)
-
-			else:
-				raise SystemError 
-
-	except SystemError:
-		exit(1)
-
-for file in cFiles:
-
-	cFileHandel = open(file)
-
-	src = cFileHandel.readlines()
+	if not regex:
+		continue
 	
-	src.pre
+	returnValue = regex.group(3)
+
+	if regex.group(4):
+		returnPointer = True
+	else:
+		returnPointer = False
+
+	functionName = regex.group(5)
+	signature = regex.group(6)
+	
+	if debug:
+		print "Return Value: %s" % returnValue
+		print "Pointer? %s" % returnPointer
+		print "Function Name: %s" % functionName
+		print "Function Signature: %s\n\n" % signature
+	
+	functions.append([])
+	function = functios[-1]
+
+	function.append(returnValue)
+	function.append(returnPointer)
+	function.append(functionName)
+	function.append(signature)
