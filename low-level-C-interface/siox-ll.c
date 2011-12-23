@@ -9,7 +9,7 @@
  * siox-ll wurde aus den Rahmenbedingungen entwickelt, die die Abstraktion
  * des I/O-Pfadmodells @em IOPm an das System stellt.
  *
- * @authors	Julian Kunkel & Michaela Zimmer
+ * @authors	Julian Kunkel & Michaela Zimmer & Marc Wiedemann
  * @date	2011
  * 			GNU Public License.
  */

@@ -2,15 +2,15 @@
  * @file	ontology.c
  *			Implementation des SIOX-Ontology-Interfaces
  *
- * @authors	Michaela Zimmer
+ * @authors	Michaela Zimmer Kleine Änderungen und Fragen Marc Wiedemann
  * @date	2011
  * 			GNU Public License
  */
 
 /** Switch off assertions unless compiled with -DDEBUG */
-#define	NDEBUG
+#define	NODEBUG
 #ifdef	DEBUG
-#undef	NDEBUG
+#undef	NODEBUG
 #endif
 
 #include <stdlib.h>
@@ -21,8 +21,8 @@
 
 #include "ontology.h"
 
-#define MINIMUM_NAME_LENGTH	   5	/**< Minimum length for a valid metric's name. */
-#define LINE_BUFFER_SIZE	2000	/**< Size for buffer to read lines into. */
+#define MINIMUM_NAME_LENGTH	   4	/**< Minimum length for a valid metric's name. */
+#define LINE_BUFFER_SIZE	2000	/**< Size for buffer to read lines into.               What ar the units? Bytes, kBytes, Bits ? */
 
 
 /*
@@ -33,14 +33,14 @@
 
 struct siox_mid_t
 {
-	int		id;	/**< The actual MID. */
+	int		id;	/**< The actual MID (metricIdentität?. */
 };
 
 struct siox_metric_t
 {
-	int							id;			/**< The metric's <em>MID</em>. */
-	char * 						name;		/**< The metric's unique name. */
-	char *						description;/**< The metric's description. */
+	int				id;		/**< The metric's <em>MID</em>. */
+	char * 				name;		/**< The metric's unique name. */
+	char *				description;	/**< The metric's description. */
 	enum siox_ont_unit_type		unit;		/**< The metric's unit of measurement. */
 	enum siox_ont_storage_type	storage;	/**< The minimal data type needed to store the metric's data. */
 	enum siox_ont_scope_type	scope;		/**< The temporal scope of the metric's data. */
@@ -51,8 +51,8 @@ struct siox_metric_t
  */
 struct siox_ont_node_t
 {
-	siox_metric				metric;	/**< The metric's actual data. */
-	struct siox_ont_node_t	*next;	/**< The next list element. */
+	siox_metric			metric;	/**< The metric's actual data. */
+	struct siox_ont_node_t		*next;	/**< The next list element. */
 };
 
 
@@ -63,12 +63,12 @@ struct siox_ont_node_t
 
 /**
  * The current ontology file name.
- * Alsoused to determine whether we have an open ontology (!= @c NULL) or not (== @c NULL ).
+ * Also used to determine whether we have an open ontology (!= @c NULL) or not (== @c NULL ).
  */
 static const char *	current_ontology = NULL;
 
 /**
- * The next free MID to assign to a new metric. Also, the nuber of metrics in the current ontology.
+ * The next free MID to assign to a new metric. Also, the number of metrics in the current ontology.
  */
 static int	current_mid = 0;
 
