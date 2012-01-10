@@ -8,19 +8,19 @@ import sys
 import argparse
 import re
 
-#from wrapper_conf import (before, beforeTracing, after, attributes, conditions,
-#Options)
+# from wrapper_conf import (before, beforeTracing, after, attributes, conditions,
+# Options)
 
-#the signatures of the functios to instrument
+# the signatures of the functios to instrument
 functions = []
-#the path to store the output files
+# the path to store the output files
 output = ['./out.c']
-#print out debug informations if True
+# print out debug informations if True
 debug = None
 def init():
 	"""Initialize the command line parser. Returns a parser from argparse."""
 
-	#FIXME: sort the options
+	# FIXME: sort the options
 	argParser = argparse.ArgumentParser(description='''Wraps SIOX function
 			around MPI function calls''')
 
@@ -87,13 +87,13 @@ def parse_header():
 # start of the main program
 #
 
-#initialize the command line argument parser 
+# initialize the command line argument parser 
 argParser = init()
 
-#read the command line arguments
+# read the command line arguments
 args = argParser.parse_args(sys.argv[1:])
 
-#get the parsed arguments
+# get the parsed arguments
 headerFile = args.header
 
 if args.output is not []:
@@ -105,7 +105,7 @@ debug = args.debug
 
 parse_header()
 
-
+# open the output file for writing
 file = open(output, "w")
 
 for function in functions:
@@ -120,26 +120,25 @@ for function in functions:
 	file.write(function[3]+" ) = NULL;\n")
 
 file.write("""
-#define OPEN_DLL(defaultfile, libname) \
-  { \
-   char * file = getenv(libname); \
-  if (file == NULL)\
-	file = defaultfile;\
-  dllFile = dlopen(file, RTLD_LAZY); \
-  if (dllFile == NULL){ \
-    printf("[Error] dll not found %s\n", file); \
-    exit(1); \
-  } \
-  }
+#define OPEN_DLL(defaultfile, libname) 
+	{ 
+		char * file = getenv(libname); 
+		if (file == NULL)
+			file = defaultfile;
+		dllFile = dlopen(file, RTLD_LAZY); 
+		if (dllFile == NULL) { 
+			printf("[Error] dll not found %s", file); 
+			exit(1); 
+		} 
+	}
 
-#define ADD_SYMBOL(name) \
-  symbol = dlsym(dllFile, #name);\
-  if (symbol == NULL){ \
-     printf("[Error] trace wrapper - symbol not found %s\n", #name); \
-  }""")
+#define ADD_SYMBOL(name) 
+	symbol = dlsym(dllFile, #name);
+	if (symbol == NULL) {
+		printf("[Error] trace wrapper - symbol not found %s", #name); 
+	}
+""")
 
 for function in functions:
-	file.write("ADD_SYMBOL("+function[2]+");\n")
+	file.write("\nADD_SYMBOL("+function[2]+");\n")
 	file.write("static_"+function[2]+" = symbol;")
-	
-
