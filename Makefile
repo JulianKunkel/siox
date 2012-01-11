@@ -31,11 +31,17 @@ HDF5FLAGS := -I$(HDF5DIR)/include -L$(HDF5DIR)/lib
 # Targets
 #=========
 TARGETS := ont ll
+# Don't hand these variables down to sub-makes
+unexport TARGETS
+
+#=============
+# für Doxygen
+#=============
 DOXYDIRS := html latex
 LOGS := *.log
 REFMAN := SIOX-Reference.pdf
 # Don't hand these variables down to sub-makes
-unexport TARGETS DOXYDIRS LOGS REFMAN
+unexport DOXYDIRS LOGS REFMAN
 
 
 ##########
@@ -108,6 +114,7 @@ docs:
 	@doxygen Doxyfile
 	@$(MAKE) --silent --directory=latex > latex/makePDF.log
 	@mv latex/refman.pdf ./$(REFMAN)
+	@$(RM) -r latex
 	@echo ...done!
 	@echo ==================================================
 

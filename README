@@ -1,19 +1,27 @@
-############################################################
+##################################################################
 # SIOX Library Package
-############################################################
-# Written 2011 by Michaela Zimmer & Julia Kunkel
-############################################################
+##################################################################
+# Written 2011 by Michaela Zimmer, Julian Kunkel & Marc Wiedemann
+##################################################################
 
 To make the libraries and a test program:
-	make
+    make
 or
-	make all
+    make all
 
 To make the debug version (without optimisation but with assertions):
-	make debug
+    make debug
+
+To run all tests included after either "make all" or "make debug":
+    make test
 
 To make the documentation:
-	make docs
-	
+    make docs
+Results in a PDF in ./ and HTML pages starting at ./html/index.html
+
 To remove all intermediate and target and documentation files:
-	make clean
+    make clean
+
+
+Note: Some examples and test files make use of HDF5 and full makes
+      will require its libraries installed in the library path!

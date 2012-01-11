@@ -1,10 +1,10 @@
 /**
- * @file	ontology.h
- *			Headerdatei für das SIOX-Ontology-Interface
- * 
- * @authors	Michaela Zimmer
- * @date	2011
- * 			GNU Public License
+ * @file    ontology.h
+ *          Headerdatei für das SIOX-Ontology-Interface
+ *
+ * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
+ * @date    2011
+ *          GNU Public License
  */
 
 
@@ -35,11 +35,11 @@ typedef struct siox_metric_t * siox_metric;
  * Mögliche Werte für das Attribut "Unit" der Metrik.
  */
 enum siox_ont_unit_type{
-	SIOX_UNIT_UNASSIGNED,
-	SIOX_UNIT_SECONDS,
-	SIOX_UNIT_BYTES,
-	SIOX_UNIT_FLOPS,
-	SIOX_UNIT_UNITS
+    SIOX_UNIT_UNASSIGNED,
+    SIOX_UNIT_SECONDS,
+    SIOX_UNIT_BYTES,
+    SIOX_UNIT_FLOPS,
+    SIOX_UNIT_UNITS
 };
 
 
@@ -47,12 +47,12 @@ enum siox_ont_unit_type{
  * Mögliche Werte für das Attribut "Minimal Storage Type" der Metrik.
  */
 enum siox_ont_storage_type{
-	SIOX_STORAGE_UNASSIGNED,
-	SIOX_STORAGE_32_BIT_INTEGER,
-	SIOX_STORAGE_64_BIT_INTEGER,
-	SIOX_STORAGE_FLOAT,
-	SIOX_STORAGE_DOUBLE,
-	SIOX_STORAGE_STRING
+    SIOX_STORAGE_UNASSIGNED,
+    SIOX_STORAGE_32_BIT_INTEGER,
+    SIOX_STORAGE_64_BIT_INTEGER,
+    SIOX_STORAGE_FLOAT,
+    SIOX_STORAGE_DOUBLE,
+    SIOX_STORAGE_STRING
 };
 
 
@@ -60,14 +60,14 @@ enum siox_ont_storage_type{
  * Mögliche Werte für das Attribut "Data Scope" der Metrik.
  */
 enum siox_ont_scope_type{
-	SIOX_SCOPE_UNASSIGNED,
-	SIOX_SCOPE_SAMPLE,
-	SIOX_SCOPE_AVERAGE,
-	SIOX_SCOPE_DIFFERENCE,
-	SIOX_SCOPE_MAXIMUM,
-	SIOX_SCOPE_MINIMUM,
-	SIOX_SCOPE_MEDIAN,
-	SIOX_SCOPE_SUM
+    SIOX_SCOPE_UNASSIGNED,
+    SIOX_SCOPE_SAMPLE,
+    SIOX_SCOPE_AVERAGE,
+    SIOX_SCOPE_DIFFERENCE,
+    SIOX_SCOPE_MAXIMUM,
+    SIOX_SCOPE_MINIMUM,
+    SIOX_SCOPE_MEDIAN,
+    SIOX_SCOPE_SUM
 };
 
 
@@ -80,10 +80,10 @@ enum siox_ont_scope_type{
 /**
  * Liest eine Ontologie aus einer Datei.
  *
- * @param	file	Der Name der Datei, aus der die Ontologie gelesen werden soll.
- *					Existiert die Datei noch nicht, wird eine neue (leere) Ontologie angelegt.
+ * @param   file    Der Name der Datei, aus der die Ontologie gelesen werden soll.
+ *                  Existiert die Datei noch nicht, wird eine neue (leere) Ontologie angelegt.
  *
- * @returns			@c true bei Erfolg, sonst @c false.
+ * @returns         @c true bei Erfolg, sonst @c false.
  */
 bool siox_ont_open_ontology( const char * file );
 
@@ -91,7 +91,7 @@ bool siox_ont_open_ontology( const char * file );
  * Schreibt den aktuellen Stand der Ontologie in die bei siox_ont_open_ontology() angegebene Datei.
  * Der bisherige Inhalt wird dabei überschrieben!
  *
- * @returns			@c true bei Erfolg, sonst @c false.
+ * @returns         @c true bei Erfolg, sonst @c false.
  */
 bool siox_ont_write_ontology();
 
@@ -102,7 +102,7 @@ bool siox_ont_write_ontology();
  * Eventuelle Änderungen an der Ontologie schreibt diese Funktion <em>nicht</em> in die Datei zurück;
  * dazu muß siox_ont_write_ontology() aufgerufen werden!
  *
- * @returns			@c true bei Erfolg, sonst @c false.
+ * @returns         @c true bei Erfolg, sonst @c false.
  */
 bool siox_ont_close_ontology();
 
@@ -118,26 +118,26 @@ bool siox_ont_close_ontology();
 /**
  * Find the @em MID for the metric with the exact name given.
  *
- * @param[in]	name	The unique name to search for.
+ * @param[in]   name    The unique name to search for.
  *
- * @returns				The @em MID of the metric with the name given or @c NULL, if no exact match was found.
+ * @returns             The @em MID of the metric with the name given or @c NULL, if no exact match was found.
  */
 siox_mid siox_ont_find_mid_by_name( const char * name);
 
 /**
  * Compare two @em MIDs for equality.
  *
- * @param[in]	mid1	An @em MID.
- * @param[in]	mid2	Another @em MID.
+ * @param[in]   mid1    An @em MID.
+ * @param[in]   mid2    Another @em MID.
  *
- * @returns				@c true if the @em MIDs are equal or both are @c NULL; otherwise @c false.
+ * @returns             @c true if the @em MIDs are equal or both are @c NULL; otherwise @c false.
  */
 bool siox_ont_mid_is_equal( siox_mid mid1, siox_mid mid2 );
 
 /**
  * Destructor for an @em MID object.
  *
- * @param [in]	mid	The @em MID object.
+ * @param [in]  mid The @em MID object.
  */
 void siox_ont_free_mid( siox_mid mid );
 
@@ -150,86 +150,86 @@ void siox_ont_free_mid( siox_mid mid );
  */
 /**@{*/
 
- 
+
 /**
  * Retrieve the metric with the @em MID given.
  *
- * @param[in]	mid		The @em MID of the metric.
+ * @param[in]   mid     The @em MID of the metric.
  *
- * @returns				If the @e MID exists, a copy of the metric's data; otherwise @c NULL.
+ * @returns             If the @e MID exists, a copy of the metric's data; otherwise @c NULL.
  */
 siox_metric siox_ont_find_metric_by_mid( siox_mid mid );
 
 /**
  * Retrieve a given metric's @em MID.
  *
- * @param[in]	metric	The metric.
+ * @param[in]   metric  The metric.
  *
- * @returns				If the metric exists, its @em MID; otherwise @c NULL.
+ * @returns             If the metric exists, its @em MID; otherwise @c NULL.
  */
 siox_mid siox_ont_metric_get_mid( siox_metric metric );
 
 /**
  * Retrieve a given metric's unique name.
  *
- * @param[in]	metric	The metric.
+ * @param[in]   metric  The metric.
  *
- * @returns				If the metric exists, a copy of its unique name; otherwise, @c NULL.
+ * @returns             If the metric exists, a copy of its unique name; otherwise, @c NULL.
  */
 const char * siox_ont_metric_get_name( siox_metric metric );
 
 /**
  * Retrieve a given metric's description.
  *
- * @param[in]	metric	The metric.
+ * @param[in]   metric  The metric.
  *
- * @returns				If the metric exists, a copy of its description; otherwise @c NULL.
+ * @returns             If the metric exists, a copy of its description; otherwise @c NULL.
  */
 const char * siox_ont_metric_get_description( siox_metric metric );
 
 /**
  * Retrieve a given metric's unit attribute.
  *
- * @param[in]	metric	The metric.
+ * @param[in]   metric  The metric.
  *
- * @returns				If the metric exists, the metric's unit attibute;
- *						otherwise @c SIOX_UNIT_UNASSIGNED.
+ * @returns             If the metric exists, the metric's unit attibute;
+ *                      otherwise @c SIOX_UNIT_UNASSIGNED.
  */
 enum siox_ont_unit_type siox_ont_metric_get_unit( siox_metric metric );
 
 /**
  * Retrieve a given metric's storage attribute.
  *
- * @param[in]	metric	The metric.
+ * @param[in]   metric  The metric.
  *
- * @returns				If the metric exists, the metric's storage attribute;
- *						otherwise @c SIOX_STORAGE_UNASSIGNED.
+ * @returns             If the metric exists, the metric's storage attribute;
+ *                      otherwise @c SIOX_STORAGE_UNASSIGNED.
  */
 enum siox_ont_storage_type siox_ont_metric_get_storage( siox_metric metric );
 
 /**
  * Retrieve a given metric's scope attribute.
  *
- * @param[in]	metric	The metric.
+ * @param[in]   metric  The metric.
  *
- * @returns				If the metric exists, the metric's scope attribute;
- *						otherwise @c SIOX_SCOPE_UNASSIGNED.
+ * @returns             If the metric exists, the metric's scope attribute;
+ *                      otherwise @c SIOX_SCOPE_UNASSIGNED.
  */
 enum siox_ont_scope_type siox_ont_metric_get_scope( siox_metric metric );
 
 /**
  * Turn the metric data into a human-readable string.
  *
- * @param[in]	metric	The metric object.
+ * @param[in]   metric  The metric object.
  *
- * @returns				If the metric exists, a multi-line string representing the data; otherwise @c NULL.
+ * @returns             If the metric exists, a multi-line string representing the data; otherwise @c NULL.
  */
 char* siox_ont_metric_to_string( siox_metric metric );
 
 /**
  * Destructor for a metric object.
  *
- * @param [in]	metric	The metric object.
+ * @param [in]  metric  The metric object.
  */
 void siox_ont_free_metric( siox_metric metric );
 
@@ -245,28 +245,28 @@ void siox_ont_free_metric( siox_metric metric );
 /**
  * Count the number of metrics in the ontology.
  *
- * @returns		The number of metrics.
+ * @returns     The number of metrics.
  */
 int siox_ont_count_metrics();
 
 /**
  * Fügt eine neue Metrik in die Ontologie ein.
  *
- * @param	name		Der Name der Metrik. Er muß eindeutig sein.
- * @param	description	Eine textuelle Beschreibung der Metrik.
- * @param	unit		Die Einheit, in welcher die Daten gemessen werden.
- * @param	storage		Der minimale zum Speichern der Daten nötige Datentyp.
- * @param	scope		Der zeitliche Bereich, in welchem die Daten angefallen sind.
+ * @param   name        Der Name der Metrik. Er muß eindeutig sein.
+ * @param   description Eine textuelle Beschreibung der Metrik.
+ * @param   unit        Die Einheit, in welcher die Daten gemessen werden.
+ * @param   storage     Der minimale zum Speichern der Daten nötige Datentyp.
+ * @param   scope       Der zeitliche Bereich, in welchem die Daten angefallen sind.
  *
- * @returns				Eine <em>Metric ID</em>.
+ * @returns             Eine <em>Metric ID</em>.
  */
-siox_mid siox_ont_register_metric( const char *					name,
-								   const char *					description,
-								   enum siox_ont_unit_type		unit,
-								   enum siox_ont_storage_type	storage,
-								   enum siox_ont_scope_type		scope );
+siox_mid siox_ont_register_metric( const char *                 name,
+                                   const char *                 description,
+                                   enum siox_ont_unit_type      unit,
+                                   enum siox_ont_storage_type   storage,
+                                   enum siox_ont_scope_type     scope );
 
- 
+
 /**@}*/
 
 

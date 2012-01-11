@@ -2,7 +2,7 @@
  * @file    ontology.c
  *          Implementation des SIOX-Ontology-Interfaces
  *
- * @authors Michaela Zimmer Kleine Änderungen und Fragen Marc Wiedemann
+ * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
  * @date    2011
  *          GNU Public License
  */

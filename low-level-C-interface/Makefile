@@ -19,7 +19,7 @@ TARGETS := siox-hdf5-example siox-mockupfs-example
 OBJECTS := siox-hdf5-example.o siox-mockupfs-example.o
 SIOXLIBS := libsiox-ll.so
 MUFSLIBS := libmufs.so
-HDF5LIBS := -lhdf5 -lhdf5_hl	# DOES THIS WORK?!?
+HDF5LIBS := -lhdf5 -lhdf5_hl
 ONTLIBS := $(ONTDIR)/libsioxont.so
 OWNLIBS := $(SIOXLIBS) $(MUFSLIBS)
 #LIBS := $(OWNLIBS) $(ONTLIBS)
@@ -93,7 +93,7 @@ libmufs.so: mufs.c mufs.h Makefile
 clean:
 	@echo --------------------------------------------------
 	@echo -n Cleaning Low-Level-C-Interface...
-	@$(RM) $(TARGETS) $(OBJECTS) $(OWNLIBS) *.log *~ *.mufs
+	@$(RM) $(TARGETS) $(OBJECTS) $(OWNLIBS) *.log *~ *.mufs *.h5
 	@echo done!
 
 .PHONY: test
