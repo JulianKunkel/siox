@@ -78,10 +78,10 @@ def parse_header():
 		function['returnType'] = regex.group(1)
 		
 		if regex.group(2):
-			function['returnPointer'] = True 
+			function['returnPointer'] = '*' 
 
 		else:
-			function['returnPointer'] = False 
+			function['returnPointer'] = ''
 
 		function['name'] = regex.group(4)
 		function['signature'] = regex.group(5)
@@ -92,8 +92,6 @@ def parse_header():
 			#print "Pointer? %s" % returnPointer
 			#print "Function Name: %s" % functionName
 			#print "Function Signature: %s\n\n" % signature
-		
-		function = functions[-1]
 
 		variables = function['signature'].split(',')
 		
@@ -143,25 +141,24 @@ file = open(output, "w")
 # Function headers
 for function in functions:
 	file.write("static ")
-	file.write(function[0]+" ")
-	
-	if function[1]:
-		file.write("* ")
-		
-	file.write("(* static_")
-	file.write(function[2]+") ( ")
-	file.write(function[3]+" ) = NULL;\n")
+	file.write(function['returnType']+" ")
+	file.write(function['returnPointer'])
+	file.write(" (* static_")
+	file.write(function['name']+") ( ")
+	file.write(function['signature']+" ) = NULL;\n")
 
 # Function definitions
 for function in functions:
-	file.write(function[0] + " " + function[2] + "(" + function[3] + ") {\n")
+	file.write(function['returnType'] + " " + function['returnPointer'] + function['name'] + "(" + function['signature'] + ") {\n")
 
 	newSignature = ''
 
-	for var in function[4]:
-		newSignature += var + ", "
+	for var in function['signatureParts']:
+		newSignature += var['name'] + ", "
 
-	file.write(function[0] + " ret = (* static_" + function[2] + ") ("+newSignature+");\n")
+	newSignature = newSignature[0:-2]
+
+	file.write(function['returnType'] + " ret = (* static_" + function['name'] + ") ("+newSignature+");\n")
 	file.write("return ret;\n")
 	file.write("}\n")
 
@@ -188,5 +185,5 @@ file.write("""
 
 # Symbols
 for function in functions:
-	file.write("\nADD_SYMBOL("+function[2]+");\n")
-	file.write("static_"+function[2]+" = symbol;")
+	file.write("\nADD_SYMBOL("+function['name']+");\n")
+	file.write("static_"+function['name']+" = symbol;")
