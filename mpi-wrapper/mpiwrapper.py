@@ -18,6 +18,8 @@ functions = []
 output = ['./out.c']
 # print out debug informations if True
 debug = None
+
+headerFile = []
 def init():
 	"""Initialize the command line parser. Returns a parser from argparse."""
 
@@ -39,13 +41,20 @@ def init():
 
 def parse_header():
 	
+	if debug:
+		print "Call cpp with header file: " + headerFile[0]
 
 	cppProc = subprocess.Popen(['cpp',headerFile[0]], stdin=subprocess.PIPE,
 			stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	
 	header, error = cppProc.communicate()
 
-	for line in header:
+	headerLines = header.split("\n")
+	
+	for line in headerLines:
+		
+		if debug:
+			print "Parsing line: "+line
 
 		# ^\s* -> leading white space
 		# (\w+)\s* -> the return value
@@ -56,43 +65,56 @@ def parse_header():
 		# (.+) -> matches the parameters of the function 
 		# \) -> matches the closing parentheses for the signature
 		# \s*;\s*$ -> matches the colon and the trailing white space
-
-		regex = re.compile("^\s*(\w+)(\s*(\*)\s*)|(\s+)(\w+)\s*\((.+)\)\s*;\s*",
+		regex = re.compile("^\s*(\w+)(?:(\s*\*\s*)|(\s+))(\w+)\s*\((.+)\)\s*;\s*",
 				re.M)
 
 		regex = regex.match(line)
 
 		if not regex:
 			continue
-		
-		returnValue = regex.group(3)
 
-		if regex.group(4):
-			returnPointer = True
+		function = {}
+
+		function['returnType'] = regex.group(1)
+		
+		if regex.group(2):
+			function['returnPointer'] = True 
+
 		else:
-			returnPointer = False
+			function['returnPointer'] = False 
 
-		functionName = regex.group(5)
-		signature = regex.group(6)
+		function['name'] = regex.group(4)
+		function['signature'] = regex.group(5)
 		
-		if debug:
-			print "Return Value: %s" % returnValue
-			print "Pointer? %s" % returnPointer
-			print "Function Name: %s" % functionName
-			print "Function Signature: %s\n\n" % signature
+		#if debug:
+			#print line
+			#print "Return Value: %s" % returnValue
+			#print "Pointer? %s" % returnPointer
+			#print "Function Name: %s" % functionName
+			#print "Function Signature: %s\n\n" % signature
 		
-		functions.append([])
 		function = functions[-1]
 
-		# ReturnValue = function[0]
-		function.append(returnValue)
-		# ReturnPointer = function[1]
-		function.append(returnPointer)
-		# FunctionName = function[2]
-		function.append(functionName)
-		# Signature = function[3]
-		function.append(signature)
+		variables = function['signature'].split(',')
+		
+		function['signatureParts'] = []
+		
+		for index, variable in enumerate(variables):
+			
+			parts = {}
+			variable = variable.split()
 
+			if len(variable) == 2:
+
+				parts['type'] = variable[0]
+				parts['name'] = variable[1]
+			else:
+				parts['type'] = variable[0]
+				parts['name']= 'var' + str(index)
+				
+			function['signatureParts'].append(parts)
+
+		functions.append(function)
 #
 # start of the main program
 #
@@ -132,10 +154,16 @@ for function in functions:
 
 # Function definitions
 for function in functions:
-	file.write(function[0] + " " + function[2] + "(" + function[3] + ") {\n");
-	file.write(function[0] + " ret = (* static_" + function[2] + ") ();\n");
-	file.write("return ret;\n");
-	file.write("}\n");
+	file.write(function[0] + " " + function[2] + "(" + function[3] + ") {\n")
+
+	newSignature = ''
+
+	for var in function[4]:
+		newSignature += var + ", "
+
+	file.write(function[0] + " ret = (* static_" + function[2] + ") ("+newSignature+");\n")
+	file.write("return ret;\n")
+	file.write("}\n")
 
 # Generic needs
 file.write("""
