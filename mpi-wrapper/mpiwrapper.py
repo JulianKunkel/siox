@@ -85,9 +85,13 @@ def parse_header():
 		functions.append([])
 		function = functions[-1]
 
+		# ReturnValue = function[0]
 		function.append(returnValue)
+		# ReturnPointer = function[1]
 		function.append(returnPointer)
+		# FunctionName = function[2]
 		function.append(functionName)
+		# Signature = function[3]
 		function.append(signature)
 
 #
@@ -115,6 +119,7 @@ parse_header()
 # open the output file for writing
 file = open(output, "w")
 
+# Function headers
 for function in functions:
 	file.write("static ")
 	file.write(function[0]+" ")
@@ -126,6 +131,14 @@ for function in functions:
 	file.write(function[2]+") ( ")
 	file.write(function[3]+" ) = NULL;\n")
 
+# Function definitions
+for function in functions:
+	file.write(function[0] + " " + function[2] + "(" + function[3] + ") {\n");
+	file.write(function[0] + " ret = (* static_" + function[2] + ") ();\n");
+	file.write("return ret;\n");
+	file.write("}\n");
+
+# Generic needs
 file.write("""
 #define OPEN_DLL(defaultfile, libname) 
 	{ 
@@ -146,6 +159,7 @@ file.write("""
 	}
 """)
 
+# Symbols
 for function in functions:
 	file.write("\nADD_SYMBOL("+function[2]+");\n")
 	file.write("static_"+function[2]+" = symbol;")
