@@ -7,6 +7,7 @@ import re
 import sys
 import argparse
 import re
+import subprocess
 
 # from wrapper_conf import (before, beforeTracing, after, attributes, conditions,
 # Options)
@@ -39,8 +40,10 @@ def init():
 def parse_header():
 	
 
-	headerFH = open(headerFile[0])
-	header = headerFH.readlines()
+	cppProc = subprocess.Popen(['cpp',headerFile[0]], stdin=subprocess.PIPE,
+			stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	
+	header, error = cppProc.communicate()
 
 	for line in header:
 
@@ -54,7 +57,11 @@ def parse_header():
 		# (.+) -> matches the parameters of the function 
 		# \) -> matches the closing parentheses for the signature
 		# \s*;\s*$ -> matches the colon and the trailing white space
-		regex = re.match("^\s*(?!(//)|(/\*))\s*(\w+)\s*(\*)?\s*(\w+)\s*\((.+)\)\s*;\s*$", line)
+
+		regex = re.compile("^\s*(?!(//)|(/\*))\s*(\w+)\s*(\*)?\s*(\w+)\s*\((.+)\)\s*;\s*",
+				re.M)
+
+		regex = regex.match(line)
 
 		if not regex:
 			continue
