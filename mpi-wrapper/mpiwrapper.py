@@ -48,7 +48,6 @@ def parse_header():
 	for line in header:
 
 		# ^\s* -> leading white space
-		# (?!(//)|(/\*))\s* -> exclude comments // or /*
 		# (\w+)\s* -> the return value
 		# (\*)?\s* -> matches a * if the return value is a pointer don't have to
 		#		appear 
@@ -58,7 +57,7 @@ def parse_header():
 		# \) -> matches the closing parentheses for the signature
 		# \s*;\s*$ -> matches the colon and the trailing white space
 
-		regex = re.compile("^\s*(?!(//)|(/\*))\s*(\w+)\s*(\*)?\s*(\w+)\s*\((.+)\)\s*;\s*",
+		regex = re.compile("^\s*(\w+)(\s*(\*)\s*)|(\s+)(\w+)\s*\((.+)\)\s*;\s*",
 				re.M)
 
 		regex = regex.match(line)
