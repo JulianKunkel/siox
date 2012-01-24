@@ -67,7 +67,7 @@ def parse_header():
 		# (.+) -> matches the parameters of the function 
 		# \) -> matches the closing parentheses for the signature
 		# \s*;\s*$ -> matches the colon and the trailing white space
-		regex = re.compile("^\s*(\w+)(?:(\s*\*\s*)|(\s+))(\w+)\s*\((.+)\)\s*;\s*",
+		regex = re.compile("^\s*(\w+)(?:(\s*\*+\s*)|(\s+))(\w+)\s*\((.+)\)\s*;\s*",
 				re.M)
 
 		regex = regex.match(line)
@@ -78,11 +78,9 @@ def parse_header():
 		function = {}
 
 		function['returnType'] = regex.group(1)
+		function['returnPointer'] = regex.group(2) 
 		
-		if regex.group(2):
-			function['returnPointer'] = '*' 
-
-		else:
+		if not regex.group(2):
 			function['returnPointer'] = ''
 
 		function['name'] = regex.group(4)
@@ -94,20 +92,32 @@ def parse_header():
 
 		function['signatue'] = ''
 		
+		regex = re.compile("^\s*([\w\s]+)(?:(\s*\*+\s*)|(\s*))(\w*)\s*", re.M)
+		
+		function['signature'] = ''
+
 		for index, variable in enumerate(variables):
 			
+
+			regexVar = regex.match(variable)
 			parts = {}
-			variable = variable.split()
 
-			if len(variable) == 2:
+			parts['type'] = regexVar.group(1)
+			parts['pointer'] = regexVar.group(2)
 
-				parts['type'] = variable[0]
-				parts['name'] = variable[1]
-			else:
-				parts['type'] = variable[0]
-				parts['name']= 'var' + str(index)
+			if not regexVar.group(2):
+				parts['pointer'] = ''
 			
-			function['signature'] = function['signature'] + parts['type'] + " " + parts['name'] + ", "
+			parts['name'] = regexVar.group(4)
+			
+			if not regexVar.group(4):
+				parts['name'] = 'var'+ str(index)
+
+			print "type " + parts['type']
+			print "name " + parts['name']
+			
+			print "signature " + function['signature']
+			function['signature'] = function['signature'] + parts['type'] + " "+ parts['pointer'] +" " + parts['name'] + ", "
 			function['signatureParts'].append(parts)
 
 		function['signature'] = function['signature'][:-2]
