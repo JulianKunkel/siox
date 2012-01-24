@@ -30,6 +30,8 @@ def init():
 	argParser.add_argument('--output', '-o', action='store', nargs=1,
 			dest='output', help='out')
 	
+	argParser.add_argument('--generate-header', '-g', action='store_true', default=False,
+			dest='gen', help='''Generate a skeleton.''')
 
 	argParser.add_argument('--debug', '-d', action='store_true', default=False,
 			dest='debug', help='''Print out debug information.''')
@@ -138,52 +140,62 @@ parse_header()
 # open the output file for writing
 file = open(output, "w")
 
-# Function headers
-for function in functions:
-	file.write("static ")
-	file.write(function['returnType']+" ")
-	file.write(function['returnPointer'])
-	file.write(" (* static_")
-	file.write(function['name']+") ( ")
-	file.write(function['signature']+" ) = NULL;\n")
+if args.gen:
+	# Function headers
+	for function in functions:
+		file.write(function['returnType']+" ")
+		file.write(function['returnPointer'])
+		file.write(function['name']+" ( ")
+		file.write(function['signature']+" ); \n")		
+else:
+	# Function headers
+	for function in functions:
+		file.write("static ")
+		file.write(function['returnType']+" ")
+		file.write(function['returnPointer'])
+		file.write(" (* static_")
+		file.write(function['name']+") ( ")
+		file.write(function['signature']+" ) = NULL;\n")
 
-# Function definitions
-for function in functions:
-	file.write(function['returnType'] + " " + function['returnPointer'] + function['name'] + "(" + function['signature'] + ") {\n")
+	# Function definitions
+	for function in functions:
+		file.write(function['returnType'] + " " + function['returnPointer'] + function['name'] + "(" + function['signature'] + ") {\n")
 
-	newSignature = ''
+		newSignature = ''
 
-	for var in function['signatureParts']:
-		newSignature += var['name'] + ", "
+		for var in function['signatureParts']:
+			newSignature += var['name'] + ", "
 
-	newSignature = newSignature[0:-2]
+		newSignature = newSignature[0:-2]
 
-	file.write(function['returnType'] + " ret = (* static_" + function['name'] + ") ("+newSignature+");\n")
-	file.write("return ret;\n")
-	file.write("}\n")
+		file.write(function['returnType'] + " ret = (* static_" + function['name'] + ") ("+newSignature+");\n")
+		file.write("return ret;\n")
+		file.write("}\n")
 
-# Generic needs
-file.write("""
-#define OPEN_DLL(defaultfile, libname) 
-	{ 
-		char * file = getenv(libname); 
-		if (file == NULL)
-			file = defaultfile;
-		dllFile = dlopen(file, RTLD_LAZY); 
-		if (dllFile == NULL) { 
-			printf("[Error] dll not found %s", file); 
-			exit(1); 
-		} 
-	}
+	# Generic needs
+	file.write("""
+	#define OPEN_DLL(defaultfile, libname) 
+		{ 
+			char * file = getenv(libname); 
+			if (file == NULL)
+				file = defaultfile;
+			dllFile = dlopen(file, RTLD_LAZY); 
+			if (dllFile == NULL) { 
+				printf("[Error] dll not found %s", file); 
+				exit(1); 
+			} 
+		}
 
-#define ADD_SYMBOL(name) 
-	symbol = dlsym(dllFile, #name);
-	if (symbol == NULL) {
-		printf("[Error] trace wrapper - symbol not found %s", #name); 
-	}
-""")
+	#define ADD_SYMBOL(name) 
+		symbol = dlsym(dllFile, #name);
+		if (symbol == NULL) {
+			printf("[Error] trace wrapper - symbol not found %s", #name); 
+		}
+	""")
 
-# Symbols
-for function in functions:
-	file.write("\nADD_SYMBOL("+function['name']+");\n")
-	file.write("static_"+function['name']+" = symbol;")
+	# Symbols
+	for function in functions:
+		file.write("\nADD_SYMBOL("+function['name']+");\n")
+		file.write("static_"+function['name']+" = symbol;")
+
+file.close();
