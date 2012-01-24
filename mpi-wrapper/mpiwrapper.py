@@ -88,16 +88,11 @@ def parse_header():
 		function['name'] = regex.group(4)
 		function['signature'] = regex.group(5)
 		
-		#if debug:
-			#print line
-			#print "Return Value: %s" % returnValue
-			#print "Pointer? %s" % returnPointer
-			#print "Function Name: %s" % functionName
-			#print "Function Signature: %s\n\n" % signature
-
 		variables = function['signature'].split(',')
 		
 		function['signatureParts'] = []
+
+		function['signatue'] = ''
 		
 		for index, variable in enumerate(variables):
 			
@@ -111,9 +106,11 @@ def parse_header():
 			else:
 				parts['type'] = variable[0]
 				parts['name']= 'var' + str(index)
-				
+			
+			function['signature'] = function['signature'] + parts['type'] + " " + parts['name'] + ", "
 			function['signatureParts'].append(parts)
 
+		function['signature'] = function['signature'][:-2]
 		functions.append(function)
 #
 # start of the main program
@@ -140,13 +137,16 @@ parse_header()
 # open the output file for writing
 file = open(output, "w")
 
+# only generate a header-skeleton for the user to comment
 if args.gen:
 	# Function headers
 	for function in functions:
 		file.write(function['returnType']+" ")
 		file.write(function['returnPointer'])
 		file.write(function['name']+" ( ")
-		file.write(function['signature']+" ); \n")		
+		file.write(function['signature']+" ); \n")	
+
+# use the header-skeleton commented by the user to generate the instrumented library
 else:
 	# Function headers
 	for function in functions:
