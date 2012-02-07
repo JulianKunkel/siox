@@ -6,206 +6,236 @@ import __future__
 import re
 import sys
 import argparse
-import re
-import subprocess
+from pycparser import c_parser, c_ast, parse_file
 
 # from wrapper_conf import (before, beforeTracing, after, attributes, conditions,
 # Options)
 
-# the signatures of the functios to instrument
-functions = []
-# the path to store the output files
-output = ['./out.c']
-# print out debug informations if True
-debug = None
+DEBUG = False
 
-headerFile = []
-def init():
-	"""Initialize the command line parser. Returns a parser from argparse."""
+		
+
+class FuncDefVisitor(c_ast.NodeVisitor):
+	
+	def __init__(self):
+
+		self.functions = [] 
+		self.storage = None
+
+	def visit_FuncDef(self, node):
+		
+		# We found a function definition! \o/
+		self.storage = Function()
+		self.functions.append(self.storage)
+		
+		
+		if DEBUG:
+			print('Function %s at %s' % (node.decl.name, node.decl.coord))
+		
+		function = self.functions[-1]
+		function.name = node.decl.name
+		
+		self.getType(node.decl.type.type)
+
+		# Get the parameter
+
+		if node.decl.type.args:
+			params = node.decl.type.args.params
+			
+			# Iterate over the parameters
+			for param in params:
+
+				# Append a new parameter
+				self.storage = Parameter()
+				function = self.functions[-1]
+				function.parameters.append(self.storage)
+				
+				self.storage.name += param.name
+				# Recursive run through the abstract syntax tree of the parameter
+				self.getType(param)
+		
+
+	def getType(self, decl):
+
+		typ = type(decl)
+		
+		if typ == c_ast.TypeDecl:
+			self.getType(decl.type)
+			
+
+		elif typ == c_ast.Typename or typ == c_ast.Decl:
+			self.getType(decl.type)
+		
+		# I found Waldo! After several hours!
+		# Stores the  type of the parameter.
+		elif typ == c_ast.IdentifierType:
+			identifier= ''
+			
+			# Join the identifiers like 'unsigned int' into one string
+			for name in decl.names:
+				identifier += name + ' '
+
+			if DEBUG:
+				print('Found identifier: %s' % (identifier))
+			
+			self.storage.type = identifier
+
+		# Add a * to the parameter type if there is a pointer
+		elif typ == c_ast.PtrDecl:
+			self.getType(decl.type)
+
+			self.storage.type += '*'
+		
+		# Add * to the parameter type if it's a array
+		elif typ == c_ast.ArrayDecl:
+			self.getType(decl.type)
+
+			self.storage.type += '*'
+
+class Function():
+
+	def __init__(self):
+		"""docstring for __init__"""
+		self.type= ''
+		self.name = ''
+		self.parameters = []
+
+class Parameter():
+
+	def __init__(self):
+		"""docstring for __init__"""
+		self.type = ''
+		self.name = ''
+
+#def run():
+	#pass
+
+def Option():
 
 	# FIXME: sort the options
 	argParser = argparse.ArgumentParser(description='''Wraps SIOX function
 			around MPI function calls''')
 
 	argParser.add_argument('--output', '-o', action='store', nargs=1,
-			dest='output', help='out')
+			dest='outputFile', default="out.c", help='out')
 	
-	argParser.add_argument('--generate-header', '-g', action='store_true', default=False,
-			dest='gen', help='''Generate a skeleton.''')
-
 	argParser.add_argument('--debug', '-d', action='store_true', default=False,
 			dest='debug', help='''Print out debug information.''')
 
-	argParser.add_argument('header',metavar='files',action='store', nargs='+',
-			help='The header file to instrument.')
+	argParser.add_argument('--source', '-s', action='store', nargs=1,
+			dest='sourceFile', help='A C source code file that should be parsed.')	
+
+	argParser.add_argument('--header', '-g', action='store', nargs=1,
+			dest='headerFile', help='''A C header file that will be parsed''')
+
 	
-	return argParser
+	args = argParser.parse_args()
 
-def parse_header():
+	if args.headerFile:
+		args.headerFile = args.headerFile[0]
+
+	if args.sourceFile:
+		args.sourceFile = args.sourceFile[0]
 	
-	if debug:
-		print "Call cpp with header file: " + headerFile[0]
+	return args
 
-	cppProc = subprocess.Popen(['cpp',headerFile[0]], stdin=subprocess.PIPE,
-			stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	
-	header, error = cppProc.communicate()
-
-	headerLines = header.split("\n")
-	
-	for line in headerLines:
-		
-		if debug:
-			print "Parsing line: "+line
-
-		# ^\s* -> leading white space
-		# (\w+)\s* -> the return value
-		# (\*)?\s* -> matches a * if the return value is a pointer don't have to
-		#		appear 
-		# (\w+)\s* -> matches the function name
-		# \( -> matches opening parentheses for the signature
-		# (.+) -> matches the parameters of the function 
-		# \) -> matches the closing parentheses for the signature
-		# \s*;\s*$ -> matches the colon and the trailing white space
-		regex = re.compile("^\s*(\w+)(?:(\s*\*+\s*)|(\s+))(\w+)\s*\((.+)\)\s*;\s*",
-				re.M)
-
-		regex = regex.match(line)
-
-		if not regex:
-			continue
-
-		function = {}
-
-		function['returnType'] = regex.group(1)
-		function['returnPointer'] = regex.group(2) 
-		
-		if not regex.group(2):
-			function['returnPointer'] = ''
-
-		function['name'] = regex.group(4)
-		function['signature'] = regex.group(5)
-		
-		variables = function['signature'].split(',')
-		
-		function['signatureParts'] = []
-
-		function['signatue'] = ''
-		
-		regex = re.compile("^\s*([\w\s]+)(?:(\s*\*+\s*)|(\s*))(\w*)\s*", re.M)
-		
-		function['signature'] = ''
-
-		for index, variable in enumerate(variables):
-			
-
-			regexVar = regex.match(variable)
-			parts = {}
-
-			parts['type'] = regexVar.group(1)
-			parts['pointer'] = regexVar.group(2)
-
-			if not regexVar.group(2):
-				parts['pointer'] = ''
-			
-			parts['name'] = regexVar.group(4)
-			
-			if not regexVar.group(4):
-				parts['name'] = 'var'+ str(index)
-
-			print "type " + parts['type']
-			print "name " + parts['name']
-			
-			print "signature " + function['signature']
-			function['signature'] = function['signature'] + parts['type'] + " "+ parts['pointer'] +" " + parts['name'] + ", "
-			function['signatureParts'].append(parts)
-
-		function['signature'] = function['signature'][:-2]
-		functions.append(function)
 #
 # start of the main program
 #
+def main():
+	# parse the options
+	opt = Option()
+	DEBUG = opt.debug
 
-# initialize the command line argument parser 
-argParser = init()
+	functionDefs = FuncDefVisitor()
 
-# read the command line arguments
-args = argParser.parse_args(sys.argv[1:])
+	# abstract syntax tree for the header- and the source code file 
+	headerAST = None
+	sourceAST = None 
+	
+	if not (opt.headerFile or opt.sourceFile):
+		print('No source file or header file provided. Nothing to compute.')
+		sys.exit(1)
+	
+	if opt.headerFile:
+		if DEBUG:
+			print('DEBUG: Parsing header file: %s' % (opt.headerFile))
 
-# get the parsed arguments
-headerFile = args.header
+		headerAST = parse_file(opt.headerFile, use_cpp=True)
+		functionDefs.visit(headerAST)
+	
+	if opt.sourceFile:
+		if DEBUG:
+			print('DEBUG: Parsing source code file: %s' % (opt.sourceFile))
 
-if args.output is not []:
-	output = args.output 
+		sourceAST = parse_file(opt.sourceFile, use_cpp=True)
+		functionDefs.visit(sourceAST)
+	
 
-output = output[0]
-debug = args.debug
-
-
-parse_header()
+main()
 
 # open the output file for writing
-file = open(output, "w")
 
-# only generate a header-skeleton for the user to comment
-if args.gen:
-	# Function headers
-	for function in functions:
-		file.write(function['returnType']+" ")
-		file.write(function['returnPointer'])
-		file.write(function['name']+" ( ")
-		file.write(function['signature']+" ); \n")	
+## only generate a header-skeleton for the user to comment
+#if args.gen:
+	## Function headers
+	#for function in functions:
+		#file.write(function['returnType']+" ")
+		#file.write(function['returnPointer'])
+		#file.write(function['name']+" ( ")
+		#file.write(function['signature']+" ); \n")	
 
-# use the header-skeleton commented by the user to generate the instrumented library
-else:
-	# Function headers
-	for function in functions:
-		file.write("static ")
-		file.write(function['returnType']+" ")
-		file.write(function['returnPointer'])
-		file.write(" (* static_")
-		file.write(function['name']+") ( ")
-		file.write(function['signature']+" ) = NULL;\n")
+## use the header-skeleton commented by the user to generate the instrumented library
+#else:
+	## Function headers
+	#for function in functions:
+		#file.write("static ")
+		#file.write(function['returnType']+" ")
+		#file.write(function['returnPointer'])
+		#file.write(" (* static_")
+		#file.write(function['name']+") ( ")
+		#file.write(function['signature']+" ) = NULL;\n")
 
-	# Function definitions
-	for function in functions:
-		file.write(function['returnType'] + " " + function['returnPointer'] + function['name'] + "(" + function['signature'] + ") {\n")
+	## Function definitions
+	#for function in functions:
+		#file.write(function['returnType'] + " " + function['returnPointer'] + function['name'] + "(" + function['signature'] + ") {\n")
 
-		newSignature = ''
+		#newSignature = ''
+		#print line
 
-		for var in function['signatureParts']:
-			newSignature += var['name'] + ", "
+		#for var in function['signatureParts']:
+			#newSignature += var['name'] + ", "
 
-		newSignature = newSignature[0:-2]
+		#newSignature = newSignature[0:-2]
 
-		file.write(function['returnType'] + " ret = (* static_" + function['name'] + ") ("+newSignature+");\n")
-		file.write("return ret;\n")
-		file.write("}\n")
+		#file.write(function['returnType'] + " ret = (* static_" + function['name'] + ") ("+newSignature+");\n")
+		#file.write("return ret;\n")
+		#file.write("}\n")
 
-	# Generic needs
-	file.write("""
-	#define OPEN_DLL(defaultfile, libname) 
-		{ 
-			char * file = getenv(libname); 
-			if (file == NULL)
-				file = defaultfile;
-			dllFile = dlopen(file, RTLD_LAZY); 
-			if (dllFile == NULL) { 
-				printf("[Error] dll not found %s", file); 
-				exit(1); 
-			} 
-		}
+	## Generic needs
+	#file.write("""
+	##define OPEN_DLL(defaultfile, libname) 
+		#{ 
+			#char * file = getenv(libname); 
+			#if (file == NULL)
+				#file = defaultfile;
+			#dllFile = dlopen(file, RTLD_LAZY); 
+			#if (dllFile == NULL) { 
+				#printf("[Error] dll not found %s", file); 
+				#exit(1); 
+			#} 
+		#}
 
-	#define ADD_SYMBOL(name) 
-		symbol = dlsym(dllFile, #name);
-		if (symbol == NULL) {
-			printf("[Error] trace wrapper - symbol not found %s", #name); 
-		}
-	""")
+	##define ADD_SYMBOL(name) 
+		#symbol = dlsym(dllFile, #name);
+		#if (symbol == NULL) {
+			#printf("[Error] trace wrapper - symbol not found %s", #name); 
+		#}
+	#""")
 
-	# Symbols
-	for function in functions:
-		file.write("\nADD_SYMBOL("+function['name']+");\n")
-		file.write("static_"+function['name']+" = symbol;")
+	## Symbols
+	#for function in functions:
+		#file.write("\nADD_SYMBOL("+function['name']+");\n")
+		#file.write("static_"+function['name']+" = symbol;")
 
-file.close();
+#file.close();
