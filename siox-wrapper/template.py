@@ -15,9 +15,9 @@ variables = [
 template = {
 'reg_node': {
 	'init': 'global_HWID = SIOX_get_HWID();\n\
-		 global_SWID = SIOX_get_SWID();\n\
-		 global_PID = getPID();\n\
-		 global_unid = SIOX_register_node(global_SWID, global_PID, global_HWID);\n',
+		global_SWID = SIOX_get_SWID();\n\
+		global_PID = getPID();\n\
+		global_unid = SIOX_register_node(global_SWID, global_PID, global_HWID);\n',
 	'before': '',
 	'after': ''
 },
@@ -32,3 +32,5 @@ template = {
 	'after': ''
 }
 }
+
+print template['reg_node']['init']

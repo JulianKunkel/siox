@@ -99,6 +99,7 @@ class Function():
 		self.type= ''
 		self.name = ''
 		self.parameters = []
+		self.signature = ''
 
 class Parameter():
 
@@ -128,6 +129,8 @@ def Option():
 	argParser.add_argument('--header', '-g', action='store', nargs=1,
 			dest='headerFile', help='''A C header file that will be parsed''')
 
+	argParser.add_argument('--blankHeader', '-b', action='store_true', default=False,
+			dest='blankHeader', help='''Only generate a clean header file''')
 	
 	args = argParser.parse_args()
 
@@ -136,8 +139,77 @@ def Option():
 
 	if args.sourceFile:
 		args.sourceFile = args.sourceFile[0]
+
+	if args.outputFile:
+		args.outputFile = args.outputFile[0]
 	
 	return args
+
+def writeOutputFile(options, functions):
+	# open the output file for writing
+	file = open(options.outputFile, 'w')
+
+	# generate signatures
+	for function in functions:
+		signature = '';
+	
+		for sigpart in function.parameters:						
+			sig = sigpart.type + '' + sigpart.name + ', '
+			function.signature += sig
+		function.signature = function.signature[:-2]
+
+	# only generate a header-skeleton for the user to comment
+	if options.blankHeader:
+		# Function headers
+		for function in functions:
+			file.write(function.type+" ")
+			file.write(function.name+" ( ")
+			file.write(function.signature+" ); \n")	
+
+	# use the header-skeleton commented by the user to generate the instrumented library
+	else:
+		# Function headers
+		for function in functions:
+			file.write("static ")
+			file.write(function.type+" ")
+			file.write(" (* static_")
+			file.write(function.name+") ( ")
+			file.write(function.signature+" ) = NULL;\n")
+
+		# Function definitions
+		for function in functions:
+			file.write(function.type + " " + function.name + "(" + function.signature + ") {\n")
+			file.write(function.type + " ret = (* static_" + function.name + ") (" + function.signature + ");\n")
+			file.write("return ret;\n")
+			file.write("}\n")
+
+		# Generic needs
+		file.write("""
+		#define OPEN_DLL(defaultfile, libname) 
+			{ 
+				char * file = getenv(libname); 
+				if (file == NULL)
+					file = defaultfile;
+				dllFile = dlopen(file, RTLD_LAZY); 
+				if (dllFile == NULL) { 
+					printf("[Error] dll not found %s", file); 
+					exit(1); 
+				} 
+			}
+
+		#define ADD_SYMBOL(name) 
+			symbol = dlsym(dllFile, #name);
+			if (symbol == NULL) {
+				printf("[Error] trace wrapper - symbol not found %s", #name); 
+			}
+		""")
+
+		# Symbols
+		for function in functions:
+			file.write("\nADD_SYMBOL("+function.name+");\n")
+			file.write("static_"+function.name+" = symbol;")
+
+#file.close();
 
 #
 # start of the main program
@@ -169,73 +241,8 @@ def main():
 			print('DEBUG: Parsing source code file: %s' % (opt.sourceFile))
 
 		sourceAST = parse_file(opt.sourceFile, use_cpp=True)
-		functionDefs.visit(sourceAST)
-	
+		functionDefs.visit(sourceAST)	
+
+	writeOutputFile(opt, functionDefs.functions)
 
 main()
-
-# open the output file for writing
-
-## only generate a header-skeleton for the user to comment
-#if args.gen:
-	## Function headers
-	#for function in functions:
-		#file.write(function['returnType']+" ")
-		#file.write(function['returnPointer'])
-		#file.write(function['name']+" ( ")
-		#file.write(function['signature']+" ); \n")	
-
-## use the header-skeleton commented by the user to generate the instrumented library
-#else:
-	## Function headers
-	#for function in functions:
-		#file.write("static ")
-		#file.write(function['returnType']+" ")
-		#file.write(function['returnPointer'])
-		#file.write(" (* static_")
-		#file.write(function['name']+") ( ")
-		#file.write(function['signature']+" ) = NULL;\n")
-
-	## Function definitions
-	#for function in functions:
-		#file.write(function['returnType'] + " " + function['returnPointer'] + function['name'] + "(" + function['signature'] + ") {\n")
-
-		#newSignature = ''
-		#print line
-
-		#for var in function['signatureParts']:
-			#newSignature += var['name'] + ", "
-
-		#newSignature = newSignature[0:-2]
-
-		#file.write(function['returnType'] + " ret = (* static_" + function['name'] + ") ("+newSignature+");\n")
-		#file.write("return ret;\n")
-		#file.write("}\n")
-
-	## Generic needs
-	#file.write("""
-	##define OPEN_DLL(defaultfile, libname) 
-		#{ 
-			#char * file = getenv(libname); 
-			#if (file == NULL)
-				#file = defaultfile;
-			#dllFile = dlopen(file, RTLD_LAZY); 
-			#if (dllFile == NULL) { 
-				#printf("[Error] dll not found %s", file); 
-				#exit(1); 
-			#} 
-		#}
-
-	##define ADD_SYMBOL(name) 
-		#symbol = dlsym(dllFile, #name);
-		#if (symbol == NULL) {
-			#printf("[Error] trace wrapper - symbol not found %s", #name); 
-		#}
-	#""")
-
-	## Symbols
-	#for function in functions:
-		#file.write("\nADD_SYMBOL("+function['name']+");\n")
-		#file.write("static_"+function['name']+" = symbol;")
-
-#file.close();
