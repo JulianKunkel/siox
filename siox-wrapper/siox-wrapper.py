@@ -175,41 +175,42 @@ def writeOutputFile(options, functions):
 			file.write(" (* static_")
 			file.write(function.name+") ( ")
 			file.write(function.signature+" ) = NULL;\n")
+		
+		file.write("\n")
 
 		# Function definitions
 		for function in functions:
 			file.write(function.type + " " + function.name + "(" + function.signature + ") {\n")
-			file.write(function.type + " ret = (* static_" + function.name + ") (" + function.signature + ");\n")
-			file.write("return ret;\n")
-			file.write("}\n")
+			file.write("	" + function.type + " ret = (* static_" + function.name + ") (" + function.signature + ");\n")
+			file.write("	return ret;\n")
+			file.write("}\n\n")
 
 		# Generic needs
-		file.write("""
-		#define OPEN_DLL(defaultfile, libname) 
-			{ 
-				char * file = getenv(libname); 
-				if (file == NULL)
-					file = defaultfile;
-				dllFile = dlopen(file, RTLD_LAZY); 
-				if (dllFile == NULL) { 
-					printf("[Error] dll not found %s", file); 
-					exit(1); 
-				} 
-			}
+		file.write("""#define OPEN_DLL(defaultfile, libname) 
+{ 
+	char * file = getenv(libname); 
+	if (file == NULL)
+		file = defaultfile;
+	dllFile = dlopen(file, RTLD_LAZY); 
+	if (dllFile == NULL) { 
+		printf("[Error] dll not found %s", file); 
+		exit(1); 
+	} 
+}
 
-		#define ADD_SYMBOL(name) 
-			symbol = dlsym(dllFile, #name);
-			if (symbol == NULL) {
-				printf("[Error] trace wrapper - symbol not found %s", #name); 
-			}
-		""")
+#define ADD_SYMBOL(name) 
+symbol = dlsym(dllFile, #name);
+if (symbol == NULL) {
+	printf("[Error] trace wrapper - symbol not found %s", #name); 
+}
+""")
 
 		# Symbols
 		for function in functions:
 			file.write("\nADD_SYMBOL("+function.name+");\n")
 			file.write("static_"+function.name+" = symbol;")
 
-#file.close();
+		file.close()
 
 #
 # start of the main program
