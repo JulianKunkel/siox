@@ -32,5 +32,3 @@ template = {
 	'after': ''
 }
 }
-
-print template['reg_node']['init']
