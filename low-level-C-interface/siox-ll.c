@@ -109,17 +109,17 @@ siox_register_edge( siox_unid       unid,
 
 
 siox_dmid
-siox_register_descriptor_map( siox_unid     unid,
-                              const char *  source_descriptor_type,
-                              const char *  target_descriptor_type)
+siox_register_descriptor_map( siox_unid  unid,
+                              siox_dtid  source_dtid,
+                              siox_dtid  target_dtid)
 {
     /* Draw fresh DMID */
     siox_dmid dmid = malloc( sizeof( struct siox_dmid_t ) );
-    (*dmid).id = current_dmid++;
+    dmid->id = current_dmid++;
 
 
     printf( "# UNID %ld registered DMID %ld: %s -> %s.\n",
-        (*unid).id, (*dmid).id, source_descriptor_type, target_descriptor_type );
+        unid->id, dmid->id, siox_ont_dtid_to_string( source_dtid ), siox_ont_dtid_to_string( target_dtid ) );
 
     return( dmid );
 }
@@ -127,32 +127,32 @@ siox_register_descriptor_map( siox_unid     unid,
 
 void
 siox_create_descriptor( siox_unid       unid,
-                        const char *    descriptor_type,
+                        siox_dtid       dtid,
                         const char *    descriptor )
 {
-    printf( "\n= UNID %ld created descriptor >%s< of type >%s<.\n",
-        (*unid).id, descriptor, descriptor_type );
+    printf( "\n= UNID %ld created descriptor >%s< of DTID %s.\n",
+        unid->id, descriptor, siox_ont_dtid_to_string( dtid ) );
 }
 
 
 void
 siox_send_descriptor( siox_unid     unid,
                       const char *  child_swid,
-                      const char *  descriptor_type,
+                      siox_dtid     dtid,
                       const char *  descriptor )
 {
-    printf( "= UNID %ld sent descriptor >%s< of type >%s< to child node >%s<.\n",
-        (*unid).id, descriptor, descriptor_type, child_swid );
+    printf( "= UNID %ld sent descriptor >%s< of DTID %s to child node >%s<.\n",
+        unid->id, descriptor, siox_ont_dtid_to_string( dtid ), child_swid );
 }
 
 
 void
 siox_receive_descriptor( siox_unid      unid,
-                         const char *   descriptor_type,
+                         siox_dtid      dtid,
                          const char *   descriptor )
 {
-    printf( "\n= UNID %ld received descriptor >%s< of type >%s<.\n",
-        (*unid).id, descriptor, descriptor_type );
+    printf( "\n= UNID %ld received descriptor >%s< of DTID %s.\n",
+        unid->id, descriptor, siox_ont_dtid_to_string( dtid ) );
 }
 
 
@@ -169,11 +169,11 @@ siox_map_descriptor( siox_unid      unid,
 
 void
 siox_release_descriptor( siox_unid      unid,
-                         const char *   descriptor_type,
+                         siox_dtid      dtid,
                          const char *   descriptor )
 {
-    printf( "= UNID %ld released descriptor >%s< of type >%s<.\n\n",
-        (*unid).id, descriptor, descriptor_type );
+    printf( "= UNID %ld released descriptor >%s< of DTID %s.\n\n",
+        (*unid).id, descriptor, siox_ont_dtid_to_string( dtid ) );
 }
 
 
@@ -212,15 +212,15 @@ siox_stop_activity( siox_aid    aid )
 
 void
 siox_report_activity( siox_aid              aid,
-                      const char *          descriptor_type,
+                      siox_dtid             dtid,
                       const char *          descriptor,
                       siox_mid              mid,
                       enum siox_value_type  value_type,
                       void *                value,
                       const char *          details )
 {
-    printf( "- AID %ld, identified by the %s of %s, was measured as follows:\n",
-        (*aid).id, descriptor_type, descriptor );
+    printf( "- AID %ld, identified by >%s< of DTID %s, was measured as follows:\n",
+        aid->id, descriptor, siox_ont_dtid_to_string( dtid ) );
     printf( "\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
     switch ( value_type ){

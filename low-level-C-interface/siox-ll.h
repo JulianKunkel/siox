@@ -113,14 +113,14 @@ void siox_register_edge(siox_unid unid, const char * child_swid);
  * Das System kann aus den Möglichkeiten eines Knotens Schlüsse auf den Verlauf des
  * Datenpfades und die Aktivitäten darauf ziehen.
  *
- * @param[in]   unid                    Die @em UNID des Knoten.
- * @param[in]   source_descriptor_type  Der Typ des Quelldeskriptors.
- * @param[in]   target_descriptor_type  Der Typ des Zieldeskriptors.
+ * @param[in]   unid            Die @em UNID des Knoten.
+ * @param[in]   source_dtid     Die @em DTID des Quelldeskriptors.
+ * @param[in]   target_dtid     Die @em DTID des Zieldeskriptors.
  *
  * @return      Eine <em> DeskriptorMapID (DMID)</em>, die der Knoten angeben muß, wenn er SIOX mit
                 siox_map_descriptor() eine Anwendung dieser Abbildung meldet.
  */
-siox_dmid siox_register_descriptor_map(siox_unid unid, const char* source_descriptor_type, const char * target_descriptor_type);
+siox_dmid siox_register_descriptor_map(siox_unid unid, siox_dtid source_dtid, siox_dtid target_dtid);
 
 
 /**
@@ -132,12 +132,12 @@ siox_dmid siox_register_descriptor_map(siox_unid unid, const char* source_descri
  * @em Beispiel:    Ein Dateiname, den der Client durch eine Benutzereingabe erhalten hat.
  *
  * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   descriptor_type Der Typ des folgenden Deskriptor, z.B. "FileName" oder "Inode".
+ * @param[in]   dtid            Die @em DTID des folgenden Deskriptors
  * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "siox.c" oder "17".
  *
  * @note    Diese Funktion ist optional.
  */
-void siox_create_descriptor(siox_unid unid, const char * descriptor_type, const char * descriptor);
+void siox_create_descriptor(siox_unid unid, siox_dtid dtid, const char * descriptor);
 
 
 /**
@@ -146,12 +146,12 @@ void siox_create_descriptor(siox_unid unid, const char * descriptor_type, const 
  * @em Beispiel:    Ein Knoten fordert das Lesen aus einer Datei an,
  *                  die über ihr Dateihandle identifiziert wird.
  *
- * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   child_swid      Die @em SoftWareID des empfangenden Kindesknoten, z.B. "HDF5".
- * @param[in]   descriptor_type Der Typ des Deskriptors, z.B. "HDF5-FileHandle".
- * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "17726".
+ * @param[in]   unid        Die @em UNID des Knoten.
+ * @param[in]   child_swid  Die @em SoftWareID des empfangenden Kindesknoten, z.B. "HDF5".
+ * @param[in]   dtid        Die @em DTID des Deskriptors.
+ * @param[in]   descriptor  Der eigentliche Deskriptor, z.B. "17726".
  */
-void siox_send_descriptor(siox_unid unid, const char * child_swid, const char * descriptor_type, const char * descriptor);
+void siox_send_descriptor(siox_unid unid, const char * child_swid, siox_dtid dtid, const char * descriptor);
 
 
 /**
@@ -160,11 +160,11 @@ void siox_send_descriptor(siox_unid unid, const char * child_swid, const char * 
  * @em Beispiel:    Ein Knoten wird angewiesen, aus einer Datei zu lesen,
  *                  die über ihre Inode identifiziert wird.
  *
- * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   descriptor_type Der Typ des Deskriptors, z.B. "PVFS-FileHandle".
- * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "53718332".
+ * @param[in]   unid        Die @em UNID des Knoten.
+ * @param[in]   dtid        Die @em DTID des Deskriptors.
+ * @param[in]   descriptor  Der eigentliche Deskriptor, z.B. "53718332".
  */
-void siox_receive_descriptor(siox_unid unid, const char * descriptor_type, const char * descriptor);
+void siox_receive_descriptor(siox_unid unid, siox_dtid dtid, const char * descriptor);
 
 
 /**
@@ -188,13 +188,13 @@ void siox_map_descriptor(siox_unid unid, siox_dmid dmid, const char * source_des
  *
  * @em Beispiel:    Ein Dateihandle wird beim Schließen seiner Datei freigegeben.
  *
- * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   descriptor_type Der Typ des Deskriptors, z.B. "Posix-FileHandle".
- * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "51773".
+ * @param[in]   unid        Die @em UNID des Knoten.
+ * @param[in]   dtid        Die @em DTID des Deskriptors.
+ * @param[in]   descriptor  Der eigentliche Deskriptor, z.B. "51773".
  *
  * @note    Diese Funktion ist optional.
  */
-void siox_release_descriptor(siox_unid unid, const char * descriptor_type, const char * descriptor);
+void siox_release_descriptor(siox_unid unid, siox_dtid dtid, const char * descriptor);
 
 
 /**
@@ -232,7 +232,7 @@ void siox_stop_activity(siox_aid aid);
  *                  die über ein Dateihandle angefordert wurden.
  *
  * @param[in]   aid             Die @em AID der Aktivität.
- * @param[in]   descriptor_type Der Typ des Deskriptors, z.B. "Posix-FileHandle".
+ * @param[in]   descriptor_type Die @em DTID des Deskriptors.
  * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "51773".
  * @param[in]   mid             Die @em MID der Meßgröße.
  * @param[in]   value_type      Der Typ des folgenden Wertes als siox_value_type.
@@ -241,7 +241,7 @@ void siox_stop_activity(siox_aid aid);
  *
  * @todo    Woher weiß die Komponente, ob – und wenn ja, auf was – wir die Leistungsdaten beschränken wollen?
  */
-void siox_report_activity(siox_aid aid, const char * descriptor_type, const char * descriptor, siox_mid mid, enum siox_value_type value_type, void * value, const char * details);
+void siox_report_activity(siox_aid aid, siox_dtid descriptor_type, const char * descriptor, siox_mid mid, enum siox_value_type value_type, void * value, const char * details);
 
 
 /**

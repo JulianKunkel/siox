@@ -134,6 +134,15 @@ bool siox_ont_close_ontology();
  */
 siox_dtid siox_ont_register_datatype( const char * name, enum siox_ont_storage_type storage );
 
+/**
+ * Turn the DTID into a human-readable string.
+ *
+ * @param[in]   dtid    The @em DTID object.
+ *
+ * @returns             If the metric exists, a multi-line string representing the data; otherwise @c NULL.
+ */
+const char* siox_ont_dtid_to_string( siox_dtid dtid );
+
 /**@}*/
 
 

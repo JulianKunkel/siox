@@ -33,12 +33,12 @@
 
 struct siox_dtid_t
 {
-    int     id; /**< The actual Data Type ID. */
+   unsigned int     id; /**< The actual Data Type ID. */
 };
 
 struct siox_mid_t
 {
-    int     id; /**< The actual Metric ID. */
+    unsigned int    id; /**< The actual Metric ID. */
 };
 
 struct siox_metric_t
@@ -337,8 +337,26 @@ siox_ont_close_ontology()
 siox_dtid
 siox_ont_register_datatype( const char * name, enum siox_ont_storage_type storage )
 {
-    /** @todo: Actually read, lookup and write data type */
-    return ( NULL );
+    /** @todo Actually read, lookup and write data type */
+    return( NULL );
+}
+
+
+const char*
+siox_ont_dtid_to_string( siox_dtid dtid )
+{
+    char * sResult;
+
+    sResult = malloc( 80 );
+
+    /** @todo Lookup and return actual name belonging to the data type. */
+    if ( dtid )
+    {
+        sprintf( sResult, "%u", dtid->id );
+        return( sResult );
+    }
+    else
+        return( NULL );
 }
 
 
@@ -373,7 +391,7 @@ siox_ont_free_mid( siox_mid mid )
 siox_metric
 siox_ont_find_metric_by_mid( siox_mid mid )
 {
-    int                             id;
+    int                     id;
     struct siox_ont_node_t  *current;
 
     /* Require an open ontology */
