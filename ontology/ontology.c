@@ -3,7 +3,7 @@
  *          Implementation des SIOX-Ontology-Interfaces
  *
  * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
- * @date    2011
+ * @date    2012
  *          GNU Public License
  */
 
@@ -30,6 +30,11 @@
  * ================
  */
 
+
+struct siox_dtid_t
+{
+    int     id; /**< The actual Data Type ID. */
+};
 
 struct siox_mid_t
 {
@@ -326,6 +331,14 @@ siox_ont_close_ontology()
     current_ontology = NULL;
 
     return( true );
+}
+
+
+siox_dtid
+siox_ont_register_datatype( const char * name, enum siox_ont_storage_type storage )
+{
+    /** @todo: Actually read, lookup and write data type */
+    return ( NULL );
 }
 
 

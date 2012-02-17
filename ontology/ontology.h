@@ -16,6 +16,14 @@
 
 
 /**
+ * Die <em>Data Type ID</em>.
+ *
+ * Identifiziert einen Semantischen Datentyp in der Ontologie.
+ */
+typedef struct siox_dtid_t * siox_dtid;
+
+
+/**
  * Die <em>Metric ID</em>.
  *
  * Identifiziert eine Metrik in der Ontologie.
@@ -105,6 +113,26 @@ bool siox_ont_write_ontology();
  * @returns         @c true bei Erfolg, sonst @c false.
  */
 bool siox_ont_close_ontology();
+
+/**@}*/
+
+
+
+/**
+ * @name Functions for the @em DTID object @em siox_dtid
+ */
+/**@{*/
+
+/**
+ * Find the @em DTID for the data type with the specifications given.
+ * If it already exists in the ontology, return its DTID; otherwise, create it and return the fresh DTID.
+ *
+ * @param[in]   name        The data type's unique name.
+ * @param[in]   storage     The minimum storage type required to store data of the data type.
+ *
+ * @returns                 The @em DTID of the descriptor type.
+ */
+siox_dtid siox_ont_register_datatype( const char * name, enum siox_ont_storage_type storage );
 
 /**@}*/
 
@@ -229,7 +257,7 @@ char* siox_ont_metric_to_string( siox_metric metric );
 /**
  * Destructor for a metric object.
  *
- * @param [in]  metric  The metric object.
+ * @param[in]   metric  The metric object.
  */
 void siox_ont_free_metric( siox_metric metric );
 
@@ -252,11 +280,11 @@ int siox_ont_count_metrics();
 /**
  * Fügt eine neue Metrik in die Ontologie ein.
  *
- * @param   name        Der Name der Metrik. Er muß eindeutig sein.
- * @param   description Eine textuelle Beschreibung der Metrik.
- * @param   unit        Die Einheit, in welcher die Daten gemessen werden.
- * @param   storage     Der minimale zum Speichern der Daten nötige Datentyp.
- * @param   scope       Der zeitliche Bereich, in welchem die Daten angefallen sind.
+ * @param[in]   name        Der Name der Metrik. Er muß eindeutig sein.
+ * @param[in]   description Eine textuelle Beschreibung der Metrik.
+ * @param[in]   unit        Die Einheit, in welcher die Daten gemessen werden.
+ * @param[in]   storage     Der minimale zum Speichern der Daten nötige Datentyp.
+ * @param[in]   scope       Der zeitliche Bereich, in welchem die Daten angefallen sind.
  *
  * @returns             Eine <em>Metric ID</em>.
  */
