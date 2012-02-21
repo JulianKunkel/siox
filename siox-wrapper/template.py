@@ -28,7 +28,7 @@ template = {
 },
 'map': {
 	'init': '',
-	'before': 'SIOX_map_descriptor(global_unid, "FileName", filename, "FileHandle", ret);',
+	'before': 'SIOX_map_descriptor(global_unid, "%s", filename, "%s", ret);',
 	'after': ''
 }
 }

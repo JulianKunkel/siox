@@ -29,7 +29,7 @@ class FuncDefVisitor(c_ast.NodeVisitor):
 		# declaration is the function name without the return type.
 		# So we search for a type declaration and check if the next decalration is
 		# a function. Sounds strange but it works.
-		if node.children()[0].__class__ != c_ast.FuncDecl:
+		if type(node.children()[0][1]) != c_ast.FuncDecl:
 			return	
 
 		# We found a function definition! \o/
@@ -137,9 +137,10 @@ class InstructionParser():
 			lineArray = line.split(' ') 
 				
 			key = ''.join(lineArray)
-
 			if instructions.has_key(key):
-				instructions[key].append([instructionName, instructionParameters]) 
+				instructions[key].append([instructionName, instructionParameters])
+				instructionName = ''
+				instructionParameters = []
 				
 			elif lineArray[0] in commands:
 				instructionName = lineArray[0]
@@ -152,6 +153,8 @@ class InstructionParser():
 					print('ERROR: Template name not found! %s is not a valid instrumention instruction in line %i.' % (lineArray[0], index))
 
 				instructionParameters.extend(lineArray)
+
+		return instructions	
 
 class Function():
 
@@ -228,9 +231,7 @@ def writeHeaderFile(options, functions):
 
 	# function headers
 	for function in functions:
-		file.write(function.type+" ")
-		file.write(function.name+" ( ")
-		file.write(function.signature+" ); \n")	
+		file.write("%s %s ( %s ); \n" % (function.type, function.name, function.signature))
 
 	# close the file
 	file.close()
@@ -257,19 +258,21 @@ def writeSourceFile(options, functions, instructions):
 
 	# function definitions
 	for function in functions:
-		file.write("%s %s(%s) {" % (function.type, function.name, function.signature))
+		file.write("%s %s(%s) {\n" % (function.type, function.name, function.signature))
 
-		if function.getIdentyfier in instructions:
-			for i in instructions[identyfier]:
-				file.write(template[i]["before"])
+		if instructions.has_key(function.getIdentyfier()):
+			for i in instructions[function.getIdentyfier()]:
+				if template[i[0]]["before"] != "":
+					file.write("%s \n" % (template[i[0]]["before"] % tuple(i[1])))
 
-		file.write("    %s ret = (* static_%s) (%s);\n" % (function.type, function.name, function.signature))
+		file.write("%s ret = (* static_%s) (%s);\n" % (function.type, function.name, function.signature))
 
-		if function.getIdentyfier in instructions:
-			for i in instructions[identyfier]:
-				file.write(template[i]["after"])
+		if instructions.has_key(function.getIdentyfier()):
+			for i in instructions[function.getIdentyfier()]:
+				if template[i[0]]["after"] != "":
+					file.write("%s \n" % (template[i[0]]["after"] % tuple(i[1])))
 
-		file.write("	return ret;\n}\n\n")
+		file.write("return ret;\n}\n\n")
 
 	# generic needs
 	file.write("""#define OPEN_DLL(defaultfile, libname) \\
@@ -334,10 +337,9 @@ def main():
 	functions = functionDefs.functions
 
 	instructions = InstructionParser()
-	instructions.parse(functions, opt.inputFile)
+	instr = instructions.parse(functions, opt.inputFile)
 
 	# TODO: foobar ersetzten	
-	foobar = ''
-	writeOutputFile(opt, functions, instructions)
+	writeOutputFile(opt, functions, instr)
 
 main()
