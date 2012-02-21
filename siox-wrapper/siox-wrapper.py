@@ -8,6 +8,7 @@ import sys
 import argparse
 from pycparser import c_parser, c_ast, parse_file
 
+
 # import the template
 from template import *
 
@@ -18,43 +19,64 @@ class FuncDefVisitor(c_ast.NodeVisitor):
 	def __init__(self):
 
 		self.functions = [] 
-		self.storage = None
 
-	def visit_FuncDef(self, node):
+	def visit_Decl(self, node):
 		
+		# If the found declaration has a not a function declaration
+		# jump out.
+		# This is necessary because in a header file int foobar(void); is not
+		# recognised as a function definition by the pycparser and the function
+		# declaration is the function name without the return type.
+		# So we search for a type declaration and check if the next decalration is
+		# a function. Sounds strange but it works.
+		if node.children()[0].__class__ != c_ast.FuncDecl:
+			return	
+
 		# We found a function definition! \o/
-		self.storage = Function()
+		# Create a new function and append it to the list of found functions
+		# The self.storge variable is used to unifiy the accsess 
+		function = Function()
 		self.functions.append(self.storage)
 		
-		
+		storage.name = node.name
+
 		if DEBUG:
-			print('Function %s at %s' % (node.decl.name, node.decl.coord))
+			print('Function %s' % (self.storage.name))
 		
-		function = self.functions[-1]
-		function.name = node.decl.name
 		
-		self.getType(node.decl.type.type)
+		self.getType(node.type.type, storage)
 
 		# Get the parameter
-
-		if node.decl.type.args:
-			params = node.decl.type.args.params
+		if node.type.args:
+			params = node.type.args.params
 			
-			# Iterate over the parameters
+			# Iterate over the parameters and get the name an type
 			for param in params:
-
-				# Append a new parameter
-				self.storage = Parameter()
-				function = self.functions[-1]
-				function.parameters.append(self.storage)
 				
-				self.storage.name += param.name
-				# Recursive run through the abstract syntax tree of the parameter
-				self.getType(param)
+				# Append a new parameter
+				parameter = Parameter()
+				function = self.functions[-1]
+				function.parameters.append(parameter)
+				
+				# Get the name of the parameter and parse the type
+				parameter.name += param.name
+				self.getType(param, parameter)
+	
+	##
+	# @brief Recursive run through the type definitions of the function or 
+	# parameter
+	#
+	# 
+	# This is needed because every pointer is a new node in the declaration,
+	# ** are two nodes in depth.
+	#
+	# @param decl The current node in the declaration
+	# @param storage A reference to the object to store the parameter type,
+	# this could be the return type of a function or a type of function parameter
+	#
+	# @return Nothing 
+	def getType(self, decl, storage):
 		
-
-	def getType(self, decl):
-
 		typ = type(decl)
 		
 		if typ == c_ast.TypeDecl:
@@ -84,7 +106,7 @@ class FuncDefVisitor(c_ast.NodeVisitor):
 
 			self.storage.type += '*'
 		
-		# Add * to the parameter type if it's a array
+		# Add * to the parameter type if it's a array like foo[] 
 		elif typ == c_ast.ArrayDecl:
 			self.getType(decl.type)
 
@@ -169,6 +191,7 @@ def writeHeaderFile(options, functions):
 	file.close()
 
 def writeSourceFile(options, functions, instructions):
+
 	# open the output file for writing	
 	file = open(options.outputFile, 'w')
 	
@@ -184,24 +207,24 @@ def writeSourceFile(options, functions, instructions):
 
 	# function headers
 	for function in functions:
-		file.write("static ")
-		file.write(function.type+" ")
-		file.write(" (* static_")
-		file.write(function.name+") ( ")
-		file.write(function.signature+" ) = NULL;\n")
-		
+		file.write("static %s  (* static_%s) ( %s ) = NULL;\n"  % (function.type, function.name, function.signature))
 	file.write("\n")
 
 	# function definitions
 	for function in functions:
-		file.write(function.type + " " + function.name + "(" + function.signature + ") {\n")
-		if funtion.identyfier in instructions
-			file.write(template[instructions[identyfier]]["before"])
-		file.write("	" + function.type + " ret = (* static_" + function.name + ") (" + function.signature + ");\n")
-		if funtion.identyfier in instructions
-			file.write(template[instructions[identyfier]]["after"])
-		file.write("	return ret;\n")
-		file.write("}\n\n")
+		file.write("%s %s(%s) {" % (function.type, function.name, function.signature))
+
+		if funtion.identyfier in instructions:
+			for i in instructions[identyfier]:
+				file.write(template[i]["before"])
+
+		file.write("    %s ret = (* static_%s) (%s);\n" % (function.type, function.name, function.signature))
+
+		if funtion.identyfier in instructions:
+			for i in instructions[identyfier]:
+				file.write(template[i]["after"])
+
+		file.write("	return ret;\n}\n\n")
 
 	# generic needs
 	file.write("""#define OPEN_DLL(defaultfile, libname) \\
@@ -225,8 +248,7 @@ if (symbol == NULL) { \\
 
 	# Symbols
 	for function in functions:
-		file.write("\nADD_SYMBOL("+function.name+");\n")
-		file.write("static_"+function.name+" = symbol;")
+		file.write("\nADD_SYMBOL(%s);\nstatic_%s = symbol;" % (function.name, function.name))
 
 	# close the file
 	file.close()
@@ -274,10 +296,11 @@ def main():
 			print('DEBUG: Parsing source code file: %s' % (opt.sourceFile))
 
 		sourceAST = parse_file(opt.sourceFile, use_cpp=True)
-		functionDefs.visit(sourceAST)	
-	
-	foobar = ''
 
+		functionDefs.visit(sourceAST)	
+
+	# TODO: foobar ersetzten	
+	foobar = ''
 	writeOutputFile(opt, functionDefs.functions, foobar)
 
 main()
