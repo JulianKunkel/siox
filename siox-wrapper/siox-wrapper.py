@@ -36,15 +36,15 @@ class FuncDefVisitor(c_ast.NodeVisitor):
 		# Create a new function and append it to the list of found functions
 		# The self.storge variable is used to unifiy the accsess 
 		function = Function()
-		self.functions.append(self.storage)
-		
-		storage.name = node.name
+		self.functions.append(function)
+
+		function.name = node.name
 
 		if DEBUG:
-			print('Function %s' % (self.storage.name))
+			print('Function %s' % (function.name))
 		
 		
-		self.getType(node.type.type, storage)
+		self.getType(node.type.type, function)
 
 		# Get the parameter
 		if node.type.args:
@@ -80,11 +80,11 @@ class FuncDefVisitor(c_ast.NodeVisitor):
 		typ = type(decl)
 		
 		if typ == c_ast.TypeDecl:
-			self.getType(decl.type)
+			self.getType(decl.type, storage)
 			
 
 		elif typ == c_ast.Typename or typ == c_ast.Decl:
-			self.getType(decl.type)
+			self.getType(decl.type, storage)
 		
 		# I found Waldo! After several hours!
 		# Stores the type of the parameter.
@@ -98,19 +98,60 @@ class FuncDefVisitor(c_ast.NodeVisitor):
 			if DEBUG:
 				print('Found identifier: %s' % (identifier))
 			
-			self.storage.type = identifier
+			storage.type = identifier
 
 		# Add a * to the parameter type if there is a pointer
 		elif typ == c_ast.PtrDecl:
-			self.getType(decl.type)
+			self.getType(decl.type, storage)
 
-			self.storage.type += '*'
+			storage.type += '*'
 		
 		# Add * to the parameter type if it's a array like foo[] 
 		elif typ == c_ast.ArrayDecl:
-			self.getType(decl.type)
+			self.getType(decl.type, storage)
 
-			self.storage.type += '*'
+			storage.type += '*'
+
+
+class InstructionParser():
+
+	def parse(self, functions, inputFile):
+
+		inputFileHandel = open(inputFile, 'r')
+
+		inputLines = inputFileHandel.readlines()
+		commands = template.keys()
+		
+		instructions = {}
+		instructionName = ''
+		instructionParameters = []
+
+		for function in functions:
+			instructions[function.getIdentyfier()] = []
+
+		for index, line in enumerate(inputLines):
+			
+			line = line.lstrip('/ \t')
+			line = line.rstrip()
+
+			lineArray = line.split(' ') 
+				
+			key = ''.join(lineArray)
+
+			if instructions.has_key(key):
+				instructions[key].append([instructionName, instructionParameters]) 
+				
+			elif lineArray[0] in commands:
+				instructionName = lineArray[0]
+
+				if len(lineArray) > 2:
+					instructionParameters.extend(lineArray[1:])
+
+			else:
+				if instructionName == '':
+					print('ERROR: Template name not found! %s is not a valid instrumention instruction in line %i.' % (lineArray[0], index))
+
+				instructionParameters.extend(lineArray)
 
 class Function():
 
@@ -121,8 +162,19 @@ class Function():
 		self.parameters = []
 		self.signature = ''
 
-	def identyfier(self):
-		return "%s %s %s" % (self.type, self.name, self.signature)
+	def getIdentyfier(self):
+		
+		params = ''	
+
+		for param in self.parameters:
+			params += '%s,' % (param.__str__())
+		
+		params = params[:-1]
+
+		identyfier = '%s%s(%s);' % (''.join(self.type.split(' ')),
+			self.name, params)
+
+		return identyfier
 
 class Parameter():
 
@@ -131,8 +183,10 @@ class Parameter():
 		self.type = ''
 		self.name = ''
 
-#def run():
-	#pass
+	
+	def __str__(self):
+		
+		return ''.join(self.type.split(' '))+self.name
 
 def Option():
 
@@ -149,16 +203,13 @@ def Option():
 	argParser.add_argument('--blankHeader', '-b', action='store_true', default=False,
 			dest='blankHeader', help='''Only generate a clean header file''')
 	
-	argParser.add_argument('inputFile', nargs='1', default=None, 
+	argParser.add_argument('inputFile', default=None, 
 	help='Source or header file to parse')
 
 	args = argParser.parse_args()
 
 	if args.outputFile:
 		args.outputFile = args.outputFile[0]
-	
-	if args.inputFile:
-		args.inputFile = args.inputFile[0]
 
 	return args
 
@@ -175,7 +226,7 @@ def writeHeaderFile(options, functions):
 	# open the output file for writing
 	file = open(options.outputFile, 'w')
 
-	# Function headers
+	# function headers
 	for function in functions:
 		file.write(function.type+" ")
 		file.write(function.name+" ( ")
@@ -184,28 +235,43 @@ def writeHeaderFile(options, functions):
 	# close the file
 	file.close()
 
-def writeSourceFile(options, functions):
+def writeSourceFile(options, functions, instructions):
+
 	# open the output file for writing	
 	file = open(options.outputFile, 'w')
 	
-	# Function headers
-	for function in functions:
-		file.write("static ")
-		file.write(function.type+" ")
-		file.write(" (* static_")
-		file.write(function.name+") ( ")
-		file.write(function.signature+" ) = NULL;\n")
-		
+	# includes
+	for i in includes:
+		file.write(i+"\n")
 	file.write("\n")
 
-	# Function definitions
-	for function in functions:
-		file.write(function.type + " " + function.name + "(" + function.signature + ") {\n")
-		file.write("	" + function.type + " ret = (* static_" + function.name + ") (" + function.signature + ");\n")
-		file.write("	return ret;\n")
-		file.write("}\n\n")
+ 	# global variables
+	for i in variables:
+		file.write(i+"\n")
+	file.write("\n")
 
-	# Generic needs
+	# function headers
+	for function in functions:
+		file.write("static %s  (* static_%s) ( %s ) = NULL;\n"  % (function.type, function.name, function.signature))
+	file.write("\n")
+
+	# function definitions
+	for function in functions:
+		file.write("%s %s(%s) {" % (function.type, function.name, function.signature))
+
+		if function.getIdentyfier in instructions:
+			for i in instructions[identyfier]:
+				file.write(template[i]["before"])
+
+		file.write("    %s ret = (* static_%s) (%s);\n" % (function.type, function.name, function.signature))
+
+		if function.getIdentyfier in instructions:
+			for i in instructions[identyfier]:
+				file.write(template[i]["after"])
+
+		file.write("	return ret;\n}\n\n")
+
+	# generic needs
 	file.write("""#define OPEN_DLL(defaultfile, libname) \\
 { \\
 	char * file = getenv(libname); \\
@@ -227,13 +293,12 @@ if (symbol == NULL) { \\
 
 	# Symbols
 	for function in functions:
-		file.write("\nADD_SYMBOL("+function.name+");\n")
-		file.write("static_"+function.name+" = symbol;")
+		file.write("\nADD_SYMBOL(%s);\nstatic_%s = symbol;" % (function.name, function.name))
 
 	# close the file
 	file.close()
 
-def writeOutputFile(options, functions):
+def writeOutputFile(options, functions, instructions):
 	
 	# Generate all function-signatures for writing
 	generateSignatures(functions)
@@ -244,7 +309,7 @@ def writeOutputFile(options, functions):
 
 	else:
 		# use the header-skeleton commented by the user to generate the instrumented library
-		writeSourceFile(options, functions)
+		writeSourceFile(options, functions, instructions)
 
 #
 # start of the main program
@@ -261,10 +326,18 @@ def main():
 	sourceAST = None 
 	
 	if DEBUG:
-		print('DEBUG: Parsing source code file: %s' % (opt.sourceFile))
+		print('DEBUG: Parsing file: %s' % (opt.inputFile))
 
-	sourceAST = parse_file(opt.sourceFile, use_cpp=True)
+	sourceAST = parse_file(opt.inputFile, use_cpp=True)
 
 	functionDefs.visit(sourceAST)	
-	
+	functions = functionDefs.functions
+
+	instructions = InstructionParser()
+	instructions.parse(functions, opt.inputFile)
+
+	# TODO: foobar ersetzten	
+	foobar = ''
+	writeOutputFile(opt, functions, instructions)
+
 main()
