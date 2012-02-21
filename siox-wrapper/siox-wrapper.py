@@ -122,7 +122,7 @@ class Function():
 		self.signature = ''
 
 	def identyfier(self):
-		return self.name+self.signature
+		return "%s %s %s" % (self.type, self.name, self.signature)
 
 class Parameter():
 
@@ -146,26 +146,20 @@ def Option():
 	argParser.add_argument('--debug', '-d', action='store_true', default=False,
 			dest='debug', help='''Print out debug information.''')
 
-	argParser.add_argument('--source', '-s', action='store', nargs=1,
-			dest='sourceFile', help='A C source code file that should be parsed.')	
-
-	argParser.add_argument('--header', '-g', action='store', nargs=1,
-			dest='headerFile', help='''A C header file that will be parsed''')
-
 	argParser.add_argument('--blankHeader', '-b', action='store_true', default=False,
 			dest='blankHeader', help='''Only generate a clean header file''')
 	
+	argParser.add_argument('inputFile', nargs='1', default=None, 
+	help='Source or header file to parse')
+
 	args = argParser.parse_args()
-
-	if args.headerFile:
-		args.headerFile = args.headerFile[0]
-
-	if args.sourceFile:
-		args.sourceFile = args.sourceFile[0]
 
 	if args.outputFile:
 		args.outputFile = args.outputFile[0]
 	
+	if args.inputFile:
+		args.inputFile = args.inputFile[0]
+
 	return args
 
 def generateSignatures(functions):
@@ -266,23 +260,11 @@ def main():
 	headerAST = None
 	sourceAST = None 
 	
-	if not (opt.headerFile or opt.sourceFile):
-		print('No source file or header file provided. Nothing to compute.')
-		sys.exit(1)
+	if DEBUG:
+		print('DEBUG: Parsing source code file: %s' % (opt.sourceFile))
+
+	sourceAST = parse_file(opt.sourceFile, use_cpp=True)
+
+	functionDefs.visit(sourceAST)	
 	
-	if opt.headerFile:
-		if DEBUG:
-			print('DEBUG: Parsing header file: %s' % (opt.headerFile))
-
-		headerAST = parse_file(opt.headerFile, use_cpp=True)
-		functionDefs.visit(headerAST)
-	
-	if opt.sourceFile:
-		if DEBUG:
-			print('DEBUG: Parsing source code file: %s' % (opt.sourceFile))
-
-		sourceAST = parse_file(opt.sourceFile, use_cpp=True)
-
-		functionDefs.visit(sourceAST)	
-
 main()
