@@ -159,7 +159,7 @@ def writeHeaderFile(options, functions):
 	# open the output file for writing
 	file = open(options.outputFile, 'w')
 
-	# Function headers
+	# function headers
 	for function in functions:
 		file.write(function.type+" ")
 		file.write(function.name+" ( ")
@@ -168,11 +168,21 @@ def writeHeaderFile(options, functions):
 	# close the file
 	file.close()
 
-def writeSourceFile(options, functions):
+def writeSourceFile(options, functions, instructions):
 	# open the output file for writing	
 	file = open(options.outputFile, 'w')
 	
-	# Function headers
+	# includes
+	for i in includes:
+		file.write(i+"\n")
+	file.write("\n")
+
+ 	# global variables
+	for i in variables:
+		file.write(i+"\n")
+	file.write("\n")
+
+	# function headers
 	for function in functions:
 		file.write("static ")
 		file.write(function.type+" ")
@@ -182,14 +192,18 @@ def writeSourceFile(options, functions):
 		
 	file.write("\n")
 
-	# Function definitions
+	# function definitions
 	for function in functions:
 		file.write(function.type + " " + function.name + "(" + function.signature + ") {\n")
+		if funtion.identyfier in instructions
+			file.write(template[instructions[identyfier]]["before"])
 		file.write("	" + function.type + " ret = (* static_" + function.name + ") (" + function.signature + ");\n")
+		if funtion.identyfier in instructions
+			file.write(template[instructions[identyfier]]["after"])
 		file.write("	return ret;\n")
 		file.write("}\n\n")
 
-	# Generic needs
+	# generic needs
 	file.write("""#define OPEN_DLL(defaultfile, libname) \\
 { \\
 	char * file = getenv(libname); \\
@@ -217,7 +231,7 @@ if (symbol == NULL) { \\
 	# close the file
 	file.close()
 
-def writeOutputFile(options, functions):
+def writeOutputFile(options, functions, instructions):
 	
 	# Generate all function-signatures for writing
 	generateSignatures(functions)
@@ -228,7 +242,7 @@ def writeOutputFile(options, functions):
 
 	else:
 		# use the header-skeleton commented by the user to generate the instrumented library
-		writeSourceFile(options, functions)
+		writeSourceFile(options, functions, instructions)
 
 #
 # start of the main program
@@ -261,7 +275,9 @@ def main():
 
 		sourceAST = parse_file(opt.sourceFile, use_cpp=True)
 		functionDefs.visit(sourceAST)	
+	
+	foobar = ''
 
-	writeOutputFile(opt, functionDefs.functions)
+	writeOutputFile(opt, functionDefs.functions, foobar)
 
 main()
