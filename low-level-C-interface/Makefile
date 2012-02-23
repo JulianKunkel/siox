@@ -18,9 +18,9 @@
 TARGETS := siox-hdf5-example siox-mockupfs-example
 OBJECTS := siox-hdf5-example.o siox-mockupfs-example.o
 SIOXLIBS := libsiox-ll.so
+ONTLIBS := $(ONTDIR)/libsioxont.so
 MUFSLIBS := libmufs.so
 HDF5LIBS := -lhdf5 -lhdf5_hl
-ONTLIBS := $(ONTDIR)/libsioxont.so
 OWNLIBS := $(SIOXLIBS) $(MUFSLIBS)
 #LIBS := $(OWNLIBS) $(ONTLIBS)
 
@@ -37,16 +37,16 @@ OWNLIBS := $(SIOXLIBS) $(MUFSLIBS)
 all: $(TARGETS) Makefile
 #	@echo --------------------------------------------------
 
-siox-hdf5-example: siox-hdf5-example.c $(SIOXLIBS) $(ONTLIBS) Makefile
+siox-hdf5-example: siox-hdf5-example.c $(SIOXLIBS) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LDFLAGS) $(HDF5FLAGS) -o $@ $< $(SIOXLIBS) $(ONTLIBS) $(HDF5LIBS)
+	$(CC) $(LDFLAGS) $(LLFLAGS) $(HDF5FLAGS) -o $@ $< $(SIOXLIBS) $(HDF5LIBS)
 	@echo done!
 
-siox-mockupfs-example: siox-mockupfs-example.c $(SIOXLIBS) $(ONTLIBS) $(MUFSLIBS) Makefile
+siox-mockupfs-example: siox-mockupfs-example.c $(SIOXLIBS) $(MUFSLIBS) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LDFLAGS) -o $@ $< $(SIOXLIBS) $(ONTLIBS) $(MUFSLIBS)
+	$(CC) $(LDFLAGS) $(LLFLAGS) -o $@ $< $(SIOXLIBS) $(MUFSLIBS)
 	@echo done!
 
 #===============
@@ -65,13 +65,13 @@ debug: all
 libsiox-ll.so: siox-ll.c siox-ll.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) -c $(LIBFLAGS) -o $@ siox-ll.c
+	$(CC) $(LIBFLAGS) $(ONTFLAGS) -o $@ siox-ll.c $(ONTLIBS)
 	@echo done!
 
 libmufs.so: mufs.c mufs.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) -c $(LIBFLAGS) -o $@ mufs.c
+	$(CC) $(LIBFLAGS) $(LLFLAGS) -o $@ mufs.c $(SIOXLIBS)
 	@echo done!
 
 #=================

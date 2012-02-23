@@ -3,7 +3,7 @@
  *          Implementation des Mock-Up-File-System.
  *
  * @authors Julian Kunkel & Michaela Zimmer
- * @date    2011
+ * @date    2012
  *          GNU Public License.
  */
 
@@ -15,7 +15,6 @@
 
 #include "mufs.h"
 #include "siox-ll.h"
-#include "../ontology/ontology.h"
 
 
 /** Größe der Blöcke, auf welche die zu schreibenden Daten aufgeteilt werden. */
@@ -35,8 +34,6 @@ static siox_dtid    dtid_fn;   /**< Die @em DTID für FileName-Deskriptoren. */
 static siox_dtid    dtid_fp;   /**< Die @em DTID für FilePointer-Deskriptoren. */
 /** Die @em DMID der Deskriptorübersetzung, die @em MUFS ausführen kann. */
 static siox_dmid    dmid;
-/** Die Datei mit der SIOX-Ontologie */
-static char         ontology[] = "siox.ont";
 /** Die @em MID für unsere Leistungsmetrik */
 static siox_mid     mid;
 
@@ -203,30 +200,18 @@ static void mufs_initialise()
     /* Register node itself */
     unid = siox_register_node( "Michaelas T1500", "MUFS", pid_s );
     /* Register descriptor types we know */
-    dtid_fn = siox_ont_register_datatype( "FileName", SIOX_STORAGE_STRING );
-    dtid_fp = siox_ont_register_datatype( "MUFS-FilePointer", SIOX_STORAGE_32_BIT_INTEGER );
+    dtid_fn = siox_register_datatype( "FileName", SIOX_STORAGE_STRING );
+    dtid_fp = siox_register_datatype( "MUFS-FilePointer", SIOX_STORAGE_32_BIT_INTEGER );
     /* Register ability to map MUFS-FileName to MUFS-FilePointer */
     dmid = siox_register_descriptor_map( unid, dtid_fn, dtid_fp );
 
-    /* Open ontology */
-    siox_ont_open_ontology( ontology );
-    /* Find MID for our performance metric, if it exists... */
-    if( (mid = siox_ont_find_mid_by_name( "Bytes Written" )) )
-    {
-        printf( "Found performance metric %s in ontotology.\n",
-                siox_ont_metric_get_name( siox_ont_find_metric_by_mid( mid ) ) );
-    }
-    else
-    {
-        /* ...otherwise, register our performance metric with the ontology */
-        mid = siox_ont_register_metric( "Bytes Written",
-                                        "",
-                                        SIOX_UNIT_BYTES,
-                                        SIOX_STORAGE_64_BIT_INTEGER,
-                                        SIOX_SCOPE_SUM);
-        printf( "Registered performance metric %s with ontotology.\n",
-                siox_ont_metric_get_name( siox_ont_find_metric_by_mid( mid ) ) );
-        siox_ont_write_ontology();
-    }
+    /* Register our performance metric with the ontology */
+    mid = siox_register_metric( "Bytes Written",
+                                "",
+                                SIOX_UNIT_BYTES,
+                                SIOX_STORAGE_64_BIT_INTEGER,
+                                SIOX_SCOPE_SUM);
+    printf( "Registered performance metric %s with ontotology.\n",
+            "\"Bytes Written\"" );
 }
 

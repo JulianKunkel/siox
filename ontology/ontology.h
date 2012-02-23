@@ -3,7 +3,7 @@
  *          Headerdatei für das SIOX-Ontology-Interface
  *
  * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
- * @date    2011
+ * @date    2012
  *          GNU Public License
  */
 
@@ -139,7 +139,7 @@ siox_dtid siox_ont_register_datatype( const char * name, enum siox_ont_storage_t
  *
  * @param[in]   dtid    The @em DTID object.
  *
- * @returns             If the metric exists, a multi-line string representing the data; otherwise @c NULL.
+ * @returns             If the metric exists, a string representing the data; otherwise @c NULL.
  */
 const char* siox_ont_dtid_to_string( siox_dtid dtid );
 

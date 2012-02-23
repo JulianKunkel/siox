@@ -5,7 +5,7 @@
  * Es demonstriert, wie ein Client für SIOX instrumentiert wird.
  *
  * @authors Julian Kunkel & Michaela Zimmer
- * @date    2011
+ * @date    2012
  *          GNU Public License.
  */
 
@@ -18,7 +18,6 @@
 #include <hdf5_hl.h>
 
 #include "siox-ll.h"
-#include "../ontology/ontology.h"
 
 
 /**
@@ -38,7 +37,6 @@ main(){
     siox_dmid   dmid;           /* A DMID for a descriptor mapping this node can perform */
     siox_aid    aid_write;      /* An AID for the write activity only */
     siox_aid    aid_all;        /* Another AID for an activity encompassing the whole file access */
-    char        ontology[] = "siox.ont";    /* The SIOX ontology file */
     siox_mid    mid;            /* An MID for the performance metric we want to measure */
     int         bytes_written;  /* A collector for performance data */
 
@@ -83,8 +81,8 @@ main(){
     unid = siox_register_node( "Michaelas T1500", "SIOX-HDF5-Example", pid_s );
 
     /* Register descriptor types we will use */
-    dtid_h5fn = siox_ont_register_datatype( "HDF5-FileName", SIOX_STORAGE_STRING );
-    dtid_h5id = siox_ont_register_datatype( "HDF5-FileId", SIOX_STORAGE_64_BIT_INTEGER );
+    dtid_h5fn = siox_register_datatype( "HDF5-FileName", SIOX_STORAGE_STRING );
+    dtid_h5id = siox_register_datatype( "HDF5-FileId", SIOX_STORAGE_64_BIT_INTEGER );
 
     /* Register ability to map HDF5-FileName to HDF5-FileId */
     dmid = siox_register_descriptor_map( unid, dtid_h5fn, dtid_h5id );
@@ -93,27 +91,13 @@ main(){
     siox_register_edge( unid, "HDF5" );
 
 
-    /* Open ontology */
-    siox_ont_open_ontology( ontology );
-
-    /* Find MID for our performance metric, if it exists... */
-    if( (mid = siox_ont_find_mid_by_name( "Bytes Written" )) )
-    {
-        printf( "Found performance metric %s in ontotology.\n",
-                siox_ont_metric_get_name( siox_ont_find_metric_by_mid( mid ) ) );
-    }
-    else
-    {
-        /* ...otherwise, register our performance metric with the ontology */
-        mid = siox_ont_register_metric( "Bytes Written",
-                                        "",
-                                        SIOX_UNIT_BYTES,
-                                        SIOX_STORAGE_64_BIT_INTEGER,
-                                        SIOX_SCOPE_SUM );
-        printf( "Registered performance metric %s with ontotology.\n",
-                siox_ont_metric_get_name( siox_ont_find_metric_by_mid( mid ) ) );
-        siox_ont_write_ontology();
-    }
+    /* Register our performance metric with the ontology */
+    mid = siox_register_metric( "Bytes Written",
+                                "",
+                                SIOX_UNIT_BYTES,
+                                SIOX_STORAGE_64_BIT_INTEGER,
+                                SIOX_SCOPE_SUM );
+    printf( "Registered performance metric 'Bytes Written' with ontotology.\n" );
 
 
     /*
@@ -212,9 +196,6 @@ main(){
 
     /* Unregister node from SIOX */
     siox_unregister_node( unid );
-
-    /* Closing SIOX ontology */
-    siox_ont_close_ontology();
 
 
     exit( EXIT_SUCCESS );

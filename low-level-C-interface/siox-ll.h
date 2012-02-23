@@ -3,7 +3,7 @@
  *          Headerdatei für das SIOX-Low-Level-Interface
  *
  * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
- * @date    2011
+ * @date    2012
  *          GNU Public License
  */
 
@@ -53,6 +53,10 @@ enum siox_value_type{
 
 
 
+/**
+ * @name Functions for Nodes and Their Attributes
+ */
+/**@{*/
 
 /**
  * Meldet den Knoten als Teilnehmer an SIOX an und teilt ihm eine frische @em UNID zu.
@@ -108,6 +112,18 @@ void siox_register_edge(siox_unid unid, const char * child_swid);
 
 
 /**
+ * Find the @em DTID for the data type with the specifications given.
+ * If it already exists in the ontology, return its DTID; otherwise, create it and return the fresh DTID.
+ *
+ * @param[in]   name        The data type's unique name.
+ * @param[in]   storage     The minimum storage type required to store data of the data type.
+ *
+ * @returns                 The @em DTID of the descriptor type.
+ */
+siox_dtid siox_register_datatype( const char * name, enum siox_ont_storage_type storage );
+
+
+/**
  * Meldet die Fähigkeit, eine bestimmte Deskriptorübersetzung auszuführen, bei SIOX an.
  *
  * Das System kann aus den Möglichkeiten eines Knotens Schlüsse auf den Verlauf des
@@ -122,6 +138,36 @@ void siox_register_edge(siox_unid unid, const char * child_swid);
  */
 siox_dmid siox_register_descriptor_map(siox_unid unid, siox_dtid source_dtid, siox_dtid target_dtid);
 
+
+/**
+ * Liefert die @em MID zu einer Metrik.
+ * Existiert diese noch nicht, wird eine neue Metrik in die Ontologie eingefügt und deren neue @em MID zurückgeliefert.
+ *
+ * @param[in]   name        Der Name der Metrik. Er muß eindeutig sein.
+ * @param[in]   description Eine textuelle Beschreibung der Metrik.
+ *                          Existiert die Metrik, ohne daß eine Beschreibung gesetzt wurde, wird die neue übernommen.
+ *                          Existiert bereits eine, wird die neue ignoriert.
+ * @param[in]   unit        Die Einheit, in welcher die Daten gemessen werden.
+ * @param[in]   storage     Der minimale zum Speichern der Daten nötige Datentyp.
+ * @param[in]   scope       Der zeitliche Bereich, in welchem die Daten angefallen sind.
+ *
+ * @returns             Eine <em>Metric ID</em>.
+ */
+siox_mid siox_register_metric( const char *                 name,
+                               const char *                 description,
+                               enum siox_ont_unit_type      unit,
+                               enum siox_ont_storage_type   storage,
+                               enum siox_ont_scope_type     scope );
+
+
+/**@}*/
+
+
+
+/**
+ * @name Functions for Descriptors
+ */
+/**@{*/
 
 /**
  * Meldet das Erzeugen eines neuen Deskriptors an SIOX.
@@ -196,6 +242,14 @@ void siox_map_descriptor(siox_unid unid, siox_dmid dmid, const char * source_des
  */
 void siox_release_descriptor(siox_unid unid, siox_dtid dtid, const char * descriptor);
 
+/**@}*/
+
+
+
+/**
+ * @name Functions for Activities
+ */
+/**@{*/
 
 /**
  * Meldet den Start einer Aktivität und erhält eine <em>Activity ID (AID)</em> dafür.
@@ -272,5 +326,26 @@ void siox_end_activity(siox_aid aid);
  */
 void siox_report(siox_unid unid,  siox_mid  mid, enum siox_value_type value_type, void * value, const char * details);
 
+/**@}*/
+
+
+
+/**
+ * @name Functions for Accessing the Ontology
+ */
+/**@{*/
+
+/**
+ * Set the ontology to be used.
+ * This function has to be called before any functions using the ontology, such as all
+ * siox_register_...() calls, otherwise it will be ignored, and SIOX will access the default ontology.
+ *
+ * @param[in]   name    The name of the ontology to be used.
+ *
+ * @returns             @c true, if the ontology was set successfully; @c false, otherwise.
+ */
+bool siox_set_ontology( const char * name );
+
+/**@}*/
 
 #endif

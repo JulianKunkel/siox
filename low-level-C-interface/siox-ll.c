@@ -10,17 +10,28 @@
  * die die Abstraktion des I/O-Pfadmodells @em IOPm an das System stellt.
  *
  * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
- * @date    2011
+ * @date    2012
  *          GNU Public License.
  */
 
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "siox-ll.h"
 #include "../ontology/ontology.h"
+
+
+#define DEFAULT_ONTOLOGY "testontology"
+
+/** Haben wir initialise_ontology() bereits durchlaufen? */
+static bool initialised_ontology = false;
+
+/** Die zu nutzende Ontologie. Kann vor dem ersten Aufruf von initialise_ontology() per siox_set_ontology()
+ *  gesetzt werden; ansonsten wird DEFAULT_ONTOLOGY verwendet. */
+static char sOntology[80] = "";
 
 
 
@@ -47,6 +58,14 @@ struct siox_dmid_t {
     unsigned long int   id; /**< The actual ID. */
     };
 
+
+
+/**
+ * Initialisiere die Ontologie-Bibliothek.
+ * Wird nur beim ersten Zugriff auf aus der Ontologie zu lesende Daten (etwa die siox_register_...-Funktionen)
+ * aufgerufen.
+ */
+static void initialise_ontology();
 
 
 
@@ -285,3 +304,65 @@ siox_report( siox_unid              unid,
 }
 
 
+bool
+siox_set_ontology( const char * name )
+{
+    /* Set ontology name if as yet unset. */
+    if( strlen( sOntology ) == 0 )
+    {
+        strcpy( sOntology, name );
+        return( true );
+    }
+    else
+        return( false );
+}
+
+
+siox_dtid
+siox_register_datatype( const char *                name,
+                        enum siox_ont_storage_type  storage )
+{
+    siox_dtid   result;
+
+    if( !initialised_ontology )
+        initialise_ontology();
+
+    result = siox_ont_register_datatype( name, storage );
+
+    return( result );
+}
+
+
+
+siox_mid
+siox_register_metric( const char *                 name,
+                      const char *                 description,
+                      enum siox_ont_unit_type      unit,
+                      enum siox_ont_storage_type   storage,
+                      enum siox_ont_scope_type     scope )
+{
+    siox_mid result;
+
+    if( !initialised_ontology )
+        initialise_ontology();
+
+    result = siox_ont_register_metric( name,
+                                       description,
+                                       unit,
+                                       storage,
+                                       scope );
+
+    return( result );
+}
+
+
+static void
+initialise_ontology()
+{
+    initialised_ontology = true;
+
+    siox_set_ontology( DEFAULT_ONTOLOGY ); /* Klappt nur, falls noch nicht gesetzt. */
+
+    /* Ontologie öffnen; solange wir keine finalise()-Funktion haben, bleibt sie zu Programmende eben offen. */
+    siox_ont_open_ontology( sOntology );
+}
