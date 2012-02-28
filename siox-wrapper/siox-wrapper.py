@@ -7,7 +7,7 @@ import re
 import sys
 import argparse
 from pycparser import c_parser, c_ast, parse_file
-
+from collections import OrderedDict
 
 # import the template
 from template import *
@@ -29,7 +29,7 @@ class FuncDefVisitor(c_ast.NodeVisitor):
 		# declaration is the function name without the return type.
 		# So we search for a type declaration and check if the next decalration is
 		# a function. Sounds strange but it works.
-		if type(node.children()[0][1]) != c_ast.FuncDecl:
+		if type(node.children()[0])!= c_ast.FuncDecl:
 			return	
 
 		# We found a function definition! \o/
@@ -122,38 +122,63 @@ class InstructionParser():
 		inputLines = inputFileHandel.readlines()
 		commands = template.keys()
 		
-		instructions = {}
-		instructionName = ''
-		instructionParameters = []
+		instructions = OrderedDict()
+		
+		functionCounter = 0
 
 		for function in functions:
-			instructions[function.getIdentyfier()] = []
+			instructions[function.getIdentyfier()] = Instructions()
 
 		for index, line in enumerate(inputLines):
 			
 			line = line.lstrip('/ \t')
 			line = line.rstrip()
 
-			lineArray = line.split(' ') 
-				
-			key = ''.join(lineArray)
+			wordList = line.split()
+			
+			key = ''.join(wordList)
+			
+			storage = None
+
 			if instructions.has_key(key):
-				instructions[key].append([instructionName, instructionParameters])
-				instructionName = ''
-				instructionParameters = []
-				
-			elif lineArray[0] in commands:
-				instructionName = lineArray[0]
-
-				if len(lineArray) > 2:
-					instructionParameters.extend(lineArray[1:])
-
+				functionCounter+=1
+				storage = None
+			
 			else:
-				if instructionName == '':
-					print('ERROR: Template name not found! %s is not a valid instrumention instruction in line %i.' % (lineArray[0], index))
 
-				instructionParameters.extend(lineArray)
+				for word in wordList:
+					
+					if word == 'before':
+						storage = instructions.mro()
+						storage = storage[functionCounter].before
 
+					elif word == 'after':
+						storage = instructions.mro()
+						storage = storage[functionCounter].after
+
+					elif word == 'init':
+						storage = instructions.mro()
+						storage = storage[functionCounter].init
+
+					elif word in commands:
+						
+						if not storage:
+							print('ERROR: No section defined for %s at %i, please use "before", "after" or "init"' % (word, index))
+							sys.exit(1)
+
+						instruction = Instruction()
+						instruction.name = word
+						storage.append(instruction)
+
+					else:
+
+						if instruction.name == '':
+							print('ERROR: Template name not found! %s is not a valid instrumention instruction in line %i.' % (word, index))
+							sys.exit(1)
+
+						storage.parameters.append(word)
+
+		print instructions	
 		return instructions	
 
 class Function():
@@ -190,6 +215,22 @@ class Parameter():
 	def __str__(self):
 		
 		return ''.join(self.type.split(' '))+self.name
+
+
+class InstrumentedFunction():
+
+	def __init__(self):
+
+		self.init = []
+		self.befor = []
+		self.after = []
+
+class Instruction():
+	
+	def __init__(self):
+		self.name = ''
+		self.parameters = []
+
 
 def Option():
 
@@ -261,6 +302,7 @@ def writeSourceFile(options, functions, instructions):
 		file.write("%s %s(%s) {\n" % (function.type, function.name, function.signature))
 
 		if instructions.has_key(function.getIdentyfier()):
+
 			for i in instructions[function.getIdentyfier()]:
 				if template[i[0]]["before"] != "":
 					file.write("%s \n" % (template[i[0]]["before"] % tuple(i[1])))
