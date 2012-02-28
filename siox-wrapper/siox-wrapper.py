@@ -313,6 +313,10 @@ def writeSourceFile(options, functions, instructions):
 				if template[line.name] != "":
 					file.write("%s \n" % (template[line.name]["before"] % tuple(line.parameters)))
 
+			for line in lines.init:
+				if template[line.name] != "":
+					file.write("%s \n" % (template[line.name]["init"] % tuple(line.parameters)))
+
 		file.write("%s ret = (* static_%s) (%s);\n" % (function.type, function.name, function.signature))
 
 #		if instructions.has_key(function.getIdentyfier()):
