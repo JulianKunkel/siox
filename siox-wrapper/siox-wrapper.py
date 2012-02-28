@@ -127,8 +127,10 @@ class InstructionParser():
 		functionCounter = 0
 
 		for function in functions:
-			instructions[function.getIdentyfier()] = Instructions()
-
+			instructions[function.getIdentyfier()] = InstrumentedFunction()
+		
+		identyfier, sections = instructions.popitem()
+		storage = None
 		for index, line in enumerate(inputLines):
 			
 			line = line.lstrip('/ \t')
@@ -138,31 +140,29 @@ class InstructionParser():
 			
 			key = ''.join(wordList)
 			
-			storage = None
+			if identyfier == key:
 
-			if instructions.has_key(key):
-				functionCounter+=1
+				instructions[identyfier] = sections 
+				
+				identyfier, sections = instructions.popitem()
 				storage = None
-			
+
 			else:
 
 				for word in wordList:
-					
+
 					if word == 'before':
-						storage = instructions.mro()
-						storage = storage[functionCounter].before
+						storage = sections.before
 
 					elif word == 'after':
-						storage = instructions.mro()
-						storage = storage[functionCounter].after
+						storage = sections.after
 
 					elif word == 'init':
-						storage = instructions.mro()
-						storage = storage[functionCounter].init
+						storage = sections.init
 
 					elif word in commands:
 						
-						if not storage:
+						if storage == None:
 							print('ERROR: No section defined for %s at %i, please use "before", "after" or "init"' % (word, index))
 							sys.exit(1)
 
@@ -176,9 +176,9 @@ class InstructionParser():
 							print('ERROR: Template name not found! %s is not a valid instrumention instruction in line %i.' % (word, index))
 							sys.exit(1)
 
-						storage.parameters.append(word)
+						storage[-1].parameters.append(word)
 
-		print instructions	
+		instructions[identyfier] = sections
 		return instructions	
 
 class Function():
@@ -222,7 +222,7 @@ class InstrumentedFunction():
 	def __init__(self):
 
 		self.init = []
-		self.befor = []
+		self.before = []
 		self.after = []
 
 class Instruction():
@@ -301,18 +301,30 @@ def writeSourceFile(options, functions, instructions):
 	for function in functions:
 		file.write("%s %s(%s) {\n" % (function.type, function.name, function.signature))
 
+#		if instructions.has_key(function.getIdentyfier()):
+#			for i in instructions[function.getIdentyfier()]:
+#				if template[i[0]]["before"] != "":
+#					file.write("%s \n" % (template[i[0]]["before"] % tuple(i[1])))
+
 		if instructions.has_key(function.getIdentyfier()):
 
-			for i in instructions[function.getIdentyfier()]:
-				if template[i[0]]["before"] != "":
-					file.write("%s \n" % (template[i[0]]["before"] % tuple(i[1])))
+			lines = instructions[function.getIdentyfier()]
+			for line in lines.before:
+				if template[line.name] != "":
+					file.write("%s \n" % (template[line.name]["before"] % tuple(line.parameters)))
 
 		file.write("%s ret = (* static_%s) (%s);\n" % (function.type, function.name, function.signature))
 
+#		if instructions.has_key(function.getIdentyfier()):
+#			for i in instructions[function.getIdentyfier()]:
+#				if template[i[0]]["after"] != "":
+#					file.write("%s \n" % (template[i[0]]["after"] % tuple(i[1])))
+
 		if instructions.has_key(function.getIdentyfier()):
-			for i in instructions[function.getIdentyfier()]:
-				if template[i[0]]["after"] != "":
-					file.write("%s \n" % (template[i[0]]["after"] % tuple(i[1])))
+			lines = instructions[function.getIdentyfier()]
+			for line in lines.after:
+				if template[line.name] != "":
+					file.write("%s \n" % (template[line.name]["after"] % tuple(line.parameters)))
 
 		file.write("return ret;\n}\n\n")
 
