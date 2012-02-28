@@ -260,17 +260,29 @@ def writeSourceFile(options, functions, instructions):
 	for function in functions:
 		file.write("%s %s(%s) {\n" % (function.type, function.name, function.signature))
 
+#		if instructions.has_key(function.getIdentyfier()):
+#			for i in instructions[function.getIdentyfier()]:
+#				if template[i[0]]["before"] != "":
+#					file.write("%s \n" % (template[i[0]]["before"] % tuple(i[1])))
+
 		if instructions.has_key(function.getIdentyfier()):
-			for i in instructions[function.getIdentyfier()]:
-				if template[i[0]]["before"] != "":
-					file.write("%s \n" % (template[i[0]]["before"] % tuple(i[1])))
+			lines = instructions[function.getIdentyfier()]
+			for line in lines.before:
+				if template[line.name] != "":
+					file.write("%s \n" % (template[line.name]["before"] % line.parameters))
 
 		file.write("%s ret = (* static_%s) (%s);\n" % (function.type, function.name, function.signature))
 
+#		if instructions.has_key(function.getIdentyfier()):
+#			for i in instructions[function.getIdentyfier()]:
+#				if template[i[0]]["after"] != "":
+#					file.write("%s \n" % (template[i[0]]["after"] % tuple(i[1])))
+
 		if instructions.has_key(function.getIdentyfier()):
-			for i in instructions[function.getIdentyfier()]:
-				if template[i[0]]["after"] != "":
-					file.write("%s \n" % (template[i[0]]["after"] % tuple(i[1])))
+			lines = instructions[function.getIdentyfier()]
+			for line in lines.after:
+				if template[line.name] != "":
+					file.write("%s \n" % (template[line.name]["after"] % line.parameters))
 
 		file.write("return ret;\n}\n\n")
 
