@@ -349,32 +349,29 @@ def writeSourceFile(options, functions, instructions):
 	for function in functions:
 		file.write("%s %s(%s) {\n" % (function.type, function.name, function.signature))
 
-#		if instructions.has_key(function.getIdentyfier()):
-#			for i in instructions[function.getIdentyfier()]:
-#				if template[i[0]]["before"] != "":
-#					file.write("%s \n" % (template[i[0]]["before"] % tuple(i[1])))
-
+		# look for instructions
 		if instructions.has_key(function.getIdentyfier()):
-
 			lines = instructions[function.getIdentyfier()]
+			
+			# is this the desired init-function? If yes, write all inits
+			for line in lines.init:
+				if line.name == "init":
+					for inits in template:
+						file.write(inits["init"])	
+
+			# write given befores
 			for line in lines.before:
 				if template[line.name] != "":
 					file.write("%s \n" % (template[line.name]["before"] % tuple(line.parameters)))
 
-			for line in lines.init:
-				if template[line.name] != "":
-					file.write("%s \n" % (template[line.name]["init"] % tuple(line.parameters)))
-
+		# write the function call
 		file.write("%s ret = (* static_%s) (%s);\n" % (function.type, function.name, function.signature))
 
-#		if instructions.has_key(function.getIdentyfier()):
-#			for i in instructions[function.getIdentyfier()]:
-#				if template[i[0]]["after"] != "":
-#					file.write("%s \n" % (template[i[0]]["after"] % tuple(i[1])))
-
+		# look for instructions
 		if instructions.has_key(function.getIdentyfier()):
 			lines = instructions[function.getIdentyfier()]
 			for line in lines.after:
+				# write all given afters
 				if template[line.name] != "":
 					file.write("%s \n" % (template[line.name]["after"] % tuple(line.parameters)))
 
@@ -445,7 +442,6 @@ def main():
 	instructions = InstructionParser()
 	instr = instructions.parse(functions, opt.inputFile)
 
-	# TODO: foobar ersetzten	
 	writeOutputFile(opt, functions, instr)
 
 main()
