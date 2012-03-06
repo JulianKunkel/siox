@@ -34,7 +34,7 @@ class Function():
 	#
 	# @return The identifier which is the signature of the function without
 	# white space 
-	def getIdentyfier(self):
+	def getIdentifier(self):
 		params = ''	
 
 		for param in self.parameters:
@@ -44,10 +44,10 @@ class Function():
 		# Truncate the last ,
 		params = params[:-1]
 
-		identyfier = '%s%s(%s);' % (''.join(self.type.split(' ')),
+		identifier = '%s%s(%s);' % (''.join(self.type.split(' ')),
 			self.name, params)
 
-		return identyfier
+		return identifier
 	#end def
 #end class
 
@@ -72,7 +72,7 @@ class Parameter():
 class InstrumentedFunction():
 
 	def __init__(self):
-		self.init = []
+		self.init = False
 		self.before = []
 		self.after = []
 	#end def
@@ -213,15 +213,12 @@ class InstructionParser():
 		# Iterate over the function list to generate all the functions inside the
 		# ordered dict
 		for function in functions:
-			instructions[function.getIdentyfier()] = InstrumentedFunction()
-		
-		# Get the first first function inside the order dict which is although the
-		# first function in the input file
-		identyfier, sections = instructions.popitem()
+			instructions[function.getIdentifier()] = None 
 
 		# The actual section (init, before, after) to store the instrumentation
 		# instructions
 		storage = None
+		instrumentedFunction = InstrumentedFunction()
 
 		for index, line in enumerate(inputLines):
 			
@@ -235,26 +232,23 @@ class InstructionParser():
 			# Join each line without white space, this is equal to the identifier of
 			# a function used as key to access the ordered dict
 			key = ''.join(wordList)
-			
-			if identyfier == key:
 
-				instructions[identyfier] = sections 
-				
-				identyfier, sections = instructions.popitem()
-				storage = None
+			if instructions.has_key(key):
+				instructions[key] = instrumentedFunction
+				instrumentedFunction =	InstrumentedFunction()
 
 			else:
 
 				for word in wordList:
 
 					if word == 'before':
-						storage = sections.before
+						storage = instrumentedFunction.before
 
 					elif word == 'after':
-						storage = sections.after
+						storage = instrumentedFunction.after
 
 					elif word == 'init':
-						storage = sections.init
+						instrumentedFunction.init = True
 
 					elif word in commands:
 						
@@ -272,9 +266,6 @@ class InstructionParser():
 							sys.exit(1)
 
 						storage[-1].parameters.append(word)
-
-		instructions[identyfier] = sections
-
 		return instructions	
 
 
@@ -350,14 +341,13 @@ def writeSourceFile(options, functions, instructions):
 		file.write("%s %s(%s) {\n" % (function.type, function.name, function.signature))
 
 		# look for instructions
-		if instructions.has_key(function.getIdentyfier()):
-			lines = instructions[function.getIdentyfier()]
-			
+		if instructions.has_key(function.getIdentifier()):
+			lines = instructions[function.getIdentifier()]
+
 			# is this the desired init-function? If yes, write all inits
-			for line in lines.init:
-				if line.name == "init":
-					for inits in template:
-						file.write(inits["init"])	
+			if lines.init:
+				for inits in template.itervalues():
+					file.write(inits["init"]+'\n')	
 
 			# write given befores
 			for line in lines.before:
@@ -368,8 +358,8 @@ def writeSourceFile(options, functions, instructions):
 		file.write("%s ret = (* static_%s) (%s);\n" % (function.type, function.name, function.signature))
 
 		# look for instructions
-		if instructions.has_key(function.getIdentyfier()):
-			lines = instructions[function.getIdentyfier()]
+		if instructions.has_key(function.getIdentifier()):
+			lines = instructions[function.getIdentifier()]
 			for line in lines.after:
 				# write all given afters
 				if template[line.name] != "":
