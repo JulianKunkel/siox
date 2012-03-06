@@ -322,14 +322,33 @@ siox_dtid
 siox_register_datatype( const char *                name,
                         enum siox_ont_storage_type  storage )
 {
-    siox_dtid   result;
+    siox_dtid       dtid;
+    siox_datatype   datatype;
 
     if( !initialised_ontology )
         initialise_ontology();
 
-    result = siox_ont_register_datatype( name, storage );
+    dtid = siox_ont_find_dtid_by_name( name );
 
-    return( result );
+    if( dtid )
+    {
+        /* Compare found metric to current one, returning the mid if they match and NULL otherwise. */
+        datatype = siox_ont_find_datatype_by_dtid( dtid );
+
+        if( ( storage != siox_ont_datatype_get_storage( datatype ) ) )
+        {
+            fprintf( stderr, "ERROR: Could not register the datatype >%s< "
+                             "as it exists already,\n"
+                             "with different attributes:\n%s\n",
+                             name, siox_ont_datatype_to_string( datatype ) );
+            return( NULL );
+        }
+    }
+    else
+        dtid = siox_ont_register_datatype( name,
+                                           storage );
+
+    return( dtid );
 }
 
 
@@ -341,18 +360,38 @@ siox_register_metric( const char *                 name,
                       enum siox_ont_storage_type   storage,
                       enum siox_ont_scope_type     scope )
 {
-    siox_mid result;
+    siox_mid    mid;
+    siox_metric metric;
 
     if( !initialised_ontology )
         initialise_ontology();
 
-    result = siox_ont_register_metric( name,
-                                       description,
-                                       unit,
-                                       storage,
-                                       scope );
+    mid = siox_ont_find_mid_by_name( name );
 
-    return( result );
+    if( mid )
+    {
+        /* Compare found metric to current one, returning the mid if they match and NULL otherwise. */
+        metric = siox_ont_find_metric_by_mid( mid );
+
+        if( ( unit != siox_ont_metric_get_unit( metric ) )
+            || ( storage != siox_ont_metric_get_storage( metric ) )
+            || ( scope != siox_ont_metric_get_scope( metric ) ) )
+        {
+            fprintf( stderr, "ERROR: Could not register the metric >%s< "
+                             "as it exists already,\n"
+                             "with different attributes:\n%s\n",
+                             name, siox_ont_metric_to_string( metric ) );
+            return( NULL );
+        }
+    }
+    else
+        mid = siox_ont_register_metric( name,
+                                        description,
+                                        unit,
+                                        storage,
+                                        scope );
+
+    return( mid );
 }
 
 

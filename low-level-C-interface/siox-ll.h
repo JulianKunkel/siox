@@ -113,7 +113,8 @@ void siox_register_edge(siox_unid unid, const char * child_swid);
 
 /**
  * Find the @em DTID for the data type with the specifications given.
- * If it already exists in the ontology, return its DTID; otherwise, create it and return the fresh DTID.
+ * If it already exists in the ontology (only the name is checked to test for this!), return its DTID;
+ * otherwise, create it and return the fresh DTID.
  *
  * @param[in]   name        The data type's unique name.
  * @param[in]   storage     The minimum storage type required to store data of the data type.
@@ -141,12 +142,11 @@ siox_dmid siox_register_descriptor_map(siox_unid unid, siox_dtid source_dtid, si
 
 /**
  * Liefert die @em MID zu einer Metrik.
- * Existiert diese noch nicht, wird eine neue Metrik in die Ontologie eingefügt und deren neue @em MID zurückgeliefert.
+ * Existiert diese noch nicht (hierzu wird nur der Name geprüft!), wird eine neue Metrik in die Ontologie eingefügt
+ * und deren neue @em MID zurückgeliefert.
  *
  * @param[in]   name        Der Name der Metrik. Er muß eindeutig sein.
  * @param[in]   description Eine textuelle Beschreibung der Metrik.
- *                          Existiert die Metrik, ohne daß eine Beschreibung gesetzt wurde, wird die neue übernommen.
- *                          Existiert bereits eine, wird die neue ignoriert.
  * @param[in]   unit        Die Einheit, in welcher die Daten gemessen werden.
  * @param[in]   storage     Der minimale zum Speichern der Daten nötige Datentyp.
  * @param[in]   scope       Der zeitliche Bereich, in welchem die Daten angefallen sind.

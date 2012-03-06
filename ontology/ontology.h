@@ -13,90 +13,32 @@
 
 
 #include <stdbool.h>
-
-
-/**
- * Die <em>Data Type ID</em>.
- *
- * Identifiziert einen Semantischen Datentyp in der Ontologie.
- */
-typedef struct siox_dtid_t * siox_dtid;
-
-
-/**
- * Die <em>Metric ID</em>.
- *
- * Identifiziert eine Metrik in der Ontologie.
- */
-typedef struct siox_mid_t * siox_mid;
-
-
-/**
- * Die Metrik mit allen Attributen.
- *
- * Enthält die Beschreibung einer Metrik mit allen zugehörigen Eigenschaften und Attributen.
- */
-typedef struct siox_metric_t * siox_metric;
-
-
-/**
- * Mögliche Werte für das Attribut "Unit" der Metrik.
- */
-enum siox_ont_unit_type{
-    SIOX_UNIT_UNASSIGNED,
-    SIOX_UNIT_SECONDS,
-    SIOX_UNIT_BYTES,
-    SIOX_UNIT_FLOPS,
-    SIOX_UNIT_UNITS
-};
-
-
-/**
- * Mögliche Werte für das Attribut "Minimal Storage Type" der Metrik.
- */
-enum siox_ont_storage_type{
-    SIOX_STORAGE_UNASSIGNED,
-    SIOX_STORAGE_32_BIT_INTEGER,
-    SIOX_STORAGE_64_BIT_INTEGER,
-    SIOX_STORAGE_FLOAT,
-    SIOX_STORAGE_DOUBLE,
-    SIOX_STORAGE_STRING
-};
-
-
-/**
- * Mögliche Werte für das Attribut "Data Scope" der Metrik.
- */
-enum siox_ont_scope_type{
-    SIOX_SCOPE_UNASSIGNED,
-    SIOX_SCOPE_SAMPLE,
-    SIOX_SCOPE_AVERAGE,
-    SIOX_SCOPE_DIFFERENCE,
-    SIOX_SCOPE_MAXIMUM,
-    SIOX_SCOPE_MINIMUM,
-    SIOX_SCOPE_MEDIAN,
-    SIOX_SCOPE_SUM
-};
+#include "enums.h"
+#include "metric.h"
+#include "datatype.h"
 
 
 
 /**
- * @name Opening, Writing and Closing the Ontology
+ * @name Opening, Writing, Closing and Removing the Ontology
  */
 /**@{*/
 
 /**
  * Liest eine Ontologie aus einer Datei.
  *
- * @param   file    Der Name der Datei, aus der die Ontologie gelesen werden soll.
- *                  Existiert die Datei noch nicht, wird eine neue (leere) Ontologie angelegt.
+ * @param   file    Der Basisname der Dateien, aus denen die Ontologie gelesen werden soll.
+ *                  Er wird jeweils um passende Endungen ergänzt.
+ *                  Existieren die Dateien noch nicht, wird eine neue (leere)
+ *                  Ontologie angelegt.
  *
  * @returns         @c true bei Erfolg, sonst @c false.
  */
 bool siox_ont_open_ontology( const char * file );
 
 /**
- * Schreibt den aktuellen Stand der Ontologie in die bei siox_ont_open_ontology() angegebene Datei.
+ * Schreibt den aktuellen Stand der Ontologie in die bei siox_ont_open_ontology()
+ * angegebene Datei.
  * Der bisherige Inhalt wird dabei überschrieben!
  *
  * @returns         @c true bei Erfolg, sonst @c false.
@@ -107,19 +49,32 @@ bool siox_ont_write_ontology();
  * Schließt die Ontologie wieder.
  *
  * Belegte Ressourcen werden freigegeben.
- * Eventuelle Änderungen an der Ontologie schreibt diese Funktion <em>nicht</em> in die Datei zurück;
- * dazu muß siox_ont_write_ontology() aufgerufen werden!
+ * Eventuelle Änderungen an der Ontologie schreibt diese Funktion <em>nicht</em>
+ * in die Datei zurück; dazu muß siox_ont_write_ontology() aufgerufen werden!
  *
  * @returns         @c true bei Erfolg, sonst @c false.
  */
 bool siox_ont_close_ontology();
 
+/**
+ * Löscht die Ontologie dauerhaft.
+ *
+ * Belegte Ressourcen werden freigegeben.
+ *
+ * @param   file    Der Basisname der Dateien, aus denen die zu löschende Ontologie
+ *                  besteht. Er wird jeweils um passende Endungen ergänzt.
+ *
+ * @returns         @c true bei Erfolg, sonst @c false.
+ */
+bool siox_ont_remove_ontology( const char * file );
+
 /**@}*/
 
 
 
+
 /**
- * @name Functions for the @em DTID object @em siox_dtid
+ * @name Accessing the DataType Part of the Ontology
  */
 /**@{*/
 
@@ -134,157 +89,42 @@ bool siox_ont_close_ontology();
  */
 siox_dtid siox_ont_register_datatype( const char * name, enum siox_ont_storage_type storage );
 
-/**
- * Turn the DTID into a human-readable string.
- *
- * @param[in]   dtid    The @em DTID object.
- *
- * @returns             If the metric exists, a string representing the data; otherwise @c NULL.
- */
-const char* siox_ont_dtid_to_string( siox_dtid dtid );
-
-/**@}*/
-
-
 
 /**
- * @name Functions for the @em MID object @em siox_mid
- */
-/**@{*/
-
-/**
- * Find the @em MID for the metric with the exact name given.
+ * Find the @em DTID for the datatype with the exact name given.
  *
  * @param[in]   name    The unique name to search for.
  *
- * @returns             The @em MID of the metric with the name given or @c NULL, if no exact match was found.
+ * @returns             The @em DTID of the datatype with the name given or @c NULL, if no exact match was found.
  */
-siox_mid siox_ont_find_mid_by_name( const char * name);
+siox_dtid siox_ont_find_dtid_by_name( const char * name);
+
 
 /**
- * Compare two @em MIDs for equality.
+ * Retrieve the datatype with the @em DTID given.
  *
- * @param[in]   mid1    An @em MID.
- * @param[in]   mid2    Another @em MID.
+ * @param[in]   dtid     The @em DTID of the datatype.
  *
- * @returns             @c true if the @em MIDs are equal or both are @c NULL; otherwise @c false.
+ * @returns             If the @e DTID exists, a copy of the datatype's data; otherwise @c NULL.
  */
-bool siox_ont_mid_is_equal( siox_mid mid1, siox_mid mid2 );
+siox_datatype siox_ont_find_datatype_by_dtid( siox_dtid dtid );
+
 
 /**
- * Destructor for an @em MID object.
+ * Count the number of datatypes in the ontology.
  *
- * @param [in]  mid The @em MID object.
+ * @returns     The number of datatypes.
  */
-void siox_ont_free_mid( siox_mid mid );
+int siox_ont_count_datatypes();
 
 /**@}*/
 
 
 
 /**
- * @name Functions for the Metric Object @em siox_metric
+ * @name Accessing the Metrics Part of the Ontology
  */
 /**@{*/
-
-
-/**
- * Retrieve the metric with the @em MID given.
- *
- * @param[in]   mid     The @em MID of the metric.
- *
- * @returns             If the @e MID exists, a copy of the metric's data; otherwise @c NULL.
- */
-siox_metric siox_ont_find_metric_by_mid( siox_mid mid );
-
-/**
- * Retrieve a given metric's @em MID.
- *
- * @param[in]   metric  The metric.
- *
- * @returns             If the metric exists, its @em MID; otherwise @c NULL.
- */
-siox_mid siox_ont_metric_get_mid( siox_metric metric );
-
-/**
- * Retrieve a given metric's unique name.
- *
- * @param[in]   metric  The metric.
- *
- * @returns             If the metric exists, a copy of its unique name; otherwise, @c NULL.
- */
-const char * siox_ont_metric_get_name( siox_metric metric );
-
-/**
- * Retrieve a given metric's description.
- *
- * @param[in]   metric  The metric.
- *
- * @returns             If the metric exists, a copy of its description; otherwise @c NULL.
- */
-const char * siox_ont_metric_get_description( siox_metric metric );
-
-/**
- * Retrieve a given metric's unit attribute.
- *
- * @param[in]   metric  The metric.
- *
- * @returns             If the metric exists, the metric's unit attibute;
- *                      otherwise @c SIOX_UNIT_UNASSIGNED.
- */
-enum siox_ont_unit_type siox_ont_metric_get_unit( siox_metric metric );
-
-/**
- * Retrieve a given metric's storage attribute.
- *
- * @param[in]   metric  The metric.
- *
- * @returns             If the metric exists, the metric's storage attribute;
- *                      otherwise @c SIOX_STORAGE_UNASSIGNED.
- */
-enum siox_ont_storage_type siox_ont_metric_get_storage( siox_metric metric );
-
-/**
- * Retrieve a given metric's scope attribute.
- *
- * @param[in]   metric  The metric.
- *
- * @returns             If the metric exists, the metric's scope attribute;
- *                      otherwise @c SIOX_SCOPE_UNASSIGNED.
- */
-enum siox_ont_scope_type siox_ont_metric_get_scope( siox_metric metric );
-
-/**
- * Turn the metric data into a human-readable string.
- *
- * @param[in]   metric  The metric object.
- *
- * @returns             If the metric exists, a multi-line string representing the data; otherwise @c NULL.
- */
-char* siox_ont_metric_to_string( siox_metric metric );
-
-/**
- * Destructor for a metric object.
- *
- * @param[in]   metric  The metric object.
- */
-void siox_ont_free_metric( siox_metric metric );
-
-/**@}*/
-
-
-
-/**
- * @name Sizing Up and Extending the Ontology
- */
-/**@{*/
-
-/**
- * Count the number of metrics in the ontology.
- *
- * @returns     The number of metrics.
- */
-int siox_ont_count_metrics();
 
 /**
  * Fügt eine neue Metrik in die Ontologie ein.
@@ -304,7 +144,31 @@ siox_mid siox_ont_register_metric( const char *                 name,
                                    enum siox_ont_scope_type     scope );
 
 
-/**@}*/
+/**
+ * Find the @em MID for the metric with the exact name given.
+ *
+ * @param[in]   name    The unique name to search for.
+ *
+ * @returns             The @em MID of the metric with the name given or @c NULL, if no exact match was found.
+ */
+siox_mid siox_ont_find_mid_by_name( const char * name);
 
+/**
+ * Retrieve the metric with the @em MID given.
+ *
+ * @param[in]   mid     The @em MID of the metric.
+ *
+ * @returns             If the @e MID exists, a copy of the metric's data; otherwise @c NULL.
+ */
+siox_metric siox_ont_find_metric_by_mid( siox_mid mid );
+
+/**
+ * Count the number of metrics in the ontology.
+ *
+ * @returns     The number of metrics.
+ */
+int siox_ont_count_metrics();
+
+/**@}*/
 
 #endif

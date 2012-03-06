@@ -19,9 +19,11 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include "enums.h"
 #include "ontology.h"
 
-#define MINIMUM_NAME_LENGTH    4    /**< Minimum length for a valid metric's name. */
+#define MINIMUM_NAME_LENGTH    4    /**< Minimum length for a valid
+                                         datatype's or metric's name. */
 #define LINE_BUFFER_SIZE    2000    /**< Size (bytes) for buffer to read lines into. */
 
 
@@ -34,6 +36,22 @@
 struct siox_dtid_t
 {
    unsigned int     id; /**< The actual Data Type ID. */
+};
+
+struct siox_datatype_t
+{
+    int                         id;     /**< The datatype's <em>DTID</em>. */
+    char *                      name;       /**< The datatype's unique name. */
+    enum siox_ont_storage_type  storage;    /**< The minimal data type needed to store the datatype's data. */
+};
+
+/**
+ * A list element for a simple list of datatypes.
+ */
+struct siox_ont_datatype_node_t
+{
+    siox_datatype                       datatype; /**< The datatype's actual data. */
+    struct siox_ont_datatype_node_t     *next;  /**< The next list element. */
 };
 
 struct siox_mid_t
@@ -54,10 +72,10 @@ struct siox_metric_t
 /**
  * A list element for a simple list of metrics.
  */
-struct siox_ont_node_t
+struct siox_ont_metric_node_t
 {
-    siox_metric                 metric; /**< The metric's actual data. */
-    struct siox_ont_node_t      *next;  /**< The next list element. */
+    siox_metric                     metric; /**< The metric's actual data. */
+    struct siox_ont_metric_node_t   *next;  /**< The next list element. */
 };
 
 
@@ -78,12 +96,25 @@ static const char * current_ontology = NULL;
 static int  current_mid = 0;
 
 /**
+ * The next free DTID to assign to a new datatype. Also, the number of datatypes in the current ontology.
+ */
+static int  current_dtid = 0;
+
+/**
  * A pointer to the head of the list of actual metrics data.
- * Simple implementation for dynamic, eventually to be replaced by something better.
+ * Simple implementation for the moment, eventually to be replaced by something better.
  *
  * @todo Replace the list with something more sophisticated, such as a btree.
  */
-static struct siox_ont_node_t * head;
+static struct siox_ont_metric_node_t * metric_head;
+
+/**
+ * A pointer to the head of the list of actual datatypes data.
+ * Simple implementation for the moment, eventually to be replaced by something better.
+ *
+ * @todo Replace the list with something more sophisticated, such as a btree.
+ */
+static struct siox_ont_datatype_node_t * datatype_head;
 
 
 /*
@@ -91,9 +122,13 @@ static struct siox_ont_node_t * head;
  * ===============================
  */
 
-static siox_mid     new_mid_from_id( int id );
-static siox_metric  new_metric( void);
-static bool         insert_into_list( siox_metric metric );
+static bool     read_datatype_file( void );
+static bool     insert_datatype_into_list( siox_datatype datatype );
+static bool     write_datatype_file( void );
+
+static bool     read_metric_file( void );
+static bool     insert_metric_into_list( siox_metric metric );
+static bool     write_metric_file( void );
 
 
 /*
@@ -104,6 +139,435 @@ static bool         insert_into_list( siox_metric metric );
 bool
 siox_ont_open_ontology( const char * file )
 {
+    /* Require closed ontology */
+    if( current_ontology )
+        siox_ont_close_ontology();
+
+    /* Memorise file name */
+    assert( current_ontology == NULL );
+    current_ontology = file;
+
+    return( read_datatype_file() && read_metric_file() );
+}
+
+
+bool
+siox_ont_write_ontology()
+{
+    /* Require an open ontology */
+    if( !current_ontology )
+    {
+        fprintf( stderr, "ERROR: No ontology to write!\n" );
+        return( false );
+    }
+
+    return( write_datatype_file() && write_metric_file() );
+}
+
+
+bool
+siox_ont_close_ontology()
+{
+    struct siox_ont_metric_node_t       *this_metric, *next_metric;
+    struct siox_ont_datatype_node_t     *this_datatype, *next_datatype;
+
+    /* Require an open ontology */
+    if( !current_ontology )
+    {
+        fprintf( stderr, "ERROR: No ontology!\n" );
+        return( false );
+    }
+
+    /* Free metrics storage */
+    this_metric = metric_head;
+    while( this_metric )
+    {
+        assert( this_metric->metric != NULL);
+        next_metric = this_metric->next;
+        siox_ont_free_metric( this_metric->metric );
+        this_metric = next_metric;
+    }
+    metric_head = NULL;
+
+    /* Free datatype storage */
+    this_datatype = datatype_head;
+    while( this_datatype )
+    {
+        assert( this_datatype->datatype != NULL);
+        next_datatype = this_datatype->next;
+        siox_ont_free_datatype( this_datatype->datatype );
+        this_datatype = next_datatype;
+    }
+    datatype_head = NULL;
+
+    /* Forget file name */
+    current_ontology = NULL;
+
+    return( true );
+}
+
+
+bool siox_ont_remove_ontology( const char * ontology )
+{
+    char    filename[80];
+    bool    bResult = true;
+
+    /* Remove Metrics file */
+    sprintf( filename, "%s.m.ont", ontology );
+    bResult = bResult && remove( filename );
+
+    /* Remove DataTypes file */
+    sprintf( filename, "%s.dt.ont", ontology );
+    bResult = bResult && remove( filename );
+
+    return( bResult );
+}
+
+
+
+/**
+ * Tries to read the datatypes data from a file with the name "<current_ontology>.dt.ont".
+ *
+ * @returns     @c false if any problems arose, @c true otherwise.
+ */
+static bool
+read_datatype_file( void )
+{
+    char            filename[80];
+    FILE *          fh;
+    char            sBuffer[LINE_BUFFER_SIZE];
+    siox_datatype   datatype;
+    int             line;
+    int             id, storage;
+    int             length;
+    char            *p, *q;
+
+    /* Construct file name */
+    assert( current_ontology != NULL );
+    sprintf( filename, "%s.dt.ont", current_ontology );
+
+    /* Initialise datatypes field */
+    assert( datatype_head == NULL );
+
+    current_dtid = 0;
+
+    /* Open file */
+    if( ( fh = fopen( filename, "rt" ) ) != NULL )
+    {
+        line = 0;
+        /* Read line from file */
+        while( fgets( sBuffer, LINE_BUFFER_SIZE, fh ) )
+        {
+            /* Allow for comment lines */
+            if( sBuffer[0] == '#' )
+                continue;
+            switch( line++ % 3 )
+            {
+                case 0: /* Parse numeric values */
+                    /* Set up new datatype object */
+                    datatype = siox_ont_new_datatype();
+                    if ( !datatype )
+                        return( false );
+                    if( 4 != sscanf( sBuffer, "%d, %d\n", &id, &storage ) )
+                    {
+                        fprintf( stderr, "ERROR: Format error in file %s.\n", filename );
+                        fclose( fh );
+                        siox_ont_free_datatype( datatype );
+                        current_ontology = NULL;
+                        return( false );
+                    }
+                    datatype->id = id;
+                    datatype->storage = (enum siox_ont_storage_type) storage;
+                    break;
+                case 1: /* Parse for name */
+                    length = strlen( sBuffer );
+                    if( length < MINIMUM_NAME_LENGTH )
+                    {
+                        fprintf( stderr, "ERROR: Datatype name too short (%d < %d) in file %s.\n",
+                                 length, MINIMUM_NAME_LENGTH, filename );
+                        fclose( fh );
+                        siox_ont_free_datatype( datatype );
+                        current_ontology = NULL;
+                        return( false );
+                    }
+                    datatype->name = malloc( length );
+                    if ( !(datatype->name) )
+                    {
+                        fprintf( stderr, "ERROR: Memory allocation error in siox_ont_open_ontology()!\n" );
+                        fclose( fh );
+                        siox_ont_free_datatype( datatype );
+                        current_ontology = NULL;
+                        return( false );
+                    }
+                    p = datatype->name + length - 2;
+                    q = sBuffer + length - 2;
+                    while( p >= datatype->name )
+                         *(p--) = *(q--);
+                    datatype->name[ length - 1 ] = '\0'; /* Cut off the \n */
+                    break;
+                case 2: /* Parse for empty line */
+                    if( !insert_datatype_into_list( datatype ) )
+                    {
+                        fprintf( stderr, "ERROR: Cannot store datatype >%s< due to storage limitations.\n",
+                                         datatype->name );
+                        fclose( fh );
+                        siox_ont_free_datatype( datatype );
+                        current_ontology = NULL;
+                        return( false );
+                    }
+                    /* Insert datatype into field */
+                    current_dtid = datatype->id + 1;
+                    break;
+                default:    /* ERROR! */
+                    /* This should never happen! */
+                    fprintf( stderr, "ERROR: Format error in file %s.\n", filename );
+                    fclose( fh );
+                    current_ontology = NULL;
+                    return( false );
+            }
+        }
+
+        /* Close file */
+        if( fclose( fh ) == EOF )
+        {
+            fprintf( stderr, "ERROR: Couldn't close file %s properly.\n", filename );
+            current_ontology = NULL;
+            return( false );
+        }
+    }
+
+    return( true );
+}
+
+
+/**
+ * Tries to write the datatype data to a file with the name "<current_ontology>.dt.ont".
+ *
+ * @returns     @c true on success, @c false otherwise.
+ */
+static bool
+write_datatype_file( void )
+{
+    FILE *                            fh;
+    char                              filename[80];
+    char                              sBuffer[LINE_BUFFER_SIZE];
+    siox_datatype                     datatype;
+    int                               iError = 0;
+    struct siox_ont_datatype_node_t  *current;
+
+
+    sprintf( filename, "%s.dt.ont", current_ontology );
+
+    /* Open file */
+    if( ( fh = fopen( filename, "wt" ) ) != NULL )
+    {
+        /** @todo Write file header comment */
+
+        /* Write datatypes to file */
+        for( current = datatype_head; current; current = current->next )
+        {
+            datatype = current->datatype;
+            assert( datatype != NULL );
+            /* fprintf( stderr, "Writing to file:\n%s\n", siox_ont_datatype_to_string( datatype ) ); */
+            sprintf( sBuffer, "%d, %d\n",
+                              datatype->id,
+                              datatype->storage );
+            if( fputs( sBuffer, fh ) == EOF )
+                iError++;
+            sprintf( sBuffer, "%s\n", datatype->name );
+            if( fputs( sBuffer, fh ) == EOF )
+                iError++;
+            if( fputs( "\n", fh ) == EOF )
+                iError++;
+        }
+        if( iError )
+        {
+            fprintf( stderr, "ERROR: Could not write datatypes to file %s.\n", filename );
+            fclose( fh );
+            return( false );
+        }
+
+        /* Close file */
+        if( fclose( fh ) == EOF )
+        {
+            fprintf( stderr, "ERROR: Could not close file %s properly.\n", filename );
+            return( false );
+        }
+    }
+    else
+    {
+        fprintf( stderr, "ERROR: Could not open file %s for writing.\n", filename );
+        return( false );
+    }
+
+    return( true );
+}
+
+
+siox_mid
+siox_ont_find_mid_by_name( const char * name)
+{
+    struct siox_ont_metric_node_t  *current;
+
+    current = metric_head;
+
+    while( current )
+    {
+        assert( current->metric != NULL );
+        if( strcmp( name, current->metric->name ) == 0 )
+            return( siox_ont_mid_from_id( current->metric->id ) );
+        current = current->next;
+    }
+
+    return( NULL );
+}
+
+
+siox_metric
+siox_ont_find_metric_by_mid( siox_mid mid )
+{
+    int                     id;
+    struct siox_ont_metric_node_t  *current;
+
+    /* Require an open ontology */
+    if( !current_ontology )
+    {
+        fprintf( stderr, "ERROR: No ontology!\n" );
+        return( NULL );
+    }
+
+    if( mid )
+        id = mid->id;
+    else
+    {
+        fprintf( stderr, "ERROR: Empty MID object!\n" );
+        return( NULL );
+    }
+
+    if( id < 0  ||  current_mid <= id )
+    {
+        fprintf( stderr, "ERROR: MID %d out of range (0 - %d)!\n", id, current_mid );
+        return( NULL );
+    }
+
+    for( current = metric_head; current; current = current->next )
+    {
+        assert( current->metric != NULL );
+        if( current->metric->id == id )
+            return( current->metric );
+    }
+
+    return( NULL );
+}
+
+
+int
+siox_ont_count_metrics()
+{
+    struct siox_ont_metric_node_t  *current;
+    int                             result;
+
+    /* Require an open ontology */
+    if( !current_ontology )
+    {
+        fprintf( stderr, "ERROR: No ontology!\n" );
+        return( -1 );
+    }
+
+    result = 0;
+    for( current = metric_head; current; current = current->next )
+        result++;
+
+    return( result );
+}
+
+
+siox_mid
+siox_ont_register_metric( const char *                  name,
+                          const char *                  description,
+                          enum siox_ont_unit_type       unit,
+                          enum siox_ont_storage_type    storage,
+                          enum siox_ont_scope_type      scope )
+{
+    siox_mid    mid;
+    siox_metric metric;
+
+    /* Require an open ontology */
+    if( !current_ontology )
+    {
+        fprintf( stderr, "ERROR: No ontology!\n" );
+        return( NULL );
+    }
+
+    mid = siox_ont_find_mid_by_name( name );
+    if( mid )
+    {
+        fprintf( stderr, "ERROR: The unique name >%s< exists already!\n", name );
+        siox_ont_free_mid( mid );
+        return( NULL );
+    }
+
+    mid = siox_ont_mid_from_id( current_mid );
+    if( !mid )
+    {
+        fprintf( stderr, "ERROR: Cannot register metric >%s< due to storage limitations.\n", name );
+        return( NULL );
+    }
+    current_mid++;
+
+    /* Set up new metric object */
+    metric = siox_ont_new_metric();
+    if ( !metric )
+    {
+        fprintf( stderr, "ERROR: Cannot register metric >%s< due to storage limitations.\n", name );
+        siox_ont_free_mid( mid );
+        return( NULL );
+    }
+    metric->id = mid->id;
+    metric->name = malloc( strlen( name ) + 1 );
+    if ( !(metric->name) )
+    {
+        fprintf( stderr, "Memory allocation error in siox_ont_register_metric()!\n" );
+        siox_ont_free_metric( metric );
+        siox_ont_free_mid( mid );
+        return( NULL );
+    }
+    strcpy( metric->name, name );
+    metric->description = malloc( strlen( description ) + 1 );
+    if ( !(metric->description) )
+    {
+        fprintf( stderr, "Memory allocation error in siox_ont_register_metric()!\n" );
+        siox_ont_free_metric( metric );
+        siox_ont_free_mid( mid );
+        return( NULL );
+    }
+    strcpy( metric->description, description );
+    metric->unit = unit;
+    metric->storage = storage;
+    metric->scope = scope;
+
+    /* Insert metric into field */
+    if( !insert_metric_into_list( metric ) )
+    {
+        fprintf( stderr, "ERROR: Cannot register metric >%s< due to storage limitations.\n",
+                         metric->name );
+        siox_ont_free_metric( metric );
+        return( NULL );
+    }
+
+    return( mid );
+}
+
+
+/**
+ * Tries to read the metrics data from a file with the name "<current_ontology>.m.ont".
+ *
+ * @returns     @c false if any problems arose, @c true otherwise.
+ */
+static bool
+read_metric_file( void )
+{
+    char            filename[80];
     FILE *          fh;
     char            sBuffer[LINE_BUFFER_SIZE];
     siox_metric     metric;
@@ -112,22 +576,17 @@ siox_ont_open_ontology( const char * file )
     int             length;
     char            *p, *q;
 
-
-    /* Require no open ontology */
-    if( current_ontology )
-        siox_ont_close_ontology();
-
-    /* Memorise file name */
-    assert( current_ontology == NULL );
-    current_ontology = file;
+    /* Construct file name */
+    assert( current_ontology != NULL );
+    sprintf( filename, "%s.m.ont", current_ontology );
 
     /* Initialise metrics field */
-    assert( head == NULL );
+    assert( metric_head == NULL );
 
     current_mid = 0;
 
     /* Open file */
-    if( ( fh = fopen( file, "rt" ) ) != NULL )
+    if( ( fh = fopen( filename, "rt" ) ) != NULL )
     {
         line = 0;
         /* Read line from file */
@@ -140,12 +599,12 @@ siox_ont_open_ontology( const char * file )
             {
                 case 0: /* Parse numeric values */
                     /* Set up new metric object */
-                    metric = new_metric();
+                    metric = siox_ont_new_metric();
                     if ( !metric )
                         return( false );
                     if( 4 != sscanf( sBuffer, "%d, %d, %d, %d\n", &id, &unit, &storage, &scope) )
                     {
-                        fprintf( stderr, "ERROR: Format error in file %s.\n", file );
+                        fprintf( stderr, "ERROR: Format error in file %s.\n", filename );
                         fclose( fh );
                         siox_ont_free_metric( metric );
                         current_ontology = NULL;
@@ -161,7 +620,7 @@ siox_ont_open_ontology( const char * file )
                     if( length < MINIMUM_NAME_LENGTH )
                     {
                         fprintf( stderr, "ERROR: Metric name too short (%d < %d) in file %s.\n",
-                                 length, MINIMUM_NAME_LENGTH, file );
+                                 length, MINIMUM_NAME_LENGTH, filename );
                         fclose( fh );
                         siox_ont_free_metric( metric );
                         current_ontology = NULL;
@@ -202,7 +661,7 @@ siox_ont_open_ontology( const char * file )
                     metric->description[ length - 1 ] = '\0'; /* Cut off the \n */
                     break;
                 case 3: /* Parse for empty line */
-                    if( !insert_into_list( metric ) )
+                    if( !insert_metric_into_list( metric ) )
                     {
                         fprintf( stderr, "ERROR: Cannot store metric >%s< due to storage limitations.\n",
                                          metric->name );
@@ -216,7 +675,7 @@ siox_ont_open_ontology( const char * file )
                     break;
                 default:    /* ERROR! */
                     /* This should never happen! */
-                    fprintf( stderr, "ERROR: Format error in file %s.\n", file );
+                    fprintf( stderr, "ERROR: Format error in file %s.\n", filename );
                     fclose( fh );
                     current_ontology = NULL;
                     return( false );
@@ -226,7 +685,7 @@ siox_ont_open_ontology( const char * file )
         /* Close file */
         if( fclose( fh ) == EOF )
         {
-            fprintf( stderr, "ERROR: Couldn't close file %s properly.\n", file );
+            fprintf( stderr, "ERROR: Couldn't close file %s properly.\n", filename );
             current_ontology = NULL;
             return( false );
         }
@@ -236,34 +695,35 @@ siox_ont_open_ontology( const char * file )
 }
 
 
-bool
-siox_ont_write_ontology()
+/**
+ * Tries to write the metrics data to a file with the name "<current_ontology>.m.ont".
+ *
+ * @returns     @c true on success, @c false otherwise.
+ */
+static bool
+write_metric_file( void )
 {
-    FILE *                  fh;
-    char                    sBuffer[LINE_BUFFER_SIZE];
-    siox_metric             metric;
-    int                     iError;
-    struct siox_ont_node_t  *current;
+    FILE *                          fh;
+    char                            filename[80];
+    char                            sBuffer[LINE_BUFFER_SIZE];
+    siox_metric                     metric;
+    int                             iError = 0;
+    struct siox_ont_metric_node_t  *current;
 
-    /* Require an open ontology */
-    if( !current_ontology )
-    {
-        fprintf( stderr, "ERROR: No ontology to write!\n" );
-        return( false );
-    }
+
+    sprintf( filename, "%s.m.ont", current_ontology );
 
     /* Open file */
-    if( ( fh = fopen( current_ontology, "wt" ) ) != NULL )
+    if( ( fh = fopen( filename, "wt" ) ) != NULL )
     {
         /** @todo Write file header comment */
 
         /* Write metrics to file */
-        for( current = head; current; current = current->next )
+        for( current = metric_head; current; current = current->next )
         {
-            iError = 0;
             metric = current->metric;
             assert( metric != NULL );
-            fprintf( stderr, "Writing to file:\n%s\n", siox_ont_metric_to_string( metric ) );
+            /* fprintf( stderr, "Writing to file:\n%s\n", siox_ont_metric_to_string( metric ) ); */
             sprintf( sBuffer, "%d, %d, %d, %d\n",
                               metric->id,
                               metric->unit,
@@ -282,7 +742,7 @@ siox_ont_write_ontology()
         }
         if( iError )
         {
-            fprintf( stderr, "ERROR: Could not write metrics to file %s.\n", current_ontology );
+            fprintf( stderr, "ERROR: Could not write metrics to file %s.\n", filename );
             fclose( fh );
             return( false );
         }
@@ -290,416 +750,17 @@ siox_ont_write_ontology()
         /* Close file */
         if( fclose( fh ) == EOF )
         {
-            fprintf( stderr, "ERROR: Could not close file %s properly.\n", current_ontology );
+            fprintf( stderr, "ERROR: Could not close file %s properly.\n", filename );
             return( false );
         }
     }
     else
     {
-        fprintf( stderr, "ERROR: Could not open file %s for writing.\n", current_ontology );
+        fprintf( stderr, "ERROR: Could not open file %s for writing.\n", filename );
         return( false );
     }
 
     return( true );
-}
-
-
-bool
-siox_ont_close_ontology()
-{
-    struct siox_ont_node_t  *this, *next;
-
-    /* Require an open ontology */
-    if( !current_ontology )
-    {
-        fprintf( stderr, "ERROR: No ontology!\n" );
-        return( false );
-    }
-
-    /* Free metrics storage */
-    this = head;
-    while( this )
-    {
-        assert( this->metric != NULL);
-        next = this->next;
-        siox_ont_free_metric( this->metric );
-        this = next;
-    }
-    head = NULL;
-
-    /* Forget file name */
-    current_ontology = NULL;
-
-    return( true );
-}
-
-
-siox_dtid
-siox_ont_register_datatype( const char * name, enum siox_ont_storage_type storage )
-{
-    /** @todo Actually read, lookup and write data type */
-    return( NULL );
-}
-
-
-const char*
-siox_ont_dtid_to_string( siox_dtid dtid )
-{
-    char * sResult;
-
-    sResult = malloc( 80 );
-
-    /** @todo Lookup and return actual name belonging to the data type. */
-    if ( dtid )
-    {
-        sprintf( sResult, "%u", dtid->id );
-        return( sResult );
-    }
-    else
-        return( NULL );
-}
-
-
-siox_mid
-siox_ont_find_mid_by_name( const char * name)
-{
-    struct siox_ont_node_t  *current;
-
-    current = head;
-
-    while( current )
-    {
-        assert( current->metric != NULL );
-        if( strcmp( name, current->metric->name ) == 0 )
-            return( new_mid_from_id( current->metric->id ) );
-        current = current->next;
-    }
-
-    return( NULL );
-}
-
-
-void
-siox_ont_free_mid( siox_mid mid )
-{
-    free( mid );
-
-    return;
-}
-
-
-siox_metric
-siox_ont_find_metric_by_mid( siox_mid mid )
-{
-    int                     id;
-    struct siox_ont_node_t  *current;
-
-    /* Require an open ontology */
-    if( !current_ontology )
-    {
-        fprintf( stderr, "ERROR: No ontology!\n" );
-        return( NULL );
-    }
-
-    if( mid )
-        id = mid->id;
-    else
-    {
-        fprintf( stderr, "ERROR: Empty MID object!\n" );
-        return( NULL );
-    }
-
-    if( id < 0  ||  current_mid <= id )
-    {
-        fprintf( stderr, "ERROR: MID %d out of range (0 - %d)!\n", id, current_mid );
-        return( NULL );
-    }
-
-    for( current = head; current; current = current->next )
-    {
-        assert( current->metric != NULL );
-        if( current->metric->id == id )
-            return( current->metric );
-    }
-
-    return( NULL );
-}
-
-
-void
-siox_ont_free_metric( siox_metric metric )
-{
-    if( metric )
-    {
-        free( metric->name );
-        free( metric->description );
-
-        free( metric );
-    }
-
-    return;
-}
-
-
-siox_mid
-siox_ont_metric_get_mid( siox_metric metric )
-{
-    if ( metric )
-        return new_mid_from_id( metric->id );
-    else
-        return( NULL );
-}
-
-
-const char *
-siox_ont_metric_get_name( siox_metric metric )
-{
-    if( metric )
-        return metric->name;
-    else
-        return( NULL );
-}
-
-
-const char *
-siox_ont_metric_get_description( siox_metric metric )
-{
-    if( metric )
-        return metric->description;
-    else
-        return( NULL );
-}
-
-
-enum siox_ont_unit_type
-siox_ont_metric_get_unit( siox_metric metric )
-{
-    if( metric )
-        return( metric->unit );
-    else
-        return( SIOX_UNIT_UNASSIGNED );
-}
-
-
-enum siox_ont_storage_type
-siox_ont_metric_get_storage( siox_metric metric )
-{
-    if( metric )
-        return( metric->storage );
-    else
-        return( SIOX_UNIT_UNASSIGNED );
-}
-
-
-enum siox_ont_scope_type
-siox_ont_metric_get_scope( siox_metric metric )
-{
-    if( metric )
-        return( metric->scope );
-    else
-        return( SIOX_SCOPE_UNASSIGNED );
-}
-
-
-bool
-siox_ont_mid_is_equal( siox_mid mid1, siox_mid mid2 )
-{
-    if( mid1 && mid2 )
-        return( mid1->id == mid2->id );
-    else
-        return( mid1 == mid2 );
-}
-
-
-char *
-siox_ont_metric_to_string( siox_metric metric )
-{
-    char*   sResult;
-    int     nLength;
-
-
-    /* Require an open ontology */
-    if( !current_ontology )
-    {
-        fprintf( stderr, "ERROR: No ontology!\n" );
-        return( NULL );
-    }
-
-    nLength = strlen( metric->name ) + strlen( metric->description ) + 50;
-    sResult = malloc( sizeof( char[nLength] ) );
-
-    if ( !sResult )
-    {
-        fprintf( stderr, "ERROR: Memory allocation error in siox_ont_metric_to_string()!\n" );
-        return( NULL );
-    }
-
-    sprintf( sResult, "Metric:\t%s\n"
-                      "%s\n"
-                      "Unit:    %u\n"
-                      "Storage: %u\n"
-                      "Scope:   %u\n",
-                      metric->name,
-                      metric->description,
-                      metric->unit,
-                      metric->storage,
-                      metric->scope );
-
-    return( sResult );
-}
-
-
-int
-siox_ont_count_metrics()
-{
-    struct siox_ont_node_t  *current;
-    int                     result;
-
-    /* Require an open ontology */
-    if( !current_ontology )
-    {
-        fprintf( stderr, "ERROR: No ontology!\n" );
-        return( -1 );
-    }
-
-    result = 0;
-    for( current = head; current; current = current->next )
-        result++;
-
-    return( result );
-}
-
-
-siox_mid
-siox_ont_register_metric( const char *                  name,
-                          const char *                  description,
-                          enum siox_ont_unit_type       unit,
-                          enum siox_ont_storage_type    storage,
-                          enum siox_ont_scope_type      scope )
-{
-    siox_mid    mid;
-    siox_metric metric;
-
-    /* Require an open ontology */
-    if( !current_ontology )
-    {
-        fprintf( stderr, "ERROR: No ontology!\n" );
-        return( NULL );
-    }
-
-    mid = siox_ont_find_mid_by_name( name );
-    if( mid )
-    {
-        fprintf( stderr, "ERROR: The unique name >%s< exists already!\n", name );
-        siox_ont_free_mid( mid );
-        return( NULL );
-    }
-
-    mid = new_mid_from_id( current_mid );
-    if( !mid )
-    {
-        fprintf( stderr, "ERROR: Cannot register metric >%s< due to storage limitations.\n", name );
-        return( NULL );
-    }
-    current_mid++;
-
-    /* Set up new metric object */
-    metric = new_metric();
-    if ( !metric )
-    {
-        fprintf( stderr, "ERROR: Cannot register metric >%s< due to storage limitations.\n", name );
-        siox_ont_free_mid( mid );
-        return( NULL );
-    }
-    metric->id = mid->id;
-    metric->name = malloc( strlen( name ) + 1 );
-    if ( !(metric->name) )
-    {
-        fprintf( stderr, "Memory allocation error in siox_ont_register_metric()!\n" );
-        siox_ont_free_metric( metric );
-        siox_ont_free_mid( mid );
-        return( NULL );
-    }
-    strcpy( metric->name, name );
-    metric->description = malloc( strlen( description ) + 1 );
-    if ( !(metric->description) )
-    {
-        fprintf( stderr, "Memory allocation error in siox_ont_register_metric()!\n" );
-        siox_ont_free_metric( metric );
-        siox_ont_free_mid( mid );
-        return( NULL );
-    }
-    strcpy( metric->description, description );
-    metric->unit = unit;
-    metric->storage = storage;
-    metric->scope = scope;
-
-    /* Insert metric into field */
-    if( !insert_into_list( metric ) )
-    {
-        fprintf( stderr, "ERROR: Cannot register metric >%s< due to storage limitations.\n",
-                         metric->name );
-        siox_ont_free_metric( metric );
-        return( NULL );
-    }
-
-    return( mid );
-}
-
-
-/**
- * Create a new @em MID.
- *
- * @param[in]   id  The id the new @em MID is to have.
- * @returns         A new @em MID with the id given, unless there is no memory left,
- *                  in which case @c NULL is returned.
- */
-static siox_mid
-new_mid_from_id( int id )
-{
-    siox_mid mid;
-
-    /* Draw fresh MID */
-    mid = malloc( sizeof( struct siox_mid_t ) );
-    if ( !mid )
-    {
-        fprintf( stderr, "ERROR: Memory allocation error in new_mid_from_id()!\n" );
-        return( NULL );
-    }
-    mid->id = id;
-
-    return( mid );
-}
-
-
-/**
- * Generic constructor for the metric object.
- *
- * @returns         A new metric object with fields initialised to @c NULL or
- *                  @c SIOX_[UNIT|STORAGE|SCOPE]_UNASSIGNED;
- *                  if no memory could be allocated, @c NULL is returned.
- */
-static siox_metric
-new_metric( void )
-{
-    siox_metric metric;
-
-    /* Draw fresh metric */
-    metric = malloc( sizeof( struct siox_metric_t ) );
-    if ( !metric )
-    {
-        fprintf( stderr, "ERROR: Memory allocation error in new_metric()!\n" );
-        return( NULL );
-    }
-
-    /* Initialise fields */
-    metric->name = NULL;
-    metric->description = NULL;
-    metric->unit = SIOX_UNIT_UNASSIGNED;
-    metric->storage = SIOX_STORAGE_UNASSIGNED;
-    metric->scope = SIOX_SCOPE_UNASSIGNED;
-
-    return( metric );
 }
 
 
@@ -711,38 +772,38 @@ new_metric( void )
  * @returns             @c true if successfully inserted, otherwise @c false.
  */
 static bool
-insert_into_list( siox_metric metric )
+insert_metric_into_list( siox_metric metric )
 {
-    struct siox_ont_node_t  *last, *this, *new;
+    struct siox_ont_metric_node_t  *last, *this, *new;
 
     assert( metric != NULL );
 
-    new = malloc( sizeof( struct siox_ont_node_t ) );
+    new = malloc( sizeof( struct siox_ont_metric_node_t ) );
     if( !new )
         return( false );
     new->metric = metric;
 
     /* Insert as only element */
-    if( !head )
+    if( !metric_head )
     {
         new->next = NULL;
-        head = new;
+        metric_head = new;
         return( true );
     }
 
-    assert( head->metric != NULL );
+    assert( metric_head->metric != NULL );
 
     /* Insert before first element */
-    if( metric->id < head->metric->id )
+    if( metric->id < metric_head->metric->id )
     {
-        new->next = head;
-        head = new;
+        new->next = metric_head;
+        metric_head = new;
         return( true );
     }
 
     /* Insert between two elements */
-    last = head;
-    this = head->next;
+    last = metric_head;
+    this = metric_head->next;
     while( this != NULL )
     {
         assert( this->metric != NULL );
@@ -762,3 +823,203 @@ insert_into_list( siox_metric metric )
     return( true );
 }
 
+
+int
+siox_ont_count_datatypes()
+{
+    struct siox_ont_datatype_node_t  *current;
+    int                     result;
+
+    /* Require an open ontology */
+    if( !current_ontology )
+    {
+        fprintf( stderr, "ERROR: No ontology!\n" );
+        return( -1 );
+    }
+
+    result = 0;
+    for( current = datatype_head; current; current = current->next )
+        result++;
+
+    return( result );
+}
+
+
+siox_datatype
+siox_ont_find_datatype_by_dtid( siox_dtid dtid )
+{
+    int                     id;
+    struct siox_ont_datatype_node_t  *current;
+
+    /* Require an open ontology */
+    if( !current_ontology )
+    {
+        fprintf( stderr, "ERROR: No ontology!\n" );
+        return( NULL );
+    }
+
+    if( dtid )
+        id = dtid->id;
+    else
+    {
+        fprintf( stderr, "ERROR: Empty dtid object!\n" );
+        return( NULL );
+    }
+
+    if( id < 0  ||  current_dtid <= id )
+    {
+        fprintf( stderr, "ERROR: dtid %d out of range (0 - %d)!\n", id, current_dtid );
+        return( NULL );
+    }
+
+    for( current = datatype_head; current; current = current->next )
+    {
+        assert( current->datatype != NULL );
+        if( current->datatype->id == id )
+            return( current->datatype );
+    }
+
+    return( NULL );
+}
+
+
+siox_dtid
+siox_ont_find_dtid_by_name( const char * name)
+{
+    struct siox_ont_datatype_node_t  *current;
+
+    current = datatype_head;
+
+    while( current )
+    {
+        assert( current->datatype != NULL );
+        if( strcmp( name, current->datatype->name ) == 0 )
+            return( siox_ont_dtid_from_id( current->datatype->id ) );
+        current = current->next;
+    }
+
+    return( NULL );
+}
+
+
+/**
+ * Inserts a datatype into the list of datatypes according to ascending order of id.
+ *
+ * @param[in]   datatype  The datatype to be inserted.
+ *
+ * @returns             @c true if successfully inserted, otherwise @c false.
+ */
+static bool
+insert_datatype_into_list( siox_datatype datatype )
+{
+    struct siox_ont_datatype_node_t  *last, *this, *new;
+
+    assert( datatype != NULL );
+
+    new = malloc( sizeof( struct siox_ont_datatype_node_t ) );
+    if( !new )
+        return( false );
+    new->datatype = datatype;
+
+    /* Insert as only element */
+    if( !datatype_head )
+    {
+        new->next = NULL;
+        datatype_head = new;
+        return( true );
+    }
+
+    assert( datatype_head->datatype != NULL );
+
+    /* Insert before first element */
+    if( datatype->id < datatype_head->datatype->id )
+    {
+        new->next = datatype_head;
+        datatype_head = new;
+        return( true );
+    }
+
+    /* Insert between two elements */
+    last = datatype_head;
+    this = datatype_head->next;
+    while( this != NULL )
+    {
+        assert( this->datatype != NULL );
+        if ( datatype->id <= this->datatype->id )
+        {
+            new->next = this;
+            last->next = new;
+            return( true );
+        }
+        last = this;
+        this = this->next;
+    }
+
+    /* Insert behind last element */
+    new->next = NULL;
+    last->next = new;
+    return( true );
+}
+
+
+siox_dtid
+siox_ont_register_datatype( const char *                name,
+                          enum siox_ont_storage_type    storage )
+{
+    siox_dtid    dtid;
+    siox_datatype datatype;
+
+    /* Require an open ontology */
+    if( !current_ontology )
+    {
+        fprintf( stderr, "ERROR: No ontology!\n" );
+        return( NULL );
+    }
+
+    dtid = siox_ont_find_dtid_by_name( name );
+    if( dtid )
+    {
+        fprintf( stderr, "ERROR: The unique name >%s< exists already!\n", name );
+        siox_ont_free_dtid( dtid );
+        return( NULL );
+    }
+
+    dtid = siox_ont_dtid_from_id( current_dtid );
+    if( !dtid )
+    {
+        fprintf( stderr, "ERROR: Cannot register datatype >%s< due to storage limitations.\n", name );
+        return( NULL );
+    }
+    current_dtid++;
+
+    /* Set up new datatype object */
+    datatype = siox_ont_new_datatype();
+    if ( !datatype )
+    {
+        fprintf( stderr, "ERROR: Cannot register datatype >%s< due to storage limitations.\n", name );
+        siox_ont_free_dtid( dtid );
+        return( NULL );
+    }
+    datatype->id = dtid->id;
+    datatype->name = malloc( strlen( name ) + 1 );
+    if ( !(datatype->name) )
+    {
+        fprintf( stderr, "Memory allocation error in siox_ont_register_datatype()!\n" );
+        siox_ont_free_datatype( datatype );
+        siox_ont_free_dtid( dtid );
+        return( NULL );
+    }
+    strcpy( datatype->name, name );
+    datatype->storage = storage;
+
+    /* Insert datatype into field */
+    if( !insert_datatype_into_list( datatype ) )
+    {
+        fprintf( stderr, "ERROR: Cannot register datatype >%s< due to storage limitations.\n",
+                         datatype->name );
+        siox_ont_free_datatype( datatype );
+        return( NULL );
+    }
+
+    return( dtid );
+}
