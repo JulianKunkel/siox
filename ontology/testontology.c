@@ -58,9 +58,6 @@ int main()
 {
     int failures = 0;
 
-    /* Reroute stderr to log file */
-    /* fopen( "testontology.log", "wt", stderr ); */
-
     failures += test1();
     failures += test2();
     failures += test3();

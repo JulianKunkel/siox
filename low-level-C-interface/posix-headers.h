@@ -13,9 +13,9 @@
 //activity
 //cause pathname
 //descriptorMap filename filehandle pathname function_return_value
-       int creat(const char *pathname, mode_t mode);
+       int create(const char *pathname, mode_t mode);
 
-//activity 
+//activity
 //cause fd
 //releaseDescriptor filehandle fd
        int close(int fd);
@@ -83,6 +83,10 @@
        int fseek(FILE *stream, long offset, int whence);
        int fsetpos(FILE *stream, fpos_t *pos);
 
+
+//============================================================
+// Weitere Beispiele für MPI-IO
+//============================================================
 
 //activity
 //cause filename

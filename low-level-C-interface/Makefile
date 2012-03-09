@@ -39,13 +39,13 @@ all: $(TARGETS) Makefile
 siox-hdf5-example: siox-hdf5-example.c $(SIOXLIBS) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LDFLAGS) $(LLFLAGS) $(HDF5FLAGS) -o $@ $< $(SIOXLIBS) $(HDF5LIBS)
+	$(CC) $(LDFLAGS) $(LLFLAGS) $(HDF5FLAGS) -o $@ $< $(HDF5LIBS) $(SIOXLIBS)
 	@echo done!
 
 siox-mockupfs-example: siox-mockupfs-example.c $(SIOXLIBS) $(MUFSLIBS) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LDFLAGS) $(LLFLAGS) -o $@ $< $(SIOXLIBS) $(MUFSLIBS)
+	$(CC) $(LDFLAGS) $(LLFLAGS) -o $@ $< $(MUFSLIBS) $(SIOXLIBS)
 	@echo done!
 
 #===============
