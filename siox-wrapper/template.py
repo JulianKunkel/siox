@@ -1,7 +1,7 @@
 # Aufbau: template['beschreibung']['before/after/init'];
 
 includes = [
-	'#import "siox_hh"'
+	'#include "siox_hh"'
 ]
 
 variables = [
@@ -27,7 +27,7 @@ global_unid = SIOX_register_node(global_SWID, global_PID, global_HWID);\n''',
 	'after': ''
 },
 'map': {
-	'init': 'fooooo',
+	'init': '',
 	'before': 'SIOX_map_descriptor(global_unid, "%s", filename, "%s", ret);',
 	'after': ''
 }
