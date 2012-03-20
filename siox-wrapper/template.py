@@ -1,34 +1,49 @@
-# Aufbau: template['beschreibung']['before/after/init'];
+class template():
+	def __init__(self, templateDict, variables):
+		self.name = templateDict['name']
+		self.parameters = {}
+		self.setParameters(templateDict['variables'], variables)
+		self.global = templateDict['global']
+		self.init = templateDict['init']
+		self.before = templateDict['before']
+		self.after = templateDict['after']
+		self.final = templateDict['final']
 
-includes = [
-	'#include "siox_hh"'
-]
+	def setParameters(self, parameters, variables):
+		parameterlist = paramters.split(' ')
+		namelist = variables.split(' ')
 
-variables = [
-	'siox_unid global_unid;',
-	'siox_dmid global_dmid;',
-	'char[255] global_PID;',
-	'char[255] global_SWID;',
-	'char[255] global_HWID;'
-]
+		j = 0;
+		for i in paramterlist:
+			parameters[namelist[j]] = i
+			j++
 
-template = {
-'reg_node': {
-	'init': '''global_HWID = SIOX_get_HWID();\n
-global_SWID = SIOX_get_SWID();\n
-global_PID = getPID();\n
-global_unid = SIOX_register_node(global_SWID, global_PID, global_HWID);\n''',
-	'before': '',
-	'after': ''
-},
-'register_map': {
-	'init': 'global_dmid = SIOX_register_descriptor_map(global_unid, "FileName", "FileHandle");',
-	'before': '',
-	'after': ''
-},
-'map': {
-	'init': '',
-	'before': 'SIOX_map_descriptor(global_unid, "%s", filename, "%s", ret);',
-	'after': ''
+	def output(self, type):
+		if (type == 'global'):
+			return global % parameters
+		elif (type == 'init'):
+			return init % parameters
+		elif (type == 'before'):
+			return before % parameters
+		elif (type == 'after'):
+			return after % parameters
+		elif (type == 'final'):
+			return final % parameters
+		else
+			return 'Idiot'
+
+
+ontology = {
+	name: 'ontology',
+	variables: 'VARNAME VARTYPE',
+	global: 'siox_dtid dtid%(VARNAME)s;',
+	init: 'dtid%(VARNAME)s = siox_register_datatype( %(VARNAME)s, %(STORAGETYPE)s );',
+	before: '',
+	after: '',
+	final: ''
 }
-}
+
+//ontology a b
+ParsedString = 'a b'
+iterArray = []
+iterArray.add(template(ontology, parsedstring))
