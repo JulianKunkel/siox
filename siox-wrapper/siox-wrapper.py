@@ -221,6 +221,50 @@ class FunctionParser():
 
         return (type, name)
 
+# This class is like SkyNet, but more advanced
+class templateClass():
+	def __init__(self, name, variables):
+		templateDict = template[name]
+		self.name = name
+		self.parameters = {}
+		self.setParameters(templateDict['variables'], variables)
+		self.world = templateDict['global']
+		self.init = templateDict['init']
+		self.before = templateDict['before']
+		self.after = templateDict['after']
+		self.final = templateDict['final']
+
+	# fill the parameter-lists
+	def setParameters(self, names, values):
+		NameList = names.split(' ')
+		ValueList = values.split(' ')
+
+		position = 0;
+
+		# only iterate over the first elements
+		for value in ValueList[0:len(NameList)-1]:
+			self.parameters[NameList[position]] = value
+			position += 1
+	
+		# all other elements belong to the last parameter
+		self.parameters[NameList[position]] = ' '.join(ValueList[len(NameList)-1:])
+
+	# puts everything together
+	def output(self, type):
+		if (type == 'global'):
+			return self.world % self.parameters
+		elif (type == 'init'):
+			return self.init % self.parameters
+		elif (type == 'before'):
+			return self.before % self.parameters
+		elif (type == 'after'):
+			return self.after % self.parameters
+		elif (type == 'final'):
+			return self.final % self.parameters
+		else:
+			# Error
+			# FIXME: Proper Error-Handling ;)
+			return 'Einmal mit Profis arbeiten...'
 
     ##
 # @brief
@@ -253,6 +297,49 @@ class Writer():
 		# close the file
 		file.close()
 
+	def sourceFile(self, functions):
+		# open the output file for writing		
+		file = open(self.outputFile, 'w')
+
+		# generic includes
+		file.write('#include <stdio.h> \n#include <stdlib.h>')
+	
+		# global stuff
+		for function in functions:
+			for temp in function.usedTemplates:
+				file.write('%s\n' % (temp['global']))
+
+		# redefinition
+		for function in functions:
+			file.write('%s *__real_%s(%s);\n' % (function.type, function.name, function.signature))
+			
+		# functions
+		for function in functions:
+			# is this the desired init-function?
+			if function.special == 'init':
+				# write all init-functions		
+				for func in functions:
+					for temp in func.usedTemplates:
+						file.write('\t%s\n' % (temp['init']))
+
+			# is this the desired final-function?
+			if function.special == 'final':
+				# write all init-functions		
+				for func in functions:
+					for temp in func.usedTemplates:
+						file.write('\t%s\n' % (temp['final']))
+
+			file.write('%s *__wrap_%s(%s)\n{\n' % (function.type, function.name, function.signature))
+
+			for temp in function.usedTemplates:
+				file.write('\t%s\n' % (temp['before']))
+
+			file.write('\treturn __real_%s(%s);\n' % (function.name, function.signature)) 
+
+			for temp in function.usedTemplates:
+				file.write('\t%s\n' % (temp['after']))
+			
+			file.write('}\n\n');
 
 ##
 # @brief The main function.
