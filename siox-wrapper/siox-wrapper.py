@@ -57,6 +57,7 @@ class Function():
 		# A list of Parameters, a parameter is a extra class for storing
 		self.parameters = []
 		self.signature = ''
+        self.usedTemplates = []
 
     def generateSignature(self):
 
@@ -221,8 +222,40 @@ class FunctionParser():
 
         return (type, name)
 
+class ComandoParser():
 
-    ##
+    def __init__(self,options,functions):
+        self.inputFile
+
+        self.commandRegex = regex.compile('^\s*//\s*(*)\s*(.*)')
+    def parse():
+        avalibalCommands  = template.keys()
+        input = open(self.inputFile, 'r')
+        inputLines = input.readlines()
+        index = 0
+        commandName=''
+        comandArgs=''
+        for line in inputLines():
+            match = self.commandRegex.match(line)
+            if (match):
+                if match.group(1) in avalibalCommands:
+                    if commandName is not '':
+                        templateList.append(templateClass(commandName, commandArgs))
+                        commandName = ''
+                        commandArgs = ''
+
+                    commandName +=  match.group(1)
+                    cmmandArgs += match.group(2)
+
+                else:
+                    commandArgs = match.group(1)
+                    commandArgs = match.group(2)
+            else:
+                if re.sub('\s', '', line) is functions[index].signature:
+                    functions[index].usedTemplates = templateList
+                    commandName = ''
+                    commandArgs = ''
+                    index+=1
 # @brief
 class Writer():
 
