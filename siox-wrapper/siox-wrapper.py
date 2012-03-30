@@ -93,17 +93,15 @@ class Function():
     # @return
     def getIdentyfier(self):
 
-        params = ''
-
-        for param in self.parameters:
-            params += '%s,' % (param.__str__())
-
-            params = params[:-1]
-
-        identyfier = '%s%s(%s);' % (''.join(self.type.split(' ')),
-        self.name.strip(), params)
-
-        return identyfier
+        identifier = self.type
+        identifier += self.name
+        identifier +='('
+        
+        for parameter in self.parameters:
+            identifier += ''.join(parameter.type.split())
+            identifier += parameter.name
+        identifier += ');'
+        return identifier
 ##
 # @brief One parameter of a function.
 class Parameter():
@@ -112,11 +110,6 @@ class Parameter():
     self.type = ''
     self.name = ''
   #end def
-
-
-  def __str__(self):
-
-    return ''.join(self.type.split(' '))+self.name
 #end class
 
 class Instruction():
@@ -227,14 +220,16 @@ class FunctionParser():
         name = ''
 
         parameterParts = declaration.split('*')
+        
 
         if self.alternativeVarNames:
             if(len(parameterParts) == 1):
-                type = parameterParts[0]
-                name = alternativeName
+                type = parameterParts[0].strip()
+                name = alternativeName.strip()
 
             else:
                 for element in parameterParts:
+                    element = element.strip()
                     if element is '':
                         type += '*'
 
@@ -247,21 +242,23 @@ class FunctionParser():
 
             if(len(parameterParts) == 1):
                 parameterParts = declaration.split()
-                name = parameterParts.pop()
+                name = parameterParts.pop().strip()
 
                 for element in parameterParts:
+                    element = element.strip()
                     type += element
 
             else:
-                name = parameterParts.pop()
+                name = parameterParts.pop().strip()
 
-        for element in parameterParts:
-            if element is '':
-                type+= '*'
+                for element in parameterParts:
+                    element = element.strip()
+                    if element is '':
+                        type+= '*'
 
-            else:
-                type+= element
-                type += '*'
+                    else:
+                        type+= element
+                        type += '*'
         return (type, name)
 
 ##
@@ -286,7 +283,6 @@ class CommandParser():
         for line in inputLines:
             match = self.commandRegex.match(line)
             if (match):
-                print [match.group(1)]
                 if match.group(1) == 'init':
                     init = True
 
@@ -300,22 +296,22 @@ class CommandParser():
                         commandArgs = ''
 
                     commandName +=  match.group(1)
-                    print commandName
                     commandArgs += match.group(2)
                 else:
                     commandArgs = match.group(1)
                     commandArgs = match.group(2)
             else:
-                if re.sub('\s', '', line) == functions[index].getIdentyfier() and commandName != '':
-                    templateList.append(templateClass(commandName, commandArgs))
-                    functions[index].usedTemplates = templateList
-                    functions[index].init = init
-                    functions[index].final = final
-                    init = False
-                    final = False
-                    commandName = ''
-                    commandArgs = ''
-                    index+=1
+                if re.sub('[,\s]', '', line) == functions[index].getIdentyfier():
+                    if commandName != '':
+                        templateList.append(templateClass(commandName, commandArgs))
+                        functions[index].usedTemplates = templateList
+                        functions[index].init = init
+                        functions[index].final = final
+                        init = False
+                        final = False
+                        commandName = ''
+                        commandArgs = ''
+                    index = index + 1
         return functions
 
 # This class is like SkyNet, but more advanced
@@ -397,7 +393,7 @@ class Writer():
     file = open(self.outputFile, 'w')
 
     # generic includes
-    file.write('#include <stdio.h> \n#include <stdlib.h>')
+    file.write('#include <stdio.h> \n#include <stdlib.h>\n\n')
 
     # global stuff
     for function in functions:
@@ -412,6 +408,8 @@ class Writer():
 
     # functions
     for function in functions:
+        file.write('%s *__wrap_%s(%s)\n{\n' % (function.type, function.name, function.signature))
+
         # is this the desired init-function?
         if function.init:
             # write all init-functions
@@ -425,8 +423,6 @@ class Writer():
             for func in functions:
                 for temp in func.usedTemplates:
                     file.write('\t%s\n' % (temp['final']))
-
-        file.write('%s *__wrap_%s(%s)\n{\n' % (function.type, function.name, function.signature))
 
         for temp in function.usedTemplates:
             file.write('\t%s\n' % (temp.output('before')))

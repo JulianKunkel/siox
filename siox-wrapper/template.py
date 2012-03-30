@@ -7,13 +7,95 @@ template = {
 	'after': '',
 	'final': ''
 },
-'activity': {
-	'variables': 'CALL',
-	'global': '',
-	'init': '',
-	'before': 'siox_aid _aid%(CALL)s = siox_start_activity( unid, %(CALL)s );',
-	'after': 'siox_stop_activity(_aid%(CALL)s);',
-	'final': 'siox_end_activity(_aid%(CALL)s);'
+'registernode': {
+	'variables': 'HWID SWID',
+	'global': '''   siox_unid global_unid;
+                        char global_pid''',
+       	'init': '''   sprintf( global_pid, "%%d", getpid() );
+                        global_unid = siox_register_node("%(HWID)s", "%(SWID)s", global_pid);''',
+	'before': '',
+	'after': '',
+	'final': 'siox_unregister_node(global_unid);'
+},
+'register_descriptor': {
+	'variables': 'FileName FileHandle DmidName',
+	'global': '''siox_dmid %(DmidName)s;''',
+	'init': '''%(DmidName)s = siox_register_map( global_unid, %(FileName)s, %(FileHandle)s );''',
+       	'before': ''' ''',
+	'after': '',
+	'final': ''
+},
+'register_edge': {
+	'variables': 'Edge',
+	'global': '''''',
+	'init': '''siox_register_edge( global_unid, "%(Edge)s" );''',
+       	'before': ''' ''',
+	'after': '',
+	'final': ''
+},
+'activity_start': {
+	'variables': 'Name Description',
+	'global': '''siox_aid %(Name)s;''',
+	'init': '''%(Name)s = siox_start_activity( global_unid, "%(Name)s" );''',
+       	'before': ''' ''',
+	'after': '',
+	'final': ''
+},
+'activity_stop': {
+	'variables': 'Name',
+	'global': '''''',
+	'init': '''siox_stop_activity( "%(Name)s" );''',
+       	'before': ''' ''',
+	'after': '',
+	'final': ''
+},
+'activity_end': {
+	'variables': 'Name',
+	'global': '''''',
+	'init': '''siox_end_activity( "%(Name)s" );''',
+       	'before': ''' ''',
+	'after': '',
+	'final': ''
+},
+'activity_report': { #TODO
+	'variables': '',
+	'global': ''' ''',
+	'init': ''' ''',
+       	'before': ''' ''',
+	'after': '',
+	'final': ''
+},
+'create_descriptor': {
+	'variables': 'DescriptorName Type',
+	'global': '''''',
+	'init': '''siox_create_descriptor( global_unid, "%(DescriptorName)s", "%(Type)s");''',
+       	'before': ''' ''',
+	'after': '',
+	'final': 'siox_release_descriptor( global_unid, "%(DescriptorName)s", "%(Type)s");'
+},
+'send_descriptor': {
+	'variables': 'TargetSWID DescriptorName Type',
+	'global': '''''',
+	'init': '''siox_send_descriptor( global_unid, "%(TargetSWID)s", "%(DescriptorName)s", "%(Type)s");''',
+       	'before': ''' ''',
+	'after': '',
+	'final': ''
+},
+'map_descriptor': {
+	'variables': 'Descriptor From To',
+	'global': '''''',
+	'init': '''siox_map_descriptor( global_unid, %(Descriptor)s, %(From)s, %(To)s);''',
+       	'before': ''' ''',
+	'after': '',
+	'final': ''
+},
+'receive_descriptor': { 
+	'variables': 'Descriptor From To',
+	'global': '''''',
+	'init': '''siox_receive_descriptor( global_unid, %(Descriptor)s, %(From)s, %(To)s);''',
+       	'before': ''' ''',
+	'after': '',
+	'final': ''
 },
 'splice': {
 	'variables': 'PROGRAMMCODE',
