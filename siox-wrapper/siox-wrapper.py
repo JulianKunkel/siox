@@ -65,7 +65,7 @@ class Function():
     def generateSignature(self):
 
 			for sigpart in self.parameters:
-				sig = sigpart.type + '' + sigpart.name + ', '
+				sig = sigpart.type + ' ' + sigpart.name + ', '
 				self.signature += sig
 			self.signature = self.signature[:-2]
 
@@ -234,14 +234,14 @@ class FunctionParser():
             else:
                 name = parameterParts.pop()
 
-            for element in parameterParts:
-                if element is '':
-                    type+= '*'
+		for element in parameterParts:
+			if element is '':
+				type+= '*'
 
-                else:
-                    type+= element
-                    type += '*'
-
+			else:
+				type+= element
+				type += '*'
+	print type
         return (type, name)
 
 class CommandParser():
@@ -366,6 +366,8 @@ class Writer():
 		for function in functions:
 			for temp in function.usedTemplates:
 				file.write('%s\n' % (temp.output('global')))
+		
+		file.write("\n\n")
 
 		# redefinition
 		for function in functions:
@@ -403,7 +405,14 @@ class Writer():
 			for temp in function.usedTemplates:
 				file.write('\t%s\n' % (temp.output('before')))
 
-			file.write('\treturn __real_%s(%s);\n' % (function.name, function.signature))
+			signatureNames = ""
+
+			for par in function.parameters:
+				signatureNames = '%s%s, ' % (signatureNames, par.name)
+
+			signatureNames = signatureNames[:-2]
+
+			file.write('\treturn __real_%s(%s);\n' % (function.name, signatureNames))
 
 			for temp in function.usedTemplates:
 				file.write('\t%s\n' % (temp.output('after')))
