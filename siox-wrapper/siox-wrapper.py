@@ -19,7 +19,7 @@ DEBUG = False
 class  Option():
 
     def parse(self):
-		# FIXME: sort the options
+    # FIXME: sort the options
         argParser = argparse.ArgumentParser(description='''Wraps SIOX function
 around library function calls''')
 
@@ -27,21 +27,21 @@ around library function calls''')
                 default=False, dest='blankHeader')
 
         argParser.add_argument('--output', '-o', action='store', nargs=1,
-				dest='outputFile', default='out.h', help='out')
+        dest='outputFile', default='out.h', help='out')
 
         argParser.add_argument('--debug', '-d', action='store_true', default=False,
-				dest='debug', help='''Print out debug information.''')
+        dest='debug', help='''Print out debug information.''')
 
         argParser.add_argument('--cpp', '-c', action='store_true', default=False,
-				dest='cpp', help='Use cpp to pre process the input file.')
+        dest='cpp', help='Use cpp to pre process the input file.')
 
         argParser.add_argument('--altternative-var-names', '-n',
-				action='store_true', default=False, dest='alternativeVarNames',
-				help='''If a header file dose not provide variable names, this will
+        action='store_true', default=False, dest='alternativeVarNames',
+        help='''If a header file dose not provide variable names, this will
 enumerate them.''')
 
         argParser.add_argument('--cppArgs', '-a', action='store',nargs=1, default=[],
-				dest='cppArgs', help='''Pass arguments to the cpp. If this option is
+        dest='cppArgs', help='''Pass arguments to the cpp. If this option is
 specified the --cpp option is specified implied.''')
 
         argParser.add_argument('inputFile', default=None,
@@ -54,60 +54,77 @@ specified the --cpp option is specified implied.''')
 
         return args
 
+##
+# @brief A storage class for a function.
+#
 class Function():
 
     def __init__(self):
 
-		# Return type of the function (int*, char, etc.)
+    ## Return type of the function (int*, char, etc.)
         self.type= ''
+        ## Name of the function
         self.name = ''
-		# A list of Parameters, a parameter is a extra class for storing
+    ## A list of Parameters, a parameter is a extra class for storing
         self.parameters = []
+        ## The parameters of the function separate by ',' (a bit misleading)
         self.signature = ''
         self.usedTemplates = []
-        self.special = ''
+        self.init = False
+        self.final = False
+
+    ##
+    # @brief Genrate the signature for the function.
+    #
     def generateSignature(self):
 
-			for sigpart in self.parameters:
-				sig = sigpart.type + ' ' + sigpart.name + ', '
-				self.signature += sig
-			self.signature = self.signature[:-2]
+      for sigpart in self.parameters:
+        sig = sigpart.type + ' ' + sigpart.name + ', '
+        self.signature += sig
+      self.signature = self.signature[:-2]
 
 
+    ##
+    # @brief Generate an identifier of the function.
+    #
+    # The generated identifier is used as a key for the hash table the functions
+    # are stored in.
+    #
+    # @return
     def getIdentyfier(self):
 
-		params = ''
+        params = ''
 
-		for param in self.parameters:
-			params += '%s,' % (param.__str__())
+        for param in self.parameters:
+            params += '%s,' % (param.__str__())
 
-		params = params[:-1]
+            params = params[:-1]
 
-		identyfier = '%s%s(%s);' % (''.join(self.type.split(' ')),
-			self.name.strip(), params)
+        identyfier = '%s%s(%s);' % (''.join(self.type.split(' ')),
+        self.name.strip(), params)
 
-		return identyfier
+        return identyfier
 ##
 # @brief One parameter of a function.
 class Parameter():
 
-	def __init__(self):
-		self.type = ''
-		self.name = ''
-	#end def
+  def __init__(self):
+    self.type = ''
+    self.name = ''
+  #end def
 
 
-	def __str__(self):
+  def __str__(self):
 
-		return ''.join(self.type.split(' '))+self.name
+    return ''.join(self.type.split(' '))+self.name
 #end class
 
 class Instruction():
 
-	def __init__(self):
-		self.name = ''
-		self.parameters = []
-	#end def
+  def __init__(self):
+    self.name = ''
+    self.parameters = []
+  #end def
 #end class
 
 ##
@@ -238,14 +255,13 @@ class FunctionParser():
             else:
                 name = parameterParts.pop()
 
-		for element in parameterParts:
-			if element is '':
-				type+= '*'
+        for element in parameterParts:
+            if element is '':
+                type+= '*'
 
-			else:
-				type+= element
-				type += '*'
-	print type
+            else:
+                type+= element
+                type += '*'
         return (type, name)
 
 ##
@@ -255,7 +271,8 @@ class CommandParser():
     def __init__(self,options):
         self.inputFile = options.inputFile
 
-        self.commandRegex = re.compile('^\s*//\s*([-_.\w\d]+)\s*(.*)')
+        self.commandRegex = re.compile('^\s*//\s*(.+?)\s+(.*)')
+
     def parse(self, functions):
         avalibalCommands  = template.keys()
         input = open(self.inputFile, 'r')
@@ -263,25 +280,39 @@ class CommandParser():
         index = 0
         commandName=''
         commandArgs=''
+        init = False
+        final = False
         templateList = []
         for line in inputLines:
             match = self.commandRegex.match(line)
             if (match):
-                if match.group(1) in avalibalCommands:
-                    if commandName is not '':
+                print [match.group(1)]
+                if match.group(1) == 'init':
+                    init = True
+
+                elif match.group(1) == 'final':
+                    final = True
+
+                elif match.group(1) in avalibalCommands:
+                    if commandName != '':
                         templateList.append(templateClass(commandName, commandArgs))
                         commandName = ''
                         commandArgs = ''
 
                     commandName +=  match.group(1)
+                    print commandName
                     commandArgs += match.group(2)
                 else:
                     commandArgs = match.group(1)
                     commandArgs = match.group(2)
             else:
-                if re.sub('\s', '', line) == functions[index].getIdentyfier():
+                if re.sub('\s', '', line) == functions[index].getIdentyfier() and commandName != '':
                     templateList.append(templateClass(commandName, commandArgs))
                     functions[index].usedTemplates = templateList
+                    functions[index].init = init
+                    functions[index].final = final
+                    init = False
+                    final = False
                     commandName = ''
                     commandArgs = ''
                     index+=1
@@ -289,148 +320,137 @@ class CommandParser():
 
 # This class is like SkyNet, but more advanced
 class templateClass():
-	def __init__(self, name, variables):
-		templateDict = template[name]
-		self.name = name
-		self.parameters = {}
-		self.setParameters(templateDict['variables'], variables)
-		self.world = templateDict['global']
-		self.init = templateDict['init']
-		self.before = templateDict['before']
-		self.after = templateDict['after']
-		self.final = templateDict['final']
+  def __init__(self, name, variables):
+    templateDict = template[name]
+    self.name = name
+    self.parameters = {}
+    self.setParameters(templateDict['variables'], variables)
+    self.world = templateDict['global']
+    self.init = templateDict['init']
+    self.before = templateDict['before']
+    self.after = templateDict['after']
+    self.final = templateDict['final']
 
-	# fill the parameter-lists
-	def setParameters(self, names, values):
-		NameList = names.split(' ')
-		ValueList = values.split(' ')
+  # fill the parameter-lists
+  def setParameters(self, names, values):
+    NameList = names.split(' ')
+    ValueList = values.split(' ')
 
-		position = 0;
+    position = 0;
 
-		# only iterate over the first elements
-		for value in ValueList[0:len(NameList)-1]:
-			self.parameters[NameList[position]] = value
-			position += 1
-		# all other elements belong to the last parameter
-		self.parameters[NameList[position]] = ' '.join(ValueList[len(NameList)-1:])
+    # only iterate over the first elements
+    for value in ValueList[0:len(NameList)-1]:
+      self.parameters[NameList[position]] = value
+      position += 1
+    # all other elements belong to the last parameter
+    self.parameters[NameList[position]] = ' '.join(ValueList[len(NameList)-1:])
 
-	# puts everything together
-	def output(self, type):
-		if (type == 'global'):
-			return self.world % self.parameters
-		elif (type == 'init'):
-			return self.init % self.parameters
-		elif (type == 'before'):
-			return self.before % self.parameters
-		elif (type == 'after'):
-			return self.after % self.parameters
-		elif (type == 'final'):
-			return self.final % self.parameters
-		else:
-			# Error
-			# FIXME: Proper Error-Handling ;)
-			return 'Einmal mit Profis arbeiten...'
+  # puts everything together
+  def output(self, type):
+    if (type == 'global'):
+      return self.world % self.parameters
+    elif (type == 'init'):
+      return self.init % self.parameters
+    elif (type == 'before'):
+      return self.before % self.parameters
+    elif (type == 'after'):
+      return self.after % self.parameters
+    elif (type == 'final'):
+      return self.final % self.parameters
+    else:
+      # Error
+      # FIXME: Proper Error-Handling ;)
+      return 'Einmal mit Profis arbeiten...'
 
 # @brief
 class Writer():
 
-	##
-	# @brief
-	#
-	# @param options
-	#
-	def __init__(self, options):
+  ##
+  # @brief
+  #
+  # @param options
+  #
+  def __init__(self, options):
 
-		self.outputFile = options.outputFile
+    self.outputFile = options.outputFile
 
-	##
-	# @brief
-	#
-	# @param functions
-	#
-	# @return
-	def headerFile(self, functions):
-		# open the output file for writing
-		file = open(self.outputFile, 'w')
+  ##
+  # @brief
+  #
+  # @param functions
+  #
+  # @return
+  def headerFile(self, functions):
+    # open the output file for writing
+    file = open(self.outputFile, 'w')
 
-		# function headers
-		for function in functions:
-			file.write("%s %s ( %s ); \n" % (function.type,
-				function.name, function.signature))
+    # function headers
+    for function in functions:
+      file.write("%s %s ( %s ); \n" % (function.type,
+        function.name, function.signature))
 
-		# close the file
-		file.close()
+    # close the file
+    file.close()
 
-	def sourceFile(self, functions):
-		# open the output file for writing
-		file = open(self.outputFile, 'w')
+  def sourceFile(self, functions):
+    # open the output file for writing
+    file = open(self.outputFile, 'w')
 
-		# generic includes
-		file.write('#include <stdio.h> \n#include <stdlib.h>')
+    # generic includes
+    file.write('#include <stdio.h> \n#include <stdlib.h>')
 
-		# global stuff
-		for function in functions:
-			for temp in function.usedTemplates:
-				file.write('%s\n' % (temp.output('global')))
+    # global stuff
+    for function in functions:
+      for temp in function.usedTemplates:
+        file.write('%s\n' % (temp.output('global')))
 
-		file.write("\n\n")
+    file.write("\n\n")
 
-		# redefinition
-		for function in functions:
-			file.write('%s *__real_%s(%s);\n' % (function.type, function.name, function.signature))
+    # redefinition
+    for function in functions:
+      file.write('%s *__real_%s(%s);\n' % (function.type, function.name, function.signature))
 
-		# functions
-		for function in functions:
-			# is this the desired init-function?
-			if function.special == 'init':
-				# write all init-functions
-				for func in functions:
-					for temp in func.usedTemplates:
-						file.write('\t%s\n' % (temp.output('init')))
+    # functions
+    for function in functions:
+        # is this the desired init-function?
+        if function.init:
+            # write all init-functions
+            for func in functions:
+                for temp in func.usedTemplates:
+                    file.write('\t%s\n' % (temp.output('init')))
 
-			# is this the desired final-function?
-			if function.special == 'final':
-				# write all init-functions
-				for func in functions:
-					for temp in func.usedTemplates:
-						file.write('\t%s\n' % (temp.output('final')))
-				# write all init-functions
-				for func in functions:
-					for temp in func.usedTemplates:
-						file.write('\t%s\n' % (temp['init']))
+        # is this the desired final-function?
+        if function.final:
+            # write all init-functions
+            for func in functions:
+                for temp in func.usedTemplates:
+                    file.write('\t%s\n' % (temp['final']))
 
-			# is this the desired final-function?
-			if function.special == 'final':
-				# write all init-functions
-				for func in functions:
-					for temp in func.usedTemplates:
-						file.write('\t%s\n' % (temp['final']))
+        file.write('%s *__wrap_%s(%s)\n{\n' % (function.type, function.name, function.signature))
 
-			file.write('%s *__wrap_%s(%s)\n{\n' % (function.type, function.name, function.signature))
+        for temp in function.usedTemplates:
+            file.write('\t%s\n' % (temp.output('before')))
 
-			for temp in function.usedTemplates:
-				file.write('\t%s\n' % (temp.output('before')))
+        signatureNames = ""
 
-			signatureNames = ""
+        for par in function.parameters:
+            signatureNames = '%s%s, ' % (signatureNames, par.name)
 
-			for par in function.parameters:
-				signatureNames = '%s%s, ' % (signatureNames, par.name)
+        signatureNames = signatureNames[:-2]
 
-			signatureNames = signatureNames[:-2]
+        file.write('\treturn __real_%s(%s);\n' % (function.name, signatureNames))
 
-			file.write('\treturn __real_%s(%s);\n' % (function.name, signatureNames))
+        for temp in function.usedTemplates:
+            file.write('\t%s\n' % (temp.output('after')))
 
-			for temp in function.usedTemplates:
-				file.write('\t%s\n' % (temp.output('after')))
-
-			file.write('}\n\n');
+        file.write('}\n\n');
 
 ##
 # @brief The main function.
 #
 def main():
 
-	# Parse input parameter.
+  # Parse input parameter.
     opt = Option()
     options = opt.parse()
 
@@ -449,6 +469,6 @@ def main():
         outputWriter.sourceFile(functions)
 
 if __name__  == '__main__':
-	main()
+  main()
 
 
