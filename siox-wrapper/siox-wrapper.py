@@ -12,6 +12,10 @@ from template import *
 DEBUG = False
 
 
+##
+# @brief Generate and handle the command line parsing.
+#
+# This class is just a simple Wrapper of the python argparser.
 class  Option():
 
     def parse(self):
@@ -244,6 +248,8 @@ class FunctionParser():
 	print type
         return (type, name)
 
+##
+# @brief
 class CommandParser():
 
     def __init__(self,options):
@@ -366,7 +372,7 @@ class Writer():
 		for function in functions:
 			for temp in function.usedTemplates:
 				file.write('%s\n' % (temp.output('global')))
-		
+
 		file.write("\n\n")
 
 		# redefinition
