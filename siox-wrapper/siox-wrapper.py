@@ -280,6 +280,7 @@ class CommandParser():
                     commandArgs = ''
                     index+=1
         return functions
+
 # This class is like SkyNet, but more advanced
 class templateClass():
 	def __init__(self, name, variables):
@@ -304,7 +305,6 @@ class templateClass():
 		for value in ValueList[0:len(NameList)-1]:
 			self.parameters[NameList[position]] = value
 			position += 1
-
 		# all other elements belong to the last parameter
 		self.parameters[NameList[position]] = ' '.join(ValueList[len(NameList)-1:])
 
@@ -386,6 +386,17 @@ class Writer():
 				for func in functions:
 					for temp in func.usedTemplates:
 						file.write('\t%s\n' % (temp.output('final')))
+				# write all init-functions
+				for func in functions:
+					for temp in func.usedTemplates:
+						file.write('\t%s\n' % (temp['init']))
+
+			# is this the desired final-function?
+			if function.special == 'final':
+				# write all init-functions
+				for func in functions:
+					for temp in func.usedTemplates:
+						file.write('\t%s\n' % (temp['final']))
 
 			file.write('%s *__wrap_%s(%s)\n{\n' % (function.type, function.name, function.signature))
 
@@ -420,7 +431,6 @@ def main():
     else:
         commandParser = CommandParser(options)
         functions = commandParser.parse(functions)
-        print functions[0].usedTemplates
         outputWriter.sourceFile(functions)
 
 if __name__  == '__main__':
