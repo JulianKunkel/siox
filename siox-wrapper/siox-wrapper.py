@@ -96,7 +96,7 @@ class Function():
         identifier = self.type
         identifier += self.name
         identifier +='('
-        
+
         for parameter in self.parameters:
             identifier += ''.join(parameter.type.split())
             identifier += parameter.name
@@ -220,7 +220,7 @@ class FunctionParser():
         name = ''
 
         parameterParts = declaration.split('*')
-        
+
 
         if self.alternativeVarNames:
             if(len(parameterParts) == 1):
@@ -234,7 +234,7 @@ class FunctionParser():
                         type += '*'
 
                     else:
-                        type += element
+                        type += ' %s' % (element)
                         name = alternativeName
                         type += '*'
 
@@ -246,7 +246,7 @@ class FunctionParser():
 
                 for element in parameterParts:
                     element = element.strip()
-                    type += element
+                    type += ' %s' % (element)
 
             else:
                 name = parameterParts.pop().strip()
@@ -257,7 +257,7 @@ class FunctionParser():
                         type+= '*'
 
                     else:
-                        type+= element
+                        type+= '  %s' % (element)
                         type += '*'
         return (type, name)
 
