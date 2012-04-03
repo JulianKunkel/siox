@@ -281,17 +281,15 @@ class CommandParser():
         index = 0
         commandName=''
         commandArgs=''
-        init = False
-        final = False
         templateList = []
         for line in inputLines:
             match = self.commandRegex.match(line)
             if (match):
                 if match.group(1) == 'init':
-                    init = True
+                    functions[index].init = True
 
                 elif match.group(1) == 'final':
-                    final = True
+                    functions[index].final = True
 
                 elif match.group(1) in avalibalCommands:
                     if commandName != '':
@@ -299,7 +297,7 @@ class CommandParser():
                         commandName = ''
                         commandArgs = ''
 
-                    commandName +=  match.group(1)
+                    commandName += match.group(1)
                     commandArgs += match.group(2)
                 else:
                     commandArgs = match.group(1)
@@ -309,16 +307,11 @@ class CommandParser():
                     if commandName != '':
                         templateList.append(templateClass(commandName, commandArgs))
                         functions[index].usedTemplates = templateList
-                        functions[index].init = init
-                        functions[index].final = final
-                        init = False
-                        final = False
+                        templateList = []
                         commandName = ''
                         commandArgs = ''
                     index = index + 1
-        for function in functions:
-            print function.name
-            print function.usedTemplates
+                
         return functions
 
 # This class is like SkyNet, but more advanced
@@ -403,9 +396,9 @@ class Writer():
     file.write('#include <stdio.h> \n#include <stdlib.h>\n\n')
 
     # global stuff
-    for function in functions:
-      for temp in function.usedTemplates:
-        file.write('%s\n' % (temp.output('global')))
+    #for function in functions:
+    for temp in functions[0].usedTemplates:
+      file.write('%s\n' % (temp.output('global')))
 
     file.write("\n\n")
 
@@ -417,22 +410,21 @@ class Writer():
     for function in functions:
         file.write('%s *__wrap_%s(%s)\n{\n' % (function.type, function.name, function.signature))
 
+        file.write('\t%s ret;\n' % (function.type))
+
         # is this the desired init-function?
         if function.init:
             # write all init-functions
             for func in functions:
                 for temp in func.usedTemplates:
-                    file.write('\t%s\n' % (temp.output('init')))
-
-        # is this the desired final-function?
-        if function.final:
-            # write all init-functions
-            for func in functions:
-                for temp in func.usedTemplates:
-                    file.write('\t%s\n' % (temp['final']))
+                    outstr = '\t%s\n' % (temp.output('init').strip())
+                    if outstr.strip() != '':
+                        file.write(outstr)    
 
         for temp in function.usedTemplates:
-            file.write('\t%s\n' % (temp.output('before')))
+            outstr = '\t%s\n' % (temp.output('before').strip())
+            if outstr.strip() != '':
+                file.write(outstr)    
 
         signatureNames = ""
 
@@ -441,10 +433,23 @@ class Writer():
 
         signatureNames = signatureNames[:-2]
 
-        file.write('\treturn __real_%s(%s);\n' % (function.name, signatureNames))
+        file.write('\tret = __real_%s(%s);\n' % (function.name, signatureNames))
+        
+        # is this the desired final-function?
+        if function.final:
+            # write all final-functions
+            for func in functions:
+                for temp in func.usedTemplates:
+                    outstr = '\t%s\n' % (temp.output('final').strip())
+                    if outstr.strip() != '':
+                        file.write(outstr)        
 
         for temp in function.usedTemplates:
-            file.write('\t%s\n' % (temp.output('after')))
+            outstr = '\t%s\n' % (temp.output('after').strip())
+            if outstr.strip() != '':
+                file.write(outstr)    
+
+        file.write('\treturn ret;\n')
 
         file.write('}\n\n');
 
