@@ -101,6 +101,7 @@ class Function():
             identifier += ''.join(parameter.type.split())
             identifier += parameter.name
         identifier += ');'
+        identifier = re.sub('[,\s]', '', identifier)
         return identifier
 ##
 # @brief One parameter of a function.
@@ -179,7 +180,6 @@ class FunctionParser():
 
 
             function = function.split('\n')
-            print function
             for index in range(0,len(function)):
                 function[index] = function[index].lstrip()
 
@@ -263,7 +263,7 @@ class FunctionParser():
                     else:
                         type+= '  %s' % (element)
                         type += '*'
-        return (type, name)
+        return (type.strip(), name)
 
 ##
 # @brief
@@ -316,6 +316,9 @@ class CommandParser():
                         commandName = ''
                         commandArgs = ''
                     index = index + 1
+        for function in functions:
+            print function.name
+            print function.usedTemplates
         return functions
 
 # This class is like SkyNet, but more advanced
