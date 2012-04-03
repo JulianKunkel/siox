@@ -110,6 +110,9 @@ class Parameter():
   def __init__(self):
     self.type = ''
     self.name = ''
+    
+  def __str__(self):
+    return self.name    
   #end def
 #end class
 
@@ -314,144 +317,165 @@ class CommandParser():
                 
         return functions
 
-# This class is like SkyNet, but more advanced
+##
+# @brief Used to store the templates for each funtion
 class templateClass():
-  def __init__(self, name, variables):
-    templateDict = template[name]
-    self.name = name
-    self.parameters = {}
-    self.setParameters(templateDict['variables'], variables)
-    self.world = templateDict['global']
-    self.init = templateDict['init']
-    self.before = templateDict['before']
-    self.after = templateDict['after']
-    self.final = templateDict['final']
+    ##
+    # @brief The constructor
+    #
+    # @param name The name of the used template
+    # @param variables The used variables
+    def __init__(self, name, variables):
+        templateDict = template[name]
+        self.name = name
+        self.parameters = {}
+        
+        # Generate strings for output from given input
+        self.setParameters(templateDict['variables'], variables)
+        
+        # Remember template-acces for easier usage
+        self.world = templateDict['global']
+        self.init = templateDict['init']
+        self.before = templateDict['before']
+        self.after = templateDict['after']
+        self.final = templateDict['final']
 
-  # fill the parameter-lists
-  def setParameters(self, names, values):
-    NameList = names.split(' ')
-    ValueList = values.split(' ')
+    ##
+    # @brief Reads the parameteres and generates the needed output
+    #
+    # @param names The name of the used template
+    # @param values The used variables
+    def setParameters(self, names, values):
+        # generate a list of all names and values
+        NameList = names.split(' ')
+        ValueList = values.split(' ')
 
-    position = 0;
+        position = 0;
+        # iterate over all elements but the last one
+        for value in ValueList[0:len(NameList)-1]:
+            self.parameters[NameList[position]] = value
+            position += 1
+        # all other elements belong to the last parameter
+        self.parameters[NameList[position]] = ' '.join(ValueList[len(NameList)-1:])
 
-    # only iterate over the first elements
-    for value in ValueList[0:len(NameList)-1]:
-      self.parameters[NameList[position]] = value
-      position += 1
-    # all other elements belong to the last parameter
-    self.parameters[NameList[position]] = ' '.join(ValueList[len(NameList)-1:])
+    ##
+    # @brief Used for selective output
+    #
+    # @param type What part of the template should be given
+    #
+    # @return The requested string from the template
+    def output(self, type):
+        if (type == 'global'):
+            return self.world % self.parameters
+        elif (type == 'init'):
+            return self.init % self.parameters
+        elif (type == 'before'):
+            return self.before % self.parameters
+        elif (type == 'after'):
+            return self.after % self.parameters
+        elif (type == 'final'):
+            return self.final % self.parameters
+        else:
+            # Error
+            # FIXME: Proper Error-Handling
+            return 'Einmal mit Profis arbeiten...'
 
-  # puts everything together
-  def output(self, type):
-    if (type == 'global'):
-      return self.world % self.parameters
-    elif (type == 'init'):
-      return self.init % self.parameters
-    elif (type == 'before'):
-      return self.before % self.parameters
-    elif (type == 'after'):
-      return self.after % self.parameters
-    elif (type == 'final'):
-      return self.final % self.parameters
-    else:
-      # Error
-      # FIXME: Proper Error-Handling ;)
-      return 'Einmal mit Profis arbeiten...'
-
-# @brief
+##
+# @brief The output class (write a file to disk)
+#
 class Writer():
 
-  ##
-  # @brief
-  #
-  # @param options
-  #
-  def __init__(self, options):
+    ##
+    # @brief The constructor
+    #
+    # @param options The supplied arguments
+    def __init__(self, options):
+        self.outputFile = options.outputFile
 
-    self.outputFile = options.outputFile
+    ##
+    # @brief Write a header file
+    #
+    # @param functions A list of function-objects to write
+    def headerFile(self, functions):
+        # open the output file for writing
+        file = open(self.outputFile, 'w')
 
-  ##
-  # @brief
-  #
-  # @param functions
-  #
-  # @return
-  def headerFile(self, functions):
-    # open the output file for writing
-    file = open(self.outputFile, 'w')
+        # write all function headers
+        for function in functions:
+            file.write("%s ; \n" % (function.type, function.call()))
 
-    # function headers
-    for function in functions:
-      file.write("%s %s ( %s ); \n" % (function.type,
-        function.name, function.signature))
+        # close the file
+        file.close()
 
-    # close the file
-    file.close()
+    ##
+    # @brief Write a source file
+    #
+    # @param functions A list of function-objects to write
+    def sourceFile(self, functions):
+      # open the output file for writing
+      file = open(self.outputFile, 'w')
+    
+      # write all needed includes
+      file.write('#include <stdio.h> \n#include <stdlib.h>\n\n')
 
-  def sourceFile(self, functions):
-    # open the output file for writing
-    file = open(self.outputFile, 'w')
+      # write all global-Templates
+      for temp in functions[0].usedTemplates:
+          file.write('%s\n' % (temp.output('global')))
+      file.write("\n\n")
+    
+      # write the redefinition of all functions
+      for function in functions:
+          file.write('%s *__real_%s;\n' % (function.type, function.call()))
 
-    # generic includes
-    file.write('#include <stdio.h> \n#include <stdlib.h>\n\n')
+      # write all functions-bodies
+      for function in functions:
+          # write function signature
+          file.write('%s *__wrap_%s\n{\n' % (function.type, function.call()))
 
-    # global stuff
-    #for function in functions:
-    for temp in functions[0].usedTemplates:
-      file.write('%s\n' % (temp.output('global')))
+          # a variable to save the return-value
+          file.write('\t%s ret;\n' % (function.type))
 
-    file.write("\n\n")
+          # is this the desired init-function?
+          if function.init:
+              # write all init-templates
+              for func in functions:
+                  for temp in func.usedTemplates:
+                      outstr = '\t%s\n' % (temp.output('init').strip())
+                      if outstr.strip() != '':
+                          file.write(outstr)    
 
-    # redefinition
-    for function in functions:
-      file.write('%s *__real_%s(%s);\n' % (function.type, function.name, function.signature))
+          # write the before-template for this function
+          for temp in function.usedTemplates:
+              outstr = '\t%s\n' % (temp.output('before').strip())
+                if outstr.strip() != '':
+                    file.write(outstr)    
 
-    # functions
-    for function in functions:
-        file.write('%s *__wrap_%s(%s)\n{\n' % (function.type, function.name, function.signature))
+            # generate a string with all parameter-names
+            signatureNames = ', '.join(str(x) for x in function.parameters)
 
-        file.write('\t%s ret;\n' % (function.type))
+            # write the function call
+            file.write('\tret = __real_%s(%s);\n' % (function.name, signatureNames))
 
-        # is this the desired init-function?
-        if function.init:
-            # write all init-functions
-            for func in functions:
-                for temp in func.usedTemplates:
-                    outstr = '\t%s\n' % (temp.output('init').strip())
-                    if outstr.strip() != '':
-                        file.write(outstr)    
+            # is this the desired final-function?
+            if function.final:
+                # write all final-functions
+                for func in functions:
+                    for temp in func.usedTemplates:
+                        outstr = '\t%s\n' % (temp.output('final').strip())
+                        if outstr.strip() != '':
+                            file.write(outstr)        
 
-        for temp in function.usedTemplates:
-            outstr = '\t%s\n' % (temp.output('before').strip())
-            if outstr.strip() != '':
-                file.write(outstr)    
+            # write all after-templates for this function
+            for temp in function.usedTemplates:
+                outstr = '\t%s\n' % (temp.output('after').strip())
+                if outstr.strip() != '':
+                    file.write(outstr)    
 
-        signatureNames = ""
-
-        for par in function.parameters:
-            signatureNames = '%s%s, ' % (signatureNames, par.name)
-
-        signatureNames = signatureNames[:-2]
-
-        file.write('\tret = __real_%s(%s);\n' % (function.name, signatureNames))
+            # write the return statement and close the function
+            file.write('\treturn ret;\n}\n\n')
         
-        # is this the desired final-function?
-        if function.final:
-            # write all final-functions
-            for func in functions:
-                for temp in func.usedTemplates:
-                    outstr = '\t%s\n' % (temp.output('final').strip())
-                    if outstr.strip() != '':
-                        file.write(outstr)        
-
-        for temp in function.usedTemplates:
-            outstr = '\t%s\n' % (temp.output('after').strip())
-            if outstr.strip() != '':
-                file.write(outstr)    
-
-        file.write('\treturn ret;\n')
-
-        file.write('}\n\n');
+    # close the file
+    file.close
 
 ##
 # @brief The main function.
