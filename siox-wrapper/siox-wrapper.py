@@ -139,11 +139,14 @@ class FunctionParser():
         self.functions = []
         # This regex searches from the beginning of the file or } or ; to the next
         # ; or {.
-        self.regexFuncDef = re.compile('(?:;|})?(.+?)(?:;|{)', re.M | re.S)
+        self.regexFuncDef = re.compile('(?:;|})?(.+?)(?:;|{)',re.M | re.S)
 
         # Filter lines with comments beginng with / or # and key word that looks
         # like function definitions
-        self.regexFilter = re.compile('^[#/]|typedef.*')
+        self.regexFilterList = [re.compile('^\s*[#/].*'),
+                re.compile('^\s*typedef.*'),
+                re.compile('^.*\].*$')
+                ]
 
         # Split every line that is left in function name and parameters.
         self.regexFuncDefParts = re.compile( '(.+?)\((.+?)\).*')
@@ -176,12 +179,13 @@ class FunctionParser():
 
 
             function = function.split('\n')
-
+            print function
             for index in range(0,len(function)):
                 function[index] = function[index].lstrip()
 
-                if self.regexFilter.match(function[index]):
-                    function[index] = ''
+                for regexFilter in self.regexFilterList:
+                    if regexFilter.match(function[index]):
+                        function[index] = ''
 
                 function[index] = function[index].rstrip()
 
