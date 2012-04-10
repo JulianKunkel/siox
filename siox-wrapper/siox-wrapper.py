@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # encoding: utf-8
+from __future__ import print_function
 
 import re
 import sys
@@ -19,30 +20,35 @@ DEBUG = False
 class  Option():
 
     def parse(self):
-    # FIXME: sort the options
-        argParser = argparse.ArgumentParser(description='''Wraps SIOX function
-around library function calls''')
+        prog='SIOX-Wrapper'
 
-        argParser.add_argument('--blank-header', '-b', action='store_true',
-                default=False, dest='blankHeader')
+        description='''The SIOX-Wrapper is a tool which instrument software
+libraries, by calling trace functions before and after the actual library call.'''
+
+        argParser = argparse.ArgumentParser(description=description, prog=prog)
 
         argParser.add_argument('--output', '-o', action='store', nargs=1,
-        dest='outputFile', default='out.h', help='out')
+        dest='outputFile', default='out.h', help='Provide a file to write the output.')
 
         argParser.add_argument('--debug', '-d', action='store_true', default=False,
         dest='debug', help='''Print out debug information.''')
 
+        argParser.add_argument('--blank-header', '-b', action='store_true',
+                default=False, dest='blankHeader',
+                help='''Generate a clean header file wich can be instrumented
+from a other header file or C source file.''')
+
         argParser.add_argument('--cpp', '-c', action='store_true', default=False,
         dest='cpp', help='Use cpp to pre process the input file.')
 
-        argParser.add_argument('--altternative-var-names', '-n',
+        argParser.add_argument('--cpp-args', '-a', action='store',nargs=1, default=[],
+        dest='cppArgs', help='''Pass arguments to the cpp. If this option is
+specified the --cpp option is specified implied.''')
+
+        argParser.add_argument('--alt-var-names', '-n',
         action='store_true', default=False, dest='alternativeVarNames',
         help='''If a header file dose not provide variable names, this will
 enumerate them.''')
-
-        argParser.add_argument('--cppArgs', '-a', action='store',nargs=1, default=[],
-        dest='cppArgs', help='''Pass arguments to the cpp. If this option is
-specified the --cpp option is specified implied.''')
 
         argParser.add_argument('inputFile', default=None,
         help='Source or header file to parse')
@@ -57,33 +63,47 @@ specified the --cpp option is specified implied.''')
 ##
 # @brief A storage class for a function.
 #
+#
 class Function():
 
     def __init__(self):
 
-    ## Return type of the function (int*, char, etc.)
+        ## Return type of the function (int*, char, etc.)
         self.type= ''
         ## Name of the function
         self.name = ''
-    ## A list of Parameters, a parameter is a extra class for storing
+        ## A list of Parameters, a parameter is a extra class for storing.
         self.parameters = []
-        ## The parameters of the function separate by ',' (a bit misleading)
-        self.signature = ''
+        ## A list of templates associated with the function.
         self.usedTemplates = []
+        ## Indicates that the function is the first called function of the library and initialize SIOX.
         self.init = False
+        ## Indicates that the function is the last called function of the library.
         self.final = False
 
     ##
-    # @brief Genrate the signature for the function.
+    # @brief Generate the function call.
     #
-    def generateSignature(self):
+    # @param self The reference to this object.
+    #
+    # @return A string containing the function call.
+    #
+    # Generates the function call of the function.
+    def call(self):
 
-      for sigpart in self.parameters:
-        sig = sigpart.type + ' ' + sigpart.name + ', '
-        self.signature += sig
-      self.signature = self.signature[:-2]
+        return '%s(%s)' % (self.name, ', '.join(paramName.name for paramName in self.parameters))
 
 
+    ##
+    # @brief Generate the function definition.
+    #
+    # @param self The reference to this object.
+    #
+    # @return The function definition as a string.
+    def definition(self):
+
+        return '%s %s(%s)'% (self.type, self.name,
+                ', '.join('  '.join([param.type, param.name]) for param in self.parameters))
     ##
     # @brief Generate an identifier of the function.
     #
@@ -110,9 +130,9 @@ class Parameter():
   def __init__(self):
     self.type = ''
     self.name = ''
-    
+
   def __str__(self):
-    return self.name    
+    return self.name
   #end def
 #end class
 
@@ -302,7 +322,12 @@ class CommandParser():
 
                     commandName += match.group(1)
                     commandArgs += match.group(2)
+
                 else:
+                    if commandName == '':
+                        out("error", file=sys.stderr)
+                        sys.exit(1)
+
                     commandArgs = match.group(1)
                     commandArgs = match.group(2)
             else:
@@ -314,7 +339,7 @@ class CommandParser():
                         commandName = ''
                         commandArgs = ''
                     index = index + 1
-                
+
         return functions
 
 ##
@@ -329,10 +354,10 @@ class templateClass():
         templateDict = template[name]
         self.name = name
         self.parameters = {}
-        
+
         # Generate strings for output from given input
         self.setParameters(templateDict['variables'], variables)
-        
+
         # Remember template-acces for easier usage
         self.world = templateDict['global']
         self.init = templateDict['init']
@@ -412,46 +437,46 @@ class Writer():
     #
     # @param functions A list of function-objects to write
     def sourceFile(self, functions):
-      # open the output file for writing
-      file = open(self.outputFile, 'w')
-    
-      # write all needed includes
-      file.write('#include <stdio.h> \n#include <stdlib.h>\n\n')
+        # open the output file for writing
+        file = open(self.outputFile, 'w')
 
-      # write all global-Templates
-      for temp in functions[0].usedTemplates:
-          file.write('%s\n' % (temp.output('global')))
-      file.write("\n\n")
-    
-      # write the redefinition of all functions
-      for function in functions:
-          file.write('%s *__real_%s;\n' % (function.type, function.call()))
+        # write all needed includes
+        file.write('#include <stdio.h> \n#include <stdlib.h>\n\n')
 
-      # write all functions-bodies
-      for function in functions:
-          # write function signature
-          file.write('%s *__wrap_%s\n{\n' % (function.type, function.call()))
+        # write all global-Templates
+        for temp in functions[0].usedTemplates:
+            file.write('%s\n' % (temp.output('global')))
+        file.write("\n\n")
 
-          # a variable to save the return-value
-          file.write('\t%s ret;\n' % (function.type))
+        # write the redefinition of all functions
+        for function in functions:
+            file.write('%s *__real_%s;\n' % (function.type, function.call()))
 
-          # is this the desired init-function?
-          if function.init:
-              # write all init-templates
-              for func in functions:
-                  for temp in func.usedTemplates:
-                      outstr = '\t%s\n' % (temp.output('init').strip())
-                      if outstr.strip() != '':
-                          file.write(outstr)    
+        # write all functions-bodies
+        for function in functions:
+            # write function signature
+            file.write('%s *__wrap_%s\n{\n' % (function.type, function.call()))
 
-          # write the before-template for this function
-          for temp in function.usedTemplates:
-              outstr = '\t%s\n' % (temp.output('before').strip())
+            # a variable to save the return-value
+            file.write('\t%s ret;\n' % (function.type))
+
+            # is this the desired init-function?
+            if function.init:
+                # write all init-templates
+                for func in functions:
+                    for temp in func.usedTemplates:
+                        outstr = '\t%s\n' % (temp.output('init').strip())
+                        if outstr.strip() != '':
+                            file.write(outstr)
+
+            # write the before-template for this function
+            for temp in function.usedTemplates:
+                outstr = '\t%s\n' % (temp.output('before').strip())
                 if outstr.strip() != '':
-                    file.write(outstr)    
+                    file.write(outstr)
 
             # generate a string with all parameter-names
-            signatureNames = ', '.join(str(x) for x in function.parameters)
+            signatureNames = ', '.join(paramter.name for parameter in function.parameters)
 
             # write the function call
             file.write('\tret = __real_%s(%s);\n' % (function.name, signatureNames))
@@ -463,17 +488,17 @@ class Writer():
                     for temp in func.usedTemplates:
                         outstr = '\t%s\n' % (temp.output('final').strip())
                         if outstr.strip() != '':
-                            file.write(outstr)        
+                            file.write(outstr)
 
             # write all after-templates for this function
             for temp in function.usedTemplates:
                 outstr = '\t%s\n' % (temp.output('after').strip())
                 if outstr.strip() != '':
-                    file.write(outstr)    
+                    file.write(outstr)
 
             # write the return statement and close the function
             file.write('\treturn ret;\n}\n\n')
-        
+
     # close the file
     file.close
 
