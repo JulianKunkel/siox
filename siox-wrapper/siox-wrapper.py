@@ -54,6 +54,11 @@ specified the --cpp option is specified implied.''')
         help='''If a header file dose not provide variable names, this will
 enumerate them.''')
 
+        argParser.add_argument('--style', '-s',
+        action='store', default='wrap', dest='style',
+        choices=['wrap', 'dllsym'],
+        help='''Determinates which output-style to use.''')
+
         argParser.add_argument('inputFile', default=None,
         help='Source or header file to parse.')
 
@@ -468,7 +473,8 @@ class Writer():
 
         # write all function headers
         for function in functions:
-            print(function.definition(), end=';\n', sep='', file=output)
+            print(function.type)
+            print(function.type, ' ', function.definition(), end=';\n', sep='', file=output)
 
         # close the file
         output.close()
@@ -477,7 +483,7 @@ class Writer():
     # @brief Write a source file
     #
     # @param functions A list of function-objects to write
-    def sourceFile(self, functions):
+    def sourceFileWrap(self, functions):
         # open the output file for writing
         output = open(self.outputFile, 'w')
 
@@ -497,11 +503,12 @@ class Writer():
         # write all functions-bodies
         for function in functions:
             # write function signature
-            print(function.type, ' *__wrap_',function.definition(),'\n{',
-                    end='\n', sep='', file=output)
+            
+            print(function.type, ' *__wrap_',function.definition(),
+                    end='\n{\n', sep='', file=output)
 
             # a variable to save the return-value
-            print('\t', function.type, 'ret;', end='\n', sep='',
+            print('\t', function.type, ' ret;', end='\n', sep='',
                     file=output)
 
             # is this the desired init-function?
@@ -542,6 +549,97 @@ class Writer():
         # close the file
         output.close()
 
+    ##
+    # @brief Write a source file
+    #
+    # @param functions A list of function-objects to write
+    def sourceFileDLLSym(self, functions):
+        # open the output file for writing
+        output = open(self.outputFile, 'w')
+
+        # write all global-Templates
+        for temp in functions[0].usedTemplates:
+            print(temp.output('global'), file=output)
+        print("\n\n", file=output)
+
+        # write the redefinition of all functions
+        for function in functions:
+            print('static ', function.type, ' (* static_', function.name,
+             ') ( ', ", ".join((' '.join([param.type, param.name]) for param in function.parameters)), end=' ) = NULL;\n',
+             sep='', file=output)
+
+        # write all functions-bodies
+        for function in functions:
+            # write function signature
+            print(function.type, function.definition(),
+                    end='\n{\n', sep='', file=output)
+
+            # a variable to save the return-value
+            print('\t', function.type, ' ret;', end='\n', sep='',
+                    file=output)
+
+            # is this the desired init-function?
+            if function.init:
+                # write all init-templates
+                for func in functions:
+                    for temp in func.usedTemplates:
+                        outstr = temp.output('init').strip()
+                        if outstr.strip() != '':
+                            print('\t', outstr, end='\n', sep='', file=output)
+
+            # write the before-template for this function
+            for temp in function.usedTemplates:
+                outstr = temp.output('before').strip()
+                if outstr != '':
+                    print('\t', outstr, end='\n', sep='', file=output)
+
+
+            # write the function call
+            print('\tret = (* static_', function.call(), end=');\n', sep='',
+                    file=output)
+
+            # is this the desired final-function?
+            if function.final:
+                # write all final-functions
+                for func in functions:
+                    for temp in func.usedTemplates:
+                        outstr = temp.output('final').strip()
+                        if outstr.strip() != '':
+                            print('\t', outstr, end='\n', sep='', file=output)
+
+            # write all after-templates for this function
+            for temp in function.usedTemplates:
+                outstr = temp.output('after').strip()
+            # write the return statement and close the function
+            print('\treturn ret;\n}', end='\n\n', file=output)
+
+        # generic needs
+        print("""#define OPEN_DLL(defaultfile, libname) \\
+{ \\
+    char * file = getenv(libname); \\
+	if (file == NULL) \\
+		file = defaultfile; \\
+	dllFile = dlopen(file, RTLD_LAZY); \\
+	if (dllFile == NULL) { \\
+		printf("[Error] dll not found %s", file); \\
+		exit(1); \\
+	} \\
+}
+
+#define ADD_SYMBOL(name) \\
+symbol = dlsym(dllFile, #name); \\
+if (symbol == NULL) { \\
+	printf("[Error] trace wrapper - symbol not found %s", #name); \\
+}
+""", file=output)
+
+        for function in functions:
+            print("\nADD_SYMBOL(", function.name, ");\nstatic_", function.name, " = symbol;", file=output)
+
+        # close the file
+        output.close()
+
+
 ##
 # @brief The main function.
 #
@@ -563,7 +661,10 @@ def main():
     else:
         commandParser = CommandParser(options)
         functions = commandParser.parse(functions)
-        outputWriter.sourceFile(functions)
+        if options.style == "wrap":
+            outputWriter.sourceFileWrap(functions)
+        else:
+            outputWriter.sourceFileDLLSym(functions)
 
 if __name__  == '__main__':
   main()
