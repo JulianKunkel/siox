@@ -30,11 +30,11 @@ int
 main(){
 
 	/* Vars for SIOX */
-	siox_unid	unid;			/* This node's UNID */
-	siox_aid	aid_write;		/* An AID for the write activity */
-	int			bytes_written;	/* A collector for performance data */
+	siox_unid	unid;		/* This node's UNID */
+	siox_aid	aid_write;	/* An AID for the write activity */
+	int		bytes_written;	/* A collector for performance data */
 	char		ontology[] = "siox.ont";	/* The ontology file */
-	siox_mid	mid;			/* The MID for our performance metric */
+	siox_mid	mid;		/* The MID for our performance metric */
 
 	/* Vars for handling our PID */
 	pid_t		pid;
@@ -88,9 +88,9 @@ main(){
 	 * ============
 	 */
 	printf( "\n"
-			"SIOX Mock-Up File System Example\n"
-			"================================\n"
-			"\n" );
+		"SIOX Mock-Up File System Example\n"
+		"================================\n"
+		"\n" );
 
 
 	/*
@@ -116,10 +116,10 @@ main(){
 	{
 		/* ...otherwise, register our performance metric with the ontology */
 		mid = siox_ont_register_metric( "Bytes Written",
-										"",
-										SIOX_UNIT_BYTES,
-										SIOX_STORAGE_64_BIT_INTEGER,
-										SIOX_SCOPE_SUM);
+							"",
+							SIOX_UNIT_BYTES,
+							SIOX_STORAGE_64_BIT_INTEGER,
+							SIOX_SCOPE_SUM);
 		printf( "Registered performance metric %s with ontotology.\n",
 				siox_ont_metric_get_name( siox_ont_find_metric_by_mid( mid ) ) );
 		siox_ont_write_ontology();
@@ -161,9 +161,9 @@ main(){
 	/* Report the data we collected. This could take place anytime between siox_start_activity()
 	   and siox_end_activity() and happen more than once per activity.  */
 	siox_report_activity( aid_write,
-						  "FileName", mufs_file_name,
-						  mid, SIOX_TYPE_INTEGER, &bytes_written,
-						  "Including opening & closing the file, as usual with MUFS." );
+				  "FileName", mufs_file_name,
+				  mid, SIOX_TYPE_INTEGER, &bytes_written,
+				  "Including opening & closing the file, as usual with MUFS." );
 
 	/* Notify SIOX that all pertinent data has been sent and the activities can be closed */
 	siox_end_activity( aid_write );
