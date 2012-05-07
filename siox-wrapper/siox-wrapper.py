@@ -84,6 +84,7 @@ class Function():
         ## A list of Parameters, a parameter is a extra class for storing.
         self.parameters = []
         ## A list of templates associated with the function.
+        self.definition = ''
         self.usedTemplates = []
         ## Indicates that the function is the first called function of the library and initialize SIOX.
         self.init = False
@@ -98,7 +99,7 @@ class Function():
     # @return A string containing the function call.
     #
     # Generates the function call of the function.
-    def call(self):
+    def getCall(self):
 
         return '%s(%s)' % (self.name, ', '.join(paramName.name for paramName in self.parameters))
 
@@ -109,10 +110,14 @@ class Function():
     # @param self The reference to this object.
     #
     # @return The function definition as a string without the type.
-    def definition(self):
+    def getDefinition(self):
 
-        return '%s(%s)'% (self.name,
+        if self.definition == '':
+
+            return '%s(%s)'% (self.name,
                 ', '.join('  '.join([param.type, param.name]) for param in self.parameters))
+        else:
+            return self.definition
     ##
     # @brief Generate an identifier of the function.
     #
@@ -159,18 +164,12 @@ class Instruction():
 # The function parser searches through a header file using regular expressions.
 class FunctionParser():
 
-    ##
-    # @brief
-    #
-    # @param options
-    #
-    # @return
     def __init__(self, options):
 
         self.inputFile = options.inputFile
         self.cpp = options.cpp
         self.cppArgs = options.cppArgs
-        self.alternativeVarNames = options.alternativeVarNames
+        self.blankHeader = options.blankHeader
         # This regex searches from the beginning of the file or } or ; to the next
         # ; or {.
         ## This regular expression searches for the general function definition.
@@ -206,6 +205,10 @@ class FunctionParser():
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             lines, error = cpp.communicate()
 
+            if error != '':
+                print('ERROR: CPP error:\n', error, file=sys.stderr)
+                sys.exit(1)
+
         else:
             #TODO Error handling for the cpp an maybe adjust the path to the cpp.
             inputFile = open(self.inputFile, 'r')
@@ -239,17 +242,21 @@ class FunctionParser():
             function = Function()
             functions.append(function)
 
-            # Get type and the name of the function.
-            function.type, function.name = self.getTypeName(funcParts.group(1),
-            'function'+str(funcNo), False)
+            if self.blankHeader:
+                # Get type and the name of the function.
+                function.definition = funcParts.group(1).strip()
+                function.definition += " ("+funcParts.group(2)+" )"
 
-            parameters = funcParts.group(2).split(',')
+            else:
 
-            # Get the type and name of the parameters.
-            for paramNo, parameter in enumerate(parameters):
-                parameterObj = Parameter()
-                function.parameters.append(parameterObj)
-                parameterObj.type, parameterObj.name = self.getTypeName(parameter, 'var'+str(paramNo), self.alternativeVarNames)
+                function.type, function.name = self.getTypeName(funcParts.group(1))
+                parameters = funcParts.group(2).split(',')
+
+                # Get the type and name of the parameters.
+                for paramNo, parameter in enumerate(parameters):
+                    parameterObj = Parameter()
+                    function.parameters.append(parameterObj)
+                    parameterObj.type, parameterObj.name = self.getTypeName(parameter)
 
         return functions
 
@@ -261,53 +268,33 @@ class FunctionParser():
     # names they will be prefixed and enumerated.
     #
     # @return The type and the name of the declaration as a tuple.
-    def getTypeName(self, declaration, alternativeName, useAltVar):
+    def getTypeName(self, declaration):
 
         type = ''
         name = ''
 
         parameterParts = declaration.split('*')
 
-        # Use alternative variable names for the header file.
-        if useAltVar:
-            if(len(parameterParts) == 1):
-                type = parameterParts[0].strip()
-                name = alternativeName.strip()
+        if(len(parameterParts) == 1):
+            parameterParts = declaration.split()
+            # Pop the name of the declaration.
+            name = parameterParts.pop().strip()
 
-            else:
-                for element in parameterParts:
-                    element = element.strip()
-                    # If a empty string is found, multiple * where split.
-                    if element is '':
-                        type += '*'
-
-                    else:
-                        type += ' %s' % (element)
-                        name = alternativeName
-                        type += '*'
+            for element in parameterParts:
+                element = element.strip()
+                type += ' %s' % (element)
 
         else:
+            name = parameterParts.pop().strip()
 
-            if(len(parameterParts) == 1):
-                parameterParts = declaration.split()
-                # Pop the name of the declaration.
-                name = parameterParts.pop().strip()
+            for element in parameterParts:
+                element = element.strip()
+                if element is '':
+                    type+= '*'
 
-                for element in parameterParts:
-                    element = element.strip()
-                    type += ' %s' % (element)
-
-            else:
-                name = parameterParts.pop().strip()
-
-                for element in parameterParts:
-                    element = element.strip()
-                    if element is '':
-                        type+= '*'
-
-                    else:
-                        type+= '  %s' % (element)
-                        type += '*'
+                else:
+                    type+= '  %s' % (element)
+                    type += '*'
 
         return (type.strip(), name)
 
@@ -370,7 +357,7 @@ class CommandParser():
                     # If no command name is defined and a comment which is no
                     # instruction is found throw an error.
                     if commandName == '':
-                        print("error", file=sys.stderr)
+                        print("ERROR: Command not known: ",match.group(1), file=sys.stderr)
                         sys.exit(1)
 
                     commandArgs = match.group(1)
@@ -448,8 +435,8 @@ class templateClass():
             return self.final % self.parameters
         else:
             # Error
-            # FIXME: Proper Error-Handling
-            return 'Einmal mit Profis arbeiten...'
+            print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
+            sys.exit(1)
 
 ##
 # @brief The output class (write a file to disk)
@@ -474,7 +461,7 @@ class Writer():
         # write all function headers
         for function in functions:
             print(function.type)
-            print(function.type, ' ', function.definition(), end=';\n', sep='', file=output)
+            print(function.type, ' ', function.getDefinition(), end=';\n', sep='', file=output)
 
         # close the file
         output.close()
@@ -497,14 +484,14 @@ class Writer():
 
         # write the redefinition of all functions
         for function in functions:
-            print(function.type, ' *__real_', function.call(), end=';\n',
+            print(function.type, ' *__real_', function.getCall(), end=';\n',
                     sep='', file=output)
 
         # write all functions-bodies
         for function in functions:
             # write function signature
-            
-            print(function.type, ' *__wrap_',function.definition(),
+
+            print(function.type, ' *__wrap_',function.getDefinition(),
                     end='\n{\n', sep='', file=output)
 
             # a variable to save the return-value
@@ -528,7 +515,7 @@ class Writer():
 
 
             # write the function call
-            print('\tret = __real_', function.call(), end=';\n', sep='',
+            print('\tret = __real_', function.getCall(), end=';\n', sep='',
                     file=output)
 
             # is this the desired final-function?
@@ -571,7 +558,7 @@ class Writer():
         # write all functions-bodies
         for function in functions:
             # write function signature
-            print(function.type, function.definition(),
+            print(function.type, function.getDefinition(),
                     end='\n{\n', sep='', file=output)
 
             # a variable to save the return-value
@@ -595,7 +582,7 @@ class Writer():
 
 
             # write the function call
-            print('\tret = (* static_', function.call(), end=');\n', sep='',
+            print('\tret = (* static_', function.getCall(), end=');\n', sep='',
                     file=output)
 
             # is this the desired final-function?
