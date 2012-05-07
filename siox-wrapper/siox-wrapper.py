@@ -532,6 +532,14 @@ class Writer():
                 outstr = temp.output('after').strip()
             # write the return statement and close the function
             print('\treturn ret;\n}', end='\n\n', file=output)
+            
+        # generate gcc string for the user
+        gcchelper = ''
+            
+        for func in functions:
+            gcchelper = "%s,%s" % (gcchelper, func.name)
+                
+        print(gcchelper[2:])
 
         # close the file
         output.close()
@@ -614,7 +622,10 @@ class Writer():
 }
 
 #define ADD_SYMBOL(name) \\
-symbol = dlsym(dllFile, #name); \\
+symbol = dlsym(dllFile, #name)game.tar.gz - The source code in a tarball. Extract and run make
+
+Readme.txt - Readme instruction file for the game
+; \\
 if (symbol == NULL) { \\
 	printf("[Error] trace wrapper - symbol not found %s", #name); \\
 }
