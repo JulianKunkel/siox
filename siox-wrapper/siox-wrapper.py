@@ -237,7 +237,7 @@ class FunctionParser():
                         function[index] = ''
 
             # Rejoin the split function into a single line.
-            function = ''.join(function)
+            function = ' '.join(function)
 
             funcParts = self.regexFuncDefParts.match(function)
 
@@ -480,7 +480,7 @@ class Writer():
 
         # write all function headers
         for function in functions:
-            if not re.match("^\s*extern\s+", function.getDefinition()):
+            if not re.search("((^\s*)|(\s+))extern\s+.*\(", function.getDefinition()):
                 print(function.getDefinition(), end=';\n', sep='', file=output)
 
         # close the file
