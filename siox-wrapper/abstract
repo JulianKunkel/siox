@@ -44,5 +44,13 @@ Examples
 Generate a clean header-file
     python siox-wrapper.py --blank-header --output out.h --cpp input.c
     
+Annotate a file
+    // init
+    // func1 param1 param2    
+    // func2 param1 param2 param3 param3 param3 param3
+    void testfunction(int a);
+    
+    In the above example the function "testfunction" will be wrapped with what the template designates for func1 and func2 in the "before"- and "after"-sections, and what _every single_ init-section says.
+    
 Generate an instrumented c-file from an annotated header-file (generated before and then annotated)
     python siox-wrapper.py --style wrap --output out.c out.h
