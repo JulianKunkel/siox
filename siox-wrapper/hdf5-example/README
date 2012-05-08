@@ -1,0 +1,34 @@
+1.  Erzeugen einer sauberen Headerdatei.
+
+      python siox-wrapper.py -b -c -o hdf5-example.h /usr/include/hdf5.h
+
+2.  Nun können die einzelnen Annotationen vorgenommen werden.
+
+    z.B.:
+
+      //init
+      //register_node IO-Server HDF5
+      hid_t H5Fcreate (const char *filename, unsigned flags, hid_t create_plist, hid_t access_plist );
+
+3.  Nun kann die annotierte Datei eingelesen werden und der C code erzeugt werden.
+
+      python siox-wrapper.py -o hdf5-example/hdf.c hdf5-example/hdf5.h
+
+    Die zu sehende Ausgabe ist eine Liste aller Funktionsnamen, die später an GCC weiter gegeben werden muss.
+
+4.  In der Enstanden C-Datei muss der HDF5 include hinzugefügt werden.
+
+      #include <hdf5.h>
+
+    Eine Funktion muss leider gelöscht werden, da wir nicht in der Lage sind den Typ va_list weiter zu reichen.
+
+      __wrap_H5Epush2
+
+5. Nun kann aus der C-Datei eine Bibliothek erzeugt werden.
+
+     gcc hdf.c -Wl,-wrap,<Liste von Funktionen> -c -fPIC -lhdf5 -o libsiox-hdf5.so
+
+    Da ich allerdings kein SIOX installiert habe compiliert es nicht zu Ende.
+    In dem Ordner 'hdf5-example' liegt noch eine 'hdf5-withoutsiox.c' welche sich compilieren lässt.
+    Allerdings haben wir noch nicht herausgefunden, wie diese weiter zu linken ist.
+
