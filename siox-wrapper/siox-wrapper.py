@@ -480,7 +480,8 @@ class Writer():
 
         # write all function headers
         for function in functions:
-            print(function.type, ' ', function.getDefinition(), end=';\n', sep='', file=output)
+            if not re.match("^\s*extern\s+", function.getDefinition()):
+                print(function.getDefinition(), end=';\n', sep='', file=output)
 
         # close the file
         output.close()
