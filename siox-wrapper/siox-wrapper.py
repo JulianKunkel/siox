@@ -516,8 +516,9 @@ class Writer():
             # a variable to save the return-value
             returntype = function.type
             returntype = re.sub('^\s*extern\s*', '', returntype)
-            print('\t', returntype, ' ret;', end='\n', sep='',
-                    file=output)
+            if returntype != "void":
+                print('\t', returntype, ' ret;', end='\n', sep='',
+                        file=output)
 
             # is this the desired init-function?
             if function.init:
@@ -535,8 +536,12 @@ class Writer():
                     print('\t', outstr, end='\n', sep='', file=output)
 
             # write the function call
-            print('\tret = __real_', function.getCall(), end=';\n', sep='',
-                    file=output)
+            if returntype != "void":
+                print('\tret = __real_', function.getCall(), end=';\n', sep='',
+                        file=output)
+            else:
+                print('\t__real_', function.getCall(), end=';\n', sep='',
+                        file=output)
 
             # is this the desired final-function?
             if function.final:
@@ -551,7 +556,10 @@ class Writer():
             for temp in function.usedTemplates:
                 outstr = temp.output('after').strip()
             # write the return statement and close the function
-            print('\treturn ret;\n}', end='\n\n', file=output)
+            if returntype != "void":
+                print('\treturn ret;\n}', end='\n\n', file=output)
+            else:
+                print('\treturn void;\n}', end='\n\n', file=output)
 
         # generate gcc string for the user
         gcchelper = ''
