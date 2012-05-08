@@ -24,9 +24,9 @@ class  Option():
     #
     # Parses the command line arguments, using the python argparser.
     def parse(self):
-        prog='SIOX-Wrapper'
+        prog = 'SIOX-Wrapper'
 
-        description='''The SIOX-Wrapper is a tool which instrument software
+        description = '''The SIOX-Wrapper is a tool which instrument software
 libraries, by calling trace functions before and after the actual library call.'''
 
         argParser = argparse.ArgumentParser(description=description, prog=prog)
@@ -45,7 +45,7 @@ from a other header file or C source file.''')
         argParser.add_argument('--cpp', '-c', action='store_true', default=False,
         dest='cpp', help='Use cpp to pre process the input file.')
 
-        argParser.add_argument('--cpp-args', '-a', action='store',nargs=1, default=[],
+        argParser.add_argument('--cpp-args', '-a', action='store', nargs=1, default=[],
         dest='cppArgs', help='''Pass arguments to the cpp. If this option is
 specified the --cpp option is specified implied.''')
 
@@ -64,10 +64,13 @@ enumerate them.''')
 
         args = argParser.parse_args()
 
-        if args.outputFile: args.outputFile = args.outputFile[0]
-        if args.cppArgs: args.cpp = True
+        if args.outputFile:
+            args.outputFile = args.outputFile[0]
+        if args.cppArgs:
+            args.cpp = True
 
         return args
+
 
 ##
 # @brief A storage class for a function.
@@ -78,7 +81,7 @@ class Function():
     def __init__(self):
 
         ## Return type of the function (int*, char, etc.)
-        self.type= ''
+        self.type = ''
         ## Name of the function
         self.name = ''
         ## A list of Parameters, a parameter is a extra class for storing.
@@ -103,7 +106,6 @@ class Function():
 
         return '%s(%s)' % (self.name, ', '.join(paramName.name for paramName in self.parameters))
 
-
     ##
     # @brief Generate the function definition.
     #
@@ -114,10 +116,12 @@ class Function():
 
         if self.definition == '':
 
-            return '%s(%s)'% (self.name,
-                ', '.join('  '.join([param.type, param.name]) for param in self.parameters))
+            return '%s(%s)' % (self.name,
+            ', '.join('  '.join([param.type, param.name]) for param in self.parameters))
+
         else:
             return self.definition
+
     ##
     # @brief Generate an identifier of the function.
     #
@@ -131,18 +135,19 @@ class Function():
                 ''.join(''.join([param.type, param.name]) for param in self.parameters))
 
         return re.sub('[,\s]', '', identifier)
+
+
 ##
 # @brief One parameter of a function.
 #
 # This class holds only data.
 class Parameter():
 
-
-  def __init__(self):
-    ## The type of the parameter.
-    self.type = ''
-    ## The name of the parameter.
-    self.name = ''
+    def __init__(self):
+        ## The type of the parameter.
+        self.type = ''
+        ## The name of the parameter.
+        self.name = ''
 
 
 ##
@@ -152,11 +157,12 @@ class Parameter():
 # names are the entries found in the template file.
 class Instruction():
 
-  def __init__(self):
-    ## Name of the instruction.
-    self.name = ''
-    ## Parameters of the instruction.
-    self.parameters = []
+    def __init__(self):
+        ## Name of the instruction.
+        self.name = ''
+        ## Parameters of the instruction.
+        self.parameters = []
+
 
 ##
 # @brief Parses a header file and looks for function definitions.
@@ -173,7 +179,7 @@ class FunctionParser():
         # This regex searches from the beginning of the file or } or ; to the next
         # ; or {.
         ## This regular expression searches for the general function definition.
-        self.regexFuncDef = re.compile('(?:;|})?(.+?)(?:;|{)',re.M | re.S)
+        self.regexFuncDef = re.compile('(?:;|})?(.+?)(?:;|{)', re.M | re.S)
         # Filter lines with comments beginng with / or # and key word that looks
         # like function definitions
         ## This list regular expression is used to filter the found definitions,
@@ -183,7 +189,7 @@ class FunctionParser():
                 re.compile('^.*\].*$')]
 
         ## This regular expression splits every line that is left in function name and parameters.
-        self.regexFuncDefParts = re.compile( '(.+?)\((.+?)\).*')
+        self.regexFuncDefParts = re.compile('(.+?)\((.+?)\).*')
 
     ##
     # @brief This function parses the header file.
@@ -222,7 +228,7 @@ class FunctionParser():
             # could be in multiple lines.
             function = function.split('\n')
 
-            for index in range(0,len(function)):
+            for index in range(0, len(function)):
                 function[index] = function[index].strip()
 
                 # Run the filter regex list.
@@ -245,7 +251,7 @@ class FunctionParser():
             if self.blankHeader:
                 # Get type and the name of the function.
                 function.definition = funcParts.group(1).strip()
-                function.definition += " ("+funcParts.group(2)+" )"
+                function.definition += " (" + funcParts.group(2) + " )"
 
             else:
 
@@ -285,18 +291,30 @@ class FunctionParser():
                 type += ' %s' % (element)
 
         else:
-            name = parameterParts.pop().strip()
+            name = parameterParts.pop()
+
+            nameParts = name.split()
+
+            if len(nameParts) == 1:
+                name = nameParts.pop().strip()
+
+            elif len(nameParts) > 1:
+                name = nameParts.pop().strip()
 
             for element in parameterParts:
                 element = element.strip()
                 if element is '':
-                    type+= '*'
-
-                else:
-                    type+= '  %s' % (element)
                     type += '*'
 
+                else:
+                    type += '  %s' % (element)
+                    type += '*'
+
+            for element in nameParts:
+                type += ' %s' % (element)
+
         return (type.strip(), name)
+
 
 ##
 # @brief The command parser which reads the instrumentation instructions.
@@ -305,7 +323,7 @@ class FunctionParser():
 # The parsing is based on regular expressions.
 class CommandParser():
 
-    def __init__(self,options):
+    def __init__(self, options):
         self.inputFile = options.inputFile
 
         ## This regular expression matches the instructions which begin with //
@@ -322,12 +340,12 @@ class CommandParser():
     # @return A list of function objects which are extended by the
     # instrumentation instructions.
     def parse(self, functions):
-        avalibalCommands  = template.keys()
+        avalibalCommands = template.keys()
         input = open(self.inputFile, 'r')
         inputLines = input.readlines()
         index = 0
-        commandName=''
-        commandArgs=''
+        commandName = ''
+        commandArgs = ''
         templateList = []
 
         # Iterate over every line and search for instrumentation instructions.
@@ -357,7 +375,7 @@ class CommandParser():
                     # If no command name is defined and a comment which is no
                     # instruction is found throw an error.
                     if commandName == '':
-                        print("ERROR: Command not known: ",match.group(1), file=sys.stderr)
+                        print("ERROR: Command not known: ", match.group(1), file=sys.stderr)
                         sys.exit(1)
 
                     commandArgs = match.group(1)
@@ -374,6 +392,7 @@ class CommandParser():
                     index = index + 1
 
         return functions
+
 
 ##
 # @brief Used to store the templates for each funtion
@@ -408,13 +427,13 @@ class templateClass():
         NameList = names.split(' ')
         ValueList = values.split(' ')
 
-        position = 0;
+        position = 0
         # iterate over all elements but the last one
-        for value in ValueList[0:len(NameList)-1]:
+        for value in ValueList[0:len(NameList) - 1]:
             self.parameters[NameList[position]] = value
             position += 1
         # all other elements belong to the last parameter
-        self.parameters[NameList[position]] = ' '.join(ValueList[len(NameList)-1:])
+        self.parameters[NameList[position]] = ' '.join(ValueList[len(NameList) - 1:])
 
     ##
     # @brief Used for selective output
@@ -438,6 +457,7 @@ class templateClass():
             print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
             sys.exit(1)
 
+
 ##
 # @brief The output class (write a file to disk)
 #
@@ -460,7 +480,6 @@ class Writer():
 
         # write all function headers
         for function in functions:
-            print(function.type)
             print(function.type, ' ', function.getDefinition(), end=';\n', sep='', file=output)
 
         # close the file
@@ -484,18 +503,20 @@ class Writer():
 
         # write the redefinition of all functions
         for function in functions:
-            print(function.type, ' *__real_', function.getCall(), end=';\n',
+            print(function.type, ' __real_', function.getDefinition(), end=';\n',
                     sep='', file=output)
 
         # write all functions-bodies
         for function in functions:
             # write function signature
 
-            print(function.type, ' *__wrap_',function.getDefinition(),
+            print(function.type, ' __wrap_', function.getDefinition(),
                     end='\n{\n', sep='', file=output)
 
             # a variable to save the return-value
-            print('\t', function.type, ' ret;', end='\n', sep='',
+            returntype = function.type
+            returntype = re.sub('^\s*extern\s*', '', returntype)
+            print('\t', returntype, ' ret;', end='\n', sep='',
                     file=output)
 
             # is this the desired init-function?
@@ -512,7 +533,6 @@ class Writer():
                 outstr = temp.output('before').strip()
                 if outstr != '':
                     print('\t', outstr, end='\n', sep='', file=output)
-
 
             # write the function call
             print('\tret = __real_', function.getCall(), end=';\n', sep='',
@@ -532,13 +552,13 @@ class Writer():
                 outstr = temp.output('after').strip()
             # write the return statement and close the function
             print('\treturn ret;\n}', end='\n\n', file=output)
-            
+
         # generate gcc string for the user
         gcchelper = ''
-            
+
         for func in functions:
             gcchelper = "%s,%s" % (gcchelper, func.name)
-                
+
         print(gcchelper[2:])
 
         # close the file
@@ -570,7 +590,9 @@ class Writer():
                     end='\n{\n', sep='', file=output)
 
             # a variable to save the return-value
-            print('\t', function.type, ' ret;', end='\n', sep='',
+            returntype = function.type
+            returntype = re.sub('^\s*extern\s*', '', returntype)
+            print('\t', returntype, ' ret;', end='\n', sep='',
                     file=output)
 
             # is this the desired init-function?
@@ -587,7 +609,6 @@ class Writer():
                 outstr = temp.output('before').strip()
                 if outstr != '':
                     print('\t', outstr, end='\n', sep='', file=output)
-
 
             # write the function call
             print('\tret = (* static_', function.getCall(), end=');\n', sep='',
@@ -611,14 +632,14 @@ class Writer():
         # generic needs
         print("""#define OPEN_DLL(defaultfile, libname) \\
 { \\
-    char * file = getenv(libname); \\
-	if (file == NULL) \\
-		file = defaultfile; \\
-	dllFile = dlopen(file, RTLD_LAZY); \\
-	if (dllFile == NULL) { \\
-		printf("[Error] dll not found %s", file); \\
-		exit(1); \\
-	} \\
+  char * file = getenv(libname); \\
+  if (file == NULL) \\
+    file = defaultfile; \\
+  dllFile = dlopen(file, RTLD_LAZY); \\
+  if (dllFile == NULL) { \\
+    printf("[Error] dll not found %s", file); \\
+    exit(1); \\
+  } \\
 }
 
 #define ADD_SYMBOL(name) \\
@@ -627,7 +648,7 @@ symbol = dlsym(dllFile, #name)game.tar.gz - The source code in a tarball. Extrac
 Readme.txt - Readme instruction file for the game
 ; \\
 if (symbol == NULL) { \\
-	printf("[Error] trace wrapper - symbol not found %s", #name); \\
+  printf("[Error] trace wrapper - symbol not found %s", #name); \\
 }
 """, file=output)
 
@@ -647,7 +668,6 @@ def main():
     opt = Option()
     options = opt.parse()
 
-
     functionParser = FunctionParser(options)
     outputWriter = Writer(options)
 
@@ -664,5 +684,5 @@ def main():
         else:
             outputWriter.sourceFileDLLSym(functions)
 
-if __name__  == '__main__':
-  main()
+if __name__ == '__main__':
+    main()
