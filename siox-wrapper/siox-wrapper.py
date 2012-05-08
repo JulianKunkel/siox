@@ -411,10 +411,6 @@ class CommandParser():
                     commandArgs = match.group(2)
             else:
                 #If a function is found append the found instructions to the function object.
-                print("---")
-                print (currentFunction.getIdentifier())
-                print (functions[index].getIdentifier())
-                print("---")
                 if currentFunction.getIdentifier() == functions[index].getIdentifier():
                     if commandName != '':
                         templateList.append(templateClass(commandName, commandArgs))
