@@ -498,8 +498,9 @@ class Writer():
         print('#include <stdio.h> \n#include <stdlib.h>', end='\n\n', file=output)
 
         # write all global-Templates
-        for temp in functions[0].usedTemplates:
-            print(temp.output('global'), file=output)
+        for func in functions:
+            for templ in func.usedTemplates:
+                print(templ.output('global'), file=output)
         print("\n\n", file=output)
 
         # write the redefinition of all functions
