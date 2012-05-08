@@ -104,6 +104,9 @@ class Function():
     # Generates the function call of the function.
     def getCall(self):
 
+        if len(self.parameters) == 1:
+            if self.parameters[0].name == 'void':
+                return '%s()' % (self.name)
         return '%s(%s)' % (self.name, ', '.join(paramName.name for paramName in self.parameters))
 
     ##
@@ -120,7 +123,7 @@ class Function():
             ', '.join('  '.join([param.type, param.name]) for param in self.parameters))
 
         else:
-            return self.definition
+            return '%s %s %s' % (self.type, self.name, self.definition)
 
     ##
     # @brief Generate an identifier of the function.
@@ -186,10 +189,10 @@ class FunctionParser():
         ## because something could look like a definition but relay isn't.
         self.regexFilterList = [re.compile('^\s*[#/].*'),
                 re.compile('^\s*typedef.*'),
-                re.compile('^.*\].*$')]
+                re.compile('^.*=.*')]
 
         ## This regular expression splits every line that is left in function name and parameters.
-        self.regexFuncDefParts = re.compile('(.+?)\((.+?)\).*')
+        self.regexFuncDefParts = re.compile('([a-zA-Z0-9_\-\s]+?)\((.+?)\).*')
 
     ##
     # @brief This function parses the header file.
@@ -197,28 +200,32 @@ class FunctionParser():
     # @return A list of function definitions.
     #
     # @param self The reference to the object.
-    def parse(self):
+    def parse(self, inputLine=None):
 
         functions = []
         lines = ''
 
-        # Call the cpp.
-        if self.cpp:
-            cppCommand = ['cpp']
-            cppCommand.extend(self.cppArgs)
-            cppCommand.append(self.inputFile)
-            cpp = subprocess.Popen(cppCommand,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            lines, error = cpp.communicate()
+        if inputLine == None:
+            # Call the cpp.
+            if self.cpp:
+                cppCommand = ['cpp']
+                cppCommand.extend(self.cppArgs)
+                cppCommand.append(self.inputFile)
+                cpp = subprocess.Popen(cppCommand,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                lines, error = cpp.communicate()
 
-            if error != '':
-                print('ERROR: CPP error:\n', error, file=sys.stderr)
-                sys.exit(1)
+                if error != '':
+                    print('ERROR: CPP error:\n', error, file=sys.stderr)
+                    sys.exit(1)
+
+            else:
+                #TODO Error handling for the cpp an maybe adjust the path to the cpp.
+                inputFile = open(self.inputFile, 'r')
+                lines = inputFile.read()
 
         else:
-            #TODO Error handling for the cpp an maybe adjust the path to the cpp.
-            inputFile = open(self.inputFile, 'r')
-            lines = inputFile.read()
+            lines = inputLine
 
         matchFuncDef = self.regexFuncDef.findall(lines)
 
@@ -250,8 +257,8 @@ class FunctionParser():
 
             if self.blankHeader:
                 # Get type and the name of the function.
-                function.definition = funcParts.group(1).strip()
-                function.definition += " (" + funcParts.group(2) + " )"
+                function.type, function.name = self.getTypeName(funcParts.group(1).strip())
+                function.definition = "(" + funcParts.group(2) + " )"
 
             else:
 
@@ -278,6 +285,12 @@ class FunctionParser():
 
         type = ''
         name = ''
+        arrayPointer = ''
+        regexBrackets = re.compile('\[\s*\]')
+
+        if regexBrackets.search(declaration):
+            declaration = regexBrackets.sub('', declaration)
+            arrayPointer = '*'
 
         parameterParts = declaration.split('*')
 
@@ -289,8 +302,11 @@ class FunctionParser():
             for element in parameterParts:
                 element = element.strip()
                 type += ' %s' % (element)
+            type += arrayPointer
 
         else:
+
+            arrayPointer += '*'
             name = parameterParts.pop()
 
             nameParts = name.split()
@@ -308,7 +324,9 @@ class FunctionParser():
 
                 else:
                     type += '  %s' % (element)
-                    type += '*'
+
+                type += arrayPointer
+                arrayPointer = ''
 
             for element in nameParts:
                 type += ' %s' % (element)
@@ -325,7 +343,7 @@ class CommandParser():
 
     def __init__(self, options):
         self.inputFile = options.inputFile
-
+        self.options = options
         ## This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*(.+?)\s+(.*)')
 
@@ -340,6 +358,9 @@ class CommandParser():
     # @return A list of function objects which are extended by the
     # instrumentation instructions.
     def parse(self, functions):
+
+        functionParser = FunctionParser(self.options)
+
         avalibalCommands = template.keys()
         input = open(self.inputFile, 'r')
         inputLines = input.readlines()
@@ -347,9 +368,16 @@ class CommandParser():
         commandName = ''
         commandArgs = ''
         templateList = []
-
+        currentFunction = ''
         # Iterate over every line and search for instrumentation instructions.
         for line in inputLines:
+
+            currentFunction = functionParser.parse(line)
+            if len(currentFunction) == 1:
+                currentFunction = currentFunction[0]
+            else:
+                currentFunction = Function()
+
             match = self.commandRegex.match(line)
             if (match):
                 # Search for init or final sections to define init or final
@@ -368,6 +396,7 @@ class CommandParser():
                         commandName = ''
                         commandArgs = ''
 
+
                     commandName += match.group(1)
                     commandArgs += match.group(2)
 
@@ -382,7 +411,11 @@ class CommandParser():
                     commandArgs = match.group(2)
             else:
                 #If a function is found append the found instructions to the function object.
-                if re.sub('[,\s]', '', line) == functions[index].getIdentifier():
+                print("---")
+                print (currentFunction.getIdentifier())
+                print (functions[index].getIdentifier())
+                print("---")
+                if currentFunction.getIdentifier() == functions[index].getIdentifier():
                     if commandName != '':
                         templateList.append(templateClass(commandName, commandArgs))
                         functions[index].usedTemplates = templateList
@@ -480,7 +513,16 @@ class Writer():
 
         # write all function headers
         for function in functions:
-            if not re.search("((^\s*)|(\s+))extern\s+.*\(", function.getDefinition()):
+            if re.search("((^\s*)|(\s+))extern\s+.*\(", function.getDefinition()):
+                continue
+
+            elif function.type == '':
+                continue
+
+            elif function.name == '':
+                continue
+
+            else:
                 print(function.getDefinition(), end=';\n', sep='', file=output)
 
         # close the file
@@ -560,8 +602,9 @@ class Writer():
             # write the return statement and close the function
             if returntype != "void":
                 print('\treturn ret;\n}', end='\n\n', file=output)
+
             else:
-                print('\treturn void;\n}', end='\n\n', file=output)
+                print('\n}', end='\n\n', file=output)
 
         # generate gcc string for the user
         gcchelper = ''
@@ -569,7 +612,7 @@ class Writer():
         for func in functions:
             gcchelper = "%s,%s" % (gcchelper, func.name)
 
-        print(gcchelper[2:])
+        print(gcchelper[1:])
 
         # close the file
         output.close()
