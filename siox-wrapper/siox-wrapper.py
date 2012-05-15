@@ -555,7 +555,11 @@ class Writer():
 
             # a variable to save the return-value
             returntype = function.type
-            returntype = re.sub('^\s*extern\s*', '', returntype)
+
+            for match in throwaway:
+                returntype = function.type
+                returntype = re.sub(match, '', returntype)
+
             if returntype != "void":
                 print('\t', returntype, ' ret;', end='\n', sep='',
                         file=output)
@@ -692,10 +696,7 @@ class Writer():
 }
 
 #define ADD_SYMBOL(name) \\
-symbol = dlsym(dllFile, #name)game.tar.gz - The source code in a tarball. Extract and run make
-
-Readme.txt - Readme instruction file for the game
-; \\
+symbol = dlsym(dllFile, #name); \\
 if (symbol == NULL) { \\
   printf("[Error] trace wrapper - symbol not found %s", #name); \\
 }

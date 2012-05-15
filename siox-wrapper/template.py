@@ -9,7 +9,7 @@ template = {
 },
 'register_node': {
 	'variables': 'HWID SWID',
-	'global': '''siox_unid global_unid;
+	'global': '''siox_unid global_unid; %(HWID)s
                  char global_pid;''',
     'init': '''sprintf( global_pid, "%%d", getpid() );
                global_unid = siox_register_node("%(HWID)s", "%(SWID)s", global_pid);''',
@@ -31,6 +31,14 @@ template = {
 	'init': '''siox_register_edge( global_unid, "%(Edge)s" );''',
     'before': '''''',
 	'after': '',
+	'final': ''
+},
+'activity': {
+	'variables': 'Name Description',
+	'global': '''siox_aid %(Name)s;''',
+	'init': '''''',
+    'before': '''%(Name)s = siox_start_activity( global_unid, "%(Name)s" );''',
+	'after': 'siox_stop_activity( "%(Name)s" );',
 	'final': ''
 },
 'activity_start': {
@@ -89,7 +97,7 @@ template = {
 	'after': 'siox_map_descriptor( global_unid, %(Descriptor)s, %(From)s, %(To)s);',
 	'final': ''
 },
-'receive_descriptor': { 
+'receive_descriptor': {
 	'variables': 'Descriptor From To',
 	'global': '''''',
 	'init': '''''',
@@ -106,3 +114,5 @@ template = {
 	'final': ''
 }
 }
+
+throwaway = ["^\s*extern\s*'"]
