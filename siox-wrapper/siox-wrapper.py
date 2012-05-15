@@ -509,10 +509,11 @@ class Writer():
 
         # write all function headers
         for function in functions:
-            if re.search("((^\s*)|(\s+))extern\s+.*\(", function.getDefinition()):
-                continue
+            for match in throwaway:
+                if re.search(match, function.getDefinition()):
+                    function.name = '';
 
-            elif function.type == '':
+            if function.type == '':
                 continue
 
             elif function.name == '':
@@ -555,10 +556,6 @@ class Writer():
 
             # a variable to save the return-value
             returntype = function.type
-
-            for match in throwaway:
-                returntype = function.type
-                returntype = re.sub(match, '', returntype)
 
             if returntype != "void":
                 print('\t', returntype, ' ret;', end='\n', sep='',

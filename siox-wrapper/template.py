@@ -115,4 +115,4 @@ template = {
 }
 }
 
-throwaway = ["^\s*extern\s*'"]
+throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
