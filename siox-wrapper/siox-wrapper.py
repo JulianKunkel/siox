@@ -13,6 +13,7 @@ from template import *
 DEBUG = False
 
 
+
 ##
 # @brief Generate and handle the command line parsing.
 #
@@ -200,34 +201,11 @@ class FunctionParser():
     # @return A list of function definitions.
     #
     # @param self The reference to the object.
-    def parse(self, inputLine=None):
+    def parse(self, string):
 
         functions = []
-        lines = ''
 
-        if inputLine == None:
-            # Call the cpp.
-            if self.cpp:
-                cppCommand = ['cpp']
-                cppCommand.extend(self.cppArgs)
-                cppCommand.append(self.inputFile)
-                cpp = subprocess.Popen(cppCommand,
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                lines, error = cpp.communicate()
-
-                if error != '':
-                    print('ERROR: CPP error:\n', error, file=sys.stderr)
-                    sys.exit(1)
-
-            else:
-                #TODO Error handling for the cpp an maybe adjust the path to the cpp.
-                inputFile = open(self.inputFile, 'r')
-                lines = inputFile.read()
-
-        else:
-            lines = inputLine
-
-        matchFuncDef = self.regexFuncDef.findall(lines)
+        matchFuncDef = self.regexFuncDef.findall(string)
 
         for funcNo, function in enumerate(matchFuncDef):
 
@@ -273,6 +251,48 @@ class FunctionParser():
 
         return functions
 
+    # @brief Wrapper function for parse().
+    #
+    # @return A list of function objects
+    #
+    # @param self
+    #
+    # This is a wrapper function for the parse() function for parsing the
+    #passed to the FunctionParser object with the option argument.
+    def parseFile(self):
+
+        # Call the cpp.
+        if self.cpp:
+            cppCommand = ['cpp']
+            cppCommand.extend(self.cppArgs)
+            cppCommand.append(self.inputFile)
+            cpp = subprocess.Popen(cppCommand,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            string, error = cpp.communicate()
+
+            if error != '':
+                print('ERROR: CPP error:\n', error, file=sys.stderr)
+                sys.exit(1)
+
+        else:
+            inputFile = open(self.inputFile, 'r')
+            string = inputFile.read()
+
+        functions = self.parse(string)
+        return functions
+
+    # @brief Wrapper function for parse()
+    #
+    # @return A list of function objects
+    #
+    # @param self
+    #
+    # param string
+    def parseString(self, string):
+
+        functions = self.parse(string)
+        return functions
+
     ##
     # @brief Get the type and the name of a declaration.
     #
@@ -286,6 +306,7 @@ class FunctionParser():
         type = ''
         name = ''
         arrayPointer = ''
+        # this is needed for converting array[] to array*
         regexBrackets = re.compile('\[\s*\]')
 
         if regexBrackets.search(declaration):
@@ -369,10 +390,11 @@ class CommandParser():
         commandArgs = ''
         templateList = []
         currentFunction = ''
+
         # Iterate over every line and search for instrumentation instructions.
         for line in inputLines:
 
-            currentFunction = functionParser.parse(line)
+            currentFunction = functionParser.parseString(line)
             if len(currentFunction) == 1:
                 currentFunction = currentFunction[0]
             else:
@@ -689,7 +711,7 @@ class Writer():
     printf("[Error] dll not found %s", file); \\
     exit(1); \\
   } \\
-}
+}            pass
 
 #define ADD_SYMBOL(name) \\
 symbol = dlsym(dllFile, #name)game.tar.gz - The source code in a tarball. Extract and run make
@@ -720,7 +742,7 @@ def main():
     functionParser = FunctionParser(options)
     outputWriter = Writer(options)
 
-    functions = functionParser.parse()
+    functions = functionParser.parseFile()
 
     if options.blankHeader:
         outputWriter.headerFile(functions)
