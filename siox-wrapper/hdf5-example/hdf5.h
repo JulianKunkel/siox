@@ -189,7 +189,6 @@ hid_t H5Eget_current_stack (void );
 herr_t H5Eclose_stack (hid_t stack_id );
 ssize_t H5Eget_class_name (hid_t class_id, char *name, size_t size );
 herr_t H5Eset_current_stack (hid_t err_stack_id );
-herr_t H5Epush2 (hid_t err_stack, const char *file, const char *func, unsigned line, hid_t cls_id, hid_t maj_id, hid_t min_id, const char *msg, ... );
 herr_t H5Epop (hid_t err_stack, size_t count );
 herr_t H5Eprint2 (hid_t err_stack, FILE *stream );
 herr_t H5Ewalk2 (hid_t err_stack, H5E_direction_t direction, H5E_walk2_t func, void *client_data );
@@ -206,8 +205,7 @@ herr_t H5Eprint1 (FILE *stream );
 herr_t H5Eset_auto1 (H5E_auto1_t func, void *client_data );
 herr_t H5Ewalk1 (H5E_direction_t direction, H5E_walk1_t func, void *client_data );
 htri_t H5Fis_hdf5 (const char *filename );
-//init
-//register_node IO-Server HDF5
+// splice_before printf("--- calling H5Fcreate ---\n");
 hid_t H5Fcreate (const char *filename, unsigned flags, hid_t create_plist, hid_t access_plist );
 hid_t H5Fopen (const char *filename, unsigned flags, hid_t access_plist );
 hid_t H5Freopen (hid_t file_id );

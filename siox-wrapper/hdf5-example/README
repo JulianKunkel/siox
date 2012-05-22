@@ -10,6 +10,9 @@
       //register_node IO-Server HDF5
       hid_t H5Fcreate (const char *filename, unsigned flags, hid_t create_plist, hid_t access_plist );
 
+      Das vorligende header file ist mit einem splice_before
+      an der der Function H5Fopen annotiert.
+
 3.  Nun kann die annotierte Datei eingelesen werden und der C code erzeugt werden.
 
       python siox-wrapper.py -o hdf5-example/hdf.c hdf5-example/hdf5.h
@@ -20,15 +23,16 @@
 
       #include <hdf5.h>
 
-    Eine Funktion muss leider gelöscht werden, da wir nicht in der Lage sind den Typ va_list weiter zu reichen.
-
-      __wrap_H5Epush2
-
 5. Nun kann aus der C-Datei eine Bibliothek erzeugt werden.
 
-     gcc hdf.c -Wl,-wrap,<Liste von Funktionen> -c -fPIC -lhdf5 -o libsiox-hdf5.so
+      gcc -c filter-test.c
+      gcc -c hdf5.c
 
-    Da ich allerdings kein SIOX installiert habe compiliert es nicht zu Ende.
-    In dem Ordner 'hdf5-example' liegt noch eine 'hdf5-withoutsiox.c' welche sich compilieren lässt.
-    Allerdings haben wir noch nicht herausgefunden, wie diese weiter zu linken ist.
+      gcc -o filter-test-intercepted filter-test.o -lhdf5 hdf5.o <Ausgabe von dem siox-wrapper>
+
+      gcc -o filter-test filter-test.o -lhdf5
+
+
+
+
 

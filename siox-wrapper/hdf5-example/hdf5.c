@@ -1,17 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <hdf5.h>
-
-siox_unid global_unid;
-                 char global_pid;
+#include  <stdio.h>
+#include  <stdlib.h>
+#include  <hdf5.h>
 
 
-
-herr_t __real_H5open(  void);
-herr_t __real_H5close(  void);
-herr_t __real_H5dont_atexit(  void);
-herr_t __real_H5garbage_collect(  void);
+herr_t __real_H5open(void  );
+herr_t __real_H5close(void  );
+herr_t __real_H5dont_atexit(void  );
+herr_t __real_H5garbage_collect(void  );
 herr_t __real_H5set_free_list_limits(int  reg_global_lim, int  reg_list_lim, int  arr_global_lim, int  arr_list_lim, int  blk_global_lim, int  blk_list_lim);
 herr_t __real_H5get_libversion(unsigned*  majnum, unsigned*  minnum, unsigned*  relnum);
 herr_t __real_H5check_version(unsigned  majnum, unsigned  minnum, unsigned  relnum);
@@ -50,9 +45,9 @@ herr_t __real_H5Tenum_insert(hid_t  type, const char*  name, const void*  value)
 herr_t __real_H5Tenum_nameof(hid_t  type, const void*  value, char*  name, size_t  size);
 herr_t __real_H5Tenum_valueof(hid_t  type, const char*  name, void*  value);
 hid_t __real_H5Tvlen_create(hid_t  base_id);
-hid_t __real_H5Tarray_create2(hid_t  base_id, unsigned  ndims, const hsize_t*  dim);
+hid_t __real_H5Tarray_create2(hid_t  base_id, unsigned  ndims, const hsize_t  dim);
 int __real_H5Tget_array_ndims(hid_t  type_id);
-int __real_H5Tget_array_dims2(hid_t  type_id, hsize_t*  dims);
+int __real_H5Tget_array_dims2(hid_t  type_id, hsize_t  dims);
 herr_t __real_H5Tset_tag(hid_t  type, const char*  tag);
 hid_t __real_H5Tget_super(hid_t  type);
 H5T_class_t __real_H5Tget_class(hid_t  type_id);
@@ -91,13 +86,13 @@ herr_t __real_H5Tset_cset(hid_t  type_id, H5T_cset_t  cset);
 herr_t __real_H5Tset_strpad(hid_t  type_id, H5T_str_t  strpad);
 herr_t __real_H5Tregister(H5T_pers_t  pers, const char*  name, hid_t  src_id, hid_t  dst_id, H5T_conv_t  func);
 herr_t __real_H5Tunregister(H5T_pers_t  pers, const char*  name, hid_t  src_id, hid_t  dst_id, H5T_conv_t  func);
-H5T_conv_t __real_H5Tfind(hid_t  src_id, hid_t  dst_id, H5T_cdata_t**  pcdata);
+H5T_conv_t __real_H5Tfind(hid_t  src_id, hid_t  dst_id, H5T_cdata_t **  pcdata);
 htri_t __real_H5Tcompiler_conv(hid_t  src_id, hid_t  dst_id);
 herr_t __real_H5Tconvert(hid_t  src_id, hid_t  dst_id, size_t  nelmts, void*  buf, void*  background, hid_t  plist_id);
 herr_t __real_H5Tcommit1(hid_t  loc_id, const char*  name, hid_t  type_id);
 hid_t __real_H5Topen1(hid_t  loc_id, const char*  name);
-hid_t __real_H5Tarray_create1(hid_t  base_id, int  ndims, const hsize_t*  dim, const int*  perm);
-int __real_H5Tget_array_dims1(hid_t  type_id, hsize_t*  dims, int*  perm);
+hid_t __real_H5Tarray_create1(hid_t  base_id, int  ndims, const hsize_t  dim, const int  perm);
+int __real_H5Tget_array_dims1(hid_t  type_id, hsize_t  dims, int  perm);
 herr_t __real_H5Lmove(hid_t  src_loc, const char*  src_name, hid_t  dst_loc, const char*  dst_name, hid_t  lcpl_id, hid_t  lapl_id);
 herr_t __real_H5Lcopy(hid_t  src_loc, const char*  src_name, hid_t  dst_loc, const char*  dst_name, hid_t  lcpl_id, hid_t  lapl_id);
 herr_t __real_H5Lcreate_hard(hid_t  cur_loc, const char*  cur_name, hid_t  dst_loc, const char*  dst_name, hid_t  lcpl_id, hid_t  lapl_id);
@@ -118,7 +113,7 @@ herr_t __real_H5Lcreate_ud(hid_t  link_loc_id, const char*  link_name, H5L_type_
 herr_t __real_H5Lregister(const H5L_class_t*  cls);
 herr_t __real_H5Lunregister(H5L_type_t  id);
 htri_t __real_H5Lis_registered(H5L_type_t  id);
-herr_t __real_H5Lunpack_elink_val(const void*  ext_linkval, size_t  link_size, unsigned*  flags, const char**  filename, const char**  obj_path);
+herr_t __real_H5Lunpack_elink_val(const void*  ext_linkval, size_t  link_size, unsigned*  flags, const char **  filename, const char **  obj_path);
 herr_t __real_H5Lcreate_external(const char*  file_name, const char*  obj_name, hid_t  link_loc_id, const char*  link_name, hid_t  lcpl_id, hid_t  lapl_id);
 hid_t __real_H5Oopen(hid_t  loc_id, const char*  name, hid_t  lapl_id);
 hid_t __real_H5Oopen_by_addr(hid_t  loc_id, haddr_t  addr);
@@ -185,32 +180,31 @@ herr_t __real_H5Diterate(void*  buf, hid_t  type_id, hid_t  space_id, H5D_operat
 herr_t __real_H5Dvlen_reclaim(hid_t  type_id, hid_t  space_id, hid_t  plist_id, void*  buf);
 herr_t __real_H5Dvlen_get_buf_size(hid_t  dataset_id, hid_t  type_id, hid_t  space_id, hsize_t*  size);
 herr_t __real_H5Dfill(const void*  fill, hid_t  fill_type, void*  buf, hid_t  buf_type, hid_t  space);
-herr_t __real_H5Dset_extent(hid_t  dset_id, const hsize_t*  size);
+herr_t __real_H5Dset_extent(hid_t  dset_id, const hsize_t  size);
 herr_t __real_H5Ddebug(hid_t  dset_id);
 hid_t __real_H5Dcreate1(hid_t  file_id, const char*  name, hid_t  type_id, hid_t  space_id, hid_t  dcpl_id);
 hid_t __real_H5Dopen1(hid_t  file_id, const char*  name);
-herr_t __real_H5Dextend(hid_t  dset_id, const hsize_t*  size);
+herr_t __real_H5Dextend(hid_t  dset_id, const hsize_t  size);
 hid_t __real_H5Eregister_class(const char*  cls_name, const char*  lib_name, const char*  version);
 herr_t __real_H5Eunregister_class(hid_t  class_id);
 herr_t __real_H5Eclose_msg(hid_t  err_id);
 hid_t __real_H5Ecreate_msg(hid_t  cls, H5E_type_t  msg_type, const char*  msg);
-hid_t __real_H5Ecreate_stack(  void);
-hid_t __real_H5Eget_current_stack(  void);
+hid_t __real_H5Ecreate_stack(void  );
+hid_t __real_H5Eget_current_stack(void  );
 herr_t __real_H5Eclose_stack(hid_t  stack_id);
 ssize_t __real_H5Eget_class_name(hid_t  class_id, char*  name, size_t  size);
 herr_t __real_H5Eset_current_stack(hid_t  err_stack_id);
-herr_t __real_H5Epush2(hid_t  err_stack, const char*  file, const char*  func, unsigned  line, hid_t  cls_id, hid_t  maj_id, hid_t  min_id, const char*  msg,   ...);
 herr_t __real_H5Epop(hid_t  err_stack, size_t  count);
 herr_t __real_H5Eprint2(hid_t  err_stack, FILE*  stream);
 herr_t __real_H5Ewalk2(hid_t  err_stack, H5E_direction_t  direction, H5E_walk2_t  func, void*  client_data);
-herr_t __real_H5Eget_auto2(hid_t  estack_id, H5E_auto2_t*  func, void**  client_data);
+herr_t __real_H5Eget_auto2(hid_t  estack_id, H5E_auto2_t*  func, void **  client_data);
 herr_t __real_H5Eset_auto2(hid_t  estack_id, H5E_auto2_t  func, void*  client_data);
 herr_t __real_H5Eclear2(hid_t  err_stack);
 herr_t __real_H5Eauto_is_v2(hid_t  err_stack, unsigned*  is_stack);
 ssize_t __real_H5Eget_msg(hid_t  msg_id, H5E_type_t*  type, char*  msg, size_t  size);
 ssize_t __real_H5Eget_num(hid_t  error_stack_id);
-herr_t __real_H5Eclear1(  void);
-herr_t __real_H5Eget_auto1(H5E_auto1_t*  func, void**  client_data);
+herr_t __real_H5Eclear1(void  );
+herr_t __real_H5Eget_auto1(H5E_auto1_t*  func, void **  client_data);
 herr_t __real_H5Epush1(const char*  file, const char*  func, unsigned  line, H5E_major_t  maj, H5E_minor_t  min, const char*  str);
 herr_t __real_H5Eprint1(FILE*  stream);
 herr_t __real_H5Eset_auto1(H5E_auto1_t  func, void*  client_data);
@@ -226,7 +220,7 @@ hid_t __real_H5Fget_access_plist(hid_t  file_id);
 herr_t __real_H5Fget_intent(hid_t  file_id, unsigned*  intent);
 ssize_t __real_H5Fget_obj_count(hid_t  file_id, unsigned  types);
 ssize_t __real_H5Fget_obj_ids(hid_t  file_id, unsigned  types, size_t  max_objs, hid_t*  obj_id_list);
-herr_t __real_H5Fget_vfd_handle(hid_t  file_id, hid_t  fapl, void**  file_handle);
+herr_t __real_H5Fget_vfd_handle(hid_t  file_id, hid_t  fapl, void **  file_handle);
 herr_t __real_H5Fmount(hid_t  loc, const char*  name, hid_t  child, hid_t  plist);
 herr_t __real_H5Funmount(hid_t  loc, const char*  name);
 hssize_t __real_H5Fget_freespace(hid_t  file_id);
@@ -347,16 +341,16 @@ herr_t __real_H5Pset_libver_bounds(hid_t  plist_id, H5F_libver_t  low, H5F_libve
 herr_t __real_H5Pget_libver_bounds(hid_t  plist_id, H5F_libver_t*  low, H5F_libver_t*  high);
 herr_t __real_H5Pset_layout(hid_t  plist_id, H5D_layout_t  layout);
 H5D_layout_t __real_H5Pget_layout(hid_t  plist_id);
-herr_t __real_H5Pset_chunk(hid_t  plist_id, int  ndims, const hsize_t*  dim);
-int __real_H5Pget_chunk(hid_t  plist_id, int  max_ndims, hsize_t*  dim);
+herr_t __real_H5Pset_chunk(hid_t  plist_id, int  ndims, const hsize_t  dim);
+int __real_H5Pget_chunk(hid_t  plist_id, int  max_ndims, hsize_t  dim);
 herr_t __real_H5Pset_external(hid_t  plist_id, const char*  name, off_t  offset, hsize_t  size);
 int __real_H5Pget_external_count(hid_t  plist_id);
 herr_t __real_H5Pget_external(hid_t  plist_id, unsigned  idx, size_t  name_size, char*  name, off_t*  offset, hsize_t*  size);
-herr_t __real_H5Pmodify_filter(hid_t  plist_id, H5Z_filter_t  filter, unsigned int  flags, size_t  cd_nelmts, const unsigned int*  cd_values);
-herr_t __real_H5Pset_filter(hid_t  plist_id, H5Z_filter_t  filter, unsigned int  flags, size_t  cd_nelmts, const unsigned int*  c_values);
+herr_t __real_H5Pmodify_filter(hid_t  plist_id, H5Z_filter_t  filter, unsigned int  flags, size_t  cd_nelmts, const unsigned int  cd_values);
+herr_t __real_H5Pset_filter(hid_t  plist_id, H5Z_filter_t  filter, unsigned int  flags, size_t  cd_nelmts, const unsigned int  c_values);
 int __real_H5Pget_nfilters(hid_t  plist_id);
-H5Z_filter_t __real_H5Pget_filter2(hid_t  plist_id, unsigned  filter, unsigned int*  flags, size_t*  cd_nelmts, unsigned*  cd_values, size_t  namelen, char*  name, unsigned*  filter_config);
-herr_t __real_H5Pget_filter_by_id2(hid_t  plist_id, H5Z_filter_t  id, unsigned int*  flags, size_t*  cd_nelmts, unsigned*  cd_values, size_t  namelen, char*  name, unsigned*  filter_config);
+H5Z_filter_t __real_H5Pget_filter2(hid_t  plist_id, unsigned  filter, unsigned int*  flags, size_t*  cd_nelmts, unsigned  cd_values, size_t  namelen, char  name, unsigned*  filter_config);
+herr_t __real_H5Pget_filter_by_id2(hid_t  plist_id, H5Z_filter_t  id, unsigned int*  flags, size_t*  cd_nelmts, unsigned  cd_values, size_t  namelen, char  name, unsigned*  filter_config);
 htri_t __real_H5Pall_filters_avail(hid_t  plist_id);
 herr_t __real_H5Premove_filter(hid_t  plist_id, H5Z_filter_t  filter);
 herr_t __real_H5Pset_deflate(hid_t  plist_id, unsigned  aggression);
@@ -377,7 +371,7 @@ herr_t __real_H5Pget_chunk_cache(hid_t  dapl_id, size_t*  rdcc_nslots, size_t*  
 herr_t __real_H5Pset_data_transform(hid_t  plist_id, const char*  expression);
 ssize_t __real_H5Pget_data_transform(hid_t  plist_id, char*  expression, size_t  size);
 herr_t __real_H5Pset_buffer(hid_t  plist_id, size_t  size, void*  tconv, void*  bkg);
-size_t __real_H5Pget_buffer(hid_t  plist_id, void**  tconv, void**  bkg);
+size_t __real_H5Pget_buffer(hid_t  plist_id, void **  tconv, void **  bkg);
 herr_t __real_H5Pset_preserve(hid_t  plist_id, hbool_t  status);
 int __real_H5Pget_preserve(hid_t  plist_id);
 herr_t __real_H5Pset_edc_check(hid_t  plist_id, H5Z_EDC_t  check);
@@ -386,7 +380,7 @@ herr_t __real_H5Pset_filter_callback(hid_t  plist_id, H5Z_filter_func_t  func, v
 herr_t __real_H5Pset_btree_ratios(hid_t  plist_id, double  left, double  middle, double  right);
 herr_t __real_H5Pget_btree_ratios(hid_t  plist_id, double*  left, double*  middle, double*  right);
 herr_t __real_H5Pset_vlen_mem_manager(hid_t  plist_id, H5MM_allocate_t  alloc_func, void*  alloc_info, H5MM_free_t  free_func, void*  free_info);
-herr_t __real_H5Pget_vlen_mem_manager(hid_t  plist_id, H5MM_allocate_t*  alloc_func, void**  alloc_info, H5MM_free_t*  free_func, void**  free_info);
+herr_t __real_H5Pget_vlen_mem_manager(hid_t  plist_id, H5MM_allocate_t*  alloc_func, void **  alloc_info, H5MM_free_t*  free_func, void **  free_info);
 herr_t __real_H5Pset_hyper_vector_size(hid_t  fapl_id, size_t  size);
 herr_t __real_H5Pget_hyper_vector_size(hid_t  fapl_id, size_t*  size);
 herr_t __real_H5Pset_type_conv_cb(hid_t  dxpl_id, H5T_conv_except_func_t  op, void*  operate_data);
@@ -412,13 +406,13 @@ herr_t __real_H5Pset_elink_fapl(hid_t  lapl_id, hid_t  fapl_id);
 herr_t __real_H5Pset_elink_acc_flags(hid_t  lapl_id, unsigned  flags);
 herr_t __real_H5Pget_elink_acc_flags(hid_t  lapl_id, unsigned*  flags);
 herr_t __real_H5Pset_elink_cb(hid_t  lapl_id, H5L_elink_traverse_t  func, void*  op_data);
-herr_t __real_H5Pget_elink_cb(hid_t  lapl_id, H5L_elink_traverse_t*  func, void**  op_data);
+herr_t __real_H5Pget_elink_cb(hid_t  lapl_id, H5L_elink_traverse_t*  func, void **  op_data);
 herr_t __real_H5Pset_copy_object(hid_t  plist_id, unsigned  crt_intmd);
 herr_t __real_H5Pget_copy_object(hid_t  plist_id, unsigned*  crt_intmd);
 herr_t __real_H5Pregister1(hid_t  cls_id, const char*  name, size_t  size, void*  def_value, H5P_prp_create_func_t  prp_create, H5P_prp_set_func_t  prp_set, H5P_prp_get_func_t  prp_get, H5P_prp_delete_func_t  prp_del, H5P_prp_copy_func_t  prp_copy, H5P_prp_close_func_t  prp_close);
 herr_t __real_H5Pinsert1(hid_t  plist_id, const char*  name, size_t  size, void*  value, H5P_prp_set_func_t  prp_set, H5P_prp_get_func_t  prp_get, H5P_prp_delete_func_t  prp_delete, H5P_prp_copy_func_t  prp_copy, H5P_prp_close_func_t  prp_close);
-H5Z_filter_t __real_H5Pget_filter1(hid_t  plist_id, unsigned  filter, unsigned int*  flags, size_t*  cd_nelmts, unsigned*  cd_values, size_t  namelen, char*  name);
-herr_t __real_H5Pget_filter_by_id1(hid_t  plist_id, H5Z_filter_t  id, unsigned int*  flags, size_t*  cd_nelmts, unsigned*  cd_values, size_t  namelen, char*  name);
+H5Z_filter_t __real_H5Pget_filter1(hid_t  plist_id, unsigned  filter, unsigned int*  flags, size_t*  cd_nelmts, unsigned  cd_values, size_t  namelen, char  name);
+herr_t __real_H5Pget_filter_by_id1(hid_t  plist_id, H5Z_filter_t  id, unsigned int*  flags, size_t*  cd_nelmts, unsigned  cd_values, size_t  namelen, char  name);
 herr_t __real_H5Rcreate(void*  ref, hid_t  loc_id, const char*  name, H5R_type_t  ref_type, hid_t  space_id);
 hid_t __real_H5Rdereference(hid_t  dataset, H5R_type_t  ref_type, const void*  ref);
 hid_t __real_H5Rget_region(hid_t  dataset, H5R_type_t  ref_type, const void*  ref);
@@ -426,18 +420,18 @@ herr_t __real_H5Rget_obj_type2(hid_t  id, H5R_type_t  ref_type, const void*  _re
 ssize_t __real_H5Rget_name(hid_t  loc_id, H5R_type_t  ref_type, const void*  ref, char*  name, size_t  size);
 H5G_obj_t __real_H5Rget_obj_type1(hid_t  id, H5R_type_t  ref_type, const void*  _ref);
 hid_t __real_H5Screate(H5S_class_t  type);
-hid_t __real_H5Screate_simple(int  rank, const hsize_t*  dims, const hsize_t*  maxdims);
-herr_t __real_H5Sset_extent_simple(hid_t  space_id, int  rank, const hsize_t*  dims, const hsize_t*  max);
+hid_t __real_H5Screate_simple(int  rank, const hsize_t  dims, const hsize_t  maxdims);
+herr_t __real_H5Sset_extent_simple(hid_t  space_id, int  rank, const hsize_t  dims, const hsize_t  max);
 hid_t __real_H5Scopy(hid_t  space_id);
 herr_t __real_H5Sclose(hid_t  space_id);
 herr_t __real_H5Sencode(hid_t  obj_id, void*  buf, size_t*  nalloc);
 hid_t __real_H5Sdecode(const void*  buf);
 hssize_t __real_H5Sget_simple_extent_npoints(hid_t  space_id);
 int __real_H5Sget_simple_extent_ndims(hid_t  space_id);
-int __real_H5Sget_simple_extent_dims(hid_t  space_id, hsize_t*  dims, hsize_t*  maxdims);
+int __real_H5Sget_simple_extent_dims(hid_t  space_id, hsize_t  dims, hsize_t  maxdims);
 htri_t __real_H5Sis_simple(hid_t  space_id);
 hssize_t __real_H5Sget_select_npoints(hid_t  spaceid);
-herr_t __real_H5Sselect_hyperslab(hid_t  space_id, H5S_seloper_t  op, const hsize_t*  start, const hsize_t*  _stride, const hsize_t*  count, const hsize_t*  _block);
+herr_t __real_H5Sselect_hyperslab(hid_t  space_id, H5S_seloper_t  op, const hsize_t  start, const hsize_t  _stride, const hsize_t  count, const hsize_t  _block);
 herr_t __real_H5Sselect_elements(hid_t  space_id, H5S_seloper_t  op, size_t  num_elem, const hsize_t*  coord);
 H5S_class_t __real_H5Sget_simple_extent_type(hid_t  space_id);
 herr_t __real_H5Sset_extent_none(hid_t  space_id);
@@ -449,56 +443,57 @@ herr_t __real_H5Soffset_simple(hid_t  space_id, const hssize_t*  offset);
 htri_t __real_H5Sselect_valid(hid_t  spaceid);
 hssize_t __real_H5Sget_select_hyper_nblocks(hid_t  spaceid);
 hssize_t __real_H5Sget_select_elem_npoints(hid_t  spaceid);
-herr_t __real_H5Sget_select_hyper_blocklist(hid_t  spaceid, hsize_t  startblock, hsize_t  numblocks, hsize_t*  buf);
-herr_t __real_H5Sget_select_elem_pointlist(hid_t  spaceid, hsize_t  startpoint, hsize_t  numpoints, hsize_t*  buf);
-herr_t __real_H5Sget_select_bounds(hid_t  spaceid, hsize_t*  start, hsize_t*  end);
+herr_t __real_H5Sget_select_hyper_blocklist(hid_t  spaceid, hsize_t  startblock, hsize_t  numblocks, hsize_t  buf);
+herr_t __real_H5Sget_select_elem_pointlist(hid_t  spaceid, hsize_t  startpoint, hsize_t  numpoints, hsize_t  buf);
+herr_t __real_H5Sget_select_bounds(hid_t  spaceid, hsize_t  start, hsize_t  end);
 H5S_sel_type __real_H5Sget_select_type(hid_t  spaceid);
-hid_t __real_H5FD_core_init(  void);
-void __real_H5FD_core_term(  void);
+hid_t __real_H5FD_core_init(void  );
+void __real_H5FD_core_term(void  );
 herr_t __real_H5Pset_fapl_core(hid_t  fapl_id, size_t  increment, hbool_t  backing_store);
 herr_t __real_H5Pget_fapl_core(hid_t  fapl_id, size_t*  increment, hbool_t*  backing_store);
-hid_t __real_H5FD_family_init(  void);
-void __real_H5FD_family_term(  void);
+hid_t __real_H5FD_family_init(void  );
+void __real_H5FD_family_term(void  );
 herr_t __real_H5Pset_fapl_family(hid_t  fapl_id, hsize_t  memb_size, hid_t  memb_fapl_id);
 herr_t __real_H5Pget_fapl_family(hid_t  fapl_id, hsize_t*  memb_size, hid_t*  memb_fapl_id);
-hid_t __real_H5FD_log_init(  void);
-void __real_H5FD_log_term(  void);
+hid_t __real_H5FD_log_init(void  );
+void __real_H5FD_log_term(void  );
 herr_t __real_H5Pset_fapl_log(hid_t  fapl_id, const char*  logfile, unsigned  flags, size_t  buf_size);
-hid_t __real_H5FD_multi_init(  void);
-void __real_H5FD_multi_term(  void);
-herr_t __real_H5Pset_fapl_multi(hid_t  fapl_id, const H5FD_mem_t*  memb_map, const hid_t*  memb_fapl, const char*  const  memb_name, const haddr_t*  memb_addr, hbool_t  relax);
-herr_t __real_H5Pget_fapl_multi(hid_t  fapl_id, H5FD_mem_t*  memb_map, hid_t*  memb_fapl, char**  memb_name, haddr_t*  memb_addr, hbool_t*  relax);
+hid_t __real_H5FD_multi_init(void  );
+void __real_H5FD_multi_term(void  );
+herr_t __real_H5Pset_fapl_multi(hid_t  fapl_id, const H5FD_mem_t*  memb_map, const hid_t*  memb_fapl, const char * const*  memb_name, const haddr_t*  memb_addr, hbool_t  relax);
+herr_t __real_H5Pget_fapl_multi(hid_t  fapl_id, H5FD_mem_t*  memb_map, hid_t*  memb_fapl, char **  memb_name, haddr_t*  memb_addr, hbool_t*  relax);
 herr_t __real_H5Pset_dxpl_multi(hid_t  dxpl_id, const hid_t*  memb_dxpl);
 herr_t __real_H5Pget_dxpl_multi(hid_t  dxpl_id, hid_t*  memb_dxpl);
 herr_t __real_H5Pset_fapl_split(hid_t  fapl, const char*  meta_ext, hid_t  meta_plist_id, const char*  raw_ext, hid_t  raw_plist_id);
-hid_t __real_H5FD_sec2_init(  void);
-void __real_H5FD_sec2_term(  void);
+hid_t __real_H5FD_sec2_init(void  );
+void __real_H5FD_sec2_term(void  );
 herr_t __real_H5Pset_fapl_sec2(hid_t  fapl_id);
-hid_t __real_H5FD_stdio_init(  void);
-void __real_H5FD_stdio_term(  void);
+hid_t __real_H5FD_stdio_init(void  );
+void __real_H5FD_stdio_term(void  );
 herr_t __real_H5Pset_fapl_stdio(hid_t  fapl_id);
-herr_t __wrap_H5open(  void)
+
+herr_t __wrap_H5open(void  )
 {
 	herr_t ret;
 	ret = __real_H5open();
 	return ret;
 }
 
-herr_t __wrap_H5close(  void)
+herr_t __wrap_H5close(void  )
 {
 	herr_t ret;
 	ret = __real_H5close();
 	return ret;
 }
 
-herr_t __wrap_H5dont_atexit(  void)
+herr_t __wrap_H5dont_atexit(void  )
 {
 	herr_t ret;
 	ret = __real_H5dont_atexit();
 	return ret;
 }
 
-herr_t __wrap_H5garbage_collect(  void)
+herr_t __wrap_H5garbage_collect(void  )
 {
 	herr_t ret;
 	ret = __real_H5garbage_collect();
@@ -771,7 +766,7 @@ hid_t __wrap_H5Tvlen_create(hid_t  base_id)
 	return ret;
 }
 
-hid_t __wrap_H5Tarray_create2(hid_t  base_id, unsigned  ndims, const hsize_t*  dim)
+hid_t __wrap_H5Tarray_create2(hid_t  base_id, unsigned  ndims, const hsize_t  dim)
 {
 	hid_t ret;
 	ret = __real_H5Tarray_create2(base_id, ndims, dim);
@@ -785,7 +780,7 @@ int __wrap_H5Tget_array_ndims(hid_t  type_id)
 	return ret;
 }
 
-int __wrap_H5Tget_array_dims2(hid_t  type_id, hsize_t*  dims)
+int __wrap_H5Tget_array_dims2(hid_t  type_id, hsize_t  dims)
 {
 	int ret;
 	ret = __real_H5Tget_array_dims2(type_id, dims);
@@ -1058,7 +1053,7 @@ herr_t __wrap_H5Tunregister(H5T_pers_t  pers, const char*  name, hid_t  src_id, 
 	return ret;
 }
 
-H5T_conv_t __wrap_H5Tfind(hid_t  src_id, hid_t  dst_id, H5T_cdata_t**  pcdata)
+H5T_conv_t __wrap_H5Tfind(hid_t  src_id, hid_t  dst_id, H5T_cdata_t **  pcdata)
 {
 	H5T_conv_t ret;
 	ret = __real_H5Tfind(src_id, dst_id, pcdata);
@@ -1093,14 +1088,14 @@ hid_t __wrap_H5Topen1(hid_t  loc_id, const char*  name)
 	return ret;
 }
 
-hid_t __wrap_H5Tarray_create1(hid_t  base_id, int  ndims, const hsize_t*  dim, const int*  perm)
+hid_t __wrap_H5Tarray_create1(hid_t  base_id, int  ndims, const hsize_t  dim, const int  perm)
 {
 	hid_t ret;
 	ret = __real_H5Tarray_create1(base_id, ndims, dim, perm);
 	return ret;
 }
 
-int __wrap_H5Tget_array_dims1(hid_t  type_id, hsize_t*  dims, int*  perm)
+int __wrap_H5Tget_array_dims1(hid_t  type_id, hsize_t  dims, int  perm)
 {
 	int ret;
 	ret = __real_H5Tget_array_dims1(type_id, dims, perm);
@@ -1247,7 +1242,7 @@ htri_t __wrap_H5Lis_registered(H5L_type_t  id)
 	return ret;
 }
 
-herr_t __wrap_H5Lunpack_elink_val(const void*  ext_linkval, size_t  link_size, unsigned*  flags, const char**  filename, const char**  obj_path)
+herr_t __wrap_H5Lunpack_elink_val(const void*  ext_linkval, size_t  link_size, unsigned*  flags, const char **  filename, const char **  obj_path)
 {
 	herr_t ret;
 	ret = __real_H5Lunpack_elink_val(ext_linkval, link_size, flags, filename, obj_path);
@@ -1716,7 +1711,7 @@ herr_t __wrap_H5Dfill(const void*  fill, hid_t  fill_type, void*  buf, hid_t  bu
 	return ret;
 }
 
-herr_t __wrap_H5Dset_extent(hid_t  dset_id, const hsize_t*  size)
+herr_t __wrap_H5Dset_extent(hid_t  dset_id, const hsize_t  size)
 {
 	herr_t ret;
 	ret = __real_H5Dset_extent(dset_id, size);
@@ -1744,7 +1739,7 @@ hid_t __wrap_H5Dopen1(hid_t  file_id, const char*  name)
 	return ret;
 }
 
-herr_t __wrap_H5Dextend(hid_t  dset_id, const hsize_t*  size)
+herr_t __wrap_H5Dextend(hid_t  dset_id, const hsize_t  size)
 {
 	herr_t ret;
 	ret = __real_H5Dextend(dset_id, size);
@@ -1779,14 +1774,14 @@ hid_t __wrap_H5Ecreate_msg(hid_t  cls, H5E_type_t  msg_type, const char*  msg)
 	return ret;
 }
 
-hid_t __wrap_H5Ecreate_stack(  void)
+hid_t __wrap_H5Ecreate_stack(void  )
 {
 	hid_t ret;
 	ret = __real_H5Ecreate_stack();
 	return ret;
 }
 
-hid_t __wrap_H5Eget_current_stack(  void)
+hid_t __wrap_H5Eget_current_stack(void  )
 {
 	hid_t ret;
 	ret = __real_H5Eget_current_stack();
@@ -1814,7 +1809,6 @@ herr_t __wrap_H5Eset_current_stack(hid_t  err_stack_id)
 	return ret;
 }
 
-
 herr_t __wrap_H5Epop(hid_t  err_stack, size_t  count)
 {
 	herr_t ret;
@@ -1836,7 +1830,7 @@ herr_t __wrap_H5Ewalk2(hid_t  err_stack, H5E_direction_t  direction, H5E_walk2_t
 	return ret;
 }
 
-herr_t __wrap_H5Eget_auto2(hid_t  estack_id, H5E_auto2_t*  func, void**  client_data)
+herr_t __wrap_H5Eget_auto2(hid_t  estack_id, H5E_auto2_t*  func, void **  client_data)
 {
 	herr_t ret;
 	ret = __real_H5Eget_auto2(estack_id, func, client_data);
@@ -1878,14 +1872,14 @@ ssize_t __wrap_H5Eget_num(hid_t  error_stack_id)
 	return ret;
 }
 
-herr_t __wrap_H5Eclear1(  void)
+herr_t __wrap_H5Eclear1(void  )
 {
 	herr_t ret;
 	ret = __real_H5Eclear1();
 	return ret;
 }
 
-herr_t __wrap_H5Eget_auto1(H5E_auto1_t*  func, void**  client_data)
+herr_t __wrap_H5Eget_auto1(H5E_auto1_t*  func, void **  client_data)
 {
 	herr_t ret;
 	ret = __real_H5Eget_auto1(func, client_data);
@@ -1930,8 +1924,7 @@ htri_t __wrap_H5Fis_hdf5(const char*  filename)
 hid_t __wrap_H5Fcreate(const char*  filename, unsigned  flags, hid_t  create_plist, hid_t  access_plist)
 {
 	hid_t ret;
-	sprintf( global_pid, "%d", getpid() );
-               global_unid = siox_register_node("IO-Server", "HDF5", global_pid);
+	printf("--- calling H5Fcreate ---\n");
 	ret = __real_H5Fcreate(filename, flags, create_plist, access_plist);
 	return ret;
 }
@@ -1999,7 +1992,7 @@ ssize_t __wrap_H5Fget_obj_ids(hid_t  file_id, unsigned  types, size_t  max_objs,
 	return ret;
 }
 
-herr_t __wrap_H5Fget_vfd_handle(hid_t  file_id, hid_t  fapl, void**  file_handle)
+herr_t __wrap_H5Fget_vfd_handle(hid_t  file_id, hid_t  fapl, void **  file_handle)
 {
 	herr_t ret;
 	ret = __real_H5Fget_vfd_handle(file_id, fapl, file_handle);
@@ -2846,14 +2839,14 @@ H5D_layout_t __wrap_H5Pget_layout(hid_t  plist_id)
 	return ret;
 }
 
-herr_t __wrap_H5Pset_chunk(hid_t  plist_id, int  ndims, const hsize_t*  dim)
+herr_t __wrap_H5Pset_chunk(hid_t  plist_id, int  ndims, const hsize_t  dim)
 {
 	herr_t ret;
 	ret = __real_H5Pset_chunk(plist_id, ndims, dim);
 	return ret;
 }
 
-int __wrap_H5Pget_chunk(hid_t  plist_id, int  max_ndims, hsize_t*  dim)
+int __wrap_H5Pget_chunk(hid_t  plist_id, int  max_ndims, hsize_t  dim)
 {
 	int ret;
 	ret = __real_H5Pget_chunk(plist_id, max_ndims, dim);
@@ -2881,14 +2874,14 @@ herr_t __wrap_H5Pget_external(hid_t  plist_id, unsigned  idx, size_t  name_size,
 	return ret;
 }
 
-herr_t __wrap_H5Pmodify_filter(hid_t  plist_id, H5Z_filter_t  filter, unsigned int  flags, size_t  cd_nelmts, const unsigned int*  cd_values)
+herr_t __wrap_H5Pmodify_filter(hid_t  plist_id, H5Z_filter_t  filter, unsigned int  flags, size_t  cd_nelmts, const unsigned int  cd_values)
 {
 	herr_t ret;
 	ret = __real_H5Pmodify_filter(plist_id, filter, flags, cd_nelmts, cd_values);
 	return ret;
 }
 
-herr_t __wrap_H5Pset_filter(hid_t  plist_id, H5Z_filter_t  filter, unsigned int  flags, size_t  cd_nelmts, const unsigned int*  c_values)
+herr_t __wrap_H5Pset_filter(hid_t  plist_id, H5Z_filter_t  filter, unsigned int  flags, size_t  cd_nelmts, const unsigned int  c_values)
 {
 	herr_t ret;
 	ret = __real_H5Pset_filter(plist_id, filter, flags, cd_nelmts, c_values);
@@ -2902,14 +2895,14 @@ int __wrap_H5Pget_nfilters(hid_t  plist_id)
 	return ret;
 }
 
-H5Z_filter_t __wrap_H5Pget_filter2(hid_t  plist_id, unsigned  filter, unsigned int*  flags, size_t*  cd_nelmts, unsigned*  cd_values, size_t  namelen, char*  name, unsigned*  filter_config)
+H5Z_filter_t __wrap_H5Pget_filter2(hid_t  plist_id, unsigned  filter, unsigned int*  flags, size_t*  cd_nelmts, unsigned  cd_values, size_t  namelen, char  name, unsigned*  filter_config)
 {
 	H5Z_filter_t ret;
 	ret = __real_H5Pget_filter2(plist_id, filter, flags, cd_nelmts, cd_values, namelen, name, filter_config);
 	return ret;
 }
 
-herr_t __wrap_H5Pget_filter_by_id2(hid_t  plist_id, H5Z_filter_t  id, unsigned int*  flags, size_t*  cd_nelmts, unsigned*  cd_values, size_t  namelen, char*  name, unsigned*  filter_config)
+herr_t __wrap_H5Pget_filter_by_id2(hid_t  plist_id, H5Z_filter_t  id, unsigned int*  flags, size_t*  cd_nelmts, unsigned  cd_values, size_t  namelen, char  name, unsigned*  filter_config)
 {
 	herr_t ret;
 	ret = __real_H5Pget_filter_by_id2(plist_id, id, flags, cd_nelmts, cd_values, namelen, name, filter_config);
@@ -3056,7 +3049,7 @@ herr_t __wrap_H5Pset_buffer(hid_t  plist_id, size_t  size, void*  tconv, void*  
 	return ret;
 }
 
-size_t __wrap_H5Pget_buffer(hid_t  plist_id, void**  tconv, void**  bkg)
+size_t __wrap_H5Pget_buffer(hid_t  plist_id, void **  tconv, void **  bkg)
 {
 	size_t ret;
 	ret = __real_H5Pget_buffer(plist_id, tconv, bkg);
@@ -3119,7 +3112,7 @@ herr_t __wrap_H5Pset_vlen_mem_manager(hid_t  plist_id, H5MM_allocate_t  alloc_fu
 	return ret;
 }
 
-herr_t __wrap_H5Pget_vlen_mem_manager(hid_t  plist_id, H5MM_allocate_t*  alloc_func, void**  alloc_info, H5MM_free_t*  free_func, void**  free_info)
+herr_t __wrap_H5Pget_vlen_mem_manager(hid_t  plist_id, H5MM_allocate_t*  alloc_func, void **  alloc_info, H5MM_free_t*  free_func, void **  free_info)
 {
 	herr_t ret;
 	ret = __real_H5Pget_vlen_mem_manager(plist_id, alloc_func, alloc_info, free_func, free_info);
@@ -3301,7 +3294,7 @@ herr_t __wrap_H5Pset_elink_cb(hid_t  lapl_id, H5L_elink_traverse_t  func, void* 
 	return ret;
 }
 
-herr_t __wrap_H5Pget_elink_cb(hid_t  lapl_id, H5L_elink_traverse_t*  func, void**  op_data)
+herr_t __wrap_H5Pget_elink_cb(hid_t  lapl_id, H5L_elink_traverse_t*  func, void **  op_data)
 {
 	herr_t ret;
 	ret = __real_H5Pget_elink_cb(lapl_id, func, op_data);
@@ -3336,14 +3329,14 @@ herr_t __wrap_H5Pinsert1(hid_t  plist_id, const char*  name, size_t  size, void*
 	return ret;
 }
 
-H5Z_filter_t __wrap_H5Pget_filter1(hid_t  plist_id, unsigned  filter, unsigned int*  flags, size_t*  cd_nelmts, unsigned*  cd_values, size_t  namelen, char*  name)
+H5Z_filter_t __wrap_H5Pget_filter1(hid_t  plist_id, unsigned  filter, unsigned int*  flags, size_t*  cd_nelmts, unsigned  cd_values, size_t  namelen, char  name)
 {
 	H5Z_filter_t ret;
 	ret = __real_H5Pget_filter1(plist_id, filter, flags, cd_nelmts, cd_values, namelen, name);
 	return ret;
 }
 
-herr_t __wrap_H5Pget_filter_by_id1(hid_t  plist_id, H5Z_filter_t  id, unsigned int*  flags, size_t*  cd_nelmts, unsigned*  cd_values, size_t  namelen, char*  name)
+herr_t __wrap_H5Pget_filter_by_id1(hid_t  plist_id, H5Z_filter_t  id, unsigned int*  flags, size_t*  cd_nelmts, unsigned  cd_values, size_t  namelen, char  name)
 {
 	herr_t ret;
 	ret = __real_H5Pget_filter_by_id1(plist_id, id, flags, cd_nelmts, cd_values, namelen, name);
@@ -3399,14 +3392,14 @@ hid_t __wrap_H5Screate(H5S_class_t  type)
 	return ret;
 }
 
-hid_t __wrap_H5Screate_simple(int  rank, const hsize_t*  dims, const hsize_t*  maxdims)
+hid_t __wrap_H5Screate_simple(int  rank, const hsize_t  dims, const hsize_t  maxdims)
 {
 	hid_t ret;
 	ret = __real_H5Screate_simple(rank, dims, maxdims);
 	return ret;
 }
 
-herr_t __wrap_H5Sset_extent_simple(hid_t  space_id, int  rank, const hsize_t*  dims, const hsize_t*  max)
+herr_t __wrap_H5Sset_extent_simple(hid_t  space_id, int  rank, const hsize_t  dims, const hsize_t  max)
 {
 	herr_t ret;
 	ret = __real_H5Sset_extent_simple(space_id, rank, dims, max);
@@ -3455,7 +3448,7 @@ int __wrap_H5Sget_simple_extent_ndims(hid_t  space_id)
 	return ret;
 }
 
-int __wrap_H5Sget_simple_extent_dims(hid_t  space_id, hsize_t*  dims, hsize_t*  maxdims)
+int __wrap_H5Sget_simple_extent_dims(hid_t  space_id, hsize_t  dims, hsize_t  maxdims)
 {
 	int ret;
 	ret = __real_H5Sget_simple_extent_dims(space_id, dims, maxdims);
@@ -3476,7 +3469,7 @@ hssize_t __wrap_H5Sget_select_npoints(hid_t  spaceid)
 	return ret;
 }
 
-herr_t __wrap_H5Sselect_hyperslab(hid_t  space_id, H5S_seloper_t  op, const hsize_t*  start, const hsize_t*  _stride, const hsize_t*  count, const hsize_t*  _block)
+herr_t __wrap_H5Sselect_hyperslab(hid_t  space_id, H5S_seloper_t  op, const hsize_t  start, const hsize_t  _stride, const hsize_t  count, const hsize_t  _block)
 {
 	herr_t ret;
 	ret = __real_H5Sselect_hyperslab(space_id, op, start, _stride, count, _block);
@@ -3560,21 +3553,21 @@ hssize_t __wrap_H5Sget_select_elem_npoints(hid_t  spaceid)
 	return ret;
 }
 
-herr_t __wrap_H5Sget_select_hyper_blocklist(hid_t  spaceid, hsize_t  startblock, hsize_t  numblocks, hsize_t*  buf)
+herr_t __wrap_H5Sget_select_hyper_blocklist(hid_t  spaceid, hsize_t  startblock, hsize_t  numblocks, hsize_t  buf)
 {
 	herr_t ret;
 	ret = __real_H5Sget_select_hyper_blocklist(spaceid, startblock, numblocks, buf);
 	return ret;
 }
 
-herr_t __wrap_H5Sget_select_elem_pointlist(hid_t  spaceid, hsize_t  startpoint, hsize_t  numpoints, hsize_t*  buf)
+herr_t __wrap_H5Sget_select_elem_pointlist(hid_t  spaceid, hsize_t  startpoint, hsize_t  numpoints, hsize_t  buf)
 {
 	herr_t ret;
 	ret = __real_H5Sget_select_elem_pointlist(spaceid, startpoint, numpoints, buf);
 	return ret;
 }
 
-herr_t __wrap_H5Sget_select_bounds(hid_t  spaceid, hsize_t*  start, hsize_t*  end)
+herr_t __wrap_H5Sget_select_bounds(hid_t  spaceid, hsize_t  start, hsize_t  end)
 {
 	herr_t ret;
 	ret = __real_H5Sget_select_bounds(spaceid, start, end);
@@ -3588,14 +3581,14 @@ H5S_sel_type __wrap_H5Sget_select_type(hid_t  spaceid)
 	return ret;
 }
 
-hid_t __wrap_H5FD_core_init(  void)
+hid_t __wrap_H5FD_core_init(void  )
 {
 	hid_t ret;
 	ret = __real_H5FD_core_init();
 	return ret;
 }
 
-void __wrap_H5FD_core_term(  void)
+void __wrap_H5FD_core_term(void  )
 {
 	__real_H5FD_core_term();
 
@@ -3615,14 +3608,14 @@ herr_t __wrap_H5Pget_fapl_core(hid_t  fapl_id, size_t*  increment, hbool_t*  bac
 	return ret;
 }
 
-hid_t __wrap_H5FD_family_init(  void)
+hid_t __wrap_H5FD_family_init(void  )
 {
 	hid_t ret;
 	ret = __real_H5FD_family_init();
 	return ret;
 }
 
-void __wrap_H5FD_family_term(  void)
+void __wrap_H5FD_family_term(void  )
 {
 	__real_H5FD_family_term();
 
@@ -3642,14 +3635,14 @@ herr_t __wrap_H5Pget_fapl_family(hid_t  fapl_id, hsize_t*  memb_size, hid_t*  me
 	return ret;
 }
 
-hid_t __wrap_H5FD_log_init(  void)
+hid_t __wrap_H5FD_log_init(void  )
 {
 	hid_t ret;
 	ret = __real_H5FD_log_init();
 	return ret;
 }
 
-void __wrap_H5FD_log_term(  void)
+void __wrap_H5FD_log_term(void  )
 {
 	__real_H5FD_log_term();
 
@@ -3662,27 +3655,27 @@ herr_t __wrap_H5Pset_fapl_log(hid_t  fapl_id, const char*  logfile, unsigned  fl
 	return ret;
 }
 
-hid_t __wrap_H5FD_multi_init(  void)
+hid_t __wrap_H5FD_multi_init(void  )
 {
 	hid_t ret;
 	ret = __real_H5FD_multi_init();
 	return ret;
 }
 
-void __wrap_H5FD_multi_term(  void)
+void __wrap_H5FD_multi_term(void  )
 {
 	__real_H5FD_multi_term();
 
 }
 
-herr_t __wrap_H5Pset_fapl_multi(hid_t  fapl_id, const H5FD_mem_t*  memb_map, const hid_t*  memb_fapl, const char*  const  memb_name, const haddr_t*  memb_addr, hbool_t  relax)
+herr_t __wrap_H5Pset_fapl_multi(hid_t  fapl_id, const H5FD_mem_t*  memb_map, const hid_t*  memb_fapl, const char * const*  memb_name, const haddr_t*  memb_addr, hbool_t  relax)
 {
 	herr_t ret;
 	ret = __real_H5Pset_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax);
 	return ret;
 }
 
-herr_t __wrap_H5Pget_fapl_multi(hid_t  fapl_id, H5FD_mem_t*  memb_map, hid_t*  memb_fapl, char**  memb_name, haddr_t*  memb_addr, hbool_t*  relax)
+herr_t __wrap_H5Pget_fapl_multi(hid_t  fapl_id, H5FD_mem_t*  memb_map, hid_t*  memb_fapl, char **  memb_name, haddr_t*  memb_addr, hbool_t*  relax)
 {
 	herr_t ret;
 	ret = __real_H5Pget_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax);
@@ -3710,14 +3703,14 @@ herr_t __wrap_H5Pset_fapl_split(hid_t  fapl, const char*  meta_ext, hid_t  meta_
 	return ret;
 }
 
-hid_t __wrap_H5FD_sec2_init(  void)
+hid_t __wrap_H5FD_sec2_init(void  )
 {
 	hid_t ret;
 	ret = __real_H5FD_sec2_init();
 	return ret;
 }
 
-void __wrap_H5FD_sec2_term(  void)
+void __wrap_H5FD_sec2_term(void  )
 {
 	__real_H5FD_sec2_term();
 
@@ -3730,14 +3723,14 @@ herr_t __wrap_H5Pset_fapl_sec2(hid_t  fapl_id)
 	return ret;
 }
 
-hid_t __wrap_H5FD_stdio_init(  void)
+hid_t __wrap_H5FD_stdio_init(void  )
 {
 	hid_t ret;
 	ret = __real_H5FD_stdio_init();
 	return ret;
 }
 
-void __wrap_H5FD_stdio_term(  void)
+void __wrap_H5FD_stdio_term(void  )
 {
 	__real_H5FD_stdio_term();
 
