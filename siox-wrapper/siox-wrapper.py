@@ -40,11 +40,11 @@ libraries, by calling trace functions before and after the actual library call.'
 
         argParser.add_argument('--blank-header', '-b', action='store_true',
                 default=False, dest='blankHeader',
-                help='''Generate a clean header file wich can be instrumented
+                help='''Generate a clean header file which can be instrumented
 from a other header file or C source file.''')
 
         argParser.add_argument('--cpp', '-c', action='store_true', default=False,
-        dest='cpp', help='Use cpp to pre process the input file.')
+        dest='cpp', help='Use cpp to preprocess the input file.')
 
         argParser.add_argument('--cpp-args', '-a', action='store', nargs=1, default=[],
         dest='cppArgs', help='''Pass arguments to the cpp. If this option is
@@ -58,7 +58,7 @@ enumerate them.''')
         argParser.add_argument('--style', '-s',
         action='store', default='wrap', dest='style',
         choices=['wrap', 'dllsym'],
-        help='''Determinates which output-style to use.''')
+        help='''Designates which output-style to use.''')
 
         argParser.add_argument('inputFile', default=None,
         help='Source or header file to parse.')
@@ -184,7 +184,7 @@ class FunctionParser():
         # ; or {.
         ## This regular expression searches for the general function definition.
         self.regexFuncDef = re.compile('(?:;|})?(.+?)(?:;|{)', re.M | re.S)
-        # Filter lines with comments beginng with / or # and key word that looks
+        # Filter lines with comments beginning with / or # and key word that looks
         # like function definitions
         ## This list regular expression is used to filter the found definitions,
         ## because something could look like a definition but relay isn't.
@@ -446,7 +446,7 @@ class CommandParser():
 
 
 ##
-# @brief Used to store the templates for each funtion
+# @brief Used to store the templates for each function
 class templateClass():
     ##
     # @brief The constructor
@@ -461,7 +461,7 @@ class templateClass():
         # Generate strings for output from given input
         self.setParameters(templateDict['variables'], variables)
 
-        # Remember template-acces for easier usage
+        # Remember template-access for easier usage
         self.world = templateDict['global']
         self.init = templateDict['init']
         self.before = templateDict['before']
@@ -469,7 +469,7 @@ class templateClass():
         self.final = templateDict['final']
 
     ##
-    # @brief Reads the parameteres and generates the needed output
+    # @brief Reads the parameters and generates the needed output
     #
     # @param names The name of the used template
     # @param values The used variables
@@ -567,7 +567,7 @@ class Writer():
                     print(templ.output('global'), file=output)
         print("", file=output)
 
-        # write all function redefintions
+        # write all function redefinitions
         for function in functions:
             print(function.type, ' __real_', function.getDefinition(),
                     end=';\n', sep='', file=output)
