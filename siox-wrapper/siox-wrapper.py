@@ -231,15 +231,18 @@ class FunctionParser():
 
             # At this point we are quite certain, we found a function definition
             function = Function()
-            functions.append(function)
 
             if self.blankHeader:
                 # Get type and the name of the function.
-                function.type, function.name = self.getTypeName(funcParts.group(1).strip())
-                function.definition = "(" + funcParts.group(2) + " )"
+                try:
+                    function.type, function.name = self.getTypeName(funcParts.group(1).strip())
+                except Exception as error:
+                    continue
+                else:
+                    function.definition = "(" + funcParts.group(2) + " )"
+                    functions.append(function)
 
             else:
-
                 function.type, function.name = self.getTypeName(funcParts.group(1))
                 parameters = funcParts.group(2).split(',')
 
@@ -249,6 +252,7 @@ class FunctionParser():
                     function.parameters.append(parameterObj)
                     parameterObj.type, parameterObj.name = self.getTypeName(parameter)
 
+            functions.append(function)
         return functions
 
     # @brief Wrapper function for parse().
@@ -306,24 +310,28 @@ class FunctionParser():
         type = ''
         name = ''
         arrayPointer = ''
-        # this is needed for converting array[] to array*
-        regexBrackets = re.compile('\[\s*\]')
 
+        regexBrackets = re.compile('\[\s*\]')
         if regexBrackets.search(declaration):
             declaration = regexBrackets.sub('', declaration)
             arrayPointer = '*'
 
-        parameterParts = declaration.split('*')
+        parameterParts = declaration.rsplit('*', 1)
 
         if(len(parameterParts) == 1):
-            parameterParts = declaration.split()
-            # Pop the name of the declaration.
-            name = parameterParts.pop().strip()
+            parameterParts = declaration.rsplit(None, 1)
+            if len(parameterParts) == 1:
+                if parameterParts[0].strip() in ('void','...'):
+                    type = parameterParts[0].strip()
+                    type += arrayPointer
+                    name = ''
+                else:
+                    raise Exception("Missing parameter name.")
 
-            for element in parameterParts:
-                element = element.strip()
-                type += ' %s' % (element)
-            type += arrayPointer
+            else:
+                # Pop the name of the declaration.
+                name = parameterParts[1].strip()
+                type = parameterParts[0].strip()
 
         else:
 
@@ -418,7 +426,6 @@ class CommandParser():
                         commandName = ''
                         commandArgs = ''
 
-
                     commandName += match.group(1)
                     commandArgs += match.group(2)
 
@@ -431,8 +438,10 @@ class CommandParser():
 
                     commandArgs = match.group(1)
                     commandArgs = match.group(2)
+
             else:
                 #If a function is found append the found instructions to the function object.
+                print(currentFunction, functions[index])
                 if currentFunction.getIdentifier() == functions[index].getIdentifier():
                     if commandName != '':
                         templateList.append(templateClass(commandName, commandArgs))
@@ -637,7 +646,7 @@ class Writer():
         gcchelper = ''
 
         for func in functions:
-            gcchelper = "%s,\"%s\"" % (gcchelper, func.name)
+            gcchelper = "%s,--wrap=\"%s\"" % (gcchelper, func.name)
 
         print(gcchelper[1:])
 
