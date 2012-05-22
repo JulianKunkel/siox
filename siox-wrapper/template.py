@@ -105,14 +105,24 @@ template = {
 	'after': '',
 	'final': ''
 },
-'splice': {
+'splice_before': {
 	'variables': 'PROGRAMMCODE',
 	'global': '',
 	'init': '',
 	'before': '%(PROGRAMMCODE)s',
 	'after': '',
 	'final': ''
+},
+'splice_after': {
+	'variables': 'PROGRAMMCODE',
+	'global': '',
+	'init': '',
+	'before': '',
+	'after': '%(PROGRAMMCODE)s',
+	'final': ''
 }
 }
 
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
+
+includes = ["<stdio.h>", "<stdlib.h>"]

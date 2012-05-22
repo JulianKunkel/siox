@@ -556,18 +556,23 @@ class Writer():
         output = open(self.outputFile, 'w')
 
         # write all needed includes
-        print('#include <stdio.h> \n#include <stdlib.h>', end='\n\n', file=output)
+        for match in includes:
+            print('#include ', match, end='\n', file=output)
+        print('\n', file=output)
 
         # write all global-Templates
         for func in functions:
             for templ in func.usedTemplates:
-                print(templ.output('global'), file=output)
-        print("\n\n", file=output)
+                if templ.output('global') != '':
+                    print(templ.output('global'), file=output)
+        print("", file=output)
 
-        # write the redefinition of all functions
+        # write all function redefintions
         for function in functions:
-            print(function.type, ' __real_', function.getDefinition(), end=';\n',
-                    sep='', file=output)
+            print(function.type, ' __real_', function.getDefinition(),
+                    end=';\n', sep='', file=output)
+
+        print("", file=output)
 
         # write all functions-bodies
         for function in functions:
@@ -618,6 +623,9 @@ class Writer():
             # write all after-templates for this function
             for temp in function.usedTemplates:
                 outstr = temp.output('after').strip()
+                if outstr != '':
+                    print('\t', outstr, end='\n', sep='', file=output)
+
             # write the return statement and close the function
             if returntype != "void":
                 print('\treturn ret;\n}', end='\n\n', file=output)
@@ -629,7 +637,7 @@ class Writer():
         gcchelper = ''
 
         for func in functions:
-            gcchelper = "%s,%s" % (gcchelper, func.name)
+            gcchelper = "%s,\"%s\"" % (gcchelper, func.name)
 
         print(gcchelper[1:])
 
