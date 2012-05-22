@@ -441,7 +441,6 @@ class CommandParser():
 
             else:
                 #If a function is found append the found instructions to the function object.
-                print(currentFunction, functions[index])
                 if currentFunction.getIdentifier() == functions[index].getIdentifier():
                     if commandName != '':
                         templateList.append(templateClass(commandName, commandArgs))
@@ -643,12 +642,12 @@ class Writer():
                 print('\n}', end='\n\n', file=output)
 
         # generate gcc string for the user
-        gcchelper = ''
+        gcchelper = '-Wl'
 
         for func in functions:
             gcchelper = "%s,--wrap=\"%s\"" % (gcchelper, func.name)
 
-        print(gcchelper[1:])
+        print(gcchelper)
 
         # close the file
         output.close()
