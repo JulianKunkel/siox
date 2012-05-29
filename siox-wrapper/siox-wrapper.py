@@ -13,7 +13,6 @@ from template import *
 DEBUG = False
 
 
-
 ##
 # @brief Generate and handle the command line parsing.
 #
@@ -180,20 +179,35 @@ class FunctionParser():
         self.cpp = options.cpp
         self.cppArgs = options.cppArgs
         self.blankHeader = options.blankHeader
-        # This regex searches from the beginning of the file or } or ; to the next
-        # ; or {.
-        ## This regular expression searches for the general function definition.
-        self.regexFuncDef = re.compile('(?:;|})?(.+?)(?:;|{)', re.M | re.S)
-        # Filter lines with comments beginning with / or # and key word that looks
-        # like function definitions
-        ## This list regular expression is used to filter the found definitions,
-        ## because something could look like a definition but relay isn't.
-        self.regexFilterList = [re.compile('^\s*[#/].*'),
-                re.compile('^\s*typedef.*'),
-                re.compile('^.*=.*')]
 
-        ## This regular expression splits every line that is left in function name and parameters.
-        self.regexFuncDefParts = re.compile('([a-zA-Z0-9_\-\s]+?)\((.+?)\).*')
+        ## This regular expression searches for the general function definition.
+        # ([\w*\s]) matches the return type of the function.
+        # (?:\s*\w+\s*\()) is a look ahead that ensures that the first part of
+        # the ends right before the function name. The look ahead searches for
+        # last 'word'right in front of the (.
+        # the \s*(\w+)\s* actually matches the function name (a look ahead
+        # doesn't consume text).
+        # \(([,\w*\s\[\]]*)\) matches the parentheses of the function definition
+        # and groups everything inside them. The regex can't match single
+        # parameters because a regex must have a fixed number of groups to match.
+        self.regexFuncDef = re.compile('(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\]]*)\)[\w+]*?;',
+        re.S | re.M)
+
+        ## This regular expression matches parameter type and name.
+        # The Parameter which is matched needs to have a type and a name and is
+        # only used when the C code of the instrumented header file is
+        # generated. The instrumented header must provide the type and the name
+        # of every parameter.
+        # [\w*\s]+ matches everything until the last * or space.
+        # (?:\*\s*|\s+) matches the last * or blank
+        # ([\w]+ matches the parameter name
+        # (?:\s*\[\s*\])? matches array [] if exist
+        self.regexParamterDef = re.compile('([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[\s*\])?)')
+
+        ## This tuple of filter words searches for reseverd words in the
+        ## function return type.
+        # Some typedefs can look like function a definition the regex.
+        self.Filter = ('typedef')
 
     ##
     # @brief This function parses the header file.
@@ -205,64 +219,77 @@ class FunctionParser():
 
         functions = []
 
-        matchFuncDef = self.regexFuncDef.findall(string)
+        # Match all function definitions
+        iterFuncDef = self.regexFuncDef.finditer(string)
 
-        for funcNo, function in enumerate(matchFuncDef):
+        for funcDef in iterFuncDef:
 
-            # The find all was a multi line match, one function definition
-            # could be in multiple lines.
-            function = function.split('\n')
-
-            for index in range(0, len(function)):
-                function[index] = function[index].strip()
-
-                # Run the filter regex list.
-                for regexFilter in self.regexFilterList:
-                    if regexFilter.match(function[index]):
-                        function[index] = ''
-
-            # Rejoin the split function into a single line.
-            function = ' '.join(function)
-
-            funcParts = self.regexFuncDefParts.match(function)
-
-            if funcParts is None:
+            # filter typedefs
+            if funcDef.group(1).find(self.Filter) != -1:
                 continue
 
             # At this point we are quite certain, we found a function definition
             function = Function()
 
+            # Extract the type an name form the match object.
+            function.type = funcDef.group(1).strip()
+            function.name = funcDef.group(2).strip()
+
+            # Get the parameter string.
+            parameterString = funcDef.group(3).strip()
+            # Substitute newlines and multiple blanks
+            parameterString = re.sub('\n', '', parameterString)
+            parameterString = re.sub('\s+', ' ', parameterString)
+
+            # If only the blank header file should be generated pass the
+            # string of parameters to the Function object.
             if self.blankHeader:
-                # Get type and the name of the function.
-                try:
-                    function.type, function.name = self.getTypeName(funcParts.group(1).strip())
-                except Exception as error:
-                    continue
-                else:
-                    function.definition = "(" + funcParts.group(2) + " )"
-                    functions.append(function)
 
+                    function.definition = "(" + parameterString + ")"
+
+            # If the C source code should be generated split the string into a
+            # list of parameters and extract the type and name of the parameter.
             else:
-                function.type, function.name = self.getTypeName(funcParts.group(1))
-                parameters = funcParts.group(2).split(',')
+                parameterList = parameterString.split(',')
 
-                # Get the type and name of the parameters.
-                for paramNo, parameter in enumerate(parameters):
-                    parameterObj = Parameter()
-                    function.parameters.append(parameterObj)
-                    parameterObj.type, parameterObj.name = self.getTypeName(parameter)
+                for parameter in parameterList:
+                    parameterObject = Parameter()
+                    parameter = parameter.strip()
+
+                    if parameter in ('void', '...'):
+                        parameterName = ''
+                        parameterType = parameter
+
+                    else:
+
+                        parameterMatch = self.regexParamterDef.match(parameter)
+                        parameterType = parameterMatch.group(1)
+                        parameterName = parameterMatch.group(2)
+
+                        # Search for something like 'int list[]' and convert it to
+                        # 'int* list'
+                        regexBracketes = re.compile('\[\s*\]')
+                        if regexBracketes.search(parameterName):
+                            parameterName = regexBracketes.sub('', parameterName)
+                            parameterType += '*'
+
+                    parameterObject.name = parameterName
+                    parameterObject.type = parameterType
+
+                    function.parameters.append(parameterObject)
 
             functions.append(function)
+
         return functions
 
-    # @brief Wrapper function for parse().
+    ## @brief Wrapper function for parse().
     #
     # @return A list of function objects
     #
     # @param self
     #
     # This is a wrapper function for the parse() function for parsing the
-    #passed to the FunctionParser object with the option argument.
+    # passed to the FunctionParser object with the option argument.
     def parseFile(self):
 
         # Call the cpp.
@@ -296,71 +323,6 @@ class FunctionParser():
 
         functions = self.parse(string)
         return functions
-
-    ##
-    # @brief Get the type and the name of a declaration.
-    #
-    # @param declaration A declaration of a function or parameter.
-    # @param alternativeVarName If the header file doesn't provide variable
-    # names they will be prefixed and enumerated.
-    #
-    # @return The type and the name of the declaration as a tuple.
-    def getTypeName(self, declaration):
-
-        type = ''
-        name = ''
-        arrayPointer = ''
-
-        regexBrackets = re.compile('\[\s*\]')
-        if regexBrackets.search(declaration):
-            declaration = regexBrackets.sub('', declaration)
-            arrayPointer = '*'
-
-        parameterParts = declaration.rsplit('*', 1)
-
-        if(len(parameterParts) == 1):
-            parameterParts = declaration.rsplit(None, 1)
-            if len(parameterParts) == 1:
-                if parameterParts[0].strip() in ('void','...'):
-                    type = parameterParts[0].strip()
-                    type += arrayPointer
-                    name = ''
-                else:
-                    raise Exception("Missing parameter name.")
-
-            else:
-                # Pop the name of the declaration.
-                name = parameterParts[1].strip()
-                type = parameterParts[0].strip()
-
-        else:
-
-            arrayPointer += '*'
-            name = parameterParts.pop()
-
-            nameParts = name.split()
-
-            if len(nameParts) == 1:
-                name = nameParts.pop().strip()
-
-            elif len(nameParts) > 1:
-                name = nameParts.pop().strip()
-
-            for element in parameterParts:
-                element = element.strip()
-                if element is '':
-                    type += '*'
-
-                else:
-                    type += '  %s' % (element)
-
-                type += arrayPointer
-                arrayPointer = ''
-
-            for element in nameParts:
-                type += ' %s' % (element)
-
-        return (type.strip(), name)
 
 
 ##
@@ -541,7 +503,7 @@ class Writer():
         for function in functions:
             for match in throwaway:
                 if re.search(match, function.getDefinition()):
-                    function.name = '';
+                    function.name = ''
 
             if function.type == '':
                 continue
