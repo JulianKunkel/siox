@@ -1,6 +1,6 @@
 #include  <stdio.h>
 #include  <stdlib.h>
-
+#include <hdf5.h>
 
 
 herr_t __real_H5open(void  );
@@ -1983,7 +1983,7 @@ htri_t __wrap_H5Fis_hdf5(const char *  filename)
 hid_t __wrap_H5Fcreate(const char *  filename, unsigned   flags, hid_t   create_plist, hid_t   access_plist)
 {
 	hid_t ret;
-	printf("Creating file!!! (siox trace call)");
+	printf("Creating file: %s (SIOX TRACE CALL)\n", filename);
 	ret = __real_H5Fcreate(filename, flags, create_plist, access_plist);
 	return ret;
 }
