@@ -126,3 +126,5 @@ template = {
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 includes = ["<stdio.h>", "<stdlib.h>"]
+
+dlsymLibPath = "/usr/include"

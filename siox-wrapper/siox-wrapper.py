@@ -618,32 +618,31 @@ class Writer():
     # @brief Write a source file
     #
     # @param functions A list of function-objects to write
-    def sourceFileDLLSym(self, functions):
+    def sourceFileDLSym(self, functions):
         # open the output file for writing
         output = open(self.outputFile, 'w')
 
-        # write all global-Templates
-        for temp in functions[0].usedTemplates:
-            print(temp.output('global'), file=output)
-        print("\n\n", file=output)
+        print('#include <dlfcn.h>\nvoid* dllib = dlopen(', dlsymLibPath,
+            ', RTLD_LOCAL', ');', file=output)
 
-        # write the redefinition of all functions
-        for function in functions:
-            print('static ', function.type, ' (* static_', function.name,
-             ') ( ', ", ".join((' '.join([param.type, param.name]) for param in function.parameters)), end=' ) = NULL;\n',
-             sep='', file=output)
+        for func in functions:
+            print(func.type, ' (* __real_', func.name, ')(',
+                ', '.join(func.parameters), '= (', func.type, '(*)(',
+                ', '.join(func.parameters), ')) dlsym(dllib, (const char *) "',
+                func.name, '");', file=output)
 
-        # write all functions-bodies
         for function in functions:
+
             # write function signature
-            print(function.type, function.getDefinition(),
-                    end='\n{\n', sep='', file=output)
+            print(function.type, function.getDefinition(), end='\n{\n', sep='',
+                file=output)
 
             # a variable to save the return-value
             returntype = function.type
-            returntype = re.sub('^\s*extern\s*', '', returntype)
-            print('\t', returntype, ' ret;', end='\n', sep='',
-                    file=output)
+
+            if returntype != "void":
+                print('\t', returntype, ' ret;', end='\n', sep='',
+                        file=output)
 
             # is this the desired init-function?
             if function.init:
@@ -661,8 +660,12 @@ class Writer():
                     print('\t', outstr, end='\n', sep='', file=output)
 
             # write the function call
-            print('\tret = (* static_', function.getCall(), end=');\n', sep='',
-                    file=output)
+            if returntype != "void":
+                print('\tret = __real_', function.getPointerCall(), end=';\n',
+                    sep='', file=output)
+            else:
+                print('\t__real_', function.getPointerCall(), end=';\n', sep='',
+                        file=output)
 
             # is this the desired final-function?
             if function.final:
@@ -673,34 +676,20 @@ class Writer():
                         if outstr.strip() != '':
                             print('\t', outstr, end='\n', sep='', file=output)
 
+                print("dlclose(", dllib, ");", file=output)
+
             # write all after-templates for this function
             for temp in function.usedTemplates:
                 outstr = temp.output('after').strip()
+                if outstr != '':
+                    print('\t', outstr, end='\n', sep='', file=output)
+
             # write the return statement and close the function
-            print('\treturn ret;\n}', end='\n\n', file=output)
+            if returntype != "void":
+                print('\treturn ret;\n}', end='\n\n', file=output)
 
-        # generic needs
-        print("""#define OPEN_DLL(defaultfile, libname) \\
-{ \\
-  char * file = getenv(libname); \\
-  if (file == NULL) \\
-    file = defaultfile; \\
-  dllFile = dlopen(file, RTLD_LAZY); \\
-  if (dllFile == NULL) { \\
-    printf("[Error] dll not found %s", file); \\
-    exit(1); \\
-  } \\
-}            pass
-
-#define ADD_SYMBOL(name) \\
-symbol = dlsym(dllFile, #name); \\
-if (symbol == NULL) { \\
-  printf("[Error] trace wrapper - symbol not found %s", #name); \\
-}
-""", file=output)
-
-        for function in functions:
-            print("\nADD_SYMBOL(", function.name, ");\nstatic_", function.name, " = symbol;", file=output)
+            else:
+                print('\n}', end='\n\n', file=output)
 
         # close the file
         output.close()
