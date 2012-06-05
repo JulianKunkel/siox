@@ -89,9 +89,11 @@ class Function():
         ## A list of templates associated with the function.
         self.definition = ''
         self.usedTemplates = []
-        ## Indicates that the function is the first called function of the library and initialize SIOX.
+        ## Indicates that the function is the first called function of the
+        # library and initialize SIOX.
         self.init = False
-        ## Indicates that the function is the last called function of the library.
+        ## Indicates that the function is the last called function of the
+        # library.
         self.final = False
 
     ##
@@ -107,7 +109,22 @@ class Function():
         if len(self.parameters) == 1:
             if self.parameters[0].name == 'void':
                 return '%s()' % (self.name)
-        return '%s(%s)' % (self.name, ', '.join(paramName.name for paramName in self.parameters))
+        return '%s(%s)' % (self.name,
+         ', '.join(paramName.name for paramName in self.parameters))
+
+    ##
+    # @brief Generate the function call for a function pointer for dlsym.
+    #
+    # @param self The reference to this object.
+    #
+    # @return A string containing the function call for a function pointer
+    def getPointerCall(self):
+
+        if len(self.parameters) == 1:
+            if self.parameters[0].name == 'void':
+                return '(*%s)()' % (self.name)
+        return '(* __real_%s)(%s)' % (self.name,
+            ', '.join(paramName.name for paramName in self.parameters))
 
     ##
     # @brief Generate the function definition.
@@ -120,10 +137,28 @@ class Function():
         if self.definition == '':
 
             return '%s(%s)' % (self.name,
-            ', '.join('  '.join([param.type, param.name]) for param in self.parameters))
+                ', '.join('  '.join([param.type, param.name])
+                for param in self.parameters))
 
         else:
             return '%s %s %s' % (self.type, self.name, self.definition)
+
+    def getPointerDefinition():
+
+        if self.definition == '':
+
+            parameters = ', '.join(' '.join([parameter.type, parameter.name])
+                for parameter in paramters)
+
+            return ('%s (*__real_%s) (%s) = (%s (*) (%s)) dlsym(dllib, \
+                (const char*) "%s");' % (self.type, self.name, paramters,
+                self.type, parameters, self.name)
+
+        else:
+
+            return ('%s (*__real_%s) %s = (%s (*) %s) dlsym(dllib, \
+                (const char*) "%s");' % (self.type, self.name, self.definition,
+                self.type, self.definition, self.name)
 
     ##
     # @brief Generate an identifier of the function.
@@ -661,7 +696,7 @@ class Writer():
 
             # write the function call
             if returntype != "void":
-                print('\tret = __real_', function.getPointerCall(), end=';\n',
+                print('\tret = ', function.getPointerCall(), end=';\n',
                     sep='', file=output)
             else:
                 print('\t__real_', function.getPointerCall(), end=';\n', sep='',
