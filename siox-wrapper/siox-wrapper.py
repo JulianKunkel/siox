@@ -661,10 +661,7 @@ class Writer():
             ', RTLD_LOCAL', ');', file=output)
 
         for func in functions:
-            print(func.type, ' (* __real_', func.name, ')(',
-                ', '.join(func.parameters), '= (', func.type, '(*)(',
-                ', '.join(func.parameters), ')) dlsym(dllib, (const char *) "',
-                func.name, '");', file=output)
+            print(func.getPointerDefinition(), file=output)
 
         for function in functions:
 
