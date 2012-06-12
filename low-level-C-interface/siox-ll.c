@@ -23,7 +23,7 @@
 #include "siox-ll.h"
 #include "../ontology/ontology.h"
 
-
+/** Die Default-Ontologie, sollte keine andere per siox_set_ontology() gesetzt werden. */
 #define DEFAULT_ONTOLOGY "testontology"
 
 /** Haben wir initialise_ontology() bereits durchlaufen? */

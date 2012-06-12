@@ -17,7 +17,8 @@ RM := -rm -f
 #=============
 LLDIR := $(CURDIR)/low-level-C-interface
 ONTDIR := $(CURDIR)/ontology
-HDF5DIR := /usr/local/hdf5
+HDF5DIR :=
+#/usr/include
 
 #=======
 # Flags
@@ -117,7 +118,7 @@ docs:
 	@doxygen Doxyfile
 	@$(MAKE) --silent --directory=latex > latex/makePDF.log
 	@mv latex/refman.pdf ./$(REFMAN)
-	@$(RM) -r latex
+	#@$(RM) -r latex
 	@echo ...done!
 	@echo ==================================================
 
