@@ -150,16 +150,27 @@ class Function():
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
                 for parameter in self.parameters)
 
-            return ('%s (*__real_%s) (%s) = (%s (*) (%s)) dlsym(dllib, \
-                (const char*) "%s");' % (self.type, self.name, parameters,
-                self.type, parameters, self.name))
+            return ('%s (*__real_%s) (%s);' % (self.type, self.name, parameters))
 
         else:
 
-            return ('%s (*__real_%s) %s = (%s (*) %s) dlsym(dllib, \
-                (const char*) "%s");' % (self.type, self.name, self.definition,
-                self.type, self.definition, self.name))
+            return ('%s (*__real_%s) (%s);' % (self.type, self.name,
+                self.definition))
 
+    def getDlsym(self):
+
+        if self.definition == '':
+
+            parameters = ', '.join(' '.join([parameter.type, parameter.name])
+                for parameter in self.parameters)
+
+            return ('*__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
+                (self.name, self.type, parameters, self.name))
+
+        else:
+
+            return ('*__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
+                (self.name, self.type, self.definition, self.name))
     ##
     # @brief Generate an identifier of the function.
     #
@@ -657,8 +668,7 @@ class Writer():
         # open the output file for writing
         output = open(self.outputFile, 'w')
 
-        print('#include <dlfcn.h>\nvoid* dllib = dlopen(', dlsymLibPath,
-            ', RTLD_LOCAL', ');', file=output)
+        print('#include <dlfcn.h>\n', file=output)
 
         for func in functions:
             print(func.getPointerDefinition(), file=output)
@@ -678,12 +688,17 @@ class Writer():
 
             # is this the desired init-function?
             if function.init:
+                print('void* dllib = dlopen(', dlsymLibPath,
+                    ', RTLD_LOCAL', ');', file=output)
+
                 # write all init-templates
                 for func in functions:
                     for temp in func.usedTemplates:
                         outstr = temp.output('init').strip()
                         if outstr.strip() != '':
                             print('\t', outstr, end='\n', sep='', file=output)
+
+                    print(func.getDlsym(), file=output)
 
             # write the before-template for this function
             for temp in function.usedTemplates:
