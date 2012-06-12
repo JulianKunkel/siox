@@ -143,22 +143,22 @@ class Function():
         else:
             return '%s %s %s' % (self.type, self.name, self.definition)
 
-    def getPointerDefinition():
+    def getPointerDefinition(self):
 
         if self.definition == '':
 
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
-                for parameter in paramters)
+                for parameter in self.parameters)
 
             return ('%s (*__real_%s) (%s) = (%s (*) (%s)) dlsym(dllib, \
-                (const char*) "%s");' % (self.type, self.name, paramters,
-                self.type, parameters, self.name)
+                (const char*) "%s");' % (self.type, self.name, parameters,
+                self.type, parameters, self.name))
 
         else:
 
             return ('%s (*__real_%s) %s = (%s (*) %s) dlsym(dllib, \
                 (const char*) "%s");' % (self.type, self.name, self.definition,
-                self.type, self.definition, self.name)
+                self.type, self.definition, self.name))
 
     ##
     # @brief Generate an identifier of the function.
@@ -750,7 +750,7 @@ def main():
         if options.style == "wrap":
             outputWriter.sourceFileWrap(functions)
         else:
-            outputWriter.sourceFileDLLSym(functions)
+            outputWriter.sourceFileDLSym(functions)
 
 if __name__ == '__main__':
     main()
