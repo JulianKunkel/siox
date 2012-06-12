@@ -5,15 +5,18 @@
 ############################################################
 
 To make the library and a test program:
-	make
+    make
 or
-	make all
+    make all
 
 To make the debug version (without optimisation but with assertions):
-	make debug
+    make debug
+
+To run all test programs:
+    make test
 
 To make the documentation:
-	make docs
-	
+    make docs
+
 To remove all intermediate and target and documentation files:
-	make clean
+    make clean

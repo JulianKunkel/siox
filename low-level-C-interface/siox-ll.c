@@ -10,17 +10,28 @@
  * die die Abstraktion des I/O-Pfadmodells @em IOPm an das System stellt.
  *
  * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
- * @date    2011
+ * @date    2012
  *          GNU Public License.
  */
 
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "siox-ll.h"
 #include "../ontology/ontology.h"
+
+/** Die Default-Ontologie, sollte keine andere per siox_set_ontology() gesetzt werden. */
+#define DEFAULT_ONTOLOGY "testontology"
+
+/** Haben wir initialise_ontology() bereits durchlaufen? */
+static bool initialised_ontology = false;
+
+/** Die zu nutzende Ontologie. Kann vor dem ersten Aufruf von initialise_ontology() per siox_set_ontology()
+ *  gesetzt werden; ansonsten wird DEFAULT_ONTOLOGY verwendet. */
+static char sOntology[80] = "";
 
 
 
@@ -47,6 +58,14 @@ struct siox_dmid_t {
     unsigned long int   id; /**< The actual ID. */
     };
 
+
+
+/**
+ * Initialisiere die Ontologie-Bibliothek.
+ * Wird nur beim ersten Zugriff auf aus der Ontologie zu lesende Daten (etwa die siox_register_...-Funktionen)
+ * aufgerufen.
+ */
+static void initialise_ontology();
 
 
 
@@ -109,17 +128,17 @@ siox_register_edge( siox_unid       unid,
 
 
 siox_dmid
-siox_register_descriptor_map( siox_unid     unid,
-                              const char *  source_descriptor_type,
-                              const char *  target_descriptor_type)
+siox_register_descriptor_map( siox_unid  unid,
+                              siox_dtid  source_dtid,
+                              siox_dtid  target_dtid)
 {
     /* Draw fresh DMID */
     siox_dmid dmid = malloc( sizeof( struct siox_dmid_t ) );
-    (*dmid).id = current_dmid++;
+    dmid->id = current_dmid++;
 
 
     printf( "# UNID %ld registered DMID %ld: %s -> %s.\n",
-        (*unid).id, (*dmid).id, source_descriptor_type, target_descriptor_type );
+        unid->id, dmid->id, siox_ont_dtid_to_string( source_dtid ), siox_ont_dtid_to_string( target_dtid ) );
 
     return( dmid );
 }
@@ -127,32 +146,32 @@ siox_register_descriptor_map( siox_unid     unid,
 
 void
 siox_create_descriptor( siox_unid       unid,
-                        const char *    descriptor_type,
+                        siox_dtid       dtid,
                         const char *    descriptor )
 {
-    printf( "\n= UNID %ld created descriptor >%s< of type >%s<.\n",
-        (*unid).id, descriptor, descriptor_type );
+    printf( "\n= UNID %ld created descriptor >%s< of DTID %s.\n",
+        unid->id, descriptor, siox_ont_dtid_to_string( dtid ) );
 }
 
 
 void
 siox_send_descriptor( siox_unid     unid,
                       const char *  child_swid,
-                      const char *  descriptor_type,
+                      siox_dtid     dtid,
                       const char *  descriptor )
 {
-    printf( "= UNID %ld sent descriptor >%s< of type >%s< to child node >%s<.\n",
-        (*unid).id, descriptor, descriptor_type, child_swid );
+    printf( "= UNID %ld sent descriptor >%s< of DTID %s to child node >%s<.\n",
+        unid->id, descriptor, siox_ont_dtid_to_string( dtid ), child_swid );
 }
 
 
 void
 siox_receive_descriptor( siox_unid      unid,
-                         const char *   descriptor_type,
+                         siox_dtid      dtid,
                          const char *   descriptor )
 {
-    printf( "\n= UNID %ld received descriptor >%s< of type >%s<.\n",
-        (*unid).id, descriptor, descriptor_type );
+    printf( "\n= UNID %ld received descriptor >%s< of DTID %s.\n",
+        unid->id, descriptor, siox_ont_dtid_to_string( dtid ) );
 }
 
 
@@ -169,11 +188,11 @@ siox_map_descriptor( siox_unid      unid,
 
 void
 siox_release_descriptor( siox_unid      unid,
-                         const char *   descriptor_type,
+                         siox_dtid      dtid,
                          const char *   descriptor )
 {
-    printf( "= UNID %ld released descriptor >%s< of type >%s<.\n\n",
-        (*unid).id, descriptor, descriptor_type );
+    printf( "= UNID %ld released descriptor >%s< of DTID %s.\n\n",
+        (*unid).id, descriptor, siox_ont_dtid_to_string( dtid ) );
 }
 
 
@@ -212,15 +231,15 @@ siox_stop_activity( siox_aid    aid )
 
 void
 siox_report_activity( siox_aid              aid,
-                      const char *          descriptor_type,
+                      siox_dtid             dtid,
                       const char *          descriptor,
                       siox_mid              mid,
                       enum siox_value_type  value_type,
                       void *                value,
                       const char *          details )
 {
-    printf( "- AID %ld, identified by the %s of %s, was measured as follows:\n",
-        (*aid).id, descriptor_type, descriptor );
+    printf( "- AID %ld, identified by >%s< of DTID %s, was measured as follows:\n",
+        aid->id, descriptor, siox_ont_dtid_to_string( dtid ) );
     printf( "\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
     switch ( value_type ){
@@ -285,3 +304,104 @@ siox_report( siox_unid              unid,
 }
 
 
+bool
+siox_set_ontology( const char * name )
+{
+    /* Set ontology name if as yet unset. */
+    if( strlen( sOntology ) == 0 )
+    {
+        strcpy( sOntology, name );
+        return( true );
+    }
+    else
+        return( false );
+}
+
+
+siox_dtid
+siox_register_datatype( const char *                name,
+                        enum siox_ont_storage_type  storage )
+{
+    siox_dtid       dtid;
+    siox_datatype   datatype;
+
+    if( !initialised_ontology )
+        initialise_ontology();
+
+    dtid = siox_ont_find_dtid_by_name( name );
+
+    if( dtid )
+    {
+        /* Compare found metric to current one, returning the mid if they match and NULL otherwise. */
+        datatype = siox_ont_find_datatype_by_dtid( dtid );
+
+        if( ( storage != siox_ont_datatype_get_storage( datatype ) ) )
+        {
+            fprintf( stderr, "ERROR: Could not register the datatype >%s< "
+                             "as it exists already,\n"
+                             "with different attributes:\n%s\n",
+                             name, siox_ont_datatype_to_string( datatype ) );
+            return( NULL );
+        }
+    }
+    else
+        dtid = siox_ont_register_datatype( name,
+                                           storage );
+
+    return( dtid );
+}
+
+
+
+siox_mid
+siox_register_metric( const char *                 name,
+                      const char *                 description,
+                      enum siox_ont_unit_type      unit,
+                      enum siox_ont_storage_type   storage,
+                      enum siox_ont_scope_type     scope )
+{
+    siox_mid    mid;
+    siox_metric metric;
+
+    if( !initialised_ontology )
+        initialise_ontology();
+
+    mid = siox_ont_find_mid_by_name( name );
+
+    if( mid )
+    {
+        /* Compare found metric to current one, returning the mid if they match and NULL otherwise. */
+        metric = siox_ont_find_metric_by_mid( mid );
+
+        if( ( unit != siox_ont_metric_get_unit( metric ) )
+            || ( storage != siox_ont_metric_get_storage( metric ) )
+            || ( scope != siox_ont_metric_get_scope( metric ) ) )
+        {
+            fprintf( stderr, "ERROR: Could not register the metric >%s< "
+                             "as it exists already,\n"
+                             "with different attributes:\n%s\n",
+                             name, siox_ont_metric_to_string( metric ) );
+            return( NULL );
+        }
+    }
+    else
+        mid = siox_ont_register_metric( name,
+                                        description,
+                                        unit,
+                                        storage,
+                                        scope );
+
+    return( mid );
+}
+
+
+static void
+initialise_ontology()
+{
+    initialised_ontology = true;
+
+    siox_set_ontology( DEFAULT_ONTOLOGY ); /* Klappt nur, falls noch nicht gesetzt. */
+
+    /* Ontologie öffnen; solange wir keine finalise()-Funktion haben, bleibt sie zu Programmende eben offen. */
+    siox_ont_open_ontology( sOntology );
+}

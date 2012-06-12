@@ -17,15 +17,19 @@ RM := -rm -f
 #=============
 LLDIR := $(CURDIR)/low-level-C-interface
 ONTDIR := $(CURDIR)/ontology
-HDF5DIR := /usr/local/hdf5
+HDF5DIR :=
+#/usr/include
 
 #=======
 # Flags
 #=======
-CFLAGS := -std=c99 -pedantic -Wall
+CFLAGS := -std=c1x -pedantic -Wall
 LIBFLAGS := $(CFLAGS) -shared -fPIC
 LDFLAGS := $(CFLAGS)
 HDF5FLAGS := -I$(HDF5DIR)/include -L$(HDF5DIR)/lib
+#ONTFLAGS := -iquote$(ONTDIR) -Wl,-rpath=$(ONTDIR)
+ONTFLAGS := -I$(ONTDIR) -Wl,-rpath=$(ONTDIR)
+LLFLAGS := -I$(LLDIR) -Wl,-rpath=$(LLDIR)
 
 #=========
 # Targets
