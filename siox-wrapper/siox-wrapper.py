@@ -339,7 +339,9 @@ class FunctionParser():
     def parseFile(self):
 
         # Call the cpp.
-        cppCommand = ['cpp']
+        # Use gcc instad of cpp, because cpp is broken on OS X >= Lion.
+        # llvm-cpp doesn't strip comments on OS X >= Lion.
+        cppCommand = ['gcc', '-E']
         cppCommand.extend(self.cppArgs)
         cppCommand.append(self.inputFile)
         cpp = subprocess.Popen(cppCommand,
