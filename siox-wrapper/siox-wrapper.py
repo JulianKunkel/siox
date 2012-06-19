@@ -672,6 +672,13 @@ class Writer():
             print('#include ', match, end='\n', file=output)
         print('\n', file=output)
 
+        # write all global-Templates
+        for func in functions:
+            for templ in func.usedTemplates:
+                if templ.output('global') != '':
+                    print(templ.output('global'), file=output)
+        print("", file=output)
+
         for func in functions:
             print(func.getPointerDefinition(), file=output)
 
@@ -691,7 +698,7 @@ class Writer():
             # is this the desired init-function?
             if function.init:
                 print('void* dllib = dlopen(', dlsymLibPath,
-                    ', RTLD_LOCAL', ');', file=output)
+                    ', RTLD_LAZY', ');', file=output)
 
                 # write all init-templates
                 for func in functions:
