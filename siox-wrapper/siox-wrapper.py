@@ -339,21 +339,16 @@ class FunctionParser():
     def parseFile(self):
 
         # Call the cpp.
-        if self.cpp:
-            cppCommand = ['cpp']
-            cppCommand.extend(self.cppArgs)
-            cppCommand.append(self.inputFile)
-            cpp = subprocess.Popen(cppCommand,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            string, error = cpp.communicate()
+        cppCommand = ['cpp']
+        cppCommand.extend(self.cppArgs)
+        cppCommand.append(self.inputFile)
+        cpp = subprocess.Popen(cppCommand,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        string, error = cpp.communicate()
 
-            if error != '':
-                print('ERROR: CPP error:\n', error, file=sys.stderr)
-                sys.exit(1)
-
-        else:
-            inputFile = open(self.inputFile, 'r')
-            string = inputFile.read()
+        if error != '':
+            print('ERROR: CPP error:\n', error, file=sys.stderr)
+            sys.exit(1)
 
         functions = self.parse(string)
         return functions
