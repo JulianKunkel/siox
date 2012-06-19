@@ -123,7 +123,7 @@ class Function():
         if len(self.parameters) == 1:
             if self.parameters[0].name == 'void':
                 return '(*%s)()' % (self.name)
-        return '(* __real_%s)(%s)' % (self.name,
+        return '( __real_%s)(%s)' % (self.name,
             ', '.join(paramName.name for paramName in self.parameters))
 
     ##
@@ -136,7 +136,7 @@ class Function():
 
         if self.definition == '':
 
-            return '%s(%s)' % (self.name,
+            return '%s (%s)' % (self.name,
                 ', '.join('  '.join([param.type, param.name])
                 for param in self.parameters))
 
@@ -164,12 +164,12 @@ class Function():
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
                 for parameter in self.parameters)
 
-            return ('*__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
+            return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
                 (self.name, self.type, parameters, self.name))
 
         else:
 
-            return ('*__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
+            return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
                 (self.name, self.type, self.definition, self.name))
     ##
     # @brief Generate an identifier of the function.
@@ -585,7 +585,7 @@ class Writer():
 
         # write all function redefinitions
         for function in functions:
-            print(function.type, ' __real_', function.getDefinition(),
+            print(' __real_', function.getDefinition(),
                     end=';\n', sep='', file=output)
 
         print("", file=output)
@@ -670,13 +670,18 @@ class Writer():
 
         print('#include <dlfcn.h>\n', file=output)
 
+        # write all needed includes
+        for match in includes:
+            print('#include ', match, end='\n', file=output)
+        print('\n', file=output)
+
         for func in functions:
             print(func.getPointerDefinition(), file=output)
 
         for function in functions:
 
             # write function signature
-            print(function.type, function.getDefinition(), end='\n{\n', sep='',
+            print(function.type, function.getDefinition(), end='\n{\n', sep=' ',
                 file=output)
 
             # a variable to save the return-value
@@ -711,7 +716,7 @@ class Writer():
                 print('\tret = ', function.getPointerCall(), end=';\n',
                     sep='', file=output)
             else:
-                print('\t__real_', function.getPointerCall(), end=';\n', sep='',
+                print('\t', function.getPointerCall(), end=';\n', sep='',
                         file=output)
 
             # is this the desired final-function?
