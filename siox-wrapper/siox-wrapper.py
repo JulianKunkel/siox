@@ -452,7 +452,7 @@ class CommandParser():
                 if currentFunction.getIdentifier() == functions[index].getIdentifier():
                     if commandName != '':
                         templateList.append(templateClass(commandName, commandArgs))
-                        functions[index].usedTemplates = templateList
+                        functions[index].usedTemplates = templateList[:]
                         templateList = []
                         commandName = ''
                         commandArgs = ''
