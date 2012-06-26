@@ -29,7 +29,7 @@ template = {
 'register_datatype': { 
 	'variables': 'Name MinStorage RetName',
 	'global': '''siox_dtid %(RetName)s;''',
-	'init': '''%(RetName)s = siox_register_datatype( "%(Name)s", "%(MinStorage)s" );''',
+	'init': '''%(RetName)s = siox_register_datatype( "%(Name)s", %(MinStorage)s );''',
     'before': '''''',
 	'after': '',
 	'final': ''
