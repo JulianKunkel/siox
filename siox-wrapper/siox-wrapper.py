@@ -582,7 +582,7 @@ class Writer():
 
         # write all function redefinitions
         for function in functions:
-            print(' __real_', function.getDefinition(),
+            print(function.type, ' ',' __real_', function.getDefinition(),
                     end=';\n', sep='', file=output)
 
         print("", file=output)
