@@ -118,7 +118,7 @@ template = {
 	'variables': 'Type Name',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_receive_descriptor( global_unid, %(Type)s, %(Name)s );''',
+    'before': '''siox_receive_descriptor( global_unid, %(Type)s, "%(Name)s" );''',
 	'after': '',
 	'final': ''
 },
