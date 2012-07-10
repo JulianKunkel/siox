@@ -10,8 +10,6 @@ import subprocess
 # import the template
 from template import *
 
-DEBUG = False
-
 
 ##
 # @brief Generate and handle the command line parsing.
@@ -34,30 +32,18 @@ libraries, by calling trace functions before and after the actual library call.'
         argParser.add_argument('--output', '-o', action='store', nargs=1,
         dest='outputFile', default=['out'], help='Provide a file to write the output.')
 
-        argParser.add_argument('--debug', '-d', action='store_true', default=False,
-        dest='debug', help='''Print out debug information.''')
-
         argParser.add_argument('--blank-header', '-b', action='store_true',
                 default=False, dest='blankHeader',
-                help='''Generate a clean header file which can be instrumented
-from a other header file or C source file.''')
-
-        argParser.add_argument('--cpp', '-c', action='store_true', default=False,
-        dest='cpp', help='Use cpp to preprocess the input file.')
+                help='''Generate a clean header file, which can be instrumented,
+from a other header file.''')
 
         argParser.add_argument('--cpp-args', '-a', action='store', nargs=1, default=[],
-        dest='cppArgs', help='''Pass arguments to the cpp. If this option is
-specified the --cpp option is specified implied.''')
-
-        argParser.add_argument('--alt-var-names', '-n',
-        action='store_true', default=False, dest='alternativeVarNames',
-        help='''If a header file dose not provide variable names, this will
-enumerate them.''')
+        dest='cppArgs', help='''Pass arguments to the cpp.''')
 
         argParser.add_argument('--style', '-s',
         action='store', default='wrap', dest='style',
-        choices=['wrap', 'dllsym'],
-        help='''Designates which output-style to use.''')
+        choices=['wrap', 'dlsym'],
+        help='''Choose which output-style to use.''')
 
         argParser.add_argument('inputFile', default=None,
         help='Source or header file to parse.')
@@ -66,9 +52,6 @@ enumerate them.''')
 
         if args.outputFile:
             args.outputFile = args.outputFile[0]
-        if args.cppArgs:
-            args.cpp = True
-
         return args
 
 
@@ -103,50 +86,120 @@ class Function():
     #
     # @return A string containing the function call.
     #
-    # Generates the function call of the function.
+    # Generates the function call of the function object.
     def getCall(self):
 
         if len(self.parameters) == 1:
             if self.parameters[0].name == 'void':
                 return '%s()' % (self.name)
+
         return '%s(%s)' % (self.name,
          ', '.join(paramName.name for paramName in self.parameters))
-
-    ##
-    # @brief Generate the function call for a function pointer for dlsym.
-    #
-    # @param self The reference to this object.
-    #
-    # @return A string containing the function call for a function pointer
-    def getPointerCall(self):
-
-        if len(self.parameters) == 1:
-            if self.parameters[0].name == 'void':
-                return '(*%s)()' % (self.name)
-        return '( __real_%s)(%s)' % (self.name,
-            ', '.join(paramName.name for paramName in self.parameters))
 
     ##
     # @brief Generate the function definition.
     #
     # @param self The reference to this object.
     #
-    # @return The function definition as a string without the type.
+    # @return The function definition as a string.
+    #
+    # Generates the function call of the function object.
     def getDefinition(self):
 
         if self.definition == '':
-
-            return '%s (%s)' % (self.name,
+            return '%s %s (%s)' % (self.type, self.name,
                 ', '.join('  '.join([param.type, param.name])
                 for param in self.parameters))
 
         else:
             return '%s %s %s' % (self.type, self.name, self.definition)
 
-    def getPointerDefinition(self):
+    ##
+    # @brief Generate the function call prefixed with __real_.
+    #
+    # @param self The reference to this object.
+    #
+    # @return A string containing the the function call prefixed with __real_.
+    #
+    # Generates the function call of the function object for the gcc wrap
+    # functionality. The Call will be prefixed with __real_ and used as the
+    # original function.
+    def getCallReal(self):
+
+        if len(self.parameters) == 1:
+            if self.parameters[0].name == 'void':
+                return '__real_%s()' % (self.name)
+        return '%s(%s)' % (self.name,
+         ', '.join(paramName.name for paramName in self.parameters))
+
+
+    ##
+    # @brief Generate the function definition prefixed with __real_.
+    #
+    # @param self The reference to this object.
+    #
+    # @return A string containing the function definition prefixed with __real_.
+    #
+    # Generates the function definition of the function object for the gcc wrap
+    # functionality. The definition will be prefixed with __real_.
+    def getDefinitionReal(self):
 
         if self.definition == '':
+            return '%s __real_%s (%s)' % (self.type, self.name,
+                ', '.join('  '.join([param.type, param.name])
+                for param in self.parameters))
 
+        else:
+            return '%s __real_%s %s' % (self.type, self.name, self.definition)
+
+    ##
+    # @brief Generate the function definition prefixed with __wrap_.
+    #
+    # @param self The reference to this object.
+    #
+    # @return A string containing the function definition prefixed with __real_.
+    #
+    # Generates the function definition of the function object for the gcc wrap
+    # functionality. The definition will be prefixed with __real_.
+    def getDefinitionWrap(self):
+
+        if self.definition == '':
+            return '%s __wrap_%s (%s)' % (self.type, self.name,
+                ', '.join('  '.join([param.type, param.name])
+                for param in self.parameters))
+
+        else:
+            return '%s __warp_%s %s' % (self.type, self.name, self.definition)
+
+    ##
+    # @brief Generate the function call with a function pointer for dlsym.
+    #
+    # @param self The reference to this object.
+    #
+    # @return A string containing the function call for a function pointer.
+    #
+    # Generate the function pointer call for dlsym. The function
+    # pointer call looks something like: (__real_funcName)(parameter).
+    def getCallPointer(self):
+
+        if len(self.parameters) == 1:
+            if self.parameters[0].name == 'void':
+                return '(__real_*%s)()' % (self.name)
+        return '( __real_%s)(%s)' % (self.name,
+            ', '.join(paramName.name for paramName in self.parameters))
+
+    ##
+    # @brief Generate the function pointer definition for dlsym.
+    #
+    # @param self The reference to this object.
+    #
+    # @return A string containing the pointer definition of the function.
+    #
+    # Generate the function pointer definition for dlsym. The function pointer
+    # definition looks something like: funcType (*_real_funcName)(parType parName).
+    def getDefinitionPointer(self):
+
+        if self.definition == '':
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
                 for parameter in self.parameters)
 
@@ -157,6 +210,14 @@ class Function():
             return ('%s (*__real_%s) (%s);' % (self.type, self.name,
                 self.definition))
 
+    ##
+    # @brief Generate the C code to open the function with dlsym.
+    #
+    # @param self The reference to this object.
+    #
+    # @return A string containing the dlsym call.
+    #
+    # Generate the C code for the dlsym function call.
     def getDlsym(self):
 
         if self.definition == '':
@@ -171,16 +232,19 @@ class Function():
 
             return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
                 (self.name, self.type, self.definition, self.name))
+
     ##
     # @brief Generate an identifier of the function.
     #
-    # The generated identifier is used as a key for the hash table the functions
-    # are stored in.
+    # @param self The reference to this object.
     #
     # @return A unique identifier for the function as a string.
+    #
+    # The generated identifier is used as a key for the hash table the functions
+    # are stored in.
     def getIdentifier(self):
 
-        identifier = '%s%s(%s);' % (self.type, self.name,
+        identifier = '%s %s(%s);' % (self.type, self.name,
                 ''.join(''.join([param.type, param.name]) for param in self.parameters))
 
         return re.sub('[,\s]', '', identifier)
@@ -206,6 +270,10 @@ class Parameter():
 # names are the entries found in the template file.
 class Instruction():
 
+    ##
+    # @brief Constructor for the Instruction class.
+    #
+    # @param self The reference to this object.
     def __init__(self):
         ## Name of the instruction.
         self.name = ''
@@ -219,10 +287,15 @@ class Instruction():
 # The function parser searches through a header file using regular expressions.
 class FunctionParser():
 
+    ##
+    # @brief Constructor for the FunctionParser class.
+    #
+    # @param self The reference to this object.
+    #
+    # @param options An Option object.
     def __init__(self, options):
 
         self.inputFile = options.inputFile
-        self.cpp = options.cpp
         self.cppArgs = options.cppArgs
         self.blankHeader = options.blankHeader
 
@@ -258,9 +331,15 @@ class FunctionParser():
     ##
     # @brief This function parses the header file.
     #
-    # @return A list of function definitions.
     #
     # @param self The reference to the object.
+    #
+    # @param string A string to parse for function.
+    #
+    # @return A list of function definitions.
+    #
+    # This function dose the actually searching for functions inside a string.
+    # The string can contain multiple function in one string.
     def parse(self, string):
 
         functions = []
@@ -290,9 +369,7 @@ class FunctionParser():
             # If only the blank header file should be generated pass the
             # string of parameters to the Function object.
             if self.blankHeader:
-
                     function.definition = "(" + parameterString + ")"
-
             # If the C source code should be generated split the string into a
             # list of parameters and extract the type and name of the parameter.
             else:
@@ -328,14 +405,16 @@ class FunctionParser():
 
         return functions
 
-    ## @brief Wrapper function for parse().
+    ##
+    # @brief Wrapper function for parse().
     #
     # @return A list of function objects
     #
     # @param self
     #
-    # This is a wrapper function for the parse() function for parsing the
-    # passed to the FunctionParser object with the option argument.
+    # This is a wrapper function for the parse(). parseFile takes the input
+    # header file form the option object and pass it to cpp. The output off cpp
+    # is then passed to the function parse.
     def parseFile(self):
 
         # Call the cpp.
@@ -359,9 +438,9 @@ class FunctionParser():
     #
     # @return A list of function objects
     #
-    # @param self
+    # @param self The reference to this object.
     #
-    # param string
+    # param string The string to be parsed.
     def parseString(self, string):
 
         functions = self.parse(string)
@@ -385,12 +464,15 @@ class CommandParser():
     # @brief This function parses the header file.
     #
     # @param self The reference to the object.
+    #
     # @param functions The list of function objects returned by the function
     # parser.
     #
-    #
     # @return A list of function objects which are extended by the
     # instrumentation instructions.
+    #
+    # Parses a instrumented header file and adds the instrumentation instructions
+    # to the functions inside the list of functions an returns the new list.
     def parse(self, functions):
 
         functionParser = FunctionParser(self.options)
@@ -582,8 +664,7 @@ class Writer():
 
         # write all function redefinitions
         for function in functions:
-            print(function.type, ' ',' __real_', function.getDefinition(),
-                    end=';\n', sep='', file=output)
+            print(function.getDefinitionReal(), end=';\n', sep='', file=output)
 
         print("", file=output)
 
@@ -591,7 +672,7 @@ class Writer():
         for function in functions:
             # write function signature
 
-            print(function.type, ' __wrap_', function.getDefinition(),
+            print(function.type, ' __wrap_', function.getDefinitionWrap(),
                     end='\n{\n', sep='', file=output)
 
             # a variable to save the return-value
@@ -618,10 +699,10 @@ class Writer():
 
             # write the function call
             if returntype != "void":
-                print('\tret = __real_', function.getCall(), end=';\n', sep='',
+                print('\tret = ', function.getCallReal(), end=';\n', sep='',
                         file=output)
             else:
-                print('\t__real_', function.getCall(), end=';\n', sep='',
+                print('\t', function.getCallReal(), end=';\n', sep='',
                         file=output)
 
             # is this the desired final-function?
@@ -680,12 +761,12 @@ class Writer():
         print("", file=output)
 
         for func in functions:
-            print(func.getPointerDefinition(), file=output)
+            print(func.getDefinitionPointer(), file=output)
 
         for function in functions:
 
             # write function signature
-            print(function.type, function.getDefinition(), end='\n{\n', sep=' ',
+            print(function.getDefinition(), end='\n{\n', sep=' ',
                 file=output)
 
             # a variable to save the return-value
@@ -717,10 +798,10 @@ class Writer():
 
             # write the function call
             if returntype != "void":
-                print('\tret = ', function.getPointerCall(), end=';\n',
+                print('\tret = ', function.getCallPointer(), end=';\n',
                     sep='', file=output)
             else:
-                print('\t', function.getPointerCall(), end=';\n', sep='',
+                print('\t', function.getCallPointer(), end=';\n', sep='',
                         file=output)
 
             # is this the desired final-function?
