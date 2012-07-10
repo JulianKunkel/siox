@@ -3,7 +3,7 @@
  *          Headerdatei für das SIOX-Low-Level-Interface
  *
  * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
- * @date    2011
+ * @date    2012
  *          GNU Public License
  */
 
@@ -53,6 +53,10 @@ enum siox_value_type{
 
 
 
+/**
+ * @name Functions for Nodes and Their Attributes
+ */
+/**@{*/
 
 /**
  * Meldet den Knoten als Teilnehmer an SIOX an und teilt ihm eine frische @em UNID zu.
@@ -108,20 +112,62 @@ void siox_register_edge(siox_unid unid, const char * child_swid);
 
 
 /**
+ * Find the @em DTID for the data type with the specifications given.
+ * If it already exists in the ontology (only the name is checked to test for this!), return its DTID;
+ * otherwise, create it and return the fresh DTID.
+ *
+ * @param[in]   name        The data type's unique name.
+ * @param[in]   storage     The minimum storage type required to store data of the data type.
+ *
+ * @returns                 The @em DTID of the descriptor type.
+ */
+siox_dtid siox_register_datatype( const char * name, enum siox_ont_storage_type storage );
+
+
+/**
  * Meldet die Fähigkeit, eine bestimmte Deskriptorübersetzung auszuführen, bei SIOX an.
  *
  * Das System kann aus den Möglichkeiten eines Knotens Schlüsse auf den Verlauf des
  * Datenpfades und die Aktivitäten darauf ziehen.
  *
- * @param[in]   unid                    Die @em UNID des Knoten.
- * @param[in]   source_descriptor_type  Der Typ des Quelldeskriptors.
- * @param[in]   target_descriptor_type  Der Typ des Zieldeskriptors.
+ * @param[in]   unid            Die @em UNID des Knoten.
+ * @param[in]   source_dtid     Die @em DTID des Quelldeskriptors.
+ * @param[in]   target_dtid     Die @em DTID des Zieldeskriptors.
  *
  * @return      Eine <em> DeskriptorMapID (DMID)</em>, die der Knoten angeben muß, wenn er SIOX mit
                 siox_map_descriptor() eine Anwendung dieser Abbildung meldet.
  */
-siox_dmid siox_register_descriptor_map(siox_unid unid, const char* source_descriptor_type, const char * target_descriptor_type);
+siox_dmid siox_register_descriptor_map(siox_unid unid, siox_dtid source_dtid, siox_dtid target_dtid);
 
+
+/**
+ * Liefert die @em MID zu einer Metrik.
+ * Existiert diese noch nicht (hierzu wird nur der Name geprüft!), wird eine neue Metrik in die Ontologie eingefügt
+ * und deren neue @em MID zurückgeliefert.
+ *
+ * @param[in]   name        Der Name der Metrik. Er muß eindeutig sein.
+ * @param[in]   description Eine textuelle Beschreibung der Metrik.
+ * @param[in]   unit        Die Einheit, in welcher die Daten gemessen werden.
+ * @param[in]   storage     Der minimale zum Speichern der Daten nötige Datentyp.
+ * @param[in]   scope       Der zeitliche Bereich, in welchem die Daten angefallen sind.
+ *
+ * @returns             Eine <em>Metric ID</em>.
+ */
+siox_mid siox_register_metric( const char *                 name,
+                               const char *                 description,
+                               enum siox_ont_unit_type      unit,
+                               enum siox_ont_storage_type   storage,
+                               enum siox_ont_scope_type     scope );
+
+
+/**@}*/
+
+
+
+/**
+ * @name Functions for Descriptors
+ */
+/**@{*/
 
 /**
  * Meldet das Erzeugen eines neuen Deskriptors an SIOX.
@@ -132,12 +178,12 @@ siox_dmid siox_register_descriptor_map(siox_unid unid, const char* source_descri
  * @em Beispiel:    Ein Dateiname, den der Client durch eine Benutzereingabe erhalten hat.
  *
  * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   descriptor_type Der Typ des folgenden Deskriptor, z.B. "FileName" oder "Inode".
+ * @param[in]   dtid            Die @em DTID des folgenden Deskriptors
  * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "siox.c" oder "17".
  *
  * @note    Diese Funktion ist optional.
  */
-void siox_create_descriptor(siox_unid unid, const char * descriptor_type, const char * descriptor);
+void siox_create_descriptor(siox_unid unid, siox_dtid dtid, const char * descriptor);
 
 
 /**
@@ -146,12 +192,12 @@ void siox_create_descriptor(siox_unid unid, const char * descriptor_type, const 
  * @em Beispiel:    Ein Knoten fordert das Lesen aus einer Datei an,
  *                  die über ihr Dateihandle identifiziert wird.
  *
- * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   child_swid      Die @em SoftWareID des empfangenden Kindesknoten, z.B. "HDF5".
- * @param[in]   descriptor_type Der Typ des Deskriptors, z.B. "HDF5-FileHandle".
- * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "17726".
+ * @param[in]   unid        Die @em UNID des Knoten.
+ * @param[in]   child_swid  Die @em SoftWareID des empfangenden Kindesknoten, z.B. "HDF5".
+ * @param[in]   dtid        Die @em DTID des Deskriptors.
+ * @param[in]   descriptor  Der eigentliche Deskriptor, z.B. "17726".
  */
-void siox_send_descriptor(siox_unid unid, const char * child_swid, const char * descriptor_type, const char * descriptor);
+void siox_send_descriptor(siox_unid unid, const char * child_swid, siox_dtid dtid, const char * descriptor);
 
 
 /**
@@ -160,11 +206,11 @@ void siox_send_descriptor(siox_unid unid, const char * child_swid, const char * 
  * @em Beispiel:    Ein Knoten wird angewiesen, aus einer Datei zu lesen,
  *                  die über ihre Inode identifiziert wird.
  *
- * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   descriptor_type Der Typ des Deskriptors, z.B. "PVFS-FileHandle".
- * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "53718332".
+ * @param[in]   unid        Die @em UNID des Knoten.
+ * @param[in]   dtid        Die @em DTID des Deskriptors.
+ * @param[in]   descriptor  Der eigentliche Deskriptor, z.B. "53718332".
  */
-void siox_receive_descriptor(siox_unid unid, const char * descriptor_type, const char * descriptor);
+void siox_receive_descriptor(siox_unid unid, siox_dtid dtid, const char * descriptor);
 
 
 /**
@@ -188,14 +234,22 @@ void siox_map_descriptor(siox_unid unid, siox_dmid dmid, const char * source_des
  *
  * @em Beispiel:    Ein Dateihandle wird beim Schließen seiner Datei freigegeben.
  *
- * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   descriptor_type Der Typ des Deskriptors, z.B. "Posix-FileHandle".
- * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "51773".
+ * @param[in]   unid        Die @em UNID des Knoten.
+ * @param[in]   dtid        Die @em DTID des Deskriptors.
+ * @param[in]   descriptor  Der eigentliche Deskriptor, z.B. "51773".
  *
  * @note    Diese Funktion ist optional.
  */
-void siox_release_descriptor(siox_unid unid, const char * descriptor_type, const char * descriptor);
+void siox_release_descriptor(siox_unid unid, siox_dtid dtid, const char * descriptor);
 
+/**@}*/
+
+
+
+/**
+ * @name Functions for Activities
+ */
+/**@{*/
 
 /**
  * Meldet den Start einer Aktivität und erhält eine <em>Activity ID (AID)</em> dafür.
@@ -232,7 +286,7 @@ void siox_stop_activity(siox_aid aid);
  *                  die über ein Dateihandle angefordert wurden.
  *
  * @param[in]   aid             Die @em AID der Aktivität.
- * @param[in]   descriptor_type Der Typ des Deskriptors, z.B. "Posix-FileHandle".
+ * @param[in]   descriptor_type Die @em DTID des Deskriptors.
  * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "51773".
  * @param[in]   mid             Die @em MID der Meßgröße.
  * @param[in]   value_type      Der Typ des folgenden Wertes als siox_value_type.
@@ -241,7 +295,7 @@ void siox_stop_activity(siox_aid aid);
  *
  * @todo    Woher weiß die Komponente, ob – und wenn ja, auf was – wir die Leistungsdaten beschränken wollen?
  */
-void siox_report_activity(siox_aid aid, const char * descriptor_type, const char * descriptor, siox_mid mid, enum siox_value_type value_type, void * value, const char * details);
+void siox_report_activity(siox_aid aid, siox_dtid descriptor_type, const char * descriptor, siox_mid mid, enum siox_value_type value_type, void * value, const char * details);
 
 
 /**
@@ -272,5 +326,26 @@ void siox_end_activity(siox_aid aid);
  */
 void siox_report(siox_unid unid,  siox_mid  mid, enum siox_value_type value_type, void * value, const char * details);
 
+/**@}*/
+
+
+
+/**
+ * @name Functions for Accessing the Ontology
+ */
+/**@{*/
+
+/**
+ * Set the ontology to be used.
+ * This function has to be called before any functions using the ontology, such as all
+ * siox_register_...() calls, otherwise it will be ignored, and SIOX will access the default ontology.
+ *
+ * @param[in]   name    The name of the ontology to be used.
+ *
+ * @returns             @c true, if the ontology was set successfully; @c false, otherwise.
+ */
+bool siox_set_ontology( const char * name );
+
+/**@}*/
 
 #endif

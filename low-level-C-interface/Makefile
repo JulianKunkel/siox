@@ -16,11 +16,10 @@
 # Targets
 #=========
 TARGETS := siox-hdf5-example siox-mockupfs-example
-OBJECTS := siox-hdf5-example.o siox-mockupfs-example.o
 SIOXLIBS := libsiox-ll.so
+ONTLIBS := $(ONTDIR)/libsioxont.so
 MUFSLIBS := libmufs.so
 HDF5LIBS := -lhdf5 -lhdf5_hl
-ONTLIBS := $(ONTDIR)/libsioxont.so
 OWNLIBS := $(SIOXLIBS) $(MUFSLIBS)
 #LIBS := $(OWNLIBS) $(ONTLIBS)
 
@@ -37,16 +36,16 @@ OWNLIBS := $(SIOXLIBS) $(MUFSLIBS)
 all: $(TARGETS) Makefile
 #	@echo --------------------------------------------------
 
-siox-hdf5-example: siox-hdf5-example.c $(SIOXLIBS) $(ONTLIBS) Makefile
+siox-hdf5-example: siox-hdf5-example.c $(SIOXLIBS) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LDFLAGS) $(HDF5FLAGS) -o $@ $< $(SIOXLIBS) $(ONTLIBS) $(HDF5LIBS)
+	$(CC) $(LDFLAGS) $(LLFLAGS) $(HDF5FLAGS) -o $@ $< $(HDF5LIBS) $(SIOXLIBS)
 	@echo done!
 
-siox-mockupfs-example: siox-mockupfs-example.c $(SIOXLIBS) $(ONTLIBS) $(MUFSLIBS) Makefile
+siox-mockupfs-example: siox-mockupfs-example.c $(SIOXLIBS) $(MUFSLIBS) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LDFLAGS) -o $@ $< $(SIOXLIBS) $(ONTLIBS) $(MUFSLIBS)
+	$(CC) $(LDFLAGS) $(LLFLAGS) -o $@ $< $(MUFSLIBS) $(SIOXLIBS)
 	@echo done!
 
 #===============
@@ -65,13 +64,13 @@ debug: all
 libsiox-ll.so: siox-ll.c siox-ll.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) -c $(LIBFLAGS) -o $@ siox-ll.c
+	$(CC) $(LIBFLAGS) $(ONTFLAGS) -o $@ $< $(ONTLIBS)
 	@echo done!
 
 libmufs.so: mufs.c mufs.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) -c $(LIBFLAGS) -o $@ mufs.c
+	$(CC) $(LIBFLAGS) $(LLFLAGS) -o $@ $< $(SIOXLIBS)
 	@echo done!
 
 #=================
@@ -80,7 +79,7 @@ libmufs.so: mufs.c mufs.h Makefile
 %.o : %.c Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) -o $@ $<
 	@echo done!
 
 % : %.c
@@ -93,7 +92,7 @@ libmufs.so: mufs.c mufs.h Makefile
 clean:
 	@echo --------------------------------------------------
 	@echo -n Cleaning Low-Level-C-Interface...
-	@$(RM) $(TARGETS) $(OBJECTS) $(OWNLIBS) *.log *~ *.mufs *.h5 *.ont
+	@$(RM) $(TARGETS) $(OWNLIBS) *.o *.log *~ *.mufs *.h5
 	@echo done!
 
 .PHONY: test
