@@ -16,3 +16,21 @@ ssize_t write(int fd, const void *buf, size_t count);
 ssize_t read(int fd, const void *buf, size_t count);
 
 
+/* See: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Synchronizing-I_002fO */
+int sync (void);
+int fsync (int fildes);
+int fdatasync (int fildes);
+
+/* See: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Memory_002dmapped-I_002fO */
+/* Probably we should record this type of usage with SIOX, but how... */
+void * mmap (void *address, size_t length, int protect, int flags, int filedes, off_t offset);
+
+void * mremap (void *address, size_t length, size_t new_length, int flag)
+
+int munmap (void *addr, size_t length);
+
+/* Hints to the system, this might be used for optimizations by SIOX in the future */
+/* HOWEVER, they are not implemented in the current GLIBC as of 2012-07-17 */
+/* See also: http://insights.oetiker.ch/linux/fadvise.html */
+int madvise (void *addr, size_t length, int advice);
+int posix_fadvise (int fd, __off_t offset, __off_t len, int advise);
