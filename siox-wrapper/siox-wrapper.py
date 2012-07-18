@@ -662,11 +662,33 @@ class Writer():
                     print(templ.output('global'), file=output)
         print("", file=output)
 
+        print("static void sioxFinal() __attribute__((destructor));", file=output)
+        print("static void sioxInit() __attribute__((constructor));", file=output)
+
         # write all function redefinitions
         for function in functions:
             print(function.getDefinitionReal(), end=';\n', sep='', file=output)
 
         print("", file=output)
+
+
+        print("static void sioxInit() {", file=output)        
+        # write all init-templates
+        for func in functions:
+            for temp in func.usedTemplates:
+                outstr = temp.output('init').strip()
+                if outstr.strip() != '':
+                    print('\t', outstr, end='\n', sep='', file=output)
+        print("}", file=output)
+
+        print("static void sioxFinal() {", file=output)
+        # write all final-functions
+        for func in functions:
+            for temp in func.usedTemplates:
+                outstr = temp.output('final').strip()
+                if outstr.strip() != '':
+                    print('\t', outstr, end='\n', sep='', file=output)
+        print("}", file=output)
 
         # write all functions-bodies
         for function in functions:
@@ -682,15 +704,6 @@ class Writer():
                 print('\t', returntype, ' ret;', end='\n', sep='',
                         file=output)
 
-            # is this the desired init-function?
-            if function.init:
-                # write all init-templates
-                for func in functions:
-                    for temp in func.usedTemplates:
-                        outstr = temp.output('init').strip()
-                        if outstr.strip() != '':
-                            print('\t', outstr, end='\n', sep='', file=output)
-
             # write the before-template for this function
             for temp in function.usedTemplates:
                 outstr = temp.output('before').strip()
@@ -704,15 +717,6 @@ class Writer():
             else:
                 print('\t', function.getCallReal(), end=';\n', sep='',
                         file=output)
-
-            # is this the desired final-function?
-            if function.final:
-                # write all final-functions
-                for func in functions:
-                    for temp in func.usedTemplates:
-                        outstr = temp.output('final').strip()
-                        if outstr.strip() != '':
-                            print('\t', outstr, end='\n', sep='', file=output)
 
             # write all after-templates for this function
             for temp in function.usedTemplates:
