@@ -15,7 +15,7 @@
 
 3.  Nun kann die annotierte Datei eingelesen werden und der C code erzeugt werden.
 
-      python siox-wrapper.py -o hdf5-example/hdf.c hdf5-example/hdf5.h
+      python siox-wrapper.py -o hdf5-example/hdf5.c hdf5-example/hdf5.h
 
     Die zu sehende Ausgabe ist eine Liste aller Funktionsnamen, die später an GCC weiter gegeben werden muss.
 
