@@ -302,8 +302,8 @@ class FunctionParser():
         ## This regular expression searches for the general function definition.
         # ([\w*\s]) matches the return type of the function.
         # (?:\s*\w+\s*\()) is a look ahead that ensures that the first part of
-        # the ends right before the function name. The look ahead searches for
-        # last 'word'right in front of the (.
+        # the regex ends right before the function name. The look ahead searches for
+        # last 'word' right in front of the (.
         # the \s*(\w+)\s* actually matches the function name (a look ahead
         # doesn't consume text).
         # \(([,\w*\s\[\]]*)\) matches the parentheses of the function definition
