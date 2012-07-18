@@ -571,7 +571,35 @@ class templateClass():
     def setParameters(self, names, values):
         # generate a list of all names and values
         NameList = names.split(' ')
-        ValueList = values.split(' ')
+        tmpValueList = values.split(' ')
+        ValueList = []
+        isString = False
+
+        for entry in tmpValueList:
+
+            if len(entry) < 1:
+                continue
+
+            if entry[0] == ("\"" or "\'") and isString == False:
+                isString = True
+                ValueList.append("")
+
+                if len(entry) == 1:
+                    ValueList[-1] += entry
+                    entry = " "  # avoid error on if entry[-1]
+
+            if isString:
+                ValueList[-1] += entry
+            else:
+                ValueList.append(entry)
+
+            if entry[-1] == ("\"" or "\'") and isString == True:
+
+                if len(entry) > 1:
+                    if entry[-2] == "\\":
+                        continue
+
+                isString = False
 
         position = 0
         # iterate over all elements but the last one
@@ -672,7 +700,7 @@ class Writer():
         print("", file=output)
 
 
-        print("static void sioxInit() {", file=output)        
+        print("static void sioxInit() {", file=output)
         # write all init-templates
         for func in functions:
             for temp in func.usedTemplates:
