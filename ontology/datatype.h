@@ -65,7 +65,7 @@ bool siox_ont_dtid_is_equal( siox_dtid dtid1, siox_dtid dtid2 );
  *
  * @param[in]   dtid    The @em DTID object.
  *
- * @returns             If the metric exists, a string representing the data; otherwise @c NULL.
+ * @returns             If the @em DTID exists, a string representing the data; otherwise @c NULL.
  */
 const char* siox_ont_dtid_to_string( siox_dtid dtid );
 

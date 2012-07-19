@@ -23,7 +23,7 @@
 #include "siox-ll.h"
 #include "../ontology/ontology.h"
 
-/** Die Default-Ontologie, sollte keine andere per siox_set_ontology() gesetzt werden. */
+/** Die Default-Ontologie, falls keine andere per siox_set_ontology() gesetzt worden sein sollte. */
 #define DEFAULT_ONTOLOGY "testontology"
 
 /** Haben wir initialise_ontology() bereits durchlaufen? */
@@ -94,28 +94,14 @@ siox_unregister_node( siox_unid unid )
 
 
 void
-siox_register_attribute( siox_unid              unid,
-                         const char *           key,
-                         enum siox_value_type   value_type,
-                         void *                 value )
+siox_register_attribute( siox_unid       unid,
+                         siox_dtid      dtid,
+                         const void *   value )
 {
     printf( "# UNID %ld registered the following additional attributes:\n",
         (*unid).id );
-    printf( "\t%s:\t", key );
-    switch ( value_type ){
-        case SIOX_TYPE_INTEGER:
-            printf( "%d.\n", *((int*) value) );
-            break;
-        case SIOX_TYPE_LONG:
-            printf( "%ld.\n", *((long*) value) );
-            break;
-        case SIOX_TYPE_FLOAT:
-            printf( "%f.\n", *((float*) value) );
-            break;
-        case SIOX_TYPE_STRING:
-            printf( "%s.\n", (char*) value );
-            break;
-    }
+    printf( "\t%s:\t", siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ) );
+    printf( "%s\n", siox_ont_data_to_string( dtid, value ) );
 }
 
 
@@ -145,54 +131,55 @@ siox_register_descriptor_map( siox_unid  unid,
 
 
 void
-siox_create_descriptor( siox_unid       unid,
+siox_create_descriptor( siox_aid        aid,
                         siox_dtid       dtid,
-                        const char *    descriptor )
+                        const void *    descriptor )
 {
-    printf( "\n= UNID %ld created descriptor >%s< of DTID %s.\n",
-        unid->id, descriptor, siox_ont_dtid_to_string( dtid ) );
+    printf( "\n= AID %ld reports creation of descriptor >%s< of DTID %s.\n",
+        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
 }
 
 
 void
-siox_send_descriptor( siox_unid     unid,
+siox_send_descriptor( siox_aid      aid,
                       const char *  child_swid,
                       siox_dtid     dtid,
-                      const char *  descriptor )
+                      const void *  descriptor )
 {
-    printf( "= UNID %ld sent descriptor >%s< of DTID %s to child node >%s<.\n",
-        unid->id, descriptor, siox_ont_dtid_to_string( dtid ), child_swid );
+    printf( "= AID %ld reports sending of descriptor >%s< of DTID %s to child node >%s<.\n",
+        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ), child_swid );
 }
 
 
 void
-siox_receive_descriptor( siox_unid      unid,
+siox_receive_descriptor( siox_aid       aid,
                          siox_dtid      dtid,
-                         const char *   descriptor )
+                         const void *   descriptor )
 {
-    printf( "\n= UNID %ld received descriptor >%s< of DTID %s.\n",
-        unid->id, descriptor, siox_ont_dtid_to_string( dtid ) );
+    printf( "\n= AID %ld reports reception of descriptor >%s< of DTID %s.\n",
+        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
 }
 
 
 void
-siox_map_descriptor( siox_unid      unid,
+siox_map_descriptor( siox_aid       aid,
                      siox_dmid      dmid,
-                     const char *   source_descriptor,
-                     const char *   target_descriptor )
+                     const void *   source_descriptor,
+                     const void *   target_descriptor )
 {
-    printf( "= UNID %ld applied DMID %ld: %s -> %s.\n",
-        (*unid).id, (*dmid).id, source_descriptor, target_descriptor );
+    printf( "= AID %ld reports application of DMID %ld: %p -> %p.\n",
+        (*aid).id, (*dmid).id, source_descriptor, target_descriptor );
+    /** @TODO Look up actual @em DTIDs from @em DMID. */
 }
 
 
 void
-siox_release_descriptor( siox_unid      unid,
+siox_release_descriptor( siox_aid       aid,
                          siox_dtid      dtid,
-                         const char *   descriptor )
+                         const void *   descriptor )
 {
-    printf( "= UNID %ld released descriptor >%s< of DTID %s.\n\n",
-        (*unid).id, descriptor, siox_ont_dtid_to_string( dtid ) );
+    printf( "= AID %ld reports release of descriptor >%s< of DTID %s.\n\n",
+        (*aid).id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
 }
 
 
@@ -232,30 +219,16 @@ siox_stop_activity( siox_aid    aid )
 void
 siox_report_activity( siox_aid              aid,
                       siox_dtid             dtid,
-                      const char *          descriptor,
+                      const void *          descriptor,
                       siox_mid              mid,
-                      enum siox_value_type  value_type,
                       void *                value,
                       const char *          details )
 {
     printf( "- AID %ld, identified by >%s< of DTID %s, was measured as follows:\n",
-        aid->id, descriptor, siox_ont_dtid_to_string( dtid ) );
+        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
     printf( "\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
-    switch ( value_type ){
-        case SIOX_TYPE_INTEGER:
-            printf( "%d\n", *((int*) value) );
-            break;
-        case SIOX_TYPE_LONG:
-            printf( "%ld\n", *((long*) value) );
-            break;
-        case SIOX_TYPE_FLOAT:
-            printf( "%f\n", *((float*) value) );
-            break;
-        case SIOX_TYPE_STRING:
-            printf( "%s\n", (char*) value );
-            break;
-    }
+    printf( "%s\n", siox_ont_metric_data_to_string( mid, value ) );
     if (details != NULL)
         printf( "\tNote:\t%s\n", details );
 }
@@ -276,7 +249,6 @@ siox_end_activity ( siox_aid    aid )
 void
 siox_report( siox_unid              unid,
              siox_mid               mid,
-             enum siox_value_type   value_type,
              void *                 value,
              const char *           details )
 {
@@ -284,20 +256,7 @@ siox_report( siox_unid              unid,
         (*unid).id );
     printf( "\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
-    switch ( value_type ){
-        case SIOX_TYPE_INTEGER:
-            printf( "%d\n", *((int*) value) );
-            break;
-        case SIOX_TYPE_LONG:
-            printf( "%ld\n", *((long*) value) );
-            break;
-        case SIOX_TYPE_FLOAT:
-            printf( "%f\n", *((float*) value) );
-            break;
-        case SIOX_TYPE_STRING:
-            printf( "%s\n", (char*) value );
-            break;
-    }
+    printf( "%s\n", siox_ont_metric_data_to_string( mid, value ) );
     if (details != NULL)
         printf( "\tNote:\t%s\n", details );
 
