@@ -110,10 +110,10 @@ main(){
     aid_all = siox_start_activity( unid, "Write whole file" );
 
     /* Report creation of a new descriptor - the file name */
-    siox_create_descriptor( unid, dtid_h5fn, hdf5_file_name );
+    siox_create_descriptor( aid_all, dtid_h5fn, &hdf5_file_name );
 
     /* Report the imminent transfer of the new descriptor to a node with SWID "HDF5" */
-    siox_send_descriptor( unid, "HFD5", dtid_h5fn, hdf5_file_name);
+    siox_send_descriptor( aid_all, "HFD5", dtid_h5fn, &hdf5_file_name);
 
     /* The actual call to HDF5 to create a file with the name "Datei.h5", returning a HDF5 file id */
     hdf5_file_id = H5Fcreate ( hdf5_file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
@@ -121,7 +121,7 @@ main(){
     /* Report the mapping of file name to file id,
        as we cannot know whether HDF5 is instrumented for and reporting to SIOX */
     sprintf( hdf5_file_id_s, "%d", (int) hdf5_file_id ); /* Turn foreign data type into string */
-    siox_map_descriptor( unid, dmid, hdf5_file_name, hdf5_file_id_s );
+    siox_map_descriptor( aid_all, dmid, &hdf5_file_name, &hdf5_file_id_s );
 
 
     /*
@@ -133,7 +133,7 @@ main(){
     aid_write = siox_start_activity( unid, "Write data" );
 
     /* Once again, a descriptor will be handed over; inform SIOX */
-    siox_send_descriptor( unid, "HDF5", dtid_h5id, hdf5_file_id_s );
+    siox_send_descriptor( aid_write, "HDF5", dtid_h5id, &hdf5_file_id_s );
 
     /* The actual call to create the file and write the dataset to it */
     hdf5_status = H5LTmake_dataset( hdf5_file_id, "/dset", 2, dims, H5T_NATIVE_INT, data );
@@ -153,7 +153,7 @@ main(){
         fprintf(stderr, "!!! Fehler beim Schreiben über HDF5! !!!\n");
 
     /* After closing the file, we will not need the file id descriptor anymore */
-    siox_release_descriptor( unid, dtid_h5id, hdf5_file_id_s );
+    siox_release_descriptor( aid_all, dtid_h5id, &hdf5_file_id_s );
 
     /* Now stop the activity covering the whole file access, too */
     siox_stop_activity( aid_all );
@@ -172,12 +172,12 @@ main(){
        As one is mapped to the other, we could attribute the data to either the file name or
        the file id descriptor; we'll do one each  */
     siox_report_activity( aid_write,
-                          dtid_h5id, hdf5_file_id_s,
-                          mid, SIOX_TYPE_INTEGER, &bytes_written,
+                          dtid_h5id, &hdf5_file_id_s,
+                          mid, &bytes_written,
                           NULL );
     siox_report_activity( aid_all,
-                          dtid_h5fn, hdf5_file_name,
-                          mid, SIOX_TYPE_INTEGER, &bytes_written,
+                          dtid_h5fn, &hdf5_file_name,
+                          mid, &bytes_written,
                           "Including opening & closing the file." );
 
 
@@ -192,7 +192,7 @@ main(){
      */
 
     /* Mark any descriptors left as unused */
-    siox_release_descriptor( unid, dtid_h5fn, hdf5_file_name );
+    siox_release_descriptor( aid_all, dtid_h5fn, &hdf5_file_name );
 
     /* Unregister node from SIOX */
     siox_unregister_node( unid );

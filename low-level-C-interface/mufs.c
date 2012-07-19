@@ -73,22 +73,22 @@ mufs_putfile( const char * filename, const char * contents )
     /*
      * SIOX - preliminary negotiations
      */
-    /* Report receiving a new descriptor */
-    siox_receive_descriptor( unid, dtid_fn, filename);
+    aid = siox_start_activity( unid, sBuffer );
 
+    /* Report receiving a new descriptor */
+    siox_receive_descriptor( aid, dtid_fn, &filename);
 
     /*
      * Open or, if necessary, create file via POSIX
      */
     sprintf( sBuffer, "Open file %s for writing.", filename );
-    aid = siox_start_activity( unid, sBuffer );
 
     fp = fopen( filename, "wt" );
 
     siox_end_activity( aid );
     /* Report the mapping of file name to file pointer */
     sprintf( fp_s, "%p", (void *) fp ); /* Turn foreign data type into string */
-    siox_map_descriptor( unid, dmid, filename, fp_s );
+    siox_map_descriptor( aid, dmid, &filename, &fp_s );
 
 
     /*
@@ -128,8 +128,8 @@ mufs_putfile( const char * filename, const char * contents )
         /* Report the end of the activity, any performance data gathered and close bookkeeping for it. */
         siox_stop_activity( aid );
         siox_report_activity( aid,
-                              dtid_fp, fp_s,
-                              mid, SIOX_TYPE_INTEGER, &bytes_to_write,
+                              dtid_fp, &fp_s,
+                              mid, &bytes_to_write,
                               NULL );
         siox_end_activity( aid );
     }
@@ -143,22 +143,24 @@ mufs_putfile( const char * filename, const char * contents )
 
     if( fclose( fp ) == EOF )
     {
+        siox_release_descriptor( aid, dtid_fp, &fp_s );
         siox_end_activity( aid );
-        siox_release_descriptor( unid, dtid_fp, fp_s );
 
         fprintf( stderr, "!!! Fehler beim Schließen der Datei %s! !!!\n", filename );
         return( 0 );
     }
 
-    siox_end_activity( aid );
+    siox_stop_activity( aid );
 
 
     /*
      * SIOX - final negotiations
      */
     /* Mark any descriptors left as unused */
-    siox_release_descriptor( unid, dtid_fp, fp_s );
-    siox_release_descriptor( unid, dtid_fn, filename );
+    siox_release_descriptor( aid, dtid_fp, &fp_s );
+    siox_release_descriptor( aid, dtid_fn, &filename );
+
+    siox_end_activity( aid );
 
 
     /* Return number of bytes successfully written */
