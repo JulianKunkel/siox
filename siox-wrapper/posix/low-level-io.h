@@ -3,6 +3,9 @@
  */
 
 #include <unistd.h>
+// Für readv
+#include <sys/uio.h>
+//
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
