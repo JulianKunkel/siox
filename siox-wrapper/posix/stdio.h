@@ -1,5 +1,6 @@
 /**
  * See: http://www.jedsoft.org/slang/doc/html/slangfun-14.html
+ * Kurzbeschreibungen hier hineinkopieren!
  */
 
 #include <stdio.h>
@@ -21,7 +22,7 @@ FILE *fopen(const char *path, const char *mode);
 int fclose(FILE *fp);
 
 //activity "fdopen"
-//reveive_descriptor pfd_t fd
+//receive_descriptor pfd_t fd
 //map_descriptor pfd_t fd filep_t ret
 FILE *fdopen(int fd, const char *mode);
 
@@ -36,6 +37,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream);
 //activity "fread"
 //receive_descriptor filep_t stream
 //report_activity size_t (size*nmemb)
+/* Hier splice ftello(). */
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 //activity "fwrite"
@@ -43,3 +45,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 //report_activity size_t (size*nmemb)
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
+
+
+
+/* ERGÄNZEN!!! */
