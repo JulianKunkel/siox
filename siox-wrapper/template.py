@@ -43,19 +43,19 @@ template = {
 	'final': ''
 },
 'register_metric': {
-	'variables': 'Name Description UnitType StorageType ScopeType',
-	'global': '''''',
-	'init': '''siox_register_metric( "%(Name)s", "%(Description)s", "%(UnitType)s", "%(StorageType)s", "%(ScopeType)s" );''',
+	'variables': 'Name Description UnitType StorageType ScopeType RetName',
+	'global': '''siox_mid %(RetName)s''',
+	'init': '''%(RetName)s = siox_register_metric( "%(Name)s", "%(Description)s", "%(UnitType)s", "%(StorageType)s", "%(ScopeType)s" );''',
     'before': '''''',
 	'after': '',
 	'final': ''
 },
 'activity': { 
-	'variables': 'Name Description',
-	'global': '''siox_aid %(Name)s;''',
-	'init': '''''',
-    'before': '''%(Name)s = siox_start_activity( global_unid, "%(Description)s" );''',
-	'after': 'siox_stop_activity( "%(Name)s" );',
+	'variables': 'Description',
+	'global': '''''',
+	'init': '''siox_aid local_aid;''',
+    'before': '''local_aid = siox_start_activity( global_unid, "%(Description)s" );''',
+	'after': 'siox_stop_activity( local_aid );',
 	'final': ''
 },
 'activity_start': {
@@ -83,19 +83,19 @@ template = {
 	'final': ''
 },
 'activity_report': {
-	'variables': 'ActivityId DescriptorId DescriptorName MapId ValueType Value Details',
+	'variables': 'ActivityId DescriptorId DescriptorName MetricId Value Details',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_report_activity(%(ActivityId)s, %(DescriptorId)s, %(DescriptorName)s, %(MapId)s, %(ValueType)s, %(Value)s, %(Details)s);',
+	'after': 'siox_report_activity(%(ActivityId)s, %(DescriptorId)s, %(DescriptorName)s, %(MetricId)s, %(Value)s, %(Details)s);',
 	'final': ''
 },
 'create_descriptor': {
 	'variables': 'Type DescriptorName',
 	'global': '''''',
-	'init': '''siox_create_descriptor( global_unid, "%(Type)s", "%(DescriptorName)s");''',
+	'init': '''''',
     'before': '''''',
-	'after': '',
+	'after': 'siox_create_descriptor( global_unid, "%(Type)s", "%(DescriptorName)s");',
 	'final': 'siox_release_descriptor( global_unid, "%(Type)s", "%(DescriptorName)s");'
 },
 'send_descriptor': {
@@ -120,6 +120,14 @@ template = {
 	'init': '''''',
     'before': '''siox_receive_descriptor( global_unid, %(Type)s, "%(Name)s" );''',
 	'after': '',
+	'final': ''
+},
+'release_descriptor': {
+	'variables': 'Type DescriptorName',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': 'siox_release_descriptor( global_unid, "%(Type)s", "%(DescriptorName)s");',
 	'final': ''
 },
 'splice_before': {
