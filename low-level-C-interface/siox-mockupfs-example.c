@@ -32,7 +32,7 @@ main(){
     siox_unid   unid;           /* This node's UNID */
     siox_dtid   dtid;           /* The DTID of the descriptor type we know, "FileName" */
     siox_aid    aid_write;      /* An AID for the write activity */
-    int         bytes_written;  /* A collector for performance data */
+    long        bytes_written;  /* A collector for performance data */
     siox_mid    mid;            /* The MID for our performance metric */
 
     /* Vars for handling our PID */
@@ -106,14 +106,14 @@ main(){
     /* Register the descriptor type we know */
     dtid = siox_register_datatype( "FileName", SIOX_STORAGE_STRING );
 
-    /* ...otherwise, register our performance metric with the ontology */
+    /* Register our performance metric with the ontology */
     mid = siox_register_metric( "Bytes Written",
                                 "",
                                 SIOX_UNIT_BYTES,
                                 SIOX_STORAGE_64_BIT_INTEGER,
                                 SIOX_SCOPE_SUM);
-    printf( "Registered performance metric %s with ontotology.\n",
-            "\"Bytes Written\"" );
+    printf( "Registered performance metric >%s< with ontology.\n",
+            "Bytes Written" );
 
 
     /*
@@ -139,7 +139,7 @@ main(){
         exit( EXIT_FAILURE );
     }
 
-    /* Stop the writing activity */
+    /* Stop the writing activity; this will stop the clock running on the activity, without closing it yet. */
     siox_stop_activity( aid_write );
 
 
@@ -150,6 +150,7 @@ main(){
 
     /* Report the data we collected. This could take place anytime between siox_start_activity()
        and siox_end_activity() and happen more than once per activity.  */
+    printf("Bytes Written: %ld.\n", bytes_written);
     siox_report_activity( aid_write,
                           dtid, &mufs_file_name,
                           mid, &bytes_written,
@@ -164,7 +165,7 @@ main(){
     /* Mark any descriptors left as unused */
     siox_release_descriptor( aid_write, dtid, &mufs_file_name );
 
-    /* Notify SIOX that all pertinent data has been sent and the activities can be closed */
+    /* Notify SIOX that all pertinent data has been sent and the activity can be closed */
     siox_end_activity( aid_write );
 
     /* Unregister node from SIOX */

@@ -22,7 +22,7 @@
  *
  * @return	If successful, the number of bytes written; otherwise, 0.
  */
-int mufs_putfile( const char * filename, const char * contents );
+long mufs_putfile( const char * filename, const char * contents );
 
 
 #endif
