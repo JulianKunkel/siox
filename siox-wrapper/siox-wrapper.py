@@ -420,7 +420,7 @@ class FunctionParser():
         # Call the cpp.
         # Use gcc instad of cpp, because cpp is broken on OS X >= Lion.
         # llvm-cpp doesn't strip comments on OS X >= Lion.
-        cppCommand = ['gcc', '-E']
+        cppCommand = ['cpp']
         cppCommand.extend(self.cppArgs)
         cppCommand.append(self.inputFile)
         cpp = subprocess.Popen(cppCommand,
@@ -785,12 +785,40 @@ class Writer():
             print('#include ', match, end='\n', file=output)
         print('\n', file=output)
 
+        print("static void sioxFinal() __attribute__((destructor));", file=output)
+        print("static void sioxInit() __attribute__((constructor));", file=output)
+
         # write all global-Templates
         for func in functions:
             for templ in func.usedTemplates:
                 if templ.output('global') != '':
                     print(templ.output('global'), file=output)
         print("", file=output)
+
+        print("static void sioxInit() {\n", file=output)
+        #print('\t', returntype, ' ret;', end='\n', sep='', file=output)
+        # write all init-templates
+        for func in functions:
+            for temp in func.usedTemplates:
+                outstr = temp.output('init').strip()
+                if outstr.strip() != '':
+                    print('\t', outstr, end='\n', sep='', file=output)
+
+            print(func.getDlsym(), file=output)
+            print(func.getDlsym())
+        print("}", file=output)
+
+        print("static void sioxFinal() {", file=output)
+        # write all final-functions        
+        for func in functions:
+            for temp in func.usedTemplates:
+                outstr = temp.output('final').strip()
+                if outstr.strip() != '':
+                    print('\t', outstr, end='\n', sep='', file=output)
+
+        print("dlclose(", dllib, ");", file=output)
+
+        print("}", file=output)        
 
         for func in functions:
             print(func.getDefinitionPointer(), file=output)
@@ -808,20 +836,6 @@ class Writer():
                 print('\t', returntype, ' ret;', end='\n', sep='',
                         file=output)
 
-            # is this the desired init-function?
-            if function.init:
-                print('void* dllib = dlopen(', dlsymLibPath,
-                    ', RTLD_LAZY', ');', file=output)
-
-                # write all init-templates
-                for func in functions:
-                    for temp in func.usedTemplates:
-                        outstr = temp.output('init').strip()
-                        if outstr.strip() != '':
-                            print('\t', outstr, end='\n', sep='', file=output)
-
-                    print(func.getDlsym(), file=output)
-
             # write the before-template for this function
             for temp in function.usedTemplates:
                 outstr = temp.output('before').strip()
@@ -835,17 +849,6 @@ class Writer():
             else:
                 print('\t', function.getCallPointer(), end=';\n', sep='',
                         file=output)
-
-            # is this the desired final-function?
-            if function.final:
-                # write all final-functions
-                for func in functions:
-                    for temp in func.usedTemplates:
-                        outstr = temp.output('final').strip()
-                        if outstr.strip() != '':
-                            print('\t', outstr, end='\n', sep='', file=output)
-
-                print("dlclose(", dllib, ");", file=output)
 
             # write all after-templates for this function
             for temp in function.usedTemplates:
