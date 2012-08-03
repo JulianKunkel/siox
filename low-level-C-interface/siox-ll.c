@@ -123,7 +123,7 @@ siox_register_descriptor_map( siox_unid  unid,
     dmid->id = current_dmid++;
 
 
-    printf( "# UNID %ld registered DMID %ld: %s -> %s.\n",
+    printf( "# UNID %ld registered DMID %ld: DTID %s -> DTID %s.\n",
         unid->id, dmid->id, siox_ont_dtid_to_string( source_dtid ), siox_ont_dtid_to_string( target_dtid ) );
 
     return( dmid );
@@ -169,7 +169,7 @@ siox_map_descriptor( siox_aid       aid,
 {
     printf( "= AID %ld reports application of DMID %ld: %p -> %p.\n",
         (*aid).id, (*dmid).id, source_descriptor, target_descriptor );
-    /** @TODO Look up actual @em DTIDs from @em DMID. */
+    /** @todo Look up actual @em DTIDs from @em DMID. */
 }
 
 

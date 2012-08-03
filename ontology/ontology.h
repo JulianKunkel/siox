@@ -117,6 +117,9 @@ siox_datatype siox_ont_find_datatype_by_dtid( siox_dtid dtid );
  * @param[in]   value   A pointer to the actual value.
  *
  * @returns     A human-readable string representation of the the value.
+ *
+ * @note		Strings to be passed as values must be defined as @c char*, @em not
+ * 				as @c char[], or a segmentation fault may result!!!
  */
 const char * siox_ont_data_to_string( siox_dtid dtid, const void * value );
 
@@ -181,6 +184,9 @@ siox_metric siox_ont_find_metric_by_mid( siox_mid mid );
  * @param[in]   value   A pointer to the actual value.
  *
  * @returns     A human-readable string representation of the the value.
+ *
+ * @note		Strings to be passed as values must be defined as @c char*, @em not
+ * 				as @c char[], or a segmentation fault may result!!!
  */
 const char * siox_ont_metric_data_to_string( siox_mid mid, const void * value );
 

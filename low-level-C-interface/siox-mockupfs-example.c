@@ -40,7 +40,7 @@ main(){
     char        pid_s[10];      /* A printable representation of pid */
 
     /* Vars for accessing MUFS */
-    char        mufs_file_name[] = "EECummings.mufs";
+    char*       mufs_file_name = "EECummings.mufs";
     char        data[] =    "as freedom is a breakfastfood\n"
                             "or truth can live with right and wrong\n"
                             "or molehills are from mountains made\n"

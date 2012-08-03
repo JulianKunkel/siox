@@ -1049,39 +1049,26 @@ siox_ont_data_to_string( siox_dtid dtid, const void * value )
     switch( dtType->storage )
     {
         case SIOX_STORAGE_32_BIT_INTEGER:
-            fprintf(stderr, "data_to_string: SIOX_STORAGE_32_BIT_INTEGER\n");
             sResult = to_string( "%d", *((const int *) value) );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
         case SIOX_STORAGE_64_BIT_INTEGER:
-            fprintf(stderr, "data_to_string: SIOX_STORAGE_64_BIT_INTEGER\n");
             sResult = to_string( "%ld", *((const long int *) value) );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
 
         case SIOX_STORAGE_FLOAT:
-            fprintf(stderr, "data_to_string: SIOX_STORAGE_FLOAT\n");
             sResult = to_string( "%f", *((const float *) value) );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
         case SIOX_STORAGE_DOUBLE:
-            fprintf(stderr, "data_to_string: SIOX_STORAGE_DOUBLE\n");
             sResult = to_string( "%f", *((const double *) value) );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
 
         case SIOX_STORAGE_STRING:
-            fprintf(stderr, "data_to_string: SIOX_STORAGE_STRING\n");
             sResult = to_string( "%s", *((const char* *) value) );
-            /*sResult = *((char**) value);*/
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
 
         case SIOX_STORAGE_UNASSIGNED:
         default:
-            fprintf(stderr, "data_to_string: SIOX_STORAGE_UNASSIGNED\n");
             sResult = to_string( "(Unknown data type)" );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
     }
 
@@ -1108,39 +1095,26 @@ siox_ont_metric_data_to_string( siox_mid mid, const void * value )
     switch( metric->storage )
     {
         case SIOX_STORAGE_32_BIT_INTEGER:
-            fprintf(stderr, "metric_data_to_string: SIOX_STORAGE_32_BIT_INTEGER\n");
             sResult = to_string( "%d", *((const int *) value) );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
         case SIOX_STORAGE_64_BIT_INTEGER:
-            fprintf(stderr, "metric_data_to_string: SIOX_STORAGE_64_BIT_INTEGER\n");
             sResult = to_string( "%ld", *((const long int *) value) );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
 
         case SIOX_STORAGE_FLOAT:
-            fprintf(stderr, "metric_data_to_string: SIOX_STORAGE_FLOAT\n");
             sResult = to_string( "%f", *((const float *) value) );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
         case SIOX_STORAGE_DOUBLE:
-            fprintf(stderr, "metric_data_to_string: SIOX_STORAGE_DOUBLE\n");
             sResult = to_string( "%f", *((const double *) value) );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
 
         case SIOX_STORAGE_STRING:
-            fprintf(stderr, "metric_data_to_string: SIOX_STORAGE_STRING\n");
             sResult = to_string( "%s", *((const char* *) value) );
-            // sResult = (char *) value;
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
 
         case SIOX_STORAGE_UNASSIGNED:
         default:
-            fprintf(stderr, "metric_data_to_string: SIOX_STORAGE_UNASSIGNED\n");
             sResult = to_string( "(Unknown data type)" );
-            fprintf(stderr, "Result: %s.\n", sResult);
             break;
     }
 

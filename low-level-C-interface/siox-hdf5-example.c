@@ -38,14 +38,14 @@ main(){
     siox_aid    aid_write;      /* An AID for the write activity only */
     siox_aid    aid_all;        /* Another AID for an activity encompassing the whole file access */
     siox_mid    mid;            /* An MID for the performance metric we want to measure */
-    int         bytes_written;  /* A collector for performance data */
+    long int    bytes_written;  /* A collector for performance data */
 
     /* Vars for handling our PID */
     pid_t       pid;
     char        pid_s[10];      /* A printable representation of pid */
 
     /* Vars for accessing HDF5 */
-    char        hdf5_file_name[] = "Datei.h5";
+    char*       hdf5_file_name = "Datei.h5";
     hid_t       hdf5_file_id;
     char        hdf5_file_id_s[10]; /* A printable representation of hdf5_file_id */
     hsize_t     dims[2]={2,3};
@@ -58,8 +58,10 @@ main(){
      * Info Message
      * ============
      */
-     printf( "SIOX HDF5 Example\n" );
-     printf( "=================\n\n" );
+     printf( "\n"
+             "SIOX HDF5 Example\n"
+             "=================\n"
+             "\n" );
 
 
     /*
@@ -97,7 +99,7 @@ main(){
                                 SIOX_UNIT_BYTES,
                                 SIOX_STORAGE_64_BIT_INTEGER,
                                 SIOX_SCOPE_SUM );
-    printf( "Registered performance metric 'Bytes Written' with ontotology.\n" );
+    printf( "Registered performance metric >Bytes Written< with ontology.\n" );
 
 
     /*
@@ -120,7 +122,7 @@ main(){
 
     /* Report the mapping of file name to file id,
        as we cannot know whether HDF5 is instrumented for and reporting to SIOX */
-    sprintf( hdf5_file_id_s, "%d", (int) hdf5_file_id ); /* Turn foreign data type into string */
+    sprintf( hdf5_file_id_s, "%ld", (long int) hdf5_file_id ); /* Turn foreign data type into string */
     siox_map_descriptor( aid_all, dmid, &hdf5_file_name, &hdf5_file_id_s );
 
 

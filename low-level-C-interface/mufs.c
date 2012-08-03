@@ -49,9 +49,9 @@ long
 mufs_putfile( const char * filename, const char * contents )
 {
     FILE *          fp;
-    long            bytes_to_write;
-    long            total_bytes_to_write;
-    long            total_bytes_written;
+    long int        bytes_to_write;
+    long int        total_bytes_to_write;
+    long int        total_bytes_written;
     int             block;
     const char *    pData;
     const char *    pEnd;
