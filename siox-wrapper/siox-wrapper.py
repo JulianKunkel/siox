@@ -107,12 +107,12 @@ class Function():
     def getDefinition(self):
 
         if self.definition == '':
-            return '%s %s (%s)' % (self.type, self.name,
-                ', '.join('  '.join([param.type, param.name])
+            return '%s %s(%s)' % (self.type, self.name,
+                ', '.join(' '.join([param.type, param.name])
                 for param in self.parameters))
 
         else:
-            return '%s %s %s' % (self.type, self.name, self.definition)
+            return '%s %s%s' % (self.type, self.name, self.definition)
 
     ##
     # @brief Generate the function call prefixed with __real_.
@@ -326,7 +326,7 @@ class FunctionParser():
         ## This tuple of filter words searches for reseverd words in the
         ## function return type.
         # Some typedefs can look like function a definition the regex.
-        self.Filter = ('typedef')
+        self.Filter = ('typedef','//','#')
 
     ##
     # @brief This function parses the header file.
@@ -349,9 +349,9 @@ class FunctionParser():
 
         for funcDef in iterFuncDef:
 
-            # filter typedefs
-            if funcDef.group(1).find(self.Filter) != -1:
-                continue
+            for element in self.Filter:
+                if funcDef.group(1).find(element) == -1:
+                    break
 
             # At this point we are quite certain, we found a function definition
             function = Function()
@@ -402,7 +402,7 @@ class FunctionParser():
                     function.parameters.append(parameterObject)
 
             functions.append(function)
-
+            print (str(functions))
         return functions
 
     ##
@@ -417,19 +417,23 @@ class FunctionParser():
     # is then passed to the function parse.
     def parseFile(self):
 
-        # Call the cpp.
-        # Use gcc instad of cpp, because cpp is broken on OS X >= Lion.
-        # llvm-cpp doesn't strip comments on OS X >= Lion.
-        cppCommand = ['cpp']
-        cppCommand.extend(self.cppArgs)
-        cppCommand.append(self.inputFile)
-        cpp = subprocess.Popen(cppCommand,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        string, error = cpp.communicate()
+        string = ''
 
-        if error != '':
-            print('ERROR: CPP error:\n', error, file=sys.stderr)
-            sys.exit(1)
+        if self.blankHeader:
+            cppCommand = ['cpp']
+            cppCommand.extend(self.cppArgs)
+            cppCommand.append(self.inputFile)
+            cpp = subprocess.Popen(cppCommand,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            string, error = cpp.communicate()
+
+            if error != '':
+                print('ERROR: CPP error:\n', error, file=sys.stderr)
+                sys.exit(1)
+
+        else:
+            stringFH = open(self.inputFile)
+            string = stringFH.read()
 
         functions = self.parse(string)
         return functions
@@ -528,6 +532,8 @@ class CommandParser():
 
             else:
                 #If a function is found append the found instructions to the function object.
+                print (currentFunction.getIdentifier())
+                print (functions[index].getIdentifier())
                 if currentFunction.getIdentifier() == functions[index].getIdentifier():
                     if commandName != '':
                         templateList.append(templateClass(commandName, commandArgs))
@@ -809,7 +815,7 @@ class Writer():
         print("}", file=output)
 
         print("static void sioxFinal() {", file=output)
-        # write all final-functions        
+        # write all final-functions
         for func in functions:
             for temp in func.usedTemplates:
                 outstr = temp.output('final').strip()
@@ -818,7 +824,7 @@ class Writer():
 
         print("dlclose(", dllib, ");", file=output)
 
-        print("}", file=output)        
+        print("}", file=output)
 
         for func in functions:
             print(func.getDefinitionPointer(), file=output)
