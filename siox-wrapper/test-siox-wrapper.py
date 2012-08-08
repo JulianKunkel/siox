@@ -18,9 +18,9 @@ class testParameter(unittest.TestCase):
 
     def setUp(self):
 
-       self.parameter = sioxWrapper.Parameter()
-       self.parameter.type = 'int'
-       self.parameter.name = 'foo'
+        self.parameter = sioxWrapper.Parameter()
+        self.parameter.type = 'int'
+        self.parameter.name = 'foo'
 
     ##
     # @brief Test the Parameter class.
@@ -116,6 +116,15 @@ class testFunction(unittest.TestCase):
             '__real_foo()')
         self.assertEqual(functionGetCallReal,
             '__real_bar(param1, param2)')
+
+
+    def testGetDefinitionReal(self):
+
+        functionDefinitionReal = self.function.getDefinitionReal()
+
+        self.assertEqual(functionDefinitionReal,
+            'int * __real_bar(const char param1, int * param2)')
+
 
 if __name__ == '__main__':
     unittest.main()
