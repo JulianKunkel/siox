@@ -145,8 +145,8 @@ class Function():
     def getDefinitionReal(self):
 
         if self.definition == '':
-            return '%s __real_%s (%s)' % (self.type, self.name,
-                ', '.join('  '.join([param.type, param.name])
+            return '%s __real_%s(%s)' % (self.type, self.name,
+                ', '.join(' '.join([param.type, param.name])
                 for param in self.parameters))
 
         else:
@@ -164,12 +164,12 @@ class Function():
     def getDefinitionWrap(self):
 
         if self.definition == '':
-            return '%s __wrap_%s (%s)' % (self.type, self.name,
-                ', '.join('  '.join([param.type, param.name])
+            return '%s __wrap_%s(%s)' % (self.type, self.name,
+                ', '.join(' '.join([param.type, param.name])
                 for param in self.parameters))
 
         else:
-            return '%s __warp_%s %s' % (self.type, self.name, self.definition)
+            return '%s __warp_%s%s' % (self.type, self.name, self.definition)
 
     ##
     # @brief Generate the function call with a function pointer for dlsym.
