@@ -97,13 +97,25 @@ class testFunction(unittest.TestCase):
         self.assertEqual(functionCall, 'bar(param1, param2)')
 
     ##
-    #@brief Test the get getDefintion function of the Function class.
+    # @brief Test the get getDefintion function of the Function class.
     def testGetDefinition(self):
 
         functionDefinition = self.function.getDefinition()
 
         self.assertEqual(functionDefinition,
             'int * bar(const char param1, int * param2)')
+
+    ##
+    # @brief Test the getCallReal function of the Function class.
+    def testGetCallReal(self):
+
+        functionGetCallReal = self.function.getCallReal()
+        functionVoidGetCallReal = self.functionVoid.getCallReal()
+
+        self.assertEqual(functionVoidGetCallReal,
+            '__real_foo()')
+        self.assertEqual(functionGetCallReal,
+            '__real_bar(param1, param2)')
 
 if __name__ == '__main__':
     unittest.main()
