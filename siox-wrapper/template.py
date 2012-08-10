@@ -1,11 +1,11 @@
 template = {
-'register_node': {
-	'variables': 'HWID SWID OntName',
+'interfaceName': {
+	'variables': 'SWID',
 	'global': '''siox_unid global_unid;
                  char global_pid;''',
     'init': '''sprintf( &global_pid, "%%d", getpid() );
-               global_unid = siox_register_node("%(HWID)s", "%(SWID)s", &global_pid);
-               siox_set_ontology("%(OntName)s");''',
+               global_unid = siox_register_node("TODO", "%(SWID)s", &global_pid);
+               siox_set_ontology("OntologyName");''',
 	'before': '',
 	'after': '',
 	'final': 'siox_unregister_node(global_unid);'
@@ -29,7 +29,7 @@ template = {
 'register_datatype': { 
 	'variables': 'Name MinStorage RetName',
 	'global': '''siox_dtid %(RetName)s;''',
-	'init': '''%(RetName)s = siox_register_datatype( "%(Name)s", %(MinStorage)s );''',
+	'init': '''%(RetName)s = siox_register_datatype( %(Name)s, %(MinStorage)s );''',
     'before': '''''',
 	'after': '',
 	'final': ''
@@ -45,7 +45,7 @@ template = {
 'register_metric': {
 	'variables': 'Name Description UnitType StorageType ScopeType RetName',
 	'global': '''siox_mid %(RetName)s''',
-	'init': '''%(RetName)s = siox_register_metric( "%(Name)s", "%(Description)s", "%(UnitType)s", "%(StorageType)s", "%(ScopeType)s" );''',
+	'init': '''%(RetName)s = siox_register_metric( %(Name)s, %(Description)s, %(UnitType)s, %(StorageType)s, %(ScopeType)s );''',
     'before': '''''',
 	'after': '',
 	'final': ''
@@ -53,9 +53,11 @@ template = {
 'activity': { 
 	'variables': 'Description',
 	'global': '''''',
-	'init': '''siox_aid local_aid;''',
-    'before': '''local_aid = siox_start_activity( global_unid, "%(Description)s" );''',
-	'after': 'siox_stop_activity( local_aid );',
+	'init': '''''',
+    'before': '''siox_aid local_aid = siox_start_activity( global_unid, "%(Description)s" );''',
+	'after': '''siox_stop_activity( local_aid );
+			  siox_end_activity( local_aid );
+			  ''',
 	'final': ''
 },
 'activity_start': {
@@ -95,8 +97,8 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_create_descriptor( global_unid, "%(Type)s", "%(DescriptorName)s");',
-	'final': 'siox_release_descriptor( global_unid, "%(Type)s", "%(DescriptorName)s");'
+	'after': 'siox_create_descriptor( global_unid, %(Type)s, %(DescriptorName)s);',
+	'final': 'siox_release_descriptor( global_unid, %(Type)s, %(DescriptorName)s");'
 },
 'send_descriptor': {
 	'variables': 'TargetSWID Type DescriptorName',
@@ -118,7 +120,7 @@ template = {
 	'variables': 'Type Name',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_receive_descriptor( global_unid, %(Type)s, "%(Name)s" );''',
+    'before': '''siox_receive_descriptor( global_unid, %(Type)s, %(Name)s );''',
 	'after': '',
 	'final': ''
 },
@@ -127,7 +129,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_release_descriptor( global_unid, "%(Type)s", "%(DescriptorName)s");',
+	'after': 'siox_release_descriptor( global_unid, %(Type)s, %(DescriptorName)s);',
 	'final': ''
 },
 'splice_before': {
