@@ -144,5 +144,25 @@ class testFunction(unittest.TestCase):
         self.assertEqual(functionCallPointer,
             '(__real_bar)(param1, param2)')
 
+    ##
+    # @brief Test the getDefinitionPointer function of the Function class.
+    def testGetDefintionPointer(self):
+
+        functionDefinitionPointer = self.function.getDefinitionPointer()
+
+        self.assertEqual(functionDefinitionPointer,
+            'int * (*__real_bar) (const char param1, int * param2);')
+
+    ##
+    # @brief Test the getDlsym function of the Function class.
+    def testGetDlsym(self):
+
+        functionGetDlsym = self.function.getDlsym()
+
+        self.assertEqual(functionGetDlsym,
+            '__real_bar = (int * (*) (const char param1, int * param2)) dlsym(dllib, (const char*) "bar");')
+
+
 if __name__ == '__main__':
     unittest.main()
+
