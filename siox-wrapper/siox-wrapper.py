@@ -185,7 +185,7 @@ class Function():
         if len(self.parameters) == 1:
             if self.parameters[0].name == 'void':
                 return '(__real_*%s)()' % (self.name)
-        return '( __real_%s)(%s)' % (self.name,
+        return '(__real_%s)(%s)' % (self.name,
             ', '.join(paramName.name for paramName in self.parameters))
 
     ##
