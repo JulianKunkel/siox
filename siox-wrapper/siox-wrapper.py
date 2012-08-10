@@ -244,7 +244,7 @@ class Function():
     # are stored in.
     def getIdentifier(self):
 
-        identifier = '%s %s(%s);' % (self.type, self.name,
+        identifier = '%s%s(%s);' % (self.type, self.name,
                 ''.join(''.join([param.type, param.name]) for param in self.parameters))
 
         return re.sub('[,\s]', '', identifier)
