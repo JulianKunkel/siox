@@ -126,8 +126,8 @@ class testFunction(unittest.TestCase):
         self.assertEqual(functionDefinitionReal,
             'int * __real_bar(const char param1, int * param2)')
 
-##
-# @breif Test the getDefinitonWeap function of the Function class.
+    ##
+    # @breif Test the getDefinitonWeap function of the Function class.
     def testGetDefinitonWrap(self):
 
         functionDefinitionWrap = self.function.getDefinitionWrap()
@@ -135,6 +135,14 @@ class testFunction(unittest.TestCase):
         self.assertEqual(functionDefinitionWrap,
             'int * __wrap_bar(const char param1, int * param2)')
 
+    ##
+    # @breif Test the getCallPointer function of the Function class.
+    def testGetCallPointer(self):
+
+        functionCallPointer = self.function.getCallPointer()
+
+        self.assertEqual(functionCallPointer,
+            '(__real_bar)(param1, param2)')
 
 if __name__ == '__main__':
     unittest.main()
