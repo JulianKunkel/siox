@@ -568,6 +568,7 @@ class templateClass():
         self.before = templateDict['before']
         self.after = templateDict['after']
         self.final = templateDict['final']
+        self.cleanup = templateDict['cleanup']
 
     ##
     # @brief Reads the parameters and generates the needed output
@@ -632,6 +633,8 @@ class templateClass():
             return self.after % self.parameters
         elif (type == 'final'):
             return self.final % self.parameters
+        elif (type == 'cleanup'):
+            return self.cleanup % self.parameters
         else:
             # Error
             print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
@@ -758,6 +761,12 @@ class Writer():
                 if outstr != '':
                     print('\t', outstr, end='\n', sep='', file=output)
 
+            # write all cleanup-templates for this function
+            for temp in function.usedTemplates:
+                outstr = temp.output('cleanup').strip()
+                if outstr != '':
+                    print('\t', outstr, end='\n', sep='', file=output)
+
             # write the return statement and close the function
             if returntype != "void":
                 print('\treturn ret;\n}', end='\n\n', file=output)
@@ -859,6 +868,12 @@ class Writer():
             # write all after-templates for this function
             for temp in function.usedTemplates:
                 outstr = temp.output('after').strip()
+                if outstr != '':
+                    print('\t', outstr, end='\n', sep='', file=output)
+
+            # write all after-templates for this function
+            for temp in function.usedTemplates:
+                outstr = temp.output('cleanup').strip()
                 if outstr != '':
                     print('\t', outstr, end='\n', sep='', file=output)
 
