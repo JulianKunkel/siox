@@ -162,6 +162,15 @@ class testFunction(unittest.TestCase):
         self.assertEqual(functionGetDlsym,
             '__real_bar = (int * (*) (const char param1, int * param2)) dlsym(dllib, (const char*) "bar");')
 
+    ##
+    # @brief Test the getIdentifer function of the Function class.
+    def testGetIdentifier(self):
+
+        functionGetIdentifier = self.function.getIdentifier()
+
+        self.assertEqual(functionGetIdentifier,
+            'int*bar(constcharparam1int*param2);')
+
 
 if __name__ == '__main__':
     unittest.main()
