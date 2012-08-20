@@ -476,33 +476,40 @@ class CommandParser():
     #
     # Parses a instrumented header file and adds the instrumentation instructions
     # to the functions inside the list of functions an returns the new list.
-    def parse(self, functions):
+    def parse(self):
 
         functionParser = FunctionParser(self.options)
-
         avalibalCommands = template.keys()
         input = open(self.inputFile, 'r')
         inputLines = input.readlines()
-        index = 0
         commandName = ''
         commandArgs = ''
         templateList = []
         currentFunction = ''
+        functions = []
+        final = False
+        init = False
+
+        #strip comments
+        for line in inputLines:
+            if re.search('^\s*#', line):
+                line = ''
 
         # Iterate over every line and search for instrumentation instructions.
-        for line in inputLines:
+        for iTuple in enumerate(inputLines):
 
+            #enumerate in all its wisdom returns a tuple
+            i = iTuple[0]
 
-
-            match = self.commandRegex.match(line)
+            match = self.commandRegex.match(inputLines[i])
             if (match):
                 # Search for init or final sections to define init or final
                 # functions
                 if match.group(1) == 'init':
-                    functions[index].init = True
+                    init = True
 
                 elif match.group(1) == 'final':
-                    functions[index].final = True
+                    final = True
 
                 elif match.group(1) in avalibalCommands:
                     # If a new command name is found and a old one is still
@@ -526,21 +533,35 @@ class CommandParser():
                     commandArgs = match.group(2)
 
             else:
-                currentFunction = functionParser.parseString(line)
+                j = i
+                functionString = ''
+
+                while not re.search('^\s*//', inputLines[j]):
+                    if j >= len(inputLines) - 1:
+                        break
+
+                    functionString += inputLines[j]
+                    j += 1
+
+                print (functionString)
+                currentFunction = functionParser.parseString(functionString)
                 if len(currentFunction) == 1:
                     currentFunction = currentFunction[0]
                 else:
-                    currentFunction = Function()
-
+                    continue
                 #If a function is found append the found instructions to the function object.
-                if currentFunction.getIdentifier() == functions[index].getIdentifier():
-                    if commandName != '':
-                        templateList.append(templateClass(commandName, commandArgs))
-                        functions[index].usedTemplates = templateList[:]
-                        templateList = []
-                        commandName = ''
-                        commandArgs = ''
-                    index = index + 1
+
+                if commandName != '':
+                    templateList.append(templateClass(commandName, commandArgs))
+                    currentFunction.usedTemplates = templateList[:]
+                    currentFunction.init = init
+                    currentFunction.final = final
+                    functions.append(currentFunction)
+                    templateList = []
+                    commandName = ''
+                    commandArgs = ''
+                    final = False
+                    init = False
 
         return functions
 
@@ -899,14 +920,13 @@ def main():
     functionParser = FunctionParser(options)
     outputWriter = Writer(options)
 
-    functions = functionParser.parseFile()
-
     if options.blankHeader:
+        functions = functionParser.parseFile()
         outputWriter.headerFile(functions)
 
     else:
         commandParser = CommandParser(options)
-        functions = commandParser.parse(functions)
+        functions = commandParser.parse()
         if options.style == "wrap":
             outputWriter.sourceFileWrap(functions)
         else:
