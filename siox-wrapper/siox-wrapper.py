@@ -830,6 +830,9 @@ class Writer():
                     print(templ.output('global'), file=output)
         print("", file=output)
 
+        for func in functions:
+            print(func.getDefinitionPointer(), file=output)
+
         print("static void sioxInit() {\n", file=output)
         #print('\t', returntype, ' ret;', end='\n', sep='', file=output)
         # write all init-templates
@@ -854,9 +857,6 @@ class Writer():
         print("dlclose(", dllib, ");", file=output)
 
         print("}", file=output)
-
-        for func in functions:
-            print(func.getDefinitionPointer(), file=output)
 
         for function in functions:
 
