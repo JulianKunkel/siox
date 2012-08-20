@@ -348,12 +348,17 @@ class FunctionParser():
         iterFuncDef = self.regexFuncDef.finditer(string)
 
         for funcDef in iterFuncDef:
+            filtered = False
 
             for element in self.Filter:
-                if funcDef.group(1).find(element) == -1:
-                    break
+                if funcDef.group(1).find(element) != -1:
+                    filtered = True
 
             # At this point we are quite certain, we found a function definition
+
+            if filtered is True:
+                continue
+
             function = Function()
 
             # Extract the type an name form the match object.
@@ -402,7 +407,6 @@ class FunctionParser():
                     function.parameters.append(parameterObject)
 
             functions.append(function)
-            print (str(functions))
         return functions
 
     ##
@@ -419,21 +423,16 @@ class FunctionParser():
 
         string = ''
 
-        if self.blankHeader:
-            cppCommand = ['cpp']
-            cppCommand.extend(self.cppArgs)
-            cppCommand.append(self.inputFile)
-            cpp = subprocess.Popen(cppCommand,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            string, error = cpp.communicate()
+        cppCommand = ['cpp']
+        cppCommand.extend(self.cppArgs)
+        cppCommand.append(self.inputFile)
+        cpp = subprocess.Popen(cppCommand,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        string, error = cpp.communicate()
 
-            if error != '':
-                print('ERROR: CPP error:\n', error, file=sys.stderr)
-                sys.exit(1)
-
-        else:
-            stringFH = open(self.inputFile)
-            string = stringFH.read()
+        if error != '':
+            print('ERROR: CPP error:\n', error, file=sys.stderr)
+            sys.exit(1)
 
         functions = self.parse(string)
         return functions
@@ -493,11 +492,7 @@ class CommandParser():
         # Iterate over every line and search for instrumentation instructions.
         for line in inputLines:
 
-            currentFunction = functionParser.parseString(line)
-            if len(currentFunction) == 1:
-                currentFunction = currentFunction[0]
-            else:
-                currentFunction = Function()
+
 
             match = self.commandRegex.match(line)
             if (match):
@@ -531,9 +526,13 @@ class CommandParser():
                     commandArgs = match.group(2)
 
             else:
+                currentFunction = functionParser.parseString(line)
+                if len(currentFunction) == 1:
+                    currentFunction = currentFunction[0]
+                else:
+                    currentFunction = Function()
+
                 #If a function is found append the found instructions to the function object.
-                print (currentFunction.getIdentifier())
-                print (functions[index].getIdentifier())
                 if currentFunction.getIdentifier() == functions[index].getIdentifier():
                     if commandName != '':
                         templateList.append(templateClass(commandName, commandArgs))
