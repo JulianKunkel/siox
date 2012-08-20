@@ -830,6 +830,8 @@ class Writer():
                     print(templ.output('global'), file=output)
         print("", file=output)
 
+        print("char* dllib =", dllib, file=output)
+
         for func in functions:
             print(func.getDefinitionPointer(), file=output)
 
@@ -854,7 +856,7 @@ class Writer():
                 if outstr.strip() != '':
                     print('\t', outstr, end='\n', sep='', file=output)
 
-        print("dlclose(", dllib, ");", file=output)
+        print("dlclose(dllib);", file=output)
 
         print("}", file=output)
 
