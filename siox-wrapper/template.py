@@ -175,7 +175,3 @@ ForEachAfter = ""
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 includes = ["<stdio.h>", "<stdlib.h>", "<hdf5.h>", "\"siox-ll.h\""]
-
-dlsymLibPath = "/usr/local/"
-
-dllib = "libhdf5.dylib"
