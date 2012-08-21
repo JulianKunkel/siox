@@ -203,11 +203,11 @@ class Function():
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
                 for parameter in self.parameters)
 
-            return ('%s (*__real_%s) (%s);' % (self.type, self.name, parameters))
+            return ('static %s (*__real_%s) (%s);' % (self.type, self.name, parameters))
 
         else:
 
-            return ('%s (*__real_%s) (%s);' % (self.type, self.name,
+            return ('static %s (*__real_%s) (%s);' % (self.type, self.name,
                 self.definition))
 
     ##
@@ -810,9 +810,12 @@ class Writer():
     #
     # @param functions A list of function-objects to write
     def sourceFileDLSym(self, functions):
+        #TODO: HEADER
+
         # open the output file for writing
         output = open(self.outputFile, 'w')
 
+        print('#DEFINE _GNU_SOURCE', file=output)
         print('#include <dlfcn.h>\n', file=output)
 
         # write all needed includes
@@ -830,14 +833,12 @@ class Writer():
                     print(templ.output('global'), file=output)
         print("", file=output)
 
-        print("char* dllib =", dllib, ';', file=output)
+        print("static char* dllib = RTLD_NEXT;", file=output)
 
         for func in functions:
             print(func.getDefinitionPointer(), file=output)
 
-        print("static void sioxInit() {\n", file=output)
-        #print('\t', returntype, ' ret;', end='\n', sep='', file=output)
-        print('dlopen("', dlsymLibPath+dllib,'", RTLD_NEXT);', file=output)
+        print("\nstatic void sioxInit() {\n", file=output)
         # write all init-templates
         for func in functions:
             for temp in func.usedTemplates:
@@ -849,15 +850,13 @@ class Writer():
             print(func.getDlsym())
         print("}", file=output)
 
-        print("static void sioxFinal() {", file=output)
+        print("\nstatic void sioxFinal() {", file=output)
         # write all final-functions
         for func in functions:
             for temp in func.usedTemplates:
                 outstr = temp.output('final').strip()
                 if outstr.strip() != '':
                     print('\t', outstr, end='\n', sep='', file=output)
-
-        print("dlclose(dllib);", file=output)
 
         print("}", file=output)
 
