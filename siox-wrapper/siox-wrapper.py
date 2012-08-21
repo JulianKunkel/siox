@@ -831,7 +831,7 @@ class Writer():
                     print(templ.output('global'), file=output)
         print("", file=output)
 
-        print("char* dllib =", dllib, file=output)
+        print("char* dllib =", dllib, ';', file=output)
 
         for func in functions:
             print(func.getDefinitionPointer(), file=output)

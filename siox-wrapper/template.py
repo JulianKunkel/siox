@@ -176,6 +176,6 @@ throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 includes = ["<stdio.h>", "<stdlib.h>", "<hdf5.h>", "\"siox-ll.h\""]
 
-dlsymLibPath = "\"/usr/local/\""
+dlsymLibPath = "/usr/local/"
 
-dllib = "\"libhdf5.dylib\""
+dllib = "libhdf5.dylib"
