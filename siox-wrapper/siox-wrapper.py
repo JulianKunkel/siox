@@ -403,7 +403,6 @@ class FunctionParser():
 
                     parameterObject.name = parameterName
                     parameterObject.type = parameterType
-
                     function.parameters.append(parameterObject)
 
             functions.append(function)
@@ -529,8 +528,9 @@ class CommandParser():
                         print("ERROR: Command not known: ", match.group(1), file=sys.stderr)
                         sys.exit(1)
 
-                    commandArgs = match.group(1)
-                    commandArgs = match.group(2)
+                    commandArgs += match.group(1)
+                    commandArgs += match.group(2)
+
 
             else:
                 j = i
@@ -543,12 +543,13 @@ class CommandParser():
                     functionString += inputLines[j]
                     j += 1
 
-                print (functionString)
-                currentFunction = functionParser.parseString(functionString)
-                if len(currentFunction) == 1:
-                    currentFunction = currentFunction[0]
-                else:
+                i = j
+                currentFunctions = functionParser.parseString(functionString)
+
+                if len(currentFunctions) == 0:
                     continue
+
+                currentFunction = currentFunctions[0]
                 #If a function is found append the found instructions to the function object.
 
                 if commandName != '':
@@ -556,7 +557,7 @@ class CommandParser():
                     currentFunction.usedTemplates = templateList[:]
                     currentFunction.init = init
                     currentFunction.final = final
-                    functions.append(currentFunction)
+                    functions.extend(currentFunctions)
                     templateList = []
                     commandName = ''
                     commandArgs = ''
@@ -846,7 +847,6 @@ class Writer():
                     print('\t', outstr, end='\n', sep='', file=output)
 
             print(func.getDlsym(), file=output)
-            print(func.getDlsym())
         print("}", file=output)
 
         print("static void sioxFinal() {", file=output)
