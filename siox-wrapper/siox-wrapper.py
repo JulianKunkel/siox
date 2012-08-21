@@ -837,7 +837,7 @@ class Writer():
 
         print("static void sioxInit() {\n", file=output)
         #print('\t', returntype, ' ret;', end='\n', sep='', file=output)
-        print('dlopen(', dlsymLibPath+dllib,', RTLD_NEXT);')
+        print('dlopen("', dlsymLibPath+dllib,'", RTLD_NEXT);', file=output)
         # write all init-templates
         for func in functions:
             for temp in func.usedTemplates:
