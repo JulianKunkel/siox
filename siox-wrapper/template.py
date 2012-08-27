@@ -174,4 +174,4 @@ forEachAfter = ""
 
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
-includes = ["<stdio.h>", "<stdlib.h>", "<hdf5.h>", "\"siox-ll.h\""]
+includes = []
