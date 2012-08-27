@@ -466,7 +466,7 @@ class CommandParser():
         self.inputFile = options.inputFile
         ## This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*(.+?)\s+(.*)')
-
+        self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\']+)\s*')
         self.options = options
 
     ##
@@ -498,6 +498,13 @@ class CommandParser():
 
         #strip comments
         for line in inputLines:
+
+            match = self.includeRegex.match(line)
+            if match:
+                include = match.group(1)
+                if include not in includes:
+                    includes.append(include)
+
             if re.search('^\s*#', line):
                 line = ''
 
@@ -758,7 +765,7 @@ class Writer():
         for function in functions:
             # write function signature
 
-            print(function.type, ' __wrap_', function.getDefinitionWrap(),
+            print(function.getDefinitionWrap(),
                     end='\n{\n', sep='', file=output)
 
             # a variable to save the return-value
@@ -817,7 +824,6 @@ class Writer():
     #
     # @param functions A list of function-objects to write
     def sourceFileDLSym(self, functions):
-        #TODO: HEADER
 
         # open the output file for writing
         output = open(self.outputFile, 'w')
