@@ -8,8 +8,12 @@ import sys
 import argparse
 import subprocess
 # import the template
-from template import *
 
+throwaway = None
+forEachAfter = None
+forEachBefore = None
+includes = None
+template = None
 
 ##
 # @brief Generate and handle the command line parsing.
@@ -41,17 +45,28 @@ from a other header file.''')
         dest='cppArgs', help='''Pass arguments to the cpp.''')
 
         argParser.add_argument('--style', '-s',
-        action='store', default='wrap', dest='style',
+        action='store', default='dlsym', dest='style',
         choices=['wrap', 'dlsym'],
         help='''Choose which output-style to use.''')
 
         argParser.add_argument('inputFile', default=None,
         help='Source or header file to parse.')
 
+        argParser.add_argument('--template', '-t',
+            action='store', default='./template.py', dest='template',
+            help='Provide an alternative template.')
         args = argParser.parse_args()
 
+        from template import *
         if args.outputFile:
             args.outputFile = args.outputFile[0]
+
+        __template = __import__(options.template)
+        throwaway = __template.throwaway
+        forEachBefore = __template.forEachBefore
+        forEachAfter = __template.forEachAfter
+        includes = __template.includes
+
         return args
 
 
@@ -458,7 +473,6 @@ class CommandParser():
 
     def __init__(self, options):
         self.inputFile = options.inputFile
-        self.options = options
         ## This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*(.+?)\s+(.*)')
 
@@ -478,7 +492,7 @@ class CommandParser():
     def parse(self):
 
         functionParser = FunctionParser(self.options)
-        avalibalCommands = template.keys()
+        avalibalCommands = Template(None, None).template.keys()
         input = open(self.inputFile, 'r')
         inputLines = input.readlines()
         commandName = ''
@@ -514,7 +528,7 @@ class CommandParser():
                     # If a new command name is found and a old one is still
                     # used, save the old command and begin a new instruction
                     if commandName != '':
-                        templateList.append(templateClass(commandName, commandArgs))
+                        templateList.append(Template(commandName, commandArgs))
                         commandName = ''
                         commandArgs = ''
 
@@ -530,7 +544,6 @@ class CommandParser():
 
                     commandArgs += match.group(1)
                     commandArgs += match.group(2)
-
 
             else:
                 j = i
@@ -553,7 +566,7 @@ class CommandParser():
                 #If a function is found append the found instructions to the function object.
 
                 if commandName != '':
-                    templateList.append(templateClass(commandName, commandArgs))
+                    templateList.append(Template(commandName, commandArgs))
                     currentFunction.usedTemplates = templateList[:]
                     currentFunction.init = init
                     currentFunction.final = final
@@ -569,13 +582,14 @@ class CommandParser():
 
 ##
 # @brief Used to store the templates for each function
-class templateClass():
+class Template():
     ##
     # @brief The constructor
     #
     # @param name The name of the used template
     # @param variables The used variables
     def __init__(self, name, variables):
+
         templateDict = template[name]
         self.name = name
         self.parameters = {}
@@ -728,7 +742,6 @@ class Writer():
             print(function.getDefinitionReal(), end=';\n', sep='', file=output)
 
         print("", file=output)
-
 
         print("static void sioxInit() {", file=output)
         # write all init-templates
