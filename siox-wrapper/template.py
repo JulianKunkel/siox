@@ -168,9 +168,9 @@ template = {
 }
 }
 
-ForEachBefore = ""
+forEachBefore = ""
 
-ForEachAfter = ""
+forEachAfter = ""
 
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 

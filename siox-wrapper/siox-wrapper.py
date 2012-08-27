@@ -829,7 +829,7 @@ class Writer():
         # open the output file for writing
         output = open(self.outputFile, 'w')
 
-        print('#DEFINE _GNU_SOURCE', file=output)
+        print('#define _GNU_SOURCE', file=output)
         print('#include <dlfcn.h>\n', file=output)
 
         # write all needed includes
