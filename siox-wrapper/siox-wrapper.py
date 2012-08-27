@@ -9,11 +9,6 @@ import argparse
 import subprocess
 # import the template
 
-throwaway = None
-forEachAfter = None
-forEachBefore = None
-includes = None
-template = None
 
 ##
 # @brief Generate and handle the command line parsing.
@@ -57,16 +52,12 @@ from a other header file.''')
             help='Provide an alternative template.')
         args = argParser.parse_args()
 
-        from template import *
         if args.outputFile:
             args.outputFile = args.outputFile[0]
 
-        __template = __import__(options.template)
-        throwaway = __template.throwaway
-        forEachBefore = __template.forEachBefore
-        forEachAfter = __template.forEachAfter
-        includes = __template.includes
-
+        namespace = {}
+        execfile(args.template, namespace)
+        globals().update(namespace)
         return args
 
 
@@ -341,7 +332,7 @@ class FunctionParser():
         ## This tuple of filter words searches for reseverd words in the
         ## function return type.
         # Some typedefs can look like function a definition the regex.
-        self.Filter = ('typedef','//','#')
+        self.Filter = ('typedef', '//', '#', 'return')
 
     ##
     # @brief This function parses the header file.
@@ -476,6 +467,8 @@ class CommandParser():
         ## This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*(.+?)\s+(.*)')
 
+        self.options = options
+
     ##
     # @brief This function parses the header file.
     #
@@ -492,7 +485,7 @@ class CommandParser():
     def parse(self):
 
         functionParser = FunctionParser(self.options)
-        avalibalCommands = Template(None, None).template.keys()
+        avalibalCommands = template.keys()
         input = open(self.inputFile, 'r')
         inputLines = input.readlines()
         commandName = ''
