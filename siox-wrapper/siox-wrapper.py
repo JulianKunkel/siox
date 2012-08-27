@@ -7,7 +7,6 @@ import re
 import sys
 import argparse
 import subprocess
-# import the template
 
 
 ##
@@ -55,6 +54,7 @@ from a other header file.''')
         if args.outputFile:
             args.outputFile = args.outputFile[0]
 
+        # import the template
         namespace = {}
         execfile(args.template, namespace)
         globals().update(namespace)
@@ -74,10 +74,10 @@ class Function():
         ## Name of the function
         self.name = ''
         ## A list of Parameters, a parameter is a extra class for storing.
-        self.parameters = []
+        self.parameterList = []
         ## A list of templates associated with the function.
         self.definition = ''
-        self.usedTemplates = []
+        self.usedTemplateList = []
         ## Indicates that the function is the first called function of the
         # library and initialize SIOX.
         self.init = False
@@ -95,12 +95,12 @@ class Function():
     # Generates the function call of the function object.
     def getCall(self):
 
-        if len(self.parameters) == 1:
-            if self.parameters[0].name == 'void':
+        if len(self.parameterList) == 1:
+            if self.parameterList[0].name == 'void':
                 return '%s()' % (self.name)
 
         return '%s(%s)' % (self.name,
-         ', '.join(paramName.name for paramName in self.parameters))
+         ', '.join(parameter.name for parameter in self.parameterList))
 
     ##
     # @brief Generate the function definition.
@@ -114,8 +114,8 @@ class Function():
 
         if self.definition == '':
             return '%s %s(%s)' % (self.type, self.name,
-                ', '.join(' '.join([param.type, param.name])
-                for param in self.parameters))
+                ', '.join(' '.join([parameter.type, parameter.name])
+                for parameter in self.parameterList))
 
         else:
             return '%s %s%s' % (self.type, self.name, self.definition)
@@ -132,12 +132,11 @@ class Function():
     # original function.
     def getCallReal(self):
 
-        if len(self.parameters) == 1:
-            if self.parameters[0].name == 'void':
+        if len(self.parameterList) == 1:
+            if self.parameterList[0].name == 'void':
                 return '__real_%s()' % (self.name)
         return '__real_%s(%s)' % (self.name,
-         ', '.join(paramName.name for paramName in self.parameters))
-
+         ', '.join(parameter.name for parameter in self.parameterList))
 
     ##
     # @brief Generate the function definition prefixed with __real_.
@@ -152,8 +151,8 @@ class Function():
 
         if self.definition == '':
             return '%s __real_%s(%s)' % (self.type, self.name,
-                ', '.join(' '.join([param.type, param.name])
-                for param in self.parameters))
+                ', '.join(' '.join([parameter.type, parameter.name])
+                for parameter in self.parameterList))
 
         else:
             return '%s __real_%s %s' % (self.type, self.name, self.definition)
@@ -171,8 +170,8 @@ class Function():
 
         if self.definition == '':
             return '%s __wrap_%s(%s)' % (self.type, self.name,
-                ', '.join(' '.join([param.type, param.name])
-                for param in self.parameters))
+                ', '.join(' '.join([parameter.type, parameter.name])
+                for parameter in self.parameterList))
 
         else:
             return '%s __warp_%s%s' % (self.type, self.name, self.definition)
@@ -188,11 +187,11 @@ class Function():
     # pointer call looks something like: (__real_funcName)(parameter).
     def getCallPointer(self):
 
-        if len(self.parameters) == 1:
-            if self.parameters[0].name == 'void':
+        if len(self.parameterList) == 1:
+            if self.parameterList[0].name == 'void':
                 return '(__real_*%s)()' % (self.name)
         return '(__real_%s)(%s)' % (self.name,
-            ', '.join(paramName.name for paramName in self.parameters))
+            ', '.join(parameter.name for parameter in self.parameterList))
 
     ##
     # @brief Generate the function pointer definition for dlsym.
@@ -207,7 +206,7 @@ class Function():
 
         if self.definition == '':
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
-                for parameter in self.parameters)
+                for parameter in self.parameterList)
 
             return ('static %s (*__real_%s) (%s);' % (self.type, self.name, parameters))
 
@@ -229,7 +228,7 @@ class Function():
         if self.definition == '':
 
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
-                for parameter in self.parameters)
+                for parameter in self.parameterList)
 
             return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
                 (self.name, self.type, parameters, self.name))
@@ -251,7 +250,8 @@ class Function():
     def getIdentifier(self):
 
         identifier = '%s%s(%s);' % (self.type, self.name,
-                ''.join(''.join([param.type, param.name]) for param in self.parameters))
+                ''.join(''.join([parameter.type, parameter.name]) for
+                    parameter in self.parameterList))
 
         return re.sub('[,\s]', '', identifier)
 
@@ -284,7 +284,7 @@ class Instruction():
         ## Name of the instruction.
         self.name = ''
         ## Parameters of the instruction.
-        self.parameters = []
+        self.parameterList = []
 
 
 ##
@@ -315,7 +315,7 @@ class FunctionParser():
         # \(([,\w*\s\[\]]*)\) matches the parentheses of the function definition
         # and groups everything inside them. The regex can't match single
         # parameters because a regex must have a fixed number of groups to match.
-        self.regexFuncDef = re.compile('(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\]]*)\)[\w+]*?;',
+        self.regexFunctionDefinition = re.compile('(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\]]*)\)[\w+]*?;',
         re.S | re.M)
 
         ## This regular expression matches parameter type and name.
@@ -327,12 +327,12 @@ class FunctionParser():
         # (?:\*\s*|\s+) matches the last * or blank
         # ([\w]+ matches the parameter name
         # (?:\s*\[\s*\])? matches array [] if exist
-        self.regexParamterDef = re.compile('([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[\s*\])?)')
+        self.regexParamterDefinition = re.compile('([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[\s*\])?)')
 
         ## This tuple of filter words searches for reseverd words in the
         ## function return type.
         # Some typedefs can look like function a definition the regex.
-        self.Filter = ('typedef', '//', '#', 'return')
+        self.filter = ('typedef', '//', '#', 'return')
 
     ##
     # @brief This function parses the header file.
@@ -348,16 +348,16 @@ class FunctionParser():
     # The string can contain multiple function in one string.
     def parse(self, string):
 
-        functions = []
+        functionList = []
 
         # Match all function definitions
-        iterFuncDef = self.regexFuncDef.finditer(string)
+        iterateFunctionDefinition = self.regexFunctionDefinition.finditer(string)
 
-        for funcDef in iterFuncDef:
+        for functionDefinition in iterateFunctionDefinition:
             filtered = False
 
-            for element in self.Filter:
-                if funcDef.group(1).find(element) != -1:
+            for element in self.filter:
+                if functionDefinition.group(1).find(element) != -1:
                     filtered = True
 
             # At this point we are quite certain, we found a function definition
@@ -368,11 +368,11 @@ class FunctionParser():
             function = Function()
 
             # Extract the type an name form the match object.
-            function.type = funcDef.group(1).strip()
-            function.name = funcDef.group(2).strip()
+            function.type = functionDefinition.group(1).strip()
+            function.name = functionDefinition.group(2).strip()
 
             # Get the parameter string.
-            parameterString = funcDef.group(3).strip()
+            parameterString = functionDefinition.group(3).strip()
             # Substitute newlines and multiple blanks
             parameterString = re.sub('\n', '', parameterString)
             parameterString = re.sub('\s+', ' ', parameterString)
@@ -396,7 +396,7 @@ class FunctionParser():
 
                     else:
 
-                        parameterMatch = self.regexParamterDef.match(parameter)
+                        parameterMatch = self.regexParamterDefinition.match(parameter)
                         parameterType = parameterMatch.group(1)
                         parameterName = parameterMatch.group(2)
 
@@ -409,10 +409,10 @@ class FunctionParser():
 
                     parameterObject.name = parameterName
                     parameterObject.type = parameterType
-                    function.parameters.append(parameterObject)
+                    function.parameterList.append(parameterObject)
 
-            functions.append(function)
-        return functions
+            functionList.append(function)
+        return functionList
 
     ##
     # @brief Wrapper function for parse().
@@ -439,8 +439,8 @@ class FunctionParser():
             print('ERROR: CPP error:\n', error, file=sys.stderr)
             sys.exit(1)
 
-        functions = self.parse(string)
-        return functions
+        functionList = self.parse(string)
+        return functionList
 
     # @brief Wrapper function for parse()
     #
@@ -451,8 +451,8 @@ class FunctionParser():
     # param string The string to be parsed.
     def parseString(self, string):
 
-        functions = self.parse(string)
-        return functions
+        functionList = self.parse(string)
+        return functionList
 
 
 ##
@@ -487,17 +487,17 @@ class CommandParser():
         functionParser = FunctionParser(self.options)
         avalibalCommands = template.keys()
         input = open(self.inputFile, 'r')
-        inputLines = input.readlines()
+        inputLineList = input.readlines()
         commandName = ''
         commandArgs = ''
         templateList = []
         currentFunction = ''
-        functions = []
+        functionList = []
         final = False
         init = False
 
         #strip comments
-        for line in inputLines:
+        for line in inputLineList:
 
             match = self.includeRegex.match(line)
             if match:
@@ -509,12 +509,12 @@ class CommandParser():
                 line = ''
 
         # Iterate over every line and search for instrumentation instructions.
-        for iTuple in enumerate(inputLines):
+        for iTuple in enumerate(inputLineList):
 
             #enumerate in all its wisdom returns a tuple
             i = iTuple[0]
 
-            match = self.commandRegex.match(inputLines[i])
+            match = self.commandRegex.match(inputLineList[i])
             if (match):
                 # Search for init or final sections to define init or final
                 # functions
@@ -549,35 +549,35 @@ class CommandParser():
                 j = i
                 functionString = ''
 
-                while not re.search('^\s*//', inputLines[j]):
-                    if j >= len(inputLines) - 1:
+                while not re.search('^\s*//', inputLineList[j]):
+                    if j >= len(inputLineList) - 1:
                         break
 
-                    functionString += inputLines[j]
+                    functionString += inputLineList[j]
                     j += 1
 
                 i = j
-                currentFunctions = functionParser.parseString(functionString)
+                currentFunctionList = functionParser.parseString(functionString)
 
-                if len(currentFunctions) == 0:
+                if len(currentFunctionList) == 0:
                     continue
 
-                currentFunction = currentFunctions[0]
+                currentFunction = currentFunctionList[0]
                 #If a function is found append the found instructions to the function object.
 
                 if commandName != '':
                     templateList.append(Template(commandName, commandArgs))
-                    currentFunction.usedTemplates = templateList[:]
+                    currentFunction.usedTemplateList = templateList[:]
                     currentFunction.init = init
                     currentFunction.final = final
-                    functions.extend(currentFunctions)
+                    functionList.extend(currentFunctionList)
                     templateList = []
                     commandName = ''
                     commandArgs = ''
                     final = False
                     init = False
 
-        return functions
+        return functionList
 
 
 ##
@@ -592,7 +592,7 @@ class Template():
 
         templateDict = template[name]
         self.name = name
-        self.parameters = {}
+        self.parameterList = {}
 
         # Generate strings for output from given input
         self.setParameters(templateDict['variables'], variables)
@@ -612,9 +612,9 @@ class Template():
     # @param values The used variables
     def setParameters(self, names, values):
         # generate a list of all names and values
-        NameList = names.split(' ')
+        nameList = names.split(' ')
         tmpValueList = values.split(' ')
-        ValueList = []
+        valueList = []
         isString = False
 
         for entry in tmpValueList:
@@ -622,19 +622,21 @@ class Template():
             if len(entry) < 1:
                 continue
 
+            # handle "foo bar" as one parameter
             if entry[0] == ("\"" or "\'") and isString == False:
                 isString = True
-                ValueList.append("")
+                valueList.append("")
 
                 if len(entry) == 1:
-                    ValueList[-1] += entry
+                    valueList[-1] += entry
                     entry = " "  # avoid error on if entry[-1]
 
             if isString:
-                ValueList[-1] += entry
+                valueList[-1] += entry
             else:
-                ValueList.append(entry)
+                valueList.append(entry)
 
+            # s.a.
             if entry[-1] == ("\"" or "\'") and isString == True:
 
                 if len(entry) > 1:
@@ -645,11 +647,11 @@ class Template():
 
         position = 0
         # iterate over all elements but the last one
-        for value in ValueList[0:len(NameList) - 1]:
-            self.parameters[NameList[position]] = value
+        for value in valueList[0:len(nameList) - 1]:
+            self.parameterList[nameList[position]] = value
             position += 1
         # all other elements belong to the last parameter
-        self.parameters[NameList[position]] = ' '.join(ValueList[len(NameList) - 1:])
+        self.parameterList[nameList[position]] = ' '.join(valueList[len(nameList) - 1:])
 
     ##
     # @brief Used for selective output
@@ -659,17 +661,17 @@ class Template():
     # @return The requested string from the template
     def output(self, type):
         if (type == 'global'):
-            return self.world % self.parameters
+            return self.world % self.parameterList
         elif (type == 'init'):
-            return self.init % self.parameters
+            return self.init % self.parameterList
         elif (type == 'before'):
-            return self.before % self.parameters
+            return self.before % self.parameterList
         elif (type == 'after'):
-            return self.after % self.parameters
+            return self.after % self.parameterList
         elif (type == 'final'):
-            return self.final % self.parameters
+            return self.final % self.parameterList
         elif (type == 'cleanup'):
-            return self.cleanup % self.parameters
+            return self.cleanup % self.parameterList
         else:
             # Error
             print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
@@ -692,12 +694,12 @@ class Writer():
     # @brief Write a header file
     #
     # @param functions A list of function-objects to write
-    def headerFile(self, functions):
+    def headerFile(self, functionList):
         # open the output file for writing
         output = open(self.outputFile, 'w')
 
         # write all function headers
-        for function in functions:
+        for function in functionList:
             for match in throwaway:
                 if re.search(match, function.getDefinition()):
                     function.name = ''
@@ -718,7 +720,7 @@ class Writer():
     # @brief Write a source file
     #
     # @param functions A list of function-objects to write
-    def sourceFileWrap(self, functions):
+    def sourceFileWrap(self, functionList):
         # open the output file for writing
         output = open(self.outputFile, 'w')
 
@@ -728,8 +730,8 @@ class Writer():
         print('\n', file=output)
 
         # write all global-Templates
-        for func in functions:
-            for templ in func.usedTemplates:
+        for function in functionList:
+            for templ in function.usedTemplateList:
                 if templ.output('global') != '':
                     print(templ.output('global'), file=output)
         print("", file=output)
@@ -738,51 +740,51 @@ class Writer():
         print("static void sioxInit() __attribute__((constructor));", file=output)
 
         # write all function redefinitions
-        for function in functions:
+        for function in functionList:
             print(function.getDefinitionReal(), end=';\n', sep='', file=output)
 
         print("", file=output)
 
         print("static void sioxInit() {", file=output)
         # write all init-templates
-        for func in functions:
-            for temp in func.usedTemplates:
-                outstr = temp.output('init').strip()
-                if outstr.strip() != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+        for function in functionList:
+            for templ in function.usedTemplateList:
+                outputString = templ.output('init').strip()
+                if outputString.strip() != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
         print("}", file=output)
 
         print("static void sioxFinal() {", file=output)
         # write all final-functions
-        for func in functions:
-            for temp in func.usedTemplates:
-                outstr = temp.output('final').strip()
-                if outstr.strip() != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+        for function in functionList:
+            for templ in function.usedTemplateList:
+                outputString = templ.output('final').strip()
+                if outputString.strip() != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
         print("}", file=output)
 
         # write all functions-bodies
-        for function in functions:
+        for function in functionList:
             # write function signature
 
             print(function.getDefinitionWrap(),
                     end='\n{\n', sep='', file=output)
 
             # a variable to save the return-value
-            returntype = function.type
+            returnType = function.type
 
-            if returntype != "void":
-                print('\t', returntype, ' ret;', end='\n', sep='',
+            if returnType != "void":
+                print('\t', returnType, ' ret;', end='\n', sep='',
                         file=output)
 
             # write the before-template for this function
-            for temp in function.usedTemplates:
-                outstr = temp.output('before').strip()
-                if outstr != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+            for templ in function.usedTemplateList:
+                outputString = templ.output('before').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
 
             # write the function call
-            if returntype != "void":
+            if returnType != "void":
                 print('\tret = ', function.getCallReal(), end=';\n', sep='',
                         file=output)
             else:
@@ -790,31 +792,31 @@ class Writer():
                         file=output)
 
             # write all after-templates for this function
-            for temp in function.usedTemplates:
-                outstr = temp.output('after').strip()
-                if outstr != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+            for templ in function.usedTemplateList:
+                outputString = templ.output('after').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
 
             # write all cleanup-templates for this function
-            for temp in function.usedTemplates:
-                outstr = temp.output('cleanup').strip()
-                if outstr != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+            for templ in function.usedTemplateList:
+                outputString = templ.output('cleanup').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
 
             # write the return statement and close the function
-            if returntype != "void":
+            if returnType != "void":
                 print('\treturn ret;\n}', end='\n\n', file=output)
 
             else:
                 print('\n}', end='\n\n', file=output)
 
         # generate gcc string for the user
-        gcchelper = '-Wl'
+        gccHelper = '-Wl'
 
-        for func in functions:
-            gcchelper = "%s,--wrap=\"%s\"" % (gcchelper, func.name)
+        for function in functionList:
+            gccHelper = "%s,--wrap=\"%s\"" % (gccHelper, function.name)
 
-        print(gcchelper)
+        print(gccHelper)
 
         # close the file
         output.close()
@@ -823,7 +825,7 @@ class Writer():
     # @brief Write a source file
     #
     # @param functions A list of function-objects to write
-    def sourceFileDLSym(self, functions):
+    def sourceFileDLSym(self, functionList):
 
         # open the output file for writing
         output = open(self.outputFile, 'w')
@@ -840,59 +842,59 @@ class Writer():
         print("static void sioxInit() __attribute__((constructor));", file=output)
 
         # write all global-Templates
-        for func in functions:
-            for templ in func.usedTemplates:
+        for function in functionList:
+            for templ in function.usedTemplateList:
                 if templ.output('global') != '':
                     print(templ.output('global'), file=output)
         print("", file=output)
 
         print("static char* dllib = RTLD_NEXT;", file=output)
 
-        for func in functions:
-            print(func.getDefinitionPointer(), file=output)
+        for function in functionList:
+            print(function.getDefinitionPointer(), file=output)
 
         print("\nstatic void sioxInit() {\n", file=output)
         # write all init-templates
-        for func in functions:
-            for temp in func.usedTemplates:
-                outstr = temp.output('init').strip()
-                if outstr.strip() != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+        for function in functionList:
+            for templ in function.usedTemplateList:
+                outputString = templ.output('init').strip()
+                if outputString.strip() != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
 
-            print(func.getDlsym(), file=output)
+            print(function.getDlsym(), file=output)
         print("}", file=output)
 
         print("\nstatic void sioxFinal() {", file=output)
         # write all final-functions
-        for func in functions:
-            for temp in func.usedTemplates:
-                outstr = temp.output('final').strip()
-                if outstr.strip() != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+        for function in functionList:
+            for templ in function.usedTemplateList:
+                outputString = templ.output('final').strip()
+                if outputString.strip() != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
 
         print("}", file=output)
 
-        for function in functions:
+        for function in functionList:
 
             # write function signature
             print(function.getDefinition(), end='\n{\n', sep=' ',
                 file=output)
 
             # a variable to save the return-value
-            returntype = function.type
+            returnType = function.type
 
-            if returntype != "void":
-                print('\t', returntype, ' ret;', end='\n', sep='',
+            if returnType != "void":
+                print('\t', returnType, ' ret;', end='\n', sep='',
                         file=output)
 
             # write the before-template for this function
-            for temp in function.usedTemplates:
-                outstr = temp.output('before').strip()
-                if outstr != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+            for templ in function.usedTemplateList:
+                outputString = templ.output('before').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
 
             # write the function call
-            if returntype != "void":
+            if returnType != "void":
                 print('\tret = ', function.getCallPointer(), end=';\n',
                     sep='', file=output)
             else:
@@ -900,19 +902,19 @@ class Writer():
                         file=output)
 
             # write all after-templates for this function
-            for temp in function.usedTemplates:
-                outstr = temp.output('after').strip()
-                if outstr != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+            for templ in function.usedTemplateList:
+                outputString = templ.output('after').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
 
             # write all after-templates for this function
-            for temp in function.usedTemplates:
-                outstr = temp.output('cleanup').strip()
-                if outstr != '':
-                    print('\t', outstr, end='\n', sep='', file=output)
+            for templ in function.usedTemplateList:
+                outputString = templ.output('cleanup').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
 
             # write the return statement and close the function
-            if returntype != "void":
+            if returnType != "void":
                 print('\treturn ret;\n}', end='\n\n', file=output)
 
             else:
