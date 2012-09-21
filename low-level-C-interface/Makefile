@@ -99,6 +99,6 @@ clean:
 test:
 	@echo --------------------------------------------------
 	@echo -n Running tests on Low-Level-C-Interface...
-	@./siox-mockupfs-example >siox-mockupfs-example.log
-	@./siox-hdf5-example >siox-hdf5-example.log
-	@echo ...passed!
+	@./siox-mockupfs-example >siox-mockupfs-example.log 2>siox-mockupfs-example.err
+	@./siox-hdf5-example >siox-hdf5-example.log 2>siox-hdf5-example.err
+	@echo passed!

@@ -17,10 +17,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <assert.h>
 
 #include "enums.h"
 #include "ontology.h"
+
 
 #define MINIMUM_NAME_LENGTH    4    /**< Minimum length for a valid
                                          datatype's or metric's name. */
@@ -129,6 +131,8 @@ static bool     write_datatype_file( void );
 static bool     read_metric_file( void );
 static bool     insert_metric_into_list( siox_metric metric );
 static bool     write_metric_file( void );
+
+static char *   to_string( const char * format, ... );
 
 
 /*
@@ -1022,4 +1026,161 @@ siox_ont_register_datatype( const char *                name,
     }
 
     return( dtid );
+}
+
+
+
+const char *
+siox_ont_data_to_string( siox_dtid dtid, const void * value )
+{
+    siox_datatype   dtType;
+    char *          sResult;
+
+    /* Check whether DTID is valid. */
+    dtType = siox_ont_find_datatype_by_dtid( dtid );
+    if (dtType == NULL)
+    {
+        fprintf( stderr, "ERROR: Invalid DTID >%s<.\n",
+                 siox_ont_dtid_to_string( dtid ) );
+        return( NULL );
+    }
+
+    /* Convert according to correct scheme. */
+    switch( dtType->storage )
+    {
+        case SIOX_STORAGE_32_BIT_INTEGER:
+            sResult = to_string( "%d", *((const int *) value) );
+            break;
+        case SIOX_STORAGE_64_BIT_INTEGER:
+            sResult = to_string( "%ld", *((const long int *) value) );
+            break;
+
+        case SIOX_STORAGE_FLOAT:
+            sResult = to_string( "%f", *((const float *) value) );
+            break;
+        case SIOX_STORAGE_DOUBLE:
+            sResult = to_string( "%f", *((const double *) value) );
+            break;
+
+        case SIOX_STORAGE_STRING:
+            sResult = to_string( "%s", *((const char* *) value) );
+            break;
+
+        case SIOX_STORAGE_UNASSIGNED:
+        default:
+            sResult = to_string( "(Unknown data type)" );
+            break;
+    }
+
+    return( sResult );
+}
+
+
+const char *
+siox_ont_metric_data_to_string( siox_mid mid, const void * value )
+{
+    siox_metric     metric;
+    char *          sResult;
+
+    /* Check whether MID is valid. */
+    metric = siox_ont_find_metric_by_mid( mid );
+    if (metric == NULL)
+    {
+        fprintf( stderr, "ERROR: Invalid MID >%s<.\n",
+                 siox_ont_mid_to_string( mid ) );
+        return( NULL );
+    }
+
+    /* Convert according to correct scheme. */
+    switch( metric->storage )
+    {
+        case SIOX_STORAGE_32_BIT_INTEGER:
+            sResult = to_string( "%d", *((const int *) value) );
+            break;
+        case SIOX_STORAGE_64_BIT_INTEGER:
+            sResult = to_string( "%ld", *((const long int *) value) );
+            break;
+
+        case SIOX_STORAGE_FLOAT:
+            sResult = to_string( "%f", *((const float *) value) );
+            break;
+        case SIOX_STORAGE_DOUBLE:
+            sResult = to_string( "%f", *((const double *) value) );
+            break;
+
+        case SIOX_STORAGE_STRING:
+            sResult = to_string( "%s", *((const char* *) value) );
+            break;
+
+        case SIOX_STORAGE_UNASSIGNED:
+        default:
+            sResult = to_string( "(Unknown data type)" );
+            break;
+    }
+
+    return( sResult );
+}
+
+
+/**
+ * Function to turn argument list into string. The memory needed will be allocated as exactly as possible.
+ *
+ * @param[in]   format  The format string, as would be used in printf().
+ * @param[in]   ...     The list of arguments to be inserted into the string.
+ *
+ * @returns     A string containing the arguments as specified by the format.
+ */
+static char *
+to_string(const char * format, ...)
+{
+   int      nBufferSize = 20; /* A small value to begin with. */
+   int      nLength = 0;
+   char *   p;
+   char *   pNew;
+   va_list  arguments;
+
+
+   /* Claim initial space of size nBufferSize. */
+   if( ( p = malloc( nBufferSize ) ) == NULL )
+   {
+       fprintf( stderr, "Memory allocation error in ontology.c:to_string()!\n" );
+       return( NULL );
+   }
+   /*fprintf(stderr, "tostring(): Allocated %d Bytes at %p.\n", nBufferSize, p);*/
+
+   for(;;)
+   {
+        /* Try to convert in the space we have. */
+        va_start( arguments, format );
+        nLength = vsnprintf( p, nBufferSize, format, arguments );
+        va_end( arguments );
+        /*fprintf(stderr, "tostring(): nLength = %d, nBufferSize = %d.\n", nLength, nBufferSize);*/
+
+        /* Are we done? */
+        if(( nLength > -1 ) && ( nLength < nBufferSize ))
+            return p;
+        /*
+        else
+            fprintf(stderr, "tostring(): NOT done; nLength = %d, nBufferSize = %d.\n", nLength, nBufferSize);
+
+
+        fprintf(stderr,"tostring(): nLength = %d >= %d = nBufferSize\n", nLength, nBufferSize);
+        */
+
+        /* Get more space and try until successful. */
+        if( nLength > -1 )    /* glibc 2.1 */
+            nBufferSize = nLength + 1; /* The exact size needed */
+        else           /* glibc 2.0 */
+            nBufferSize *= 2;  /* Double the last try's size */
+
+        /* Relocate variable to new (larger) memory area. */
+        if( ( pNew = realloc ( p, nBufferSize ) ) == NULL )
+        {
+            free( p );
+            fprintf( stderr, "Memory allocation error in ontology.c:to_string()!\n" );
+            return( NULL );
+        }
+        else
+            p = pNew;
+   }
 }

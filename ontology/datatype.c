@@ -61,7 +61,6 @@ struct siox_ont_datatype_node_t
  * ===============================
  */
 
-
 /*
  * Function Definitions
  * ====================

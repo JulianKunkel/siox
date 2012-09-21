@@ -45,13 +45,13 @@ static siox_mid     mid;
 static void mufs_initialise();
 
 
-int
+long
 mufs_putfile( const char * filename, const char * contents )
 {
     FILE *          fp;
-    int             bytes_to_write;
-    int             total_bytes_to_write;
-    int             total_bytes_written;
+    long int        bytes_to_write;
+    long int        total_bytes_to_write;
+    long int        total_bytes_written;
     int             block;
     const char *    pData;
     const char *    pEnd;
@@ -73,22 +73,21 @@ mufs_putfile( const char * filename, const char * contents )
     /*
      * SIOX - preliminary negotiations
      */
-    /* Report receiving a new descriptor */
-    siox_receive_descriptor( unid, dtid_fn, filename);
+    sprintf( sBuffer, "Open file %s for writing.", filename );
+    aid = siox_start_activity( unid, sBuffer );
 
+    /* Report receiving a new descriptor */
+    siox_receive_descriptor( aid, dtid_fn, &filename);
 
     /*
      * Open or, if necessary, create file via POSIX
      */
-    sprintf( sBuffer, "Open file %s for writing.", filename );
-    aid = siox_start_activity( unid, sBuffer );
-
     fp = fopen( filename, "wt" );
 
     siox_end_activity( aid );
     /* Report the mapping of file name to file pointer */
     sprintf( fp_s, "%p", (void *) fp ); /* Turn foreign data type into string */
-    siox_map_descriptor( unid, dmid, filename, fp_s );
+    siox_map_descriptor( aid, dmid, &filename, &fp );
 
 
     /*
@@ -119,7 +118,7 @@ mufs_putfile( const char * filename, const char * contents )
             {
                 siox_end_activity( aid );
 
-                fprintf( stderr, "!!! Fehler beim Schreiben von Block %d der Datei %s! !!!\n",
+                fprintf( stderr, "!!! Fehler beim Schreiben von Block %d der Datei >%s<! !!!\n",
                          block, filename );
                 return( 0 );
             }
@@ -128,8 +127,8 @@ mufs_putfile( const char * filename, const char * contents )
         /* Report the end of the activity, any performance data gathered and close bookkeeping for it. */
         siox_stop_activity( aid );
         siox_report_activity( aid,
-                              dtid_fp, fp_s,
-                              mid, SIOX_TYPE_INTEGER, &bytes_to_write,
+                              dtid_fp, &fp,
+                              mid, &bytes_to_write,
                               NULL );
         siox_end_activity( aid );
     }
@@ -143,22 +142,24 @@ mufs_putfile( const char * filename, const char * contents )
 
     if( fclose( fp ) == EOF )
     {
+        siox_release_descriptor( aid, dtid_fp, &fp );
         siox_end_activity( aid );
-        siox_release_descriptor( unid, dtid_fp, fp_s );
 
-        fprintf( stderr, "!!! Fehler beim Schließen der Datei %s! !!!\n", filename );
+        fprintf( stderr, "!!! Fehler beim Schließen der Datei >%s<! !!!\n", filename );
         return( 0 );
     }
 
-    siox_end_activity( aid );
+    siox_stop_activity( aid );
 
 
     /*
      * SIOX - final negotiations
      */
     /* Mark any descriptors left as unused */
-    siox_release_descriptor( unid, dtid_fp, fp_s );
-    siox_release_descriptor( unid, dtid_fn, filename );
+    siox_release_descriptor( aid, dtid_fp, &fp );
+    siox_release_descriptor( aid, dtid_fn, &filename );
+
+    siox_end_activity( aid );
 
 
     /* Return number of bytes successfully written */
@@ -201,7 +202,7 @@ static void mufs_initialise()
     unid = siox_register_node( "Michaelas T1500", "MUFS", pid_s );
     /* Register descriptor types we know */
     dtid_fn = siox_register_datatype( "FileName", SIOX_STORAGE_STRING );
-    dtid_fp = siox_register_datatype( "MUFS-FilePointer", SIOX_STORAGE_32_BIT_INTEGER );
+    dtid_fp = siox_register_datatype( "MUFS-FilePointer", SIOX_STORAGE_64_BIT_INTEGER );
     /* Register ability to map MUFS-FileName to MUFS-FilePointer */
     dmid = siox_register_descriptor_map( unid, dtid_fn, dtid_fp );
 
@@ -211,7 +212,7 @@ static void mufs_initialise()
                                 SIOX_UNIT_BYTES,
                                 SIOX_STORAGE_64_BIT_INTEGER,
                                 SIOX_SCOPE_SUM);
-    printf( "Registered performance metric %s with ontotology.\n",
-            "\"Bytes Written\"" );
+    printf( "Registered performance metric >%s< with ontology.\n",
+            "Bytes Written" );
 }
 
