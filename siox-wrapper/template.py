@@ -61,42 +61,13 @@ template = {
 	'final': ''
 },
 'activity': {
-	'variables': 'AID Type Descriptor MetricID ValueType Value Description',
+	'variables': 'AID Description',
 	'global': '''''',
 	'init': '''''',
     'before': '''siox_aid %(AID)s = siox_start_activity( global_unid, %(Description)s );''',
 	'after': '''siox_stop_activity( %(AID)s );
-				siox_report_activity(%(AID)s, %(Type)s, %(Descriptor)s, %(MetricID)s, %(ValueType)s, %(Value)s, %(Description)s );
-			  siox_end_activity( %(AID)s );
 			  ''',
-	'cleanup': '',
-	'final': ''
-},
-'activity_start': {
-	'variables': 'Name Description',
-	'global': '''siox_aid %(Name)s;''',
-	'init': '''''',
-    'before': '''%(Name)s = siox_start_activity( global_unid, %(Description)s );''',
-	'after': '',
-	'cleanup': '',
-	'final': ''
-},
-'activity_stop': {
-	'variables': 'Name',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_stop_activity( %(Name)s );',
-	'cleanup': '',
-	'final': ''
-},
-'activity_end': {
-	'variables': 'Name',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_end_activity( %(Name)s );',
-	'cleanup': '',
+	'cleanup': 'siox_end_activity( %(AID)s );',
 	'final': ''
 },
 'activity_report': {
@@ -144,15 +115,6 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-'release_descriptor': {
-	'variables': 'AID Type Descriptor',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_release_descriptor( %(AID)s, %(Type)s, %(Descriptor)s);',
-	'cleanup': '',
-	'final': ''
-},
 'splice_before': {
 	'variables': 'PROGRAMMCODE',
 	'global': '',
@@ -180,3 +142,41 @@ forEachAfter = ""
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 includes = ['<siox-ll.h>', '<stdargs.h>']
+
+# Old stuff
+# 'activity_start': {
+# 	'variables': 'Name Description',
+# 	'global': '''siox_aid %(Name)s;''',
+# 	'init': '''''',
+#     'before': '''%(Name)s = siox_start_activity( global_unid, %(Description)s );''',
+# 	'after': '',
+# 	'cleanup': '',
+# 	'final': ''
+# },
+# 'activity_stop': {
+# 	'variables': 'Name',
+# 	'global': '''''',
+# 	'init': '''''',
+#     'before': '''''',
+# 	'after': 'siox_stop_activity( %(Name)s );',
+# 	'cleanup': '',
+# 	'final': ''
+# },
+# 'activity_end': {
+# 	'variables': 'Name',
+# 	'global': '''''',
+# 	'init': '''''',
+#     'before': '''''',
+# 	'after': 'siox_end_activity( %(Name)s );',
+# 	'cleanup': '',
+# 	'final': ''
+# },
+# 'release_descriptor': {
+# 	'variables': 'AID Type Descriptor',
+# 	'global': '''''',
+# 	'init': '''''',
+#     'before': '''''',
+# 	'after': '',
+# 	'cleanup': 'siox_release_descriptor( %(AID)s, %(Type)s, %(Descriptor)s);',
+# 	'final': ''
+# },
