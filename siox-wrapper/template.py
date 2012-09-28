@@ -61,13 +61,13 @@ template = {
 	'final': ''
 },
 'activity': {
-	'variables': 'Type Descriptor MetricID ValueType Value Description',
+	'variables': 'AID Type Descriptor MetricID ValueType Value Description',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_aid local_aid = siox_start_activity( global_unid, %(Description)s );''',
-	'after': '''siox_stop_activity( local_aid );
-				siox_report_activity(local_aid, %(Type)s, %(Descriptor)s, %(MetricID)s, %(ValueType)s, %(Value)s, %(Description)s );
-			  siox_end_activity( local_aid );
+    'before': '''siox_aid %(AID)s = siox_start_activity( global_unid, %(Description)s );''',
+	'after': '''siox_stop_activity( %(AID)s );
+				siox_report_activity(%(AID)s, %(Type)s, %(Descriptor)s, %(MetricID)s, %(ValueType)s, %(Value)s, %(Description)s );
+			  siox_end_activity( %(AID)s );
 			  ''',
 	'cleanup': '',
 	'final': ''
