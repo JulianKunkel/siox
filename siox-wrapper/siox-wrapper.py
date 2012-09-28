@@ -60,7 +60,6 @@ from a other header file.''')
         globals().update(namespace)
         return args
 
-
 ##
 # @brief A storage class for a function.
 #
@@ -315,7 +314,7 @@ class FunctionParser():
         # \(([,\w*\s\[\]]*)\) matches the parentheses of the function definition
         # and groups everything inside them. The regex can't match single
         # parameters because a regex must have a fixed number of groups to match.
-        self.regexFunctionDefinition = re.compile('(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\]]*)\)[\w+]*?;',
+        self.regexFunctionDefinition = re.compile('(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].]*)\)[\w+]*?;',
         re.S | re.M)
 
         ## This regular expression matches parameter type and name.
@@ -466,7 +465,7 @@ class CommandParser():
         self.inputFile = options.inputFile
         ## This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*(.+?)\s+(.*)')
-        self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\']+)\s*')
+        self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\'/]+)\s*')
         self.options = options
 
     ##
@@ -487,7 +486,7 @@ class CommandParser():
         functionParser = FunctionParser(self.options)
         avalibalCommands = template.keys()
         input = open(self.inputFile, 'r')
-        inputLineList = input.readlines()
+        inputString = input.read()
         commandName = ''
         commandArgs = ''
         templateList = []
@@ -496,23 +495,24 @@ class CommandParser():
         final = False
         init = False
 
-        #strip comments
-        for line in inputLineList:
+        # Strip comments
+        re.sub('/\*.*\*/', '', inputString, flags=re.M|re.S)
 
-            match = self.includeRegex.match(line)
-            if match:
-                include = match.group(1)
-                if include not in includes:
-                    includes.append(include)
-
-            if re.search('^\s*#', line):
-                line = ''
-
+        inputLineList = inputString.split('\n')
         # Iterate over every line and search for instrumentation instructions.
         for iTuple in enumerate(inputLineList):
 
             #enumerate in all its wisdom returns a tuple
             i = iTuple[0]
+
+            # Search for includes
+            match = self.includeRegex.match(inputLineList[i])
+            if match:
+                include = match.group(1)
+                # If the include is not already inside the template append it
+                if include not in includes:
+                    includes.append(include)
+
 
             match = self.commandRegex.match(inputLineList[i])
             if (match):
@@ -533,7 +533,7 @@ class CommandParser():
                         commandArgs = ''
 
                     commandName += match.group(1)
-                    commandArgs += match.group(2)
+                    commandArgs += match.group(2) + " "
 
                 else:
                     # If no command name is defined and a comment which is no
@@ -542,8 +542,8 @@ class CommandParser():
                         print("ERROR: Command not known: ", match.group(1), file=sys.stderr)
                         sys.exit(1)
 
-                    commandArgs += match.group(1)
-                    commandArgs += match.group(2)
+                    commandArgs += match.group(1) + " "
+                    commandArgs += match.group(2) + " "
 
             else:
                 j = i
@@ -553,7 +553,7 @@ class CommandParser():
                     if j >= len(inputLineList) - 1:
                         break
 
-                    functionString += inputLineList[j]
+                    functionString += inputLineList[j].strip()
                     j += 1
 
                 i = j
@@ -594,6 +594,13 @@ class Template():
         self.name = name
         self.parameterList = {}
 
+        # This regex parses the values string in the function setParameters.
+        # It distinguish between 3 cases:
+        # (?:\s*\S+\s*) matches the first bare word of the values
+        # (?:\s*\".*\"\s*) matches double quoted strings
+        # (?:\s*\'.*\'\s*) matches single quoted strings
+        self.valueRegex = re.compile('((?:^\s*[-\w%_\(\)\[\]&*]+\s*)|(?:^\s*[^\\]\".*?[^\\]\"\s*)|(?:^\s*[^\\]\'.*?[^\\]\'\s*))', re.S | re.M)
+
         # Generate strings for output from given input
         self.setParameters(templateDict['variables'], variables)
 
@@ -611,47 +618,23 @@ class Template():
     # @param names The name of the used template
     # @param values The used variables
     def setParameters(self, names, values):
+        # TODO: raise error and error handling
         # generate a list of all names and values
         nameList = names.split(' ')
-        tmpValueList = values.split(' ')
-        valueList = []
-        isString = False
 
-        for entry in tmpValueList:
+        for name in nameList:
 
-            if len(entry) < 1:
-                continue
+            # Match the next value and only one value out of the string
+            value = self.valueRegex.match(values)
+            if value:
+                # Set the matched value
+                self.parameterList[name] = value.group(1).strip()
 
-            # handle "foo bar" as one parameter
-            if entry[0] == ("\"" or "\'") and isString == False:
-                isString = True
-                valueList.append("")
+                # Truncate the found value from the value string
+                values = self.valueRegex.sub('', values, 1)
 
-                if len(entry) == 1:
-                    valueList[-1] += entry
-                    entry = " "  # avoid error on if entry[-1]
-
-            if isString:
-                valueList[-1] += entry
-            else:
-                valueList.append(entry)
-
-            # s.a.
-            if entry[-1] == ("\"" or "\'") and isString == True:
-
-                if len(entry) > 1:
-                    if entry[-2] == "\\":
-                        continue
-
-                isString = False
-
-        position = 0
-        # iterate over all elements but the last one
-        for value in valueList[0:len(nameList) - 1]:
-            self.parameterList[nameList[position]] = value
-            position += 1
-        # all other elements belong to the last parameter
-        self.parameterList[nameList[position]] = ' '.join(valueList[len(nameList) - 1:])
+        lastName = nameList[-1]
+        self.parameterList[lastName] += " " + values.strip()
 
     ##
     # @brief Used for selective output
