@@ -4,20 +4,52 @@
  */
 
 #include <unistd.h>
-// Für readv
+
 #include <sys/uio.h>
-//
+
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dlfcn.h>
 #include <fcntl.h>
 
-int open(const char *pathname, int flags);
+/* Set the interface name for the library*/
+//interface_name "POSIX"
+
+/* Register the data types for the descriptors */
+//register_datatype "FileName" SIOX_STORAGE_STRING dtid_FileName
+
+//register_datatype "FileHandle" SIOX_STORAGE_64_BIT_INTEGER dtid_FileHandle
+
+/* Register the metrics to grab the performance data */
+//register_metric "Bytes written." "Count of bytes written to file."
+//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM mid_bytes_written
+
+//register_metric "Bytes read." "Count of bytes read form file"
+//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM mid_bytes_read
+
+/* Register the descriptor mapping form a file name to a file handle */
+//register_descriptor_map dtid_FileName dtid_FileHandle dmid_open
+
+/* Receive the file name descriptor and map it to the file handle descriptor */
+//receive_descriptor dtid_FileName "FileName"
+//map_descriptor dmid_open "FileName" "FileHandle"
+int open(const char *pathname, int flags, ...);
+
 int creat(const char *pathname, mode_t mode);
 
-int close(int fd); 
+/* The close function destroys the file handle descriptor */
+//receive_descriptor dtid_FileHandle "FileHandle"
+//release_descriptor dtid_FIleHandle "FileHandle"
+int close(int fd);
 
+/* The write function starts an activity and reports it */
+//receive_descriptor dtid_FileHandle "FileHandle"
+//activity dtid_FileHandle "FileHandle" mid_bytes_written SIOX_TYPE_INTEGER &count "Write to disk."
 ssize_t write(int fd, const void *buf, size_t count);
-/* Hier splice lseek(seekcur,0) */
+
+/* The read function starts an activity and reports it*/
+//receive_descriptor dtid_FileHandle "FileHAndle"
+//activity dtid_FileHandle "FileHandle" mid_bytes_read SIOX_TYPE_INTEGER &count "Read from disk."
 ssize_t read(int fd, const void *buf, size_t count);
 
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
