@@ -1,38 +1,98 @@
-1.  Erzeugen einer sauberen Headerdatei.
+The first part of this readme is optional, it's only used to provide a complete
+documentation.
 
-      python siox-wrapper.py -b -c -o hdf5-example.h /usr/include/hdf5.h
+--- OPTIONAL PART ---
 
-2.  Nun können die einzelnen Annotationen vorgenommen werden.
+0. -- Generate the header file
 
-    z.B.:
+First a clean header file of the HDF5 lib has to be created. The clean header
+file only contains the required includes and the function definition of the
+parsed header file. The clean header file will be annotated with the commands
+from the template.
 
-      //init
-      //register_node IO-Server HDF5
-      hid_t H5Fcreate (const char *filename, unsigned flags, hid_t create_plist, hid_t access_plist );
+-b create a clean header file
+-t the template which will be used
+-o name of the output file
 
-      Das vorligende header file ist mit einem splice_before
-      an der der Function H5Fopen annotiert.
+  ../../siox-wrapper.py -b -t ../../template.py -o hdf5.h /usr/include/hdf5.h
 
-3.  Nun kann die annotierte Datei eingelesen werden und der C code erzeugt werden.
+Add the necessary includes at the beginning of the hdf5.h file.
 
-      python siox-wrapper.py -o hdf5-example/hdf5.c hdf5-example/hdf5.h
+  #include <hdf5.h>
+  #include <stdio.h>
+  #include <stdlib.h>
 
-    Die zu sehende Ausgabe ist eine Liste aller Funktionsnamen, die später an GCC weiter gegeben werden muss.
+It is possible to add additional includes in the template with the includes
+variable. Multiple includes of the same header file will be filtered.
 
-4.  In der Enstanden C-Datei muss der HDF5 include hinzugefügt werden.
+Now the commands of the template can be used to instrument the code.
+In this example C code is added before and after the H5Fcreate function call.
+All other HDF5 function have been deleted for clearness.
 
-      #include <hdf5.h>
+splice_before adds C code before the HDF5 function call
+splice_after adds C code after the HDF5 function call
 
-5. Nun kann aus der C-Datei eine Bibliothek erzeugt werden.
+  // splice_before printf("SIOX: Call H5Fcreate.\n");
+  // splice_after printf("SIOX: H5Fcreate terminated.\n");
+  hid_t H5Fcreate(const char *filename, unsigned flags, hid_t create_plist,
+  hid_t access_plist);
 
-      gcc -c filter-test.c
-      gcc -c hdf5.c
+1. -- Generate the source code
 
-      gcc -o filter-test-intercepted filter-test.o -lhdf5 hdf5.o <Ausgabe von dem siox-wrapper>
+The C source code file of the library can be generated in two ways, with the
+ld.so of the linker (dlsym) or the wrapper functionality of the gcc (wrap).
 
-      gcc -o filter-test filter-test.o -lhdf5
+To generate the C source with dlsym (default):
+
+-t provide the template
+-o output file
+
+  ../../siox-wrapper.py -t ../../template.py -o hdf5-dlsym.c hdf.h
 
 
+To create the C code for the instrumented library with the gcc wrap
+functionality:
 
+-s wrap the style which should be used to generate the C code (default dlsym)
 
+  ../../siox-wrapper.py -s wrap -t ../../template.py -o hdf5-wrap.c
 
+The siox-wrapper prints the name of the function prefixed with the wrap
+parameter to let the gcc know which function should be wrapped. This output
+must be passed to gcc. The compile-wrap.sh already contains the
+necessary list.
+
+--- END OPTIONAL PART ---
+
+2. -- Build the shared library
+
+Depending on the method used to generate the C code the shared library
+need to be build and used in different ways.
+
+Was the source code generated with dlsym the compile-dlsym.sh is used to build
+the shared library and the filter-test application. How to build the library
+is documented in the shell script.
+
+  ./compile-dlsym.sh
+
+To call filter-test with hdf5-dlsym.so:
+
+  LD_PRELOAD=./hdf5-dlsym.so ./filter-test
+
+It is possible to load multiple instrumented libraries.
+If the posix example is already build it is possible to load this library
+to and trace the path of the I/O even further.
+
+  LD_PRELOAD="./hdf5-dlsym.so ../posix/posix-dlsym.so" ./filter-test
+
+To compile the C source generated with the wrap option run:
+
+  ./compile-wrap.sh
+
+The wrap option of the gcc has the disadvantage that the executable needs to
+be rebuild. The compile-wrap.sh produces two executables the normal filter-test
+and the instrumented filter-test-wrap.
+
+  ./filter-test-wrap
+
+LD_PRELOAD is not needed any more because the hdf5-wrap.so is directly linked against the filter-test-wrap application.
