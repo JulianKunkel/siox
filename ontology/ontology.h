@@ -111,11 +111,26 @@ siox_datatype siox_ont_find_datatype_by_dtid( siox_dtid dtid );
 
 
 /**
+ * Turn data typed by a @em DTID into a human-readable string.
+ *
+ * @param[in]   dtid    The @em DTID of the datatype describing the value.
+ * @param[in]   value   A pointer to the actual value.
+ *
+ * @returns     A human-readable string representation of the the value.
+ *
+ * @note		Strings to be passed as values must be defined as @c char*, @em not
+ * 				as @c char[], or a segmentation fault may result!!!
+ */
+const char * siox_ont_data_to_string( siox_dtid dtid, const void * value );
+
+
+/**
  * Count the number of datatypes in the ontology.
  *
  * @returns     The number of datatypes.
  */
 int siox_ont_count_datatypes();
+
 
 /**@}*/
 
@@ -161,6 +176,20 @@ siox_mid siox_ont_find_mid_by_name( const char * name);
  * @returns             If the @e MID exists, a copy of the metric's data; otherwise @c NULL.
  */
 siox_metric siox_ont_find_metric_by_mid( siox_mid mid );
+
+/**
+ * Turn data typed by a @em MID into a human-readable string.
+ *
+ * @param[in]   mid     The @em MID of the metric describing the value.
+ * @param[in]   value   A pointer to the actual value.
+ *
+ * @returns     A human-readable string representation of the the value.
+ *
+ * @note		Strings to be passed as values must be defined as @c char*, @em not
+ * 				as @c char[], or a segmentation fault may result!!!
+ */
+const char * siox_ont_metric_data_to_string( siox_mid mid, const void * value );
+
 
 /**
  * Count the number of metrics in the ontology.

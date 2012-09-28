@@ -32,7 +32,7 @@ main(){
     siox_unid   unid;           /* This node's UNID */
     siox_dtid   dtid;           /* The DTID of the descriptor type we know, "FileName" */
     siox_aid    aid_write;      /* An AID for the write activity */
-    int         bytes_written;  /* A collector for performance data */
+    long        bytes_written;  /* A collector for performance data */
     siox_mid    mid;            /* The MID for our performance metric */
 
     /* Vars for handling our PID */
@@ -40,7 +40,7 @@ main(){
     char        pid_s[10];      /* A printable representation of pid */
 
     /* Vars for accessing MUFS */
-    char        mufs_file_name[] = "EECummings.mufs";
+    char*       mufs_file_name = "EECummings.mufs";
     char        data[] =    "as freedom is a breakfastfood\n"
                             "or truth can live with right and wrong\n"
                             "or molehills are from mountains made\n"
@@ -106,14 +106,14 @@ main(){
     /* Register the descriptor type we know */
     dtid = siox_register_datatype( "FileName", SIOX_STORAGE_STRING );
 
-    /* ...otherwise, register our performance metric with the ontology */
+    /* Register our performance metric with the ontology */
     mid = siox_register_metric( "Bytes Written",
                                 "",
                                 SIOX_UNIT_BYTES,
                                 SIOX_STORAGE_64_BIT_INTEGER,
                                 SIOX_SCOPE_SUM);
-    printf( "Registered performance metric %s with ontotology.\n",
-            "\"Bytes Written\"" );
+    printf( "Registered performance metric >%s< with ontology.\n",
+            "Bytes Written" );
 
 
     /*
@@ -125,10 +125,10 @@ main(){
     aid_write = siox_start_activity( unid, "Write via MUFS" );
 
     /* Report creation of a new descriptor - the file name */
-    siox_create_descriptor( unid, dtid, mufs_file_name );
+    siox_create_descriptor( aid_write, dtid, &mufs_file_name );
 
     /* Report the imminent transfer of the new descriptor to a node with SWID "MUFS" */
-    siox_send_descriptor( unid, "MUFS", dtid, mufs_file_name);
+    siox_send_descriptor( aid_write, "MUFS", dtid, &mufs_file_name);
 
 
     /* The actual call to MUFS to create a file with the given name and write the character data to it */
@@ -139,7 +139,7 @@ main(){
         exit( EXIT_FAILURE );
     }
 
-    /* Stop the writing activity */
+    /* Stop the writing activity; this will stop the clock running on the activity, without closing it yet. */
     siox_stop_activity( aid_write );
 
 
@@ -150,13 +150,11 @@ main(){
 
     /* Report the data we collected. This could take place anytime between siox_start_activity()
        and siox_end_activity() and happen more than once per activity.  */
+    printf("Bytes Written: %ld.\n", bytes_written);
     siox_report_activity( aid_write,
-                          dtid, mufs_file_name,
-                          mid, SIOX_TYPE_INTEGER, &bytes_written,
+                          dtid, &mufs_file_name,
+                          mid, &bytes_written,
                           "Including opening & closing the file, as usual with MUFS." );
-
-    /* Notify SIOX that all pertinent data has been sent and the activities can be closed */
-    siox_end_activity( aid_write );
 
 
     /*
@@ -165,7 +163,10 @@ main(){
      */
 
     /* Mark any descriptors left as unused */
-    siox_release_descriptor( unid, dtid, mufs_file_name );
+    siox_release_descriptor( aid_write, dtid, &mufs_file_name );
+
+    /* Notify SIOX that all pertinent data has been sent and the activity can be closed */
+    siox_end_activity( aid_write );
 
     /* Unregister node from SIOX */
     siox_unregister_node( unid );
