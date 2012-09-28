@@ -16,7 +16,7 @@ template = {
 	'final': 'siox_unregister_node(global_unid);'
 },
 'register_descriptor_map': {
-	'variables': 'Typ1 Typ2 DmidName',
+	'variables': 'DmidName Typ1 Typ2',
 	'global': '''siox_dmid %(DmidName)s;''',
 	'init': '''%(DmidName)s = siox_register_descriptor_map( global_unid, %(Typ1)s, %(Typ2)s );''',
     'before': '''''',
@@ -34,7 +34,7 @@ template = {
 	'final': ''
 },
 'register_datatype': {
-	'variables': 'Name MinStorage RetName',
+	'variables': 'RetName Name MinStorage',
 	'global': '''siox_dtid %(RetName)s;''',
 	'init': '''%(RetName)s = siox_register_datatype( %(Name)s, %(MinStorage)s );''',
     'before': '''''',
@@ -52,7 +52,7 @@ template = {
 	'final': ''
 },
 'register_metric': {
-	'variables': 'Name Description UnitType StorageType ScopeType RetName',
+	'variables': 'RetName Name Description UnitType StorageType ScopeType',
 	'global': '''siox_mid %(RetName)s;''',
 	'init': '''%(RetName)s = siox_register_metric( %(Name)s, %(Description)s, %(UnitType)s, %(StorageType)s, %(ScopeType)s );''',
     'before': '''''',
