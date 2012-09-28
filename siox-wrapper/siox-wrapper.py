@@ -599,7 +599,7 @@ class Template():
         # (?:\s*\S+\s*) matches the first bare word of the values
         # (?:\s*\".*\"\s*) matches double quoted strings
         # (?:\s*\'.*\'\s*) matches single quoted strings
-        self.valueRegex = re.compile('((?:^\s*[-\w%_\(\)\[\]&*]+\s*)|(?:^\s*[^\\]\".*?[^\\]\"\s*)|(?:^\s*[^\\]\'.*?[^\\]\'\s*))', re.S | re.M)
+        self.valueRegex = re.compile('((?:^\s*[-\w%_\(\)\[\]&*]+\s*)|(?:^\s*\".*?\"\s*)|(?:^\s*\'.*?\'\s*))', re.S | re.M)
 
         # Generate strings for output from given input
         self.setParameters(templateDict['variables'], variables)
@@ -753,6 +753,14 @@ class Writer():
             print(function.getDefinitionWrap(),
                     end='\n{\n', sep='', file=output)
 
+            # look for va_lists because they need special treament
+            if function.parameterList[-1].type == "...":
+                print('\tva_list args;', file=output)
+                print('\tva_start(%s, args);' % function.parameterList[-2].name, 
+                    file = output)
+                # set the name to args
+                function.parameterList[-1].name = "args"
+
             # a variable to save the return-value
             returnType = function.type
 
@@ -785,6 +793,10 @@ class Writer():
                 outputString = templ.output('cleanup').strip()
                 if outputString != '':
                     print('\t', outputString, end='\n', sep='', file=output)
+
+            # look for va_lists because they need special treament
+            if function.parameterList[-1].type == "...":
+                print("\tva_end(args);", file=output)
 
             # write the return statement and close the function
             if returnType != "void":
@@ -863,6 +875,14 @@ class Writer():
             print(function.getDefinition(), end='\n{\n', sep=' ',
                 file=output)
 
+            # look for va_lists because they need special treament
+            if function.parameterList[-1].type == "...":
+                print('\tva_list args;', file=output)
+                print('\tva_start(%s, args);' % function.parameterList[-2].name, 
+                    file = output)
+                # set the name to args
+                function.parameterList[-1].name = "args"
+
             # a variable to save the return-value
             returnType = function.type
 
@@ -895,6 +915,10 @@ class Writer():
                 outputString = templ.output('cleanup').strip()
                 if outputString != '':
                     print('\t', outputString, end='\n', sep='', file=output)
+
+            # look for va_lists because they need special treament
+            if function.parameterList[-1].type == "...":
+                print("\tva_end(args);", file=output)
 
             # write the return statement and close the function
             if returnType != "void":

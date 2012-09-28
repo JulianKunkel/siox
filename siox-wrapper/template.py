@@ -179,4 +179,4 @@ forEachAfter = ""
 
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
-includes = ['<siox-ll.h>']
+includes = ['<siox-ll.h>', '<stdargs.h>']
