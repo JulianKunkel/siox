@@ -100,56 +100,56 @@ template = {
 	'final': ''
 },
 'activity_report': {
-	'variables': 'ActivityId DescriptorId DescriptorName MetricId Value Details',
+	'variables': 'AID Type Descriptor MID value details',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_report_activity(%(ActivityId)s, %(DescriptorId)s, %(DescriptorName)s, %(MetricId)s, %(Value)s, %(Details)s);',
+	'after': 'siox_report_activity(%(AID)s, %(Type)s, %(Descriptor)s, %(MID)s, %(value)s, %(details)s);',
 	'cleanup': '',
 	'final': ''
 },
 'create_descriptor': {
-	'variables': 'Type DescriptorName',
+	'variables': 'AID Type Descriptor',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_create_descriptor( global_unid, %(Type)s, %(DescriptorName)s);',
+	'after': 'siox_create_descriptor( %(AID)s, %(Type)s, %(Descriptor)s);',
 	'cleanup': '',
 	'final': 'siox_release_descriptor( global_unid, %(Type)s, %(DescriptorName)s);'
 },
 'send_descriptor': {
-	'variables': 'TargetSWID Type DescriptorName',
+	'variables': 'AID TargetSWID Type Descriptor',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_send_descriptor( global_unid, %(TargetSWID)s, %(Type)s, %(DescriptorName)s );''',
+    'before': '''siox_send_descriptor( %(AID)s, %(TargetSWID)s, %(Type)s, %(Descriptor)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
 },
 'map_descriptor': {
-	'variables': 'Descriptor From To',
+	'variables': 'AID Type OldDescriptor NewDescriptor',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_map_descriptor( global_unid, %(Descriptor)s, %(From)s, %(To)s);',
+	'after': 'siox_map_descriptor( %(AID)s, %(Type)s, %(OldDescriptor)s, %(NewDescriptor)s);',
 	'cleanup': '',
 	'final': ''
 },
 'receive_descriptor': {
-	'variables': 'Type Name',
+	'variables': 'AID Type Descriptor',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_receive_descriptor( global_unid, %(Type)s, %(Name)s );''',
+    'before': '''siox_receive_descriptor( %(AID)s, %(Type)s, %(Descriptor)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
 },
 'release_descriptor': {
-	'variables': 'Type DescriptorName',
+	'variables': 'AID Type Descriptor',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_release_descriptor( global_unid, %(Type)s, %(DescriptorName)s);',
+	'after': 'siox_release_descriptor( %(AID)s, %(Type)s, %(Descriptor)s);',
 	'cleanup': '',
 	'final': ''
 },
