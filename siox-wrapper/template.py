@@ -75,7 +75,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_report_activity(%(AID)s, %(Type)s, %(Descriptor)s, %(MID)s, %(value)s, %(details)s);',
+	'after': 'siox_report_activity(%(AID)s, %(Type)s, &%(Descriptor)s, %(MID)s, &%(value)s, %(details)s);',
 	'cleanup': '',
 	'final': ''
 },
@@ -84,15 +84,15 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_create_descriptor( %(AID)s, %(Type)s, %(Descriptor)s);',
+	'after': 'siox_create_descriptor( %(AID)s, %(Type)s, &%(Descriptor)s);',
 	'cleanup': '',
-	'final': 'siox_release_descriptor( global_unid, %(Type)s, %(DescriptorName)s);'
+	'final': 'siox_release_descriptor( global_unid, %(Type)s, &%(DescriptorName)s);'
 },
 'send_descriptor': {
 	'variables': 'AID TargetSWID Type Descriptor',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_send_descriptor( %(AID)s, %(TargetSWID)s, %(Type)s, %(Descriptor)s );''',
+    'before': '''siox_send_descriptor( %(AID)s, %(TargetSWID)s, %(Type)s, &%(Descriptor)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -102,7 +102,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_map_descriptor( %(AID)s, %(Type)s, %(OldDescriptor)s, %(NewDescriptor)s);',
+	'after': 'siox_map_descriptor( %(AID)s, %(Type)s, &%(OldDescriptor)s, &%(NewDescriptor)s);',
 	'cleanup': '',
 	'final': ''
 },
@@ -110,7 +110,7 @@ template = {
 	'variables': 'AID Type Descriptor',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_receive_descriptor( %(AID)s, %(Type)s, %(Descriptor)s );''',
+    'before': '''siox_receive_descriptor( %(AID)s, %(Type)s, &%(Descriptor)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
