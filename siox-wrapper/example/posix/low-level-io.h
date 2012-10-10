@@ -11,46 +11,62 @@
 #include <sys/stat.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <stdio.h>
 
 /* Set the interface name for the library*/
 //interface_name "POSIX"
 
 /* Register the data types for the descriptors */
-//register_datatype "FileName" SIOX_STORAGE_STRING dtid_FileName
-
-//register_datatype "FileHandle" SIOX_STORAGE_64_BIT_INTEGER dtid_FileHandle
+//register_datatype dtid_fileName "File Name" SIOX_STORAGE_STRING
+//register_datatype dtid_fileHandle "File Handle" SIOX_STORAGE_64_BIT_INTEGER
 
 /* Register the metrics to grab the performance data */
-//register_metric "Bytes written." "Count of bytes written to file."
-//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM mid_bytes_written
+//register_metric mid_bytesWritten "Bytes written." "Count of bytes written to file."
+//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
 
-//register_metric "Bytes read." "Count of bytes read form file"
-//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM mid_bytes_read
+//register_metric mid_bytesRead "Bytes read." "Count of bytes read form file"
+//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
 
 /* Register the descriptor mapping form a file name to a file handle */
-//register_descriptor_map dtid_FileName dtid_FileHandle dmid_open
+//register_descriptor_map mid_open dtid_fileName dtid_fileHandle
+
+/*------------------------------------------------------------------------------
+End of global part
+------------------------------------------------------------------------------*/
 
 /* Receive the file name descriptor and map it to the file handle descriptor */
-//receive_descriptor dtid_FileName "FileName"
-//map_descriptor dmid_open "FileName" "FileHandle"
+//activity aID_open "Open File."
+
+//receive_descriptor aID_open dtid_fileName pathname
+
+//map_descriptor aID_open mid_open pathname ret
 int open(const char *pathname, int flags, ...);
 
 int creat(const char *pathname, mode_t mode);
 
 /* The close function destroys the file handle descriptor */
-//receive_descriptor dtid_FileHandle "FileHandle"
-//release_descriptor dtid_FIleHandle "FileHandle"
+//activity aID_close "Close File."
+
+//receive_descriptor aID_close dtid_fileHandle fd
 int close(int fd);
 
 /* The write function starts an activity and reports it */
-//receive_descriptor dtid_FileHandle "FileHandle"
-//activity dtid_FileHandle "FileHandle" mid_bytes_written SIOX_TYPE_INTEGER &count "Write to disk."
+//activity aID_write "Write to file."
+
+//receive_descriptor aID_write dtid_fileHandle fd
+
+//activity_report aID_write dtid_fileHandle fd mid_bytesWritten count
+//"Write to File."
 ssize_t write(int fd, const void *buf, size_t count);
 
 /* The read function starts an activity and reports it*/
-//receive_descriptor dtid_FileHandle "FileHAndle"
-//activity dtid_FileHandle "FileHandle" mid_bytes_read SIOX_TYPE_INTEGER &count "Read from disk."
-ssize_t read(int fd, const void *buf, size_t count);
+//activity aID_read "Read from file."
+
+//receive_descriptor aID_read dtid_fileHandle fd
+
+//activity_report aID_read dtid_fileHandle fd mid_bytesRead count
+//"Read from file."
+ssize_t read(int fd, void *buf, size_t count);
 
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
@@ -73,7 +89,7 @@ lio_listio	Initiate a list of I/O operations
 /* See: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Synchronizing-I_002fO */
 /* Problem: Woher sollen wir wissen, welche Dateien betroffen sind? => Tot? */
 /* Stellenweise optional, ggf. von SIOX zu Optimierung nutzbar? */
-int sync (void);
+void sync (void);
 int fsync (int fildes);
 int fdatasync (int fildes);
 
