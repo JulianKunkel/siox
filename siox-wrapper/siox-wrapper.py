@@ -756,7 +756,7 @@ class Writer():
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
                 print('\tva_list args;', file=output)
-                print('\tva_start(%s, args);' % function.parameterList[-2].name, 
+                print('\tva_start(args, %s);' % function.parameterList[-2].name, 
                     file = output)
                 # set the name to args
                 function.parameterList[-1].name = "args"
@@ -878,7 +878,7 @@ class Writer():
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
                 print('\tva_list args;', file=output)
-                print('\tva_start(%s, args);' % function.parameterList[-2].name, 
+                print('\tva_start(args, %s);' % function.parameterList[-2].name, 
                     file = output)
                 # set the name to args
                 function.parameterList[-1].name = "args"
