@@ -1,4 +1,9 @@
 template = {
+# interface_name 
+# 
+# Registers (and ungeristers) a new node with SIOX and sets the ontology. 
+#
+# SWID: The name for this node
 'interface_name': {
 	'variables': 'SWID',
 	'global': '''siox_unid global_unid;
@@ -6,7 +11,7 @@ template = {
                  char hostname[1024];
 ''',
     'init': '''hostname[1023] = '\\0';
-							 gethostname(hostname, 1023);
+			   gethostname(hostname, 1023);
                sprintf( &global_pid, "%%d", getpid() );
                global_unid = siox_register_node(hostname, %(SWID)s, &global_pid);
                siox_set_ontology("OntologyName");''',
@@ -15,25 +20,14 @@ template = {
 	'cleanup': '',
 	'final': 'siox_unregister_node(global_unid);'
 },
-'register_descriptor_map': {
-	'variables': 'DmidName Typ1 Typ2',
-	'global': '''siox_dmid %(DmidName)s;''',
-	'init': '''%(DmidName)s = siox_register_descriptor_map( global_unid, %(Typ1)s, %(Typ2)s );''',
-    'before': '''''',
-	'after': '',
-	'cleanup': '',
-	'final': ''
-},
-'register_edge': {
-	'variables': 'Edge',
-	'global': '''''',
-	'init': '''siox_register_edge( global_unid, %(Edge)s );''',
-    'before': '''''',
-	'after': '',
-	'cleanup': '',
-	'final': ''
-},
-'register_datatype': {
+# datatype_register
+#
+# Registers a new datatype with siox
+#
+# RetName: Name of the variable which is used to store the pointer to the dtid
+# Name: Name of the datatype
+# MinStorage: The minimum storage type required to store this datatype
+'datatype_register': {
 	'variables': 'RetName Name MinStorage',
 	'global': '''siox_dtid %(RetName)s;''',
 	'init': '''%(RetName)s = siox_register_datatype( %(Name)s, %(MinStorage)s );''',
@@ -42,16 +36,32 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-'register_attribute': {
-	'variables': 'Key ValueType Value',
+# attribute_register
+#
+# Reports other important attributes to SIOX
+#
+# DTID: Datatype-ID of the attribute
+# Value: Pointer to the real value of the attribute
+'attribute_register': {
+	'variables': 'DTID Value',
 	'global': '''''',
-	'init': '''siox_register_attribute( global_unid, %(Key)s, %(ValueType)s, %(Value)s );''',
+	'init': '''siox_register_attribute( global_unid,  %(DTID)s, %(Value)s);''',
     'before': '''''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
 },
-'register_metric': {
+# metric_register
+#
+# Registers a new metric with SIOX
+#
+# RetName: Name of the variable to store the mid
+# Name: Name of the metric
+# Description: Short description of the metric
+# UnitType: SIOX unit-type for the metric
+# StorageType: SIOX storage-type for the metric
+# ScopeType: SIOX scope-type for the metric
+'metric_register': {
 	'variables': 'RetName Name Description UnitType StorageType ScopeType',
 	'global': '''siox_mid %(RetName)s;''',
 	'init': '''%(RetName)s = siox_register_metric( %(Name)s, %(Description)s, %(UnitType)s, %(StorageType)s, %(ScopeType)s );''',
@@ -60,6 +70,13 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+# activity
+# 
+# Starts (at the beginning) and stops (at the end) a new activity in the current function.
+# Still needs to be reported!
+#
+# AID: Name of the varibale to store the aid
+# Description: Short description of the activity
 'activity': {
 	'variables': 'AID Description',
 	'global': '''''',
@@ -70,16 +87,49 @@ template = {
 	'cleanup': 'siox_end_activity( %(AID)s );',
 	'final': ''
 },
+# acivity_report
+#
+# Reports an activity
+#
+# AID: The aid of the activity to be reported
+# Type: Type of the descriptor the activity is dedicated to
+# Descriptor: Pointer to the descriptor
+# MID: Metric-ID of the reported value
+# Value: Pointer to the value to be reported
+# Details: Any explanatory notes
 'activity_report': {
-	'variables': 'AID Type Descriptor MID value details',
+	'variables': 'AID DescriptorType Descriptor MID value details',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_report_activity(%(AID)s, %(Type)s, &%(Descriptor)s, %(MID)s, &%(value)s, %(details)s);',
+	'after': 'siox_report_activity(%(AID)s, %(DescriptorType)s, &%(Descriptor)s, %(MID)s, &%(value)s, %(details)s);',
 	'cleanup': '',
 	'final': ''
 },
-'create_descriptor': {
+# descriptor_map_register
+#
+# Tells SIOX what types of descriptors can be mapped by this node.
+#
+# DmidName: Name of the variable which is used to store the pointer to the dmid
+# Typ1: The type of the origin
+# Typ2: The type of the target
+'descriptor_map_register': {
+	'variables': 'DmidName Typ1 Typ2',
+	'global': '''siox_dmid %(DmidName)s;''',
+	'init': '''%(DmidName)s = siox_register_descriptor_map( global_unid, %(Typ1)s, %(Typ2)s );''',
+    'before': '''''',
+	'after': '',
+	'cleanup': '',
+	'final': ''
+},
+# descriptor_create
+#
+# Creates a new descriptor
+#
+# AID: The activity-ID associated
+# Type: The dtid of the descriptor
+# Descriptor: The descriptor
+'descriptor_create': {
 	'variables': 'AID Type Descriptor',
 	'global': '''''',
 	'init': '''''',
@@ -88,7 +138,15 @@ template = {
 	'cleanup': '',
 	'final': 'siox_release_descriptor( global_unid, %(Type)s, &%(DescriptorName)s);'
 },
-'send_descriptor': {
+# descriptor_send
+#
+# Sends a descriptor to another node
+#
+# AID: The acitivity associated
+# TargetSWID: The receiving node
+# Type: The type (dtid) of the descriptor associated
+# Descriptor: The descriptor associated
+'descriptor_send': {
 	'variables': 'AID TargetSWID Type Descriptor',
 	'global': '''''',
 	'init': '''''',
@@ -97,7 +155,15 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-'map_descriptor': {
+# descriptor_map
+#
+# Maps a descriptor
+#
+# AID: The activity-id associated
+# Type: Type of the descriptor
+# OldDescriptor: The old descriptor (to be mapped)
+# NewDescriptor: The new descriptor (emerged from the old descriptor)
+'descriptor_map': {
 	'variables': 'AID Type OldDescriptor NewDescriptor',
 	'global': '''''',
 	'init': '''''',
@@ -106,7 +172,14 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-'receive_descriptor': {
+# descriptor_receive
+#
+# Receives a descriptor
+#
+# AID: The id of the activity associated
+# Type: The dtid of the descriptor
+# Descriptor: The descriptor
+'descriptor_receive': {
 	'variables': 'AID Type Descriptor',
 	'global': '''''',
 	'init': '''''',
@@ -115,6 +188,11 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+# splice_before
+#
+# Used to insert custom code before the call
+#
+# PROGRAMMCODE: The code to insert
 'splice_before': {
 	'variables': 'PROGRAMMCODE',
 	'global': '',
@@ -124,6 +202,11 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+# splice_before
+#
+# Used to insert custom code after the call
+#
+# PROGRAMMCODE: The code to insert
 'splice_after': {
 	'variables': 'PROGRAMMCODE',
 	'global': '',
@@ -135,48 +218,14 @@ template = {
 }
 }
 
+# Inserted before every call
 forEachBefore = ""
 
+# Inserted after every call
 forEachAfter = ""
 
+# Regexes for functions to throw away
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
+# Will be included
 includes = ['<siox-ll.h>', '<stdargs.h>']
-
-# Old stuff
-# 'activity_start': {
-# 	'variables': 'Name Description',
-# 	'global': '''siox_aid %(Name)s;''',
-# 	'init': '''''',
-#     'before': '''%(Name)s = siox_start_activity( global_unid, %(Description)s );''',
-# 	'after': '',
-# 	'cleanup': '',
-# 	'final': ''
-# },
-# 'activity_stop': {
-# 	'variables': 'Name',
-# 	'global': '''''',
-# 	'init': '''''',
-#     'before': '''''',
-# 	'after': 'siox_stop_activity( %(Name)s );',
-# 	'cleanup': '',
-# 	'final': ''
-# },
-# 'activity_end': {
-# 	'variables': 'Name',
-# 	'global': '''''',
-# 	'init': '''''',
-#     'before': '''''',
-# 	'after': 'siox_end_activity( %(Name)s );',
-# 	'cleanup': '',
-# 	'final': ''
-# },
-# 'release_descriptor': {
-# 	'variables': 'AID Type Descriptor',
-# 	'global': '''''',
-# 	'init': '''''',
-#     'before': '''''',
-# 	'after': '',
-# 	'cleanup': 'siox_release_descriptor( %(AID)s, %(Type)s, %(Descriptor)s);',
-# 	'final': ''
-# },
