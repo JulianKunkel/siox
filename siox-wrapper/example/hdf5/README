@@ -4,7 +4,7 @@ The first part of this readme is optional, it describes the usage of the siox-wr
 
 0. -- Generate the header file
 
-First a clean header file of the HDF5 lib has to be created. The clean header
+At first, a clean header file of the HDF5 lib has to be created. The clean header
 file only contains the required includes and the function definition of the
 parsed header file. The clean header file will be annotated with the commands
 from the template.
@@ -74,7 +74,7 @@ To build the wrapper code as a shared use:
   ./compile-dlsym.sh
 
 This shell script generates a shared library hdf5.so out of the hdf5-dlsym.c
-f ile. And compiles the test program filter-test.
+file, and compiles the test program filter-test.
 
 2.2 -- Link the program directly to the wrapper
 
