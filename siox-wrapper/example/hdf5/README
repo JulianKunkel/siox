@@ -18,8 +18,6 @@ from the template.
 Add the necessary includes at the beginning of the hdf5.h file.
 
   #include <hdf5.h>
-  #include <stdio.h>
-  #include <stdlib.h>
 
 It is possible to add additional includes in the template with the includes
 variable. Multiple includes of the same header file will be filtered.
