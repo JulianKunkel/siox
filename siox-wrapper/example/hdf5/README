@@ -44,7 +44,7 @@ To generate the C source with dlsym (default):
 -t provide the template
 -o output file
 
-  ../../siox-wrapper.py -t ../../template.py -o hdf5-dlsym.c hdf.h
+  ../../siox-wrapper.py -t ../../template.py -o hdf5-dlsym.c hdf5.h
 
 
 To create the C code for the instrumented library with the gcc wrap
