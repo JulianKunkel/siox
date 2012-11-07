@@ -1,6 +1,6 @@
 /**
  * @file    siox-ll.h
- *          Headerdatei für das SIOX-Low-Level-Interface
+ *          Headerdatei for the SIOX-Low-Level-Interface
  *
  * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
  * @date    2012
@@ -15,319 +15,348 @@
 
 
 /**
- * Die <em>Unique Node ID</em>.
+ * The node's <em>Unique Node ID</em>.
  *
- * Identifiziert einen Knoten im IOPm-Graphen.
+ * Identifies a node in the IOPm graph.
  */
 typedef struct siox_unid_t * siox_unid;
 
-
 /**
- * Die <em>Activity ID</em>.
+ * The <em>Activity ID</em>.
  *
- * Identifiziert eine Aktivität.
+ * Identifies an activity.
  */
 typedef struct siox_aid_t * siox_aid;
 
-
 /**
- * Die <em>Descriptor Map ID</em>.
+ * The <em>Remote Call ID</em>.
  *
- * Identifiziert eine Descriptor Map, d.h., ein Paar von zwei Deskriptortypen,
- * wobei der zweite aus dem ersten abgeleitet ist.
+ * Identifies a remote call and the group of attributes (e.g., parameters) associated
+ * with it.
  */
-typedef struct siox_dmid_t * siox_dmid;
+typedef struct siox_rcid_t * siox_rcid;
+
+/**
+ * A time stamp, as represented in SIOX.
+ */
+typedef siox_timestamp_t siox_timestamp;
 
 
 
 /**
- * @name Functions for Nodes and Their Attributes
+ * @name Nodes
+ * Nodes represent entities in the IOPm graph, e.g., a software layer such as HDF5 or
+ * a hardware component such as a block storage device.
+ *
+ * In SIOX, each node is identified by a <em>Unique Node ID (UNID)</em> which is assigned
+ * upon registration.
+ *
+ * A node's typical life cycle would consist of:
+ * <ol>
+ * <li>Checking in with SIOX in its initalisation function via siox_register_node().</li>
+ * <li>Also there, reporting any additional attributes via siox_node_attribute().</li>
+ * <li>Performing its duties as usual.</li>
+ * <li>Checking out with SIOX in its finalization function via siox_unregister_node().</li>
+ * </ol>
  */
 /**@{*/
 
 /**
- * Meldet den Knoten als Teilnehmer an SIOX an und teilt ihm eine frische @em UNID zu.
+ * Register this node with SIOX and assign a fresh @em UNID to it.
  *
- * SIOX nutzt die übergeben Daten, um einen neuen IOPm-Knoten zu erzeugen und – wenn möglich – in ggf.
- * existierende Graphen einzubinden.
+ * SIOX will use the information given to create a new node in its IOPm model of the system.
  *
- * @param[in]   hwid    Die @em HardwareID des meldenden Knoten, z.B. „Blizzard Node 5“ oder die MacID
- *                      einer NAS-Festplatte.
- * @param[in]   swid    Die @em SoftwareID des meldenden Knoten, z.B. „MPI“ oder „POSIX“.
- * @param[in]   iid     Die @em InstanzID des meldenden Knoten (je nach Knotenart, z.B. die ProzeßID
- *                      eines Threads oder IP-Adresse und Port eines Servercaches)
+ * @param[in]   hwid    The node's @em HardwareID, e.g. „Blizzard Node 5“ or the MacID
+ *                      of an NAS hard drive.
+ * @param[in]   swid    The node's @em SoftwareID, e.g. „MPI“ oder „POSIX“.
+ * @param[in]   iid     The node's @em InstanceID (according to node type, e.g. the ProcessID
+ *                      of a Thread or the IP address and Port od a server cache).
  *
- * @return  Eine frische @em UNID, die SIOX dem Knoten zuteilt und welche dieser im künftigen
- *          Umgang mit SIOX verwenden muß.
+ * @return  A fresh @em UNID to be used in all the node's future communications with SIOX.
  *
- * @note Wo SIOX die nötigen Daten selbst herausfinden kann, darf statt des Parameters @c NULL stehen.
+ * @note Any parameter SIOX can find out on its own (such as a ProcessID) may be @c NULL.
  */
 siox_unid siox_register_node(const char * hwid, const char * swid, const char * iid);
 
-
 /**
- * Meldet den Knoten bei SIOX ab.
+ * Unregister a node with SIOX.
  *
- * @param[in]   unid    Die @em UNID, die SIOX dem Knoten zugeteilt hatte.
+ * @param[in]   unid    The @em UNID  SIOX had assigned to this node.
  */
 void siox_unregister_node(siox_unid unid);
 
-
 /**
- * Meldet weitere relevante Attribute des Knoten an SIOX.
+ * Report further attributes of this node to SIOX.
  *
- * @em Beispiel:    Ein Cache, der seine Kapazität mit 10.000 Bytes angibt.
+ * @em Example:    A cache reportin its capacity as 10,000 bytes.
  *
- * @param[in]   unid        Die @em UNID des Knoten.
- * @param[in]   dtid        Die @em DTID des Attributs.
- * @param[in]   value       Ein Zeiger auf den tatsächlichen Wert des Attributs (hier z.B.: 10.000).
+ * @param[in]   unid        The node's @em UNID.
+ * @param[in]   dtid        The @em DTID of the attribute.
+ * @param[in]   value       A pointer to the attribute's value.
  */
-void siox_register_attribute(siox_unid unid, siox_dtid dtid, const void * value);
-
-
-/**
- * Meldet eine Kante zu einem potentiellen Kindesknoten im IOPm-Graphen bei SIOX an.
- *
- * Ruft ein Knoten später siox_register() auf, versucht ihn SIOX anhand dieser Informationen
- * in den vorhandenen Graphen einzupflegen.
- *
- * @param[in]   unid        Die @em UNID des Knoten.
- * @param[in]   child_swid  Die @em SoftwareID des potentiellen Kindesknoten, z.B. "HDF5".
- */
-void siox_register_edge(siox_unid unid, const char * child_swid);
-
-
-/**
- * Find the @em DTID for the data type with the specifications given.
- * If it already exists in the ontology (only the name is checked to test for this!), return its DTID;
- * otherwise, create it and return the fresh DTID.
- *
- * @param[in]   name        The data type's unique name.
- * @param[in]   storage     The minimum storage type required to store data of the data type.
- *
- * @returns                 The @em DTID of the descriptor type.
- */
-siox_dtid siox_register_datatype( const char * name, enum siox_ont_storage_type storage );
-
-
-/**
- * Meldet die Fähigkeit, eine bestimmte Deskriptorübersetzung auszuführen, bei SIOX an.
- *
- * Das System kann aus den Möglichkeiten eines Knotens Schlüsse auf den Verlauf des
- * Datenpfades und die Aktivitäten darauf ziehen.
- *
- * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   source_dtid     Die @em DTID des Quelldeskriptors.
- * @param[in]   target_dtid     Die @em DTID des Zieldeskriptors.
- *
- * @return      Eine <em> DeskriptorMapID (DMID)</em>, die der Knoten angeben muß, wenn er SIOX mit
-                siox_map_descriptor() eine Anwendung dieser Abbildung meldet.
- */
-siox_dmid siox_register_descriptor_map(siox_unid unid, siox_dtid source_dtid, siox_dtid target_dtid);
-
-
-/**
- * Liefert die @em MID zu einer Metrik.
- * Existiert diese noch nicht (hierzu wird nur der Name geprüft!), wird eine neue Metrik in die Ontologie eingefügt
- * und deren neue @em MID zurückgeliefert.
- *
- * @param[in]   name        Der Name der Metrik. Er muß eindeutig sein.
- * @param[in]   description Eine textuelle Beschreibung der Metrik.
- * @param[in]   unit        Die Einheit, in welcher die Daten gemessen werden.
- * @param[in]   storage     Der minimale zum Speichern der Daten nötige Datentyp.
- * @param[in]   scope       Der zeitliche Bereich, in welchem die Daten angefallen sind.
- *
- * @returns             Eine <em>Metric ID</em>.
- */
-siox_mid siox_register_metric( const char *                 name,
-                               const char *                 description,
-                               enum siox_ont_unit_type      unit,
-                               enum siox_ont_storage_type   storage,
-                               enum siox_ont_scope_type     scope );
-
+void siox_node_attribute(siox_unid unid, siox_dtid dtid, const void * value);
 
 /**@}*/
 
 
 
+
 /**
- * @name Functions for Descriptors
+ * @name Activities
+ * Activities bundle a series of actions so that the can be related to one or more
+ * performance metrics of the system influenced by these actions.
+ *
+ * As an example, an activity might bundle calls to open a file, write to it and close it again.
+ * This way, the performance metrics of maximum throughput and average write speed can e linked
+ * to this chain of actions.
+ *
+ * When defining an activity, the usual course of action is as follows:
+ * <ol>
+ * <li>Start the activity in its active phase and receive @em AID via siox_start_activity().</li>
+ * <li>Execute usual commands, calls, etc. pertaining to activity.</li>
+ * <li>End active phase and switch to reporting phase via siox_stop_activity().</li>
+ * <li>Gather any performance data associated with the activity and report it
+ * via siox_repot_activity().</li>
+ * <li>Close the activity via siox_end_activity().</li>
+ * </ol>
+ * If no reporting is to be done in step 4, steps 3 may be omitted as well.
  */
 /**@{*/
 
 /**
- * Meldet das Erzeugen eines neuen Deskriptors an SIOX.
+ * Report the start of an activity and receive an <em>Activity ID (AID)</em> for it.
  *
- * Die Funktion ist für jeden Deskriptor, der nicht von einem anderen abgeleitet oder von einem anderen Knoten
- * empfangen wird, aufzurufen.
+ * This will mark the time stamp given as the beginning of the activity, influencing any
+ * performance metrics associated that are measured over time.
  *
- * @em Beispiel:    Ein Dateiname, den der Client durch eine Benutzereingabe erhalten hat.
+ * SIOX will use the @em AID to correctly assign attributes used and performance metrics influenced
+ * by this activity.
+ * As any @em AID is linked to its node by SIOX, functions supplied with an @em AID do not use a @em UNID.
+ * 
  *
- * @param[in]   aid             Die @em AID der aktuellen Aktivität.
- * @param[in]   dtid            Die @em DTID des folgenden Deskriptors
- * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "siox.c" oder "17".
- *
- * @note    Diese Funktion ist optional.
+ * @param[in]   unid        The node's @em UNID.
+ * @param[in]   timestamp   A time stamp or @c NULL,
+ *                          which will result in SIOX using the current time.
+ * @return                  A fresh @em AID, to be used in all the activity's further dealings with SIOX.
  */
-void siox_create_descriptor(siox_aid aid, siox_dtid dtid, const void * descriptor);
-
+siox_aid siox_start_activity(siox_unid unid, siox_timestamp * timestamp);
 
 /**
- * Meldet die Übergabe eines Deskriptors an einen Kindesknoten.
+ * Report the end of an activity's active phase, beginning its reporting phase.
  *
- * @em Beispiel:    Ein Knoten fordert das Lesen aus einer Datei an,
- *                  die über ihr Dateihandle identifiziert wird.
+ * This will mark the time stamp given as the end of the activity, influencing any
+ * performance metrics associated that are measured over time.
  *
- * @param[in]   aid         Die @em AID der aktuellen Aktivität.
- * @param[in]   child_swid  Die @em SoftWareID des empfangenden Kindesknoten, z.B. "HDF5".
- * @param[in]   dtid        Die @em DTID des Deskriptors.
- * @param[in]   descriptor  Der eigentliche Deskriptor, z.B. "17726".
+ * @param[in]   aid         The activity's @em AID.
+ * @param[in]   timestamp   A time stamp or @c NULL,
+ *                          which will result in SIOX using the current time.
+ * @note    If there are no metrics to report for an activity, siox_stop_activity() can be omitted.
  */
-void siox_send_descriptor(siox_aid aid, const char * child_swid, siox_dtid dtid, const void * descriptor);
-
+void siox_stop_activity(siox_aid aid, siox_timestamp * timestamp);
 
 /**
- * Meldet den Empfang eines Deskriptors von einem Elternknoten.
+ * Report performance data to be associated with the activity.
  *
- * @em Beispiel:    Ein Knoten wird angewiesen, aus einer Datei zu lesen,
- *                  die über ihre Inode identifiziert wird.
+ * @em Example:   After being called to write a number of bytes to block storage, the node reports
+ *                the number of bytes successfully written, the average cache fill level oder the
+ *                maximum throughput achieved.
  *
- * @param[in]   aid         Die @em AID der aktuellen Aktivität.
- * @param[in]   dtid        Die @em DTID des Deskriptors.
- * @param[in]   descriptor  Der eigentliche Deskriptor, z.B. "53718332".
+ * @param[in]   aid             The activity's @em AID.
+ * @param[in]   mid             The metric's @em MID.
+ * @param[in]   value           A pointer to the metric's actual value.
  */
-void siox_receive_descriptor(siox_aid aid, siox_dtid dtid, const void * descriptor);
-
+void siox_report_activity(siox_aid aid, siox_mid mid, void * value);
 
 /**
- * Meldet die Ableitung eines Deskriptors aus einem anderen.
+ * Report that the current call resulted in the error code @em error so that SIOX can mark any
+ * performance metrics gathered accordingly.
+ * This should be done as part of any regular error processing by calls issued by the activity.
  *
- * @em Beispiel:    Einem Dateinamen wird ein Dateihandle zugeordnet.
- *
- * @param[in]   aid                 Die @em AID der aktuellen Aktivität.
- * @param[in]   dmid                Die @em DMID der Abbildung aus siox_register_descriptor_map().
- * @param[in]   source_descriptor   Der Ursprungsdeskriptor, z.B. "siox.c".
- * @param[in]   target_descriptor   Der Zieldeskriptor, z.B. "17".
+ * @param[in]   aid     The activity's @em AID.
+ * @param[in]   error   The error code returned by the function.
  */
-void siox_map_descriptor(siox_aid aid, siox_dmid dmid, const void * source_descriptor, const void * target_descriptor);
-
+void siox_report_error(siox_aid aid, int error);
 
 /**
- * Meldet, daß ein Deskriptor in einem Knoten nicht mehr genutzt wird.
+ * Report the end of an activity's report phase and close it.
  *
- * SIOX kennzeichnet alle Verknüpfungen zwischen ihm und verbundenen Deskriptoren
- * in der Datenbank als inaktiv.
+ * After calling this function, the behaviour of further calls to siox_report_activity()
+ * with the same @em AID will be undefined.
  *
- * @em Beispiel:    Ein Dateihandle wird beim Schließen seiner Datei freigegeben.
+ * If no performance metrics were to be reported, the usual prior call to siox_stop_activity()
+ * may be omitted, in which case timstamp will be used to determine the end of the activity's
+ * active phase. Otherwise, timestamp is discarded.
  *
- * @param[in]   aid         Die @em AID der aktuellen Aktivität.
- * @param[in]   dtid        Die @em DTID des Deskriptors.
- * @param[in]   descriptor  Der eigentliche Deskriptor, z.B. "51773".
- *
- * @note    Diese Funktion ist optional.
+ * @param[in]   aid         The activity's @em AID.
+ * @param[in]   timestamp   A time stamp or @c NULL,
+ *                          which will result in SIOX using the current time.
  */
-void siox_release_descriptor(siox_aid aid, siox_dtid dtid, const void * descriptor);
+void siox_end_activity(siox_aid aid, siox_timestamp * timestamp);
+
+/**
+ * Causally link an activity to another.
+ *
+ * This will enable SIOX to relate the activities' influence on system performance.
+ * While functions directly called by other functions can be linked by SIOX automatically,
+ * the relation between two calls related "horizontally" (such as one to open a file
+ * and one to write to it) is hard to impossible to determine automatically.
+ * This function will give SIOX the information necessary to do so.
+ *
+ * @param[in]   aid_child   The @em AID of the current activity.
+ * @param[in]   aid_parent  The @em AID of an activity causally preceding the current one.
+ */
+void siox_link_activity(siox_aid aid_child, siox_aid aid_parent);
+
+/**
+ * Report performance data @em not associated with a single activity.
+ *
+ * @em Example:   Every second, the node reports its average processor load, maximum memory usage
+ *                and total idle time to SIOX.
+ *
+ * @param[in]   unid    The node's @em UNID.
+ * @param[in]   mid     The metric's @em MID.
+ * @param[in]   value   A pointer to the metric's actual value.
+ */
+void siox_report(siox_unid unid,  siox_mid  mid, void * value);
 
 /**@}*/
 
 
 
 /**
- * @name Functions for Activities
+ * @name Remote Calls
+ * Remote calls allow SIOX to reconstruct causal relations of caller and callee
+ * via physical system boundaries.
+ *
+ * While locally, SIOX can follow caller-callee relations by itself, for calls crossing
+ * physical system boundaries, this is much harder.
+ * The path chosen here requires both caller and callee to report to SIOX the attributes
+ * of the call (such as key parameters passed) to allow for association by best match.
+ *
+ * The usual sequence is as follows:
+ * <ul>
+ * <li>On caller's side:</li>
+ * <ol>
+ * <li>Open attribute list and indicate target via siox_describe_remote_call_begin().</li>
+ * <li>Report attributes to be passed via siox_describe_remote_call_attribute().</li>
+ * <li>Close attribute list via siox_describe_remote_call_end().</li>
+ * <li>Call callee.</li>
+ * </ol>
+ * <li>On callee's side:</li>
+ * <ol>
+ * <li>Report attributes received via siox_remote_call_receive().</li>
+ * <li>Execute usual code.</li>
+ * </ol>
+ * </ul>
  */
 /**@{*/
 
 /**
- * Meldet den Start einer Aktivität und erhält eine <em>Activity ID (AID)</em> dafür.
+ * Open attribute list for a remote call, indicate its target and receive @em RCID.
  *
- * SIOX speichert den zugehörigen Zeitstempel, wieviele Aktivitäten der Knoten zur Zeit offenhält
- * und alle Leistungsdaten, die für diese Aktivität künftig zugeordnet werden werden.
+ * @param[in]   aid           The current activity's @em AID.
+ * @param[in]   target_hwid   The target node's @em HardwareID (e.g. „Blizzard Node 5“ or the MacID
+ *                            of an NAS hard drive), if known; otherwise, @c NULL.
+ * @param[in]   target_swid   The target node's @em SoftwareID (e.g. „MPI“ oder „POSIX“),
+ *                            if known; otherwise, @c NULL.
+ * @param[in]   target_iid    The target node's @em InstanceID (according to node type,
+ *                            e.g. the ProcessID of a Thread or the IP address and Port
+ *                            of a server cache), if known; otherwise, @c NULL.
  *
- * @param[in]   unid    Die @em UNID des Knoten.
- * @param[in]   comment Ein Kommentar, der die Aktivität beschreibt, z.B. "Resultate von Lauf 17 speichern".
- *
- * @return      Eine frische @em AID, welche der Knoten für alle künftigen Meldungen,
- *              die diese Aktivität betreffen, angeben muß.
+ * @return                    A fresh @em RCID to be used in all the remote call's
+ *                            future communications with SIOX.
  */
-siox_aid siox_start_activity(siox_unid unid, const char * comment);
-
+siox_rcid siox_describe_remote_call_start(siox_aid      aid,
+                                          const char *  target_hwid, 
+                                          const char *  target_swid,
+                                          const char *  target_iid);
 
 /**
- * Meldet den Abschluß einer Aktivität.
+ * Report an attribute to be sent via a remote call.
  *
- * SIOX speichert auch hier den zugehörigen Zeitstempel, wartet jedoch noch auf mögliche
- * Meldungen von Leistungsdaten, die der Aktivität per siox_report_activity() zuzuordenen sind.
- *
- * @param[in]   aid Die @em AID der Aktivität.
- *
- * @todo    Sollte eine Wiederaufnahme der Aktivität mittels siox_restart_activity(aid) möglich sein?
+ * @param[in]   rcid    The remote call's @em RCID.
+ * @param[in]   dtid    The attribute's @em DTID.
+ * @param[in]   value   The attribute's actual value.
  */
-void siox_stop_activity(siox_aid aid);
-
+void siox_remote_call_attribute(siox_rcid rcid, siox_dtid dtid, void * value);
 
 /**
- * Meldet im Laufe der Aktivität gemessene Leistungsdaten und - falls möglich - einen Deskriptor,
- * dem sie kausal zuzuordnen sind.
+ * Close attribute list for a remote call.
  *
- * @em Beispiel:    Das Senden einer Anzahl Bytes an einen übergeordneten Knoten,
- *                  die über ein Dateihandle angefordert wurden.
- *
- * @param[in]   aid             Die @em AID der Aktivität.
- * @param[in]   descriptor_type Die @em DTID des Deskriptors.
- * @param[in]   descriptor      Der eigentliche Deskriptor, z.B. "51773"; falls möglich; anderfalls @c NULL.
- * @param[in]   mid             Die @em MID der Meßgröße.
- * @param[in]   value           Ein Zeiger auf den tatsächlichen Wert des Meßwerts (hier z.B.: 10.363).
- * @param[in]   details         Raum für Anmerkungen, weitere Spezifikationen oder Details.
+ * @param[in]   rcid    The remote call's @em RCID.
  */
-void siox_report_activity(siox_aid aid, siox_dtid descriptor_type, const void * descriptor, siox_mid mid, void * value, const char * details);
-
+void siox_describe_remote_call_end(siox_rcid  rcid);
 
 /**
- * Meldet das Ende der Berichtsphase für die Aktivität und schließt sie für SIOX.
+ * Report the reception of an attribute via a remote call.
  *
- * @param[in]   aid Die @em AID der Aktivität.
- *
- * @note    Sind außer den Zeitstempeln keine weiteren Leistungsdaten zu melden,
- *          kann die Funktion auch direkt statt siox_stop_activity() aufgerufen werden.
+ * @param[in]   aid     The current activity's @em AID.
+ * @param[in]   dtid    The attribute's @em DTID.
+ * @param[in]   value   The attribute's actual value.
  */
-void siox_end_activity(siox_aid aid);
-
-
-/**
- * Meldet gemessene Leistungsdaten, die keinem einzelnen Deskriptor kausal zugeordnet werden können.
- *
- * @em Beispiel:    Die maximale Prozessorauslastung der vom Knoten repräsentierten Komponente
- *                  während der letzten Sekunde.
- *
- * @param[in]   unid            Die @em UNID des Knoten.
- * @param[in]   mid             Die @em MID der Meßgröße.
- * @param[in]   value           Ein Zeiger auf den tatsächlichen Wert des Meßwerts (hier z.B.: 73,17).
- * @param[in]   details         Raum für Anmerkungen, weitere Spezifikationen oder Details.
- *
- * @todo    Wann wird was gemeldet? Woher weiß die Komponente, ob – und wenn ja, auf was – wir
- *          die Leistungsdaten beschränken wollen?
- */
-void siox_report(siox_unid unid,  siox_mid  mid, void * value, const char * details);
+void siox_remote_call_receive(siox_aid aid, siox_dtid dtid, void * value);
 
 /**@}*/
 
 
-
 /**
- * @name Functions for Accessing the Ontology
+ * @name Accessing the Ontology
  */
 /**@{*/
 
 /**
  * Set the ontology to be used.
  * This function has to be called before any functions using the ontology, such as all
- * siox_register_...() calls, otherwise it will be ignored, and SIOX will access the default ontology.
+ * siox_register_...() calls.
+ * Omitting it will result in SIOX accessing the default ontology.
  *
  * @param[in]   name    The name of the ontology to be used.
  *
  * @returns             @c true, if the ontology was set successfully; @c false, otherwise.
  */
 bool siox_set_ontology( const char * name );
+
+/**
+ * Find the @em DTID for the data type with the name given.
+ * If it already exists in the ontology (only the name is checked to test for this!), return its @em DTID;
+ * otherwise, create it and return the fresh @em DTID.
+ *
+ * @param[in]   name        The data type's unique name.
+ * @param[in]   storage     The minimum storage type required to store data of the data type.
+ *                          This type will also to be assumed for type casts!
+ *
+ * @returns                 The @em DTID of the data type.
+ */
+siox_dtid siox_register_datatype( const char * name, enum siox_ont_storage_type storage );
+
+/**
+ * Prepare SIOX to treat a given datatype as a descriptor.
+ *
+ * Descriptors are attributes, often parameters passed in a call, that identify entities on the
+ * data path through the I/O stack, helping SIOX to reconstruct causal chains and dependencies.
+ * Examples for descriptors are file names, file handles and logical block addresses.
+ *
+ * @param[in]   dtid            The @em DTID of the datatype concerned.
+ */
+void siox_register_datatype_as_descriptor(siox_dtid dtid);
+
+/**
+ * Find the @em MID for the metric with the name given.
+ * If it already exists in the ontology (only the name is checked to test for this!), return its @em MID;
+ * otherwise, create it and return the fresh @em MID.
+ *
+ * @param[in]   name        The metric's unique name.
+ * @param[in]   unit        The unit used to measure values in the metric.
+ * @param[in]   storage     The minimum storage type required to store data of the metric.
+ *                          This type will also be assumed for type casts!
+ * @param[in]   scope       The way in which the data collected was derived.
+ *
+ * @returns                 The @em MID of the metric.
+ */
+siox_mid siox_register_metric( const char *                 name,
+                               enum siox_ont_unit_type      unit,
+                               enum siox_ont_storage_type   storage,
+                               enum siox_ont_scope_type     scope );
 
 /**@}*/
 
