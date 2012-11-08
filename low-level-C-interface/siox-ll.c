@@ -2,23 +2,143 @@
  * @file    siox-ll.c
  *          Implementation des SIOX-Low-Level-Interfaces.
  *
- *
- * \mainpage SIOX
- *
- * \section intro_sec Einführung
- * Das SIOX-Interface wurde aus den Rahmenbedingungen entwickelt,
- * die die Abstraktion des I/O-Pfadmodells @em IOPm an das System stellt.
- *
  * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
  * @date    2012
  *          GNU Public License.
  */
 
+/**
+ * @mainpage Scalable I/O for Extreme Performance (SIOX)
+ *
+ * @section intro Introduction
+ * 
+ * Applications running on HPC systems use a file system to do their I/O. This 
+ * mostly consists of the initial read of the input data, the periodical storage 
+ * of checkpointing information to restore the execution state from in case of 
+ * unexpected program termination, as well as of the eventual writing of the 
+ * application's actual output data.
+ * 
+ * In order for the I/O operations not to become the scalability bottleneck of 
+ * HPC applications, the file system and I/O infrastructure must keep pace with 
+ * the increasing performance and number of computing cores present on HPC 
+ * systems. In this context, a global optimization of the file system turns out 
+ * to be very difficult or impossible. In part due to the disparate nature of 
+ * the requirements and expectations of different user groups, and in part 
+ * because currently there is no way to identify abnormal I/O behavior and trace 
+ * it back to its source.
+ * 
+ * SIOX' main goal is to gain an overview of all the I/O activity taking place 
+ * on a HPC system, and to use this information to optimize it. Initially, the 
+ * project's scope spans the development of standardized interfaces to collect, 
+ * reduce, and store performance data from all relevant layers. This information 
+ * will then be analyzed and correlated with previously observed access patterns 
+ * in order to gain an understanding of the characteristics and causal 
+ * relationships of the system.
+ * 
+ * This knowledge will be the starting point for subsequent performance 
+ * optimizations aimed at specific users and applications, carried out through 
+ * e.g. the automatic tuning of Open MPI or file system parameters. Such 
+ * use-profiles are going to be continuously created and not only helpful for 
+ * optimization, but also when diagnosting acute performance problems, or when 
+ * planning new aquisitions. In the course of the project, an holistic approach 
+ * for I/O analysis should be conceived, implemented and applied. While SIOX' 
+ * applicability is oriented towards HPC environments, it shouldn't be 
+ * constricted to them. In this way, the integrated analysis of applications, 
+ * file systems, and infrastructure could also be used for the future 
+ * optimization of other scenarios e.g. the design of file system caches for 
+ * mail servers. 
+ * 
+ * The following sections describe the current state of the project.
+ * 
+ * @section architecture SIOX Architecture and Workflow
+ * 
+ * While the definite architecture of the SIOX system is still subject of 
+ * debate, some of its essential components are already well defined. Among them
+ * are the SIOX daemons, the knowledge base and the central data warehouse. The
+ * workflow between the different components is illustrated in the figure below.
+ * 
+ * @subsection client SIOX Client
+ * 
+ * The SIOX client serves as the interface between instrumented software 
+ * (libraries and applications) and remote SIOX servers. It is implemented 
+ * as a daemon whose job includes the correlation of the local I/O activities, 
+ * reduction of redundancy, aggregation of information and the transmission of 
+ * relevant performance and trace data to the SIOX servers. 
+ * 
+ * @subsection servers SIOX Servers
+ *
+ * SIOX' server functionality is accomplished by a group of separate server 
+ * processes fulfilling different roles. 
+ *
+ * @subsubsection transaction Transaction System
+ * 
+ * The transaction system is responsible for the continuous collection and 
+ * correlation across system boundaries of the flow of trace information sent by 
+ * the distributed clients. The result produced by the transaction system is 
+ * the causal chain of I/O events produced by an I/O activity at the application
+ * layer, as well as a detailed performance evaluation of the relevant links in
+ * order to reveal potential I/O bottlenecks. This information is then sent to 
+ * the data warehouse server for storage.
+ * 
+ * @subsubsection datawarehouse Data Warehouse
+ * 
+ * The data warehouse server manages a persistent archive of historical I/O
+ * information and the corresponding observed performance data. It decides 
+ * whether the informaiton is worth keeping or not, and if so, it stores it in a
+ * database for future consultation. The data warehouse is used periodically by 
+ * the knowledge base and the transactions server.
+ * 
+ * @subsubsection knowledgebase Knowledge Base
+ * 
+ * The goal of the knowledge base is to capitalize on the historical data 
+ * accumulated on the data warehouse to not only hint the user about possible 
+ * I/O bottlenecks in his application, but also to autonomously optimize to I/O 
+ * subsystem when a well-known I/O pattern has occurred.
+ * 
+ * @image html architecture.png "SIOX Workflow"
+ * 
+ * @section intrumentation Sofware Instrumentation
+ * 
+ * The are two ways to make an application profit from SIOX. The easiest one is 
+ * to simply compile the application against a SIOX-enabled library stack. The 
+ * other one is to manually instrument the application using the SIOX API 
+ * designed for that purpose. Before presenting some examples of manual source
+ * code instrumentation there are some fundamental concepts you should 
+ * familiarize with.
+ * 
+ * @subsection nodes SIOX Nodes
+ * 
+ * A SIOX node is a logical functional unit consisting of hardware components 
+ * and a software layer. It represent one of the conceptual links in the 
+ * corresponding causal chain of I/O activities. A SIOX node is identified by 
+ * the hardware it resides on (e.g. hostname), the software layer it originates
+ * from (e.g. application name or library name) and the application's instance
+ * (e.g. process or thread id). This identification scheme is very flexible 
+ * though and allows the combination of different data to form the different 
+ * Id's as long as their concatenation can be used as a unique key. SIOX indexes 
+ * all nodes using an unique numeric key. Instrumented applications must 
+ * register their SIOX nodes during startup as the first step.
+ * 
+ * @subsection activities SIOX Activities
+ * 
+ * A SIOX activity represents an I/O action taking place on a SIOX node. 
+ * Activities can be nested and are created by wrapping one or more of the 
+ * function calls that trigger I/O. They define the granularity at which the 
+ * SIOX system will evalute the I/O events on that particular node.
+ * 
+ * @subsection activities SIOX Descriptors
+ * 
+ * 
+ * @subsection activities SIOX Metrics
+ * 
+ */ 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#include <glib.h>
 
 #include "siox-ll.h"
 #include "../ontology/ontology.h"
@@ -59,6 +179,16 @@ struct siox_dmid_t {
     };
 
 
+/** The next unassigned RCID. */
+static unsigned long int    current_rcid = 0L;
+
+struct siox_rcid_t {
+    unsigned long int   id; /**< The actual ID. */
+    };
+
+
+/* typedef gint64  siox_timestamp_t; */
+
 
 /**
  * Initialisiere die Ontologie-Bibliothek.
@@ -94,9 +224,9 @@ siox_unregister_node( siox_unid unid )
 
 
 void
-siox_register_attribute( siox_unid       unid,
-                         siox_dtid      dtid,
-                         const void *   value )
+siox_node_attribute( siox_unid       unid,
+                     siox_dtid      dtid,
+                     const void *   value )
 {
     printf( "# UNID %ld registered the following additional attributes:\n",
         (*unid).id );
@@ -105,88 +235,11 @@ siox_register_attribute( siox_unid       unid,
 }
 
 
-void
-siox_register_edge( siox_unid       unid,
-                    const char *    child_swid )
-{
-    printf( "# UNID %ld registered edge to child node >%s<.\n", (*unid).id, child_swid );
-}
-
-
-siox_dmid
-siox_register_descriptor_map( siox_unid  unid,
-                              siox_dtid  source_dtid,
-                              siox_dtid  target_dtid)
-{
-    /* Draw fresh DMID */
-    siox_dmid dmid = malloc( sizeof( struct siox_dmid_t ) );
-    dmid->id = current_dmid++;
-
-
-    printf( "# UNID %ld registered DMID %ld: DTID %s -> DTID %s.\n",
-        unid->id, dmid->id, siox_ont_dtid_to_string( source_dtid ), siox_ont_dtid_to_string( target_dtid ) );
-
-    return( dmid );
-}
-
-
-void
-siox_create_descriptor( siox_aid        aid,
-                        siox_dtid       dtid,
-                        const void *    descriptor )
-{
-    printf( "\n= AID %ld reports creation of descriptor >%s< of DTID %s.\n",
-        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
-}
-
-
-void
-siox_send_descriptor( siox_aid      aid,
-                      const char *  child_swid,
-                      siox_dtid     dtid,
-                      const void *  descriptor )
-{
-    printf( "= AID %ld reports sending of descriptor >%s< of DTID %s to child node >%s<.\n",
-        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ), child_swid );
-}
-
-
-void
-siox_receive_descriptor( siox_aid       aid,
-                         siox_dtid      dtid,
-                         const void *   descriptor )
-{
-    printf( "\n= AID %ld reports reception of descriptor >%s< of DTID %s.\n",
-        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
-}
-
-
-void
-siox_map_descriptor( siox_aid       aid,
-                     siox_dmid      dmid,
-                     const void *   source_descriptor,
-                     const void *   target_descriptor )
-{
-    printf( "= AID %ld reports application of DMID %ld: %p -> %p.\n",
-        (*aid).id, (*dmid).id, source_descriptor, target_descriptor );
-    /** @todo Look up actual @em DTIDs from @em DMID. */
-}
-
-
-void
-siox_release_descriptor( siox_aid       aid,
-                         siox_dtid      dtid,
-                         const void *   descriptor )
-{
-    printf( "= AID %ld reports release of descriptor >%s< of DTID %s.\n\n",
-        (*aid).id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
-}
-
-
 siox_aid
-siox_start_activity( siox_unid      unid,
-                     const char *   comment )
+siox_start_activity( siox_unid        unid,
+                     siox_timestamp * timestamp )
 {
+    /** @todo Integrate correct timestamp */
     /* Draw timestamp */
     time_t  timeStamp = time(NULL);
 
@@ -205,8 +258,10 @@ siox_start_activity( siox_unid      unid,
 
 
 void
-siox_stop_activity( siox_aid    aid )
+siox_stop_activity( siox_aid    aid,
+                    siox_timestamp * time )
 {
+    /** @todo Integrate correct timestamps */
     /* Draw timestamp */
     time_t  timeStamp = time(NULL);
 
@@ -218,25 +273,21 @@ siox_stop_activity( siox_aid    aid )
 
 void
 siox_report_activity( siox_aid              aid,
-                      siox_dtid             dtid,
-                      const void *          descriptor,
                       siox_mid              mid,
-                      void *                value,
-                      const char *          details )
+                      void *                value )
 {
-    printf( "- AID %ld, identified by >%s< of DTID %s, was measured as follows:\n",
-        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
+    printf( "- AID %ld, was measured as follows:\n", aid->id );
     printf( "\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
     printf( "%s\n", siox_ont_metric_data_to_string( mid, value ) );
-    if (details != NULL)
-        printf( "\tNote:\t%s\n", details );
 }
 
 
 void
-siox_end_activity ( siox_aid    aid )
+siox_end_activity ( siox_aid          aid,
+                    siox_timestamp *  time )
 {
+    /** @todo Integrate correct timestamps */
     /* Draw timestamp */
     time_t  timeStamp = time(NULL);
 
@@ -249,17 +300,13 @@ siox_end_activity ( siox_aid    aid )
 void
 siox_report( siox_unid              unid,
              siox_mid               mid,
-             void *                 value,
-             const char *           details )
+             void *                 value )
 {
     printf( "- UNID %ld was measured as follows:\n",
         (*unid).id );
     printf( "\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
     printf( "%s\n", siox_ont_metric_data_to_string( mid, value ) );
-    if (details != NULL)
-        printf( "\tNote:\t%s\n", details );
-
 }
 
 
@@ -314,7 +361,6 @@ siox_register_datatype( const char *                name,
 
 siox_mid
 siox_register_metric( const char *                 name,
-                      const char *                 description,
                       enum siox_ont_unit_type      unit,
                       enum siox_ont_storage_type   storage,
                       enum siox_ont_scope_type     scope )
@@ -345,7 +391,7 @@ siox_register_metric( const char *                 name,
     }
     else
         mid = siox_ont_register_metric( name,
-                                        description,
+                                        "(No description yet)",
                                         unit,
                                         storage,
                                         scope );
