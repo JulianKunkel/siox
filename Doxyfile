@@ -44,7 +44,7 @@ PROJECT_BRIEF          = "Scalable I/O for eXtreme performance"
 # exceed 55 pixels and the maximum width should not exceed 200 pixels.
 # Doxygen will copy the logo to the output directory.
 
-PROJECT_LOGO           = ../Dokumente/Media/Logos/siox-klein.png
+PROJECT_LOGO           = doc/images/siox-klein.png
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute)
 # base path where the generated documentation will be put.
@@ -670,7 +670,7 @@ EXAMPLE_PATH           = examples
 # and *.h) to filter out the source-files in the directories. If left
 # blank all files are included.
 
-EXAMPLE_PATTERNS       =
+EXAMPLE_PATTERNS       = *.h *.c
 
 # If the EXAMPLE_RECURSIVE tag is set to YES then subdirectories will be
 # searched for input files to be used with the \include or \dontinclude
