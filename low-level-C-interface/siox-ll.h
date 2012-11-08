@@ -13,21 +13,21 @@
  * 
  * Applications running on HPC systems use a file system to do their I/O. This 
  * mostly consists of the initial read of the input data, the periodical storage 
- * of checkpointing information to restore the execution state from in case of 
- * unexpected program termination, as well as of the eventual writing of the 
+ * of checkpointing information from which to restore the execution state  in case 
+ * of unexpected program termination, as well as of the eventual writing of the 
  * application's actual output data.
  * 
  * In order for the I/O operations not to become the scalability bottleneck of 
  * HPC applications, the file system and I/O infrastructure must keep pace with 
- * the increasing performance and number of computing cores present on HPC 
+ * the increasing performance and number of computing cores present in HPC 
  * systems. In this context, a global optimization of the file system turns out 
- * to be very difficult or impossible. In part due to the disparate nature of 
- * the requirements and expectations of different user groups, and in part 
+ * to be very difficult to impossible. This is in part due to the disparate nature
+ * of the requirements and expectations of different user groups, and in part 
  * because currently there is no way to identify abnormal I/O behavior and trace 
  * it back to its source.
  * 
- * SIOX' main goal is to gain an overview of all the I/O activity taking place 
- * on a HPC system, and to use this information to optimize it. Initially, the 
+ * SIOX's main goal is to gain an overview of all the I/O activity taking place 
+ * on an HPC system, and to use this information to optimize it. Initially, the 
  * project's scope spans the development of standardized interfaces to collect, 
  * reduce, and store performance data from all relevant layers. This information 
  * will then be analyzed and correlated with previously observed access patterns 
@@ -38,8 +38,8 @@
  * optimizations aimed at specific users and applications, carried out through 
  * e.g. the automatic tuning of Open MPI or file system parameters. Such 
  * use-profiles are going to be continuously created and not only helpful for 
- * optimization, but also when diagnosting acute performance problems, or when 
- * planning new aquisitions. In the course of the project, an holistic approach 
+ * optimization, but also when diagnosing acute performance problems, or when 
+ * planning new aquisitions. In the course of the project, a holistic approach 
  * for I/O analysis should be conceived, implemented and applied. While SIOX' 
  * applicability is oriented towards HPC environments, it shouldn't be 
  * constricted to them. In this way, the integrated analysis of applications, 
@@ -51,8 +51,8 @@
  * 
  * @section architecture SIOX Architecture and Workflow
  * 
- * While the definite architecture of the SIOX system is still subject of 
- * debate, some of its essential components are already well defined. Among them
+ * While work on the definite architecture of the SIOX system is still in 
+ * progress, some of its essential components are already well defined. Among them
  * are the SIOX daemons, the knowledge base and the central data warehouse. The
  * workflow between the different components is illustrated in the figure below.
  * 
@@ -66,7 +66,7 @@
  * 
  * @subsection servers SIOX Servers
  *
- * SIOX' server functionality is accomplished by a group of separate server 
+ * SIOX's server functionality is accomplished by a group of separate server 
  * processes fulfilling different roles. 
  *
  * @subsubsection transaction Transaction System
@@ -90,7 +90,7 @@
  * @subsubsection knowledgebase Knowledge Base
  * 
  * The goal of the knowledge base is to capitalize on the historical data 
- * accumulated on the data warehouse to not only hint the user about possible 
+ * accumulated in the data warehouse to not only hint the user about possible 
  * I/O bottlenecks in his application, but also to autonomously optimize to I/O 
  * subsystem when a well-known I/O pattern has occurred.
  * 
@@ -98,24 +98,25 @@
  * 
  * @section intrumentation Sofware Instrumentation
  * 
- * The are two ways to make an application profit from SIOX. The easiest one is 
- * to simply compile the application against a SIOX-enabled library stack. The 
+ * The are two ways an application can profit from SIOX. The easiest one is 
+ * to simply compile the application against a SIOX-enabled library stack,
+ * thereby harnessing SIOX support for these layers. The 
  * other one is to manually instrument the application using the SIOX API 
  * designed for that purpose. Before presenting some examples of manual source
- * code instrumentation there are some fundamental concepts you should 
+ * code instrumentation, there are some fundamental concepts you should 
  * familiarize with.
  * 
  * @subsection nodes SIOX Nodes
  * 
- * A SIOX node is a logical functional unit consisting of hardware components 
- * and a software layer. It represent one of the conceptual links in the 
+ * A SIOX node is a logical functional unit, e.g. a hardware component 
+ * or a software layer. It represent one of the conceptual links in the 
  * corresponding causal chain of I/O activities. A SIOX node is identified by 
- * the hardware it resides on (e.g. hostname), the software layer it originates
- * from (e.g. application name or library name) and the application's instance
+ * the hardware it resides on (e.g. hostname), the software layer it implements
+ * (e.g. application name or library name) and the application's instance
  * (e.g. process or thread id). This identification scheme is very flexible 
  * though and allows the combination of different data to form the different 
- * Id's as long as their concatenation can be used as a unique key. SIOX indexes 
- * all nodes using an unique numeric key. Instrumented applications must 
+ * IDs as long as their concatenation can be used as a unique key. SIOX indexes 
+ * all nodes using a @em UNID, a unique numeric key. Instrumented applications must 
  * register their SIOX nodes during startup as the first step.
  * 
  * @subsection activities SIOX Activities
