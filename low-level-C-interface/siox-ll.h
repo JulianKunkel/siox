@@ -114,8 +114,8 @@
  * (e.g. process or thread id). This identification scheme is very flexible 
  * though and allows the combination of different data to form the different 
  * IDs as long as their concatenation can be used as a unique key. SIOX indexes 
- * all nodes using a @em UNID, a unique numeric key. Instrumented applications must 
- * register their SIOX nodes during startup as the first step.
+ * all nodes using a @em UNID, a unique numeric key. Instrumented applications 
+ * must register their SIOX nodes during startup as the first step.
  * 
  * @subsection activities SIOX Activities
  * 
@@ -126,8 +126,24 @@
  * 
  * @subsection descriptors SIOX Descriptors
  * 
+ * (to be written)
  * 
  * @subsection metrics SIOX Metrics
+ * 
+ * (to be written)
+ * 
+ * @subsection rcalls SIOX Remote Calls
+ * 
+ * (to be written)
+ * 
+ * @image html nodes-activities.png "SIOX Nodes, Activities and Descriptors"
+ * 
+ * @section example Instrumentation Example
+ *
+ * The following example shows how some of the MPI-I/O functions could be 
+ * instrumented.
+ * 
+ * @include mpi-example.c
  * 
  */
 
