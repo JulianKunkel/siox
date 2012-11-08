@@ -3,12 +3,10 @@
  *
  * @date 11/2012
  * @copyright GNU Public License
- * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
- */
-
-/**
- * @mainpage Scalable I/O for Extreme Performance (SIOX)
- *
+ * @authors Michaela Zimmer, Julian Kunkel, Marc Wiedemann & Alvaro Aguilera
+ *  
+ * @mainpage
+ * 
  * @section intro Introduction
  * 
  * Applications running on HPC systems use a file system to do their I/O. This 
@@ -38,8 +36,8 @@
  * optimizations aimed at specific users and applications, carried out through 
  * e.g. the automatic tuning of Open MPI or file system parameters. Such 
  * use-profiles are going to be continuously created and not only helpful for 
- * optimization, but also when diagnosting acute performance problems, or when 
- * planning new aquisitions. In the course of the project, an holistic approach 
+ * optimization, but also when diagnosing acute performance problems, or when 
+ * planning new acquisitions. In the course of the project, an holistic approach 
  * for I/O analysis should be conceived, implemented and applied. While SIOX' 
  * applicability is oriented towards HPC environments, it shouldn't be 
  * constricted to them. In this way, the integrated analysis of applications, 
@@ -66,8 +64,8 @@
  * 
  * @subsection servers SIOX Servers
  *
- * SIOX' server functionality is accomplished by a group of separate server 
- * processes fulfilling different roles. 
+ * The server functionality is accomplished in SIOX by a group of separate 
+ * server processes fulfilling different roles. 
  *
  * @subsubsection transaction Transaction System
  * 
@@ -96,13 +94,13 @@
  * 
  * @image html architecture.png "SIOX Workflow"
  * 
- * @section intrumentation Sofware Instrumentation
+ * @section intrumentation Software Instrumentation
  * 
  * The are two ways to make an application profit from SIOX. The easiest one is 
  * to simply compile the application against a SIOX-enabled library stack. The 
- * other one is to manually instrument the application using the SIOX API 
- * designed for that purpose. Before presenting some examples of manual source
- * code instrumentation there are some fundamental concepts you should 
+ * other one is to manually instrument the application or library using the SIOX 
+ * API designed for that purpose. Before presenting some examples of manual 
+ * source code instrumentation there are some fundamental concepts you should 
  * familiarize with.
  * 
  * @subsection nodes SIOX Nodes
@@ -123,7 +121,7 @@
  * A SIOX activity represents an I/O action taking place on a SIOX node. 
  * Activities can be nested and are created by wrapping one or more of the 
  * function calls that trigger I/O. They define the granularity at which the 
- * SIOX system will evalute the I/O events on that particular node.
+ * SIOX system will evaluate the I/O events on that particular node.
  * 
  * @subsection descriptors SIOX Descriptors
  * 
