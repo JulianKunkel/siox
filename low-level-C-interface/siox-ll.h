@@ -137,9 +137,10 @@ void siox_node_attribute(siox_unid unid, siox_dtid dtid, const void * value);
  * @param[in]   unid        The node's @em UNID.
  * @param[in]   timestamp   A time stamp or @c NULL,
  *                          which will result in SIOX using the current time.
+ * @param[in]   comment     Possible details about the activity, or @c NULL.
  * @return                  A fresh @em AID, to be used in all the activity's further dealings with SIOX.
  */
-siox_aid siox_start_activity(siox_unid unid, siox_timestamp * timestamp);
+siox_aid siox_start_activity(siox_unid unid, siox_timestamp * timestamp, const char * comment);
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.
