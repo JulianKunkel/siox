@@ -236,8 +236,9 @@ siox_node_attribute( siox_unid       unid,
 
 
 siox_aid
-siox_start_activity( siox_unid        unid,
-                     siox_timestamp * timestamp )
+siox_start_activity( siox_unid          unid,
+                     siox_timestamp *   timestamp,
+                     const char *       comment )
 {
     /** @todo Integrate correct timestamp */
     /* Draw timestamp */
