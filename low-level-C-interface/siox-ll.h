@@ -31,6 +31,8 @@
  * will then be analyzed and correlated with previously observed access patterns 
  * in order to gain an understanding of the characteristics and causal 
  * relationships of the system.
+ *
+ * @image html datacollection.png "SIOX in an HPC System"
  * 
  * This knowledge will be the starting point for subsequent performance 
  * optimizations aimed at specific users and applications, carried out through 
@@ -53,6 +55,8 @@
  * progress, some of its essential components are already well defined. Among them
  * are the SIOX daemons, the knowledge base and the central data warehouse. The
  * workflow between the different components is illustrated in the figure below.
+ * 
+ * @image html architecture.png "SIOX Workflow"
  * 
  * @subsection client SIOX Client
  * 
@@ -91,8 +95,6 @@
  * accumulated in the data warehouse to not only hint the user about possible 
  * I/O bottlenecks in his application, but also to autonomously optimize to I/O 
  * subsystem when a well-known I/O pattern has occurred.
- * 
- * @image html architecture.png "SIOX Workflow"
  * 
  * @section intrumentation Software Instrumentation
  * 
@@ -155,6 +157,19 @@
  * 
  * @image html nodes-activities.png "SIOX Nodes, Activities and Descriptors"
  * 
+ * @section interfaces SIOX Interfaces
+ *
+ * All interaction with SIOX is built on the low-level
+ * interface @em siox-ll - right now, all examples shown use this API.
+ * Later, the SIOX project will provide more comfortable and well-adapted
+ * high-level interfaces for each of the types of nodes, such as @em siox-cache,
+ * @em siox-network or @em siox-blockstorage.
+ * Furthermore, wrappers may be used to easily adapt software already instrumented
+ * for other tools to SIOX.
+ * Both high-level APIs and wrappers will build upon @em siox-ll to perform their tasks.
+ *
+ * @image html siox-apis.png
+ *
  * @section example Instrumentation Example
  *
  * The following example shows how some of the MPI-I/O functions could be 
