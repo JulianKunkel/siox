@@ -49,14 +49,6 @@ struct siox_aid_t {
     };
 
 
-/** The next unassigned DMID. */
-static unsigned long int    current_dmid = 0L;
-
-struct siox_dmid_t {
-    unsigned long int   id; /**< The actual ID. */
-    };
-
-
 /** The next unassigned RCID. */
 static unsigned long int    current_rcid = 0L;
 
@@ -65,7 +57,9 @@ struct siox_rcid_t {
     };
 
 
-/* typedef gint64  siox_timestamp_t; */
+struct siox_timestamp_t {
+    gint64  ticks; /**< The actual time in microseconds since 19700101. */
+    };
 
 
 /**
@@ -113,20 +107,23 @@ siox_node_attribute( siox_unid       unid,
 
 siox_aid
 siox_start_activity( siox_unid          unid,
-                     siox_timestamp *   timestamp,
+                     siox_timestamp     timestamp,
                      const char *       comment )
 {
-    /** @todo Integrate correct timestamp */
-    /* Draw timestamp */
-    time_t  timeStamp = time(NULL);
+    gint64  time_start;
+
+    if (timestamp)
+        time_start = timestamp->ticks;
+    else
+        time_start = g_get_real_time();
 
     /* Draw fresh AID */
     siox_aid aid = malloc( sizeof( struct siox_aid_t ) );
     (*aid).id = current_aid++;
 
 
-    printf( "- UNID %ld started AID %ld at %s",
-        (*unid).id, (*aid).id, ctime( &timeStamp ));
+    printf( "- UNID %ld started AID %ld at %lu",
+        (*unid).id, (*aid).id, time_start);
     if ( comment != NULL )
         printf( "\tKommentar:\t%s\n", comment );
 
@@ -135,16 +132,18 @@ siox_start_activity( siox_unid          unid,
 
 
 void
-siox_stop_activity( siox_aid    aid,
-                    siox_timestamp * time )
+siox_stop_activity( siox_aid        aid,
+                    siox_timestamp  timestamp )
 {
-    /** @todo Integrate correct timestamps */
-    /* Draw timestamp */
-    time_t  timeStamp = time(NULL);
+    gint64  time_start;
 
+    if (timestamp)
+        time_start = timestamp->ticks;
+    else
+        time_start = g_get_real_time();
 
-    printf( "- AID %ld stopped at %s",
-        (*aid).id, ctime( &timeStamp ));
+    printf( "- AID %ld stopped at %lu",
+        (*aid).id, time_start);
 }
 
 
@@ -162,15 +161,17 @@ siox_report_activity( siox_aid              aid,
 
 void
 siox_end_activity ( siox_aid          aid,
-                    siox_timestamp *  time )
+                    siox_timestamp    timestamp )
 {
-    /** @todo Integrate correct timestamps */
-    /* Draw timestamp */
-    time_t  timeStamp = time(NULL);
+    gint64  time_start;
 
+    if (timestamp)
+        time_start = timestamp->ticks;
+    else
+        time_start = g_get_real_time();
 
-    printf( "- AID %ld finally ended at %s\n",
-        (*aid).id, ctime( &timeStamp ));
+    printf( "- AID %ld finally ended at %lu\n",
+        (*aid).id, time_start);
 }
 
 
