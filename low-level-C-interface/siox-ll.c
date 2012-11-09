@@ -1,38 +1,36 @@
 /**
- * @file    siox-ll.c
- *          Implementation des SIOX-Low-Level-Interfaces.
+ * @file siox-ll.c SIOX low-level interface source code.
  *
- *
- * \mainpage SIOX
- *
- * \section intro_sec Einführung
- * Das SIOX-Interface wurde aus den Rahmenbedingungen entwickelt,
- * die die Abstraktion des I/O-Pfadmodells @em IOPm an das System stellt.
- *
- * @authors Michaela Zimmer, Julian Kunkel & Marc Wiedemann
- * @date    2012
- *          GNU Public License.
- */
-
+ * @date 11/2012
+ * @copyright GNU Public License.
+ * @authors Michaela Zimmer, Julian Kunkel, Marc Wiedemann & Alvaro Aguilera
+ */ 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
+#include <glib.h>
+
 #include "siox-ll.h"
 #include "../ontology/ontology.h"
 
-/** Die Default-Ontologie, falls keine andere per siox_set_ontology() gesetzt worden sein sollte. */
+/** 
+ * Default ontology in case no other ontology has been set using 
+ * siox_set_ontology(). */
 #define DEFAULT_ONTOLOGY "testontology"
 
-/** Haben wir initialise_ontology() bereits durchlaufen? */
+/** 
+ * Whether or not the ontology has been already initialized with 
+ * initialise_ontology().
+ */
 static bool initialised_ontology = false;
 
-/** Die zu nutzende Ontologie. Kann vor dem ersten Aufruf von initialise_ontology() per siox_set_ontology()
- *  gesetzt werden; ansonsten wird DEFAULT_ONTOLOGY verwendet. */
+/** 
+ * The ontology to use. Its value is set by initialize_ontology() using the 
+ * siox_set_ontology() call. Otherwise DEFAULT_ONTOLOGY will be used. */
 static char sOntology[80] = "";
-
 
 
 /** The next unassigned UNID. */
@@ -59,14 +57,22 @@ struct siox_dmid_t {
     };
 
 
+/** The next unassigned RCID. */
+static unsigned long int    current_rcid = 0L;
+
+struct siox_rcid_t {
+    unsigned long int   id; /**< The actual ID. */
+    };
+
+
+/* typedef gint64  siox_timestamp_t; */
+
 
 /**
- * Initialisiere die Ontologie-Bibliothek.
- * Wird nur beim ersten Zugriff auf aus der Ontologie zu lesende Daten (etwa die siox_register_...-Funktionen)
- * aufgerufen.
- */
+ * Initialization of the ontology library.
+ * This function is called only once during the first read access of the 
+ * functions siox_register_*.  */
 static void initialise_ontology();
-
 
 
 siox_unid
@@ -94,9 +100,9 @@ siox_unregister_node( siox_unid unid )
 
 
 void
-siox_register_attribute( siox_unid       unid,
-                         siox_dtid      dtid,
-                         const void *   value )
+siox_node_attribute( siox_unid       unid,
+                     siox_dtid      dtid,
+                     const void *   value )
 {
     printf( "# UNID %ld registered the following additional attributes:\n",
         (*unid).id );
@@ -105,88 +111,12 @@ siox_register_attribute( siox_unid       unid,
 }
 
 
-void
-siox_register_edge( siox_unid       unid,
-                    const char *    child_swid )
-{
-    printf( "# UNID %ld registered edge to child node >%s<.\n", (*unid).id, child_swid );
-}
-
-
-siox_dmid
-siox_register_descriptor_map( siox_unid  unid,
-                              siox_dtid  source_dtid,
-                              siox_dtid  target_dtid)
-{
-    /* Draw fresh DMID */
-    siox_dmid dmid = malloc( sizeof( struct siox_dmid_t ) );
-    dmid->id = current_dmid++;
-
-
-    printf( "# UNID %ld registered DMID %ld: DTID %s -> DTID %s.\n",
-        unid->id, dmid->id, siox_ont_dtid_to_string( source_dtid ), siox_ont_dtid_to_string( target_dtid ) );
-
-    return( dmid );
-}
-
-
-void
-siox_create_descriptor( siox_aid        aid,
-                        siox_dtid       dtid,
-                        const void *    descriptor )
-{
-    printf( "\n= AID %ld reports creation of descriptor >%s< of DTID %s.\n",
-        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
-}
-
-
-void
-siox_send_descriptor( siox_aid      aid,
-                      const char *  child_swid,
-                      siox_dtid     dtid,
-                      const void *  descriptor )
-{
-    printf( "= AID %ld reports sending of descriptor >%s< of DTID %s to child node >%s<.\n",
-        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ), child_swid );
-}
-
-
-void
-siox_receive_descriptor( siox_aid       aid,
-                         siox_dtid      dtid,
-                         const void *   descriptor )
-{
-    printf( "\n= AID %ld reports reception of descriptor >%s< of DTID %s.\n",
-        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
-}
-
-
-void
-siox_map_descriptor( siox_aid       aid,
-                     siox_dmid      dmid,
-                     const void *   source_descriptor,
-                     const void *   target_descriptor )
-{
-    printf( "= AID %ld reports application of DMID %ld: %p -> %p.\n",
-        (*aid).id, (*dmid).id, source_descriptor, target_descriptor );
-    /** @todo Look up actual @em DTIDs from @em DMID. */
-}
-
-
-void
-siox_release_descriptor( siox_aid       aid,
-                         siox_dtid      dtid,
-                         const void *   descriptor )
-{
-    printf( "= AID %ld reports release of descriptor >%s< of DTID %s.\n\n",
-        (*aid).id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
-}
-
-
 siox_aid
-siox_start_activity( siox_unid      unid,
-                     const char *   comment )
+siox_start_activity( siox_unid          unid,
+                     siox_timestamp *   timestamp,
+                     const char *       comment )
 {
+    /** @todo Integrate correct timestamp */
     /* Draw timestamp */
     time_t  timeStamp = time(NULL);
 
@@ -205,8 +135,10 @@ siox_start_activity( siox_unid      unid,
 
 
 void
-siox_stop_activity( siox_aid    aid )
+siox_stop_activity( siox_aid    aid,
+                    siox_timestamp * time )
 {
+    /** @todo Integrate correct timestamps */
     /* Draw timestamp */
     time_t  timeStamp = time(NULL);
 
@@ -218,25 +150,21 @@ siox_stop_activity( siox_aid    aid )
 
 void
 siox_report_activity( siox_aid              aid,
-                      siox_dtid             dtid,
-                      const void *          descriptor,
                       siox_mid              mid,
-                      void *                value,
-                      const char *          details )
+                      void *                value )
 {
-    printf( "- AID %ld, identified by >%s< of DTID %s, was measured as follows:\n",
-        aid->id, siox_ont_data_to_string( dtid, descriptor ), siox_ont_dtid_to_string( dtid ) );
+    printf( "- AID %ld, was measured as follows:\n", aid->id );
     printf( "\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
     printf( "%s\n", siox_ont_metric_data_to_string( mid, value ) );
-    if (details != NULL)
-        printf( "\tNote:\t%s\n", details );
 }
 
 
 void
-siox_end_activity ( siox_aid    aid )
+siox_end_activity ( siox_aid          aid,
+                    siox_timestamp *  time )
 {
+    /** @todo Integrate correct timestamps */
     /* Draw timestamp */
     time_t  timeStamp = time(NULL);
 
@@ -249,17 +177,13 @@ siox_end_activity ( siox_aid    aid )
 void
 siox_report( siox_unid              unid,
              siox_mid               mid,
-             void *                 value,
-             const char *           details )
+             void *                 value )
 {
     printf( "- UNID %ld was measured as follows:\n",
         (*unid).id );
     printf( "\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
     printf( "%s\n", siox_ont_metric_data_to_string( mid, value ) );
-    if (details != NULL)
-        printf( "\tNote:\t%s\n", details );
-
 }
 
 
@@ -314,7 +238,6 @@ siox_register_datatype( const char *                name,
 
 siox_mid
 siox_register_metric( const char *                 name,
-                      const char *                 description,
                       enum siox_ont_unit_type      unit,
                       enum siox_ont_storage_type   storage,
                       enum siox_ont_scope_type     scope )
@@ -345,7 +268,7 @@ siox_register_metric( const char *                 name,
     }
     else
         mid = siox_ont_register_metric( name,
-                                        description,
+                                        "(No description yet)",
                                         unit,
                                         storage,
                                         scope );
