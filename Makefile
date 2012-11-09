@@ -116,9 +116,9 @@ docs:
 	@echo ==================================================
 	@echo Making documentation...
 	@doxygen Doxyfile
-	@$(MAKE) --silent --directory=latex > latex/makePDF.log
-	@mv latex/refman.pdf ./$(REFMAN)
-	@$(RM) -r latex
+	@$(MAKE) --silent --directory=doc/latex > doc/latex/makePDF.log
+	@mv doc/latex/refman.pdf ./$(REFMAN)
+	@$(RM) -r doc/latex
 	@echo ...done!
 	@echo ==================================================
 
