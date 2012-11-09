@@ -117,20 +117,37 @@
  * all nodes using a @em UNID, a unique numeric key. Instrumented applications 
  * must register their SIOX nodes during startup as the first step.
  * 
+ * @sa siox_register_node()
+ * @sa siox_unregister_node()
+ * 
  * @subsection activities SIOX Activities
  * 
  * A SIOX activity represents an I/O action taking place on a SIOX node. 
  * Activities can be nested and are created by wrapping one or more of the 
  * function calls that trigger I/O. They define the granularity at which the 
- * SIOX system will evaluate the I/O events on that particular node.
+ * SIOX system will evaluate the I/O events on that particular node. At any  
+ * layer, an activity will produce a cascade of sub-activities in the 
+ * instrumented lower layers not stopping until the disk systems at the bottom 
+ * of the cluster's I/O path. We call this group of related activities the 
+ * @em causal @em chain. One of the key functionalities of SIOX is its 
+ * ability to correlate these activities even in the presence of missing links 
+ * (e.g. uninstrumented layers or components). This allows us to trace the I/O 
+ * behavior observed at any point of the I/O path back to the application that
+ * generated it.
+ *  
+ * @sa siox_start_activity();
+ * @sa siox_stop_activity();
+ * @sa siox_end_activity();
  * 
  * @subsection descriptors SIOX Descriptors
  * 
- * (to be written)
- * 
- * @subsection metrics SIOX Metrics
- * 
- * (to be written)
+ * The information available to a given activity varies depending on the node 
+ * it resides on. For example, while an activity at the application or POSIX 
+ * layer knows the files it is accessing by name, an activity at the file system
+ * layer may only know the involved @em inodes. Descriptors containing this 
+ * context information are sent by the activity at the higher layer to the 
+ * activities at the lower ones to ease the correlation of their file handlers
+ * and other variables.
  * 
  * @subsection rcalls SIOX Remote Calls
  * 
@@ -144,8 +161,10 @@
  * instrumented.
  * 
  * @include mpi-example.c
- * 
+ * @example mpi-example.c
  */
+
+
 
 #ifndef siox_LL_H
 #define siox_LL_H
