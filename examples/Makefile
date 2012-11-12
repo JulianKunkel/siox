@@ -15,8 +15,8 @@
 #=========
 # Targets
 #=========
-TARGETS := siox-hdf5-example siox-mockupfs-example
-SIOXLIBS := libsiox-ll.so
+TARGETS := hdf5-example mockupfs-example
+SIOXLIBS := $(LLDIR)/libsiox-ll.so
 ONTLIBS := $(ONTDIR)/libsioxont.so
 MUFSLIBS := libmufs.so
 HDF5LIBS := -lhdf5 -lhdf5_hl
@@ -32,17 +32,17 @@ OWNLIBS := $(SIOXLIBS) $(MUFSLIBS)
 # Endziele
 #==========
 
-.PHONY: all
-all: $(TARGETS) Makefile
+.PHONY: examples
+examples: $(TARGETS) Makefile
 #	@echo --------------------------------------------------
 
-siox-hdf5-example: siox-hdf5-example.c $(SIOXLIBS) Makefile
+hdf5-example: hdf5-example.c $(SIOXLIBS) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
 	$(CC) $(LDFLAGS) $(LLFLAGS) $(HDF5FLAGS) -o $@ $< $(HDF5LIBS) $(SIOXLIBS)
 	@echo done!
 
-siox-mockupfs-example: siox-mockupfs-example.c $(SIOXLIBS) $(MUFSLIBS) Makefile
+mockupfs-example: mockupfs-example.c $(SIOXLIBS) $(MUFSLIBS) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
 	$(CC) $(LDFLAGS) $(LLFLAGS) -o $@ $< $(MUFSLIBS) $(SIOXLIBS)
@@ -99,6 +99,6 @@ clean:
 test:
 	@echo --------------------------------------------------
 	@echo -n Running tests on Low-Level-C-Interface...
-	@./siox-mockupfs-example >siox-mockupfs-example.log 2>siox-mockupfs-example.err
-	@./siox-hdf5-example >siox-hdf5-example.log 2>siox-hdf5-example.err
+	@./mockupfs-example >mockupfs-example.log 2>mockupfs-example.err
+	@./hdf5-example >hdf5-example.log 2>hdf5-example.err
 	@echo passed!

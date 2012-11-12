@@ -1,6 +1,6 @@
-################
-# Definitionen #
-################
+###############
+# Definitions #
+###############
 
 # Prepare to hand all variables down to sub-makes
 export
@@ -17,6 +17,7 @@ RM := -rm -f
 #=============
 LLDIR := $(CURDIR)/low-level-C-interface
 ONTDIR := $(CURDIR)/ontology
+EXAMPLEDIR := $(CURDIR)/examples
 HDF5DIR :=
 #/usr/include
 
@@ -40,7 +41,7 @@ TARGETS := ont ll
 unexport TARGETS
 
 #=============
-# für Doxygen
+# for Doxygen
 #=============
 DOXYDIRS := html latex
 LOGS := *.log
@@ -49,17 +50,17 @@ REFMAN := SIOX-Reference.pdf
 unexport DOXYDIRS LOGS REFMAN
 
 
-##########
-# Regeln #
-##########
+#########
+# Rules #
+#########
 
 # Replace the default suffixes by our own suffix list
 .SUFFIXES:
 .SUFFIXES: .c .o .h
 
-#=========
-# Endziel
-#=========
+#=============
+# Main Target
+#=============
 
 .PHONY: all
 all: SUBTARGET := all
@@ -67,7 +68,7 @@ all: $(TARGETS)
 	@echo ==================================================
 
 #===============
-# Debug-Version
+# Debug Version
 #===============
 
 .PHONY: debug
@@ -75,9 +76,9 @@ debug: SUBTARGET := debug
 debug: $(TARGETS)
 	@echo ==================================================
 
-#=========================
-# explizite Zwischenziele
-#=========================
+#==========================
+# Explicit Partial Targets
+#==========================
 
 .PHONY: ont
 ont:
@@ -93,9 +94,9 @@ ll: ont
 	@$(MAKE) --silent --directory=$(LLDIR) $(SUBTARGET)
 	@echo ...done!
 
-###############
-# Pseudoziele #
-###############
+##################
+# Pseudo Targets #
+##################
 
 .PHONY: clean
 clean:
@@ -120,6 +121,14 @@ docs:
 	@$(MAKE) --silent --directory=doc/latex > doc/latex/makePDF.log
 	@mv doc/latex/refman.pdf ./$(REFMAN)
 	@$(RM) -r doc/latex
+	@echo ...done!
+	@echo ==================================================
+
+.PHONY: examples
+examples: ll ont
+	@echo ==================================================
+	@echo Making examples...
+	@$(MAKE) --silent --directory=$(EXAMPLEDIR) $(SUBTARGET)
 	@echo ...done!
 	@echo ==================================================
 
