@@ -26,10 +26,11 @@ HDF5DIR :=
 CFLAGS := -std=c1x -pedantic -Wall
 LIBFLAGS := $(CFLAGS) -shared -fPIC
 LDFLAGS := $(CFLAGS)
+GLIBFLAGS := `pkg-config --cflags glib-2.0` `pkg-config --libs glib-2.0`
 HDF5FLAGS := -I$(HDF5DIR)/include -L$(HDF5DIR)/lib
 #ONTFLAGS := -iquote$(ONTDIR) -Wl,-rpath=$(ONTDIR)
-ONTFLAGS := -I$(ONTDIR) -Wl,-rpath=$(ONTDIR)
-LLFLAGS := -I$(LLDIR) -Wl,-rpath=$(LLDIR)
+ONTFLAGS := $(GLIBFLAGS) -I$(ONTDIR) -Wl,-rpath=$(ONTDIR)
+LLFLAGS := $(GLIBFLAGS) -I$(LLDIR) -Wl,-rpath=$(LLDIR)
 
 #=========
 # Targets

@@ -4,164 +4,6 @@
  * @date 11/2012
  * @copyright GNU Public License
  * @authors Michaela Zimmer, Julian Kunkel, Marc Wiedemann & Alvaro Aguilera
- *  
- * @mainpage
- * 
- * @section intro Introduction
- * 
- * Applications running on HPC systems use a file system to do their I/O. This 
- * mostly consists of the initial read of the input data, the periodical storage 
- * of checkpointing information from which to restore the execution state  in case 
- * of unexpected program termination, as well as of the eventual writing of the 
- * application's actual output data.
- * 
- * In order for the I/O operations not to become the scalability bottleneck of 
- * HPC applications, the file system and I/O infrastructure must keep pace with 
- * the increasing performance and number of computing cores present in HPC 
- * systems. In this context, a global optimization of the file system turns out 
- * to be very difficult to impossible. This is in part due to the disparate nature
- * of the requirements and expectations of different user groups, and in part 
- * because currently there is no way to identify abnormal I/O behavior and trace 
- * it back to its source.
- * 
- * SIOX's main goal is to gain an overview of all the I/O activity taking place 
- * on an HPC system, and to use this information to optimize it. Initially, the 
- * project's scope spans the development of standardized interfaces to collect, 
- * reduce, and store performance data from all relevant layers. This information 
- * will then be analyzed and correlated with previously observed access patterns 
- * in order to gain an understanding of the characteristics and causal 
- * relationships of the system.
- * 
- * This knowledge will be the starting point for subsequent performance 
- * optimizations aimed at specific users and applications, carried out through 
- * e.g. the automatic tuning of Open MPI or file system parameters. Such 
- * use-profiles are going to be continuously created and not only helpful for 
- * optimization, but also when diagnosing acute performance problems, or when 
- * planning new acquisitions. In the course of the project, an holistic approach 
- * for I/O analysis should be conceived, implemented and applied. While SIOX' 
- * applicability is oriented towards HPC environments, it shouldn't be 
- * constricted to them. In this way, the integrated analysis of applications, 
- * file systems, and infrastructure could also be used for the future 
- * optimization of other scenarios e.g. the design of file system caches for 
- * mail servers. 
- * 
- * The following sections describe the current state of the project.
- * 
- * @section architecture SIOX Architecture and Workflow
- * 
- * While work on the definite architecture of the SIOX system is still in 
- * progress, some of its essential components are already well defined. Among them
- * are the SIOX daemons, the knowledge base and the central data warehouse. The
- * workflow between the different components is illustrated in the figure below.
- * 
- * @subsection client SIOX Client
- * 
- * The SIOX client serves as the interface between instrumented software 
- * (libraries and applications) and remote SIOX servers. It is implemented 
- * as a daemon whose job includes the correlation of the local I/O activities, 
- * reduction of redundancy, aggregation of information and the transmission of 
- * relevant performance and trace data to the SIOX servers. 
- * 
- * @subsection servers SIOX Servers
- *
- * The server functionality is accomplished in SIOX by a group of separate 
- * server processes fulfilling different roles. 
- *
- * @subsubsection transaction Transaction System
- * 
- * The transaction system is responsible for the continuous collection and 
- * correlation across system boundaries of the flow of trace information sent by 
- * the distributed clients. The result produced by the transaction system is 
- * the causal chain of I/O events produced by an I/O activity at the application
- * layer, as well as a detailed performance evaluation of the relevant links in
- * order to reveal potential I/O bottlenecks. This information is then sent to 
- * the data warehouse server for storage.
- * 
- * @subsubsection datawarehouse Data Warehouse
- * 
- * The data warehouse server manages a persistent archive of historical I/O
- * information and the corresponding observed performance data. It decides 
- * whether the informaiton is worth keeping or not, and if so, it stores it in a
- * database for future consultation. The data warehouse is used periodically by 
- * the knowledge base and the transactions server.
- * 
- * @subsubsection knowledgebase Knowledge Base
- * 
- * The goal of the knowledge base is to capitalize on the historical data 
- * accumulated in the data warehouse to not only hint the user about possible 
- * I/O bottlenecks in his application, but also to autonomously optimize to I/O 
- * subsystem when a well-known I/O pattern has occurred.
- * 
- * @image html architecture.png "SIOX Workflow"
- * 
- * @section intrumentation Software Instrumentation
- * 
- * The are two ways an application can profit from SIOX. The easiest one is 
- * to simply compile the application against a SIOX-enabled library stack,
- * thereby harnessing SIOX support for these layers. The 
- * other one is to manually instrument the application using the SIOX API 
- * designed for that purpose. Before presenting some examples of manual source
- * code instrumentation, there are some fundamental concepts you should 
- * familiarize with.
- * 
- * @subsection nodes SIOX Nodes
- * 
- * A SIOX node is a logical functional unit, e.g. a hardware component 
- * or a software layer. It represent one of the conceptual links in the 
- * corresponding causal chain of I/O activities. A SIOX node is identified by 
- * the hardware it resides on (e.g. hostname), the software layer it implements
- * (e.g. application name or library name) and the application's instance
- * (e.g. process or thread id). This identification scheme is very flexible 
- * though and allows the combination of different data to form the different 
- * IDs as long as their concatenation can be used as a unique key. SIOX indexes 
- * all nodes using a @em UNID, a unique numeric key. Instrumented applications 
- * must register their SIOX nodes during startup as the first step.
- * 
- * @sa siox_register_node()
- * @sa siox_unregister_node()
- * 
- * @subsection activities SIOX Activities
- * 
- * A SIOX activity represents an I/O action taking place on a SIOX node. 
- * Activities can be nested and are created by wrapping one or more of the 
- * function calls that trigger I/O. They define the granularity at which the 
- * SIOX system will evaluate the I/O events on that particular node. At any  
- * layer, an activity will produce a cascade of sub-activities in the 
- * instrumented lower layers not stopping until the disk systems at the bottom 
- * of the cluster's I/O path. We call this group of related activities the 
- * @em causal @em chain. One of the key functionalities of SIOX is its 
- * ability to correlate these activities even in the presence of missing links 
- * (e.g. uninstrumented layers or components). This allows us to trace the I/O 
- * behavior observed at any point of the I/O path back to the application that
- * generated it.
- *  
- * @sa siox_start_activity();
- * @sa siox_stop_activity();
- * @sa siox_end_activity();
- * 
- * @subsection descriptors SIOX Descriptors
- * 
- * The information available to a given activity varies depending on the node 
- * it resides on. For example, while an activity at the application or POSIX 
- * layer knows the files it is accessing by name, an activity at the file system
- * layer may only know the involved @em inodes. Descriptors containing this 
- * context information are sent by the activity at the higher layer to the 
- * activities at the lower ones to ease the correlation of their file handlers
- * and other variables.
- * 
- * @subsection rcalls SIOX Remote Calls
- * 
- * (to be written)
- * 
- * @image html nodes-activities.png "SIOX Nodes, Activities and Descriptors"
- * 
- * @section example Instrumentation Example
- *
- * The following example shows how some of the MPI-I/O functions could be 
- * instrumented.
- * 
- * @include mpi-example.c
- * @example mpi-example.c
  */
 
 
@@ -197,7 +39,7 @@ typedef struct siox_rcid_t * siox_rcid;
 /**
  * A time stamp, as represented in SIOX.
  */
-typedef siox_timestamp_t siox_timestamp;
+typedef struct siox_timestamp_t * siox_timestamp;
 
 
 
@@ -298,7 +140,7 @@ void siox_node_attribute(siox_unid unid, siox_dtid dtid, const void * value);
  * @param[in]   comment     Possible details about the activity, or @c NULL.
  * @return                  A fresh @em AID, to be used in all the activity's further dealings with SIOX.
  */
-siox_aid siox_start_activity(siox_unid unid, siox_timestamp * timestamp, const char * comment);
+siox_aid siox_start_activity(siox_unid unid, siox_timestamp timestamp, const char * comment);
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.
@@ -311,7 +153,7 @@ siox_aid siox_start_activity(siox_unid unid, siox_timestamp * timestamp, const c
  *                          which will result in SIOX using the current time.
  * @note    If there are no metrics to report for an activity, siox_stop_activity() can be omitted.
  */
-void siox_stop_activity(siox_aid aid, siox_timestamp * timestamp);
+void siox_stop_activity(siox_aid aid, siox_timestamp timestamp);
 
 /**
  * Report performance data to be associated with the activity.
@@ -350,7 +192,7 @@ void siox_report_error(siox_aid aid, int error);
  * @param[in]   timestamp   A time stamp or @c NULL,
  *                          which will result in SIOX using the current time.
  */
-void siox_end_activity(siox_aid aid, siox_timestamp * timestamp);
+void siox_end_activity(siox_aid aid, siox_timestamp timestamp);
 
 /**
  * Causally link an activity to another.
