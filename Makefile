@@ -24,10 +24,10 @@ HDF5DIR :=
 #=======
 # Flags
 #=======
-CFLAGS := -std=c1x -pedantic -Wall
+CFLAGS := -std=gnu1x -pedantic -Wall -Wextra
 LIBFLAGS := $(CFLAGS) -shared -fPIC
 LDFLAGS := $(CFLAGS)
-GLIBFLAGS := `pkg-config --cflags glib-2.0` `pkg-config --libs glib-2.0`
+GLIBFLAGS := `pkg-config --cflags --libs glib-2.0`
 HDF5FLAGS := -I$(HDF5DIR)/include -L$(HDF5DIR)/lib
 #ONTFLAGS := -iquote$(ONTDIR) -Wl,-rpath=$(ONTDIR)
 ONTFLAGS := $(GLIBFLAGS) -I$(ONTDIR) -Wl,-rpath=$(ONTDIR)
@@ -64,7 +64,7 @@ unexport DOXYDIRS LOGS REFMAN
 
 .PHONY: all
 all: SUBTARGET := all
-all: $(TARGETS)
+all: $(TARGETS) Makefile
 	@echo ==================================================
 
 #===============
@@ -81,14 +81,14 @@ debug: $(TARGETS)
 #==========================
 
 .PHONY: ont
-ont:
+ont: Makefile
 	@echo ==================================================
 	@echo Making Ontology...
 	@$(MAKE) --silent --directory=$(ONTDIR) $(SUBTARGET)
 	@echo ...done!
 
 .PHONY: ll
-ll: ont
+ll: ont Makefile
 	@echo ==================================================
 	@echo Making Low-Level-C-Interface...
 	@$(MAKE) --silent --directory=$(LLDIR) $(SUBTARGET)
@@ -114,7 +114,7 @@ clean:
 	@echo ==================================================
 
 .PHONY: docs
-docs:
+docs: Makefile
 	@echo ==================================================
 	@echo Making documentation...
 	@doxygen Doxyfile
@@ -125,7 +125,7 @@ docs:
 	@echo ==================================================
 
 .PHONY: examples
-examples: ll ont
+examples: ll ont Makefile
 	@echo ==================================================
 	@echo Making examples...
 	@$(MAKE) --silent --directory=$(EXAMPLEDIR) $(SUBTARGET)
@@ -133,7 +133,7 @@ examples: ll ont
 	@echo ==================================================
 
 .PHONY: test
-test:
+test: Makefile
 	@echo ==================================================
 	@echo Running tests...
 	@$(MAKE) --silent --directory=$(ONTDIR) test

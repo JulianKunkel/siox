@@ -61,11 +61,11 @@ debug: all
 #=========================
 # explizite Zwischenziele
 #=========================
-libsiox-ll.so: siox-ll.c siox-ll.h Makefile
-#	@echo --------------------------------------------------
-	@echo -n Making $@...
-	$(CC) $(LIBFLAGS) $(ONTFLAGS) -o $@ $< $(ONTLIBS)
-	@echo done!
+# libsiox-ll.so: siox-ll.c siox-ll.h Makefile
+# #	@echo --------------------------------------------------
+# 	@echo -n Making $@...
+# 	$(CC) $(LIBFLAGS) $(ONTFLAGS) -o $@ $< $(ONTLIBS)
+# 	@echo done!
 
 libmufs.so: mufs.c mufs.h Makefile
 #	@echo --------------------------------------------------
