@@ -125,7 +125,7 @@
  * layer, an activity will produce a cascade of sub-activities in the 
  * instrumented lower layers not stopping until the disk systems at the bottom 
  * of the cluster's I/O path. We call this group of related activities the 
- * @em causal @em chain. One of the key functionalities of SIOX is its 
+ * <em>causal chain</em>. One of the key functionalities of SIOX is its 
  * ability to correlate these activities even in the presence of missing links 
  * (e.g. uninstrumented layers or components). This allows us to trace the I/O 
  * behavior observed at any point of the I/O path back to the application that
@@ -140,14 +140,49 @@
  * The information available to a given activity varies depending on the node 
  * it resides on. For example, while an activity at the application or POSIX 
  * layer knows the files it is accessing by name, an activity at the file system
- * layer may only know the involved @em inodes. Descriptors containing this 
- * context information are sent by the activity at the higher layer to the 
- * activities at the lower ones to ease the correlation of their file handlers
- * and other variables.
+ * layer may only know the involved @em inodes.
+ * We call information used to identify an entity on the data path between application
+ * and block storage a descriptor for this entity. Common examples for a file are
+ * the full qualified file name, a file handle used to access it on storage or
+ * offset and byte count used to address it from main memory or from a cache.
+ * Descriptors and their relations help in tracking these entities along the data path:
+ *  - A file, when opened via a POSIX @em open() call, will be identified by its file name,
+ *  with a file handle created to more easily refer to it later. Both name and handle can
+ *  (and will) act as descriptors for the file.
+ *  - When writing to the file via a POSIX @em write() call, the file is referred to by its
+ *  file handle. Yet the @em write() activity is causally correlated to the previous open(),
+ *  and we would like to map one to the other for further analysis of their common impact on
+ *  system performance. SIOX is able to locate and track such correlations by the descriptors
+ *  used, as is shown by the horizontal @em map links in the picture.
+
  * 
+ * @image html causal-chain.png "Using Descriptors to Reconstruct the Causal Chain"
+ *
  * @subsection rcalls SIOX Remote Calls
  * 
- * (to be written)
+ * While the causal relations of caller and callee can easily be established for
+ * processes and threads running on the same physical machine (SIOX automatically
+ * infers them from the system call stack), remote calls crossing physical system
+ * boundaries require additional information for their call structure to become apparent.
+ *
+ * To correctly match remote caller to callee, both need to report the attributes
+ * of the call (such as key parameters passed) to allow for association by best match.
+ *
+ * The usual sequence is as follows:
+ * <ul>
+ * <li>On caller's side:</li>
+ * <ol>
+ * <li>Open attribute list and indicate target via siox_describe_remote_call_start().</li>
+ * <li>Report attributes to be passed via siox_remote_call_attribute().</li>
+ * <li>Close attribute list via siox_describe_remote_call_end().</li>
+ * <li>Execute actual call.</li>
+ * </ol>
+ * <li>On callee's side:</li>
+ * <ol>
+ * <li>Report attributes received via siox_remote_call_receive().</li>
+ * <li>Execute usual code.</li>
+ * </ol>
+ * </ul>
  * 
  * @image html nodes-activities.png "SIOX Nodes, Activities and Descriptors"
  * 
