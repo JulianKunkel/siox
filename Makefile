@@ -19,11 +19,11 @@ LLDIR := $(CURDIR)/low-level-C-interface
 ONTDIR := $(CURDIR)/ontology
 EXAMPLEDIR := $(CURDIR)/examples
 HDF5DIR :=
-#/usr/include
+# Only set this if placed somewhere really unusual
 
-#================
-# Flags and Libs
-#================
+#=====================
+# Flags and Libraries
+#=====================
 CFLAGS := -std=gnu1x -pedantic -Wall -Wextra
 LIBFLAGS := $(CFLAGS) -shared -fPIC
 LDFLAGS := $(CFLAGS)
@@ -47,7 +47,7 @@ unexport TARGETS
 #=============
 DOXYDIRS := html latex
 LOGS := *.log
-REFMAN := SIOX-Reference.pdf
+REFMAN := SIOX-Reference
 # Don't hand these variables down to sub-makes
 unexport DOXYDIRS LOGS REFMAN
 
@@ -60,9 +60,9 @@ unexport DOXYDIRS LOGS REFMAN
 .SUFFIXES:
 .SUFFIXES: .c .o .h
 
-#=============
-# Main Target
-#=============
+#==============
+# Main Targets
+#==============
 
 .PHONY: all
 all: SUBTARGET := all
@@ -78,9 +78,9 @@ debug: SUBTARGET := debug
 debug: $(TARGETS) Makefile
 	@echo ==================================================
 
-#==========================
-# Explicit Partial Targets
-#==========================
+#======================
+# Intermediate Targets
+#======================
 
 .PHONY: ont
 ont: Makefile
@@ -110,34 +110,33 @@ clean:
 	@echo --------------------------------------------------
 	@echo -n Cleaning Main Directory...
 	@$(RM) $(LOGS) *~
-	@$(RM) -r $(DOXYDIRS) $(REFMAN)
+	@$(RM) -r $(DOXYDIRS) $(REFMAN).pdf $(REFMAN).html
 	@echo done!
 	@echo --------------------------------------------------
 	@echo ...done!
 	@echo ==================================================
 
 .PHONY: docs
-docs: Makefile
+docs: Doxyfile Makefile
 	@echo ==================================================
 	@echo Making documentation...
 	@doxygen Doxyfile
 	@$(MAKE) --silent --directory=doc/latex > doc/latex/makePDF.log
-	@mv doc/latex/refman.pdf ./$(REFMAN)
+	@mv doc/latex/refman.pdf ./$(REFMAN).pdf
+	@ln -s doc/html/index.html ./$(REFMAN).html
 	@$(RM) -r doc/latex
 	@echo ...done!
 	@echo ==================================================
 
 .PHONY: examples
-examples: ll ont Makefile
-	@echo ==================================================
+examples: all Makefile
 	@echo Making examples...
 	@$(MAKE) --silent --directory=$(EXAMPLEDIR) $(SUBTARGET)
 	@echo ...done!
 	@echo ==================================================
 
 .PHONY: test
-test: Makefile
-	@echo ==================================================
+test: all Makefile
 	@echo Running tests...
 	@$(MAKE) --silent --directory=$(ONTDIR) test
 	@$(MAKE) --silent --directory=$(LLDIR) test

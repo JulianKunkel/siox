@@ -32,8 +32,6 @@ static siox_unid    unid;
 /* Die DTIDs der beiden Deskriptortypen, die MUFS kennt. */
 static siox_dtid    dtid_fn;   /**< Die @em DTID für FileName-Deskriptoren. */
 static siox_dtid    dtid_fp;   /**< Die @em DTID für FilePointer-Deskriptoren. */
-/** Die @em DMID der Deskriptorübersetzung, die @em MUFS ausführen kann. */
-static siox_dmid    dmid;
 /** Die @em MID für unsere Leistungsmetrik */
 static siox_mid     mid;
 
@@ -45,7 +43,7 @@ static siox_mid     mid;
 static void mufs_initialise();
 
 
-long
+unsigned long
 mufs_putfile( const char * filename, const char * contents )
 {
     FILE *          fp;
@@ -74,20 +72,17 @@ mufs_putfile( const char * filename, const char * contents )
      * SIOX - preliminary negotiations
      */
     sprintf( sBuffer, "Open file %s for writing.", filename );
-    aid = siox_start_activity( unid, sBuffer );
+    aid = siox_start_activity( unid, NULL, sBuffer );
 
     /* Report receiving a new descriptor */
-    siox_receive_descriptor( aid, dtid_fn, &filename);
+    siox_remote_call_receive( aid, dtid_fn, &filename);
 
     /*
      * Open or, if necessary, create file via POSIX
      */
     fp = fopen( filename, "wt" );
 
-    siox_end_activity( aid );
-    /* Report the mapping of file name to file pointer */
-    sprintf( fp_s, "%p", (void *) fp ); /* Turn foreign data type into string */
-    siox_map_descriptor( aid, dmid, &filename, &fp );
+    siox_end_activity( aid, NULL );
 
 
     /*
@@ -108,7 +103,7 @@ mufs_putfile( const char * filename, const char * contents )
     {
         /* Notify SIOX that we are starting an activity for which we may later collect performance data. */
         sprintf( sBuffer, "Writing to file pointer %s, block #%d.", fp_s, block );
-        aid = siox_start_activity( unid, sBuffer );
+        aid = siox_start_activity( unid, NULL, sBuffer );
 
         bytes_to_write = pEnd - pData;
         if( bytes_to_write > BLOCK_SIZE )
@@ -116,7 +111,7 @@ mufs_putfile( const char * filename, const char * contents )
 
         if( fwrite( pData, bytes_to_write, 1, fp ) != 1 )
             {
-                siox_end_activity( aid );
+                siox_end_activity( aid, NULL );
 
                 fprintf( stderr, "!!! Fehler beim Schreiben von Block %d der Datei >%s<! !!!\n",
                          block, filename );
@@ -125,12 +120,10 @@ mufs_putfile( const char * filename, const char * contents )
 
 
         /* Report the end of the activity, any performance data gathered and close bookkeeping for it. */
-        siox_stop_activity( aid );
+        siox_stop_activity( aid, NULL );
         siox_report_activity( aid,
-                              dtid_fp, &fp,
-                              mid, &bytes_to_write,
-                              NULL );
-        siox_end_activity( aid );
+                              mid, &bytes_to_write );
+        siox_end_activity( aid, NULL );
     }
 
 
@@ -138,28 +131,23 @@ mufs_putfile( const char * filename, const char * contents )
      * Close file via POSIX
      */
     sprintf( sBuffer, "Closing file pointer %s.", fp_s );
-    aid = siox_start_activity( unid, sBuffer );
+    aid = siox_start_activity( unid, NULL, sBuffer );
 
     if( fclose( fp ) == EOF )
     {
-        siox_release_descriptor( aid, dtid_fp, &fp );
-        siox_end_activity( aid );
+        siox_end_activity( aid, NULL );
 
         fprintf( stderr, "!!! Fehler beim Schließen der Datei >%s<! !!!\n", filename );
         return( 0 );
     }
 
-    siox_stop_activity( aid );
+    siox_stop_activity( aid, NULL );
 
 
     /*
      * SIOX - final negotiations
      */
-    /* Mark any descriptors left as unused */
-    siox_release_descriptor( aid, dtid_fp, &fp );
-    siox_release_descriptor( aid, dtid_fn, &filename );
-
-    siox_end_activity( aid );
+    siox_end_activity( aid, NULL );
 
 
     /* Return number of bytes successfully written */
@@ -169,7 +157,8 @@ mufs_putfile( const char * filename, const char * contents )
 
 
 
-static void mufs_initialise()
+static void
+mufs_initialise()
 {
     int     pid;
     char    pid_s[10];
@@ -203,12 +192,9 @@ static void mufs_initialise()
     /* Register descriptor types we know */
     dtid_fn = siox_register_datatype( "FileName", SIOX_STORAGE_STRING );
     dtid_fp = siox_register_datatype( "MUFS-FilePointer", SIOX_STORAGE_64_BIT_INTEGER );
-    /* Register ability to map MUFS-FileName to MUFS-FilePointer */
-    dmid = siox_register_descriptor_map( unid, dtid_fn, dtid_fp );
 
     /* Register our performance metric with the ontology */
     mid = siox_register_metric( "Bytes Written",
-                                "",
                                 SIOX_UNIT_BYTES,
                                 SIOX_STORAGE_64_BIT_INTEGER,
                                 SIOX_SCOPE_SUM);

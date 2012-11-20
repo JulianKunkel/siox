@@ -1,34 +1,36 @@
-################
-# Definitionen #
-################
+###############
+# Definitions #
+###############
 
 #=======
 # Tools
 #=======
 # All inherited from parent make
 
-#=======
-# Flags
-#=======
-# All inherited from parent make
+#=====================
+# Flags and Libraries
+#=====================
+HDF5FLAGS := -I$(HDF5DIR)/include -L$(HDF5DIR)/lib
+HDF5LIBS := -lhdf5 -lhdf5_hl
+MUFSFLAGS := -I$(EXAMPLEDIR) -Wl,-rpath=$(EXAMPLEDIR) -L$(EXAMPLEDIR)
+MUFSLIBS := -lmufs
+# All others inherited from parent make
 
 #=========
 # Targets
 #=========
 TARGETS := hdf5-example mockupfs-example
-MUFSLIBS := libmufs.so
-HDF5FLAGS := -I$(HDF5DIR)/include -L$(HDF5DIR)/lib
-HDF5LIBS := -lhdf5 -lhdf5_hl
-OWNLIBS := $(MUFSLIBS)
+MUFSLIB := libmufs.so
+OWNLIBS := $(MUFSLIB)
 
 
-##########
-# Regeln #
-##########
+#########
+# Rules #
+#########
 
-#==========
-# Endziele
-#==========
+#==============
+# Main Targets
+#==============
 
 .PHONY: examples
 examples: $(TARGETS) Makefile
@@ -40,14 +42,14 @@ hdf5-example: hdf5-example.c Makefile
 	$(CC) $(LDFLAGS) $(LLFLAGS) $(HDF5FLAGS) $(GLIBFLAGS) -o $@ $< $(HDF5LIBS) $(LLLIBS) $(GLIBLIBS)
 	@echo done!
 
-mockupfs-example: mockupfs-example.c $(MUFSLIBS) Makefile
+mockupfs-example: mockupfs-example.c $(MUFSLIB) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LDFLAGS) $(LLFLAGS) -o $@ $< $(MUFSLIBS) $(LLLIBS)
+	$(CC) $(LDFLAGS) $(LLFLAGS) $(MUFSFLAGS) -o $@ $< $(MUFSLIBS) $(LLLIBS)
 	@echo done!
 
 #===============
-# Debug-Version
+# Debug Version
 #===============
 
 .PHONY: debug
@@ -56,15 +58,20 @@ debug: LIBFLAGS += -O0 -ggdb -DDEBUG
 debug: LDFLAGS += -ggdb
 debug: all Makefile
 
+#======================
+# Intermediate Targets
+#======================
+
 libmufs.so: mufs.c mufs.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
 	$(CC) $(LIBFLAGS) $(LLFLAGS) -o $@ $< $(LLLIBS)
 	@echo done!
 
-#=================
-# implizite Ziele
-#=================
+#==================
+# Implicit Targets
+#==================
+
 %.o : %.c Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
@@ -73,9 +80,9 @@ libmufs.so: mufs.c mufs.h Makefile
 
 % : %.c
 
-###############
-# Pseudoziele #
-###############
+##################
+# Pseudo Targets #
+##################
 
 .PHONY: clean
 clean:

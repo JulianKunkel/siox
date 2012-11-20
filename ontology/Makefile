@@ -1,64 +1,67 @@
-################
-# Definitionen #
-################
+###############
+# Definitions #
+###############
 
 #=======
 # Tools
 #=======
 # All inherited from parent make
 
-#=======
-# Flags
-#=======
+#=====================
+# Flags and Libraries
+#=====================
 # All inherited from parent make
 
 #=========
 # Targets
 #=========
 TARGETS := testontology
-ONTLIBS := libsioxont.so
-OWNLIBS := $(ONTLIBS)
-# LIBS := $(OWNLIBS)
+ONTLIB := libsioxont.so
+OWNLIBS := $(ONTLIB)
 
 
-##########
-# Regeln #
-##########
+#########
+# Rules #
+#########
 
-#==========
-# Endziele
-#==========
+#==============
+# Main Targets
+#==============
+
 .PHONY: all
 all: $(TARGETS) Makefile
 #	@echo --------------------------------------------------
 
-testontology: testontology.o $(ONTLIBS) Makefile
+testontology: testontology.o $(ONTLIB) Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
 	$(CC) $(LDFLAGS) $(ONTFLAGS) -o $@ $< $(ONTLIBS)
 	@echo done!
 
 #===============
-# Debug-Version
+# Debug Version
 #===============
+
 .PHONY: debug
 debug: CFLAGS += -O0 -ggdb -DDEBUG
 debug: LIBFLAGS += -O0 -ggdb -DDEBUG
 debug: LDFLAGS += -ggdb
-debug: all
+debug: all Makefile
 
-#=========================
-# explizite Zwischenziele
-#=========================
+#======================
+# Intermediate Targets
+#======================
+
 libsioxont.so: ontology.c ontology.h datatype.c datatype.h metric.c metric.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
 	$(CC) $(LIBFLAGS) -o $@ $< datatype.c metric.c
 	@echo done!
 
-#=================
-# implizite Ziele
-#=================
+#==================
+# Implicit Targets
+#==================
+
 %.o : %.c Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
@@ -67,9 +70,9 @@ libsioxont.so: ontology.c ontology.h datatype.c datatype.h metric.c metric.h Mak
 
 % : %.c
 
-###############
-# Pseudoziele #
-###############
+##################
+# Pseudo Targets #
+##################
 
 .PHONY: test
 test:

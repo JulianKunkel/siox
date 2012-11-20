@@ -212,7 +212,6 @@ siox_describe_remote_call_start(siox_aid      aid,
     siox_rcid rcid = malloc( sizeof( struct siox_rcid_t ) );
     rcid->id = current_rcid++;
 
-
     printf( "\n# AID %ld opened description of remote call %ld to hwid >%s<, swid >%s< and iid >%s<.\n",
         aid->id,
         rcid->id,
@@ -223,32 +222,30 @@ siox_describe_remote_call_start(siox_aid      aid,
     return( rcid );
 }
 
-/**
- * Report an attribute to be sent via a remote call.
- *
- * @param[in]   rcid    The remote call's @em RCID.
- * @param[in]   dtid    The attribute's @em DTID.
- * @param[in]   value   The attribute's actual value.
- */
-void siox_remote_call_attribute(siox_rcid rcid, siox_dtid dtid, void * value);
 
-/**
- * Close attribute list for a remote call.
- *
- * @param[in]   rcid    The remote call's @em RCID.
- */
-void siox_describe_remote_call_end(siox_rcid  rcid);
-
-/**
- * Report the reception of an attribute via a remote call.
- *
- * @param[in]   aid     The current activity's @em AID.
- * @param[in]   dtid    The attribute's @em DTID.
- * @param[in]   value   The attribute's actual value.
- */
-void siox_remote_call_receive(siox_aid aid, siox_dtid dtid, void * value);
+void siox_remote_call_attribute(siox_rcid rcid, siox_dtid dtid, void * value)
+{
+    printf( "\n# Remote Call RCID %ld will send attribute of data type >%s<:\n\t>%s<.\n",
+        rcid->id,
+        siox_ont_data_to_string( dtid, value ),
+        siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ) );
+}
 
 
+void siox_describe_remote_call_end(siox_rcid  rcid)
+{
+    printf( "\n# Description of remote call RCID %ld closed.\n",
+        rcid->id );
+}
+
+
+void siox_remote_call_receive(siox_aid aid, siox_dtid dtid, void * value)
+{
+    printf( "\n# AID %ld received remote call attribute of data type >%s<:\n\t>%s<.\n",
+        aid->id,
+        siox_ont_data_to_string( dtid, value ),
+        siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ) );
+}
 
 
 
