@@ -15,11 +15,7 @@
 #=========
 # Targets
 #=========
-SIOXLIBS := libsiox-ll.so
-ONTLIBS := $(ONTDIR)/libsioxont.so
-OWNLIBS := $(SIOXLIBS)
-TARGETS := $(SIOXLIBS)
-#LIBS := $(OWNLIBS) $(ONTLIBS)
+TARGETS := libsiox-ll.so
 
 
 ##########
@@ -50,7 +46,7 @@ debug: all
 libsiox-ll.so: siox-ll.c siox-ll.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LIBFLAGS) $(ONTFLAGS) -o $@ $< $(ONTLIBS)
+	$(CC) $(LIBFLAGS) $(ONTFLAGS) $(GLIBFLAGS) -o $@ $< $(ONTLIBS) $(GLIBLIBS)
 	@echo done!
 
 #=================
@@ -72,7 +68,7 @@ libsiox-ll.so: siox-ll.c siox-ll.h Makefile
 clean:
 	@echo --------------------------------------------------
 	@echo -n Cleaning Low-Level-C-Interface...
-	@$(RM) $(TARGETS) $(OWNLIBS) *.o *.log *~
+	@$(RM) $(TARGETS) *.o *.log *~
 	@echo done!
 
 .PHONY: test

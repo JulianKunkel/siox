@@ -11,6 +11,8 @@
 #ifndef siox_LL_H
 #define siox_LL_H
 
+#include <glib.h>
+
 #include "../ontology/ontology.h"
 
 
@@ -39,7 +41,7 @@ typedef struct siox_rcid_t * siox_rcid;
 /**
  * A time stamp, as represented in SIOX.
  */
-typedef struct siox_timestamp_t * siox_timestamp;
+typedef GDateTime * siox_timestamp;
 
 
 

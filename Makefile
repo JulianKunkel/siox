@@ -21,17 +21,19 @@ EXAMPLEDIR := $(CURDIR)/examples
 HDF5DIR :=
 #/usr/include
 
-#=======
-# Flags
-#=======
+#================
+# Flags and Libs
+#================
 CFLAGS := -std=gnu1x -pedantic -Wall -Wextra
 LIBFLAGS := $(CFLAGS) -shared -fPIC
 LDFLAGS := $(CFLAGS)
-GLIBFLAGS := `pkg-config --cflags --libs glib-2.0`
-HDF5FLAGS := -I$(HDF5DIR)/include -L$(HDF5DIR)/lib
+GLIBFLAGS := $(shell pkg-config --cflags glib-2.0)
+GLIBLIBS := $(shell pkg-config --libs glib-2.0)
 #ONTFLAGS := -iquote$(ONTDIR) -Wl,-rpath=$(ONTDIR)
-ONTFLAGS := $(GLIBFLAGS) -I$(ONTDIR) -Wl,-rpath=$(ONTDIR)
-LLFLAGS := $(GLIBFLAGS) -I$(LLDIR) -Wl,-rpath=$(LLDIR)
+ONTFLAGS := -I$(ONTDIR) -Wl,-rpath=$(ONTDIR)
+ONTLIBS := -lsioxont -L$(ONTDIR)
+LLFLAGS := -I$(LLDIR) -Wl,-rpath=$(LLDIR) $(GLIBFLAGS)
+LLLIBS := -lsiox-ll -L$(LLDIR) $(GLIBLIBS)
 
 #=========
 # Targets
@@ -73,7 +75,7 @@ all: $(TARGETS) Makefile
 
 .PHONY: debug
 debug: SUBTARGET := debug
-debug: $(TARGETS)
+debug: $(TARGETS) Makefile
 	@echo ==================================================
 
 #==========================
@@ -104,6 +106,7 @@ clean:
 	@echo Cleaning project...
 	@$(MAKE) --silent --directory=$(ONTDIR) clean
 	@$(MAKE) --silent --directory=$(LLDIR) clean
+	@$(MAKE) --silent --directory=$(EXAMPLEDIR) clean
 	@echo --------------------------------------------------
 	@echo -n Cleaning Main Directory...
 	@$(RM) $(LOGS) *~

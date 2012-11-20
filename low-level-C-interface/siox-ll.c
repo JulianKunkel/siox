@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+/*#include <time.h>*/
 
 #include <glib.h>
 
@@ -29,8 +29,14 @@ static bool initialised_ontology = false;
 
 /** 
  * The ontology to use. Its value is set by initialize_ontology() using the 
- * siox_set_ontology() call. Otherwise DEFAULT_ONTOLOGY will be used. */
+ * siox_set_ontology() call. Otherwise DEFAULT_ONTOLOGY will be used.
+ */
 static char sOntology[80] = "";
+
+/**
+ * The format string to use for local date/time values.
+ */
+static const char sDateTimeFormat[] = "%F-%X %Z";
 
 
 /** The next unassigned UNID. */
@@ -57,10 +63,10 @@ struct siox_rcid_t {
     };
 
 
-struct siox_timestamp_t {
-    gint64  ticks; /**< The actual time in microseconds since 19700101. */
+/*struct siox_timestamp_t {
+    gint64  ticks; *< The actual time in microseconds since 19700101. 
     };
-
+*/
 
 /**
  * Initialization of the ontology library.
@@ -110,22 +116,23 @@ siox_start_activity( siox_unid          unid,
                      siox_timestamp     timestamp,
                      const char *       comment )
 {
-    gint64  time_start;
+    GDateTime*  now;
 
     if (timestamp)
-        time_start = timestamp->ticks;
+        now = timestamp;
     else
-        time_start = g_get_real_time();
+        now = g_date_time_new_now_local();
 
     /* Draw fresh AID */
     siox_aid aid = malloc( sizeof( struct siox_aid_t ) );
     (*aid).id = current_aid++;
 
-
-    printf( "- UNID %ld started AID %ld at %lu",
-        (*unid).id, (*aid).id, time_start);
+    gchar* sNow=g_date_time_format(now, sDateTimeFormat);
+    printf( "- UNID %ld started AID %ld at %s\n",
+        (*unid).id, (*aid).id, sNow);
     if ( comment != NULL )
         printf( "\tKommentar:\t%s\n", comment );
+    g_free(sNow);
 
     return( aid );
 }
@@ -135,15 +142,17 @@ void
 siox_stop_activity( siox_aid        aid,
                     siox_timestamp  timestamp )
 {
-    gint64  time_start;
+    GDateTime*  now;
 
     if (timestamp)
-        time_start = timestamp->ticks;
+        now = timestamp;
     else
-        time_start = g_get_real_time();
+        now = g_date_time_new_now_local();
 
-    printf( "- AID %ld stopped at %lu",
-        (*aid).id, time_start);
+    gchar* sNow=g_date_time_format(now, sDateTimeFormat);
+    printf( "- AID %ld stopped at %s\n",
+        (*aid).id, sNow);
+    g_free(sNow);
 }
 
 
@@ -163,15 +172,17 @@ void
 siox_end_activity ( siox_aid          aid,
                     siox_timestamp    timestamp )
 {
-    gint64  time_start;
+    GDateTime*  now;
 
     if (timestamp)
-        time_start = timestamp->ticks;
+        now = timestamp;
     else
-        time_start = g_get_real_time();
+        now = g_date_time_new_now_local();
 
-    printf( "- AID %ld finally ended at %lu\n",
-        (*aid).id, time_start);
+    gchar* sNow=g_date_time_format(now, sDateTimeFormat);
+    printf( "- AID %ld finally ended at %s\n",
+        (*aid).id, sNow);
+    g_free(sNow);
 }
 
 
@@ -186,6 +197,59 @@ siox_report( siox_unid              unid,
                         siox_ont_find_metric_by_mid( mid ) ) );
     printf( "%s\n", siox_ont_metric_data_to_string( mid, value ) );
 }
+
+
+
+
+
+siox_rcid
+siox_describe_remote_call_start(siox_aid      aid,
+                                const char *  target_hwid, 
+                                const char *  target_swid,
+                                const char *  target_iid)
+{
+    /* Draw fresh RCID */
+    siox_rcid rcid = malloc( sizeof( struct siox_rcid_t ) );
+    rcid->id = current_rcid++;
+
+
+    printf( "\n# AID %ld opened description of remote call %ld to hwid >%s<, swid >%s< and iid >%s<.\n",
+        aid->id,
+        rcid->id,
+        target_hwid?target_hwid:"(unknown)",
+        target_swid?target_swid:"(unknown)",
+        target_iid?target_iid:"(unknown)" );
+
+    return( rcid );
+}
+
+/**
+ * Report an attribute to be sent via a remote call.
+ *
+ * @param[in]   rcid    The remote call's @em RCID.
+ * @param[in]   dtid    The attribute's @em DTID.
+ * @param[in]   value   The attribute's actual value.
+ */
+void siox_remote_call_attribute(siox_rcid rcid, siox_dtid dtid, void * value);
+
+/**
+ * Close attribute list for a remote call.
+ *
+ * @param[in]   rcid    The remote call's @em RCID.
+ */
+void siox_describe_remote_call_end(siox_rcid  rcid);
+
+/**
+ * Report the reception of an attribute via a remote call.
+ *
+ * @param[in]   aid     The current activity's @em AID.
+ * @param[in]   dtid    The attribute's @em DTID.
+ * @param[in]   value   The attribute's actual value.
+ */
+void siox_remote_call_receive(siox_aid aid, siox_dtid dtid, void * value);
+
+
+
 
 
 bool
