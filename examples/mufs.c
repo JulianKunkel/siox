@@ -1,6 +1,6 @@
 /**
  * @file    mufs.c
- *          Implementation des Mock-Up-File-System.
+ *          Implementation of the Mock-Up File System.
  *
  * @authors Julian Kunkel & Michaela Zimmer
  * @date    2012
@@ -12,33 +12,35 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/syscall.h>
 
 #include "mufs.h"
 #include "siox-ll.h"
 
 
-/** Größe der Blöcke, auf welche die zu schreibenden Daten aufgeteilt werden. */
+/** Block size for the data to be written */
 #define BLOCK_SIZE 400
 
 
-/** Statusvariable, die angibt, ob wir mufs_initialise() bereits durchlaufen haben. */
+/** Flag indicating whether we have called mufs_initialise() yet. */
 static int initialised = 0;
 
 /*
- * Variablen für SIOX
+ * Variables for SIOX
  */
-/** Die @em UNID der Bibliothek. */
+/** The library's @em UNID */
 static siox_unid    unid;
-/* Die DTIDs der beiden Deskriptortypen, die MUFS kennt. */
-static siox_dtid    dtid_fn;   /**< Die @em DTID für FileName-Deskriptoren. */
-static siox_dtid    dtid_fp;   /**< Die @em DTID für FilePointer-Deskriptoren. */
-/** Die @em MID für unsere Leistungsmetrik */
+/* The @em DTIDs of the data types known to MUFS */
+static siox_dtid    dtid_fn;   /**< The @em DTID for file names */
+static siox_dtid    dtid_fp;   /**< The @em DTID for file pointers */
+static siox_dtid    dtid_b2w;  /**< The @em DTID for the amount of bytes to write */
+/** The @em MID for our performance metric */
 static siox_mid     mid;
 
 
 /**
- * Initialisiere die Bibliothek.
- * Bislang ausschließlich genutzt, um sie bei SIOX zu registrieren.
+ * Initialise the library.
+ * Right now, only used to check in with SIOX.
  */
 static void mufs_initialise();
 
@@ -53,11 +55,12 @@ mufs_putfile( const char * filename, const char * contents )
     int             block;
     const char *    pData;
     const char *    pEnd;
+    
+    char            sBuffer[200];
 
-    /* Variablen für SIOX */
-    siox_aid    aid;
-    char        fp_s[20];
-    char        sBuffer[200];
+    /* Variables for SIOX */
+    siox_aid    aid;        /** @em AID for an activity describing this whole function */
+
 
 
 
@@ -71,28 +74,29 @@ mufs_putfile( const char * filename, const char * contents )
     /*
      * SIOX - preliminary negotiations
      */
-    sprintf( sBuffer, "Open file %s for writing.", filename );
+    sprintf( sBuffer, "Write data to file %s via MUFS.", filename );
     aid = siox_start_activity( unid, NULL, sBuffer );
 
-    /* Report receiving a new descriptor */
+    /* Report the identifying attributes of the call received */
     siox_remote_call_receive( aid, dtid_fn, &filename);
+    /* Another characteristic of the call, though not explicitly given as a parameter:
+       The amount of data to write. */
+    total_bytes_to_write = 0;
+    for( pEnd = contents; *pEnd != 0; pEnd++)
+        total_bytes_to_write++;
+    siox_remote_call_receive( aid, dtid_b2w, &total_bytes_to_write );
+
 
     /*
      * Open or, if necessary, create file via POSIX
      */
     fp = fopen( filename, "wt" );
 
-    siox_end_activity( aid, NULL );
-
 
     /*
      * Write contents in blocks of BLOCK_SIZE characters each via POSIX
      */
-    total_bytes_to_write = 0;
     total_bytes_written = 0;
-    pData = contents;
-    for( pEnd = contents; *pEnd != 0; pEnd++)
-        total_bytes_to_write++;
 
     for( pData = contents,
          block = 0;
@@ -101,10 +105,6 @@ mufs_putfile( const char * filename, const char * contents )
                 total_bytes_written += bytes_to_write,
                 block++ )
     {
-        /* Notify SIOX that we are starting an activity for which we may later collect performance data. */
-        sprintf( sBuffer, "Writing to file pointer %s, block #%d.", fp_s, block );
-        aid = siox_start_activity( unid, NULL, sBuffer );
-
         bytes_to_write = pEnd - pData;
         if( bytes_to_write > BLOCK_SIZE )
             bytes_to_write = BLOCK_SIZE;
@@ -113,40 +113,33 @@ mufs_putfile( const char * filename, const char * contents )
             {
                 siox_end_activity( aid, NULL );
 
-                fprintf( stderr, "!!! Fehler beim Schreiben von Block %d der Datei >%s<! !!!\n",
+                fprintf( stderr, "!!! Error writing block %d of file >%s<! !!!\n",
                          block, filename );
                 return( 0 );
             }
-
-
-        /* Report the end of the activity, any performance data gathered and close bookkeeping for it. */
-        siox_stop_activity( aid, NULL );
-        siox_report_activity( aid,
-                              mid, &bytes_to_write );
-        siox_end_activity( aid, NULL );
     }
 
 
     /*
      * Close file via POSIX
      */
-    sprintf( sBuffer, "Closing file pointer %s.", fp_s );
-    aid = siox_start_activity( unid, NULL, sBuffer );
-
     if( fclose( fp ) == EOF )
     {
         siox_end_activity( aid, NULL );
 
-        fprintf( stderr, "!!! Fehler beim Schließen der Datei >%s<! !!!\n", filename );
+        fprintf( stderr, "!!! Error closing file >%s<! !!!\n", filename );
         return( 0 );
     }
 
+    /* Now all the work is done, stop the activity's clock and move on to the reporting phase. */
     siox_stop_activity( aid, NULL );
 
 
     /*
      * SIOX - final negotiations
      */
+    /* Report our performance metrics for this activity. */
+    siox_report_activity( aid, mid, &total_bytes_written );
     siox_end_activity( aid, NULL );
 
 
@@ -160,8 +153,12 @@ mufs_putfile( const char * filename, const char * contents )
 static void
 mufs_initialise()
 {
-    int     pid;
-    char    pid_s[10];
+    /* Variables for handling our HWID, SWID and IID and their string representations */
+    pid_t   pid;    /* Our process ID */
+    pid_t   tid;    /* Our thread ID */
+    char    hwid_s[ HOST_NAME_MAX ];
+    char*   swid_s = "MUFS";
+    char    iid_s[ 20 ];
 
 
     /* Flag status as initialised */
@@ -184,21 +181,24 @@ mufs_initialise()
      * =====================
      */
 
-    /* Find own PID and turn it into a string */
+    /* Find own HWID, SWID and IID and turn them into strings */
     pid = getpid();
-    sprintf( pid_s, "%d", pid );
+    tid = syscall( SYS_gettid );
+    gethostname( (char *) &hwid_s, (size_t) HOST_NAME_MAX );
+    sprintf( (char *) &iid_s, "%d-%d", (int) pid, (int) tid );
+
     /* Register node itself */
-    unid = siox_register_node( "Michaelas T1500", "MUFS", pid_s );
+    unid = siox_register_node( hwid_s, swid_s, iid_s );
+
     /* Register descriptor types we know */
     dtid_fn = siox_register_datatype( "FileName", SIOX_STORAGE_STRING );
     dtid_fp = siox_register_datatype( "MUFS-FilePointer", SIOX_STORAGE_64_BIT_INTEGER );
+    dtid_b2w = siox_register_datatype( "Bytes to write", SIOX_STORAGE_64_BIT_INTEGER );
 
     /* Register our performance metric with the ontology */
     mid = siox_register_metric( "Bytes Written",
                                 SIOX_UNIT_BYTES,
                                 SIOX_STORAGE_64_BIT_INTEGER,
-                                SIOX_SCOPE_SUM);
-    printf( "Registered performance metric >%s< with ontology.\n",
-            "Bytes Written" );
+                                SIOX_SCOPE_ACTUAL);
 }
 

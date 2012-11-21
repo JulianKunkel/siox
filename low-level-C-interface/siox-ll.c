@@ -220,9 +220,9 @@ siox_describe_remote_call_start(siox_aid      aid,
     siox_rcid rcid = malloc( sizeof( struct siox_rcid_t ) );
     rcid->id = current_rcid++;
 
-    printf( "\t- AID %ld opened description of remote call %ld to\n\t\tHWID >%s<, SWID >%s< and IID >%s<.\n",
-        aid->id,
+    printf( "\t- RCID %ld opened to describe remote call by AID %ld to\n\t\tHWID >%s<, SWID >%s< and IID >%s<.\n",
         rcid->id,
+        aid->id,
         target_hwid?target_hwid:"(unknown)",
         target_swid?target_swid:"(unknown)",
         target_iid?target_iid:"(unknown)" );
@@ -233,26 +233,26 @@ siox_describe_remote_call_start(siox_aid      aid,
 
 void siox_remote_call_attribute(siox_rcid rcid, siox_dtid dtid, void * value)
 {
-    printf( "\t\t- Remote Call RCID %ld will send attribute of data type >%s<:\n\t\t\t>%s<.\n",
+    printf( "\t\t- RCID %ld will send attribute of data type >%s<:\n\t\t\t  >%s<.\n",
         rcid->id,
-        siox_ont_data_to_string( dtid, value ),
-        siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ) );
+        siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ),
+        siox_ont_data_to_string( dtid, value ) );
 }
 
 
 void siox_describe_remote_call_end(siox_rcid  rcid)
 {
-    printf( "\t- Description of remote call RCID %ld closed.\n",
+    printf( "\t- RCID %ld closed.\n",
         rcid->id );
 }
 
 
 void siox_remote_call_receive(siox_aid aid, siox_dtid dtid, void * value)
 {
-    printf( "\t- AID %ld received remote call attribute of data type >%s<:\n\t>%s<.\n",
+    printf( "\t- AID %ld received remote call attribute of data type >%s<:\n\t  >%s<.\n",
         aid->id,
-        siox_ont_data_to_string( dtid, value ),
-        siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ) );
+        siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ),
+        siox_ont_data_to_string( dtid, value ) );
 }
 
 
@@ -301,7 +301,7 @@ siox_register_datatype( const char *                name,
         dtid = siox_ont_register_datatype( name,
                                            storage );
 
-    printf("# Registered data type >%s< with ontology.\n", name );
+    printf("# Registered data type >%s< as DTID %s.\n", name, siox_ont_dtid_to_string(dtid));
 
     return( dtid );
 }
@@ -310,8 +310,9 @@ siox_register_datatype( const char *                name,
 void
 siox_register_datatype_as_descriptor(siox_dtid dtid)
 {
-    printf("# Registered data type >%s< to serve as descriptor.\n",
-           siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ) );
+    printf("# Registered data type >%s< with DTID %s to serve as descriptor.\n",
+           siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ),
+           siox_ont_dtid_to_string(dtid));
 }
 
 
@@ -352,7 +353,7 @@ siox_register_metric( const char *                 name,
                                         storage,
                                         scope );
 
-    printf( "# Registered performance metric >%s< with ontology.\n", name );
+    printf( "# Registered performance metric >%s< as MID %s.\n", name, siox_ont_mid_to_string(mid));
 
     return( mid );
 }
