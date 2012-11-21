@@ -41,6 +41,7 @@ enum siox_ont_storage_type{
  */
 enum siox_ont_scope_type{
     SIOX_SCOPE_UNASSIGNED,
+    SIOX_SCOPE_ACTUAL,
     SIOX_SCOPE_SAMPLE,
     SIOX_SCOPE_AVERAGE,
     SIOX_SCOPE_DIFFERENCE,
