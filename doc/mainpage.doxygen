@@ -135,7 +135,7 @@
  * @sa siox_stop_activity();
  * @sa siox_end_activity();
  * 
- * @subsection descriptors SIOX Descriptors
+ * @subsection descriptors SIOX Descriptors and the Causal Chain
  * 
  * The information available to a given activity varies depending on the node 
  * it resides on. For example, while an activity at the application or POSIX 
@@ -144,19 +144,32 @@
  * We call information used to identify an entity on the data path between application
  * and block storage a descriptor for this entity. Common examples for a file are
  * the full qualified file name, a file handle used to access it on storage or
- * offset and byte count used to address it from main memory or from a cache.
+ * offset and byte count used to address it in main memory or in a cache.
  * Descriptors and their relations help in tracking these entities along the data path:
- *  - A file, when opened via a POSIX @em open() call, will be identified by its file name,
- *  with a file handle created to more easily refer to it later. Both name and handle can
- *  (and will) act as descriptors for the file.
- *  - When writing to the file via a POSIX @em write() call, the file is referred to by its
- *  file handle. Yet the @em write() activity is causally correlated to the previous open(),
- *  and we would like to map one to the other for further analysis of their common impact on
- *  system performance. SIOX is able to locate and track such correlations by the descriptors
- *  used, as is shown by the horizontal @em map links in the picture.
-
  * 
  * @image html causal-chain.png "Using Descriptors to Reconstruct the Causal Chain"
+ *
+ *  @subsubsection hdescriptors Horizontal Linking of Activities
+ *  A file, when opened via a POSIX @em open() call, will be identified by its file name,
+ *  with a file handle created to more easily refer to it later. Both name and handle can
+ *  (and will at some point) act as descriptors for the file.
+ *  When writing to the file via a POSIX @em write() call, the file is referred to by its
+ *  file handle. Neither directly calls the other one, yet the @em write() and @em close()
+ *  activities are causally correlated to the previous open(),
+ *  as all operate on the same file, and we would like to map @em write() and @em close()
+ *  to @em open() for further analysis of their common impact on system performance.
+ *
+ *  A typical indication of these relations is the use of the same descriptor (here:
+ *  the file descriptor) by functions on the same call level, i.e., that do not share
+ *  a caller-callee relation, though it still takes human discretion to recognise them.
+ *  To signal these horizontal correlations (shown by the dashed horizontal @em map links
+ *  in the picture) to SIOX, we link the activities involved via siox_link_activity().
+ * 
+ *  @subsubsection vdescriptors Vertical Linking of Activities
+ *  Activities in a caller-callee relation (shown by vertical solid send/receive links
+ *  in the picture) are even more important for system analysis than the horizontal links.
+ *  These are either automatically taken care of by SIOx, or they need to be set up for
+ *  tracking via remote calls and their attributes:
  *
  * @subsection rcalls SIOX Remote Calls
  * 
@@ -167,6 +180,13 @@
  *
  * To correctly match remote caller to callee, both need to report the attributes
  * of the call (such as key parameters passed) to allow for association by best match.
+ * Tracking the descriptors alone may not suffice: when several threads write to
+ * the same file - the file handles used will be the same, only the other parameters such
+ * as offset in the file and volume of data to write will differ; tracking the actual data 
+ * to write, on the other hand, is out of the question.
+ * Hence, other attributes may need to be supplied to SIOX besides the descriptors,
+ * some of which are also passed as parameters in the call (such as a file offset),
+ * others derived from and characteristic of it (such as the amount of bytes to write).
  *
  * The usual sequence is as follows:
  * <ul>

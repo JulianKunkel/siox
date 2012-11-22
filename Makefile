@@ -123,7 +123,7 @@ docs: Doxyfile Makefile
 	@doxygen Doxyfile
 	@$(MAKE) --silent --directory=doc/latex > doc/latex/makePDF.log
 	@mv doc/latex/refman.pdf ./$(REFMAN).pdf
-	@ln -s doc/html/index.html ./$(REFMAN).html
+	@ln -s -f doc/html/index.html ./$(REFMAN).html
 	@$(RM) -r doc/latex
 	@echo ...done!
 	@echo ==================================================
