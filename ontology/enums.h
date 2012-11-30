@@ -10,8 +10,6 @@
 #ifndef siox_ONT_ENUM_H
 #define siox_ONT_ENUM_H
 
-namespace Scalable_IO
-{
 
 /** States which may occur during input file parsing */
 enum siox_ont_state
@@ -32,7 +30,7 @@ enum siox_ont_errors
 	E_OUTPUT=2,
 	E_STYLE=4,
 	E_BINARY=8
-}
+};
 
 /** Output */
 enum siox_ont_OutputType
@@ -86,7 +84,7 @@ enum siox_ont_scope_type{
 /**
  * Mögliche Typen für die Entität "Metrik". Hier erstmal kombinierte units
  */
-
+/*
 typedef union {
         char throughput[30];
 
@@ -95,6 +93,6 @@ typedef union {
                 SIOX_UNIT_SECONDS;
 	}
 };
-
+*/
 
 #endif
