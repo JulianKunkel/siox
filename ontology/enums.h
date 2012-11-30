@@ -10,6 +10,8 @@
 #ifndef siox_ONT_ENUM_H
 #define siox_ONT_ENUM_H
 
+#define SUCCESS 1
+
 
 /** States which may occur during input file parsing */
 enum siox_ont_state
