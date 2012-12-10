@@ -1,7 +1,7 @@
 template = {
 # register_node
-# 
-# Registers (and ungeristers) a new node with SIOX and sets the ontology. 
+#
+# Registers (and ungeristers) a new node with SIOX and sets the ontology.
 #
 # SWID: The name (software id) for this node
 'register_node': {
@@ -71,7 +71,7 @@ template = {
 	'final': ''
 },
 # activity
-# 
+#
 # Starts (at the beginning) and stops (at the end) a new activity in the current function.
 # Still needs to be reported!
 #
@@ -92,7 +92,7 @@ template = {
 	'final': ''
 },
 # activity_link
-# 
+#
 # Links the current activity (started with activity) to another one.
 #
 # AID: AID of the activity to be linked
@@ -110,9 +110,6 @@ template = {
 	'final': ''
 },
 # datatype_register_as_descriptor
-# 
-# Starts (at the beginning) and stops (at the end) a new activity in the current function.
-# Still needs to be reported!
 #
 # AID: Name of the varibale to store the aid
 # Description: Short description of the activity
@@ -129,15 +126,15 @@ template = {
 #
 # Reports an activity
 #
-# AID: The aid of the activity to be reported
+# UNID: The unid
 # MID: Metric-ID of the reported value
 # Value: Pointer to the value to be reported
 'report': {
-	'variables': 'AID MID Value',
+	'variables': 'UNID MID Value',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_report( %(AID)s, %(MID)s, (void *) %(Value)s );',
+	'after': 'siox_report( %(UNID)s, %(MID)s, (void *) %(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -234,7 +231,7 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-# splice_before
+# splice_after
 #
 # Used to insert custom code after the call
 #
@@ -260,4 +257,4 @@ forEachAfter = ""
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<siox-ll.h>', '<stdarg.h>']
+includes = ['<siox-ll.h>', '<stdarg.h>', '<glib.h>']
