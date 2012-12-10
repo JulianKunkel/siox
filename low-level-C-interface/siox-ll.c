@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+/*#include <time.h>*/
 
 #include <glib.h>
 
@@ -29,8 +29,14 @@ static bool initialised_ontology = false;
 
 /** 
  * The ontology to use. Its value is set by initialize_ontology() using the 
- * siox_set_ontology() call. Otherwise DEFAULT_ONTOLOGY will be used. */
+ * siox_set_ontology() call. Otherwise DEFAULT_ONTOLOGY will be used.
+ */
 static char sOntology[80] = "";
+
+/**
+ * The format string to use for local date/time values.
+ */
+static const char sDateTimeFormat[] = "%F-%X %Z";
 
 
 /** The next unassigned UNID. */
@@ -49,14 +55,6 @@ struct siox_aid_t {
     };
 
 
-/** The next unassigned DMID. */
-static unsigned long int    current_dmid = 0L;
-
-struct siox_dmid_t {
-    unsigned long int   id; /**< The actual ID. */
-    };
-
-
 /** The next unassigned RCID. */
 static unsigned long int    current_rcid = 0L;
 
@@ -65,8 +63,10 @@ struct siox_rcid_t {
     };
 
 
-/* typedef gint64  siox_timestamp_t; */
-
+/*struct siox_timestamp_t {
+    gint64  ticks; *< The actual time in microseconds since 19700101. 
+    };
+*/
 
 /**
  * Initialization of the ontology library.
@@ -82,11 +82,11 @@ siox_register_node( const char * hwid,
 {
     /* Draw fresh UNID */
     siox_unid unid = malloc( sizeof( struct siox_unid_t ) );
-    (*unid).id = current_unid++;
+    unid->id = current_unid++;
 
 
     printf( "\n# Node registered as UNID %ld with hwid >%s<, swid >%s< and iid >%s<.\n",
-        (*unid).id, hwid, swid, iid );
+        unid->id, hwid, swid, iid );
 
     return( unid );
 }
@@ -95,7 +95,7 @@ siox_register_node( const char * hwid,
 void
 siox_unregister_node( siox_unid unid )
 {
-    printf( "# UNID %ld unregistered.\n\n", (*unid).id );
+    printf( "# UNID %ld unregistered.\n\n", unid->id );
 }
 
 
@@ -105,7 +105,7 @@ siox_node_attribute( siox_unid       unid,
                      const void *   value )
 {
     printf( "# UNID %ld registered the following additional attributes:\n",
-        (*unid).id );
+        unid->id );
     printf( "\t%s:\t", siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ) );
     printf( "%s\n", siox_ont_data_to_string( dtid, value ) );
 }
@@ -113,38 +113,54 @@ siox_node_attribute( siox_unid       unid,
 
 siox_aid
 siox_start_activity( siox_unid          unid,
-                     siox_timestamp *   timestamp,
+                     siox_timestamp     timestamp,
                      const char *       comment )
 {
-    /** @todo Integrate correct timestamp */
-    /* Draw timestamp */
-    time_t  timeStamp = time(NULL);
+    GDateTime*  now;
+
+    if (timestamp)
+        now = timestamp;
+    else
+        now = g_date_time_new_now_local();
 
     /* Draw fresh AID */
     siox_aid aid = malloc( sizeof( struct siox_aid_t ) );
-    (*aid).id = current_aid++;
+    aid->id = current_aid++;
 
-
-    printf( "- UNID %ld started AID %ld at %s",
-        (*unid).id, (*aid).id, ctime( &timeStamp ));
+    gchar* sNow=g_date_time_format(now, sDateTimeFormat);
+    printf( "+ UNID %ld started AID %ld at %s\n",
+        unid->id, aid->id, sNow);
     if ( comment != NULL )
-        printf( "\tKommentar:\t%s\n", comment );
+        printf( "\tComment:\t%s\n", comment );
+    g_free(sNow);
 
     return( aid );
 }
 
 
 void
-siox_stop_activity( siox_aid    aid,
-                    siox_timestamp * time )
+siox_link_activity(siox_aid aid_child, siox_aid aid_parent)
 {
-    /** @todo Integrate correct timestamps */
-    /* Draw timestamp */
-    time_t  timeStamp = time(NULL);
+    printf("+ AID %ld causally linked to AID %ld.\n",
+        aid_child->id, aid_parent->id );
+}
 
 
-    printf( "- AID %ld stopped at %s",
-        (*aid).id, ctime( &timeStamp ));
+void
+siox_stop_activity( siox_aid        aid,
+                    siox_timestamp  timestamp )
+{
+    GDateTime*  now;
+
+    if (timestamp)
+        now = timestamp;
+    else
+        now = g_date_time_new_now_local();
+
+    gchar* sNow=g_date_time_format(now, sDateTimeFormat);
+    printf( "+ AID %ld stopped at %s\n",
+        aid->id, sNow);
+    g_free(sNow);
 }
 
 
@@ -153,7 +169,7 @@ siox_report_activity( siox_aid              aid,
                       siox_mid              mid,
                       void *                value )
 {
-    printf( "- AID %ld, was measured as follows:\n", aid->id );
+    printf( "+ AID %ld, was measured as follows:\n", aid->id );
     printf( "\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
     printf( "%s\n", siox_ont_metric_data_to_string( mid, value ) );
@@ -162,15 +178,19 @@ siox_report_activity( siox_aid              aid,
 
 void
 siox_end_activity ( siox_aid          aid,
-                    siox_timestamp *  time )
+                    siox_timestamp    timestamp )
 {
-    /** @todo Integrate correct timestamps */
-    /* Draw timestamp */
-    time_t  timeStamp = time(NULL);
+    GDateTime*  now;
 
+    if (timestamp)
+        now = timestamp;
+    else
+        now = g_date_time_new_now_local();
 
-    printf( "- AID %ld finally ended at %s\n",
-        (*aid).id, ctime( &timeStamp ));
+    gchar* sNow=g_date_time_format(now, sDateTimeFormat);
+    printf( "+ AID %ld ended at %s\n",
+        aid->id, sNow);
+    g_free(sNow);
 }
 
 
@@ -179,12 +199,62 @@ siox_report( siox_unid              unid,
              siox_mid               mid,
              void *                 value )
 {
-    printf( "- UNID %ld was measured as follows:\n",
-        (*unid).id );
-    printf( "\t%s:\t", siox_ont_metric_get_name(
+    printf( "\t+ UNID %ld was measured as follows:\n",
+        unid->id );
+    printf( "\t\t%s:\t", siox_ont_metric_get_name(
                         siox_ont_find_metric_by_mid( mid ) ) );
     printf( "%s\n", siox_ont_metric_data_to_string( mid, value ) );
 }
+
+
+
+
+
+siox_rcid
+siox_describe_remote_call_start(siox_aid      aid,
+                                const char *  target_hwid, 
+                                const char *  target_swid,
+                                const char *  target_iid)
+{
+    /* Draw fresh RCID */
+    siox_rcid rcid = malloc( sizeof( struct siox_rcid_t ) );
+    rcid->id = current_rcid++;
+
+    printf( "\t- RCID %ld opened to describe remote call by AID %ld to\n\t\tHWID >%s<, SWID >%s< and IID >%s<.\n",
+        rcid->id,
+        aid->id,
+        target_hwid?target_hwid:"(unknown)",
+        target_swid?target_swid:"(unknown)",
+        target_iid?target_iid:"(unknown)" );
+
+    return( rcid );
+}
+
+
+void siox_remote_call_attribute(siox_rcid rcid, siox_dtid dtid, void * value)
+{
+    printf( "\t\t- RCID %ld will send attribute of data type >%s<:\n\t\t\t  >%s<.\n",
+        rcid->id,
+        siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ),
+        siox_ont_data_to_string( dtid, value ) );
+}
+
+
+void siox_describe_remote_call_end(siox_rcid  rcid)
+{
+    printf( "\t- RCID %ld closed.\n",
+        rcid->id );
+}
+
+
+void siox_remote_call_receive(siox_aid aid, siox_dtid dtid, void * value)
+{
+    printf( "\t- AID %ld received remote call attribute of data type >%s<:\n\t  >%s<.\n",
+        aid->id,
+        siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ),
+        siox_ont_data_to_string( dtid, value ) );
+}
+
 
 
 bool
@@ -231,9 +301,19 @@ siox_register_datatype( const char *                name,
         dtid = siox_ont_register_datatype( name,
                                            storage );
 
+    printf("# Registered data type >%s< as DTID %s.\n", name, siox_ont_dtid_to_string(dtid));
+
     return( dtid );
 }
 
+
+void
+siox_register_datatype_as_descriptor(siox_dtid dtid)
+{
+    printf("# Registered data type >%s< with DTID %s to serve as descriptor.\n",
+           siox_ont_datatype_get_name( siox_ont_find_datatype_by_dtid( dtid ) ),
+           siox_ont_dtid_to_string(dtid));
+}
 
 
 siox_mid
@@ -272,6 +352,8 @@ siox_register_metric( const char *                 name,
                                         unit,
                                         storage,
                                         scope );
+
+    printf( "# Registered performance metric >%s< as MID %s.\n", name, siox_ont_mid_to_string(mid));
 
     return( mid );
 }

@@ -10,14 +10,18 @@
 #=====================
 # Flags and Libraries
 #=====================
-# All inherited from parent make
+HDF5FLAGS := -I$(HDF5DIR)/include -L$(HDF5DIR)/lib
+HDF5LIBS := -lhdf5 -lhdf5_hl
+MUFSFLAGS := -I$(EXAMPLEDIR) -Wl,-rpath=$(EXAMPLEDIR) -L$(EXAMPLEDIR)
+MUFSLIBS := -lmufs
+# All others inherited from parent make
 
 #=========
 # Targets
 #=========
-TARGETS := testontology
-ONTLIB := libsioxont.so
-OWNLIBS := $(ONTLIB)
+TARGETS := hdf5-example mockupfs-example
+MUFSLIB := libmufs.so
+OWNLIBS := $(MUFSLIB)
 
 
 #########
@@ -28,14 +32,20 @@ OWNLIBS := $(ONTLIB)
 # Main Targets
 #==============
 
-.PHONY: all
-all: $(TARGETS) Makefile
+.PHONY: examples
+examples: $(TARGETS) Makefile
 #	@echo --------------------------------------------------
 
-testontology: testontology.o $(ONTLIB) Makefile
+hdf5-example: hdf5-example.c Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LDFLAGS) $(ONTFLAGS) -o $@ $< $(ONTLIBS)
+	$(CC) $(LDFLAGS) $(LLFLAGS) $(HDF5FLAGS) $(GLIBFLAGS) -o $@ $< $(HDF5LIBS) $(LLLIBS) $(GLIBLIBS)
+	@echo done!
+
+mockupfs-example: mockupfs-example.c $(MUFSLIB) Makefile
+#	@echo --------------------------------------------------
+	@echo -n Making $@...
+	$(CC) $(LDFLAGS) $(LLFLAGS) $(MUFSFLAGS) -o $@ $< $(MUFSLIBS) $(LLLIBS)
 	@echo done!
 
 #===============
@@ -52,10 +62,10 @@ debug: all Makefile
 # Intermediate Targets
 #======================
 
-libsioxont.so: ontology.c ontology.h datatype.c datatype.h metric.c metric.h Makefile
+libmufs.so: mufs.c mufs.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LIBFLAGS) -o $@ $< datatype.c metric.c
+	$(CC) $(LIBFLAGS) $(LLFLAGS) -o $@ $< $(LLLIBS)
 	@echo done!
 
 #==================
@@ -74,16 +84,17 @@ libsioxont.so: ontology.c ontology.h datatype.c datatype.h metric.c metric.h Mak
 # Pseudo Targets #
 ##################
 
-.PHONY: test
-test:
-	@echo --------------------------------------------------
-	@echo -n Running tests on Ontology...
-	@./testontology >testontology.log 2>testontology.err
-	@echo passed!
-
 .PHONY: clean
 clean:
 	@echo --------------------------------------------------
-	@echo -n Cleaning Ontology...
-	@$(RM) $(TARGETS) $(OWNLIBS) *.o *.log *.err *~
+	@echo -n Cleaning Examples...
+	@$(RM) $(TARGETS) $(OWNLIBS) *.o *.log *~ *.mufs *.h5
 	@echo done!
+
+.PHONY: test
+test:
+	@echo --------------------------------------------------
+	@echo -n Running tests on Examples...
+	@./mockupfs-example >mockupfs-example.log 2>mockupfs-example.err
+	@./hdf5-example >hdf5-example.log 2>hdf5-example.err
+	@echo passed!
