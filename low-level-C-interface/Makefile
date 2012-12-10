@@ -1,81 +1,59 @@
-################
-# Definitionen #
-################
+###############
+# Definitions #
+###############
 
 #=======
 # Tools
 #=======
 # All inherited from parent make
 
-#=======
-# Flags
-#=======
+#=====================
+# Flags and Libraries
+#=====================
 # All inherited from parent make
 
 #=========
 # Targets
 #=========
-TARGETS := siox-hdf5-example siox-mockupfs-example
-SIOXLIBS := libsiox-ll.so
-ONTLIBS := $(ONTDIR)/libsioxont.so
-MUFSLIBS := libmufs.so
-HDF5LIBS := -lhdf5 -lhdf5_hl
-OWNLIBS := $(SIOXLIBS) $(MUFSLIBS)
-#LIBS := $(OWNLIBS) $(ONTLIBS)
+TARGETS := libsiox-ll.so
 
 
-##########
-# Regeln #
-##########
+#########
+# Rules #
+#########
 
-#==========
-# Endziele
-#==========
+#==============
+# Main Targets
+#==============
 
 .PHONY: all
 all: $(TARGETS) Makefile
 #	@echo --------------------------------------------------
 
-siox-hdf5-example: siox-hdf5-example.c $(SIOXLIBS) Makefile
-#	@echo --------------------------------------------------
-	@echo -n Making $@...
-	$(CC) $(LDFLAGS) $(LLFLAGS) $(HDF5FLAGS) -o $@ $< $(HDF5LIBS) $(SIOXLIBS)
-	@echo done!
-
-siox-mockupfs-example: siox-mockupfs-example.c $(SIOXLIBS) $(MUFSLIBS) Makefile
-#	@echo --------------------------------------------------
-	@echo -n Making $@...
-	$(CC) $(LDFLAGS) $(LLFLAGS) -o $@ $< $(MUFSLIBS) $(SIOXLIBS)
-	@echo done!
-
 #===============
-# Debug-Version
+# Debug Version
 #===============
 
 .PHONY: debug
 debug: CFLAGS += -O0 -ggdb -DDEBUG
 debug: LIBFLAGS += -O0 -ggdb -DDEBUG
 debug: LDFLAGS += -ggdb
-debug: all
+debug: all Makefile
 
-#=========================
-# explizite Zwischenziele
-#=========================
+#======================
+# Intermediate Targets
+#======================
+
 libsiox-ll.so: siox-ll.c siox-ll.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LIBFLAGS) $(ONTFLAGS) -o $@ $< $(ONTLIBS)
+	$(CC) $(LIBFLAGS) $(ONTFLAGS) $(GLIBFLAGS) -o $@ $< $(ONTLIBS) $(GLIBLIBS)
 	@echo done!
 
-libmufs.so: mufs.c mufs.h Makefile
-#	@echo --------------------------------------------------
-	@echo -n Making $@...
-	$(CC) $(LIBFLAGS) $(LLFLAGS) -o $@ $< $(SIOXLIBS)
-	@echo done!
+#==================
+# Implicit Targets
+#==================
 
-#=================
-# implizite Ziele
-#=================
 %.o : %.c Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
@@ -84,21 +62,22 @@ libmufs.so: mufs.c mufs.h Makefile
 
 % : %.c
 
-###############
-# Pseudoziele #
-###############
+##################
+# Pseudo Targets #
+##################
 
 .PHONY: clean
 clean:
 	@echo --------------------------------------------------
 	@echo -n Cleaning Low-Level-C-Interface...
-	@$(RM) $(TARGETS) $(OWNLIBS) *.o *.log *~ *.mufs *.h5
+	@$(RM) $(TARGETS) *.o *.log *~
 	@echo done!
 
 .PHONY: test
 test:
 	@echo --------------------------------------------------
 	@echo -n Running tests on Low-Level-C-Interface...
-	@./siox-mockupfs-example >siox-mockupfs-example.log 2>siox-mockupfs-example.err
-	@./siox-hdf5-example >siox-hdf5-example.log 2>siox-hdf5-example.err
+	@echo -n "(no tests as yet)..."
+	#@./siox-mockupfs-example >siox-mockupfs-example.log 2>siox-mockupfs-example.err
+	#@./siox-hdf5-example >siox-hdf5-example.log 2>siox-hdf5-example.err
 	@echo passed!
