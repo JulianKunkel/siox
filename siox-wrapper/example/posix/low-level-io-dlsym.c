@@ -3,6 +3,7 @@
 
 #include  <siox-ll.h>
 #include  <stdarg.h>
+#include  <glib.h>
 #include  <unistd.h>
 #include  <sys/uio.h>
 #include  <sys/types.h>
@@ -10,6 +11,7 @@
 #include  <dlfcn.h>
 #include  <fcntl.h>
 #include  <stdio.h>
+
 
 static void sioxFinal() __attribute__((destructor));
 static void sioxInit() __attribute__((constructor));
@@ -21,7 +23,6 @@ siox_dtid dtid_fileName;
 siox_dtid dtid_fileHandle;
 siox_mid mid_bytesWritten;
 siox_mid mid_bytesRead;
-siox_dmid mid_open;
 
 static char* dllib = RTLD_NEXT;
 static int (*__real_open) (const char * pathname, int  flags, ... );
@@ -46,15 +47,15 @@ static int (*__real_dup_fd) (int  fd);
 static void sioxInit() {
 
 	hostname[1023] = '\0';
-							 gethostname(hostname, 1023);
+			   gethostname(hostname, 1023);
                sprintf( &global_pid, "%d", getpid() );
                global_unid = siox_register_node(hostname, "POSIX" , &global_pid);
                siox_set_ontology("OntologyName");
+               GHashTable *aidHashTable = g_hash_table_new(g_str_hash, g_str_equal);
 	dtid_fileName = siox_register_datatype( "File Name", SIOX_STORAGE_STRING  );
 	dtid_fileHandle = siox_register_datatype( "File Handle", SIOX_STORAGE_64_BIT_INTEGER  );
-	mid_bytesWritten = siox_register_metric( "Bytes written.", "Count of bytes written to file.", SIOX_UNIT_BYTES, SIOX_STORAGE_64_BIT_INTEGER, SIOX_SCOPE_SUM  );
-	mid_bytesRead = siox_register_metric( "Bytes read.", "Count of bytes read form file", SIOX_UNIT_BYTES, SIOX_STORAGE_64_BIT_INTEGER, SIOX_SCOPE_SUM  );
-	mid_open = siox_register_descriptor_map( global_unid, dtid_fileName, dtid_fileHandle  );
+	mid_bytesWritten = siox_register_metric( "Bytes written.", SIOX_UNIT_BYTES, SIOX_STORAGE_64_BIT_INTEGER, SIOX_SCOPE_SUM  );
+	mid_bytesRead = siox_register_metric( "Bytes read.", SIOX_UNIT_BYTES, SIOX_STORAGE_64_BIT_INTEGER, SIOX_SCOPE_SUM  );
 __real_open = (int (*) (const char * pathname, int  flags, ... )) dlsym(dllib, (const char*) "open");
 __real_creat = (int (*) (const char * pathname, mode_t  mode)) dlsym(dllib, (const char*) "creat");
 __real_close = (int (*) (int  fd)) dlsym(dllib, (const char*) "close");
@@ -73,7 +74,6 @@ __real_munmap = (int (*) (void * addr, size_t  length)) dlsym(dllib, (const char
 __real_madvise = (int (*) (void * addr, size_t  length, int  advice)) dlsym(dllib, (const char*) "madvise");
 __real_posix_fadvise = (int (*) (int  fd, __off_t  offset, __off_t  len, int  advise)) dlsym(dllib, (const char*) "posix_fadvise");
 __real_dup_fd = (int (*) (int  fd)) dlsym(dllib, (const char*) "dup_fd");
-printf("debug-1\n");
 }
 
 static void sioxFinal() {
@@ -84,15 +84,11 @@ int open(const char * pathname, int  flags, ... )
 	va_list args;
 	va_start(args, flags);
 	int ret;
-	printf("debug0\n");
-	siox_aid aID_open = siox_start_activity( global_unid, "Open File."  );
-	printf("debug1\n");
-	siox_receive_descriptor( aID_open, dtid_fileName, &pathname  );
-	printf("debug2\n");
+	siox_aid *aID_open = (siox_aid*) malloc(sizeof(siox_aid));
+    			 *aID_open = siox_start_activity( global_unid, NULL, "Open File."  );
 	ret = (__real_open)(pathname, flags, args);
-	siox_stop_activity( aID_open );
-	siox_map_descriptor( aID_open, mid_open, &pathname, &ret );
-	siox_end_activity( aID_open );
+	siox_stop_activity( *aID_open, NULL );
+	siox_end_activity( *aID_open, NULL );
 	va_end(args);
 	return ret;
 }
@@ -107,35 +103,35 @@ int creat(const char * pathname, mode_t  mode)
 int close(int  fd)
 {
 	int ret;
-	siox_aid aID_close = siox_start_activity( global_unid, "Close File."  );
-	siox_receive_descriptor( aID_close, dtid_fileHandle, &fd  );
+	siox_aid *aID_close = (siox_aid*) malloc(sizeof(siox_aid));
+    			 *aID_close = siox_start_activity( global_unid, NULL, "Close File."  );
 	ret = (__real_close)(fd);
-	siox_stop_activity( aID_close );
-	siox_end_activity( aID_close );
+	siox_stop_activity( *aID_close, NULL );
+	siox_end_activity( *aID_close, NULL );
 	return ret;
 }
 
 ssize_t write(int  fd, const void * buf, size_t  count)
 {
 	ssize_t ret;
-	siox_aid aID_write = siox_start_activity( global_unid, "Write to file."  );
-	siox_receive_descriptor( aID_write, dtid_fileHandle, &fd  );
+	siox_aid *aID_write = (siox_aid*) malloc(sizeof(siox_aid));
+    			 *aID_write = siox_start_activity( global_unid, NULL, "Write to file."  );
 	ret = (__real_write)(fd, buf, count);
-	siox_stop_activity( aID_write );
-	siox_report_activity(aID_write, dtid_fileHandle, &fd, mid_bytesWritten, &count, "Write to File." );
-	siox_end_activity( aID_write );
+	siox_stop_activity( *aID_write, NULL );
+	siox_report( global_unid, mid_bytesWritten, (void *) count  );
+	siox_end_activity( *aID_write, NULL );
 	return ret;
 }
 
 ssize_t read(int  fd, void * buf, size_t  count)
 {
 	ssize_t ret;
-	siox_aid aID_read = siox_start_activity( global_unid, "Read from file."  );
-	siox_receive_descriptor( aID_read, dtid_fileHandle, &fd  );
+	siox_aid *aID_read = (siox_aid*) malloc(sizeof(siox_aid));
+    			 *aID_read = siox_start_activity( global_unid, NULL, "Read from file."  );
 	ret = (__real_read)(fd, buf, count);
-	siox_stop_activity( aID_read );
-	siox_report_activity(aID_read, dtid_fileHandle, &fd, mid_bytesRead, &count, "Read from file." );
-	siox_end_activity( aID_read );
+	siox_stop_activity( *aID_read, NULL );
+	siox_report( global_unid, mid_bytesRead, (void *) count  );
+	siox_end_activity( *aID_read, NULL );
 	return ret;
 }
 

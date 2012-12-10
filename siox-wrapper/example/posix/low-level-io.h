@@ -14,58 +14,37 @@
 #include <stdio.h>
 
 /* Set the interface name for the library*/
-//interface_name "POSIX"
+//register_node "POSIX"
 
 /* Register the data types for the descriptors */
-//register_datatype dtid_fileName "File Name" SIOX_STORAGE_STRING
-//register_datatype dtid_fileHandle "File Handle" SIOX_STORAGE_64_BIT_INTEGER
+//datatype_register dtid_fileName "File Name" SIOX_STORAGE_STRING
+//datatype_register dtid_fileHandle "File Handle" SIOX_STORAGE_64_BIT_INTEGER
 
 /* Register the metrics to grab the performance data */
-//register_metric mid_bytesWritten "Bytes written." "Count of bytes written to file."
+//metric_register mid_bytesWritten "Bytes written."
 //SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
 
-//register_metric mid_bytesRead "Bytes read." "Count of bytes read form file"
+//metric_register mid_bytesRead "Bytes read."
 //SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
-
-/* Register the descriptor mapping form a file name to a file handle */
-//register_descriptor_map mid_open dtid_fileName dtid_fileHandle
 
 /*------------------------------------------------------------------------------
 End of global part
 ------------------------------------------------------------------------------*/
 
-/* Receive the file name descriptor and map it to the file handle descriptor */
-//activity aID_open "Open File."
-
-//receive_descriptor aID_open dtid_fileName pathname
-
-//map_descriptor aID_open mid_open pathname ret
+//activity aID_open NULL NULL NULL "Open File."
 int open(const char *pathname, int flags, ...);
 
 int creat(const char *pathname, mode_t mode);
 
-/* The close function destroys the file handle descriptor */
-//activity aID_close "Close File."
-
-//receive_descriptor aID_close dtid_fileHandle fd
+//activity aID_close NULL NULL NULL "Close File."
 int close(int fd);
 
-/* The write function starts an activity and reports it */
-//activity aID_write "Write to file."
-
-//receive_descriptor aID_write dtid_fileHandle fd
-
-//activity_report aID_write dtid_fileHandle fd mid_bytesWritten count
-//"Write to File."
+//activity aID_write NULL NULL NULL "Write to file."
+//report global_unid mid_bytesWritten count
 ssize_t write(int fd, const void *buf, size_t count);
 
-/* The read function starts an activity and reports it*/
-//activity aID_read "Read from file."
-
-//receive_descriptor aID_read dtid_fileHandle fd
-
-//activity_report aID_read dtid_fileHandle fd mid_bytesRead count
-//"Read from file."
+//activity aID_read NULL NULL NULL "Read from file."
+//report global_unid mid_bytesRead count
 ssize_t read(int fd, void *buf, size_t count);
 
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
