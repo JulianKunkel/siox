@@ -257,4 +257,4 @@ forEachAfter = ""
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<siox-ll.h>', '<stdarg.h>', '<glib.h>']
+includes = ['<stdlib.h>', '<siox-ll.h>', '<stdarg.h>', '<glib.h>']
