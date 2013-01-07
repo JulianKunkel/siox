@@ -134,7 +134,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_report( %(UNID)s, %(MID)s, (void *) %(Value)s );',
+	'after': 'siox_report( %(UNID)s, %(MID)s, (void *) &%(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -182,7 +182,7 @@ template = {
 	'variables': 'RCID DTID Value',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_remote_call_attribute( %(RCID)s, %(DTID)s, (void *) %(Value)s );''',
+    'before': '''siox_remote_call_attribute( %(RCID)s, %(DTID)s, (void *) &%(Value)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -198,7 +198,7 @@ template = {
 	'variables': 'AID DTID Value',
 	'global': '''siox_rcid %(RCID)s;\n''',
 	'init': '''''',
-    'before': '''siox_remote_call_receive( %(RCID)s, %(DTID)s, (void *) %(Value)s );''',
+    'before': '''siox_remote_call_receive( %(RCID)s, %(DTID)s, (void *) &%(Value)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
