@@ -41,7 +41,7 @@ typedef struct siox_rcid_t * siox_rcid;
 /**
  * A time stamp, as represented in SIOX.
  */
-typedef GDateTime * siox_timestamp;
+typedef long long* siox_timestamp;
 
 
 
@@ -134,7 +134,7 @@ void siox_node_attribute(siox_unid unid, siox_dtid dtid, const void * value);
  * SIOX will use the @em AID to correctly assign attributes used and performance metrics influenced
  * by this activity.
  * As any @em AID is linked to its node by SIOX, functions supplied with an @em AID do not use a @em UNID.
- * 
+ *
  *
  * @param[in]   unid        The node's @em UNID.
  * @param[in]   timestamp   A time stamp or @c NULL,
@@ -270,7 +270,7 @@ void siox_report(siox_unid unid,  siox_mid  mid, void * value);
  *                            future communications with SIOX.
  */
 siox_rcid siox_describe_remote_call_start(siox_aid      aid,
-                                          const char *  target_hwid, 
+                                          const char *  target_hwid,
                                           const char *  target_swid,
                                           const char *  target_iid);
 

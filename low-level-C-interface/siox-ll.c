@@ -4,7 +4,7 @@
  * @date 11/2012
  * @copyright GNU Public License.
  * @authors Michaela Zimmer, Julian Kunkel, Marc Wiedemann & Alvaro Aguilera
- */ 
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,23 +12,23 @@
 /*#include <time.h>*/
 
 #include <glib.h>
-
+#include <papi.h>
 #include "siox-ll.h"
 #include "../ontology/ontology.h"
 
-/** 
- * Default ontology in case no other ontology has been set using 
+/**
+ * Default ontology in case no other ontology has been set using
  * siox_set_ontology(). */
 #define DEFAULT_ONTOLOGY "testontology"
 
-/** 
- * Whether or not the ontology has been already initialized with 
+/**
+ * Whether or not the ontology has been already initialized with
  * initialise_ontology().
  */
 static bool initialised_ontology = false;
 
-/** 
- * The ontology to use. Its value is set by initialize_ontology() using the 
+/**
+ * The ontology to use. Its value is set by initialize_ontology() using the
  * siox_set_ontology() call. Otherwise DEFAULT_ONTOLOGY will be used.
  */
 static char sOntology[80] = "";
@@ -64,13 +64,13 @@ struct siox_rcid_t {
 
 
 /*struct siox_timestamp_t {
-    gint64  ticks; *< The actual time in microseconds since 19700101. 
+    gint64  ticks; *< The actual time in microseconds since 19700101.
     };
 */
 
 /**
  * Initialization of the ontology library.
- * This function is called only once during the first read access of the 
+ * This function is called only once during the first read access of the
  * functions siox_register_*.  */
 static void initialise_ontology();
 
@@ -116,23 +116,25 @@ siox_start_activity( siox_unid          unid,
                      siox_timestamp     timestamp,
                      const char *       comment )
 {
-    GDateTime*  now;
+    long long *time_nsec;
+    long long time_nsec_buf;
 
     if (timestamp)
-        now = timestamp;
+        time_nsec = timestamp;
     else
-        now = g_date_time_new_now_local();
+    {
+        time_nsec_buf = PAPI_get_real_nsec();
+        time_nsec = &time_nsec_buf;
+    }
 
     /* Draw fresh AID */
     siox_aid aid = malloc( sizeof( struct siox_aid_t ) );
     aid->id = current_aid++;
 
-    gchar* sNow=g_date_time_format(now, sDateTimeFormat);
-    printf( "+ UNID %ld started AID %ld at %s\n",
-        unid->id, aid->id, sNow);
+    printf( "+ UNID %ld started AID %ld at %lld\n",
+        unid->id, aid->id, *time_nsec);
     if ( comment != NULL )
         printf( "\tComment:\t%s\n", comment );
-    g_free(sNow);
 
     return( aid );
 }
@@ -150,17 +152,18 @@ void
 siox_stop_activity( siox_aid        aid,
                     siox_timestamp  timestamp )
 {
-    GDateTime*  now;
+    long long time_nsec_buf;
+    long long *time_nsec;
 
     if (timestamp)
-        now = timestamp;
+        time_nsec = timestamp;
     else
-        now = g_date_time_new_now_local();
-
-    gchar* sNow=g_date_time_format(now, sDateTimeFormat);
-    printf( "+ AID %ld stopped at %s\n",
-        aid->id, sNow);
-    g_free(sNow);
+    {
+        time_nsec_buf = PAPI_get_real_nsec();
+        time_nsec = &time_nsec_buf;
+    }
+    printf( "+ AID %ld stopped at %lld\n",
+        aid->id, *time_nsec);
 }
 
 
@@ -180,17 +183,19 @@ void
 siox_end_activity ( siox_aid          aid,
                     siox_timestamp    timestamp )
 {
-    GDateTime*  now;
+    long long *time_nsec;
+    long long time_nsec_buf;
 
     if (timestamp)
-        now = timestamp;
+        time_nsec = timestamp;
     else
-        now = g_date_time_new_now_local();
+    {
+        time_nsec_buf = PAPI_get_real_nsec();
+        time_nsec = &time_nsec_buf;
+    }
 
-    gchar* sNow=g_date_time_format(now, sDateTimeFormat);
-    printf( "+ AID %ld ended at %s\n",
-        aid->id, sNow);
-    g_free(sNow);
+    printf( "+ AID %ld ended at %lld\n",
+        aid->id, *time_nsec);
 }
 
 
@@ -212,7 +217,7 @@ siox_report( siox_unid              unid,
 
 siox_rcid
 siox_describe_remote_call_start(siox_aid      aid,
-                                const char *  target_hwid, 
+                                const char *  target_hwid,
                                 const char *  target_swid,
                                 const char *  target_iid)
 {

@@ -1,4 +1,5 @@
 ###############
+
 # Definitions #
 ###############
 
@@ -29,6 +30,7 @@ LIBFLAGS := $(CFLAGS) -shared -fPIC
 LDFLAGS := $(CFLAGS)
 GLIBFLAGS := $(shell pkg-config --cflags glib-2.0)
 GLIBLIBS := $(shell pkg-config --libs glib-2.0)
+PAPILIBS := -lpapi
 #ONTFLAGS := -iquote$(ONTDIR) -Wl,-rpath=$(ONTDIR)
 ONTFLAGS := -I$(ONTDIR) -Wl,-rpath=$(ONTDIR)
 ONTLIBS := -lsioxont -L$(ONTDIR)
