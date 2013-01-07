@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 
+#include  <stdlib.h>
 #include  <siox-ll.h>
 #include  <stdarg.h>
 #include  <glib.h>
@@ -118,7 +119,7 @@ ssize_t write(int  fd, const void * buf, size_t  count)
     			 *aID_write = siox_start_activity( global_unid, NULL, "Write to file."  );
 	ret = (__real_write)(fd, buf, count);
 	siox_stop_activity( *aID_write, NULL );
-	siox_report( global_unid, mid_bytesWritten, (void *) count  );
+	siox_report( global_unid, mid_bytesWritten, (void *) &count  );
 	siox_end_activity( *aID_write, NULL );
 	return ret;
 }
@@ -130,7 +131,7 @@ ssize_t read(int  fd, void * buf, size_t  count)
     			 *aID_read = siox_start_activity( global_unid, NULL, "Read from file."  );
 	ret = (__real_read)(fd, buf, count);
 	siox_stop_activity( *aID_read, NULL );
-	siox_report( global_unid, mid_bytesRead, (void *) count  );
+	siox_report( global_unid, mid_bytesRead, (void *) &count  );
 	siox_end_activity( *aID_read, NULL );
 	return ret;
 }
