@@ -3,9 +3,13 @@ siox-wrapper
 
 Description
 
-One problem with tracing foreign code is keeping up to date with it. Updating an instrumented library also requires to audit any changes that have been made to it in order to ensure its still working correctly. Siox-wrapper tries to ease and minimize this recurring work by automatically instrumenting code based on definitions made once.
-With regard to this it introduces a way to define mutable templates, which contain the changes that are applied to the source code. To achieve maximum flexibility these templates are split up into different sections where all important parts of source code can be addressed. Secondly, optional parameters can be defined for templates. Based on these parameters the templates can be dynamically modified at the time the instrumented file is written.
-Which templates are used for a function is specified in a plain header file, just before the function itself, in a comment. Siox-wrapper is able to automatically generate these clean header files for easy usage. Based on these definitions siox-wrapper automatically generates a C file that wraps around the instrumented library and can be used without further adaption.
+One problem with tracing foreign code is keeping up to date with it. Updating an instrumented library also requires to audit any changes that have been made to it in order to ensure its still working correctly. 
+Siox-wrapper tries to ease and minimize this recurring work by automatically instrumenting code based on definitions made once.
+With regard to this it introduces a way to define mutable templates, which contain the changes that are applied to the source code. 
+To achieve maximum flexibility these templates are split up into different sections where all important parts of source code can be addressed. 
+Secondly, optional parameters can be defined for templates. Based on these parameters the templates can be dynamically modified at the time the instrumented file is written.
+Which templates are used for a function is specified in a plain header file, just before the function itself, in a comment. Siox-wrapper is able to automatically generate these clean header files for easy usage. 
+Based on these definitions siox-wrapper automatically generates a C file that wraps around the instrumented library and can be used without further adaption.
 
 
 Usage
