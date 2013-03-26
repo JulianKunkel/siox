@@ -54,10 +54,45 @@ from a other header file.''')
         if args.outputFile:
             args.outputFile = args.outputFile[0]
 
-        # import the template
+        # import the templates (symbol template)
         namespace = {}
         execfile(args.template, namespace)
         globals().update(namespace)
+
+	# update the datastructures for the templates
+
+	for t in template.keys():	
+		entries = template[t]
+		if not "global" in entries:
+			entries["global"] = ""
+		entries["variablesDefaults"] = {}
+		if not "variables" in entries:
+			entries["variables"] = []
+		else:
+			var = re.split("[ \t,]+", entries["variables"])
+			processedVars = []
+			# extract default values:
+			for v in var:
+			   if "=" in v:
+				# we have a default
+				(name, default) = v.split("=")
+				processedVars.append(name) 
+				entries["variablesDefaults"][name] = default
+			   else:
+			        processedVars.append(v)
+			entries["variables"] =  processedVars
+			
+		if not "init" in entries:
+			entries["init"] = ""
+		if not "before" in entries:
+			entries["before"] = ""
+		if not "after" in entries:
+			entries["after"] = ""
+		if not "cleanup" in entries:
+			entries["cleanup"] = ""
+		if not "final" in entries:
+			entries["final"] = ""
+	
         return args
 
 ##
@@ -464,7 +499,7 @@ class CommandParser():
     def __init__(self, options):
         self.inputFile = options.inputFile
         ## This regular expression matches the instructions which begin with //
-        self.commandRegex = re.compile('^\s*//\s*(.+?)\s+(.*)')
+        self.commandRegex = re.compile('^\s*//\s*@(.+?)\s+(.*)')
         self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\'/]+)\s*')
         self.options = options
 
@@ -482,9 +517,12 @@ class CommandParser():
     # Parses a instrumented header file and adds the instrumentation instructions
     # to the functions inside the list of functions an returns the new list.
     def parse(self):
-
         functionParser = FunctionParser(self.options)
-        avalibalCommands = template.keys()
+
+	# create default values for templates.
+
+	
+        availableCommands = template.keys()
         input = open(self.inputFile, 'r')
         inputString = input.read()
         commandName = ''
@@ -524,11 +562,11 @@ class CommandParser():
                 elif match.group(1) == 'final':
                     final = True
 
-                elif match.group(1) in avalibalCommands:
+                elif match.group(1) in availableCommands:
                     # If a new command name is found and a old one is still
                     # used, save the old command and begin a new instruction
                     if commandName != '':
-                        templateList.append(Template(commandName, commandArgs))
+                        templateList.append(Template(template[commandName], commandName, commandArgs))
                         commandName = ''
                         commandArgs = ''
 
@@ -566,7 +604,7 @@ class CommandParser():
                 #If a function is found append the found instructions to the function object.
 
                 if commandName != '':
-                    templateList.append(Template(commandName, commandArgs))
+                    templateList.append(Template(template[commandName], commandName, commandArgs))
                     currentFunction.usedTemplateList = templateList[:]
                     currentFunction.init = init
                     currentFunction.final = final
@@ -581,60 +619,73 @@ class CommandParser():
 
 
 ##
-# @brief Used to store the templates for each function
+# @brief A template function including parameters and arguments
 class Template():
     ##
     # @brief The constructor
     #
     # @param name The name of the used template
     # @param variables The used variables
-    def __init__(self, name, variables):
+    def __init__(self, templateDict, name, variables):
 
-        templateDict = template[name]
+        self.templateDict = templateDict;
         self.name = name
         self.parameterList = {}
 
         # This regex parses the values string in the function setParameters.
-        # It distinguish between 3 cases:
-        # (?:\s*\S+\s*) matches the first bare word of the values
-        # (?:\s*\".*\"\s*) matches double quoted strings
-        # (?:\s*\'.*\'\s*) matches single quoted strings
-        self.valueRegex = re.compile('((?:^\s*[-\w%_\(\)\[\]&*]+\s*)|(?:^\s*\".*?\"\s*)|(?:^\s*\'.*?\'\s*))', re.S | re.M)
+        # It distinguishes between 3 cases:
+        # match the first bare word of the values
+        # match double quoted strings
+        # match single quoted strings
+	# Additionally, it is allowed to prefix the assignment with <variableName>=
+        self.valueRegex = re.compile('\s*(\w+=)?(([-\w%_\(\)\[\]&*]+)|(\".*?\")|(\'.*?\'))\s*', re.S | re.M)
 
         # Generate strings for output from given input
-        self.setParameters(templateDict['variables'], variables)
+        self.setParameters(self.templateDict['variables'], self.templateDict['variablesDefaults'], variables)
 
         # Remember template-access for easier usage
-        self.world = templateDict['global']
-        self.init = templateDict['init']
-        self.before = templateDict['before']
-        self.after = templateDict['after']
-        self.final = templateDict['final']
-        self.cleanup = templateDict['cleanup']
+        self.world = self.templateDict['global']
+        self.init = self.templateDict['init']
+        self.before = self.templateDict['before']
+        self.after = self.templateDict['after']
+        self.final = self.templateDict['final']
+        self.cleanup = self.templateDict['cleanup']
 
     ##
     # @brief Reads the parameters and generates the needed output
     #
     # @param names The name of the used template
     # @param values The used variables
-    def setParameters(self, names, values):
+    def setParameters(self, nameList, default_value_dictionary, values):
         # TODO: raise error and error handling
         # generate a list of all names and values
-        nameList = names.split(' ')
+
+	# initialize variables, this is needed for named parameters
+        for name in nameList:
+            if name in default_value_dictionary:
+               self.parameterList[name] = default_value_dictionary[name]
+            else:
+                self.parameterList[name] = ""
 
         for name in nameList:
-
             # Match the next value and only one value out of the string
             value = self.valueRegex.match(values)
             if value:
+		if(value.group(1)):
+			name = value.group(1).strip("=")
+			# the variable with the given name is set
+			if not name in nameList:
+				print("Error name " + name + " is not part of the defined function " + self.name)
+				exit(1)
                 # Set the matched value
-                self.parameterList[name] = value.group(1).strip()
+                self.parameterList[name] = value.group(2).strip()
 
                 # Truncate the found value from the value string
                 values = self.valueRegex.sub('', values, 1)
 
+        # All further text belongs to the last parameter.
         lastName = nameList[-1]
-        self.parameterList[lastName] += " " + values.strip()
+	self.parameterList[lastName] += " " + values.strip()
 
     ##
     # @brief Used for selective output
@@ -949,6 +1000,7 @@ def main():
 
     else:
         commandParser = CommandParser(options)
+	
         functions = commandParser.parse()
         if options.style == "wrap":
             outputWriter.sourceFileWrap(functions)

@@ -79,13 +79,13 @@ template = {
 # TimeStart: Start time to be reported
 # TimeStop: Stop time to be reported
 # TimeEnd: End time to be reported
-# Description: Short description of the activity
+# name: Short description of the activity
 'activity': {
-	'variables': 'AID TimeStart TimeStop TimeEnd Description',
+	'variables': 'AID=aid TimeStart=NULL TimeStop=NULL TimeEnd=NULL name',
 	'global': '''''',
 	'init': '''''',
     'before': '''siox_aid *%(AID)s = (siox_aid*) malloc(sizeof(siox_aid));
-    			 *%(AID)s = siox_start_activity( global_unid, %(TimeStart)s, %(Description)s );''',
+    			 *%(AID)s = siox_start_activity( global_unid, %(TimeStart)s, %(name)s );''',
 	'after': '''siox_stop_activity( *%(AID)s, %(TimeStop)s );
 			  ''',
 	'cleanup': 'siox_end_activity( *%(AID)s, %(TimeEnd)s );',

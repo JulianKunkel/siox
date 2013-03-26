@@ -14,33 +14,33 @@
 #include <stdio.h>
 
 /* Set the interface name for the library*/
-//register_node "POSIX"
+//@register_node SWID="POSIX"
 
 /* Register the data types for the descriptors */
-//datatype_register dtid_fileName "File Name" SIOX_STORAGE_STRING
-//datatype_register dtid_fileHandle "File Handle" SIOX_STORAGE_64_BIT_INTEGER
+//@datatype_register dtid_fileName "File Name" SIOX_STORAGE_STRING
+//@datatype_register dtid_fileHandle "File Handle" SIOX_STORAGE_64_BIT_INTEGER
 
 /* Register the metrics to grab the performance data */
-//metric_register mid_bytesWritten "Bytes written."
+//@metric_register mid_bytesWritten "Bytes written."
 //SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
 
-//metric_register mid_bytesRead "Bytes read."
+//@metric_register mid_bytesRead "Bytes read."
 //SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
 
 /*------------------------------------------------------------------------------
 End of global part
 ------------------------------------------------------------------------------*/
 
-//activity aID_open NULL NULL NULL "Open File."
+//@activity aID_open name="open"
 int open(const char *pathname, int flags, ...);
 
 int creat(const char *pathname, mode_t mode);
 
-//activity aID_close NULL NULL NULL "Close File."
+//@activity aID_close NULL NULL NULL "Close File."
 int close(int fd);
 
-//activity aID_write NULL NULL NULL "Write to file."
-//report global_unid mid_bytesWritten count
+//@activity aID_write NULL NULL NULL "Write to file."
+//@report global_unid mid_bytesWritten count
 ssize_t write(int fd, const void *buf, size_t count);
 
 //activity aID_read NULL NULL NULL "Read from file."
