@@ -1,69 +1,75 @@
 template = {
-# component_register
+# component
 #
 # Registers (and unregisters) a new component with SIOX and
 # connects to the ontology.
 #
 # SWID: The name (software id) for this component
-'component_register': {
+'component': {
 	'variables': 'SWID',
 	'global': '''siox_component global_component;
 				 siox_ontology global_ontology;
                  char global_pid;
                  char hostname[1024];
-''',
+				''',
     'init': '''hostname[1023] = '\\0';
 			   gethostname(hostname, 1023);
                sprintf( &global_pid, "%%d", getpid() );
                global_component = siox_component_register(hostname, %(SWID)s, &global_pid);
-               global_ontology = siox_ontology_connect();
-               GHashTable *activityHashTable = g_hash_table_new(g_str_hash, g_str_equal);''',
+               global_ontology = siox_ontology_connect();''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
 	'final': 'siox_component_unregister(global_component);'
 },
-# attribute_register
+# register_attribute
 #
 # Registers a new attribute type with siox, so that later calls
 # can set values for this type of attribute on certain entities.
 #
-# RetName: Name of the variable which is used to store the
-#		   pointer to the attribute type
+# AttributeVariable: Name of the variable which is used to store the
+#		   			 pointer to the attribute type
 # Name: Name of the attribute
 # MinStorage: The minimum storage type required to store this
 #			  attribute
-'attribute_register': {
-	'variables': 'RetName Name MinStorage',
-	'global': '''siox_attribute %(RetName)s;''',
-	'init': '''%(RetName)s = siox_attribute_register( %(Name)s, %(MinStorage)s );''',
+'register_attribute': {
+	'variables': 'AttributeVariable Name MinStorage',
+	'global': '''siox_attribute %(AttributeVariable)s;''',
+	'init': '''%(AttributeVariable)s = siox_attribute_register( %(Name)s, %(MinStorage)s );''',
     'before': '''''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
 },
-# component_register_descriptor
+# register_descriptor
 #
-# Mark an attribute type to serve as a descriptor for this component.
+# Registers a new descriptor type with siox, so that later calls
+# can set values for this type of descriptor on certain entities.
 #
-# Attribute: Name of the attribute type to mark as a descriptor
-'component_register_descriptor': {
-	'variables': 'Attribute',
-	'global': '''siox_component_register_descriptor( global_component, %(Attribute)s );''',
-	'init': '''''',
+# DescriptorVariable: Name of the variable which is used to store the
+#		   			 pointer to the descriptor type
+# Name: Name of the descriptor
+# MinStorage: The minimum storage type required to store this
+#			  descriptor
+'register_descriptor': {
+	'variables': 'DescriptorVariable Name MinStorage',
+	'global': '''siox_attribute %(DescriptorVariable)s;''',
+	'init': '''%(DescriptorVariable)s = siox_attribute_register( %(Name)s, %(MinStorage)s );
+			   siox_component_register_descriptor( global_component, %(DescriptorVariable)s );''',
+
     'before': '''''',
-	'after': '''''',
+	'after': '',
 	'cleanup': '',
 	'final': ''
 },
-# component_set_attribute
+# component_attribute
 #
 # Reports the value of one of the component's attributes to SIOX
 #
 # Attribute: Attribute type to set; must have been registered via
 #			 siox_attribute_register().
 # Value: Pointer to the real value of the attribute
-'component_set_attribute': {
+'component_attribute': {
 	'variables': 'Attribute Value',
 	'global': '''''',
 	'init': '''siox_component_set_attribute( global_component,  %(Attribute)s, %(Value)s);''',
@@ -72,20 +78,52 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-# metric_register
+# horizontal_map_create_str
+#
+# Creates a map data structure to keep track of descriptors that can be represented as strings.
+# These will be used for the horizontal linking of all activities using that descriptor via
+# activity_link_str.
+#
+# MapName: The name for this map; defaults to activityHashTable_str
+'horizontal_map_create_str': {
+	'variables': 'MapName=activityHashTable_str',
+	'global': '''GHashTable *%(MapName)s;''',
+    'init': '''%(MapName)s = g_hash_table_new(g_str_hash, g_str_equal);''',
+	'before': '',
+	'after': '',
+	'cleanup': '',
+	'final': ''
+},
+# horizontal_map_create_int
+#
+# Creates a map data structure to keep track of descriptors that can be represented as
+# either ints or long ints.
+# These will be used for the horizontal linking of all activities using that descriptor via
+# activity_link_int.
+#
+# MapName: The name for this map; defaults to activityHashTable_int
+'horizontal_map_create_int': {
+	'variables': 'MapName=activityHashTable_int',
+	'global': '''GHashTable *%(MapName)s;''',
+    'init': '''%(MapName)s = g_hash_table_new(g_direct_hash, g_direct_equal);''',
+	'before': '',
+	'after': '',
+	'cleanup': '',
+	'final': ''
+},
+# register_metric
 #
 # Registers a new metric with SIOX.
-# Metrics are held in an ontology, hence the name.
 #
-# RetName: Name of the variable to store the metric type in
+# MetricVariable: Name of the variable to store the metric type in
 # Name: Name of the metric
 # UnitType: SIOX unit-type for the metric
 # StorageType: SIOX storage-type for the metric
 # ScopeType: SIOX scope-type for the metric
-'metric_register': {
-	'variables': 'RetName Name UnitType StorageType ScopeType',
-	'global': '''siox_metric %(RetName)s;''',
-	'init': '''%(RetName)s = siox_ontology_register_metric( global_ontology, %(Name)s, %(UnitType)s, %(StorageType)s, %(ScopeType)s );''',
+'register_metric': {
+	'variables': 'MetricVariable Name UnitType StorageType ScopeType',
+	'global': '''siox_metric %(MetricVariable)s;''',
+	'init': '''%(MetricVariable)s = siox_ontology_register_metric( global_ontology, %(Name)s, %(UnitType)s, %(StorageType)s, %(ScopeType)s );''',
     'before': '''''',
 	'after': '',
 	'cleanup': '',
@@ -95,70 +133,217 @@ template = {
 #
 # Starts (at the beginning) and stops (at the end) a new
 # activity in the current function.
-# Still needs to be reported!
+# Any metrics resulting from the activity still need to be reported via activity_report!
 #
-# Activity: Name of the variable to store the activity in
-# TimeStart: Start time to be reported
-# TimeStop: Stop time to be reported
-# TimeEnd: End time to be reported
-# Description: Short description of the activity
+# Name: Short description of the activity
+# Activity: Name of the variable to store the activity in; defaults to sioxActivity
+# TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
+# TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
 'activity': {
-	'variables': 'Activity TimeStart TimeStop Description',
+	'variables': 'Name=__FUNCTION__ Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
 	'global': '''''',
 	'init': '''''',
     'before': '''siox_activity *%(Activity)s = (siox_activity*) malloc(sizeof(siox_activity));
-    			 *%(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Description)s );''',
-	'after': '''siox_stop_activity( *%(Activity)s, %(TimeStop)s );
-			  ''',
+    			 *%(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
+	'after': '''siox_stop_activity( *%(Activity)s, %(TimeStop)s );''',
 	'cleanup': 'siox_end_activity( *%(Activity)s;',
 	'final': ''
 },
-# activity_link
+# activity_set_attribute
 #
-# Links the current activity (started with activity) to another one.
+# Tie an attibute to an activity.
+# Attributes for activities are either its parameters or other values computed from them.
+# Metrics or statistics resulting from the call use activity_report instead.
 #
-# Activity: Activity to be linked
-# Key: Short description of the activity
-'activity_link': {
-	'variables': 'Activity Key',
+# Attribute: The attribute type to be reported
+# Value: The actual value to be reported
+# Activity: The activity; defaults to sioxActivity
+'activity_set_attribute': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );''',
+	'after': '',
+	'cleanup': '',
+	'final': ''
+},
+# activity_set_descriptor
+#
+# Tie an attibute serving as a descriptor to an activity.
+# Attributes for activities are either its parameters or other values computed from them.
+# Metrics or statistics resulting from the call use activity_report instead.
+#
+# Attribute: The attribute type to be reported
+# Value: The actual value to be reported
+# Activity: The activity; defaults to sioxActivity
+'activity_set_attribute': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'global': '''''',
+	'init': '''siox_component_register_descriptor( global_component, %(Attribute)s );''',
+    'before': '''siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );''',
+	'after': '',
+	'cleanup': '',
+	'final': ''
+},
+# horizontal_map_put_int
+#
+# Tie an attibute serving as a descriptor to an activity.
+# Attributes for activities are either its parameters or other values computed from them.
+# Metrics or statistics resulting from the call use activity_report instead
+#
+# Key: The descriptor linking the activity to others, represented as an int
+# MapName: The map to be used; defaults to activityHashTable_int
+# Activity: The activity; defaults to sioxActivity
+'horizontal_map_put_int': {
+	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), %(Activity)s );''',
+	'cleanup': '',
+	'final': ''
+},
+# horizontal_map_put_str
+#
+# Tie an attibute serving as a descriptor to an activity.
+# Attributes for activities are either its parameters or other values computed from them.
+# Metrics or statistics resulting from the call use activity_report instead
+#
+# Key: The descriptor linking the activity to others, represented as a string
+# MapName: The map to be used; defaults to activityHashTable_int
+# Activity: The activity; defaults to sioxActivity
+'horizontal_map_put_int': {
+	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''g_hash_table_insert( %(MapName)s, %(Key)s, %(Activity)s );''',
+	'cleanup': '',
+	'final': ''
+},
+# horizontal_map_remove_int
+#
+# Clear an attibute serving as a descriptor.
+# Linking activities by this attribute will now require a new call to horizontal_map_put_int.
+# Attributes for activities are either its parameters or other values computed from them.
+# Metrics or statistics resulting from the call use activity_report instead
+#
+# Key: The descriptor linking the activity to others, represented as an int
+# MapName: The map to be used; defaults to activityHashTable_int
+'horizontal_map_put_int': {
+	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''g_hash_table_remove( %(MapName)s, GINT_TO_POINTER(%(Key)s) );''',
+	'cleanup': '',
+	'final': ''
+},
+# horizontal_map_remove_str
+#
+# Clear an attibute serving as a descriptor.
+# Linking activities by this attribute will now require a new call to horizontal_map_put_str.
+# Attributes for activities are either its parameters or other values computed from them.
+# Metrics or statistics resulting from the call use activity_report instead
+#
+# Key: The descriptor linking the activity to others, represented as an int
+# MapName: The map to be used; defaults to activityHashTable_int
+'horizontal_map_put_int': {
+	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''g_hash_table_remove( %(MapName)s, %(Key)s );''',
+	'cleanup': '',
+	'final': ''
+},
+# activity_link_str
+#
+# Horizontally links the current activity (started with activity) to another one via
+# a desctriptor represented as a string.
+#
+# Key: A descriptor linking both activities together (such as a file name),
+#	   in string form
+# Activity: Activity to be linked; defaults to sioxActivity
+'activity_link_str': {
+	'variables': 'Key MapName=activityHashTable_str Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''g_hash_table_insert(activityHashTable, g_strdup_printf("%i", %(Key)s), (gpointer) %(Activity)s );
-    			soix_Activity Parent = *(siox_Activity*) g_hash_table_lookup(activityHashTable, %(Key)s );
-    			siox_link_activity( *%(Activity)s, Parent );
+	'after': '''g_hash_table_insert( %(MapName)s, g_strdup_printf("%i", %(Key)s), (gpointer) %(Activity)s );
+    			siox_Activity Parent = *(siox_Activity*) g_hash_table_lookup( %(MapName)s, %(Key)s );
+    			siox_activity_link_to_parent( *%(Activity)s, Parent );
 			  ''',
+	'cleanup': '',
+	'final': ''
+},
+# activity_link_int
+#
+# Horizontally links the current activity (started with activity) to another one via
+# a desctriptor represented as either an int or a long int.
+#
+# Key: A descriptor linking both activities together (such as a file name),
+#	   in int or long int form
+# Activity: Activity to be linked; defaults to sioxActivity
+'activity_link_int': {
+	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': '''g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), (gpointer) %(Activity)s );
+    			siox_Activity Parent = *(siox_Activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
+    			siox_activity_link_to_parent( *%(Activity)s, Parent );
+			  ''',
+	'cleanup': '',
+	'final': ''
+},
+# activity_report
+#
+# Reports a metric tied to an activity
+#
+# Metric: Metric type of the value to be reported; must be registered with register_metric!
+# Value: The value to be reported
+# Activity: The activity; defaults to sioxActivity
+'activity_report': {
+	'variables': 'Metric Value Activity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': 'siox_report( %(Activity)s, %(Metric)s, (void *) &%(Value)s );',
+	'cleanup': '',
+	'final': ''
+},
+# error
+#
+# Reports that an activity terminated with an error
+#
+# Condition: A guard expression to be evaluated after the wrapped function call;
+#			 if true, an error with code Error will be reported to SIOX, indicating
+#			 that all metrics monitored on this call are tainted.
+# Error: The error code to be reported; must be of type int
+# Activity: The Activity to be reported; defaults to sioxActivity
+'error': {
+	'variables': 'Condition Error Activity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': '''if ( %(Condition)s )
+					siox_activity_report_error( %(Activity)s, %(Error)s );',
 	'cleanup': '',
 	'final': ''
 },
 # report
 #
-# Reports an activity
+# Reports a metric that cannot be tied directly an activity
 #
-# Component: The Component
-# Metric: Metric of the reported value
-# Value: Pointer to the value to be reported
+# Metric: Metric type of the value to be reported
+# Value: The value to be reported
 'report': {
-	'variables': 'Component Metric Value',
+	'variables': 'Metric Value',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_report( %(Component)s, %(Metric)s, (void *) &%(Value)s );',
-	'cleanup': '',
-	'final': ''
-},
-# report_error
-#
-# Reports an error
-#
-# Activity: The Activity to be reported
-# Error: The error to be reported
-'report_error': {
-	'variables': 'Activity ERROR',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_report_error( %(Activity)s, %(ERROR)s );',
+	'after': 'siox_report( global_component, %(Metric)s, (void *) &%(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -166,63 +351,78 @@ template = {
 #
 # Initiates a new remote call
 #
-# RCID: The name of the varibale to store the RCID
-# Activity: The corresponding Activity
-# HWID: The hardware id of the addressed machine
-# SWID: The software id of the addressed machine
-# IID: The instance id of the addressed machine
+# RemoteCallVariable: The name of the variable to store the remote call structure in
+# TargetHWID: The hardware id of the target machine
+# TargetSWID: The software id of the target machine
+# TargetIID: The instance id of the target machine
 'remote_call_start': {
-	'variables': 'RCID Activity HWID SWID IID',
-	'global': '''siox_rcid %(RCID)s;\n''',
+	'variables': 'RemoteCallVariable TargetHWID TargetSWID TargetIID',
+	'global': '''siox_remote_call %(RemoteCallVariable)s;\n''',
 	'init': '''''',
-    'before': '''%(RCID)s = siox_describe_remote_call_start( %(Activity)s, %(HWID)s, %(SWID)s, %(IID)s );''',
+    'before': '''%(RemoteCallVariable)s = siox_remote_call_start( global_component, %(TargetHWID)s, %(TargetSWID)s, %(TargetIID)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
 },
 # remote_call_attribute
 #
-# Send an attribute over a remote call
+# Attach an attribute to a remote call
 #
-# RCID: The id of the corresponding remote call
-# DTID: The datatype id of the value
-# Value: Value to be send
+# RemoteCall: The corresponding remote call
+# Attribute: The attribute type of the value
+# Value: The actual value to be sent
 'remote_call_attribute': {
-	'variables': 'RCID DTID Value',
+	'variables': 'RemoteCall Attribute Value',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_remote_call_attribute( %(RCID)s, %(DTID)s, (void *) &%(Value)s );''',
+    'before': '''siox_remote_call_set_attribute( %(RemoteCall)s, %(Attribute)s, (void *) &%(Value)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
 },
-# remote_call_receive
+# remote_call_descriptor
 #
-# Receives a remote call
+# Attach an attribute serving as a descriptor to a remote call
 #
-# Activity: The corresponding Activity
-# DTID: The datatype id of the value
-# Value: The received value
-'remote_call_receive': {
-	'variables': 'Activity DTID Value',
-	'global': '''siox_rcid %(RCID)s;\n''',
-	'init': '''''',
-    'before': '''siox_remote_call_receive( %(RCID)s, %(DTID)s, (void *) &%(Value)s );''',
+# RemoteCall: The corresponding remote call
+# Attribute: The attribute type of the value
+# Value: The actual value to be sent
+'remote_call_descriptor': {
+	'variables': 'RemoteCall Attribute Value',
+	'global': '''''',
+	'init': '''siox_component_register_descriptor( global_component, %(Attribute)s );''',
+    'before': '''siox_remote_call_set_attribute( %(RemoteCall)s, %(Attribute)s, (void *) &%(Value)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
 },
-# remote_call_end
+# remote_call_execute
 #
-# Closes a remote call
+# Closes a remote call's attribute list
 #
-# RCID: The RCID of the remote call to be closed
-'remote_call_end': {
-	'variables': 'RCID',
+# RemoteCall: The remote call to be closed
+'remote_call_execute': {
+	'variables': 'RemoteCall',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_describe_remote_call_end( %(RCID)s );',
+	'after': 'siox_remote_call_execute( %(RemoteCall)s );',
+	'cleanup': '',
+	'final': ''
+},
+# remote_call_received
+#
+# Reports an attribute of a remote call just received
+#
+# Attribute: The attribute type of the value received
+# Value: The actual value received
+# Activity: The activity; defaults to sioxActivity
+'remote_call_received': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'global': '''siox_remote_call %(RemoteCall)s;\n''',
+	'init': '''''',
+    'before': '''siox_remote_call_received( %(RemoteCall)s, %(Attribute)s, (void *) &%(Value)s );''',
+	'after': '',
 	'cleanup': '',
 	'final': ''
 },
@@ -230,12 +430,12 @@ template = {
 #
 # Used to insert custom code before the call
 #
-# PROGRAMMCODE: The code to insert
+# PROGRAMCODE: The code to insert
 'splice_before': {
-	'variables': 'PROGRAMMCODE',
+	'variables': 'PROGRAMCODE',
 	'global': '',
 	'init': '',
-	'before': '%(PROGRAMMCODE)s',
+	'before': '%(PROGRAMCODE)s',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -244,13 +444,13 @@ template = {
 #
 # Used to insert custom code after the call
 #
-# PROGRAMMCODE: The code to insert
+# PROGRAMCODE: The code to insert
 'splice_after': {
-	'variables': 'PROGRAMMCODE',
+	'variables': 'PROGRAMCODE',
 	'global': '',
 	'init': '',
 	'before': '',
-	'after': '%(PROGRAMMCODE)s',
+	'after': '%(PROGRAMCODE)s',
 	'cleanup': '',
 	'final': ''
 }

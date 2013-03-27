@@ -14,37 +14,56 @@
 #include <stdio.h>
 
 /* Set the interface name for the library*/
-//register_node "POSIX"
+//@register_component "POSIX"
 
 /* Register the data types for the descriptors */
-//datatype_register dtid_fileName "File Name" SIOX_STORAGE_STRING
-//datatype_register dtid_fileHandle "File Handle" SIOX_STORAGE_64_BIT_INTEGER
+//@register_attribute bytesToRead "Bytes to read" SIOX_STORAGE_64_BIT_INTEGER
+//@register_attribute bytesToWrite "Bytes to write" SIOX_STORAGE_64_BIT_INTEGER
+//@register_descriptor fileName "File Name" SIOX_STORAGE_STRING
+//@register_descriptor fileHandle "POSIX File Handle" SIOX_STORAGE_64_BIT_INTEGER
 
 /* Register the metrics to grab the performance data */
-//metric_register mid_bytesWritten "Bytes written."
-//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
+//@register_metric bytesWritten "/Throughput/Write" SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
+//@register_metric bytesRead "/Troughput/Read" SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
 
-//metric_register mid_bytesRead "Bytes read."
-//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
+/* Prepare a (hash) map to link descriptors (in this case, of type int) to their activities.
+   This is necessary for the horizontal linking of activities.
+   The map and all other functions using it default to the same built-in name,
+   so it can usually be omitted. */
+//@horizontal_map_create_int
 
 /*------------------------------------------------------------------------------
 End of global part
 ------------------------------------------------------------------------------*/
 
-//activity aID_open NULL NULL NULL "Open File."
+
+//@activity
+//@activity_attribute fileName pathname
+//@horizontal_map_put_int returnValue
+//@error 'returnValue < 0' errno
 int open(const char *pathname, int flags, ...);
 
+//@activity
+//@horizontal_map_put_int returnValue
+//@error 'returnValue < 0' errno
 int creat(const char *pathname, mode_t mode);
 
-//activity aID_close NULL NULL NULL "Close File."
+//@activity
+//@horizontal_map_remove fd
+//@error 'returnValue < 0' errno
 int close(int fd);
 
-//activity aID_write NULL NULL NULL "Write to file."
-//report global_unid mid_bytesWritten count
+//@activity
+//@activity_attribute bytesToWrite count
+//@activity_report bytesWritten returnValue
+//@link_activity_int fd
+//@error 'returnValue < 0' errno
 ssize_t write(int fd, const void *buf, size_t count);
 
-//activity aID_read NULL NULL NULL "Read from file."
-//report global_unid mid_bytesRead count
+//@activity
+//@activity_attribute bytesToRead count
+//@activity_report bytesRead returnValue
+//@error 'returnValue < 0' errno
 ssize_t read(int fd, void *buf, size_t count);
 
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
