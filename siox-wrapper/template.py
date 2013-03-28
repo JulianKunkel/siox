@@ -146,7 +146,7 @@ template = {
     'before': '''siox_activity *%(Activity)s = (siox_activity*) malloc(sizeof(siox_activity));
     			 *%(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
 	'after': '''siox_stop_activity( *%(Activity)s, %(TimeStop)s );''',
-	'cleanup': 'siox_end_activity( *%(Activity)s;',
+	'cleanup': 'siox_end_activity( *%(Activity)s );',
 	'final': ''
 },
 # activity_set_attribute
@@ -323,7 +323,7 @@ template = {
 # Error: The error code to be reported; must be of type int
 # Activity: The Activity to be reported; defaults to sioxActivity
 'error': {
-	'variables': 'Condition Error Activity',
+	'variables': 'Condition Error Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
