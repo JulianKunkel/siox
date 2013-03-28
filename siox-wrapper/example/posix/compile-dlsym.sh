@@ -1,7 +1,9 @@
 #!/bin/bash -e
 
-python ../../siox-wrapper.py -s wrap -t ../../template.py -o posix-ll-wrapper.c low-level-io.h 
+OUTPUT_FILE=posix-ll-wrapper.c
 
-gcc low-level-io-dlsym.c -c -fPIC -I ../../../low-level-C-interface `pkg-config --cflags glib-2.0`
-gcc low-level-io-dlsym.o -o posix.so ../../../low-level-C-interface/libsiox-ll.so -shared -ldl `pkg-config --libs glib-2.0`
+python ../../siox-wrapper.py -s wrap -t ../../template.py -o $OUTPUT_FILE posix-low-level-io.h
+
+gcc $OUTPUT_FILE -c -fPIC -I ../../../low-level-C-interface `pkg-config --cflags glib-2.0`
+gcc ${OUTPUT_FILE%%.c}.o -o libsiox-posix-ll-wrapper.so -shared -ldl `pkg-config --libs glib-2.0`
 
