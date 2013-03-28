@@ -15,7 +15,7 @@ Based on these definitions siox-wrapper automatically generates a C file that wr
 Usage
 
 siox-Wrapper.py [-h] [--output OUTPUTFILE] [--debug] [--blank-header]
-                [--cpp] [--cpp-args CPPARGS] [--style {wrap,dllsym}]
+                [--cpp] [--cpp-args CPPARGS] [--style {wrap,dllsym,plain}]
                 inputFile
 
     -h
@@ -36,8 +36,8 @@ siox-Wrapper.py [-h] [--output OUTPUTFILE] [--debug] [--blank-header]
     --cpp-args/-a CPPARGS
         The command line arguements passed to cpp
         
-    --style/-s {wrap,dllsym}
-        Defines the output format. "wrap" will use gcc-style wrapping, "dllsym" will use a custom method
+    --style/-s {wrap,dllsym,plain}
+        Defines the output format. "wrap" will use gcc-style wrapping, "dllsym" will use a custom method, "plain" will use pintf stubs and omit the actual call
         
     inputFile
         The filepath of the inputfile. This is required
