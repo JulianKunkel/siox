@@ -328,7 +328,7 @@ template = {
 	'init': '''''',
     'before': '''''',
 	'after': '''if ( %(Condition)s )
-					siox_activity_report_error( %(Activity)s, %(Error)s );',
+					siox_activity_report_error( %(Activity)s, %(Error)s );''', 
 	'cleanup': '',
 	'final': ''
 },
