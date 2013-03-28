@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 /* Set the interface name for the library*/
-//@register_component "POSIX"
+//@component "POSIX"
 
 /* Register the data types for the descriptors */
 //@register_attribute bytesToRead "Bytes to read" SIOX_STORAGE_64_BIT_INTEGER
