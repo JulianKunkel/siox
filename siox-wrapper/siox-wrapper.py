@@ -635,7 +635,7 @@ class Template():
         # match double quoted strings
         # match single quoted strings
 	# Additionally, it is allowed to prefix the assignment with <variableName>=
-        self.valueRegex = re.compile('\s*(\w+=)?(([-\w%_\(\)\[\]&*]+)|(\".*?\")|(\'.*?\'))\s*', re.S | re.M)
+        self.valueRegex = re.compile('\s*(\w+=)?(([-\w%_\(\)\[\]&*]+)|(\".*?\")|(\'.+?\'+))\s*', re.S | re.M)
 
         # Generate strings for output from given input
         self.setParameters(self.templateDict['variables'], self.templateDict['variablesDefaults'], variables)
@@ -675,7 +675,10 @@ class Template():
 				print("Error name " + name + " is not part of the defined function " + self.name)
 				exit(1)
                 # Set the matched value
-                self.parameterList[name] = value.group(2).strip()
+                valueString = value.group(2).strip()   
+                if(valueString.startswith("''")):
+                	valueString = valueString.strip("'")
+                self.parameterList[name] = valueString
 
                 # Truncate the found value from the value string
                 values = self.valueRegex.sub('', values, 1)

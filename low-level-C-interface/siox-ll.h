@@ -1,7 +1,7 @@
 /**
  * @file siox-ll.h SIOX low-level interface headers.
  *
- * @date 11/2012
+ * @date 03/2013
  * @copyright GNU Public License
  * @authors Michaela Zimmer, Julian Kunkel, Marc Wiedemann & Alvaro Aguilera
  */
@@ -11,92 +11,140 @@
 #ifndef siox_LL_H
 #define siox_LL_H
 
+#include <stdint.h>
 #include <glib.h>
 
 #include "../ontology/ontology.h"
 
 
-/**
- * The node's <em>Unique Node ID</em>.
- *
- * Identifies a node in the IOPm graph.
+/*
+ * ==================================
+ * A note on storage mangement:
+ * ----------------------------------
+ * Right now, our philosophy is that SIOX will take care of
+ * all objects created by calls to it.
+ * Thus, instrumenting a component for SIOX will not
+ * burden you with calls to malloc() and free(); the library
+ * will do it all for you.
+ * ==================================
  */
-typedef struct siox_unid_t * siox_unid;
 
 /**
- * The <em>Activity ID</em>.
- *
- * Identifies an activity.
+ * A component, as represented in SIOX.
  */
-typedef struct siox_aid_t * siox_aid;
+typedef struct siox_component siox_component;
 
 /**
- * The <em>Remote Call ID</em>.
- *
- * Identifies a remote call and the group of attributes (e.g., parameters) associated
- * with it.
+ * An activity, as represented in SIOX.
  */
-typedef struct siox_rcid_t * siox_rcid;
+typedef struct siox_activity siox_activity;
+
+/**
+ * A remote call, as represented in SIOX.
+ */
+typedef struct siox_remote_call siox_remote_call;
 
 /**
  * A time stamp, as represented in SIOX.
  */
-typedef GDateTime * siox_timestamp;
+typedef uint64_t * siox_timestamp;
+
+
+/**
+ * @name Attributes
+ * Attributes represent details of other entities, such as a cache component's cache size
+ * or an activity's or a remote call's parameters.
+ */
+/**@{*/
+
+/**
+ * Register an attribute type with SIOX.
+ *
+ * In contrast to metrics, attributes are not supposed to be globally unique - their semantics
+ * will vary with the entity they apply to.
+ */
+//@test ''%s,%d'' name,storage_type
+siox_attribute * siox_attribute_register(const char * name, enum siox_ont_storage_type storage_type);
+
+/**@}*/
+
 
 
 
 /**
- * @name Nodes
- * Nodes represent entities in the IOPm graph, e.g., a software layer such as HDF5 or
+ * @name Components
+ * Components represent entities in the IOPm graph, e.g., a software layer such as HDF5 or
  * a hardware component such as a block storage device.
  *
- * In SIOX, each node is identified by a <em>Unique Node ID (UNID)</em> which is assigned
- * upon registration.
- *
- * A node's typical life cycle would consist of:
+ * A component's typical life cycle would consist of:
  * <ol>
- * <li>Checking in with SIOX in its initalisation function via siox_register_node().</li>
- * <li>Also there, reporting any additional attributes via siox_node_attribute().</li>
+ * <li>Checking in with SIOX in its initalisation function via siox_component_register().</li>
+ * <li>Also there, reporting any additional attributes via siox_component_set_attribute().</li>
  * <li>Performing its duties as usual.</li>
- * <li>Checking out with SIOX in its finalization function via siox_unregister_node().</li>
+ * <li>Checking out with SIOX in its finalization function via siox_component_unregister().</li>
  * </ol>
  */
 /**@{*/
 
 /**
- * Register this node with SIOX and assign a fresh @em UNID to it.
+ * Register this component with SIOX.
  *
- * SIOX will use the information given to create a new node in its IOPm model of the system.
+ * SIOX will use the information given to create a new component in its IOPm model of the system.
  *
- * @param[in]   hwid    The node's @em HardwareID, e.g. „Blizzard Node 5“ or the MacID
+ * @param[in]   hwid    The component's @em HardwareID, e.g. „Blizzard Node 5“ or the MacID
  *                      of an NAS hard drive.
- * @param[in]   swid    The node's @em SoftwareID, e.g. „MPI“ oder „POSIX“.
- * @param[in]   iid     The node's @em InstanceID (according to node type, e.g. the ProcessID
- *                      of a Thread or the IP address and Port od a server cache).
+ * @param[in]   swid    The component's @em SoftwareID, e.g. „MPI“ oder „POSIX“.
+ * @param[in]   iid     The component's @em InstanceID (according to component type, e.g.
+ *                      the ProcessID of a Thread or the IP address and Port od a server cache).
  *
- * @return  A fresh @em UNID to be used in all the node's future communications with SIOX.
+ * @return  A fresh @em siox_component to be used in all the component's future communications
+ *          with SIOX.
  *
  * @note Any parameter SIOX can find out on its own (such as a ProcessID) may be @c NULL.
  */
-siox_unid siox_register_node(const char * hwid, const char * swid, const char * iid);
+//@test ''%s-%s-%s'' hwid,swid,iid
+siox_component * siox_component_register(const char * hwid, const char * swid, const char * iid);
 
 /**
- * Unregister a node with SIOX.
+ * Report an attribute of this component to SIOX.
  *
- * @param[in]   unid    The @em UNID  SIOX had assigned to this node.
- */
-void siox_unregister_node(siox_unid unid);
-
-/**
- * Report further attributes of this node to SIOX.
+ * @em Example:    A cache reporting its capacity as 10,000 bytes.
  *
- * @em Example:    A cache reportin its capacity as 10,000 bytes.
- *
- * @param[in]   unid        The node's @em UNID.
- * @param[in]   dtid        The @em DTID of the attribute.
+ * @param[in]   component   The component.
+ * @param[in]   attribute   The attribute to be set.
  * @param[in]   value       A pointer to the attribute's value.
  */
-void siox_node_attribute(siox_unid unid, siox_dtid dtid, const void * value);
+//@test ''%p,%p,%p'' component,attribute,value
+void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, void * value);
+
+/**
+ * Register an attribute as a descriptor for this component.
+ *
+ * @em Example:    POSIX registering the attribute type "file handle" to serve as descriptor.
+ *
+ * @param[in]   component   The component.
+ * @param[in]   attribute   The attribute.
+ */
+//@test ''%p,%p'' component,attribute
+void siox_component_register_descriptor(siox_component * component, siox_attribute * attribute);
+
+/**
+ * Retrieve a named attribute of a component.
+ *
+ * @param[in]   component   The component.
+ * @param[in]   name        The name of the attribute to be retrieved.
+ */
+//@test ''%p,%s'' component,name
+siox_attribute * siox_component_get_attribute(siox_component * component, const char * name);
+
+/**
+ * Unregister a component with SIOX.
+ *
+ * @param[in]   component   The component.
+ */
+//@test ''%p' component
+void siox_component_unregister(siox_component * component);
+
 
 /**@}*/
 
@@ -105,44 +153,47 @@ void siox_node_attribute(siox_unid unid, siox_dtid dtid, const void * value);
 
 /**
  * @name Activities
- * Activities bundle a series of actions so that the can be related to one or more
+ * Activities bundle a series of actions so that they can be related to one or more
  * performance metrics of the system influenced by these actions.
  *
  * As an example, an activity might bundle calls to open a file, write to it and close it again.
- * This way, the performance metrics of maximum throughput and average write speed can e linked
+ * This way, the performance metrics of maximum throughput and average write speed can be linked
  * to this chain of actions.
  *
  * When defining an activity, the usual course of action is as follows:
  * <ol>
- * <li>Start the activity in its active phase and receive @em AID via siox_start_activity().</li>
- * <li>Execute usual commands, calls, etc. pertaining to activity.</li>
- * <li>End active phase and switch to reporting phase via siox_stop_activity().</li>
+ * <li>Start the activity in its active phase via siox_activity_start().</li>
+ * <li>Execute any usual commands, calls, etc. pertaining to activity.</li>
+ * <li>End active phase and switch to reporting phase via siox_activity_stop().</li>
  * <li>Gather any performance data associated with the activity and report it
- * via siox_repot_activity().</li>
- * <li>Close the activity via siox_end_activity().</li>
+ * via siox_activity_report().</li>
+ * <li>Close the activity via siox_activity_end().</li>
  * </ol>
- * If no reporting is to be done in step 4, steps 3 may be omitted as well.
  */
 /**@{*/
 
 /**
- * Report the start of an activity and receive an <em>Activity ID (AID)</em> for it.
+ * Report the start of an activity.
  *
  * This will mark the time stamp given as the beginning of the activity, influencing any
  * performance metrics associated that are measured over time.
  *
- * SIOX will use the @em AID to correctly assign attributes used and performance metrics influenced
- * by this activity.
- * As any @em AID is linked to its node by SIOX, functions supplied with an @em AID do not use a @em UNID.
- * 
+ * SIOX will use the @em siox_activity to correctly assign attributes used and performance
+ * metrics influenced by this activity.
+ * As any activity is linked to its component by SIOX, functions supplied with a
+ * @em siox_activity do not use a @em siox_component.
  *
- * @param[in]   unid        The node's @em UNID.
+ *
+ * @param[in]   component   The component.
  * @param[in]   timestamp   A time stamp or @c NULL,
  *                          which will result in SIOX using the current time.
  * @param[in]   comment     Possible details about the activity, or @c NULL.
- * @return                  A fresh @em AID, to be used in all the activity's further dealings with SIOX.
+ *                          This is meant for plain text comments only.
+ * @return                  A fresh @em siox_activity, to be used in all the activity's
+ *                          further dealings with SIOX.
  */
-siox_aid siox_start_activity(siox_unid unid, siox_timestamp timestamp, const char * comment);
+//@test ''%p'' component
+siox_activity * siox_activity_start(siox_component * component, siox_timestamp timestamp, const char * comment);
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.
@@ -150,51 +201,70 @@ siox_aid siox_start_activity(siox_unid unid, siox_timestamp timestamp, const cha
  * This will mark the time stamp given as the end of the activity, influencing any
  * performance metrics associated that are measured over time.
  *
- * @param[in]   aid         The activity's @em AID.
+ * @param[in]   activity    The activity.
  * @param[in]   timestamp   A time stamp or @c NULL,
  *                          which will result in SIOX using the current time.
- * @note    If there are no metrics to report for an activity, siox_stop_activity() can be omitted.
  */
-void siox_stop_activity(siox_aid aid, siox_timestamp timestamp);
+//@test ''%p,%p'' activity,timestamp
+void siox_activity_stop(siox_activity * activity, siox_timestamp timestamp);
+
+/**
+ * Report an attribute of an activity.
+ *
+ * Attributes for activities are either its parameters or other values computed from them.
+ * Metrics or statistics resulting from the call use siox_activity_report() instead.
+ *
+ * @param[in]   activity    The activity.
+ * @param[in]   attribute   The attribute.
+ * @param[in]   value       A pointer to the attribute's value.
+ */
+//@test ''%p,%p,%p'' activity,attribute,value
+void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, void * value);
+
+/**
+ * Retrieve an attribute of an activity.
+ *
+ * @param[in]   activity    The activity.
+ * @param[in]   name        The name of the attribute to be retrieved.
+  */
+//@test ''%p,%s'' activity,name
+siox_attribute * siox_activity_get_attribute(siox_activity * activity, const char * name);
 
 /**
  * Report performance data to be associated with the activity.
  *
- * @em Example:   After being called to write a number of bytes to block storage, the node reports
- *                the number of bytes successfully written, the average cache fill level oder the
- *                maximum throughput achieved.
+ * @em Example:     After being called to write a number of bytes to block storage,
+ *                  the component reports the number of bytes successfully written,
+ *                  the average cache fill level oder the maximum throughput achieved.
  *
- * @param[in]   aid             The activity's @em AID.
- * @param[in]   mid             The metric's @em MID.
+ * @param[in]   activity        The activity.
+ * @param[in]   metric          The metric describing the data.
  * @param[in]   value           A pointer to the metric's actual value.
  */
-void siox_report_activity(siox_aid aid, siox_mid mid, void * value);
+//@test ''%p,%p,%p'' activity,metric,value
+void siox_activity_report(siox_activity * activity, siox_metric * metric, void * value);
 
 /**
  * Report that the current call resulted in the error code @em error so that SIOX can mark any
  * performance metrics gathered accordingly.
  * This should be done as part of any regular error processing by calls issued by the activity.
  *
- * @param[in]   aid     The activity's @em AID.
- * @param[in]   error   The error code returned by the function.
+ * @param[in]   activity    The activity.
+ * @param[in]   error       The error code returned by the function.
  */
-void siox_report_error(siox_aid aid, int error);
+//@test ''%p,%d'' activity,error
+void siox_activity_report_error(siox_activity * activity, int error);
 
 /**
- * Report the end of an activity's report phase and close it.
+ * Mark the end of an activity's report phase and close it.
  *
- * After calling this function, the behaviour of further calls to siox_report_activity()
- * with the same @em AID will be undefined.
+ * After calling this function, the behaviour of further calls to siox_activity_report()
+ * with the same activity will be undefined.
  *
- * If no performance metrics were to be reported, the usual prior call to siox_stop_activity()
- * may be omitted, in which case timstamp will be used to determine the end of the activity's
- * active phase. Otherwise, timestamp is discarded.
- *
- * @param[in]   aid         The activity's @em AID.
- * @param[in]   timestamp   A time stamp or @c NULL,
- *                          which will result in SIOX using the current time.
+ * @param[in]   activity    The activity.
  */
-void siox_end_activity(siox_aid aid, siox_timestamp timestamp);
+//@test ''%p'' activity
+void siox_activity_end(siox_activity * activity);
 
 /**
  * Causally link an activity to another.
@@ -205,22 +275,24 @@ void siox_end_activity(siox_aid aid, siox_timestamp timestamp);
  * and one to write to it) is hard to impossible to determine automatically.
  * This function will give SIOX the information necessary to do so.
  *
- * @param[in]   aid_child   The @em AID of the current activity.
- * @param[in]   aid_parent  The @em AID of an activity causally preceding the current one.
+ * @param[in]   activity_child   The current activity.
+ * @param[in]   activity_parent  An activity causally preceding the current one.
  */
-void siox_link_activity(siox_aid aid_child, siox_aid aid_parent);
+//@test ''%p,%p'' activity_child,activity_parent
+void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent);
 
 /**
  * Report performance data @em not associated with a single activity.
  *
- * @em Example:   Every second, the node reports its average processor load, maximum memory usage
- *                and total idle time to SIOX.
+ * @em Example:   Every second, the component reports its average processor load,
+ *                maximum memory usage and total idle time to SIOX.
  *
- * @param[in]   unid    The node's @em UNID.
- * @param[in]   mid     The metric's @em MID.
+ * @param[in]   component   The component.
+ * @param[in]   metric     The metric.
  * @param[in]   value   A pointer to the metric's actual value.
  */
-void siox_report(siox_unid unid,  siox_mid  mid, void * value);
+//@test ''%p,%p,%p'' component,metric,value
+void siox_report(siox_component * component,  siox_metric * metric, void * value);
 
 /**@}*/
 
@@ -240,9 +312,9 @@ void siox_report(siox_unid unid,  siox_mid  mid, void * value);
  * <ul>
  * <li>On caller's side:</li>
  * <ol>
- * <li>Open attribute list and indicate target via siox_describe_remote_call_begin().</li>
- * <li>Report attributes to be passed via siox_describe_remote_call_attribute().</li>
- * <li>Close attribute list via siox_describe_remote_call_end().</li>
+ * <li>Open attribute list and indicate target via siox_remote_call_start().</li>
+ * <li>Report attributes to be passed via siox_remote_call_attribute().</li>
+ * <li>Close attribute list via siox_remote_call_execute().</li>
  * <li>Call callee.</li>
  * </ol>
  * <li>On callee's side:</li>
@@ -257,109 +329,103 @@ void siox_report(siox_unid unid,  siox_mid  mid, void * value);
 /**
  * Open attribute list for a remote call, indicate its target and receive @em RCID.
  *
- * @param[in]   aid           The current activity's @em AID.
- * @param[in]   target_hwid   The target node's @em HardwareID (e.g. „Blizzard Node 5“ or the MacID
+ * @param[in]   component     The component.
+ * @param[in]   target_hwid   The target component's @em HardwareID (e.g. „Blizzard Node 5“ or the MacID
  *                            of an NAS hard drive), if known; otherwise, @c NULL.
- * @param[in]   target_swid   The target node's @em SoftwareID (e.g. „MPI“ oder „POSIX“),
+ * @param[in]   target_swid   The target component's @em SoftwareID (e.g. „MPI“ oder „POSIX“),
  *                            if known; otherwise, @c NULL.
- * @param[in]   target_iid    The target node's @em InstanceID (according to node type,
+ * @param[in]   target_iid    The target component's @em InstanceID (according to component type,
  *                            e.g. the ProcessID of a Thread or the IP address and Port
  *                            of a server cache), if known; otherwise, @c NULL.
  *
  * @return                    A fresh @em RCID to be used in all the remote call's
  *                            future communications with SIOX.
  */
-siox_rcid siox_describe_remote_call_start(siox_aid      aid,
-                                          const char *  target_hwid, 
-                                          const char *  target_swid,
-                                          const char *  target_iid);
+//@test ''%p,%s-%s-%s'' component,target_hwid,target_swid,target_iid
+siox_remote_call * siox_remote_call_start(siox_component *  component,
+                                          const char *      target_hwid,
+                                          const char *      target_swid,
+                                          const char *      target_iid);
 
 /**
  * Report an attribute to be sent via a remote call.
  *
- * @param[in]   rcid    The remote call's @em RCID.
- * @param[in]   dtid    The attribute's @em DTID.
- * @param[in]   value   The attribute's actual value.
+ * @param[in]   remote_call    The remote call.
+ * @param[in]   attribute   The attribute.
+ * @param[in]   value       A pointer to the attribute's value.
  */
-void siox_remote_call_attribute(siox_rcid rcid, siox_dtid dtid, void * value);
+//@test ''%p,%p,%p'' remote_call,attribute,value
+void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, void * value);
 
 /**
  * Close attribute list for a remote call.
+ * This is necessary as there may be various remote calls originating from a single activity.
  *
- * @param[in]   rcid    The remote call's @em RCID.
+ * @param[in]   remote_call    The remote call.
  */
-void siox_describe_remote_call_end(siox_rcid  rcid);
+//@test ''%p'' remote_call
+void siox_remote_call_execute(siox_remote_call * remote_call);
 
 /**
  * Report the reception of an attribute via a remote call.
+ * While during a single activity, many remote calls may be sent, only one (the one initiating
+ * the current function invocation) may be received. Hence, on the callee's side, the delimiting
+ * functions siox_remote_call_start() and siox_remote_call_execute() are not needed.
  *
- * @param[in]   aid     The current activity's @em AID.
- * @param[in]   dtid    The attribute's @em DTID.
- * @param[in]   value   The attribute's actual value.
+ * @param[in]   component   The component.
+ * @param[in]   attribute   The attribute.
+ * @param[in]   value       A pointer to the attribute's value.
  */
-void siox_remote_call_receive(siox_aid aid, siox_dtid dtid, void * value);
+//@test ''%p,%p,%p'' component,attribute,value
+void siox_remote_call_received(siox_component * component, siox_attribute * attribute, void * value);
 
 /**@}*/
 
 
 /**
- * @name Accessing the Ontology
+ * Connect to a SIOX ontology.
+ *
+ * In SIOX, details about any metrics are held in an ontology.
+ * The details about the ontology (such as storage location) will be taken from a
+ * configuration file.
  */
-/**@{*/
+//@test
+siox_ontology * siox_ontology_connect();
 
 /**
- * Set the ontology to be used.
- * This function has to be called before any functions using the ontology, such as all
- * siox_register_...() calls.
- * Omitting it will result in SIOX accessing the default ontology.
+ * Register a metric with SIOX.
  *
- * @param[in]   name    The name of the ontology to be used.
+ * If no metric with the name given is found in the ontology, a new entry will be created.
+ * If a metric with the same name but inconsistent data is found, @c NULL will be returned.
  *
- * @returns             @c true, if the ontology was set successfully; @c false, otherwise.
- */
-bool siox_set_ontology( const char * name );
-
-/**
- * Find the @em DTID for the data type with the name given.
- * If it already exists in the ontology (only the name is checked to test for this!), return its @em DTID;
- * otherwise, create it and return the fresh @em DTID.
- *
- * @param[in]   name        The data type's unique name.
- * @param[in]   storage     The minimum storage type required to store data of the data type.
- *                          This type will also to be assumed for type casts!
- *
- * @returns                 The @em DTID of the data type.
- */
-siox_dtid siox_register_datatype( const char * name, enum siox_ont_storage_type storage );
-
-/**
- * Prepare SIOX to treat a given datatype as a descriptor.
- *
- * Descriptors are attributes, often parameters passed in a call, that identify entities on the
- * data path through the I/O stack, helping SIOX to reconstruct causal chains and dependencies.
- * Examples for descriptors are file names, file handles and logical block addresses.
- *
- * @param[in]   dtid            The @em DTID of the datatype concerned.
- */
-void siox_register_datatype_as_descriptor(siox_dtid dtid);
-
-/**
- * Find the @em MID for the metric with the name given.
- * If it already exists in the ontology (only the name is checked to test for this!), return its @em MID;
- * otherwise, create it and return the fresh @em MID.
- *
- * @param[in]   name        The metric's unique name.
+ * @param[in]   ontology    The ontology.
+ * @param[in]   name        The metric's full qualified name.
  * @param[in]   unit        The unit used to measure values in the metric.
  * @param[in]   storage     The minimum storage type required to store data of the metric.
  *                          This type will also be assumed for type casts!
  * @param[in]   scope       The way in which the data collected was derived.
  *
- * @returns                 The @em MID of the metric.
+ * @returns                 The @em siox_metric for the metric or NULL, if the data given
+ *                          is inconsistent with an exisiting metric of the same name..
  */
-siox_mid siox_register_metric( const char *                 name,
-                               enum siox_ont_unit_type      unit,
-                               enum siox_ont_storage_type   storage,
-                               enum siox_ont_scope_type     scope );
+//@test ''%p,%s,%s,%d,%d'' ontology,name,unit,storage,scope
+siox_metric * siox_ontology_register_metric(siox_ontology *             ontology,
+                                            const char *                name,
+                                            const char *                unit,
+                                            enum siox_ont_storage_type  storage,
+                                            enum siox_ont_scope_type    scope );
+
+/**
+ * Retrieve a metric by its name.
+ *
+ * @param[in]   ontology    The ontology.
+ * @param[in]   name        The metric's full qualified name.
+ *
+ * @returns                 The @em siox_metric with the name given or NULL, if no such metric
+ *                          could be found.
+ */
+//@test ''%p,%s'' ontology,name
+siox_metric * siox_ontology_find_metric_by_name( siox_ontology * ontology, const char * name);
 
 /**@}*/
 

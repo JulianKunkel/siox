@@ -7,8 +7,8 @@ template = {
 # SWID: The name (software id) for this component
 'component': {
 	'variables': 'SWID',
-	'global': '''siox_component global_component;
-				 siox_ontology global_ontology;
+	'global': '''siox_component * global_component;
+				 siox_ontology * global_ontology;
                  char global_pid;
                  char hostname[1024];
 				''',
@@ -34,7 +34,7 @@ template = {
 #			  attribute
 'register_attribute': {
 	'variables': 'AttributeVariable Name MinStorage',
-	'global': '''siox_attribute %(AttributeVariable)s;''',
+	'global': '''siox_attribute * %(AttributeVariable)s;''',
 	'init': '''%(AttributeVariable)s = siox_attribute_register( %(Name)s, %(MinStorage)s );''',
     'before': '''''',
 	'after': '',
@@ -53,7 +53,7 @@ template = {
 #			  descriptor
 'register_descriptor': {
 	'variables': 'DescriptorVariable Name MinStorage',
-	'global': '''siox_attribute %(DescriptorVariable)s;''',
+	'global': '''siox_attribute * %(DescriptorVariable)s;''',
 	'init': '''%(DescriptorVariable)s = siox_attribute_register( %(Name)s, %(MinStorage)s );
 			   siox_component_register_descriptor( global_component, %(DescriptorVariable)s );''',
 
@@ -87,7 +87,7 @@ template = {
 # MapName: The name for this map; defaults to activityHashTable_str
 'horizontal_map_create_str': {
 	'variables': 'MapName=activityHashTable_str',
-	'global': '''GHashTable *%(MapName)s;''',
+	'global': '''GHashTable * %(MapName)s;''',
     'init': '''%(MapName)s = g_hash_table_new(g_str_hash, g_str_equal);''',
 	'before': '',
 	'after': '',
@@ -104,7 +104,7 @@ template = {
 # MapName: The name for this map; defaults to activityHashTable_int
 'horizontal_map_create_int': {
 	'variables': 'MapName=activityHashTable_int',
-	'global': '''GHashTable *%(MapName)s;''',
+	'global': '''GHashTable * %(MapName)s;''',
     'init': '''%(MapName)s = g_hash_table_new(g_direct_hash, g_direct_equal);''',
 	'before': '',
 	'after': '',
@@ -122,7 +122,7 @@ template = {
 # ScopeType: SIOX scope-type for the metric
 'register_metric': {
 	'variables': 'MetricVariable Name UnitType StorageType ScopeType',
-	'global': '''siox_metric %(MetricVariable)s;''',
+	'global': '''siox_metric * %(MetricVariable)s;''',
 	'init': '''%(MetricVariable)s = siox_ontology_register_metric( global_ontology, %(Name)s, %(UnitType)s, %(StorageType)s, %(ScopeType)s );''',
     'before': '''''',
 	'after': '',
@@ -143,13 +143,12 @@ template = {
 	'variables': 'Name=__FUNCTION__ Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_activity *%(Activity)s = (siox_activity*) malloc(sizeof(siox_activity));
-    			 *%(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
-	'after': '''siox_stop_activity( *%(Activity)s, %(TimeStop)s );''',
-	'cleanup': 'siox_end_activity( *%(Activity)s );',
+    'before': '''siox_activity * %(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
+	'after': '''siox_activity_stop( %(Activity)s, %(TimeStop)s );''',
+	'cleanup': 'siox_activity_end( %(Activity)s );',
 	'final': ''
 },
-# activity_set_attribute
+# activity_attribute
 #
 # Tie an attibute to an activity.
 # Attributes for activities are either its parameters or other values computed from them.
@@ -158,7 +157,7 @@ template = {
 # Attribute: The attribute type to be reported
 # Value: The actual value to be reported
 # Activity: The activity; defaults to sioxActivity
-'activity_set_attribute': {
+'activity_attribute': {
 	'variables': 'Attribute Value Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
@@ -167,7 +166,7 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-# activity_set_descriptor
+# activity_descriptor
 #
 # Tie an attibute serving as a descriptor to an activity.
 # Attributes for activities are either its parameters or other values computed from them.
@@ -176,7 +175,7 @@ template = {
 # Attribute: The attribute type to be reported
 # Value: The actual value to be reported
 # Activity: The activity; defaults to sioxActivity
-'activity_set_attribute': {
+'activity_descriptor': {
 	'variables': 'Attribute Value Activity=sioxActivity',
 	'global': '''''',
 	'init': '''siox_component_register_descriptor( global_component, %(Attribute)s );''',
@@ -212,8 +211,8 @@ template = {
 # Key: The descriptor linking the activity to others, represented as a string
 # MapName: The map to be used; defaults to activityHashTable_int
 # Activity: The activity; defaults to sioxActivity
-'horizontal_map_put_int': {
-	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
+'horizontal_map_put_str': {
+	'variables': 'Key MapName=activityHashTable_str Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
 	'before': '',
@@ -230,7 +229,7 @@ template = {
 #
 # Key: The descriptor linking the activity to others, represented as an int
 # MapName: The map to be used; defaults to activityHashTable_int
-'horizontal_map_put_int': {
+'horizontal_map_remove_int': {
 	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
@@ -248,32 +247,12 @@ template = {
 #
 # Key: The descriptor linking the activity to others, represented as an int
 # MapName: The map to be used; defaults to activityHashTable_int
-'horizontal_map_put_int': {
-	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
+'horizontal_map_remove_str': {
+	'variables': 'Key MapName=activityHashTable_str Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
 	'before': '',
     'after': '''g_hash_table_remove( %(MapName)s, %(Key)s );''',
-	'cleanup': '',
-	'final': ''
-},
-# activity_link_str
-#
-# Horizontally links the current activity (started with activity) to another one via
-# a desctriptor represented as a string.
-#
-# Key: A descriptor linking both activities together (such as a file name),
-#	   in string form
-# Activity: Activity to be linked; defaults to sioxActivity
-'activity_link_str': {
-	'variables': 'Key MapName=activityHashTable_str Activity=sioxActivity',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': '''g_hash_table_insert( %(MapName)s, g_strdup_printf("%i", %(Key)s), (gpointer) %(Activity)s );
-    			siox_Activity Parent = *(siox_Activity*) g_hash_table_lookup( %(MapName)s, %(Key)s );
-    			siox_activity_link_to_parent( *%(Activity)s, Parent );
-			  ''',
 	'cleanup': '',
 	'final': ''
 },
@@ -290,9 +269,27 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), (gpointer) %(Activity)s );
-    			siox_Activity Parent = *(siox_Activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
-    			siox_activity_link_to_parent( *%(Activity)s, Parent );
+	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
+    			siox_activity_link_to_parent( %(Activity)s, Parent );
+			  ''',
+	'cleanup': '',
+	'final': ''
+},
+# activity_link_str
+#
+# Horizontally links the current activity (started with activity) to another one via
+# a desctriptor represented as a string.
+#
+# Key: A descriptor linking both activities together (such as a file name),
+#	   in string form
+# Activity: Activity to be linked; defaults to sioxActivity
+'activity_link_str': {
+	'variables': 'Key MapName=activityHashTable_str Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, %(Key)s );
+    			siox_activity_link_to_parent( %(Activity)s, Parent );
 			  ''',
 	'cleanup': '',
 	'final': ''
@@ -305,11 +302,11 @@ template = {
 # Value: The value to be reported
 # Activity: The activity; defaults to sioxActivity
 'activity_report': {
-	'variables': 'Metric Value Activity',
+	'variables': 'Metric Value Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_report( %(Activity)s, %(Metric)s, (void *) &%(Value)s );',
+	'after': 'siox_activity_report( %(Activity)s, %(Metric)s, (void *) &%(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -357,8 +354,8 @@ template = {
 # TargetIID: The instance id of the target machine
 'remote_call_start': {
 	'variables': 'RemoteCallVariable TargetHWID TargetSWID TargetIID',
-	'global': '''siox_remote_call %(RemoteCallVariable)s;\n''',
-	'init': '''''',
+	'global': '''''',
+	'init': '''siox_remote_call * %(RemoteCallVariable)s;\n''',
     'before': '''%(RemoteCallVariable)s = siox_remote_call_start( global_component, %(TargetHWID)s, %(TargetSWID)s, %(TargetIID)s );''',
 	'after': '',
 	'cleanup': '',
@@ -419,9 +416,9 @@ template = {
 # Activity: The activity; defaults to sioxActivity
 'remote_call_received': {
 	'variables': 'Attribute Value Activity=sioxActivity',
-	'global': '''siox_remote_call %(RemoteCall)s;\n''',
+	'global': '''''',
 	'init': '''''',
-    'before': '''siox_remote_call_received( %(RemoteCall)s, %(Attribute)s, (void *) &%(Value)s );''',
+    'before': '''siox_remote_call_received( global_component, %(Attribute)s, (void *) &%(Value)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -453,6 +450,20 @@ template = {
 	'after': '%(PROGRAMCODE)s',
 	'cleanup': '',
 	'final': ''
+},
+# test
+#
+# Writes a given message to stdout.
+#
+# Text: The text to print
+'test': {
+    'variables': '''Text="" Text2=""''',
+    'global': '''''',
+    'init': '''''',
+    'before': '''printf("%%s (%(Text)s);\\n", __FUNCTION__, %(Text2)s);''',
+    'after': '',
+    'cleanup': '',
+    'final': ''
 }
 }
 
@@ -466,4 +477,4 @@ forEachAfter = ""
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<stdlib.h>', '<siox-ll.h>', '<stdarg.h>', '<glib.h>']
+includes = ['<stdlib.h>', '<stdio.h>', '<siox-ll.h>', '<stdarg.h>', '<glib.h>']

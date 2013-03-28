@@ -12,6 +12,7 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <errno.h>
 
 /* Set the interface name for the library*/
 //@component "POSIX"
@@ -23,8 +24,8 @@
 //@register_descriptor fileHandle "POSIX File Handle" SIOX_STORAGE_64_BIT_INTEGER
 
 /* Register the metrics to grab the performance data */
-//@register_metric bytesWritten "/Throughput/Write" SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
-//@register_metric bytesRead "/Troughput/Read" SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
+//@register_metric bytesWritten "/Throughput/Write" "/Data/Volume/Bytes" SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
+//@register_metric bytesRead "/Troughput/Read" "/Data/Volume/Bytes" SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
 
 /* Prepare a (hash) map to link descriptors (in this case, of type int) to their activities.
    This is necessary for the horizontal linking of activities.
@@ -39,31 +40,31 @@ End of global part
 
 //@activity
 //@activity_attribute fileName pathname
-//@horizontal_map_put_int returnValue
-//@error 'returnValue < 0' errno
+//@horizontal_map_put_int ret
+//@error ''ret < 0'' errno
 int open(const char *pathname, int flags, ...);
 
 //@activity
-//@horizontal_map_put_int returnValue
-//@error 'returnValue < 0' errno
+//@horizontal_map_put_int ret
+//@error ''ret < 0'' errno
 int creat(const char *pathname, mode_t mode);
 
 //@activity
-//@horizontal_map_remove fd
-//@error 'returnValue < 0' errno
+//@horizontal_map_remove_int fd
+/*@error 'ret < 0' ret*/
 int close(int fd);
 
 //@activity
 //@activity_attribute bytesToWrite count
-//@activity_report bytesWritten returnValue
-//@link_activity_int fd
-//@error 'returnValue < 0' errno
+//@activity_report bytesWritten ret
+//@activity_link_int fd
+//@error ''ret < 0'' errno
 ssize_t write(int fd, const void *buf, size_t count);
 
 //@activity
 //@activity_attribute bytesToRead count
-//@activity_report bytesRead returnValue
-//@error 'returnValue < 0' errno
+//@activity_report bytesRead ret
+//@error ''ret < 0'' errno
 ssize_t read(int fd, void *buf, size_t count);
 
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
@@ -110,4 +111,4 @@ int madvise (void *addr, size_t length, int advice);
 int posix_fadvise (int fd, __off_t offset, __off_t len, int advise);
 
 /* Map-Kette um ein Glied (fd->ret) verlängern? Oder alles, was (->fd) mapt, ebenfalls (->ret) mappen? */
-int dup_fd (int fd);
+//int dup_fd (int fd);
