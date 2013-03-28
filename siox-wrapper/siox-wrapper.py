@@ -35,16 +35,20 @@ libraries, by calling trace functions before and after the actual library call.'
                 help='''Generate a clean header file, which can be instrumented,
 from a other header file.''')
 
-        argParser.add_argument('--cpp-args', '-a', action='store', nargs=1, default=[],
-        dest='cppArgs', help='''Pass arguments to the cpp.''')
+        #argParser.add_argument('--cpp-args', '-a', action='store', nargs=1, default=[],
+        #dest='cppArgs', help='''Pass arguments to the cpp.''')
 
         argParser.add_argument('--style', '-s',
         action='store', default='dlsym', dest='style',
-        choices=['wrap', 'dlsym'],
+        choices=['wrap', 'dlsym', 'plain'],
         help='''Choose which output-style to use.''')
 
         argParser.add_argument('inputFile', default=None,
         help='Source or header file to parse.')
+
+        argParser.add_argument('--debug', '-d',
+            action='store_true', dest='debug',
+            help='Debug every line')
 
         argParser.add_argument('--template', '-t',
             action='store', default='./template.py', dest='template',
@@ -61,7 +65,7 @@ from a other header file.''')
 
 	# update the datastructures for the templates
 
-	for t in template.keys():	
+	for t in template.keys():
 		entries = template[t]
 		if not "global" in entries:
 			entries["global"] = ""
@@ -76,12 +80,12 @@ from a other header file.''')
 			   if "=" in v:
 				# we have a default
 				(name, default) = v.split("=")
-				processedVars.append(name) 
+				processedVars.append(name)
 				entries["variablesDefaults"][name] = default
 			   else:
 			        processedVars.append(v)
 			entries["variables"] =  processedVars
-			
+
 		if not "init" in entries:
 			entries["init"] = ""
 		if not "before" in entries:
@@ -92,7 +96,7 @@ from a other header file.''')
 			entries["cleanup"] = ""
 		if not "final" in entries:
 			entries["final"] = ""
-	
+
         return args
 
 ##
@@ -336,7 +340,7 @@ class FunctionParser():
     def __init__(self, options):
 
         self.inputFile = options.inputFile
-        self.cppArgs = options.cppArgs
+        #self.cppArgs = options.cppArgs
         self.blankHeader = options.blankHeader
 
         ## This regular expression searches for the general function definition.
@@ -418,18 +422,17 @@ class FunctionParser():
             # If the C source code should be generated split the string into a
             # list of parameters and extract the type and name of the parameter.
             else:
-                parameterList = parameterString.split(',')
+                parameterList = parameterString.strip().split(',')
 
                 for parameter in parameterList:
                     parameterObject = Parameter()
                     parameter = parameter.strip()
 
-                    if parameter in ('void', '...'):
+                    if parameter in ('void', '...', ''):
                         parameterName = ''
                         parameterType = parameter
 
                     else:
-
                         parameterMatch = self.regexParamterDefinition.match(parameter)
                         parameterType = parameterMatch.group(1)
                         parameterName = parameterMatch.group(2)
@@ -462,17 +465,8 @@ class FunctionParser():
 
         string = ''
 
-        cppCommand = ['cpp']
-        cppCommand.extend(self.cppArgs)
-        cppCommand.append(self.inputFile)
-        cpp = subprocess.Popen(cppCommand,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        string, error = cpp.communicate()
-
-        if error != '':
-            print('ERROR: CPP error:\n', error, file=sys.stderr)
-            sys.exit(1)
-
+        fh = open(self.inputFile)
+        string = fh.read()
         functionList = self.parse(string)
         return functionList
 
@@ -499,7 +493,7 @@ class CommandParser():
     def __init__(self, options):
         self.inputFile = options.inputFile
         ## This regular expression matches the instructions which begin with //
-        self.commandRegex = re.compile('^\s*//\s*@(.+?)\s+(.*)')
+        self.commandRegex = re.compile('^\s*//\s*@(\w+)\s*(.*)')
         self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\'/]+)\s*')
         self.options = options
 
@@ -521,7 +515,7 @@ class CommandParser():
 
 	# create default values for templates.
 
-	
+
         availableCommands = template.keys()
         input = open(self.inputFile, 'r')
         inputString = input.read()
@@ -529,6 +523,7 @@ class CommandParser():
         commandArgs = ''
         templateList = []
         currentFunction = ''
+        currentFunctionList = []
         functionList = []
         final = False
         init = False
@@ -553,6 +548,9 @@ class CommandParser():
 
 
             match = self.commandRegex.match(inputLineList[i])
+
+            if self.options.debug:
+	            print("<< " + inputLineList[i])
             if (match):
                 # Search for init or final sections to define init or final
                 # functions
@@ -602,19 +600,18 @@ class CommandParser():
 
                 currentFunction = currentFunctionList[0]
                 #If a function is found append the found instructions to the function object.
-
                 if commandName != '':
                     templateList.append(Template(template[commandName], commandName, commandArgs))
                     currentFunction.usedTemplateList = templateList[:]
                     currentFunction.init = init
                     currentFunction.final = final
                     functionList.extend(currentFunctionList)
+                    currentFunctionList = []
                     templateList = []
                     commandName = ''
                     commandArgs = ''
                     final = False
                     init = False
-
         return functionList
 
 
@@ -807,10 +804,13 @@ class Writer():
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
                 print('\tva_list args;', file=output)
-                print('\tva_start(args, %s);' % function.parameterList[-2].name, 
-                    file = output)
+                print('\tva_start(args, %s);' % function.parameterList[-2].name,
+                        file=output)
+                print('\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
+                    function.parameterList[-2].type), file=output)
+
                 # set the name to args
-                function.parameterList[-1].name = "args"
+                function.parameterList[-1].name = "val"
 
             # a variable to save the return-value
             returnType = function.type
@@ -864,6 +864,75 @@ class Writer():
 
         print(gccHelper)
 
+        # close the file
+        output.close()
+
+    ##
+    # @brief Write a source file
+    #
+    # @param functions A list of function-objects to write
+    def sourceFilePlain(self, functionList):
+        # open the output file for writing
+        output = open(self.outputFile, 'w')
+
+        # write all needed includes
+        for match in includes:
+            print('#include ', match, end='\n', file=output)
+        print('\n', file=output)
+
+        # write all global-Templates
+        for function in functionList:
+            for templ in function.usedTemplateList:
+                if templ.output('global') != '':
+                    print(templ.output('global'), file=output)
+        print("", file=output)
+
+        # write all functions-bodies
+        for function in functionList:
+            # write function signature
+
+            print(function.getDefinition(),
+                    end='\n{\n', sep='', file=output)
+
+            # look for va_lists because they need special treament
+            if function.parameterList[-1].type == "...":
+                print('\tva_list args;', file=output)
+                print('\tva_start(args, %s);' % function.parameterList[-2].name,
+                    file = output)
+                print('\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
+                    function.parameterList[-2].type), file=output)
+                # set the name to args
+                function.parameterList[-1].name = "val"
+
+            # a variable to save the return-value
+            returnType = function.type
+
+            if returnType != "void":
+                print('\t', returnType, ' ret;', end='\n', sep='',
+                        file=output)
+
+            # write the before-template for this function
+            for templ in function.usedTemplateList:
+                outputString = templ.output('before').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+
+            # write all after-templates for this function
+            for templ in function.usedTemplateList:
+                outputString = templ.output('after').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+
+            # look for va_lists because they need special treament
+            if function.parameterList[-1].type == "...":
+                print("\tva_end(args);", file=output)
+
+            # write the return statement and close the function
+            if returnType != "void":
+                print('\treturn ret;\n}', end='\n\n', file=output)
+
+            else:
+                print('\n}', end='\n\n', file=output)
         # close the file
         output.close()
 
@@ -929,10 +998,12 @@ class Writer():
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
                 print('\tva_list args;', file=output)
-                print('\tva_start(args, %s);' % function.parameterList[-2].name, 
+                print('\tva_start(args, %s);' % function.parameterList[-2].name,
                     file = output)
+                print('\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
+                    function.parameterList[-2].type), file=output)
                 # set the name to args
-                function.parameterList[-1].name = "args"
+                function.parameterList[-1].name = "val"
 
             # a variable to save the return-value
             returnType = function.type
@@ -1000,12 +1071,14 @@ def main():
 
     else:
         commandParser = CommandParser(options)
-	
+
         functions = commandParser.parse()
         if options.style == "wrap":
             outputWriter.sourceFileWrap(functions)
-        else:
+        elif options.style == "dlsym":
             outputWriter.sourceFileDLSym(functions)
+        else:
+            outputWriter.sourceFilePlain(functions)
 
 if __name__ == '__main__':
     main()
