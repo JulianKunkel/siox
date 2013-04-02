@@ -451,6 +451,26 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+# activity with hints
+#
+# Starts (at the beginning) and stops (at the end) a new
+# activity in the current function and transfer the MPI hints to SIOX activity
+# Any metrics resulting from the activity still need to be reported via activity_report!
+#
+# Name: Short description of the activity
+# Activity: Name of the variable to store the activity in; defaults to sioxActivity
+# TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
+# TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
+'activity_with_hints': {
+	'variables': 'Name=__FUNCTION__ Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
+	'global': '''''',
+	'init': '''''',
+	'before': '''siox_activity * %(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
+	'after': '''siox_activity_tranfer_hints(%(Activity)s, info);
+	siox_activity_stop( %(Activity)s, %(TimeStop)s );''',
+	'cleanup': 'siox_activity_end( %(Activity)s );',
+	'final': ''
+},
 # test
 #
 # Writes a given message to stdout.
