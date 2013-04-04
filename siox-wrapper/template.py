@@ -140,7 +140,7 @@ template = {
 # TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
 # TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
 'activity': {
-	'variables': 'Name=__FUNCTION__ Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
+	'variables': 'Name=G_STRFUNC Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
 	'global': '''''',
 	'init': '''''',
     'before': '''siox_activity * %(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
@@ -462,7 +462,7 @@ template = {
 # TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
 # TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
 'activity_with_hints': {
-	'variables': 'Name=__FUNCTION__ Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
+	'variables': 'Name=G_STRFUNC Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
 	'global': '''''',
 	'init': '''''',
 	'before': '''siox_activity * %(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
@@ -480,7 +480,7 @@ template = {
     'variables': '''Text="" Text2=""''',
     'global': '''''',
     'init': '''''',
-    'before': '''printf("%%s (%(Text)s);\\n", __FUNCTION__, %(Text2)s);''',
+    'before': '''printf("%%s (%(Text)s);\\n", G_STRFUNC, %(Text2)s);''',
     'after': '',
     'cleanup': '',
     'final': ''
