@@ -1,25 +1,13 @@
-extern "C" {
-
-get_instance_<component>_<interface>
-
-get_instance_comm_server()
-get_instance_comm_client()
-
-}
-
-
-(Factory)
-
-
-
-directory structure:
-
-Public interfaces:
+Public interfaces are placed under:
 include/<package>/<component>/<interface>.h[pp]
 include/siox-ll/monitoring.h,optimization.h
 
-All implementations are derived from:
+All component implementations are derived from:
 include/core/component/component.hpp
+
+Rationale:
+* All these files offer global and mandatory interfaces for all implementations.
+* These files should be installed globally to allow everybody to write a new implementation against these interfaces.
 
 
 Implementations:
@@ -27,20 +15,4 @@ Implementations:
 <package>/<component>/<implementation>/module.c
 <package>/<component>/<implementation>/<implementation>_<interface>.[c|cpp]
 <package>/<component>/<implementation>/test/test.cpp
-
-
-core/comm/tcp/tcp_client.cpp
-core/comm/tcp/tcp_server.cpp
-
-
-
-
-
-component.h
-init(options)
-get_options()
-shutdown()
-
-uncore.h
-set_logging_target(logtarget)
 
