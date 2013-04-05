@@ -19,10 +19,11 @@ def __recurse(ctx):
 
 def options(opt):
 	opt.load('compiler_cxx waf_unit_test')
+	opt.load('boost')
 
 	#bo = opt.add_option_group("Build options")
-	opt.add_option('--debug', action='store_true', default=False, dest='debug', help="Enable debugging mode")
-	opt.load('boost')
+	opt.add_option('--production', action='store_true', default=False, dest='production', help="Disable debugging mode")
+	opt.add_option('--doc', action='store_true', default=False, dest='debug', help="Enable debugging mode")
 
 	__recurse(opt)
 	
@@ -31,24 +32,31 @@ def configure(conf):
         conf.load('waf_unit_test')
 	conf.load('boost')
 
+	conf.find_program('doxygen', var='DOXYGEN', mandatory=False)
+	if not "DOXYGEN" in conf.env:
+		print "\tI cannot create the API documentation, but please proceed!"
+	
+	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
+	conf.check_cfg(package='gmodule-2.0', use="GLIB", uselib_store='GMODULES',   args=['--cflags', '--libs'], mandatory=True)
+
         conf.check_boost(lib='system thread-mt')
 
 
 	workDir = conf.path.abspath()
 	conf.env.INCLUDES = [workDir + '/include' ]
 
-        if conf.options.debug:
-		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall'] 
-	else:
+        if conf.options.production:
 	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall'] 
+	else:
+		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall'] 
 
-	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
-	conf.check_cfg(package='gmodule-2.0', use="GLIB", uselib_store='GMODULES',   args=['--cflags', '--libs'], mandatory=True)
 
 	print ""
 	__recurse(conf)
 	print "Debugging:                               : %s" % conf.options.debug
 
+def doc(ctx):
+	ctx.exec_command("doxygen")
 	
 def build(bld):
 	#__recurse(bld)
