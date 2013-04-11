@@ -34,7 +34,7 @@ int MPI_Init(int *argc, char ***argv);
 //@error ''ret!=0'' ret
 int MPI_Finalize(void);
 
-//@activity_with_hints
+//@activity_with_hints hints_name hints_value
 //@activity_link_int fh
 //@error ''ret!=0'' ret
 /*
@@ -83,7 +83,7 @@ int MPI_File_open(MPI_Comm comm, char *filename, int amode, MPI_Info info, MPI_F
 //@horizontal_map_remove_int fh
 //@error ''ret!=0'' ret
 int MPI_File_close(MPI_File *fh);
-//@activity
+//@activity_with_hints hints_name hints_value
 //@horizontal_map_put_str filename
 //@error ''ret!=0'' ret
 int MPI_File_delete(char *filename, MPI_Info info);
@@ -107,7 +107,7 @@ int MPI_File_get_group(MPI_File fh, MPI_Group *group);
 //@activity_link_int fh
 //@error ''ret!=0'' ret
 int MPI_File_get_amode(MPI_File fh, int *amode);
-//@activity_with_hints
+//@activity
 //@activity_link_int fh
 //@activity_link_str info
 //@error ''ret!=0'' ret
@@ -154,7 +154,7 @@ int MPI_File_get_amode(MPI_File fh, int *amode);
 	- filename: Access this hint to get the name of the file.
 */
 int MPI_File_set_info(MPI_File fh, MPI_Info info);
-//@activity_with_hints
+//@activity
 //@activity_link_int fh
 //@activity_link_str info
 //@error ''ret!=0'' ret
@@ -201,7 +201,7 @@ int MPI_File_set_info(MPI_File fh, MPI_Info info);
 	- filename: Access this hint to get the name of the file.
 */
 int MPI_File_get_info(MPI_File fh, MPI_Info *info_used);
-//@activity_with_hints
+//@activity_with_hints hints_name hints_value
 //@activity_link_int fh
 //@error ''ret!=0'' ret
 /*
@@ -408,7 +408,7 @@ int MPI_File_get_atomicity(MPI_File fh, int *flag);
 int MPI_File_sync(MPI_File fh);
 
 
-//@activity_with_hints
+//@activity
 //@horizontal_map_create_str info
 //@error ''ret!=0'' ret
 //TODO Shall we define an array for info?
@@ -417,7 +417,7 @@ int MPI_File_sync(MPI_File fh);
 	object contains no key/value pairs.
 */
 int MPI_Info_create(MPI_Info *info);
-//@activity_with_hints
+//@activity
 //@horizontal_map_remove_str info
 //@error ''ret!=0'' ret
 //TODO Shall we define an array for info?
@@ -426,7 +426,7 @@ int MPI_Info_create(MPI_Info *info);
 	defined in info, the call raises an error of class MPI_ERR_INFO_NOKEY.
 */
 int MPI_Info_delete(MPI_Info info, char *key);
-//@activity_with_hints
+//@activity
 //@activity_link_str info
 //@error ''ret!=0'' ret
 //TODO Shall we define an array for info?
@@ -436,7 +436,7 @@ int MPI_Info_delete(MPI_Info info, char *key);
 */
 int MPI_Info_dup(MPI_Info info, MPI_Info *newinfo);
 
-//@activity_with_hints
+//@activity
 //@horizontal_map_remove_str info
 //@error ''ret!=0'' ret
 //TODO Shall we define an array for info?
@@ -444,7 +444,7 @@ int MPI_Info_dup(MPI_Info info, MPI_Info *newinfo);
     MPI_Info_free frees info and sets it to MPI_INFO_NULL.
 */
 int MPI_Info_free(MPI_Info *info);
-//@activity_with_hints
+//@activity
 //@activity_link_str info
 //@error ''ret!=0'' ret
 //TODO Shall we define an array for info?
@@ -460,7 +460,7 @@ int MPI_Info_free(MPI_Info *info);
     If key is larger than MPI_MAX_INFO_KEY, the call is erroneous.
 */
 int MPI_Info_get(MPI_Info info, char *key, int valuelen, char *value, int *flag);
-//@activity_with_hints
+//@activity
 //@activity_link_str info
 //@error ''ret!=0'' ret
 //TODO Shall we define an array for info?
