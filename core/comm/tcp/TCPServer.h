@@ -1,0 +1,29 @@
+#ifndef TCP_SERVER_H
+#define TCP_SERVER_H
+
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
+#include <syslog.h>
+
+#include "ServiceServer.h"
+#include "TCPConnection.h"
+
+namespace asio = boost::asio;
+
+class TCPServer 
+   : public ServiceServer {
+public:
+	explicit TCPServer(const std::string &address, const std::string &port,
+			   std::size_t worker_pool_size); 
+	
+private:
+	asio::ip::tcp::acceptor acceptor_;
+	TCPConnection_ptr new_connection_;
+
+	void start_accept();
+	void handle_accept(const boost::system::error_code &e);
+};
+
+#endif
+

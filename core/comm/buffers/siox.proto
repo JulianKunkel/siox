@@ -1,0 +1,20 @@
+package siox;
+
+message MessageBuffer {
+
+	enum MessageType {
+		TYPE1 = 0;
+		TYPE2 = 1;
+		TYPE3 = 2;
+	}
+	
+	required MessageType type = 1;
+	optional uint64 unid = 2;
+	optional uint64 aid = 3;
+	optional uint64 paid = 4;
+	optional string comment = 5;
+	repeated string descriptions = 6;
+	repeated uint64 timestamps = 7;
+	
+}
+
