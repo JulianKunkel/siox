@@ -9,7 +9,7 @@ template = {
 	'variables': 'SWID',
 	'global': '''''',
 	'init': '''printf("Registering component with SWID %%s\\n", %(SWID)s);''',
-	'before': '',
+	'before': '''printf("****************STARTING component WRAPPER****************\\n");''',
 	'after': '',
 	'cleanup': '',
 	'final': 'printf("Unregistering component with SWID %%s\\n", %(SWID)s);'
@@ -28,7 +28,7 @@ template = {
 	'variables': 'Name',
 	'global': '''''',
 	'init': '''printf("Registering attribute with attribute's name %%s\\n", %(Name)s);''',
-    'before': '''''',
+	'before': '''printf("****************STARTING register_attribute WRAPPER****************\\n");''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -47,7 +47,7 @@ template = {
 	'variables': 'Name',
 	'global': '''''',
 	'init': '''printf("Registering descriptor with descriptor's name %%s\\n", %(Name)s);''',
-	'before': '''''',
+	'before': '''printf("****************STARTING register_descriptor WRAPPER****************\\n");''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -63,7 +63,7 @@ template = {
 	'variables': 'MapName=activityHashTable_str',
 	'global': '''''',
 	'init': '''printf("Creating hash table of string type with name %%s\\n", "%(MapName)s");''',
-	'before': '',
+	'before': '''printf("****************STARTING horizontal_map_create_str WRAPPER****************\\n");''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -80,7 +80,7 @@ template = {
 	'variables': 'MapName=activityHashTable_int',
 	'global': '''''',
 	'init': '''printf("Creating hash table of int type with name %%s\\n", "%(MapName)s");''',
-	'before': '',
+	'before': '''printf("****************STARTING horizontal_map_create_int WRAPPER****************\\n");''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -98,7 +98,7 @@ template = {
 	'variables': 'RetName Name UnitType StorageType ScopeType',
 	'global': '''''',
 	'init': '''printf("Register Metric %%s with %%s RetName and %%s UnitType and %%s StorageType and %%s ScopeType\\n", %(Name)s, "%(RetName)s", "%(UnitType)s", "%(StorageType)s", "%(ScopeType)s");''',
-	'before': '''''',
+	'before': '''printf("****************STARTING register_metric WRAPPER****************\\n");''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -116,7 +116,7 @@ template = {
 	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-	'before': '',
+	'before': '''printf("****************STARTING horizontal_map_remove_int WRAPPER****************\\n");''',
 	'after': '''printf("Removing hash table with map name %%s of int type. Key is %%s and activity is %%s\\n", "%(MapName)s", "%(Key)s", "%(Activity)s");''',
 	'cleanup': '',
 	'final': ''
@@ -134,7 +134,7 @@ template = {
 	'variables': 'Key MapName=activityHashTable_str Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-	'before': '',
+	'before': '''printf("****************STARTING horizontal_map_remove_str WRAPPER****************\\n");''',
 	'after': '''printf("Removing hash table with map name %%s of string type. Key is %%s and activity is %%s\\n", "%(MapName)s", "%(Key)s", "%(Activity)s");''',
 	'cleanup': '',
 	'final': ''
@@ -153,7 +153,8 @@ template = {
 	'variables': 'AID=aid TimeStart=NULL TimeStop=NULL TimeEnd=NULL Name=__FUNCTION__',
 	'global': '''''',
 	'init': '''''',
-	'before': '''printf("Creating activity %%s with %%s TimeStart and %%s name\\n", "%(AID)s", "%(TimeStart)s", %(Name)s);''',
+	'before': '''printf("****************STARTING activity WRAPPER****************\\n");
+	printf("Creating activity %%s with %%s TimeStart and %%s name\\n", "%(AID)s", "%(TimeStart)s", %(Name)s);''',
 	'after': '''printf("Stoping activity %%s with %%s TimeStop\\n", "%(AID)s", "%(TimeStop)s");''',
 	'cleanup': 'printf("Ending activity %%s with %%s TimeEnd\\n", "%(AID)s", "%(TimeEnd)s");',
 	'final': ''
@@ -170,7 +171,7 @@ template = {
 	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-	'before': '''''',
+	'before': '''printf("****************STARTING activity_link_int WRAPPER****************\\n");''',
 	'after': '''printf("link activity with map name %%s of int type. Key is %%s and activity is %%s\\n", "%(MapName)s", "%(Key)s", "%(Activity)s");''',
 	'cleanup': '',
 	'final': ''
@@ -187,7 +188,7 @@ template = {
 	'variables': 'Key MapName=activityHashTable_str Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-	'before': '''''',
+	'before': '''printf("****************STARTING activity_link_str WRAPPER****************\\n");''',
 	'after': '''printf("Link activity with map name %%s of string type. Key is %%s and activity is %%s\\n", "%(MapName)s", "%(Key)s", "%(Activity)s");''',
 	'cleanup': '',
 	'final': ''
@@ -205,9 +206,9 @@ template = {
 	'variables': 'Condition Error Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-	'before': '''''',
+	'before': '''printf("****************STARTING error WRAPPER****************\\n");''',
 	'after': '''if ( %(Condition)s )
-	printf("ERROR!!");''', 
+	printf("ERROR!!\\n");''', 
 	'cleanup': '',
 	'final': ''
 },
@@ -225,13 +226,14 @@ template = {
 	'variables': 'AID=aid TimeStart=NULL TimeStop=NULL TimeEnd=NULL Name=__FUNCTION__',
 	'global': '''''',
 	'init': '''''',
-	'before': '''printf("Creating activity %%s with %%s TimeStart and %%s name\\n", "%(AID)s", "%(TimeStart)s", %(Name)s);''',
-	'after': '''printf("the __real_MPI_File_get_info() should be called here");
-	printf("TODO: here should be a function to convert the info_used to Attribute:Value tuple in order to transfer the Hints to siox.");
-	printf("TODO: before sending the Hints to siox, a checkout function should be called to filter the duplicated Hints.");
-	printf("TODO: or shall we just leave the checkout to the siox activity?");
-	printf("TODO: set the MPI info as activity attributes");
-	printf("the __real_MPI_Info_free() should be called here");
+	'before': '''printf("****************STARTING activity_with_hints WRAPPER****************\\n");
+	printf("Creating activity %%s with %%s TimeStart and %%s name\\n", "%(AID)s", "%(TimeStart)s", %(Name)s);''',
+	'after': '''printf("the __real_MPI_File_get_info() should be called here\\n");
+	printf("TODO: here should be a function to convert the info_used to Attribute:Value tuple in order to transfer the Hints to siox.\\n");
+	printf("TODO: before sending the Hints to siox, a checkout function should be called to filter the duplicated Hints.\\n");
+	printf("TODO: or shall we just leave the checkout to the siox activity?\\n");
+	printf("TODO: set the MPI info as activity attributes\\n");
+	printf("the __real_MPI_Info_free() should be called here\\n");
 	printf("Stoping activity %%s with %%s TimeStop\\n", "%(AID)s", "%(TimeStop)s");''',
 	'cleanup': 'printf("Ending activity %%s with %%s TimeEnd\\n", "%(AID)s", "%(TimeEnd)s");',
 	'final': ''

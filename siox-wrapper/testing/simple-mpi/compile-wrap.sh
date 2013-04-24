@@ -14,7 +14,7 @@ mpicc test.o mpi-wrapper.o -o test_wrap -Wl,--wrap="MPI_Init",--wrap="MPI_File_o
 
 printf '\n---\n\n'
 echo 'Executing test_wrap'
-mpirun -np 4 test_wrap
+mpirun -np 1 test_wrap
 
 #printf '\n---\n\n'
 #echo -n 'Cat tmp_posix_test: '
