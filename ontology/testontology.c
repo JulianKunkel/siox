@@ -134,8 +134,8 @@ int test2( void)
 /**
  * Test 3:
  * @test
- *  - Click >test3(void)< for Details <br>
- * Fehler provozieren
+ * Discover Number of Metrics while Avoiding to Open Ontology - Click >test3(void)< for Details <br>
+ * Provoke Errors
  * <ol>
  * <li> Anzahl der Metriken erfragen, ohne Ontologie zu öffnen
  * </ol>
@@ -157,7 +157,7 @@ int test3( void )
 /**
  * Test 4:
  * @test
- *  - Click >test4(void)< for Details
+ * Create new Metric in Ontology and get the Number of Metrics  - Click >test4(void)< for Details
  * <ol>
  * <li> Ontologie öffnen
  * <li> Metrik erzeugen
@@ -209,7 +209,7 @@ int test4( void )
 /**
  * Test 5:
  * @test
- *  - Click >test5(void)< for Details
+ * Create Metric in ontology from Measurement Identifier MID and Check Metric Elements for Correct Content - Click >test5(void)< for Details
  * <ol>
  * <li> Ontologie öffnen
  * <li> Metrik erzeugen
@@ -281,7 +281,7 @@ int test5( void )
 /**
  * Test 6:
  * @test
- *  - Click >test6(void)< for Details
+ * Check Number of Metrics, then Search for Specific Metrics and Check for Creation-identical IDs - Click >test6(void)< for Details
  * <ol>
  * <li> Ontologie öffnen
  * <li> Metriken erzeugen
@@ -369,8 +369,8 @@ int test6( void )
 /**
  * Test 7:
  * @test
- *  - Click >test7(void)< for Details <br>
- * Fehler provozieren:
+ * Check for Possibility of Creation of Duplicates of Names - Click >test7(void)< for Details <br>
+ * Provoke Errors
  * <ol>
  * <li> Ontologie öffnen
  * <li> Metrik erzeugen
