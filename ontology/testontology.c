@@ -3,7 +3,7 @@
  *
  * Test program for the SIOX ontology library.
  *
- * @authors Michaela Zimmer
+ * @authors Michaela Zimmer, Marc Wiedemann
  * @date    2012
  *          GNU Public License
  */
@@ -85,12 +85,13 @@ int main()
 /**
  * Test 1:
  * @test
+ * Short Description: Open empty Ontology and Close it thereafter - Click >test1(void)< for Details
  *  <ol>
- *      <li> Leere Ontologie öffnen
- *      <li> Ontologie schließen
+ *      <li> Open empty Ontology
+ *      <li> Close opened Ontology
  *  </ol>
  *
- * @returns Bei Erfolg 0, sonst 1.
+ * @returns On Success 0, Otherwise 1.
  */
 int test1( void )
 {
@@ -111,7 +112,7 @@ int test1( void )
 /**
  * Test 2:
  * @test
- * Fehler provozieren:
+ * Short Description: Test for Closing Ontology and getting Success or Hint Information - Click >test2(void)< for Details
  * <ol>
  * <li> Ontologie schließen ohne zu öffnen
  * </ol>
@@ -133,7 +134,8 @@ int test2( void)
 /**
  * Test 3:
  * @test
- * Fehler provozieren:
+ *  - Click >test3(void)< for Details <br>
+ * Fehler provozieren
  * <ol>
  * <li> Anzahl der Metriken erfragen, ohne Ontologie zu öffnen
  * </ol>
@@ -155,6 +157,7 @@ int test3( void )
 /**
  * Test 4:
  * @test
+ *  - Click >test4(void)< for Details
  * <ol>
  * <li> Ontologie öffnen
  * <li> Metrik erzeugen
@@ -206,6 +209,7 @@ int test4( void )
 /**
  * Test 5:
  * @test
+ *  - Click >test5(void)< for Details
  * <ol>
  * <li> Ontologie öffnen
  * <li> Metrik erzeugen
@@ -277,6 +281,7 @@ int test5( void )
 /**
  * Test 6:
  * @test
+ *  - Click >test6(void)< for Details
  * <ol>
  * <li> Ontologie öffnen
  * <li> Metriken erzeugen
@@ -364,6 +369,7 @@ int test6( void )
 /**
  * Test 7:
  * @test
+ *  - Click >test7(void)< for Details <br>
  * Fehler provozieren:
  * <ol>
  * <li> Ontologie öffnen
