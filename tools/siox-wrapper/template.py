@@ -490,24 +490,6 @@ template = {
     'after': '',
     'cleanup': '',
     'final': ''
-},
-# test_list
-#
-# Writes a given message to stdout and saves it to a list
-#
-# Text: The text to print and save
-'test_list': {
-    'variables': '''Text="" Text2=""''',
-    'global': '''''',
-    'init': '''''',
-    'before': '''printf("%%s (%(Text)s);\\n", __FUNCTION__, %(Text2)s);
-
-    			 g_mutex_lock (&TestMapMutex);
-    			 g_slist_append (testlist, "%(Text)s");
-    			 g_mutex_unlock (&TestMapMutex);''',
-    'after': '',
-    'cleanup': '',
-    'final': ''
 }
 }
 
@@ -518,4 +500,4 @@ globalOnce = "static GMutex TestMapMutex; \n GSList *testlist = NULL;"
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<stdlib.h>', '<stdio.h>', '<siox-ll.h>', '<stdarg.h>', '<glib.h>']
+includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<monitoring/low-level-c/siox-ll.h>']

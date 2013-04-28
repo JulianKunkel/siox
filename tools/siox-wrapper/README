@@ -1,5 +1,9 @@
 siox-wrapper
 
+Prerequisites for tests
+1) install all header files from include/ to /usr/local/include
+   This can be achieved by running ./waf install in the top directory.
+
 
 Description
 

@@ -12,9 +12,7 @@
 #define siox_LL_H
 
 #include <stdint.h>
-#include <glib.h>
-
-#include "../ontology/ontology.h"
+#include <monitoring/ontology/ontology.h>
 
 
 /*

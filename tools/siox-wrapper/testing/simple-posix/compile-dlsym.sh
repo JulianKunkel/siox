@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/bash -e
 
 echo 'Generating low-level-io-dlsym.c'
 python ../../siox-wrapper.py -t ../../template.py -o low-level-io-dlsym.c low-level-io.h
 
 echo 'Compiling low-level-io-dlsym.c as shared object posix.so'
-gcc low-level-io-dlsym.c -c -fPIC
+gcc low-level-io-dlsym.c -c -fPIC $(pkg-config glib-2.0 --libs --cflags)
 gcc low-level-io-dlsym.o -o posix.so -shared -ldl
 
 echo 'Compiling test.c as test_dlsym'

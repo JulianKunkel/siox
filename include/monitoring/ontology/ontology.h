@@ -13,10 +13,10 @@
 
 
 #include <stdbool.h>
-#include "enums.h"
-#include "metric.h"
+#include <monitoring/ontology/enums.h>
+#include <monitoring/ontology/metric.h>
 // #include "datatype.h"
- #include "attribute.h"
+#include <monitoring/ontology/attribute.h>
 
 
 /**
