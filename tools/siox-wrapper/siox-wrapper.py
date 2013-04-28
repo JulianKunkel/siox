@@ -52,6 +52,10 @@ from a other header file.''')
             action='store_true', dest='debug',
             help='Debug every line')
 
+        argParser.add_argument('--output-wrap-file', '-W',
+            action='store', dest='wrapFile',  help='File to store GCC wrap options')
+
+
         argParser.add_argument('--template', '-t',
             action='store', default='./template.py', dest='template',
             help='Provide an alternative template.')
@@ -743,6 +747,8 @@ class Writer():
     # @param options The supplied arguments
     def __init__(self, options):
         self.outputFile = options.outputFile
+	self.wrapFile = options.wrapFile
+	self.writeWrapFile = (options.style == "wrap")
 
     ##
     # @brief Write a header file
@@ -882,16 +888,18 @@ class Writer():
             else:
                 print('\n}', end='\n\n', file=output)
 
-        # generate gcc string for the user
-        gccHelper = '-Wl'
-
-        for function in functionList:
-            gccHelper = "%s,--wrap=\"%s\"" % (gccHelper, function.name)
-
-        print(gccHelper)
-
-        # close the file
         output.close()
+
+        # generate gcc string for the user
+	if self.wrapFile and self.writeWrapFile :
+	        output = open(self.wrapFile, 'w')
+	        gccHelper = '-Wl'
+
+        	for function in functionList:
+	            gccHelper = "%s,--wrap=%s" % (gccHelper, function.name)
+
+        	print(gccHelper, file=output)
+	        output.close()
 
     ##
     # @brief Write a source file

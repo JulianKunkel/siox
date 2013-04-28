@@ -111,4 +111,4 @@ int madvise (void *addr, size_t length, int advice);
 int posix_fadvise (int fd, __off_t offset, __off_t len, int advise);
 
 /* Map-Kette um ein Glied (fd->ret) verlängern? Oder alles, was (->fd) mapt, ebenfalls (->ret) mappen? */
-//int dup_fd (int fd);
+/* int dup_fd (int fd); */

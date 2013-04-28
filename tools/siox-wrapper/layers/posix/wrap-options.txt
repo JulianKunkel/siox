@@ -1,1 +1,0 @@
--Wl,--wrap="open",--wrap="creat",--wrap="close",--wrap="write",--wrap="read",--wrap="pread",--wrap="pwrite",--wrap="readv",--wrap="writev",--wrap="sync",--wrap="fsync",--wrap="fdatasync",--wrap="mmap",--wrap="mremap",--wrap="munmap",--wrap="madvise",--wrap="posix_fadvise"

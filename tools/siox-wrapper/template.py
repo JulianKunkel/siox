@@ -477,19 +477,14 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-# test
-#
-# Writes a given message to stdout.
-#
-# Text: The text to print
-'test': {
-    'variables': '''Text="" Text2=""''',
-    'global': '''''',
-    'init': '''''',
-    'before': '''printf("%%s (%(Text)s);\\n", __FUNCTION__, %(Text2)s);''',
-    'after': '',
-    'cleanup': '',
-    'final': ''
+'include': {
+	'variables': 'what',
+	'global': '#include %(what)s',
+	'init': '',
+	'before': '',
+	'after': '',
+	'cleanup': '',
+	'final': ''
 }
 }
 

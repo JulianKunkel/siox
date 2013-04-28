@@ -1,4 +1,4 @@
-
+//@include <mpi.h>
 
 /* Set the interface name for the library*/
 //@component "MPIIO"

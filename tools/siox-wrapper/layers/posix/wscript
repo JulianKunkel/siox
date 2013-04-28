@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+# encoding: utf-8
+import os.path
+
+def options(opt):
+	opt.load('compiler_c')
+        gr = opt.get_option_group('configure options')
+	gr.add_option('--siox', action='store', dest="SIOX_DIR", default=False, help='Directory to the SIOX installation')
+	gr.add_option('--siox-ll-api', action='store', dest="SIOX_LL_API", default=False, help='Directory to the SIOX low-level API to use')
+
+def configure(conf):
+	conf.load('compiler_c waf_unit_test')
+        conf.load('waf_unit_test')
+
+	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
+
+	conf.check_cc(lib='dl', uselib_store='DL', mandatory = True)
+
+        conf.check(header_name='monitoring/low-level-c/siox-ll.h', features='c cprogram')
+
+	conf.env.LIBPATH_SIOXLLIMPL = conf.options.SIOX_LL_API
+	if conf.env.LIBPATH_SIOXLLIMPL:
+		conf.check_cc(lib='siox-ll-api', use="SIOXLLIMPL",  uselib_store='SIOXLLIMPL', mandatory = True)
+
+	conf.env.LIBDIR = conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"
+
+def build(bld):
+	LAYER="posix"
+	HEADER="posix-low-level-io.h"
+
+        def wrap(task): 
+		return wrapper(task, "wrap")
+
+        def dlsym(task): 
+		return wrapper(task, "dlsym")
+
+        def wrapper(task, typ): 
+                src = task.inputs[0].abspath()
+                tgt = task.outputs[0].abspath()
+                cmd = bld.path.abspath() + '/../../siox-wrapper.py -o %s -t %s -s %s -W %s.wrap %s' % (tgt, bld.path.abspath() + "/../../template.py", typ, LAYER, src)
+                return task.exec_command(cmd)
+
+        def dummy(task): 
+                cmd = ""
+                return task.exec_command(cmd)
+
+	bld(rule=wrap, source=HEADER, target='siox-' + LAYER + '-wrap.c')
+	bld(rule=dlsym, source=HEADER, target='siox-' + LAYER + '-dlsym.c')
+	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = LAYER + ".wrap", install_path = "${LIBDIR}")
+
+	bld.shlib( use = "GLIB" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c' )
+	bld.shlib( use = "GLIB DL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c' )
+	
+	# build tests if a dummy implementation has been selected
+	if bld.env.LIBPATH_SIOXLLIMPL:
+		# Non-existing wrap file leads to race conditions when the file is not created, yet.
+		# Therefore, added a second pass.
+		wrap_file="build/" + LAYER + ".wrap"
+		if os.path.isfile(wrap_file):
+			wrap_linkerflags = open(wrap_file, 'r').read()
+			bld.program( source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOXLLIMPL", LAYER + ".wrap"] ,  install_path = None,
+				linkflags=wrap_linkerflags)
+		else:
+			print "Please rerun ./waf build to build wrapped examples"
+
+		bld.program( source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOXLLIMPL"] ,  install_path = None)
+	
+		from waflib.Tools import waf_unit_test
+		bld.add_post_fun(waf_unit_test.summary)
+
+	
+

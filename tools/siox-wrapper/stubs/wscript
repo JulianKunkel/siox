@@ -10,7 +10,7 @@
 def options(opt):
 	opt.load('compiler_c')
         gr = opt.get_option_group('configure options')
-	gr.add_option('--siox-dir', action='store', dest="SIOX_DIR", default=False, help='Directory to the SIOX installation')
+	gr.add_option('--siox', action='store', dest="SIOX_DIR", default=False, help='Directory to the SIOX installation')
 
 def configure(conf):
 	conf.load('compiler_c')
