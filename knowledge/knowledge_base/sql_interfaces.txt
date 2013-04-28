@@ -1,0 +1,12 @@
+LiteSQL: http://sourceforge.net/apps/trac/litesql/
+Nicht stabil, noch buggy (getestet, wirklich buggy).
+"0.3.x version is a proof-of-concept implementation, works for non-critical use"
+
+SQLApi++: http://www.sqlapi.com/
+Keine freie Software
+
+hisqlapi: https://code.google.com/p/hisqlapi/
+Unfertig. Bis jetzt nur ODBC und Sqlite.
+
+libpqxx
+Die offizielle libpq für C++. Fortgeschritten und stabil, dafür nur Postgres.

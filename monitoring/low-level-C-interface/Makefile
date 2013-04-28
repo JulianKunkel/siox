@@ -47,7 +47,7 @@ debug: all Makefile
 libsiox-ll.so: siox-ll.c siox-ll.h Makefile
 #	@echo --------------------------------------------------
 	@echo -n Making $@...
-	$(CC) $(LIBFLAGS) $(ONTFLAGS) $(GLIBFLAGS) -o $@ $< $(ONTLIBS) $(GLIBLIBS)
+	$(CC) $(LIBFLAGS) $(ONTFLAGS) $(GLIBFLAGS) -o $@ $< $(ONTLIBS) $(GLIBLIBS) $(PAPILIBS)
 	@echo done!
 
 #==================

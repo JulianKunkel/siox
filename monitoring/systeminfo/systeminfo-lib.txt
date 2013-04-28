@@ -1,0 +1,8 @@
+http://www.i-scream.org/libstatgrab/#documentation
+Eine schmale Lib in C die darauf aus gelegt ist auf vielen Systemen zu laufen, wird allerdings seit 2010 nicht mehr weiter entwickelt. Eine fehlende Funktionalität ist das auflisten der Computer-Hardware.
+
+
+https://developer.gnome.org/libgtop/stable/
+Entwickelt von Gnome. Bietet viele funktionen, ist allerdings auch recht schwergewichtig und hängt von der glib ab. (On Systems like Solaris or Digital Unix where you need special privileges to get those data, it uses a setuid/setgid server to do so.)
+
+Will man /proc/ selber parsen muss man auf atomare Leseoperationen achten, da sich sonst werte ändern können.

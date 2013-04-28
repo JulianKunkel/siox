@@ -1,0 +1,42 @@
+@author Marc Wiedemann
+
+Our optimizer can have three dynamic function states A, B and C where they are:
+
+A - Collection of Activities and Statistics
+B - Collection of Activities
+C - Collection of Statistics
+
+State machine:
+
+An activity thread goes to the optimizer which guides to two or more modules plugin1 and plugin2.
+The pattern comparator functions within the optimizer.
+Plugins are certain state machines that hold several patterns within one state machine.
+short example:
+
+FileOpen-> FileSmallRead-> FileSmallRead-> FileSmallRead->FileClose
+					-> FileLargeRead->FileClose
+			-> FileLargeRead-> FileSmallRead->FileClose
+					-> FileLargeRead->FileClose
+	-> FileLargeRead-> FileSmallRead-> FileSmallRead->FileClose
+					-> FileLargeRead->FileClose
+			-> FileLargeRead-> FileSmallRead->FileClose
+					-> FileLargeRead->FileClose
+
+Another one
+FileOpen-> FileSmallWrite-> FileSmallWrite-> FileSmallWrite->FileClose
+					-> FileLargeRead->FileClose
+			-> FileLargeRead-> FileSmallRead->FileClose
+					-> FileLargeRead->FileClose
+	-> FileLargeRead-> FileSmallRead-> FileSmallRead->FileClose
+					-> FileLargeRead->FileClose
+			-> FileLargeWrite-> FileSmallRead->FileClose
+					-> FileLargeWrite->FileClose
+
+Open() might only be used by some plugins.
+Creates() also.
+
+the statistics thread goes to the anomaly detection module where statistics and pattern of state machines are identified and reacted upon.
+
+The load control ensures that the anomaly detection as well as the optimizer will not exaggerate there system ressources.
+The optimizer and anomaly module are controlled by LoadControl which decides on executing function with priorities.
+These can be predefined as well as changed on new findings.

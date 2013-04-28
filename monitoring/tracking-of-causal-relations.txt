@@ -1,0 +1,99 @@
+Definition:
+vertical relations:
+A vertical relation is the invocation of an activity within a given interface by another component or interface, that means an activity of on interface directly causes the activity of another and typical lower-layer interface.
+
+horizontal relations
+A horizontal relation is the invocation of an activity within one layer caused by another activity within the same interface.
+For example, storing data into a write-behind cache is an vertical relation, but the deferred write requires a horizontal relation.
+
+Arbitrary relations between the activity can be converted into a sequence of horizontal and vertical relations.
+
+Descriptor:
+A descriptor allows to track user-meaningful identificators from application to interface-specific activity across vertical and horizontal relations.
+It is part of the IOPm graph.
+Its sole purpose is to help localizing and optimizing inefficient application behavior.
+E.g. from the user-perspective it is not helpful to talk about an inefficient PID 7553 and filedescriptor 4711 but instead about an application with the name  "gromacs" and file "/hom/XY/output.nc" which lead to suboptimal behavior.
+
+Within a single layer mapping between two descriptors where one descriptor is used for subsequent calls is also a horizontal relations.
+For example, an open() call maps the useful filename (descriptor) to a filedescriptor to allow identification of the "filename" during a later file access with read() or write().
+
+
+
+How will the SIOX interface achieve tracking of causal relations?
+
+1) Internal tracking
+Within a single process, the shared address space simplifies vertical relations, because the information of causing activities can be stored on an invocation stack.
+For example, consider an MPI_File_open() which directly invokes an POSIX open().
+By looking at the stack the previous (causing) activity can be identified precisely and stored as cause in the child activity using siox_link_activity().
+Within each interface a hashmap can faciliate arbitrary horizontal mappings.
+
+2) Explicit tracking
+When an activity on one component triggers activity on another component which has no shared address space, implicit tracking is impossible.
+In most cases, it is no option to extend the communication protocol to contain the required information about the causing activity.
+Explicit tracking allows caller and callee to record information about the activity which can be linked by SIOX.
+
+For example, assume one component (the cause) invokes a remote procedure call with signature A(b,c) on another (effect) component.
+If the cause records that it will call A(b,c) and the remote records A(b,c) has been called -- within an interval after the cause, then both calls can be matched.
+Additionally, the interface allows to specify the remote interface name e.g. POSIX.
+
+It is possible to record only a subset of the arguments but a descriptor is considered to be a mandatory part of the signature, e.g. parameter b.
+
+
+
+Problem: Correct matching of cause and effect
+If multiple clients invoke the same procedure with the same arguments, then an accurate matching and correct matching of cause and effect is impossible.
+
+Theoretically, this issue can be fixed if a unique client identifier (e.g. processID + hostname) is available on the both sides -- in this case we can consider it to be part of the signature i.. A(b,c, CLIENTIDENTIFIER) and thus invocation of different clients can be distinguished.
+However, in many cases, it is difficult to identify the client on the effect's side.
+
+Since a remote activity should behave identical regardless the ID of a client, a differentiation between two identical calls on the server side is practically meaningless.
+In case on of such concurrent activities behaves suboptimal, we can even expect that slight timing issues (arrival order of RPCs) would change the causing client.
+This example shows that it is not really useful to identify the cause in this case.
+Instead, we consider all effects within a timespan which match a given remote signature to be potentially caused by the remote.
+A consequence of this behavior is that all activity which is the potential cause of an effect is considered to be the cause.
+
+
+Problem/Strategy: Missing instrumentation in intermediate layers/components.
+Assume the effect side of the remote call A(b,c, ...) of the interface named "I" is not instrumented but invokes D(e, f,...) in interface "J" which is instrumented by SIOX.
+The concept of descriptors helps us to lazily link D(e, f...) of J with A(b,c ...) as long as a descriptor is transferred between the layers and thus part of both signatures.
+In our example b and f could be the same signature and thus filled with the same value.
+Other function arguments may change making a perfect matching impossible.
+As previously discussed all potentially matching activities are considered to be a potential cause of observed behavior.
+
+Without the concept of a descriptor the system would not understand which arguments are mandatory and which are optional in this case.
+For example the system cannot identify if it is possible to match A(b,c,. ...) with D(e,f ...) if f and c are identical because it may lead to false matching.
+This is aided by the ontology which offers a unique name for each descriptor type e.g. "POSIX/filehandle" is different from "MPI/filehandle" and this name is used across all layers that use a descriptor.
+
+
+Detailed matching rules:
+Activity A(a...) of interface I is considered to be cause of B(b...) of interface J by  the following matching rules.
+
+Mandatory requirements:
+* the execution of B happens within the execution of activity A. This also applies to non-blocking execution, as long as the completion of A is recorded properly using SIOX_end_actvitiy.
+* the values of all descriptors of A match the ones of B.
+
+Optional rules:
+To increase precision of the matching, the following rules are apply where possible:
+1) The interface as announced within A() is J.
+2) Additional attributes within A(a) match B(b).
+
+If B(b) matches rule 1) as announced by only A(a) within the execution interval then B(b) is considered to be caused by A(a) although another activity C(c) may match lazily.
+
+
+How can we track Linux kernel activity?
+Theoretically, work caused by a system call in Linux can be executed within another process.
+For example, a process invokes a write() which stores data in page cache and another process writes the data from the page cache.
+Explicit tracking allows to map cause to effect across address spaces.
+A tracking on block-level can be achieved by creating a module with Systemtap that tracks block mapping. (Marcs Bild "was im Kernel passiert" einbauen)
+
+How can we identify the application process?
+First of all, a specific layer such as MPI can use attributes to store application specific variables such as PID, user name and may use environment variables provided by the batch scheduler.
+Identification of the command line arguments are possible using /proc/<PID>/ variabls.
+Additionally, a user can instrument its code providing its own identifiers.
+
+
+Usage of "remote calls interface" for explicit tracking.
+For every remote call the interface must be used once even if the arguments and call is the same.
+However, SIOX may assign multiple effects to a single cause if multiple remote calls use the identical arguments.
+
+
