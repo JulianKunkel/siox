@@ -13,7 +13,7 @@ gcc posix-printf.c -shared -fPIC -o posix-printf.so
 
 # link library to POSIX application for testing
 echo 'Compiling test.c as test'
-gcc test.c -o test
+gcc ../simple-posix/test.c -o test
 
 printf "\n---\n\n"
 echo 'Executing test_posix with preloaded posix-printf.so'

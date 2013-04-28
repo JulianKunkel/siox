@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo 'Generating low-level-io-wrap.c'
-python ../../siox-wrapper.py -s wrap -t ./template.py -o low-level-io-wrap.c low-level-io.h
+python ../../siox-wrapper.py -s wrap -t ../..//template.py -o low-level-io-wrap.c low-level-io.h
 
 echo 'Compiling test.c as test_wrap'
 gcc low-level-io-wrap.c -c

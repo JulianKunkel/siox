@@ -148,6 +148,32 @@ template = {
 	'cleanup': 'siox_activity_end( %(Activity)s );',
 	'final': ''
 },
+
+# activity with hints
+#
+# Starts (at the beginning) and stops (at the end) a new
+# activity in the current function and transfer the MPI hints to SIOX activity
+# Any metrics resulting from the activity still need to be reported via activity_report!
+#
+# Name: Short description of the activity
+# Activity: Name of the variable to store the activity in; defaults to sioxActivity
+# TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
+# TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
+'activity_with_hints': {
+	'variables': 'Attribute Value Name=G_STRFUNC Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
+	'global': '''''',
+	'init': '''''',
+	'before': '''siox_activity * %(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
+	'after': '''__real_MPI_File_get_info(MPI_File  fh, MPI_Info * info_used);
+	printf("TODO: here should be a function to convert the info_used to Attribute:Value tuple in order to transfer the Hints to siox.");
+	printf("TODO: before sending the Hints to siox, a checkout function should be called to filter the duplicated Hints.");
+	printf("TODO: or shall we just leave the checkout to the siox activity?");
+	siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );
+	__real_MPI_Info_free(MPI_Info * info_used);
+	siox_activity_stop( %(Activity)s, %(TimeStop)s );''',
+	'cleanup': 'siox_activity_end( %(Activity)s );',
+	'final': ''
+},
 # activity_attribute
 #
 # Tie an attibute to an activity.
@@ -325,7 +351,7 @@ template = {
 	'init': '''''',
     'before': '''''',
 	'after': '''if ( %(Condition)s )
-					siox_activity_report_error( %(Activity)s, %(Error)s );''', 
+					siox_activity_report_error( %(Activity)s, %(Error)s );''',
 	'cleanup': '',
 	'final': ''
 },
@@ -451,31 +477,6 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-# activity with hints
-#
-# Starts (at the beginning) and stops (at the end) a new
-# activity in the current function and transfer the MPI hints to SIOX activity
-# Any metrics resulting from the activity still need to be reported via activity_report!
-#
-# Name: Short description of the activity
-# Activity: Name of the variable to store the activity in; defaults to sioxActivity
-# TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
-# TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
-'activity_with_hints': {
-	'variables': 'Attribute Value Name=G_STRFUNC Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
-	'global': '''''',
-	'init': '''''',
-	'before': '''siox_activity * %(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
-	'after': '''__real_MPI_File_get_info(MPI_File  fh, MPI_Info * info_used);
-	printf("TODO: here should be a function to convert the info_used to Attribute:Value tuple in order to transfer the Hints to siox.");
-	printf("TODO: before sending the Hints to siox, a checkout function should be called to filter the duplicated Hints.");
-	printf("TODO: or shall we just leave the checkout to the siox activity?");
-	siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );
-	__real_MPI_Info_free(MPI_Info * info_used);
-	siox_activity_stop( %(Activity)s, %(TimeStop)s );''',
-	'cleanup': 'siox_activity_end( %(Activity)s );',
-	'final': ''
-},
 # test
 #
 # Writes a given message to stdout.
@@ -485,18 +486,33 @@ template = {
     'variables': '''Text="" Text2=""''',
     'global': '''''',
     'init': '''''',
-    'before': '''printf("%%s (%(Text)s);\\n", G_STRFUNC, %(Text2)s);''',
+    'before': '''printf("%%s (%(Text)s);\\n", __FUNCTION__, %(Text2)s);''',
+    'after': '',
+    'cleanup': '',
+    'final': ''
+},
+# test_list
+#
+# Writes a given message to stdout and saves it to a list
+#
+# Text: The text to print and save
+'test_list': {
+    'variables': '''Text="" Text2=""''',
+    'global': '''''',
+    'init': '''''',
+    'before': '''printf("%%s (%(Text)s);\\n", __FUNCTION__, %(Text2)s);
+
+    			 g_mutex_lock (&TestMapMutex);
+    			 g_slist_append (testlist, "%(Text)s");
+    			 g_mutex_unlock (&TestMapMutex);''',
     'after': '',
     'cleanup': '',
     'final': ''
 }
 }
 
-# Inserted before every call
-forEachBefore = ""
-
-# Inserted after every call
-forEachAfter = ""
+# Insert global once
+globalOnce = "static GMutex TestMapMutex; \n GSList *testlist = NULL;"
 
 # Regexes for functions to throw away
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]

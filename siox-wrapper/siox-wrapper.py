@@ -3,6 +3,8 @@
 # encoding: utf-8
 from __future__ import print_function
 
+globalOnce = ""
+
 import re
 import sys
 import argparse
@@ -519,101 +521,119 @@ class CommandParser():
         availableCommands = template.keys()
         input = open(self.inputFile, 'r')
         inputString = input.read()
-        commandName = ''
-        commandArgs = ''
+        functionString = ""
         templateList = []
-        currentFunction = ''
-        currentFunctionList = []
         functionList = []
-        final = False
-        init = False
 
         # Strip comments
         re.sub('/\*.*\*/', '', inputString, flags=re.M|re.S)
 
         inputLineList = inputString.split('\n')
         # Iterate over every line and search for instrumentation instructions.
-        for iTuple in enumerate(inputLineList):
+        i = 0
+        try:
+            while i < len(inputLineList):
 
-            #enumerate in all its wisdom returns a tuple
-            i = iTuple[0]
+                commandFinished = False
+                functionFinished = False
+                currentFunction = Function()
 
-            # Search for includes
-            match = self.includeRegex.match(inputLineList[i])
-            if match:
-                include = match.group(1)
-                # If the include is not already inside the template append it
-                if include not in includes:
+                # match the line against the include regex
+                include = self.matchInclude(inputLineList[i])
+                if include and include not in includes:
+                    if self.options.debug:
+                        print("New include '%s' at line %i" % (include, i))
                     includes.append(include)
+                    functionString = ""
+                    i += 1
 
+                # Because a instrumentation command can be longer than one line we
+                # we have to insure to read the whole command.
+                while not commandFinished:
 
-            match = self.commandRegex.match(inputLineList[i])
+                    commandFinished = self.matchCommand(inputLineList[i], templateList)
+                    if not commandFinished:
+                        functionString = ""
+                        if self.options.debug:
+                            print("Instrumention command '%s' at line %i"
+                                % (templateList[-1].name, i))
+                        i += 1
+                        functionString = ""
 
-            if self.options.debug:
-	            print("<< " + inputLineList[i])
-            if (match):
-                # Search for init or final sections to define init or final
-                # functions
-                if match.group(1) == 'init':
-                    init = True
+                functionString += inputLineList[i]
+                if self.options.debug:
+                    print("Scanning '%s' for functions at line %i" % (functionString, i))
 
-                elif match.group(1) == 'final':
-                    final = True
-
-                elif match.group(1) in availableCommands:
-                    # If a new command name is found and a old one is still
-                    # used, save the old command and begin a new instruction
-                    if commandName != '':
-                        templateList.append(Template(template[commandName], commandName, commandArgs))
-                        commandName = ''
-                        commandArgs = ''
-
-                    commandName += match.group(1)
-                    commandArgs += match.group(2) + " "
-
-                else:
-                    # If no command name is defined and a comment which is no
-                    # instruction is found throw an error.
-                    if commandName == '':
-                        print("ERROR: Command not known: ", match.group(1), file=sys.stderr)
-                        sys.exit(1)
-
-                    commandArgs += match.group(1) + " "
-                    commandArgs += match.group(2) + " "
-
-            else:
-                j = i
-                functionString = ''
-
-                while not re.search('^\s*//', inputLineList[j]):
-                    if j >= len(inputLineList) - 1:
-                        break
-
-                    functionString += inputLineList[j].strip()
-                    j += 1
-
-                i = j
+                # Try to parse the inputLine as a function string
                 currentFunctionList = functionParser.parseString(functionString)
+                if len(currentFunctionList) > 0:
 
-                if len(currentFunctionList) == 0:
-                    continue
-
-                currentFunction = currentFunctionList[0]
-                #If a function is found append the found instructions to the function object.
-                if commandName != '':
-                    templateList.append(Template(template[commandName], commandName, commandArgs))
+                    currentFunction = currentFunctionList[0]
+                    if self.options.debug:
+                        print("Function '%s' at line %i" % (currentFunction.name, i))
                     currentFunction.usedTemplateList = templateList[:]
-                    currentFunction.init = init
-                    currentFunction.final = final
-                    functionList.extend(currentFunctionList)
-                    currentFunctionList = []
+                    functionList.append(currentFunction)
                     templateList = []
-                    commandName = ''
-                    commandArgs = ''
-                    final = False
-                    init = False
+                    functionString = ""
+                i+=1
+        except IndexError:
+            pass
+
+        if self.options.debug:
+            print("Finished scanning input header file.")
+            if len(templateList) > 0:
+                print("""WARNING: Found unassociated instrumentation commands\
+at the end of """)
         return functionList
 
+    def matchInclude(self, inputLine):
+
+        match = self.includeRegex.match(inputLine)
+        if match:
+            include = match.group(1).strip()
+            return include
+        else:
+            return False
+
+    ##
+    # @brief This function matches a instruction command with the prefix //@
+    #
+    def matchCommand(self, inputLine, templateList):
+
+        match = self.commandRegex.match(inputLine)
+
+        if (match):
+            availableCommands = template.keys()
+            commandName = match.group(1)
+            commandArgs = match.group(2) + " "
+
+            # Search for init or final sections to define init or final
+            # functions
+            if commandName == 'init':
+                currentFunction.init = True
+
+            elif commandName == 'final':
+                currentFunction.fnal = True
+
+            # If the current instrumentation command is available in the template
+            # create a new template object and fill it with the command data
+            elif commandName in availableCommands:
+                commandName = match.group(1)
+                commandArgs = match.group(2) + " "
+                newTemplate = Template(template[commandName], commandName, commandArgs)
+                templateList.append(newTemplate)
+
+            # If the command name is not in the template the parsed line
+            # belongs to the command parsed in a earlier line and the line only
+            # contains command arguments.
+            else:
+                templateList[-1].commandArgs = commandName +\
+                    " " + commandArgs
+
+            return False
+
+        else:
+            return True
 
 ##
 # @brief A template function including parameters and arguments
@@ -675,7 +695,7 @@ class Template():
 				print("Error name " + name + " is not part of the defined function " + self.name)
 				exit(1)
                 # Set the matched value
-                valueString = value.group(2).strip()   
+                valueString = value.group(2).strip()
                 if(valueString.startswith("''")):
                 	valueString = valueString.strip("'")
                 self.parameterList[name] = valueString
@@ -769,6 +789,9 @@ class Writer():
                 if templ.output('global') != '':
                     print(templ.output('global'), file=output)
         print("", file=output)
+
+        # write global once from template
+        print(globalOnce, file=output)
 
         print("static void sioxFinal() __attribute__((destructor));", file=output)
         print("static void sioxInit() __attribute__((constructor));", file=output)
@@ -890,6 +913,9 @@ class Writer():
                     print(templ.output('global'), file=output)
         print("", file=output)
 
+        # write global once from template
+        print(globalOnce, file=output)
+
         # write all functions-bodies
         for function in functionList:
             # write function signature
@@ -965,6 +991,9 @@ class Writer():
                 if templ.output('global') != '':
                     print(templ.output('global'), file=output)
         print("", file=output)
+
+        # write global once from template
+        print(globalOnce, file=output)
 
         print("static char* dllib = RTLD_NEXT;", file=output)
 
