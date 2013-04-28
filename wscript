@@ -64,25 +64,10 @@ def build(bld):
 	from waflib.Tools import waf_unit_test
         bld.add_post_fun(waf_unit_test.summary)
 
-
-def install(ctx):
-	__recurse(ctx)
-
-def clean(ctx):
-	__recurse(ctx)
-
-def distcheck(ctx):
-	__recurse(ctx)
-
-def distclean(ctx):
-	__recurse(ctx)
-
-def step(ctx):
-	__recurse(ctx)
-
-def uninstall(ctx):
-	__recurse(ctx)
-
+	# installation of header files
+	for root, dirs, files in os.walk("include"):	        
+		for f in files:
+			bld.install_files("${PREFIX}/" + root, root + "/" + f)
 
 
 # -*- indent-tabs-mode: t -*-
