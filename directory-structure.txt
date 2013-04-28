@@ -16,3 +16,7 @@ Implementations:
 <package>/<component>/<implementation>/<implementation>_<interface>.[c|cpp]
 <package>/<component>/<implementation>/test/test.cpp
 
+Documentation:
+* is provided inside the header files for the interfaces and in the implementations
+* required images / uml diagrams etc. are located in
+** doc/<package>/<component>/
