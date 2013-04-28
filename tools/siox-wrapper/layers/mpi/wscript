@@ -1,18 +1,49 @@
 #!/usr/bin/env python
 # encoding: utf-8
+import os.path
+from os import path
 
 def options(opt):
 	opt.load('compiler_c')
+        gr = opt.get_option_group('configure options')
+	gr.add_option('--siox', action='store', dest="SIOX_DIR", default=False, help='Directory to the SIOX installation')
+	gr.add_option('--siox-ll-api', action='store', dest="SIOX_LL_API", default=False, help='Directory to the SIOX low-level API to use')
+	gr.add_option('--mpi', action='store', dest="MPI", default=False, help='Directory to MPI')
+	gr.add_option('--mpicc', action='store', dest="MPICC", default="mpicc", help='MPI compiler script')
 
 def configure(conf):
-	conf.load('compiler_c')
+	conf.load('compiler_c waf_unit_test')
+        conf.load('waf_unit_test')
 
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
+	conf.check_cc(lib='dl', uselib_store='DL', mandatory = True)
+
+        conf.check(header_name='monitoring/low-level-c/siox-ll.h', features='c cprogram')
+
+        # locate mpi.h and mpicc
+	if conf.options.MPI:
+		conf.env.INCLUDES = conf.options.MPI + "/include"		
+		conf.find_program(conf.options.MPICC, var='MPICC', path_list=[conf.options.MPI+path.sep+'bin'].append(os.environ["PATH"].split(":"))) 
+	else:
+		conf.find_program(conf.options.MPICC, var='MPICC')
+	
+	conf.check(header_name='mpi.h', features='c cprogram')
+
+ 	# compile all files using mpicc
+	conf.env.COMPILER_CC = conf.env.MPICC
+	conf.env.CC = conf.env.MPICC
+	conf.env.LINK_CC = conf.env.MPICC
+
+        # to build test files
+	conf.env.LIBPATH_SIOXLLIMPL = conf.options.SIOX_LL_API
+	if conf.env.LIBPATH_SIOXLLIMPL:
+		conf.check_cc(lib='siox-ll-api', use="SIOXLLIMPL",  uselib_store='SIOXLLIMPL', mandatory = True)
 
 	conf.env.LIBDIR = conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"
 
 def build(bld):
 	LAYER="mpi"
+	HEADER="mpi.h"
 
         def wrap(task): 
 		return wrapper(task, "wrap")
@@ -30,15 +61,29 @@ def build(bld):
                 cmd = ""
                 return task.exec_command(cmd)
 
-
-	bld(rule=wrap, source="mpi.h", target='siox-' + LAYER + '-wrap.c')
-	bld(rule=dlsym, source="mpi.h", target='siox-' + LAYER + '-dlsym.c')
+	bld(rule=wrap, source=HEADER, target='siox-' + LAYER + '-wrap.c')
+	bld(rule=dlsym, source=HEADER, target='siox-' + LAYER + '-dlsym.c')
 	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = LAYER + ".wrap", install_path = "${LIBDIR}")
 
 	bld.shlib( use = "GLIB" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c' )
-	bld.shlib( use = "GLIB" ,  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c' )
+	bld.shlib( use = "GLIB DL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c' )
 	
+	# build tests if a dummy implementation has been selected
+	if bld.env.LIBPATH_SIOXLLIMPL:
+		# Non-existing wrap file leads to race conditions when the file is not created, yet.
+		# Therefore, added a second pass.
+		wrap_file="build/" + LAYER + ".wrap"
+		if os.path.isfile(wrap_file):
+			wrap_linkerflags = open(wrap_file, 'r').read()
+			bld.program( source = 'test/test.c', target = 'test-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOXLLIMPL", LAYER + ".wrap"] ,  install_path = None,
+				linkflags=wrap_linkerflags)
+		else:
+			print "Please rerun ./waf build to build wrapped examples"
 
+		bld.program( source = 'test/test.c', target = 'test-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOXLLIMPL"] ,  install_path = None)
 	
+		from waflib.Tools import waf_unit_test
+		bld.add_post_fun(waf_unit_test.summary)
+
 	
 
