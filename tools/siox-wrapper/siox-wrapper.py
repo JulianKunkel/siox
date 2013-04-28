@@ -526,7 +526,7 @@ class CommandParser():
         functionList = []
 
         # Strip comments
-        re.sub('/\*.*\*/', '', inputString, flags=re.M|re.S)
+        inputString = re.sub('/\*.*?\*/', '', inputString, flags=re.M|re.S)
 
         inputLineList = inputString.split('\n')
         # Iterate over every line and search for instrumentation instructions.

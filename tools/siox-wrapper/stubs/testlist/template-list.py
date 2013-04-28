@@ -22,4 +22,4 @@ globalOnce = "static GMutex TestMapMutex; \n static GSList *testlist = NULL; \n 
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>']
+includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<monitoring/low-level-c/siox-ll.h>']
