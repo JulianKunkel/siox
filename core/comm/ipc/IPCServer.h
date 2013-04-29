@@ -11,6 +11,7 @@ namespace asio = boost::asio;
 
 class IPCServer 
    : public ServiceServer {
+	   
 public:
 	explicit IPCServer(const std::string &path, 
 			   std::size_t worker_pool_size);

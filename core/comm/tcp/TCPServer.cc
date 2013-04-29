@@ -15,15 +15,17 @@ TCPServer::TCPServer(const std::string &address, const std::string &port,
 	acceptor_.bind(endpoint);
 	acceptor_.listen();
 
+	syslog(LOG_NOTICE, "Server::Constructor created and bound TCP server.");
+	
 	start_accept();
 }
 
 
 void TCPServer::start_accept()
 {
-	syslog(LOG_NOTICE, "Starting accept.");
+	syslog(LOG_NOTICE, "Server::Starting accept.");
 	
-	new_connection_.reset(new TCPConnection(io_service_));
+	new_connection_.reset(new TCPConnection(*this, io_service_));
 	acceptor_.async_accept(new_connection_->socket(), 
 			       boost::bind(&TCPServer::handle_accept, this, 
 					   asio::placeholders::error));
@@ -32,7 +34,11 @@ void TCPServer::start_accept()
 
 void TCPServer::handle_accept(const boost::system::error_code &e)
 {
+	syslog(LOG_NOTICE, "Server::Handling accepts.");
+	
 	if (!e) {
+		
+		syslog(LOG_NOTICE, "Server::New connection accepted.");
 		new_connection_->start();
 	}
 

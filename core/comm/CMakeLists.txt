@@ -5,7 +5,7 @@ include(FindProtobuf)
 
 find_package(
 	Protobuf REQUIRED
-	Boost COMPONENTS thread system REQUIRED
+	Boost COMPONENTS system test thread REQUIRED
 )
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS buffers/siox.proto)
@@ -22,8 +22,7 @@ include_directories(
 	${Boost_INCLUDE_DIR}
 )
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -pthread")
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -pthread -lrt -lboost_system -lboost_thread")
+set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt -lboost_system -lboost_thread -lboost_unit_test_framework")
 
 add_library(siox
 	misc/URI.h
@@ -36,7 +35,8 @@ add_library(siox
 	Connection.cc
 	ConnectionFactory.h
 	ConnectionFactory.cc
-	Server.h
+	ServerFactory.h
+	ServerFactory.cc
 	ServiceServer.h
 	ServiceServer.cc
 	ipc/IPCConnection.h
@@ -65,7 +65,14 @@ add_executable(tcp_client
 add_executable(ipc_service
 	test/ipc_service.cc)
 
+add_executable(communication_tests
+	test/communication.cc)
+
 target_link_libraries(siox ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(server siox)
 target_link_libraries(tcp_client siox)
 target_link_libraries(ipc_service siox)
+target_link_libraries(communication_tests siox)
+
+enable_testing()
+add_test("Communication" communication_tests)

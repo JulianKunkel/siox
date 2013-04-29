@@ -21,11 +21,11 @@ public:
 	
 	void disconnect();
 	void ireconnect();
-	void isend(const ConnectionMessage &msg);
-	void isend(const ConnectionMessage &msg, Callback &rsp_cb);
-	void register_connection_callback(Callback &conn_cb);
-	void register_message_callback(int msg_type, Callback &msg_cb);
-	void subscribe(int msg_type, Callback &cb);
+	virtual void isend(const ConnectionMessage &msg) = 0;
+// 	void isend(const ConnectionMessage &msg, Callback &rsp_cb);
+// 	void register_connection_callback(Callback &conn_cb);
+// 	void register_message_callback(int msg_type, Callback &msg_cb);
+// 	void subscribe(int msg_type, Callback &cb);
 	asio::io_service *get_io_service();
 protected:
 	asio::io_service *io_service_;

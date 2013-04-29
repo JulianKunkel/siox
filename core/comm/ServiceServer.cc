@@ -16,8 +16,8 @@ ServiceServer::ServiceServer(const std::size_t worker_pool_size)
 
 void ServiceServer::run()
 {
-	std::vector<boost::shared_ptr<boost::thread> > workers;
-	
+	syslog(LOG_NOTICE, "Server::Running io_service.");
+
 	for (std::size_t i = 0; i < worker_pool_size_; ++i) {
 		boost::shared_ptr<boost::thread> worker(
 			new boost::thread(boost::bind(
@@ -25,15 +25,22 @@ void ServiceServer::run()
 		workers.push_back(worker);
 	}
 	
-	for (std::size_t i = 0; i < workers.size(); ++i) 
-		workers[i]->join();
+}
 
+
+void ServiceServer::stop()
+{
+	handle_stop();
 }
 
 
 void ServiceServer::handle_stop()
 {
 	io_service_.stop();
+	
+	for (std::size_t i = 0; i < workers.size(); ++i) 
+		workers[i]->join();
+
 }
 
 
@@ -54,9 +61,21 @@ void ServiceServer::isend_response(ConnectionMessage &message,
 }
 
 
-void ServiceServer::register_response_callback(siox::MessageBuffer::MessageType type, 
-					    Callback &message_received_callback)
+void ServiceServer::register_response_callback(Callback
+					       &message_received_callback)
 {
+	response_callbacks.push_back(&message_received_callback);
+}
+
+
+void ServiceServer::handle_message(ConnectionMessage &msg)
+{
+	syslog(LOG_NOTICE, "TCP::Handling message...");
 	
+	boost::ptr_list<Callback>::iterator i;
+	for (i = response_callbacks.begin(); i != response_callbacks.end(); ++i) {
+		syslog(LOG_NOTICE, "TCP::Executing callback...");
+		i->handle_message(msg);
+	}
 }
 
