@@ -1,12 +1,14 @@
 #ifndef CALLBACK_H
 #define CALLBACK_H
 
+#include "ConnectionMessage.h"
+
+// template <class T>
 class Callback {
 public:
-	Callback();
-	Callback(const Callback &cb);
-private:
-	
+	virtual void handle_message(ConnectionMessage &msg) const
+	{
+	};
 };
 
 #endif

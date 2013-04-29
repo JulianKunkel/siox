@@ -7,21 +7,25 @@ IPCServer::IPCServer(const std::string &path,
 	  new_connection_()
 	  
 {
+	unlink(path.c_str());
+	
 	asio::local::stream_protocol::endpoint endpoint(path);
 	
 	acceptor_.open(endpoint.protocol());
 	acceptor_.bind(endpoint);
 	acceptor_.listen();
 
+	syslog(LOG_NOTICE, "Server::Constructor created and bound IPC server.");
+	
 	start_accept();
 }
 
 
 void IPCServer::start_accept()
 {
-	syslog(LOG_NOTICE, "Starting accept.");
+	syslog(LOG_NOTICE, "Server::Starting accept.");
 	
-	new_connection_.reset(new IPCConnection(io_service_));
+	new_connection_.reset(new IPCConnection(*this, io_service_));
 	acceptor_.async_accept(new_connection_->socket(), 
 	       boost::bind(&IPCServer::handle_accept, this, 
 			   asio::placeholders::error));
@@ -31,7 +35,10 @@ void IPCServer::start_accept()
 
 void IPCServer::handle_accept(const boost::system::error_code &error)
 {
+	syslog(LOG_NOTICE, "Server::Handling accepts.");
+	
 	if (!error) {
+		syslog(LOG_NOTICE, "Server::New connection accepted.");
 		new_connection_->start();
 	}
 

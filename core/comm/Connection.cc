@@ -24,30 +24,25 @@ void Connection::ireconnect()
 }
 
 
-void Connection::isend(const ConnectionMessage &msg)
-{
-}
-
-
-void Connection::isend(const ConnectionMessage &msg, Callback &rsp_cb)
-{
-	
-}
-
-
-void Connection::register_connection_callback(Callback &conn_cb)
-{
-	
-}
-
-
-void Connection::register_message_callback(int msg_type, Callback &msg_cb)
-{
-}
-
-
-void Connection::subscribe(int msg_type, Callback &cb)
-{
-	
-}
-
+// void Connection::isend(const ConnectionMessage &msg, Callback &rsp_cb)
+// {
+// 	
+// }
+// 
+// 
+// void Connection::register_connection_callback(Callback &conn_cb)
+// {
+// 	
+// }
+// 
+// 
+// void Connection::register_message_callback(int msg_type, Callback &msg_cb)
+// {
+// }
+// 
+// 
+// void Connection::subscribe(int msg_type, Callback &cb)
+// {
+// 	
+// }
+// 

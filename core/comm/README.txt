@@ -20,3 +20,5 @@ To compile create a "build" directory and run the following commands inside it:
 cmake ..
 make
 
+To execute the unit tests, do:
+make test

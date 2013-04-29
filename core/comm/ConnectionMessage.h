@@ -56,7 +56,7 @@ public:
 	typedef boost::shared_ptr<siox::MessageBuffer> MessagePointer;
 	
 	ConnectionMessage(MessagePointer msg  = MessagePointer());
-		
+	
 	void set_msg(MessagePointer msg);
 	MessagePointer get_msg();
 	
