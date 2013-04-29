@@ -4,7 +4,7 @@ OUTPUT_FILE=mpi-wrapper.c
 
 echo 'Generating' $OUTPUT_FILE
 
-python ../../siox-wrapper.py -s wrap -t ./template.py -o $OUTPUT_FILE mpi-wrapper.h > wrap-options.txt
+python ../../../siox-wrapper.py -s wrap -t ./template-mpi-test.py -o $OUTPUT_FILE mpi-wrapper.h > wrap-options.txt
 
 echo 'Compiling mpi-wrapper.c as mpi-wrapper'
 gcc mpi-wrapper.c -c
