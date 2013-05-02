@@ -1,5 +1,10 @@
-//@author Jakob Luettgau
+//@author Jakob Luettgau 
+//@author Marc Wiedemann
 //TODO Code Documentation - We will set up automatic recursive doc creation
+// In order not to exceed memory limit of 50% of available to avoid slowing the HW node,
+// we make the delivery a size of activities a necessity as this an internal interface
+// We give an adaptive interval for sizes of activities(attr,op-code,stat) and a maximal number of them i.e. 10bytes to 100mbytes 10^4
+// C++11 std should be used
 
 #ifndef ACTIVITYMULTIPLEXER_H
 #define ACTIVITYMULTIPLEXER_H 

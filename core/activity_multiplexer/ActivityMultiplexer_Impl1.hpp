@@ -11,7 +11,7 @@ class ActivityMultiplexer_Listener;
 #include <queue>
 #include <mutex>
 
-#include "ActivityMultiplexer.h"
+#include "ActivityMultiplexer.hpp"
 
 
 class Notifier
