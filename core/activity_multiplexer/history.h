@@ -1,6 +1,7 @@
 //@author Marc Wiedemann
 
-// history will be multiplexers (M1,M2,M3) aggregates without sliding window
+// history will be multiplexers (M1,M2,M3) aggregates without sliding windowcnode
+// activity multiplexer is registered a synchronous or asynchronous callabck ande
 // activity multiplexer is registered a synchronous or asynchronous callabck and forwards it layerwise to processwise aggregator
 // callbacks direct streams 
 // Every plugin stores in its own multiplexer its own relevant Information i.e. write, sequential write (SW), sequential write
@@ -12,7 +13,7 @@
 // Who is responsible?
 // Configurable is a central history and relevant history for each plugin
 // Action table when two states are true the same time
-// Abstract sliding window still exists
+// sliding window still exists
 // Two parts: storage component and decision component
 // Threads
 // fadvise must be synchronous and should be polled after activity start
@@ -66,14 +67,14 @@
 
 
 // history callback can be registered 
-register_cb(history_cb);
+virtual register_cb(history_cb);
 
-unregister_cb(history_cb);
+virtual unregister_cb(history_cb);
 
 // multiple callbacks can be registered at once
-register_cb(batched_activities_cb);
+virtual register_cb(batched_activities_cb);
 
-unregister_cb(batched_activities_cb);
+virtual unregister_cb(batched_activities_cb);
 
 // epoch 
 long double (phase);
@@ -86,8 +87,8 @@ unsigned long long number_of_statictics;
 // What is the freqency to call updated values? 1-20s? Stepwise gathering i.e. up to eight aggregation layers with 100ms overall duration each.
 // To start with: 10s
 // will be called after each cycle
-abstract class history_cb{
-	history_cb(){
+class history_cb{
+	virtual history_cb(){
 	// updated activity
 	new activity_state(activity_form, activity_description);
 	// updated statistics
@@ -96,50 +97,50 @@ abstract class history_cb{
 	~history_cb();
 };
 
-abstract class batched_activities_cb
+class batched_activities_cb
 {
 	// Better through through config file and implemented as module
 	// phase: call interface every t seconds
 	// number of activities: call batchwise 
-	batched_activities_cb(){
+	virtual batched_activities_cb(){
 		new batched_interface{number_of_activities, phase};
 	}
 	~batched_activities_cb();
 	
 };
 
-abstract class batched_statistics_cb
+class batched_statistics_cb
 {
 	// This is the implementation of a batched statistics package to deliver to history_cb
 public:
-	batched_statistics_cb(arguments);
+	virtual batched_statistics_cb(arguments);
 	~batched_statistics_cb();
 
 	/* data */
 };
 
-abstract class history
+class history
 {
 public:
-	history(arguments);
+	virtual history(arguments);
 	~history();
 
 	/* data */
 };
 
-abstract class number_of_statistics
+class number_of_statistics
 {
 public:
-	number_of_statictics(metrics_description);
+	virtual number_of_statictics(metrics_description);
 	~number_of_statictics(metrics_description);
 
 	/* data */
 };
 
-abstract class history
+class history
 {
 public:
-	history(arguments);
+	virtual history(arguments);
 	~history();
 
 	/* data */
