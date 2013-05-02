@@ -9,34 +9,56 @@ class ActivityMultiplexer_Listener;
 
 #include <list>
 #include <queue>
-#include <mutex>
 
-
-// TODO: move to own interface
-class Statistics
+class ActivityQueue
 {
 public:
-	Statistics (arguments);
-	virtual ~Statistics ();
+	/**
+	 * Add activity to queue
+	 *
+	 * @param Activity
+	 */
+	virtual void Push(Activity);
+	
+	/**
+	 * Get activity from queue
+	 *
+	 * @return	Activity 
+	 */
+	virtual Activity * Pull();
+
+	/**
+	 * Check capacity of activity queue
+	 *
+	 * @return bool  True when queue is full
+	 */
+	virtual bool Full();
 
 private:
-	/* data */
-};
+	virtual void Lock();
+	virtual void Unlock();
 
+};
 
 
 
 class Notifier
 {
 public:
-	Notifier ();
-	virtual ~Notifier ();
+	/**
+	 * So notifier starts working in case it did not already
+	 *
+	 */
+	virtual void Wake();	
+	
+	
+	/**
+	 * Inform async listeners about dropped activities and reset them
+	 *
+	 * @param	int	dropped activities
+	 */
+	virtual void Reset(int activities_dropped);
 
-	void Reset(int activities_dropped);
-	void Wake();	
-
-private:
-	/* data */
 };
 
 
@@ -45,31 +67,30 @@ class ActivityMultiplexer
 {
 
 public:
-	ActivityMultiplexer ();
-	virtual ~ActivityMultiplexer ();
 
-	// TODO: queue async Activities
-	void Log(Activity);
+	/**
+	 * Notify Listeners
+	 *
+	 * @param	Activity	Activity Object 
+	 */
+	virtual void Log(Activity);
 
-	void register_listener(ActivityMultiplexer_Listener * listener, bool async);
-	void unregister_listener(ActivityMultiplexer_Listener * listener);
+	/**
+	 * Register listener in notify list
+	 *
+	 * @param	pointer	ActivityMultiplexer_Listener
+	 * @return	Status	int
+	 */
+	virtual void register_listener(ActivityMultiplexer_Listener * listener, bool async);
 
-private:
-	std::list<ActivityMultiplexer_Listener*> listeners;
-	std::list<ActivityMultiplexer_Listener*> listeners_async;
+	/**
+	 * Unregister listener from notify list
+	 *
+	 * @param	pointer	ActivityMultiplexer_Listener
+	 * @return	Status	int
+	 */
+	virtual void unregister_listener(ActivityMultiplexer_Listener * listener);
 
-	// overload handling
-	bool has_capicity = true;
-	bool overload_mode = false;
-	int activities_dropped = 0;
-
-	// for async notifications
-	// impl1 z.B. ringbuffer
-	std::queue<Activity> activity_buffer;
-
-	// mutex and semaphore to prevent pushing listeners while notifying
-	std::mutex listeners_mutex;
-	int listeners_in_use = 0;
 };
 
 #endif /* ACTIVITYMULTIPLEXER_H */

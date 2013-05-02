@@ -1,11 +1,11 @@
 //@author Jakob Luettgau
 //TODO Code Documentation - We will set up automatic recursive doc creation
 
-#include "ActivityMultiplexer.hpp"
+#include "ActivityMultiplexer_Impl1.hpp"
 
 #include "ActivityMultiplexer_Listener.hpp"
 
-ActivityMultiplexer:: ActivityMultiplexer()
+ActivityMultiplexer_Impl1:: ActivityMultiplexer_Impl1()
 {
 
 }
@@ -13,10 +13,10 @@ ActivityMultiplexer:: ActivityMultiplexer()
 /**
  * Register listener in notify list
  *
- * @param[in]	pointer	ActivityMultiplexer_Listener
+ * @param[in]	pointer	ActivityMultiplexer_Impl1_Listener
  * @param[out]	Status	int
  */
-void ActivityMultiplexer::register_listener(ActivityMultiplexer_Listener * listener, bool async)
+void ActivityMultiplexer_Impl1::register_listener(ActivityMultiplexer_Listener * listener, bool async)
 {
 	if ( async )
 	{
@@ -35,10 +35,10 @@ void ActivityMultiplexer::register_listener(ActivityMultiplexer_Listener * liste
 /**
  * Unregister listener from notify list
  *
- * @param[in]	pointer	ActivityMultiplexer_Listener
+ * @param[in]	pointer	ActivityMultiplexer_Impl1_Listener
  * @param[out]	Status	int
  */
-void ActivityMultiplexer::unregister_listener(ActivityMultiplexer_Listener * listener)
+void ActivityMultiplexer_Impl1::unregister_listener(ActivityMultiplexer_Listener * listener)
 {
 	listeners_mutex.lock();
 	if ( listeners_in_use == 0 )
@@ -54,7 +54,7 @@ void ActivityMultiplexer::unregister_listener(ActivityMultiplexer_Listener * lis
  *
  * @param[in]	Activity	Activity Object 
  */
-void ActivityMultiplexer::Log(Activity)
+void ActivityMultiplexer_Impl1::Log(Activity)
 {
 	listeners_mutex.lock();
 	listeners_in_use++;
