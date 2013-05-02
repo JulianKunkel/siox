@@ -55,23 +55,10 @@ add_library(siox
 	${PROTO_HDRS}
 )
 
-add_executable(server 
-	test/server.cc
-)
-
-add_executable(tcp_client 
-	test/tcp_client.cc)
-
-add_executable(ipc_service
-	test/ipc_service.cc)
-
 add_executable(communication_tests
 	test/communication.cc)
 
 target_link_libraries(siox ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(server siox)
-target_link_libraries(tcp_client siox)
-target_link_libraries(ipc_service siox)
 target_link_libraries(communication_tests siox)
 
 enable_testing()

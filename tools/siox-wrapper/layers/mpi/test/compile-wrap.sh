@@ -7,7 +7,7 @@ echo 'Generating' $OUTPUT_FILE
 python ../../../siox-wrapper.py -s wrap -t ./template-mpi-test.py -o $OUTPUT_FILE mpi-wrapper.h > wrap-options.txt
 
 echo 'Compiling mpi-wrapper.c as mpi-wrapper'
-gcc mpi-wrapper.c -c
+gcc mpi-wrapper.c -c `pkg-config --cflags glib-2.0`
 mpicc test.c -c
 # Appending the output of the wrapper to compile the program
 mpicc test.o mpi-wrapper.o -o test_wrap -Wl,--wrap="MPI_Init",--wrap="MPI_File_open",--wrap="MPI_File_set_view",--wrap="MPI_File_read",--wrap="MPI_File_write",--wrap="MPI_File_close",--wrap="MPI_Finalize",--wrap="MPI_Comm_size",--wrap="MPI_Comm_rank"
