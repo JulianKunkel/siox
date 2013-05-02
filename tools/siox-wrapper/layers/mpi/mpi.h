@@ -29,12 +29,10 @@ End of global part
 int MPI_Init(int *argc, char ***argv);
 
 //@activity
-//@horizontal_map_remove_int fh
-//@horizontal_map_remove_str filename
 //@error ''ret!=0'' ret
 int MPI_Finalize(void);
 
-//@activity_with_hints hints_name hints_value
+//@activity_with_hints
 //@activity_link_int fh
 //@error ''ret!=0'' ret
 /*
@@ -83,7 +81,7 @@ int MPI_File_open(MPI_Comm comm, char *filename, int amode, MPI_Info info, MPI_F
 //@horizontal_map_remove_int fh
 //@error ''ret!=0'' ret
 int MPI_File_close(MPI_File *fh);
-//@activity_with_hints hints_name hints_value
+//@activity
 //@horizontal_map_put_str filename
 //@error ''ret!=0'' ret
 int MPI_File_delete(char *filename, MPI_Info info);
@@ -109,7 +107,6 @@ int MPI_File_get_group(MPI_File fh, MPI_Group *group);
 int MPI_File_get_amode(MPI_File fh, int *amode);
 //@activity
 //@activity_link_int fh
-//@activity_link_str info
 //@error ''ret!=0'' ret
 //TODO Shall we define an array for info?
 /*
@@ -156,7 +153,6 @@ int MPI_File_get_amode(MPI_File fh, int *amode);
 int MPI_File_set_info(MPI_File fh, MPI_Info info);
 //@activity
 //@activity_link_int fh
-//@activity_link_str info
 //@error ''ret!=0'' ret
 //TODO Shall we define an array for info?
 /*
@@ -201,7 +197,7 @@ int MPI_File_set_info(MPI_File fh, MPI_Info info);
 	- filename: Access this hint to get the name of the file.
 */
 int MPI_File_get_info(MPI_File fh, MPI_Info *info_used);
-//@activity_with_hints hints_name hints_value
+//@activity_with_hints
 //@activity_link_int fh
 //@error ''ret!=0'' ret
 /*

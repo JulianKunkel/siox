@@ -164,12 +164,12 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '''siox_activity * %(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
-	'after': '''__real_MPI_File_get_info(MPI_File  fh, MPI_Info * info_used);
+	'after': '''MPI_Info * info_used;
+	__real_MPI_File_get_info(fh, &info_used);
 	printf("TODO: here should be a function to convert the info_used to Attribute:Value tuple in order to transfer the Hints to siox.");
 	printf("TODO: before sending the Hints to siox, a checkout function should be called to filter the duplicated Hints.");
 	printf("TODO: or shall we just leave the checkout to the siox activity?");
-	siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );
-	__real_MPI_Info_free(MPI_Info * info_used);
+	__real_MPI_Info_free(&info_used);
 	siox_activity_stop( %(Activity)s, %(TimeStop)s );''',
 	'cleanup': 'siox_activity_end( %(Activity)s );',
 	'final': ''
