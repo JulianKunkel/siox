@@ -29,6 +29,7 @@ add_library(siox
 	misc/URI.cc
 	ConnectionMessage.h
 	ConnectionMessage.cc
+	MessageHandler.h
 	Callback.h
 	Callback.cc
 	Connection.h

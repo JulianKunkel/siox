@@ -22,6 +22,7 @@ public:
 	void disconnect();
 	void ireconnect();
 	virtual void isend(const ConnectionMessage &msg) = 0;
+	virtual void start() = 0;
 // 	void isend(const ConnectionMessage &msg, Callback &rsp_cb);
 // 	void register_connection_callback(Callback &conn_cb);
 // 	void register_message_callback(int msg_type, Callback &msg_cb);
@@ -30,7 +31,8 @@ public:
 protected:
 	asio::io_service *io_service_;
 	asio::io_service::strand strand_;
-	std::vector<uint8_t> buffer_;
+	std::vector<uint8_t> buffer_out_;
+	std::vector<uint8_t> buffer_in_;
 	ConnectionMessage msg_;
 };
 

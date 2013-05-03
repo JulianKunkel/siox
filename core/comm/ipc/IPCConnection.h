@@ -1,7 +1,7 @@
 #ifndef IPC_CONNECTION_H
 #define IPC_CONNECTION_H
 
-#include <syslog.h>
+#include <exception>
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/bind.hpp>
@@ -15,6 +15,17 @@
 
 namespace asio = boost::asio;
 
+
+class IPCConnectionException : public std::exception {
+public:
+	IPCConnectionException(const char *err_msg) : err_msg_(err_msg) {}
+	const char *what() const throw() { return err_msg_; }
+private:
+	const char *err_msg_;
+	
+};
+
+
 class IPCConnection 
    : public Connection, 
      public boost::enable_shared_from_this<IPCConnection>
@@ -25,10 +36,10 @@ public:
 	explicit IPCConnection(asio::io_service &io_service, 
 			       const std::string &path);
 
-	explicit IPCConnection(ServiceServer &server, 
+	explicit IPCConnection(MessageHandler &server, 
 			       asio::io_service &io_service);
 	
-	explicit IPCConnection(ServiceServer &server, 
+	explicit IPCConnection(MessageHandler &server, 
 			       asio::io_service &io_service, 
 			       const std::string &path);
 
@@ -42,7 +53,7 @@ public:
 	
 private:
 	asio::local::stream_protocol::socket socket_;
-	ServiceServer *server_;
+	MessageHandler *server_;
 	
 	void handle_connect(const boost::system::error_code &error);
 	void start_read_body(unsigned msglen);

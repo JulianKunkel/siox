@@ -1,6 +1,7 @@
 #ifndef CONNECTION_FACTORY_H
 #define CONNECTION_FACTORY_H
 
+#include <exception>
 #include <string>
 
 #include "ipc/IPCConnection.h"
@@ -8,6 +9,17 @@
 #include "misc/URI.h"
 
 namespace asio = boost::asio;
+
+
+class ConnectionFactoryException : public std::exception {
+public:
+	ConnectionFactoryException(const char *err_msg) : err_msg_(err_msg) {}
+	const char *what() const throw() { return err_msg_; }
+private:
+	const char *err_msg_;
+	
+};
+
 
 namespace ConnectionFactory {
 	
@@ -19,6 +31,7 @@ Connection *create_connection(ServiceServer &server,
 			      asio::io_service &io_service, 
 			      const std::string &endpoint_uri);
 
+/** @todo This function will probably be deprecated. */
 Connection *create_connection(asio::io_service &io_service, 
 			      const std::string &endpoint_uri);
 	

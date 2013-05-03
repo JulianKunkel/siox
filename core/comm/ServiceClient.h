@@ -1,13 +1,16 @@
 /**
- * 
+ * ServiceClient provides an interface to communicate with a ServiceServer.
  * 
  */
 
 #ifndef SERVICE_CLIENT_H
 #define SERVICE_CLIENT_H
 
-#include <list>
+#include <exception>
 #include <string>
+#include <vector>
+
+#include <boost/ptr_container/ptr_list.hpp>
 
 #include "Callback.h"
 #include "Connection.h"
@@ -15,34 +18,96 @@
 
 namespace asio = boost::asio;
 
-class ServiceClient {
+
+class ServiceClientException : public std::exception {
+public:
+	ServiceClientException(const char *err_msg) : err_msg_(err_msg) {}
+	const char *what() const throw() { return err_msg_; }
+private:
+	const char *err_msg_;
+	
+};
+
+
+class ServiceClient
+   : public MessageHandler,
+     private boost::noncopyable {
 public:
 	/**
 	 * Creates an instance of ServiceClient and connects it to the given 
-	 * address. E.g. <i>ipc:///tmp/sioxsock</i>, or <i>tcp://host:port</i>.
+	 * address. 
+	 * 
+	 * @param endpoint_uri Address where the ServiceServer is listening for 
+	 * connections.E.g. <i>ipc:///tmp/sioxsock</i> and <i>tcp://host:port</i>.
+	 * @param worker_pool_size The number of threads handling the messages. 
+	 * (Default is 1).
 	 */
-	ServiceClient(const std::string &endpoint_uri);
+	ServiceClient(const std::string &endpoint_uri, 
+		      std::size_t worker_pool_size = 1);
 	
-// 	void register_error_callback(Callback err_cb);
-// 	void unregister_error_callback(Callback err_cb);
-// 	void clear_error_callbacks();
-// 
-// 	void register_response_callback(Callback rsp_cb);
-// 	void unregister_response_callback(Callback rsp_cb);
-// 	void clear_response_callbacks();
+	/**
+	 * Adds a Callback object to the list of callbacks responsible for error
+	 * handling.
+	 * 
+	 */
+	void register_error_callback(Callback &err_cb);
 	
+	/**
+	 * Adds a Callback object to the list of callbacks responsible for 
+	 * handling the message responses from the connected ServiceServer.
+	 */
+	void register_response_callback(Callback &rsp_cb);
+	
+	/**
+	 * Remove all callbacks from the list of error handling callbacks.
+	 */
+	void clear_error_callbacks();
+	
+	/**
+	 * Remove all callbacks from the list of response handling callbacks.
+	 */
+	void clear_response_callbacks();
+	
+	/**
+	 * Asynchronously sends a message to the ServiceServer. 
+	 * 
+	 * @note This function returns immediately and the message is actually 
+	 * sent by the threads spawn by the run() method.
+	 */
 	void isend(const ConnectionMessage &msg);
 
+	/**
+	 * If a message sent to the ServiceServer produces a response from the
+	 * ServiceServer in form of a message sent back to the ServerClient,
+	 * this function will process this message using the corresponding
+	 * registered response callbacks.
+	 * 
+	 * @param rsp Response sent by the ServiceServer to the ServiceClient.
+	 */
+	void handle_response(ConnectionMessage &rsp);
+	
+	/**
+	 * Spawns the worker threads and starts the event processing loop.
+	 *
+	 * @note If the ServiceClient is not running, messages won't be 
+	 * processed.
+	 */
 	void run();
+	
+	/**
+	 * Stops the client and waits for completion of all worker threads.
+	 */
 	void stop();
 	
 private:
-	asio::io_service io_service_;
+	void handle_message(ConnectionMessage &msg);
+	
 	Connection *connection_;
-
-	void handle_stop();
-// 	std::list<Callback> error_callbacks;
-// 	std::list<Callback> response_callbacks;
+	asio::io_service io_service_;
+	std::size_t worker_pool_size_;
+	boost::ptr_list<Callback> error_callbacks;
+	boost::ptr_list<Callback> response_callbacks;
+	std::vector<boost::shared_ptr<boost::thread> > workers;
 };
 
 
