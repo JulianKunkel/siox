@@ -17,8 +17,10 @@
 // String stream
 #include <sstream>
 #include <string>
+#include <tuple>
 
 std::stringstream ssm;
+std::tuple<std::string, double, int, int, std::string> tple;
 
 class information_type
 {
@@ -68,5 +70,7 @@ void componentcontent_writer()
 
 int main()
 {
+	tple systpl("systeminfo", 3.05, "PID", "TID", "CommandLine");
+	std::cout << "Initialized with values: "; print(systpl);
 	componentcontent_writer()
 }
