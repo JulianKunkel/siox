@@ -46,10 +46,10 @@ private:
 template <typename Archive>
 void serialize(Archive &ar, component &cp, const unsigned int version)
 {
-  ar & p.name;
-  ar & p.HWid;
-  ar & p.SWid;
-  ar & p.Iid;
+  ar & cp.name;
+  ar & cp.HWid;
+  ar & cp.SWid;
+  ar & cp.Iid;
 
 }
 
