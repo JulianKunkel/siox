@@ -33,12 +33,9 @@ class IPCConnection
 public:
 	explicit IPCConnection(asio::io_service &io_service);
 	
-	explicit IPCConnection(asio::io_service &io_service, 
-			       const std::string &path);
-
 	explicit IPCConnection(MessageHandler &server, 
 			       asio::io_service &io_service);
-	
+
 	explicit IPCConnection(MessageHandler &server, 
 			       asio::io_service &io_service, 
 			       const std::string &path);
@@ -55,6 +52,7 @@ private:
 	asio::local::stream_protocol::socket socket_;
 	MessageHandler *server_;
 	
+	void do_connection(const std::string &path);
 	void handle_connect(const boost::system::error_code &error);
 	void start_read_body(unsigned msglen);
 	void handle_read_header(const boost::system::error_code &error);

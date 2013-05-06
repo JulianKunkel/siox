@@ -77,16 +77,6 @@ public:
 	void isend(const ConnectionMessage &msg);
 
 	/**
-	 * If a message sent to the ServiceServer produces a response from the
-	 * ServiceServer in form of a message sent back to the ServerClient,
-	 * this function will process this message using the corresponding
-	 * registered response callbacks.
-	 * 
-	 * @param rsp Response sent by the ServiceServer to the ServiceClient.
-	 */
-	void handle_response(ConnectionMessage &rsp);
-	
-	/**
 	 * Spawns the worker threads and starts the event processing loop.
 	 *
 	 * @note If the ServiceClient is not running, messages won't be 
@@ -98,9 +88,11 @@ public:
 	 * Stops the client and waits for completion of all worker threads.
 	 */
 	void stop();
+
+	void handle_message(ConnectionMessage &msg);
 	
 private:
-	void handle_message(ConnectionMessage &msg);
+	
 	
 	Connection *connection_;
 	asio::io_service io_service_;

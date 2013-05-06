@@ -27,14 +27,11 @@ namespace ConnectionFactory {
  * Creates a connection of the appropriate type according to the protocol 
  * especified in the given URI.
  */	
-Connection *create_connection(ServiceServer &server, 
+Connection *create_connection(MessageHandler &server, 
 			      asio::io_service &io_service, 
 			      const std::string &endpoint_uri);
 
-/** @todo This function will probably be deprecated. */
-Connection *create_connection(asio::io_service &io_service, 
-			      const std::string &endpoint_uri);
-	
+
 };
 
 #endif

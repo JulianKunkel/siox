@@ -55,9 +55,10 @@ void TCPServer::handle_accept(const boost::system::error_code &error)
 #ifndef NDEBUG
 		syslog(LOG_NOTICE, "New TCP connection accepted.");
 #endif
-		connected_sockets_.push_back(&new_connection_->socket());
-		
 		new_connection_->start();
+		
+		TCPConnection_ptr connection(new_connection_);
+		connections_.push_back(connection);
 	}
 
 	try {
@@ -68,11 +69,17 @@ void TCPServer::handle_accept(const boost::system::error_code &error)
 
 }
 
+
 void TCPServer::ipublish(ConnectionMessage &msg)
 {
-	boost::ptr_list<asio::ip::tcp::socket>::iterator i;
-	for (i = connected_sockets_.begin(); i != connected_sockets_.end(); ++i) {
-		//isend(*i, msg);
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Publishing on %zu active connections.", 
+	       connections_.size());
+#endif
+
+	std::vector<TCPConnection_ptr>::iterator i;
+	for (i = connections_.begin(); i != connections_.end(); ++i) {
+		(*i)->isend(msg);
 	}
 }
 

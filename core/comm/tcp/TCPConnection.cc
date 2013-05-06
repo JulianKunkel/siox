@@ -15,13 +15,27 @@ TCPConnection::TCPConnection(MessageHandler &server,
 }
 
 
-TCPConnection::TCPConnection(asio::io_service &io_service, 
+TCPConnection::TCPConnection(MessageHandler &server, 
+			     asio::io_service &io_service, 
 			     const std::string &address, 
 			     const std::string &port)
    : Connection(io_service),
      socket_(io_service)
 {
-	asio::ip::tcp::resolver resolver(io_service);
+	server_ = &server;
+	
+	try {
+		do_connection(address, port);
+	} catch(TCPConnectionException &e) {
+		throw;
+	}
+}
+
+
+void TCPConnection::do_connection(const std::string &address, 
+				  const std::string &port)
+{
+	asio::ip::tcp::resolver resolver(*io_service_);
 	asio::ip::tcp::resolver::query query(address, port);
 	asio::ip::tcp::resolver::iterator endpoint;
 	
@@ -37,28 +51,20 @@ TCPConnection::TCPConnection(asio::io_service &io_service,
 }
 
 
-TCPConnection::TCPConnection(MessageHandler &server, 
-			     asio::io_service &io_service, 
-			     const std::string &address, 
-			     const std::string &port)
-   : TCPConnection(io_service, address, port)
-{
-	server_ = &server;
-}
-
-
 void TCPConnection::handle_connect(const boost::system::error_code &error)
 {
 	if (!error) {
 #ifndef NDEBUG
 		syslog(LOG_NOTICE, "Connection successfully connected.");
 #endif
-		buffer_in_.resize(HEADER_SIZE);
+		start();
 		
-		asio::async_read(socket_, asio::buffer(buffer_in_),
-				asio::transfer_exactly(HEADER_SIZE),
-				boost::bind(&TCPConnection::handle_read_header, 
-					    this, asio::placeholders::error));
+// 		buffer_in_.resize(HEADER_SIZE);
+// 		
+// 		asio::async_read(socket_, asio::buffer(buffer_in_),
+// 				asio::transfer_exactly(HEADER_SIZE),
+// 				boost::bind(&TCPConnection::handle_read_header, 
+// 					    this, asio::placeholders::error));
 	}
 }
 
@@ -66,17 +72,14 @@ void TCPConnection::handle_connect(const boost::system::error_code &error)
 
 void TCPConnection::handle_read_header(const boost::system::error_code &error) 
 {
-	syslog(LOG_NOTICE, "handling header.");
-
 	if (!error) {
-		
+#ifdef NDEBUG
+		syslog(LOG_NOTICE, "Message header read (%s).", 
+			show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
+#endif
 		unsigned msglen = msg_.decode_header(buffer_in_);
 		
 		if (msglen > 0) {
-#ifdef NDEBUG
-			syslog(LOG_NOTICE, "Message header read (%s).", 
-			       show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
-#endif
 			start_read_body(msglen);
 		}  else {
 #ifndef NDEBUG
@@ -102,8 +105,7 @@ void TCPConnection::start_read_body(unsigned msglen)
 	
 	asio::async_read(socket_, buf,
 		strand_.wrap(
-			boost::bind(&TCPConnection::handle_read_body, 
-				    shared_from_this(), 
+			boost::bind(&TCPConnection::handle_read_body, this, 
 				    asio::placeholders::error)));
 }
 
@@ -150,11 +152,10 @@ void TCPConnection::start()
 	
 	asio::async_read(socket_, asio::buffer(buffer_in_),
 			 asio::transfer_exactly(HEADER_SIZE),
-			 boost::bind(&TCPConnection::handle_read_header,
-				     shared_from_this(), 
+			 boost::bind(&TCPConnection::handle_read_header, this,
 				     asio::placeholders::error));
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Connection started.");
+	syslog(LOG_NOTICE, "Waiting for message.");
 #endif
 }
 
@@ -178,29 +179,12 @@ void TCPConnection::isend(const ConnectionMessage &msg)
 }
 
 
-void TCPConnection::isend(asio::ip::tcp::socket sock, 
-			  std::vector<uint8_t> buffer) 
-{
-	asio::async_write(sock, asio::buffer(buffer), 
-			  boost::bind(&TCPConnection::handle_write, this, 
-				      asio::placeholders::error));
-}
-
-// void TCPConnection::do_write(const ConnectionMessage &msg)
-// {
-// 	std::vector<boost::uint8_t> msgbuf;
-// 	msg.pack(msgbuf);
-// 	
-// 	asio::async_write(socket_, asio::buffer(msgbuf), 
-// 		boost::bind(&TCPConnection::handle_write, this, 
-// 			    asio::placeholders::error));
-// }
-
-
 void TCPConnection::handle_write(const boost::system::error_code &e)
 {
 	if (!e) {
-		syslog(LOG_NOTICE, "Client::Message successfully written.");
+#ifndef NDEBUG
+		syslog(LOG_NOTICE, "Message successfully sent.");
+#endif
 	}
 }
 

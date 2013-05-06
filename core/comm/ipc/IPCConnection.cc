@@ -15,29 +15,30 @@ IPCConnection::IPCConnection(MessageHandler &server,
 }
 
 
-IPCConnection::IPCConnection(asio::io_service &io_service, 
+IPCConnection::IPCConnection(MessageHandler &server, 
+			     asio::io_service &io_service, 
 			     const std::string &path)
    : Connection(io_service),
      socket_(io_service)
 {
-	asio::local::stream_protocol::socket socket(io_service);
+	server_ = &server;
+	
+	try {
+		do_connection(path);
+	} catch(IPCConnectionException &e) {
+		throw;
+	}
+}
+
+void IPCConnection::do_connection(const std::string &path)
+{
+	asio::local::stream_protocol::socket socket(*io_service_);
 	asio::local::stream_protocol::endpoint endpoint(path);
 
 	socket_.async_connect(endpoint, 
 			      boost::bind(&IPCConnection::handle_connect, this,
 					  asio::placeholders::error));
-	
 }
-
-
-IPCConnection::IPCConnection(MessageHandler &server, 
-			     asio::io_service &io_service, 
-			     const std::string &path)
-   : IPCConnection(io_service, path)
-{
-	server_ = &server;
-}
-     
     
     
 void IPCConnection::handle_connect(const boost::system::error_code &error)
@@ -46,6 +47,8 @@ void IPCConnection::handle_connect(const boost::system::error_code &error)
 #ifndef NDEBUG
 		syslog(LOG_NOTICE, "Connection successfully connected.");
 #endif
+		start();
+		
 // 		asio::async_read(socket_, asio::buffer(buffer_),
 // 				 boost::bind(&IPCConnection::handle_read_header,
 // 					     this, asio::placeholders::error));
@@ -57,14 +60,13 @@ void IPCConnection::handle_connect(const boost::system::error_code &error)
 void IPCConnection::handle_read_header(const boost::system::error_code &error) 
 {
 	if (!error) {
-		
+#ifdef NDEBUG
+		syslog(LOG_NOTICE, "Message header read (%s).", 
+			show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
+#endif
 		unsigned msglen = msg_.decode_header(buffer_in_);
 		
 		if (msglen > 0) {
-#ifndef NDEBUG
-			syslog(LOG_NOTICE, "Message header read (%s).", 
-			       show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
-#endif
 			start_read_body(msglen);
 			
 		} else {
@@ -92,8 +94,8 @@ void IPCConnection::start_read_body(unsigned msglen)
 						   msglen);
 	
 	asio::async_read(socket_, buf,
-		boost::bind(&IPCConnection::handle_read_body, 
-			    shared_from_this(), asio::placeholders::error));
+		boost::bind(&IPCConnection::handle_read_body, this, 
+			    asio::placeholders::error));
 }
 
 
@@ -137,9 +139,12 @@ void IPCConnection::start()
 	
 	asio::async_read(socket_, asio::buffer(buffer_in_),
 			 asio::transfer_exactly(HEADER_SIZE),
-			 boost::bind(&IPCConnection::handle_read_header, 
-				     shared_from_this(), 
+			 boost::bind(&IPCConnection::handle_read_header, this, 
 				     asio::placeholders::error));
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Waiting for message.");
+#endif
+	
 }
 
 

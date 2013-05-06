@@ -11,7 +11,7 @@ ServiceClient::ServiceClient(const std::string &endpoint_uri,
 #endif
 	try {
 		connection_ = 
-			ConnectionFactory::create_connection(io_service_,
+			ConnectionFactory::create_connection(*this, io_service_,
 							     endpoint_uri);
 	} catch(ConnectionFactoryException &e) {
 		throw(new ServiceClientException(e.what()));
@@ -57,6 +57,9 @@ void ServiceClient::clear_error_callbacks()
 
 void ServiceClient::register_response_callback(Callback &rsp_cb)
 {
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Registering response callback");
+#endif
 	response_callbacks.push_back(&rsp_cb);
 }
 
@@ -73,7 +76,7 @@ void ServiceClient::isend(const ConnectionMessage &msg)
 }
 
 
-void ServiceClient::handle_response(ConnectionMessage &msg)
+void ServiceClient::handle_message(ConnectionMessage &msg)
 {
 #ifndef NDEBUG
 	syslog(LOG_NOTICE, "Handling message response.");
@@ -85,9 +88,4 @@ void ServiceClient::handle_response(ConnectionMessage &msg)
 #endif
 		i->handle_message(msg);
 	}
-}
-
-
-void ServiceClient::handle_message(ConnectionMessage &msg)
-{
 }

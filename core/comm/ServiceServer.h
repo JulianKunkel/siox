@@ -28,7 +28,7 @@ public:
 	
 	void advertise(siox::MessageBuffer::MessageType message_type);
 	
-	void ipublish(ConnectionMessage &message);
+	virtual void ipublish(ConnectionMessage &message);
 	
 	void isend_response(ConnectionMessage &message, 
 			    ConnectionMessage &response);

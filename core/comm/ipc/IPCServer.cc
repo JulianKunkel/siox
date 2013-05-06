@@ -52,8 +52,10 @@ void IPCServer::handle_accept(const boost::system::error_code &error)
 #ifndef NDEBUG
 		syslog(LOG_NOTICE, "New IPC connection accepted.");
 #endif
-		connected_sockets_.push_back(&new_connection_->socket());
 		new_connection_->start();
+		
+		IPCConnection_ptr connection(new_connection_);
+		connections_.push_back(connection);
 	}
 
 	try {
@@ -65,3 +67,15 @@ void IPCServer::handle_accept(const boost::system::error_code &error)
 }
 
 
+void IPCServer::ipublish(ConnectionMessage &msg)
+{
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Publishing on %zu active connections.", 
+	       connections_.size());
+#endif
+
+	std::vector<IPCConnection_ptr>::iterator i;
+	for (i = connections_.begin(); i != connections_.end(); ++i) {
+		(*i)->isend(msg);
+	}
+}

@@ -5,6 +5,7 @@
 #include <boost/bind.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/shared_ptr.hpp>
+#include <vector>
 #include <syslog.h>
 
 #include "ServiceServer.h"
@@ -33,7 +34,7 @@ public:
 private:
 	asio::ip::tcp::acceptor acceptor_;
 	TCPConnection_ptr new_connection_;
-	boost::ptr_list<asio::ip::tcp::socket> connected_sockets_;
+	std::vector<TCPConnection_ptr> connections_;
 	
 	void start_accept();
 	void handle_accept(const boost::system::error_code &e);

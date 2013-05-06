@@ -49,12 +49,12 @@ public:
 	void disconnect();
 	
 	void isend(const ConnectionMessage &msg);
-	void isend(asio::ip::tcp::socket sock, std::vector<uint8_t> buffer);
 	
 private:
 	asio::ip::tcp::socket socket_;
 	MessageHandler *server_;
-	
+
+	void do_connection(const std::string &address, const std::string &port);
 	void handle_connect(const boost::system::error_code &error);
 	void start_read_body(unsigned msglen);
 	void handle_read_header(const boost::system::error_code &error);
