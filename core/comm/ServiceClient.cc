@@ -1,80 +1,73 @@
 #include "ServiceClient.h"
 
-ServiceClient::ServiceClient(const std::string &endpoint_uri)
-   : io_service_()
+ServiceClient::ServiceClient(const std::string &endpoint_uri, 
+			     std::size_t worker_pool_size)
+   : io_service_(),
+     worker_pool_size_(worker_pool_size)
 {
-	syslog(LOG_NOTICE, "Client::Creating service client at %s.", endpoint_uri.c_str());
-	connection_ = ConnectionFactory::create_connection(io_service_, 
-							   endpoint_uri);
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Creating service client at %s.", 
+	       endpoint_uri.c_str());
+#endif
+	try {
+		connection_ = 
+			ConnectionFactory::create_connection(*this, io_service_,
+							     endpoint_uri);
+	} catch(ConnectionFactoryException &e) {
+		throw(new ServiceClientException(e.what()));
+	}
 
 }
 
 void ServiceClient::run()
 {
-	syslog(LOG_NOTICE, "Client::Running io_service.");
-	io_service_.run();
-	syslog(LOG_NOTICE, "Client::io_service has been stopped or has nothing to do.");
-	return;
-	
-// 	std::vector<boost::shared_ptr<boost::thread> > workers;
-	
-// 	for (std::size_t i = 0; i < worker_pool_size_; ++i) {
-// 		boost::shared_ptr<boost::thread> worker(
-// 			new boost::thread(boost::bind(
-// 				&asio::io_service::run, &io_service_)));
-// 		workers.push_back(worker);
-// 	}
-// 	
-// 	for (std::size_t i = 0; i < workers.size(); ++i) 
-// 		workers[i]->join();
-
+	for (std::size_t i = 0; i < worker_pool_size_; ++i) {
+		boost::shared_ptr<boost::thread> worker(
+			new boost::thread(boost::bind(
+				&asio::io_service::run, &io_service_)));
+		workers.push_back(worker);
+	}
 }
 
 
 void ServiceClient::stop()
 {
-	handle_stop();
-}
-
-
-void ServiceClient::handle_stop()
-{
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Waiting for client workers to finish."); 
+#endif
 	io_service_.stop();
+	
+	for (std::size_t i = 0; i < workers.size(); ++i) 
+		workers[i]->join();
+
 }
 
 
-// void ServiceClient::register_error_callback(Callback err_cb)
-// {
-// 	error_callbacks.push_back(err_cb);
-// }
-// 
-// 
-// void ServiceClient::unregister_error_callback(Callback err_cb)
-// {
-// }
-// 
-// 
-// void ServiceClient::clear_error_callbacks()
-// {
-// 	error_callbacks.clear();
-// }
-// 
-// 
-// void ServiceClient::register_response_callback(Callback rsp_cb)
-// {
-// 	response_callbacks.push_back(rsp_cb);
-// }
-// 
-// 
-// void ServiceClient::unregister_response_callback(Callback rsp_cb)
-// {
-// }
-// 
-// 
-// void ServiceClient::clear_response_callbacks()
-// {
-// 	response_callbacks.clear();
-// }
+void ServiceClient::register_error_callback(Callback &err_cb)
+{
+	error_callbacks.push_back(&err_cb);
+}
+
+
+void ServiceClient::clear_error_callbacks()
+{
+	error_callbacks.clear();
+}
+
+
+void ServiceClient::register_response_callback(Callback &rsp_cb)
+{
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Registering response callback");
+#endif
+	response_callbacks.push_back(&rsp_cb);
+}
+
+
+void ServiceClient::clear_response_callbacks()
+{
+	response_callbacks.clear();
+}
 
 
 void ServiceClient::isend(const ConnectionMessage &msg)
@@ -82,3 +75,17 @@ void ServiceClient::isend(const ConnectionMessage &msg)
 	connection_->isend(msg);
 }
 
+
+void ServiceClient::handle_message(ConnectionMessage &msg)
+{
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Handling message response.");
+#endif
+	boost::ptr_list<Callback>::iterator i;
+	for (i = response_callbacks.begin(); i != response_callbacks.end(); ++i) {
+#ifndef NDEBUG
+		syslog(LOG_NOTICE, "Executing message response callback.");
+#endif
+		i->handle_message(msg);
+	}
+}

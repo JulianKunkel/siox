@@ -8,21 +8,40 @@
 #ifndef URI_H
 #define URI_H
 
+#include <exception>
 #include <string>
+
+
+class MalformedURIException : public std::exception {
+public:
+	MalformedURIException(const char *err_msg) : err_msg_(err_msg) {}
+	const char *what() const throw() { return err_msg_; }
+private:
+	const char *err_msg_;
+	
+};
+
 
 /**
  * Helper class to parse connection addresses like <i>protocol://host:port</i>
  */
 class URI {
 private:
-	std::string protocol, host, port;
+	std::string protocol_, host_, port_;
 	void parse(const std::string &url_s);
+	int malformed();
 public:
+	/**
+	 * Creates an URI object containing the given URI. Supported URI are
+	 * ipc://path-to-ipc-socket and tcp://ip-address:port-number.
+	 * 
+	 * @throws MalformedURIException
+	 */
 	URI(const std::string &url_s);
-	std::string get_protocol() const;
-	std::string get_host() const;
-	std::string get_path() const;
-	std::string get_port() const;
+	std::string protocol() const;
+	std::string host() const;
+	std::string path() const;
+	std::string port() const;
 };
 
 #endif

@@ -14,6 +14,8 @@ namespace asio = boost::asio;
 
 ConnectionMessage *m;
 
+// The purpose of this callback is just to extract the message received by the
+// service in order to compare it to the one that was sent.
 class TestCallback : public Callback {
 public:
 	void handle_message(ConnectionMessage &msg) const
@@ -50,7 +52,7 @@ BOOST_AUTO_TEST_CASE(ipc_communication)
 
 	TestCallback test_cb;
 	
-	server->register_response_callback(test_cb);
+	server->register_message_callback(test_cb);
 	
 	boost::shared_ptr<siox::MessageBuffer> mp(new siox::MessageBuffer());
 	mp->set_type(siox::MessageBuffer::TYPE1);
@@ -58,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ipc_communication)
 	mp->set_aid(20);
 
 	ConnectionMessage msg(mp);
- 
+
 	ServiceClient *client = new ServiceClient(ipc_socket_path);
 	boost::thread client_thread(&ServiceClient::run, client);
 	
@@ -66,13 +68,22 @@ BOOST_AUTO_TEST_CASE(ipc_communication)
 
 	sleep(1);
 	
+	BOOST_CHECK_EQUAL(mp->unid(), m->get_msg()->unid());
+	
+	client->register_response_callback(test_cb);
+	
+	mp->set_unid(210);
+	server->ipublish(msg);
+
+	sleep(1);
+
+	BOOST_CHECK_EQUAL(210, m->get_msg()->unid());
+	
 	client->stop();
 	server->stop();
 	
 	client_thread.join();
 	server_thread.join();
-
-	BOOST_CHECK_EQUAL(mp->unid(), m->get_msg()->unid());
 }
 
 
@@ -87,7 +98,7 @@ BOOST_AUTO_TEST_CASE(tcp_communication)
 
 	TestCallback test_cb;
 	
-	server->register_response_callback(test_cb);
+	server->register_message_callback(test_cb);
 	
 	boost::shared_ptr<siox::MessageBuffer> mp(new siox::MessageBuffer());
 	mp->set_type(siox::MessageBuffer::TYPE2);
@@ -103,12 +114,21 @@ BOOST_AUTO_TEST_CASE(tcp_communication)
  
 	sleep(1);
 	
+	BOOST_CHECK_EQUAL(mp->unid(), m->get_msg()->unid());
+	
+	client->register_response_callback(test_cb);
+	
+	mp->set_unid(110);
+	server->ipublish(msg);
+
+	sleep(1);
+
+	BOOST_CHECK_EQUAL(110, m->get_msg()->unid());
+	
 	server->stop();
 	client->stop();
 	
 	client_thread.join();
 	server_thread.join();
-
-	BOOST_CHECK_EQUAL(mp->unid(), m->get_msg()->unid());
 }
 

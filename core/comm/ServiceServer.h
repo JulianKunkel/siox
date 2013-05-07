@@ -11,12 +11,14 @@
 #include <boost/thread/thread.hpp>
 
 #include "Callback.h"
+#include "MessageHandler.h"
 #include "ServiceServer.h"
 
 namespace asio = boost::asio;
 
 class ServiceServer 
-   : private boost::noncopyable {
+   : public MessageHandler,
+     private boost::noncopyable {
 	   
 public:
 	ServiceServer(const std::size_t worker_pool_size);
@@ -26,13 +28,17 @@ public:
 	
 	void advertise(siox::MessageBuffer::MessageType message_type);
 	
-	void ipublish(ConnectionMessage &message);
+	virtual void ipublish(ConnectionMessage &message);
 	
 	void isend_response(ConnectionMessage &message, 
 			    ConnectionMessage &response);
 				    
-	void register_response_callback(Callback
+	void register_message_callback(Callback
 					&message_received_callback);
+	void clear_message_callbacks();
+	void register_error_callback(Callback
+				     &error_callback);
+	void clear_error_callbacks();
 	
 	void handle_message(ConnectionMessage &msg);
 	
@@ -41,10 +47,10 @@ protected:
 	void handle_stop();
 	
 private:
-	asio::signal_set signals_;
 	std::size_t worker_pool_size_;
-	std::vector<boost::shared_ptr<boost::thread> > workers;
-	boost::ptr_list<Callback> response_callbacks;
+	boost::ptr_list<Callback> error_callbacks_;
+	boost::ptr_list<Callback> message_callbacks_;
+	std::vector<boost::shared_ptr<boost::thread> > workers_;
 };
 
 #endif

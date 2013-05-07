@@ -47,8 +47,6 @@ unsigned ConnectionMessage::decode_header(const data_buffer &buf) const
 
 bool ConnectionMessage::unpack(const data_buffer &buf) 
 {
-	syslog(LOG_ERR, "Unpacking message");
-	
 	return msg_->ParseFromArray(&buf[HEADER_SIZE], buf.size() 
 		- HEADER_SIZE);
 }
