@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     printf("==========MPI_File_write()==========\n");
     MPI_File_write(fh, &buf, 1, etype, &status);
     printf("==========MPI_File_close()==========\n");
-    MPI_File_close(fh);
+    MPI_File_close(&fh);
     printf("==========MPI_Finalize()==========\n");
     MPI_Finalize();
 
