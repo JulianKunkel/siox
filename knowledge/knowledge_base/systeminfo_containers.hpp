@@ -6,10 +6,10 @@ using namespace std;
 
 class SioxNode {
     public:
-        SioxNode(unsigned int hw_id);
+        SioxNode(string p_hw_id);
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
         unsigned int      node_id;
-        /* The hardware id. May only be 255 characters long for now (though the database could do more) */
+        /* The hardware id. */
         string       hw_id;
         /*
         * Other metrics here
@@ -24,10 +24,10 @@ class storage_device {
         unsigned int      device_id;
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
         unsigned int      node_id;
-        /* The model name.  May only be 255 characters long for now (though the database could do more) */
-        char        model_name[255];
-        /* The local adress of the device.  May only be 255 characters long for now (though the database could do more) */
-        char        local_address[255];
+        /* The model name. */
+        string        model_name;
+        /* The local adress of the device. */
+        string        local_address;
         /*
         * Other metrics here
         */
@@ -38,8 +38,8 @@ class filesystem {
         // FIXME: Constructor
         /* The filesystem id. Serial (database type) saves up to 2^16, so int16 is fine */
         unsigned int       filesystem_id;
-        /* The unique identifier of the filesystem.  May only be 255 characters long for now (though the database could do more) */
-        char        unique_id[255];
+        /* The unique identifier of the filesystem. */
+        string        unique_id;
         /*
         * Other metrics here
         */

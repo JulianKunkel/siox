@@ -3,10 +3,15 @@
 
 #include <iostream>
 #include <list>
+#include <string>
+#include <pqxx/pqxx>
 #include "systeminfo_containers.hpp"
 using namespace std;
+using namespace pqxx;
 
 class DBLayer {
+    private:
+        connection* conn;
     public:
         /* Constructor. Get/Build up Connection */
         DBLayer();
@@ -19,7 +24,7 @@ class DBLayer {
         *  Usefull for comparision to current states and updates.
         *  Also includes the nodes id, which is needed for further querying.
         */
-        SioxNode * getNodeByHWID(char* hwid);
+        SioxNode * getNodeByHWID(string hwid);
 
         /*
         *  Used to update a node object in the database. If no corresponding node is found one will be created.
@@ -50,19 +55,19 @@ class DBLayer {
         *  The device is identified by its node_id and device_id in the struct.
         *  If the corresponding device does not exist in the database it will be created.
         */
-        storage_device * updateStorageDevice(storage_device * new_storage_device);
+        void updateStorageDevice(storage_device * new_storage_device);
 
         /*
         *  Returns a filesystem identified by its unique identifier.
         *  Filesystems are not node dependent.
         */
-        filesystem * getFilesystemByUID(unsigned int uid);
+        filesystem * getFilesystemByUID(string uid);
 
         /*
         *  Updates a filesystem in the database. It is identified by its  filesystem id (not the unique identifier!).
         *  If the corresponding filesystem does not exist it will be created.
         */
-        filesystem * updateFilesystem(filesystem * new_filesystem);
+        void updateFilesystem(filesystem * new_filesystem);
 
         /*
         *  To be extended in the future for more specific use cases, like plugins searching for nodes with similar hardware for comparision.
