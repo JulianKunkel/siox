@@ -11,30 +11,34 @@
 URI::URI(const std::string &url_s)
 {
 	parse(url_s);
+	
+	if (malformed())
+		throw(new MalformedURIException("Malformed URI."));
+	
 }
 
 
-std::string URI::get_protocol() const
+std::string URI::protocol() const
 {
-	return protocol;
+	return protocol_;
 }
 
 
-std::string URI::get_host() const 
+std::string URI::host() const 
 {
-	return host;
+	return host_;
 }
 
 
-std::string URI::get_path() const 
+std::string URI::path() const 
 {
-	return host;
+	return host_;
 }
 
 
-std::string URI::get_port() const
+std::string URI::port() const
 {
-	return port;
+	return port_;
 }
 
 // Private
@@ -45,8 +49,8 @@ void URI::parse(const std::string &url_s)
 	std::string::const_iterator proto_i = search(url_s.begin(), url_s.end(), 
 						     proto_end.begin(), 
 						     proto_end.end());
-	protocol.reserve(distance(url_s.begin(), proto_i));
-	transform(url_s.begin(), proto_i, back_inserter(protocol),
+	protocol_.reserve(distance(url_s.begin(), proto_i));
+	transform(url_s.begin(), proto_i, back_inserter(protocol_),
 		  std::ptr_fun<int, int>(tolower));
 	
 	if (proto_i == url_s.end())
@@ -54,12 +58,27 @@ void URI::parse(const std::string &url_s)
 	
 	advance(proto_i, proto_end.length());
 	std::string::const_iterator port_i = find(proto_i, url_s.end(), ':');
-	host.reserve(distance(proto_i, port_i));
-	transform(proto_i, port_i, back_inserter(host), 
+	host_.reserve(distance(proto_i, port_i));
+	transform(proto_i, port_i, back_inserter(host_), 
 		  std::ptr_fun<int, int>(tolower));
 	
 	if (port_i != url_s.end())
 		++port_i;
 	
-	port.assign(port_i, url_s.end());
+	port_.assign(port_i, url_s.end());
+}
+
+
+int URI::malformed()
+{
+	if (protocol() != "ipc" && protocol() != "tcp")
+		return 1;
+	
+	if (protocol() == "ipc" && path().empty())
+		return 1;
+		
+	if (protocol() == "tcp" && (host().empty() || port().empty())) 
+		return 1;
+	
+	return 0;
 }

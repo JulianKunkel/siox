@@ -7,49 +7,47 @@ IPCConnection::IPCConnection(asio::io_service &io_service)
 }
 
 
-IPCConnection::IPCConnection(ServiceServer &server, 
+IPCConnection::IPCConnection(MessageHandler &server, 
 			     asio::io_service &io_service)
    : IPCConnection(io_service)
 {
-	syslog(LOG_NOTICE, "Server::Creating IPC connection for server and io_service.");
 	server_ = &server;
 }
 
 
-IPCConnection::IPCConnection(asio::io_service &io_service, 
+IPCConnection::IPCConnection(MessageHandler &server, 
+			     asio::io_service &io_service, 
 			     const std::string &path)
    : Connection(io_service),
      socket_(io_service)
 {
-	syslog(LOG_NOTICE, "Client::Creating IPC connection for client at %s.", path.c_str());
+	server_ = &server;
 	
-	asio::local::stream_protocol::socket socket(io_service);
+	try {
+		do_connection(path);
+	} catch(IPCConnectionException &e) {
+		throw;
+	}
+}
+
+void IPCConnection::do_connection(const std::string &path)
+{
+	asio::local::stream_protocol::socket socket(*io_service_);
 	asio::local::stream_protocol::endpoint endpoint(path);
 
 	socket_.async_connect(endpoint, 
 			      boost::bind(&IPCConnection::handle_connect, this,
 					  asio::placeholders::error));
-	
 }
-
-
-IPCConnection::IPCConnection(ServiceServer &server, 
-			     asio::io_service &io_service, 
-			     const std::string &path)
-   : IPCConnection(io_service, path)
-{
-	server_ = &server;
-}
-     
     
     
 void IPCConnection::handle_connect(const boost::system::error_code &error)
 {
-	syslog(LOG_NOTICE, "Client::Handling connection.");
-	
 	if (!error) {
-		
-		syslog(LOG_NOTICE, "Client::Connection connected.");
+#ifndef NDEBUG
+		syslog(LOG_NOTICE, "Connection successfully connected.");
+#endif
+		start();
 		
 // 		asio::async_read(socket_, asio::buffer(buffer_),
 // 				 boost::bind(&IPCConnection::handle_read_header,
@@ -61,14 +59,29 @@ void IPCConnection::handle_connect(const boost::system::error_code &error)
 
 void IPCConnection::handle_read_header(const boost::system::error_code &error) 
 {
-	syslog(LOG_NOTICE, "Server::Header read, length %d.", HEADER_SIZE);
-	
 	if (!error) {
-		syslog(LOG_NOTICE, "Server::Header is %s.", show_hex<std::vector<boost::uint8_t> >(buffer_).c_str());
-		unsigned msglen = msg_.decode_header(buffer_);
-		start_read_body(msglen);
+#ifdef NDEBUG
+		syslog(LOG_NOTICE, "Message header read (%s).", 
+			show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
+#endif
+		unsigned msglen = msg_.decode_header(buffer_in_);
+		
+		if (msglen > 0) {
+			start_read_body(msglen);
+			
+		} else {
+#ifndef NDEBUG
+			syslog(LOG_NOTICE, 
+			       "Discarding malformed message header.");
+#endif
+			start();
+		}
+		
 	} else {
-		syslog(LOG_ERR, error.message().c_str());
+#ifndef NDEBUG
+		syslog(LOG_ERR, "Error reading message header: %s", 
+		       error.message().c_str());
+#endif
 	}
 
 }
@@ -76,63 +89,68 @@ void IPCConnection::handle_read_header(const boost::system::error_code &error)
 
 void IPCConnection::start_read_body(unsigned msglen)
 {
-	syslog(LOG_NOTICE, "IPC::start_read_body(hdrlen = %u, msglen = %u)", 
-	       HEADER_SIZE, msglen);
-	
-	buffer_.resize(HEADER_SIZE + msglen);
-	asio::mutable_buffers_1 buf = asio::buffer(&buffer_[HEADER_SIZE], 
+	buffer_in_.resize(HEADER_SIZE + msglen);
+	asio::mutable_buffers_1 buf = asio::buffer(&buffer_in_[HEADER_SIZE], 
 						   msglen);
+	
 	asio::async_read(socket_, buf,
-		boost::bind(&IPCConnection::handle_read_body, 
-			    shared_from_this(), asio::placeholders::error));
+		boost::bind(&IPCConnection::handle_read_body, this, 
+			    asio::placeholders::error));
 }
 
 
 void IPCConnection::handle_read_body(const boost::system::error_code &error)
 {
-	syslog(LOG_NOTICE, "IPC::handle_read_body");
-	
 	if (!error) {
+#ifndef NDEBUG
+		syslog(LOG_NOTICE, "Message body read.");
+#endif
 		handle_message();
 		start();
+		
 	} else {
-		syslog(LOG_ERR, "IPC::Error: %s", error.message().c_str());
+#ifndef NDEBUG
+		syslog(LOG_ERR, "Error reading message body: %s", 
+		       error.message().c_str());
+#endif
 	}
 }
 
 
 void IPCConnection::handle_message()
 {
-	syslog(LOG_NOTICE, "IPC::handle_message");
-	syslog(LOG_NOTICE, "IPC::Received buffer: %s", show_hex<std::vector<boost::uint8_t> >(buffer_).c_str());
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Received message (%s)", 
+	       show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
+#endif
+	if (msg_.unpack(buffer_in_))
+		server_->handle_message(msg_);
+#ifndef NDEBUG
+	else 
+		syslog(LOG_NOTICE, "Error unpacking message.");
+#endif
 	
-	msg_.unpack(buffer_);
-
-	server_->handle_message(msg_);
-	
-	syslog(LOG_NOTICE, "IPC::message unpacked");
-	syslog(LOG_NOTICE, "IPC::Received message unid = %lud  aid=%lud type=%d", msg_.get_msg()->unid(), msg_.get_msg()->aid(), msg_.get_msg()->type());
 }
 
 
 void IPCConnection::start()
 {
-	syslog(LOG_NOTICE, "Server::start");
+	buffer_in_.resize(HEADER_SIZE);
 	
-	buffer_.resize(HEADER_SIZE);
-	
-	asio::async_read(socket_, asio::buffer(buffer_),
+	asio::async_read(socket_, asio::buffer(buffer_in_),
 			 asio::transfer_exactly(HEADER_SIZE),
-			 boost::bind(&IPCConnection::handle_read_header, 
-				     shared_from_this(), 
+			 boost::bind(&IPCConnection::handle_read_header, this, 
 				     asio::placeholders::error));
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Waiting for message.");
+#endif
+	
 }
 
 
 void IPCConnection::handle_read(const boost::system::error_code &e, 
 				 std::size_t bytes_transferred)
 {
-	syslog(LOG_NOTICE, "Reading data");
 }
 
 
@@ -148,19 +166,21 @@ void IPCConnection::handle_write(const boost::system::error_code &e)
 
 void IPCConnection::isend(const ConnectionMessage &msg)
 {
-	syslog(LOG_NOTICE, "IPC::isend");
-	
-// 	std::vector<boost::uint8_t> msgbuf;
-	msg.pack(buffer_);
+	if (!msg.pack(buffer_out_)) {
+#ifndef NDEBUG
+		syslog(LOG_NOTICE, "Error packing message."); 
+#endif
+		return;
+	}
 
-	syslog(LOG_NOTICE, "IPC::Sending: %s.\n", show_hex<std::vector<boost::uint8_t> >(buffer_).c_str());
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Sending IPC message (%s).\n", 
+	       show_hex<std::vector<boost::uint8_t> >(buffer_out_).c_str());
+#endif
 	
-	asio::async_write(socket_, asio::buffer(buffer_), 
-		boost::bind(&IPCConnection::handle_write, this, 
-			    asio::placeholders::error));
-	
-	// 	get_io_service()->post(boost::bind(&IPCConnection::do_write, this, msg));
-
+	asio::async_write(socket_, asio::buffer(buffer_out_),
+			  boost::bind(&IPCConnection::handle_write, this,
+				      asio::placeholders::error));
 }
 
 
