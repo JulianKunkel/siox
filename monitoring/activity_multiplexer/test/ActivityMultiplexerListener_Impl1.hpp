@@ -1,8 +1,7 @@
 #ifndef ACTIVITYMULTIPLEXERLISTENER_IMPL1_H
 #define ACTIVITYMULTIPLEXERLISTENER_IMPL1_H 
 
-#include "../ActivityMultiplexerListener.hpp"
-
+#include "../../../include/monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp"
 class ActivityMultiplexerListener_Impl1: public ActivityMultiplexerListener
 {
 public:

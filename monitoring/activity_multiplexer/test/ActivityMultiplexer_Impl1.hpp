@@ -4,7 +4,7 @@
 #include <list>
 #include <queue>
 
-#include "../ActivityMultiplexer.hpp"
+#include "../../../include/monitoring/activity_multiplexer/ActivityMultiplexer.hpp"
 
 #include "ActivityMultiplexerListener_Impl1.hpp"
 

@@ -2,7 +2,7 @@
 #define ACTIVITYMULTIPLEXERLISTENER_H 
 
 //TODO: change to non dummy activity
-#include "test/Activity.hpp"
+#include "../../../monitoring/activity_multiplexer/test/Activity.hpp"
 
 /**
  * ActivityMultiplexerListener
