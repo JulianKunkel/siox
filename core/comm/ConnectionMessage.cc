@@ -1,7 +1,13 @@
 #include "ConnectionMessage.h"
 
 ConnectionMessage::ConnectionMessage(MessagePointer msg)
-	: msg_(msg)
+  : msg_(msg)
+{
+}
+
+
+ConnectionMessage::ConnectionMessage(const ConnectionMessage &cm)
+  : msg_(cm.get_msg())
 {
 }
 
@@ -12,7 +18,7 @@ void ConnectionMessage::set_msg(MessagePointer msg)
 }
 
 
-typename ConnectionMessage::MessagePointer ConnectionMessage::get_msg()
+typename ConnectionMessage::MessagePointer ConnectionMessage::get_msg() const
 {
 	return msg_;
 }

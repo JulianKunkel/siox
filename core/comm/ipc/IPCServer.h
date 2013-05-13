@@ -26,11 +26,13 @@ class IPCServer
 public:
 	explicit IPCServer(const std::string &path, 
 			   std::size_t worker_pool_size);
-	void ipublish(ConnectionMessage &msg);
+	
+	void ipublish(boost::shared_ptr<ConnectionMessage> msg);
+
 private:
-	asio::local::stream_protocol::acceptor acceptor_;
 	IPCConnection_ptr new_connection_;
 	std::vector<IPCConnection_ptr> connections_;
+	asio::local::stream_protocol::acceptor acceptor_;
 	
 	void start_accept();
 	void handle_accept(const boost::system::error_code &error);
