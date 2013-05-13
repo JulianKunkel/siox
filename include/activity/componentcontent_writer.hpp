@@ -54,9 +54,34 @@ void serialize(Archive &ar, component &cp, const unsigned int version;
 };
 
 
+class ComponentActivityWriter
+{
+
+public:
+
+  /**
+   * Register listener in notify list
+   *
+   * @param pointer ComponentActivityWriter_Listener
+   * @return  Status  int
+   */
+  virtual void register_listener(ComponentActivityWriter_Listener * listener, bool async);
+
+  /**
+   * Unregister listener from notify list
+   *
+   * @param pointer ComponentActivityWriter_Listener
+   * @return  Status  int
+   */
+  virtual void unregister_listener(ComponentActivityWriter_Listener * listener);
+
+};
+
 
 void componentcontent_writer()
 {
 };
 
 
+
+#endif /* __componentcontent_writer */
