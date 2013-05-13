@@ -2,7 +2,7 @@
 
 namespace ConnectionFactory {
 
-Connection *create_connection(MessageHandler &server, 
+Connection *create_connection(Service &service, 
 			      asio::io_service &ios, 
 			      const std::string &endpoint_uri) 
 {
@@ -10,9 +10,9 @@ Connection *create_connection(MessageHandler &server,
 		URI uri(endpoint_uri);
 		
 		if (uri.protocol() == "ipc")
-			return new IPCConnection(server, ios, uri.path());
+			return new IPCConnection(service, ios, uri.path());
 		else if (uri.protocol() == "tcp")
-			return new TCPConnection(server, ios, uri.host(), 
+			return new TCPConnection(service, ios, uri.host(), 
 						 uri.port());
 			
 	} catch(MalformedURIException &muri_e) {

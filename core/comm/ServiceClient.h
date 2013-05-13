@@ -19,7 +19,8 @@
 namespace asio = boost::asio;
 
 
-class ServiceClientException : public std::exception {
+class ServiceClientException 
+  : public std::exception {
 public:
 	ServiceClientException(const char *err_msg) : err_msg_(err_msg) {}
 	const char *what() const throw() { return err_msg_; }
@@ -30,7 +31,7 @@ private:
 
 
 class ServiceClient
-   : public MessageHandler,
+   : public Service,
      private boost::noncopyable {
 public:
 	/**
@@ -74,7 +75,7 @@ public:
 	 * @note This function returns immediately and the message is actually 
 	 * sent by the threads spawn by the run() method.
 	 */
-	void isend(const ConnectionMessage &msg);
+	void isend(boost::shared_ptr<ConnectionMessage> msg);
 
 	/**
 	 * Spawns the worker threads and starts the event processing loop.
@@ -90,10 +91,9 @@ public:
 	void stop();
 
 	void handle_message(ConnectionMessage &msg);
+	void handle_message(boost::shared_ptr<ConnectionMessage> msg);
 	
 private:
-	
-	
 	Connection *connection_;
 	asio::io_service io_service_;
 	std::size_t worker_pool_size_;

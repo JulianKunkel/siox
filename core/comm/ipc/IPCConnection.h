@@ -16,7 +16,8 @@
 namespace asio = boost::asio;
 
 
-class IPCConnectionException : public std::exception {
+class IPCConnectionException 
+   : public std::exception {
 public:
 	IPCConnectionException(const char *err_msg) : err_msg_(err_msg) {}
 	const char *what() const throw() { return err_msg_; }
@@ -27,40 +28,25 @@ private:
 
 
 class IPCConnection 
-   : public Connection, 
-     public boost::enable_shared_from_this<IPCConnection>
-{
+   : public Connection {
 public:
-	explicit IPCConnection(asio::io_service &io_service);
-	
-	explicit IPCConnection(MessageHandler &server, 
+	explicit IPCConnection(Service &service, 
 			       asio::io_service &io_service);
-
-	explicit IPCConnection(MessageHandler &server, 
+	explicit IPCConnection(Service &service, 
 			       asio::io_service &io_service, 
 			       const std::string &path);
 
+	void start();
+	void isend(boost::shared_ptr<ConnectionMessage> msg);
 	asio::local::stream_protocol::socket &socket();
 	
-	void start();
-	
-	void disconnect();
-	
-	void isend(const ConnectionMessage &msg);
-	
 private:
+	std::string socket_path_;
 	asio::local::stream_protocol::socket socket_;
-	MessageHandler *server_;
 	
-	void do_connection(const std::string &path);
-	void handle_connect(const boost::system::error_code &error);
+	void do_connection();
+	void do_disconnect();
 	void start_read_body(unsigned msglen);
-	void handle_read_header(const boost::system::error_code &error);
-	void handle_read_body(const boost::system::error_code &error);
-	void handle_read(const boost::system::error_code &e, 
-			 std::size_t bytes_transferred);
-	void handle_write(const boost::system::error_code &e);
-	void handle_message();
 };
 
 typedef boost::shared_ptr<IPCConnection> IPCConnection_ptr;

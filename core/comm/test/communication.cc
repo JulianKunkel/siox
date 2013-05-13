@@ -36,7 +36,7 @@ public:
 void init_syslog()
 {
 	setlogmask(LOG_UPTO(LOG_NOTICE));
-	openlog("TCPCOMMTEST", LOG_CONS | LOG_NDELAY | LOG_NOWAIT | LOG_PERROR | 
+	openlog("CommTest", LOG_CONS | LOG_NDELAY | LOG_NOWAIT | LOG_PERROR | 
 		LOG_PID, LOG_USER);
 };
 
@@ -47,24 +47,24 @@ BOOST_AUTO_TEST_CASE(ipc_communication)
 	
 	std::string ipc_socket_path("ipc:///tmp/siox.socket");
 	ServiceServer *server = ServerFactory::create_server(ipc_socket_path);
-
-	boost::thread server_thread(&ServiceServer::run, server);
+	server->run();
 
 	TestCallback test_cb;
 	
 	server->register_message_callback(test_cb);
 	
 	boost::shared_ptr<siox::MessageBuffer> mp(new siox::MessageBuffer());
-	mp->set_type(siox::MessageBuffer::TYPE1);
+	mp->set_action(siox::MessageBuffer::Advertise);
+	mp->set_type(2);
 	mp->set_unid(10);
 	mp->set_aid(20);
 
-	ConnectionMessage msg(mp);
+	boost::shared_ptr<ConnectionMessage> msg_ptr(new ConnectionMessage(mp));
 
 	ServiceClient *client = new ServiceClient(ipc_socket_path);
-	boost::thread client_thread(&ServiceClient::run, client);
+	client->run();
 	
-	client->isend(msg);
+	client->isend(msg_ptr);
 
 	sleep(1);
 	
@@ -73,17 +73,19 @@ BOOST_AUTO_TEST_CASE(ipc_communication)
 	client->register_response_callback(test_cb);
 	
 	mp->set_unid(210);
-	server->ipublish(msg);
+	server->ipublish(msg_ptr);
 
 	sleep(1);
 
 	BOOST_CHECK_EQUAL(210, m->get_msg()->unid());
 	
+	server->advertise(77);
+	sleep(1);
+	
+	BOOST_CHECK_EQUAL(77, m->get_msg()->type());
+
 	client->stop();
 	server->stop();
-	
-	client_thread.join();
-	server_thread.join();
 }
 
 
@@ -93,24 +95,24 @@ BOOST_AUTO_TEST_CASE(tcp_communication)
 	
 	std::string tcp_socket_addr("tcp://localhost:6677");
 	ServiceServer *server = ServerFactory::create_server(tcp_socket_addr);
-
-	boost::thread server_thread(&ServiceServer::run, server);
+	server->run();
 
 	TestCallback test_cb;
 	
 	server->register_message_callback(test_cb);
 	
 	boost::shared_ptr<siox::MessageBuffer> mp(new siox::MessageBuffer());
-	mp->set_type(siox::MessageBuffer::TYPE2);
+	mp->set_action(siox::MessageBuffer::Advertise);
+	mp->set_type(2);
 	mp->set_unid(40);
 	mp->set_aid(50);
 
-	ConnectionMessage msg(mp);
-  
-	ServiceClient *client = new ServiceClient(tcp_socket_addr);
-	boost::thread client_thread(&ServiceClient::run, client);
+	boost::shared_ptr<ConnectionMessage> msg_ptr(new ConnectionMessage(mp));
 	
-	client->isend(msg);
+	ServiceClient *client = new ServiceClient(tcp_socket_addr);
+	client->run();
+	
+	client->isend(msg_ptr);
  
 	sleep(1);
 	
@@ -119,16 +121,19 @@ BOOST_AUTO_TEST_CASE(tcp_communication)
 	client->register_response_callback(test_cb);
 	
 	mp->set_unid(110);
-	server->ipublish(msg);
+	server->ipublish(msg_ptr);
 
 	sleep(1);
 
 	BOOST_CHECK_EQUAL(110, m->get_msg()->unid());
 	
+	server->advertise(66);
+	sleep(1);
+	
+	BOOST_CHECK_EQUAL(66, m->get_msg()->type());
+	
 	server->stop();
 	client->stop();
-	
-	client_thread.join();
-	server_thread.join();
+
 }
 

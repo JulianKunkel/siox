@@ -57,8 +57,10 @@ public:
 	
 	ConnectionMessage(MessagePointer msg  = MessagePointer());
 	
+	ConnectionMessage(const ConnectionMessage &cm);
+	
 	void set_msg(MessagePointer msg);
-	MessagePointer get_msg();
+	MessagePointer get_msg() const;
 	
 	/** Packs the message into the given data_buffer. The buffer is resized 
 	 * to exactly fit the message.
