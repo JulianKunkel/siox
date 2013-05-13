@@ -1,0 +1,78 @@
+/**
+ * @file    compononentactivity_reader.hpp
+ *
+ * @description File reader for object serialization and read of a file using the boost-dev libraries in C++. The reader should serialize an activity from txt using a header for its structure.
+ * @standard 	Preferred standard is C++11
+ *
+ * @author Marc Wiedemann
+ * @date   2013
+ *
+ */
+
+#ifndef __componentcontent_reader
+#define __componentcontent_reader
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/string.hpp>
+// Byte stream
+#include <iostream>
+// String stream
+#include <sstream>
+#include <string>
+#include <tuple>
+
+std::stringstream ssm;
+std::tuple<std::string, double, int, int, std::string> tple;
+
+class information_type
+{
+public:
+  component() {}
+  component(const std::string &name, const std::string &HWid, const std::string &SWid, const std::string &Iid) : name_ (name), HWid_ (HWid), SWid_ (SWid), Iid_ (Iid) {}
+  std::string name() const {return name_; }
+  std::string HWid() const {return HWid_; }
+  std::string SWid() const {return SWid_; }
+  std::string Iid() const {return Iid_; }
+
+
+private:
+  friend class boost::serializiation::access;
+
+  template  <typename Archive>
+  friend void serialize(Archive &ar, component &cp, const unsigned int version)
+
+  std::string name_;
+  std::string HWid_;
+  std::string SWid_;
+  std::string Iid_;
+};
+
+template <typename Archive>
+void serialize(Archive &ar, component &cp, const unsigned int version
+){
+  ar & cp.name;
+  ar & cp.HWid;
+  ar & cp.SWid;
+  ar & cp.Iid;
+
+}
+
+
+
+void componentcontent_reader()
+{
+  boost::archive::text_iarchive ia(ssm);
+  component *cp;
+  ia >> cp;
+	std::cout << cp->name() << std::endl;
+	delete cp;
+}
+
+
+/*int main()
+{
+  componentcontent_reader()
+}
+*/
+
+#endif /* __componentcontent_reader */
