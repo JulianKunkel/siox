@@ -8,10 +8,13 @@ binary = test_mpl_async
 #########################
 
 # get all cpps from all dirs and generate corresponding out files
-SRC = $(shell find . -type f -iname "*.cpp")
-OBJ1 = $(shell find . -type f -iname "*.cpp" | sed "s\#.*/\#\#" )
-OBJ = $(OBJ1:%.cpp=%.o)
+#SRC = $(shell find . -type f -iname "*.cpp")
+#OBJ1 = $(shell find . -type f -iname "*.cpp" | sed "s\#.*/\#\#" )
+#OBJ = $(OBJ1:%.cpp=%.o)
 
+
+SRC = ../ActivityMultiplexerListener_Impl1.cpp ../ActivityMultiplexer_Impl1.cpp Activity.cpp main_mpl_async.cpp
+OBJ = ActivityMultiplexerListener_Impl1.o ActivityMultiplexer_Impl1.o Activity.o main_mpl_async.o
 
 # likely you are already done 
 #############################

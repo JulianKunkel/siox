@@ -2,8 +2,8 @@
 #include <boost/thread.hpp>
 #include <boost/date_time.hpp>
 
-#include "ActivityMultiplexer_Impl1.hpp"
-#include "ActivityMultiplexerListener_Impl1.hpp"
+#include "../ActivityMultiplexer_Impl1.hpp"
+#include "../ActivityMultiplexerListener_Impl1.hpp"
 
 void work()  
 { 
