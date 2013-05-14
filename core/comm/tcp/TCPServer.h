@@ -30,7 +30,9 @@ class TCPServer
 public:
 	explicit TCPServer(const std::string &address, const std::string &port,
 			   std::size_t worker_pool_size); 
-	void ipublish(ConnectionMessage &msg);
+	
+	void ipublish(boost::shared_ptr<ConnectionMessage> msg);
+
 private:
 	asio::ip::tcp::acceptor acceptor_;
 	TCPConnection_ptr new_connection_;

@@ -70,7 +70,7 @@ void ServiceClient::clear_response_callbacks()
 }
 
 
-void ServiceClient::isend(const ConnectionMessage &msg)
+void ServiceClient::isend(boost::shared_ptr<ConnectionMessage> msg)
 {
 	connection_->isend(msg);
 }
@@ -86,6 +86,21 @@ void ServiceClient::handle_message(ConnectionMessage &msg)
 #ifndef NDEBUG
 		syslog(LOG_NOTICE, "Executing message response callback.");
 #endif
-		i->handle_message(msg);
+		i->execute(msg);
+	}
+}
+
+
+void ServiceClient::handle_message(boost::shared_ptr<ConnectionMessage> msg)
+{
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Handling message response.");
+#endif
+	boost::ptr_list<Callback>::iterator i;
+	for (i = response_callbacks.begin(); i != response_callbacks.end(); ++i) {
+#ifndef NDEBUG
+		syslog(LOG_NOTICE, "Executing message response callback.");
+#endif
+		i->execute(msg);
 	}
 }

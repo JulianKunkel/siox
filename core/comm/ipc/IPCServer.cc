@@ -3,8 +3,8 @@
 IPCServer::IPCServer(const std::string &path, 
 		     const std::size_t worker_pool_size)
    : ServiceServer(worker_pool_size),
-     acceptor_(io_service_),
-     new_connection_()
+     new_connection_(),
+     acceptor_(io_service_)
 {
 	unlink(path.c_str());
 	
@@ -45,9 +45,9 @@ void IPCServer::start_accept()
 }
 
 
-void IPCServer::handle_accept(const boost::system::error_code &error)
+void IPCServer::handle_accept(const boost::system::error_code &err)
 {
-	if (!error) {
+	if (!err) {
 		
 #ifndef NDEBUG
 		syslog(LOG_NOTICE, "New IPC connection accepted.");
@@ -67,15 +67,15 @@ void IPCServer::handle_accept(const boost::system::error_code &error)
 }
 
 
-void IPCServer::ipublish(ConnectionMessage &msg)
+void IPCServer::ipublish(boost::shared_ptr<ConnectionMessage> msg)
 {
 #ifndef NDEBUG
 	syslog(LOG_NOTICE, "Publishing on %zu active connections.", 
 	       connections_.size());
 #endif
-
 	std::vector<IPCConnection_ptr>::iterator i;
 	for (i = connections_.begin(); i != connections_.end(); ++i) {
 		(*i)->isend(msg);
 	}
+
 }

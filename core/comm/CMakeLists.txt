@@ -29,9 +29,8 @@ add_library(siox
 	misc/URI.cc
 	ConnectionMessage.h
 	ConnectionMessage.cc
-	MessageHandler.h
+	Service.h
 	Callback.h
-	Callback.cc
 	Connection.h
 	Connection.cc
 	ConnectionFactory.h
@@ -48,8 +47,6 @@ add_library(siox
 	tcp/TCPConnection.cc
 	tcp/TCPServer.h
 	tcp/TCPServer.cc
-	Service.h
-	Service.cc
 	ServiceClient.h
 	ServiceClient.cc
 	${PROTO_SRCS}

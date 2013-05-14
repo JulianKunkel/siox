@@ -24,44 +24,28 @@ private:
 
 
 class TCPConnection 
-   : public Connection,
-     public boost::enable_shared_from_this<TCPConnection>
+   : public Connection
 {
 public:
-	explicit TCPConnection(asio::io_service &io_service);
-	
-	explicit TCPConnection(MessageHandler &server, 
+	explicit TCPConnection(Service &service, 
 			       asio::io_service &io_service);
 	
-	explicit TCPConnection(asio::io_service &io_service, 
-			       const std::string &address, 
-			       const std::string &port);
-	
-	explicit TCPConnection(MessageHandler &server, 
+	explicit TCPConnection(Service &service, 
 			       asio::io_service &io_service, 
 			       const std::string &address,
 			       const std::string &port);
 
-	asio::ip::tcp::socket &socket();
-	
 	void start();
-	
-	void disconnect();
-	
-	void isend(const ConnectionMessage &msg);
-	
+	void isend(boost::shared_ptr<ConnectionMessage> msg);
+
+	asio::ip::tcp::socket &socket();
 private:
+	std::string socket_address_, socket_port_;
 	asio::ip::tcp::socket socket_;
-	MessageHandler *server_;
 
-	void do_connection(const std::string &address, const std::string &port);
-	void handle_connect(const boost::system::error_code &error);
+	void do_connection();
+	void do_disconnect();
 	void start_read_body(unsigned msglen);
-	void handle_read_header(const boost::system::error_code &error);
-	void handle_read_body(const boost::system::error_code &error);
-	void handle_message();
-	void handle_write(const boost::system::error_code &e);
-
 };
 
 typedef boost::shared_ptr<TCPConnection> TCPConnection_ptr;

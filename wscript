@@ -39,7 +39,7 @@ def configure(conf):
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
 	conf.check_cfg(package='gmodule-2.0', use="GLIB", uselib_store='GMODULES',   args=['--cflags', '--libs'], mandatory=True)
 
-        conf.check_boost(lib='system thread-mt')
+        conf.check_boost(lib='system thread')
 
 
 	workDir = conf.path.abspath()
