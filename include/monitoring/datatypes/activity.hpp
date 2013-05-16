@@ -70,6 +70,11 @@ private:
   The Component.SWid is the software layer composition "POSIX-Kernel-PFS-Block" or any of those individually.
  */
 
+/*!
+ Usecase 2 : MPI Write using etypes - going through ROMIO or OMPIO the through ADIO layer to kernel and to generic_Write
+ How is in this case the component.HWid discovered? Component.SWid would be the string "MPI-OMPIO-ADIO" or any of those individually.
+ */
+
 public:
   Activity(void);
   Activity(Component component, Timestamp t_start = NULL, char[] comment="");
