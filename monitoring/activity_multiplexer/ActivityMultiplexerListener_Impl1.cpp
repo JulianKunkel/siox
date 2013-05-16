@@ -1,12 +1,17 @@
 #include <iostream>
+#include <mutex>
+
 #include "ActivityMultiplexerListener_Impl1.hpp"
 
-int ActivityMultiplexerListener_Impl1::nextLID = 0;
+
+std::mutex mut_print;
+
+int ActivityMultiplexerListener_Impl1::nextID = 0;
 
 ActivityMultiplexerListener_Impl1::ActivityMultiplexerListener_Impl1() 
 {
-	LID = nextLID;
-	nextLID++;
+	ID = nextID;
+	nextID++;
 }
 
 ActivityMultiplexerListener_Impl1::~ActivityMultiplexerListener_Impl1()
@@ -16,16 +21,20 @@ ActivityMultiplexerListener_Impl1::~ActivityMultiplexerListener_Impl1()
 
 void ActivityMultiplexerListener_Impl1::print()
 {
-	std::cout << "Listener-" << LID;
+	std::cout << "Listener-" << ID;
 }
 
 void ActivityMultiplexerListener_Impl1::Notify(Activity * activity)
-{
-	// debug
+{	
+	std::unique_lock<std::mutex> lock(mut_print);
+	
+	// debug	
+	std::cout << "Notify("; 
+	activity->print();	
+	std::cout << ")";
+	std::cout << " <- ";
 	this->print();
-	std::cout << " -> Notify(";
-	activity->print();
-	std::cout << ")" <<  std::endl;
+	std::cout << std::endl;
 
 	// logic not relevent as it is plugin specific
 }

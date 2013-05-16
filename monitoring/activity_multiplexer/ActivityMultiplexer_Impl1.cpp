@@ -4,7 +4,6 @@
 #include "ActivityMultiplexer_Impl1.hpp"
 
 
-
 /**
  * ActivityMultiplexerQueue - Implementation 1
  *
@@ -26,19 +25,18 @@ bool ActivityMultiplexerQueue_Impl1::Full()
 
 void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 {
-	
+	boost::mutex::scoped_lock lock(mut);
 	activities.push(activity);
-    
 }
 
 Activity * ActivityMultiplexerQueue_Impl1::Pull()
 {
 	Activity * activity = NULL;
 
+	boost::mutex::scoped_lock lock(mut);
 	activity = activities.front();
 	activities.pop();
 	
-		
 	return activity;
 }
 
@@ -79,9 +77,6 @@ void ActivityMultiplexerNotifier_Impl1::setListenerList(std::list<ActivityMultip
 
 void ActivityMultiplexerNotifier_Impl1::Wake()
 {
-	// debug
-	//std::cout << "Notifier -> Wake()" << std::endl;
-	
 	Activity * activity = activities->Pull();
 
 	if ( activity != NULL )
@@ -92,9 +87,7 @@ void ActivityMultiplexerNotifier_Impl1::Wake()
 		{
 			(*listener)->Notify(activity);	
 		}
-		
 	}
-
 }
 
 
@@ -121,29 +114,23 @@ ActivityMultiplexer_Impl1::~ActivityMultiplexer_Impl1()
 
 }
 
-void ActivityMultiplexer_Impl1::print()
-{
-	std::cout << "Muliplexer-" << ID;
-}
-
-
 void ActivityMultiplexer_Impl1::Log(Activity * activity)
 {
-	// debug
-	std::cout << std::endl;
-	this->print();
-	std::cout << " -> Log(";
-	activity->print();
-	std::cout << ")" <<  std::endl;
+	/*
+	boost::mutex::scoped_lock lock(mut_sync);
+	sync_readers++;
+	lock.unlock();
+	*/
 
 	// logic
 	if ( !activities->Full() ) 
 	{
 		std::list<ActivityMultiplexerListener*>::iterator listener = listeners_sync.begin();
+		
 		for ( ; listener != listeners_sync.end(); ++listener) 
 		{
 			(*listener)->Notify(activity);	
-		}	
+		}
 
 		activities->Push(activity);
 
@@ -155,44 +142,38 @@ void ActivityMultiplexer_Impl1::Log(Activity * activity)
 		std::cout << "MPL switch to overload mode!" << std::endl;
 	}
 
+	/*
+	boost::mutex::scoped_lock lock2(mut_sync);
+	sync_readers++;
+	lock2.unlock();
+	*/
 }
 
 void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * listener, bool async)
 {
-	// debug
-	std::cout << std::endl;
-	this->print();
-	std::cout << " -> registerListener(";
-	dynamic_cast<ActivityMultiplexerListener_Impl1*>(listener)->print();
-	std::cout << ", " << async;
-	std::cout << ")" <<  std::endl;
-
-	// logic
 	if ( async ) {
-		listeners_async.push_back(listener);
+		boost::mutex::scoped_lock lock(mut_async);
+		if ( async_readers == 0 )
+			listeners_async.push_back(listener);
 	} else {
-		listeners_sync.push_back(listener);
+		boost::mutex::scoped_lock lock(mut_sync);
+		if ( sync_readers == 0 )
+			listeners_sync.push_back(listener);
 	}
 }
 
 void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener * listener, bool async)
 {
-	// debug
-	std::cout << std::endl;
-	this->print();
-	std::cout << " -> unregisterListener(";
-	dynamic_cast<ActivityMultiplexerListener_Impl1*>(listener)->print();
-	std::cout << ", " << async;
-	std::cout << ")" <<  std::endl;
-
-	// logic
 	if ( async ) {
-		listeners_async.remove(listener);
+		boost::mutex::scoped_lock lock(mut_async);
+		if ( async_readers == 0 )
+			listeners_async.remove(listener);
 	} else {
-		listeners_sync.remove(listener);
+		boost::mutex::scoped_lock lock(mut_sync);
+		if ( sync_readers == 0 )
+			listeners_sync.remove(listener);
 	}
 
 }
-
 
 
