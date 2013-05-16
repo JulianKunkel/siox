@@ -8,6 +8,7 @@
 /**
  * Special queue used by the ActivityMultiplexer to buffer activities
  * that are notified in an asyncrnous way.
+ *
  */
 class ActivityMultiplexerQueue
 {

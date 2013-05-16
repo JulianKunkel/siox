@@ -1,10 +1,17 @@
 #include <iostream>
+#include <sstream>
+#include <vector>
+
 #include <boost/thread.hpp>
 #include <boost/date_time.hpp>
 
 #include "../ActivityMultiplexer_Impl1.hpp"
 #include "../ActivityMultiplexerListener_Impl1.hpp"
 
+
+ActivityMultiplexer * m1 = new ActivityMultiplexer_Impl1();
+
+/*
 void work()  
 { 
 	static int id = 0;
@@ -17,7 +24,44 @@ void work()
     // Pretend to do something useful...  
     boost::this_thread::sleep(workTime);  
     std::cout << "Worker-"<< cid <<": finished" << std::endl;  
-} 
+} */
+
+const int num_a_producers = 5;
+const int num_l_producers = 5;
+const int num_l_consumers = 5;
+
+const int producer_delay_to_produce = 0.3;
+const int max_activities_per_producer = 5;
+
+void a_producer() {
+    boost::posix_time::seconds delay(producer_delay_to_produce);  
+	for (int i = 0; i < max_activities_per_producer; ++i)
+	{
+		m1->Log(new Activity());
+		boost::this_thread::sleep(delay);  
+	}
+}
+
+
+void l_producer() {
+	boost::posix_time::seconds delay(producer_delay_to_produce);  
+	for (int i = 0; i < max_activities_per_producer; ++i)
+	{
+		//ActivityMultiplexerListener * listener = new ActivityMultiplexerListener_Impl1();
+		//m1->registerListener(listener)
+		boost::this_thread::sleep(delay);  
+	}
+}
+
+void l_consumer() {
+	boost::posix_time::seconds delay(producer_delay_to_produce);  
+	for (int i = 0; i < max_activities_per_producer; ++i)
+	{
+		//ActivityMultiplexerListener * listener = m1->getRandomListener();
+		//m1->registerListener(listener)
+		boost::this_thread::sleep(delay);  
+	}
+}
 
 int main(int argc, char const *argv[])
 {
@@ -36,7 +80,6 @@ int main(int argc, char const *argv[])
 //	l3->Notify(new Activity());
 
 	// introduce a multiplexer
-	ActivityMultiplexer * m1 = new ActivityMultiplexer_Impl1();
 
 	// log an activity
 	m1->Log(new Activity());
@@ -67,15 +110,37 @@ int main(int argc, char const *argv[])
 
 	std::cout << std::endl;
 
+	// keep track of every kind individually
+	std::vector<boost::thread> a_producers;
+	std::vector<boost::thread> l_producers;
+	std::vector<boost::thread> l_consumers;
+	
 	// boost threading experiment
-    std::cout << "main: startup" << std::endl;  
-    boost::thread t1(work);  
-    boost::thread t2(work);  
-    std::cout << "main: waiting for thread" << std::endl;  
-    t1.join();  
-    t2.join();  
-    std::cout << "main: done" << std::endl;  
+    std::cout << "main: starting threads" << std::endl;  
 
+	// create the threads
+	for(int i = 0; i < num_a_producers; ++i)
+		a_producers.push_back(boost::thread(a_producer));
+
+	for(int i = 0; i < num_l_producers; ++i)
+		l_producers.push_back(boost::thread(l_producer));
+
+	for(int i = 0; i < num_l_consumers; ++i)
+		l_consumers.push_back(boost::thread(l_consumer));
+
+    std::cout << "main: waiting for threads" << std::endl;  
+
+	for(auto& t : a_producers)
+		t.join();
+
+	for(auto& t : l_producers)
+		t.join();
+
+	for(auto& t : l_consumers)
+		t.join();
+
+    std::cout << "main: done" << std::endl;
+	
 
 	return 0;
 }
