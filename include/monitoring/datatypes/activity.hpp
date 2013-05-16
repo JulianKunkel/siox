@@ -19,7 +19,7 @@
 
 
 namespace monitoring {
-    
+
 
 /*!
  State of activity
@@ -92,4 +92,6 @@ public:
   std::string Iid() const {return Iid_; };
 
 }
+
+
 #endif // __SIOX_ACTIVITY_H
