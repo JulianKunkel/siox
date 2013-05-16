@@ -5,7 +5,7 @@ include(FindProtobuf)
 
 find_package(
 	Protobuf REQUIRED
-	Boost COMPONENTS system test thread REQUIRED
+	Boost 1.53.0 COMPONENTS system test thread REQUIRED
 )
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS buffers/siox.proto)

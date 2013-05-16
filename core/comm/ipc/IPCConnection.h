@@ -18,6 +18,7 @@ namespace asio = boost::asio;
 
 class IPCConnectionException 
    : public std::exception {
+	   
 public:
 	IPCConnectionException(const char *err_msg) : err_msg_(err_msg) {}
 	const char *what() const throw() { return err_msg_; }
@@ -29,6 +30,7 @@ private:
 
 class IPCConnection 
    : public Connection {
+	   
 public:
 	explicit IPCConnection(Service &service, 
 			       asio::io_service &io_service);

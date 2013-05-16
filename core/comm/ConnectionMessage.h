@@ -52,6 +52,7 @@ const unsigned HEADER_SIZE = 4;
  */
 
 class ConnectionMessage {
+	
 public:
 	typedef boost::shared_ptr<siox::MessageBuffer> MessagePointer;
 	

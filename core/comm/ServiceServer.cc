@@ -44,21 +44,31 @@ void ServiceServer::advertise(boost::uint64_t mtype)
 	mbuf->set_type(mtype);
 	
 	boost::shared_ptr<ConnectionMessage> msg(new ConnectionMessage(mbuf));
-	ipublish(msg);
-}
 
-
-void ServiceServer::isend_response(ConnectionMessage &message, 
-				ConnectionMessage &response)
-{
+	std::multimap<boost::uint32_t, Connection *>::iterator i;
+	for (i = subscribed_connections.begin(); i != subscribed_connections.end(); ++i) {
+		(*i).second->isend(msg);
+	}
 	
 }
 
 
-void ServiceServer::isend_response(boost::shared_ptr<ConnectionMessage> msg, 
-				   boost::shared_ptr<ConnectionMessage> rsp)
+void ServiceServer::ipublish(boost::shared_ptr<ConnectionMessage> msg)
 {
-	
+	if (subscribed_connections.empty())
+		return;
+#ifndef NDEBUG
+	syslog(LOG_NOTICE, "Publishing on %zu connections.", 
+	       subscribed_connections.size());
+#endif
+	std::pair<std::multimap<boost::uint32_t, Connection *>::iterator,
+		  std::multimap<boost::uint32_t, Connection *>::iterator> range 
+			= subscribed_connections.equal_range(msg->get_msg()->type());
+
+	std::multimap<boost::uint32_t, Connection *>::iterator i;
+	for (i = range.first; i != range.second; ++i) {
+		(*i).second->isend(msg);
+	}
 }
 
 
@@ -86,11 +96,21 @@ void ServiceServer::clear_error_callbacks()
 }
 
 
-void ServiceServer::handle_message(ConnectionMessage &msg)
+void ServiceServer::subscribe(boost::uint32_t mtype, Connection &connection)
+{
+	subscribed_connections.insert(std::make_pair(mtype, &connection));
+}
+
+
+void ServiceServer::handle_message(ConnectionMessage &msg, Connection &connection)
 {
 #ifndef NDEBUG
 	syslog(LOG_NOTICE, "Handling message...");
 #endif
+	if (msg.get_msg()->action() == siox::MessageBuffer::Subscribe) {
+		subscribe(msg.get_msg()->type(), connection);
+	}
+
 	boost::ptr_list<Callback>::iterator i;
 	for (i = message_callbacks_.begin(); i != message_callbacks_.end(); ++i) {
 #ifndef NDEBUG
@@ -101,11 +121,16 @@ void ServiceServer::handle_message(ConnectionMessage &msg)
 }
 
 
-void ServiceServer::handle_message(boost::shared_ptr<ConnectionMessage> msg)
+void ServiceServer::handle_message(boost::shared_ptr<ConnectionMessage> msg, 
+				   Connection &connection)
 {
 #ifndef NDEBUG
 	syslog(LOG_NOTICE, "Handling message...");
 #endif
+	if (msg->get_msg()->action() == siox::MessageBuffer::Subscribe) {
+		subscribe(msg->get_msg()->type(), connection);
+	}
+	
 	boost::ptr_list<Callback>::iterator i;
 	for (i = message_callbacks_.begin(); i != message_callbacks_.end(); ++i) {
 #ifndef NDEBUG

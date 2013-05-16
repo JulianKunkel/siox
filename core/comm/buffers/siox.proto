@@ -4,7 +4,8 @@ message MessageBuffer {
 
 	enum Action {
 		Advertise = 0;
-		Activity = 1;
+		Subscribe = 1;
+		Activity  = 2;
 	}
 	
 	required Action action = 1 [default = Activity];

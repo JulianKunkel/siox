@@ -20,7 +20,8 @@ namespace asio = boost::asio;
 
 
 class ServiceClientException 
-  : public std::exception {
+   : public std::exception {
+	   
 public:
 	ServiceClientException(const char *err_msg) : err_msg_(err_msg) {}
 	const char *what() const throw() { return err_msg_; }
@@ -33,6 +34,7 @@ private:
 class ServiceClient
    : public Service,
      private boost::noncopyable {
+	     
 public:
 	/**
 	 * Creates an instance of ServiceClient and connects it to the given 
@@ -90,8 +92,11 @@ public:
 	 */
 	void stop();
 
-	void handle_message(ConnectionMessage &msg);
-	void handle_message(boost::shared_ptr<ConnectionMessage> msg);
+	void handle_message(ConnectionMessage &msg, 
+			    Connection &connection);
+	
+	void handle_message(boost::shared_ptr<ConnectionMessage> msg, 
+			    Connection &connection);
 	
 private:
 	Connection *connection_;

@@ -50,14 +50,12 @@ BOOST_AUTO_TEST_CASE(ipc_communication)
 	server->run();
 
 	TestCallback test_cb;
-	
 	server->register_message_callback(test_cb);
 	
 	boost::shared_ptr<siox::MessageBuffer> mp(new siox::MessageBuffer());
-	mp->set_action(siox::MessageBuffer::Advertise);
+	mp->set_action(siox::MessageBuffer::Activity);
 	mp->set_type(2);
 	mp->set_unid(10);
-	mp->set_aid(20);
 
 	boost::shared_ptr<ConnectionMessage> msg_ptr(new ConnectionMessage(mp));
 
@@ -70,19 +68,26 @@ BOOST_AUTO_TEST_CASE(ipc_communication)
 	
 	BOOST_CHECK_EQUAL(mp->unid(), m->get_msg()->unid());
 	
+	mp->set_action(siox::MessageBuffer::Subscribe);
+	mp->set_type(300);
+	client->isend(msg_ptr);
+	
+	sleep(1);
+	
 	client->register_response_callback(test_cb);
 	
-	mp->set_unid(210);
+	mp->set_unid(33);
 	server->ipublish(msg_ptr);
-
+	
 	sleep(1);
 
-	BOOST_CHECK_EQUAL(210, m->get_msg()->unid());
+	BOOST_CHECK_EQUAL(33, m->get_msg()->unid());
+
+	server->advertise(666);
 	
-	server->advertise(77);
 	sleep(1);
-	
-	BOOST_CHECK_EQUAL(77, m->get_msg()->type());
+ 
+	BOOST_CHECK_EQUAL(666, m->get_msg()->type());
 
 	client->stop();
 	server->stop();
@@ -103,7 +108,7 @@ BOOST_AUTO_TEST_CASE(tcp_communication)
 	
 	boost::shared_ptr<siox::MessageBuffer> mp(new siox::MessageBuffer());
 	mp->set_action(siox::MessageBuffer::Advertise);
-	mp->set_type(2);
+	mp->set_type(8);
 	mp->set_unid(40);
 	mp->set_aid(50);
 
@@ -118,19 +123,26 @@ BOOST_AUTO_TEST_CASE(tcp_communication)
 	
 	BOOST_CHECK_EQUAL(mp->unid(), m->get_msg()->unid());
 	
+	mp->set_action(siox::MessageBuffer::Subscribe);
+	mp->set_type(300);
+	client->isend(msg_ptr);
+
+	sleep(1);
+	
 	client->register_response_callback(test_cb);
 	
-	mp->set_unid(110);
+	mp->set_unid(99);
 	server->ipublish(msg_ptr);
-
+	
 	sleep(1);
 
-	BOOST_CHECK_EQUAL(110, m->get_msg()->unid());
+	BOOST_CHECK_EQUAL(99, m->get_msg()->unid());
+
+	server->advertise(777);
 	
-	server->advertise(66);
 	sleep(1);
-	
-	BOOST_CHECK_EQUAL(66, m->get_msg()->type());
+ 
+	BOOST_CHECK_EQUAL(777, m->get_msg()->type());
 	
 	server->stop();
 	client->stop();

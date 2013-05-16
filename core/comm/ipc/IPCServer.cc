@@ -67,15 +67,15 @@ void IPCServer::handle_accept(const boost::system::error_code &err)
 }
 
 
-void IPCServer::ipublish(boost::shared_ptr<ConnectionMessage> msg)
-{
-#ifndef NDEBUG
-	syslog(LOG_NOTICE, "Publishing on %zu active connections.", 
-	       connections_.size());
-#endif
-	std::vector<IPCConnection_ptr>::iterator i;
-	for (i = connections_.begin(); i != connections_.end(); ++i) {
-		(*i)->isend(msg);
-	}
-
-}
+// void IPCServer::ipublish(boost::shared_ptr<ConnectionMessage> msg)
+// {
+// #ifndef NDEBUG
+// 	syslog(LOG_NOTICE, "Publishing on %zu active connections.", 
+// 	       connections_.size());
+// #endif
+// 	std::vector<IPCConnection_ptr>::iterator i;
+// 	for (i = connections_.begin(); i != connections_.end(); ++i) {
+// 		(*i)->isend(msg);
+// 	}
+// 
+// }
