@@ -50,17 +50,25 @@ private:
 
     //List<Attribute> attributes;
 
+/*!
+ the activity consists of component name and ids, start and stop and end after reporting
+ */
+
 public:
-    Activity(void);
-    Activity(Component component, Timestamp t_start = NULL, char[] comment="");
-    ~Activity(void);
+  Activity(void);
+  Activity(Component component, Timestamp t_start = NULL, char[] comment="");
+  ~Activity(void);
 
-    void start(Timestamp t=NULL);
-    void stop(Timestamp t=NULL);
-    void end(void);
+  void start(Timestamp t=NULL);
+  void stop(Timestamp t=NULL);
+  void end(void);
 
-};
-
+  Component() {};
+  Component(const std::string &name, const std::string &HWid, const std::string &SWid, const std::string &Iid) : name_ (name), HWid_ (HWid), SWid_ (SWid), Iid_ (Iid) {};
+  std::string name() const {return name_; };
+  std::string HWid() const {return HWid_; };
+  std::string SWid() const {return SWid_; };
+  std::string Iid() const {return Iid_; };
 
 }
 #endif // __SIOX_ACTIVITY_H
