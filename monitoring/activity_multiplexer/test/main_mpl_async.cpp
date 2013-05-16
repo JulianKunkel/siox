@@ -1,3 +1,7 @@
+
+#include <stdlib.h> 
+#include <time.h> 
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -11,28 +15,21 @@
 
 ActivityMultiplexer * m1 = new ActivityMultiplexer_Impl1();
 
-/*
-void work()  
-{ 
-	static int id = 0;
-	id++;
-
-	int cid = id;
-
-    boost::posix_time::seconds workTime(3);  
-    std::cout << "Worker-" << cid << ": running" << std::endl;  
-    // Pretend to do something useful...  
-    boost::this_thread::sleep(workTime);  
-    std::cout << "Worker-"<< cid <<": finished" << std::endl;  
-} */
-
+// populations
+const int num_listeners = 5;
 const int num_a_producers = 5;
 const int num_l_producers = 5;
 const int num_l_consumers = 5;
 
+// behavior adjustments
 const int producer_delay_to_produce = 0.3;
-const int max_activities_per_producer = 5;
+const int max_activities_per_producer = 3;
 
+// storage
+std::vector<ActivityMultiplexerListener*> ls; // the only global as l_producer/l_consumers use it
+
+
+// thread behaivors
 void a_producer() {
     boost::posix_time::seconds delay(producer_delay_to_produce);  
 	for (int i = 0; i < max_activities_per_producer; ++i)
@@ -41,7 +38,6 @@ void a_producer() {
 		boost::this_thread::sleep(delay);  
 	}
 }
-
 
 void l_producer() {
 	boost::posix_time::seconds delay(producer_delay_to_produce);  
@@ -63,8 +59,16 @@ void l_consumer() {
 	}
 }
 
+
 int main(int argc, char const *argv[])
 {
+	srand (time(NULL));
+
+	// create finite number of listeners
+	for(int i = 0; i < num_listeners; ++i)
+	{
+		//ls.push_back(new ActivityMultiplexerNotifier_Impl1());
+	}
 
 	// create a few listeners
 	ActivityMultiplexerListener * l1 = new ActivityMultiplexerListener_Impl1();
@@ -75,7 +79,6 @@ int main(int argc, char const *argv[])
 	ActivityMultiplexerListener * l6 = new ActivityMultiplexerListener_Impl1(); // for async
 
 	// is the interface working?
-//	l1->Notify(new Activity());
 //	l2->Notify(new Activity());
 //	l3->Notify(new Activity());
 
@@ -90,9 +93,9 @@ int main(int argc, char const *argv[])
 	m1->registerListener(l3, false); // not async
 
 	// register async listeners
-	m1->registerListener(l4, true); // not async
-	m1->registerListener(l5, true); // not async
-	m1->registerListener(l6, true); // not async
+	m1->registerListener(l4, true); // async
+	m1->registerListener(l5, true); // async
+	m1->registerListener(l6, true); // async
 
 	// log another activity & expect activity in listeners	
 	m1->Log(new Activity());
@@ -105,8 +108,6 @@ int main(int argc, char const *argv[])
 	m1->Log(new Activity());
 	m1->Log(new Activity());
 	m1->Log(new Activity());
-	m1->Log(new Activity());
-
 
 	std::cout << std::endl;
 
@@ -117,6 +118,8 @@ int main(int argc, char const *argv[])
 	
 	// boost threading experiment
     std::cout << "main: starting threads" << std::endl;  
+	std::cout << std::endl;
+
 
 	// create the threads
 	for(int i = 0; i < num_a_producers; ++i)
