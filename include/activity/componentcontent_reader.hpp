@@ -9,6 +9,17 @@
  *
  */
 
+/*
+ @documentation
+ This is the first implementation of the SIOX component to string transformation.
+ Our goal is to put the activity module to action by writing and in this header reading from string file.
+ We use the string file to supervise if errors occur and to have a flexible format for the transaction system and knowledge base, later a bytestream is an option when everything is positively tested.
+ As input we need the activity format and transport
+ In this first version the activity is hardcoded as a component with for the SIOX system relevant information pieces: name, HWid, SWid,Iid.
+ To get the knowledge of the total information load of the activity we examine the activity.hpp in ../Implementation/include/monitoring/datatypes/. That format has to be adapted to our needs.
+ These headers and the ones in ../Implementation/include/activity interact.
+ */
+
 #ifndef __componentcontent_reader
 #define __componentcontent_reader
 
