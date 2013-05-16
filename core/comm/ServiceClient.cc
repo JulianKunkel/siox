@@ -76,7 +76,8 @@ void ServiceClient::isend(boost::shared_ptr<ConnectionMessage> msg)
 }
 
 
-void ServiceClient::handle_message(ConnectionMessage &msg)
+void ServiceClient::handle_message(ConnectionMessage &msg, 
+				   Connection &connnection)
 {
 #ifndef NDEBUG
 	syslog(LOG_NOTICE, "Handling message response.");
@@ -91,7 +92,8 @@ void ServiceClient::handle_message(ConnectionMessage &msg)
 }
 
 
-void ServiceClient::handle_message(boost::shared_ptr<ConnectionMessage> msg)
+void ServiceClient::handle_message(boost::shared_ptr<ConnectionMessage> msg, 
+				   Connection &connection)
 {
 #ifndef NDEBUG
 	syslog(LOG_NOTICE, "Handling message response.");

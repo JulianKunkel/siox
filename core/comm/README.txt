@@ -5,7 +5,7 @@ The communication code requires the components especified in the CMakeLists.txt
 file, that is:
 
 * Google protocol buffers
-* Boost library (threads and system)
+* Boost library (threads, system and test)
 
 During development the following versions were used:
 

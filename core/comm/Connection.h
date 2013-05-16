@@ -17,8 +17,9 @@
 namespace asio = boost::asio;
 
 class Connection 
-  : public boost::enable_shared_from_this<Connection>,
-    private boost::noncopyable {
+   : public boost::enable_shared_from_this<Connection>,
+     private boost::noncopyable {
+	     
 public:
 	explicit Connection(asio::io_service &io_service);
 	explicit Connection(asio::io_service &io_service, Service &service);

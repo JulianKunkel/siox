@@ -4,6 +4,7 @@
 #include "ConnectionMessage.h"
 
 class Callback {
+	
 public:
 	Callback(int msg_type = 0) : msg_type_(msg_type) {};
 	

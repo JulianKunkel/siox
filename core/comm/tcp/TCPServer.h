@@ -14,7 +14,9 @@
 namespace asio = boost::asio;
 
 
-class TCPServerException : public std::exception {
+class TCPServerException 
+   : public std::exception {
+	   
 public:
 	TCPServerException(const char *err_msg) : err_msg_(err_msg) {}
 	const char *what() const throw() { return err_msg_; }
@@ -31,7 +33,7 @@ public:
 	explicit TCPServer(const std::string &address, const std::string &port,
 			   std::size_t worker_pool_size); 
 	
-	void ipublish(boost::shared_ptr<ConnectionMessage> msg);
+// 	void ipublish(boost::shared_ptr<ConnectionMessage> msg);
 
 private:
 	asio::ip::tcp::acceptor acceptor_;

@@ -116,7 +116,7 @@ void Connection::handle_message()
 	       show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
 #endif
 	if (msg_.unpack(buffer_in_))
-		service_->handle_message(msg_);
+		service_->handle_message(msg_, *this);
 #ifndef NDEBUG
 	else 
 		syslog(LOG_NOTICE, "Error unpacking message.");

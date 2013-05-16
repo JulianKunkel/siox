@@ -13,7 +13,9 @@
 
 namespace asio = boost::asio;
 
-class TCPConnectionException : public std::exception {
+class TCPConnectionException 
+   : public std::exception {
+	   
 public:
 	TCPConnectionException(const char *err_msg) : err_msg_(err_msg) {}
 	const char *what() const throw() { return err_msg_; }
@@ -24,8 +26,8 @@ private:
 
 
 class TCPConnection 
-   : public Connection
-{
+   : public Connection {
+	   
 public:
 	explicit TCPConnection(Service &service, 
 			       asio::io_service &io_service);

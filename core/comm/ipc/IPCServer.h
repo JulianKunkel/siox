@@ -10,7 +10,9 @@
 
 namespace asio = boost::asio;
 
-class IPCServerException : public std::exception {
+class IPCServerException 
+   : public std::exception {
+	   
 public:
 	IPCServerException(const char *err_msg) : err_msg_(err_msg) {}
 	const char *what() const throw() { return err_msg_; }
@@ -27,7 +29,7 @@ public:
 	explicit IPCServer(const std::string &path, 
 			   std::size_t worker_pool_size);
 	
-	void ipublish(boost::shared_ptr<ConnectionMessage> msg);
+// 	void ipublish(boost::shared_ptr<ConnectionMessage> msg);
 
 private:
 	IPCConnection_ptr new_connection_;
