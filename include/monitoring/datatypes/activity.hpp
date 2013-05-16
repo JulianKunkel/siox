@@ -9,6 +9,17 @@
  *
  */
 
+/*!
+ This is a container class using the low-level activity that has ended and is complete
+
+ We have four getter methods in the following areas:
+ 1 ID's (Aid, Cid (Componentid), Name, SWid, HWid, Iid)
+ 2 Attributes (Metrics)
+ 3 Remote Calls (from other nodes)
+ 4 Parents (Paid) with special case "Remote ?"
+
+ */
+
 #infdef __SIOX_ACTIVITY_H
 #define __SIOX_ACTIVITY_H
 
@@ -79,10 +90,6 @@ public:
   Activity(void);
   Activity(Component component, Timestamp t_start = NULL, char[] comment="");
   ~Activity(void);
-
-  void start(Timestamp t=NULL);
-  void stop(Timestamp t=NULL);
-  void end(void);
 
   Component() {};
   Component(const std::string &name, const std::string &HWid, const std::string &SWid, const std::string &Iid) : name_ (name), HWid_ (HWid), SWid_ (SWid), Iid_ (Iid) {};
