@@ -1,6 +1,8 @@
 #ifndef ACTIVITYMULTIPLEXERLISTENER_IMPL1_H
 #define ACTIVITYMULTIPLEXERLISTENER_IMPL1_H 
 
+
+
 #include "../../include/monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp"
 class ActivityMultiplexerListener_Impl1: public ActivityMultiplexerListener
 {
@@ -12,9 +14,8 @@ public:
 	void print();
 
 private:
-	static int nextLID;
-	int LID;
-	/* data */
+	static int nextID;
+	int ID;
 };
 
 

@@ -54,6 +54,27 @@ private:
  the activity consists of component name and ids, start and stop and end after reporting
  */
 
+/*!
+ Five Steps for code development in general
+ Think of and write Use Cases
+ Observe and write Requirements
+ Declare functions their behavior and relations between them
+ Write documentation for the developer and user
+ See what's possible and implement it.
+ */
+
+/*!
+ Usecase 1 : Individual POSIX file write of multifile to a storage target SAS controller which has a LUN
+  In this case Component.HWid := HWid(LUN) = some kind of controller bus id = pci@0000:00:1f.2.
+  The controller has a Component.name which is a string "SAS Controller Model".
+  The Component.SWid is the software layer composition "POSIX-Kernel-PFS-Block" or any of those individually.
+ */
+
+/*!
+ Usecase 2 : MPI Write using etypes - going through ROMIO or OMPIO the through ADIO layer to kernel and to generic_Write
+ How is in this case the component.HWid discovered? Component.SWid would be the string "MPI-OMPIO-ADIO" or any of those individually.
+ */
+
 public:
   Activity(void);
   Activity(Component component, Timestamp t_start = NULL, char[] comment="");

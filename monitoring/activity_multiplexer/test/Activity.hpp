@@ -1,6 +1,7 @@
 #ifndef ACTIVITY_H
 #define ACTIVITY_H 
 
+
 class Activity
 {
 public:
@@ -9,8 +10,9 @@ public:
 	void print();
 
 private:
-	static int nextAID;
-	int AID;
+	int ID;
+	static int nextID;
+
 	/* data */
 };
 
