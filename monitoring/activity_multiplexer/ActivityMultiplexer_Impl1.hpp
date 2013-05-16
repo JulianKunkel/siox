@@ -4,11 +4,19 @@
 #include <list>
 #include <queue>
 
-#include "../../../include/monitoring/activity_multiplexer/ActivityMultiplexer.hpp"
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
+
+#include "../../include/monitoring/activity_multiplexer/ActivityMultiplexer.hpp"
 
 #include "ActivityMultiplexerListener_Impl1.hpp"
 
 
+/**
+ * ActivityMultiplexerQueue_Impl1 Considerations
+ * 
+ */
 class ActivityMultiplexerQueue_Impl1 : public ActivityMultiplexerQueue
 {
 public:
@@ -20,7 +28,14 @@ public:
 	Activity * Pull();
 
 private:
+	// boost::message_queue? -> has priorities already built in
 	std::queue<Activity*> activities;
+
+	int capacity;
+
+	boost::mutex xmutex;                               
+	boost::condition_variable is_not_full;  
+	boost::condition_variable is_not_empty;
 };
 
 
@@ -43,7 +58,6 @@ private:
 	ActivityMultiplexerQueue * activities;	
 	std::list<ActivityMultiplexerListener*> * listeners_async;
 
-	bool working = false;
 };
 
 

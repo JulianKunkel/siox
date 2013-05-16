@@ -1,6 +1,9 @@
 #include <iostream>
+#include <sstream>
 
 #include "ActivityMultiplexer_Impl1.hpp"
+
+
 
 /**
  * ActivityMultiplexerQueue - Implementation 1
@@ -23,37 +26,20 @@ bool ActivityMultiplexerQueue_Impl1::Full()
 
 void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 {
-	std::cout << "Push(";
-	activity->print();
-	std::cout << "); ";
-	std::cout << activities.size();
-	std::cout << " empty? -> ";
-	std::cout << activities.empty();
-	std::cout << std::endl;
 	
 	activities.push(activity);
-
-	std::cout << "after Push(";
-	activity->print();
-	std::cout << "); ";
-	std::cout << activities.size();
-	std::cout << " empty? -> ";
-	std::cout << activities.empty();
-	std::cout << std::endl;
+    
 }
 
 Activity * ActivityMultiplexerQueue_Impl1::Pull()
 {
-	std::cout << "Pull(";
-	std::cout << "); ";
-	std::cout << activities.size();
-	std::cout << " empty? -> ";
-	std::cout << activities.empty();
-	std::cout << std::endl;
+	Activity * activity = NULL;
 
-	Activity * activitiy = activities.front();
+	activity = activities.front();
 	activities.pop();
-	return activitiy;
+	
+		
+	return activity;
 }
 
 
@@ -94,16 +80,12 @@ void ActivityMultiplexerNotifier_Impl1::setListenerList(std::list<ActivityMultip
 void ActivityMultiplexerNotifier_Impl1::Wake()
 {
 	// debug
-	std::cout << "Notifier -> Wake()" << std::endl;
+	//std::cout << "Notifier -> Wake()" << std::endl;
 	
 	Activity * activity = activities->Pull();
 
 	if ( activity != NULL )
 	{
-
-		activity->print();
-		std::cout << "run.." << std::endl;
-
 		// dispatch
 		std::list<ActivityMultiplexerListener*>::iterator listener = listeners_async->begin();
 		for ( ; listener != listeners_async->end(); ++listener) 
@@ -164,7 +146,6 @@ void ActivityMultiplexer_Impl1::Log(Activity * activity)
 		}	
 
 		activities->Push(activity);
-		activities->Push(new Activity());
 
 		notifier->Wake();
 
