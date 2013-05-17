@@ -31,6 +31,24 @@
 
 namespace monitoring {
 
+class get_Activity
+{
+public:
+  
+  const Activity& operate_info() const // const getter
+  {
+    return m_info;
+  }
+
+  Activity& operate_info() /*! variable getter with operate = get = set */
+  {
+    return m_info;
+  }
+
+private:
+
+  Activity m_info;
+};
 
 /*!
  State of activity
@@ -59,6 +77,24 @@ private:
     int status;
     char[] comment;
 
+public:
+  Activity(void);
+  Activity(Component component, Timestamp t_start = NULL, char[] comment="");
+  ~Activity(void);
+
+  Component() {};
+  Component(const std::string &name, const std::string &HWid, const std::string &SWid, const std::string &Iid) : name_ (name), HWid_ (HWid), SWid_ (SWid), Iid_ (Iid) {};
+  std::string name() const {return name_; };
+  std::string HWid() const {return HWid_; };
+  std::string SWid() const {return SWid_; };
+  std::string Iid() const {return Iid_; };
+  ~Component(void);
+
+  SWid() {};
+  SWid(const std::string layer_name, array<unsigned char,4> version)
+  ~SWid(void);
+
+
     //List<Attribute> attributes;
 
 /*!
@@ -85,18 +121,6 @@ private:
  Usecase 2 : MPI Write using etypes - going through ROMIO or OMPIO the through ADIO layer to kernel and to generic_Write
  How is in this case the component.HWid discovered? Component.SWid would be the string "MPI-OMPIO-ADIO" or any of those individually.
  */
-
-public:
-  Activity(void);
-  Activity(Component component, Timestamp t_start = NULL, char[] comment="");
-  ~Activity(void);
-
-  Component() {};
-  Component(const std::string &name, const std::string &HWid, const std::string &SWid, const std::string &Iid) : name_ (name), HWid_ (HWid), SWid_ (SWid), Iid_ (Iid) {};
-  std::string name() const {return name_; };
-  std::string HWid() const {return HWid_; };
-  std::string SWid() const {return SWid_; };
-  std::string Iid() const {return Iid_; };
 
 }
 
