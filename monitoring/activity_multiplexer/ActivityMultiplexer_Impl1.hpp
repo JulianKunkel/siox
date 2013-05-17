@@ -33,9 +33,9 @@ private:
 
 	int capacity;
 
-	boost::mutex xmutex;                               
-	boost::condition_variable is_not_full;  
-	boost::condition_variable is_not_empty;
+	mutable boost::mutex mut;
+	//std::condition_variable is_not_full; 
+	//std::condition_variable is_not_empty;
 };
 
 
@@ -58,6 +58,8 @@ private:
 	ActivityMultiplexerQueue * activities;	
 	std::list<ActivityMultiplexerListener*> * listeners_async;
 
+	int max_wait_time;
+
 };
 
 
@@ -74,12 +76,10 @@ public:
 	void registerListener(ActivityMultiplexerListener * listener, bool async);
 	void unregisterListener(ActivityMultiplexerListener * listener, bool async);
 
-	void print();
-
 private:
 	// debug
-	static int nextID;
 	int ID;
+	static int nextID;
 
 	// queue
 	std::list<ActivityMultiplexerListener*> listeners_sync;
@@ -88,7 +88,13 @@ private:
 	// async path
 	ActivityMultiplexerQueue * activities;
 	ActivityMultiplexerNotifier * notifier;
-	
+
+	// thread safety
+	int async_readers;
+	int sync_readers;
+	boost::condition_variable cond;
+	mutable boost::mutex mut_async;
+	mutable boost::mutex mut_sync;
 };
 
 

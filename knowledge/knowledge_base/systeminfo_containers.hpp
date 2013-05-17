@@ -19,7 +19,7 @@ class SioxNode {
 
 class storage_device {
     public:
-        // FIXME: Constructor?
+        storage_device();
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
         unsigned int      device_id;
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
