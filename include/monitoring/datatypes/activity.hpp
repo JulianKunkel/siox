@@ -44,7 +44,8 @@ public:
   {
     return m_info;
   }
-
+  ~get_Activity();
+  
 private:
 
   Activity m_info;
