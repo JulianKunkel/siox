@@ -15,6 +15,7 @@
 #include "Connection.h"
 #include "Service.h"
 #include "ServiceServer.h"
+#include "SioxLogger.h"
 
 namespace asio = boost::asio;
 

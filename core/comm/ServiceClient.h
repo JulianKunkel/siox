@@ -15,6 +15,7 @@
 #include "Callback.h"
 #include "Connection.h"
 #include "ConnectionFactory.h"
+#include "SioxLogger.h"
 
 namespace asio = boost::asio;
 

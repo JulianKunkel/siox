@@ -14,9 +14,9 @@ SyslogLogger::~SyslogLogger()
 }
 
 
-void SyslogLogger::log(const Priority prio, const std::string &msg)
+void SyslogLogger::log_append(const Priority prio, const char *buffer)
 {
-	syslog(prio, msg.c_str());
+	syslog(prio, buffer);
 }
 
 

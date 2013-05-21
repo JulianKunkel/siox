@@ -15,7 +15,6 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include <syslog.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 

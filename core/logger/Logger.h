@@ -1,40 +1,25 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <iostream>
-#include <string>
+#include <boost/ptr_container/ptr_list.hpp>
 
-class LoggerException 
-   : public std::exception {
-	  
+#include "BasicLogger.h"
+
+class Logger
+   : public BasicLogger {
+	   
 public:
-	LoggerException(const char *err_msg) : err_msg_(err_msg) {}
-	const char *what() const throw() { return err_msg_; }
-private:
-	const char *err_msg_;
-	
-};
-
-
-class Logger {
-
-public:
-
-	enum Priority {
-		EMERG,
-		ALERT,
-		CRIT,
-		ERR,
-		WARNING,
-		NOTICE,
-		INFO,
-		DEBUG
-	};
-	
 	Logger();
 	~Logger();
 	
-	void log(const Priority prio, const std::string &msg);
+	void add_logger(Logger &logger);
+	void clear_loggers();
+
+protected:	
+	void log_append(const Priority prio, const char *buffer);
+	
+private:
+	boost::ptr_list<Logger> loggers_;   
 	
 };
 

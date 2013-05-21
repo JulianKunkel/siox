@@ -6,8 +6,8 @@ ServiceClient::ServiceClient(const std::string &endpoint_uri,
      worker_pool_size_(worker_pool_size)
 {
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Creating service client at %s.", 
-	       endpoint_uri.c_str());
+	logger->log(Logger::DEBUG, "Creating service client at %s.", 
+		    endpoint_uri.c_str());
 #endif
 	try {
 		connection_ = 
@@ -33,7 +33,7 @@ void ServiceClient::run()
 void ServiceClient::stop()
 {
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Waiting for client workers to finish."); 
+	logger->log(Logger::DEBUG, "Waiting for client workers to finish."); 
 #endif
 	io_service_.stop();
 	
@@ -58,7 +58,7 @@ void ServiceClient::clear_error_callbacks()
 void ServiceClient::register_response_callback(Callback &rsp_cb)
 {
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Registering response callback");
+	logger->log(Logger::DEBUG, "Registering response callback");
 #endif
 	response_callbacks.push_back(&rsp_cb);
 }
@@ -80,12 +80,12 @@ void ServiceClient::handle_message(ConnectionMessage &msg,
 				   Connection &connnection)
 {
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Handling message response.");
+	logger->log(Logger::DEBUG, "Handling message response.");
 #endif
 	boost::ptr_list<Callback>::iterator i;
 	for (i = response_callbacks.begin(); i != response_callbacks.end(); ++i) {
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "Executing message response callback.");
+		logger->log(Logger::DEBUG, "Executing message response callback.");
 #endif
 		i->execute(msg);
 	}
@@ -96,12 +96,12 @@ void ServiceClient::handle_message(boost::shared_ptr<ConnectionMessage> msg,
 				   Connection &connection)
 {
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Handling message response.");
+	logger->log(Logger::DEBUG, "Handling message response.");
 #endif
 	boost::ptr_list<Callback>::iterator i;
 	for (i = response_callbacks.begin(); i != response_callbacks.end(); ++i) {
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "Executing message response callback.");
+		logger->log(Logger::DEBUG, "Executing message response callback.");
 #endif
 		i->execute(msg);
 	}

@@ -41,7 +41,7 @@ void IPCConnection::start()
 			 boost::bind(&IPCConnection::handle_read_header, this, 
 				     asio::placeholders::error));
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Waiting for message.");
+	logger->log(Logger::DEBUG, "Waiting for message.");
 #endif
 }
 
@@ -64,14 +64,14 @@ void IPCConnection::isend(boost::shared_ptr<ConnectionMessage> msg)
 	
 	if (!msg->pack(buffer_out_)) {
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "Error packing message.");
+		logger->log(Logger::ERR, "Error packing message.");
 #endif
 		mtx_bufout_.unlock();
 		return;
 	}
 
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Sending IPC message (%s).\n", 
+	logger->log(Logger::DEBUG, "Sending IPC message (%s).\n", 
 	       show_hex<std::vector<boost::uint8_t> >(buffer_out_).c_str());
 #endif
 	asio::async_write(socket_, asio::buffer(buffer_out_), 

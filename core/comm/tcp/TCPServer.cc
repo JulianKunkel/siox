@@ -28,7 +28,7 @@ TCPServer::TCPServer(const std::string &address, const std::string &port,
 	}
 
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "TCP server created and accepting connections.");
+	logger->log(Logger::DEBUG, "TCP server created and accepting connections.");
 #endif
 
 }
@@ -53,7 +53,7 @@ void TCPServer::handle_accept(const boost::system::error_code &error)
 	if (!error) {
 		
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "New TCP connection accepted.");
+		logger->log(Logger::DEBUG, "New TCP connection accepted.");
 #endif
 		new_connection_->start();
 		
@@ -68,18 +68,4 @@ void TCPServer::handle_accept(const boost::system::error_code &error)
 	}
 
 }
-
-
-// void TCPServer::ipublish(boost::shared_ptr<ConnectionMessage> msg)
-// {
-// #ifndef NDEBUG
-// 	syslog(LOG_NOTICE, "Publishing on %zu active connections.", 
-// 	       connections_.size());
-// #endif
-// 	std::vector<TCPConnection_ptr>::iterator i;
-// 	for (i = connections_.begin(); i != connections_.end(); ++i) {
-// 		(*i)->isend(msg);
-// 	}
-// 
-// }
 
