@@ -3,26 +3,24 @@ project(SIOX)
 
 include(FindProtobuf)
 
-find_package(
-	Protobuf REQUIRED
-	Boost 1.53.0 COMPONENTS system test thread REQUIRED
-)
+find_package(Protobuf REQUIRED)
+find_package(Boost 1.53.0 COMPONENTS system thread unit_test_framework REQUIRED)
+
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS buffers/siox.proto)
 
 include_directories(
-	"${CMAKE_BINARY_DIR}"
+	"${CMAKE_CURRENT_BINARY_DIR}"
 	"${PROJECT_SOURCE_DIR}"
 	"${PROJECT_SOURCE_DIR}/misc"
 	"${PROJECT_SOURCE_DIR}/buffers"
 	"${PROJECT_SOURCE_DIR}/ipc"
 	"${PROJECT_SOURCE_DIR}/tcp"
-	"${PROJECT_SOURCE_DIR}/test"
 	"${PROTOBUF_INCLUDE_DIRS}"
 	${Boost_INCLUDE_DIR}
 )
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt -lboost_system -lboost_thread -lboost_unit_test_framework")
+set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt -lboost_system -lboost_thread")
 
 add_library(siox
 	misc/URI.h
@@ -53,11 +51,5 @@ add_library(siox
 	${PROTO_HDRS}
 )
 
-add_executable(communication_tests
-	test/communication.cc)
-
 target_link_libraries(siox ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(communication_tests siox)
 
-enable_testing()
-add_test("Communication" communication_tests)

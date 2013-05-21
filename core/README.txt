@@ -5,12 +5,13 @@ The communication code requires the components especified in the CMakeLists.txt
 file, that is:
 
 * Google protocol buffers
-* Boost library (threads, system and test)
+* Boost library (threads, system and unit_test_framework)
 
 During development the following versions were used:
 
 * Google protocol buffers 2.5.0
 * Boost 1.53
+* GCC 4.7 (for C++0x support)
 
 Compilation
 ===========

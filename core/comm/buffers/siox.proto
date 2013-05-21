@@ -18,4 +18,3 @@ message MessageBuffer {
 	repeated uint64 timestamps = 60;
 	
 }
-

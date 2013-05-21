@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include "siox.pb.h"
+// #include "siox.pb.h"
 #include "Callback.h"
 #include "ServerFactory.h"
 #include "ServiceClient.h"
@@ -13,6 +13,7 @@
 namespace asio = boost::asio;
 
 ConnectionMessage *m;
+boost::uint64_t unid_sum;
 
 // The purpose of this callback is just to extract the message received by the
 // service in order to compare it to the one that was sent.
@@ -30,6 +31,19 @@ public:
 		m = &msg;
 	}
 	
+};
+
+class AddCallback : public Callback {
+public:
+	AddCallback() {
+		unid_sum = 0;
+	};
+	
+	void handle_message(ConnectionMessage &msg) const
+	{
+		syslog(LOG_NOTICE, "AddCallback handle_message");
+		unid_sum += msg.get_msg()->unid();
+	}
 };
 
 
@@ -149,3 +163,69 @@ BOOST_AUTO_TEST_CASE(tcp_communication)
 
 }
 
+boost::uint64_t multisend(int n, ServiceClient &c)
+{
+	for (int i = 0; i < n; ++i) {
+		
+		boost::shared_ptr<siox::MessageBuffer> mp(new siox::MessageBuffer());
+		mp->set_action(siox::MessageBuffer::Activity);
+		mp->set_type(10);
+		mp->set_unid(i);
+		
+		boost::shared_ptr<ConnectionMessage> msg_ptr(new ConnectionMessage(mp));
+		
+		c.isend(msg_ptr);
+	}
+	
+	return n*(n-1)/2;
+}
+
+
+BOOST_AUTO_TEST_CASE(tcp_multisend_single)
+{
+	init_syslog();
+	
+	std::string tcp_socket_addr("tcp://localhost:6678");
+	ServiceServer *server = ServerFactory::create_server(tcp_socket_addr);
+	server->run();
+
+	AddCallback acb;
+	server->register_message_callback(acb);
+
+	ServiceClient *client = new ServiceClient(tcp_socket_addr);
+	client->run();
+	
+	boost::uint64_t sum = multisend(1000, *client);
+	
+	sleep(1);
+	
+	BOOST_CHECK_EQUAL(sum, unid_sum);
+	
+	server->stop();
+	client->stop();
+}
+
+
+BOOST_AUTO_TEST_CASE(ipc_multisend_single)
+{
+	init_syslog();
+	
+	std::string socket_addr("ipc:///tmp/socket");
+	ServiceServer *server = ServerFactory::create_server(socket_addr);
+	server->run();
+
+	AddCallback acb;
+	server->register_message_callback(acb);
+
+	ServiceClient *client = new ServiceClient(socket_addr);
+	client->run();
+	
+	boost::uint64_t sum = multisend(1000, *client);
+	
+	sleep(1);
+	
+	BOOST_CHECK_EQUAL(sum, unid_sum);
+	
+	server->stop();
+	client->stop();
+}
