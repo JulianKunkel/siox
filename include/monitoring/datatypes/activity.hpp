@@ -35,20 +35,26 @@ class get_Activity
 {
 public:
   
-  const Activity& operate_info() const // const getter
+  const get_Activity& operate_info() const // const getter - returns the value of the private member of this class.
   {
-    return m_info;
+    return get_activity_info;
   }
 
-  Activity& operate_info() /*! variable getter with operate = get = set */
+  get_Activity& operate_info() /*! variable getter with operate = get = set */
   {
-    return m_info;
+    return get_activity_info;
   }
+  const std::string& name() const;
+  void get_activity_name(const std::string& get_activity_name);
+
   ~get_Activity();
+
+
   
 private:
 
-  Activity m_info;
+  std::string get_activity_info_;
+  std::string get_activity_name_;
 };
 
 /*!
