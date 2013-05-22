@@ -15,7 +15,7 @@ public:
 	void add_logger(Logger &logger);
 	void clear_loggers();
 
-protected:	
+protected:
 	void log_append(const Priority prio, const char *buffer);
 	
 private:
