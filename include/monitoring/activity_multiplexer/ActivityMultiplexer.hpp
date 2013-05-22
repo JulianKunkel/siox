@@ -10,6 +10,9 @@
  * that are notified in an asyncrnous way.
  *
  */
+
+// could implement async buffer that is used by various components
+//
 class ActivityMultiplexerQueue
 {
 public:
@@ -20,6 +23,14 @@ public:
 	 */
 	virtual bool Full() =0;
 	
+
+	/* Check whether of not the queue is empty
+	 * 
+	 * @return bool		true = queue is empty, false = not empty
+	 */
+	virtual bool Empty() =0;
+
+
 	/**
 	 * Add an activity to the queue
 	 *
@@ -43,13 +54,16 @@ public:
 class ActivityMultiplexerNotifier
 {
 public:
-	virtual void setQueue(ActivityMultiplexerQueue * queue) =0;
-	virtual void setListenerList(std::list<ActivityMultiplexerListener*> * list) =0;
+//	virtual void setQueue(ActivityMultiplexerQueue * queue) =0;
+//	virtual void setListenerList(std::list<ActivityMultiplexerListener*> * list) =0;
+
+	// signal upstream to Deamons others
 
 	/**
 	 * Called by the owning multiplexer to start dispatching activities to async
 	 * listeners in case Notifier was not wokring already.
 	 */
+	// queue und notifier wake each other
 	virtual void Wake() =0;
 };
 
@@ -74,7 +88,8 @@ public:
 	 * @param	ActivityMultiplexerListener *	listener	listener to notify in the future
 	 * @param	bool							asyc		async = true, sync = false
 	 */
-	virtual void registerListener(ActivityMultiplexerListener * listener, bool async) =0;
+	// TODO: typecast check for async/sync
+	virtual void registerListener(ActivityMultiplexerListener * listener) =0;
 
 	/**
 	 * Unregister listener from multiplexer
@@ -82,7 +97,8 @@ public:
 	 * @param	ActivityMultiplexerListener *	listener	listener to remove
 	 * @param	bool							asyc		async = true, sync = false
 	 */
-	virtual void unregisterListener(ActivityMultiplexerListener * listener, bool async) =0;
+	// TODO: typecast check for async/sync
+	virtual void unregisterListener(ActivityMultiplexerListener * listener) =0;
 };
 
 #endif /* ACTIVITYMULTIPLEXER_H */

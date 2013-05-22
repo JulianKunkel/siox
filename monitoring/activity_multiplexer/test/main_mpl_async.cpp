@@ -6,8 +6,8 @@
 #include <sstream>
 #include <vector>
 
-#include <boost/thread.hpp>
-#include <boost/date_time.hpp>
+#include <thread>
+#include <chrono>
 
 #include "../ActivityMultiplexer_Impl1.hpp"
 #include "../ActivityMultiplexerListener_Impl1.hpp"
@@ -22,8 +22,8 @@ const int num_l_producers = 5;
 const int num_l_consumers = 5;
 
 // behavior adjustments
-const int producer_delay_to_produce = 0.3;
-const int max_activities_per_producer = 3;
+const int producer_delay_to_produce = 30;  // ms
+const int max_activities_per_producer = 3; 
 
 // storage
 std::vector<ActivityMultiplexerListener*> ls; // the only global as l_producer/l_consumers use it
@@ -31,31 +31,28 @@ std::vector<ActivityMultiplexerListener*> ls; // the only global as l_producer/l
 
 // thread behaivors
 void a_producer() {
-    boost::posix_time::seconds delay(producer_delay_to_produce);  
 	for (int i = 0; i < max_activities_per_producer; ++i)
 	{
 		m1->Log(new Activity());
-		boost::this_thread::sleep(delay);  
+		std::this_thread::sleep_for(std::chrono::milliseconds(producer_delay_to_produce));
 	}
 }
 
 void l_producer() {
-	boost::posix_time::seconds delay(producer_delay_to_produce);  
 	for (int i = 0; i < max_activities_per_producer; ++i)
 	{
 		//ActivityMultiplexerListener * listener = new ActivityMultiplexerListener_Impl1();
 		//m1->registerListener(listener)
-		boost::this_thread::sleep(delay);  
+		std::this_thread::sleep_for(std::chrono::milliseconds(producer_delay_to_produce));
 	}
 }
 
 void l_consumer() {
-	boost::posix_time::seconds delay(producer_delay_to_produce);  
 	for (int i = 0; i < max_activities_per_producer; ++i)
 	{
 		//ActivityMultiplexerListener * listener = m1->getRandomListener();
 		//m1->registerListener(listener)
-		boost::this_thread::sleep(delay);  
+		std::this_thread::sleep_for(std::chrono::milliseconds(producer_delay_to_produce));
 	}
 }
 
@@ -71,67 +68,69 @@ int main(int argc, char const *argv[])
 	}
 
 	// create a few listeners
-	ActivityMultiplexerListener * l1 = new ActivityMultiplexerListener_Impl1();
-	ActivityMultiplexerListener * l2 = new ActivityMultiplexerListener_Impl1();
-	ActivityMultiplexerListener * l3 = new ActivityMultiplexerListener_Impl1();
-	ActivityMultiplexerListener * l4 = new ActivityMultiplexerListener_Impl1(); // for async
-	ActivityMultiplexerListener * l5 = new ActivityMultiplexerListener_Impl1(); // for async
-	ActivityMultiplexerListener * l6 = new ActivityMultiplexerListener_Impl1(); // for async
+	ActivityMultiplexerListener * l0 = new ActivityMultiplexerListenerSync_Impl1();
+	ActivityMultiplexerListener * l1 = new ActivityMultiplexerListenerSync_Impl1();
+	ActivityMultiplexerListener * l2 = new ActivityMultiplexerListenerSync_Impl1();
+	ActivityMultiplexerListener * l3 = new ActivityMultiplexerListenerAsync_Impl1(); // for async
+	ActivityMultiplexerListener * l4 = new ActivityMultiplexerListenerAsync_Impl1(); // for async
+	ActivityMultiplexerListener * l5 = new ActivityMultiplexerListenerAsync_Impl1(); // for async
 
-	// is the interface working?
-//	l2->Notify(new Activity());
-//	l3->Notify(new Activity());
-
-	// introduce a multiplexer
+	// basic init
+	std::cout << "Init and register 6 listeners test notify. \n" << std::endl;
 
 	// log an activity
 	m1->Log(new Activity());
 
 	// register sync our listeners to m1
-	m1->registerListener(l1, false); // not async
-	m1->registerListener(l2, false); // not async
-	m1->registerListener(l3, false); // not async
+	m1->registerListener(l0); // not async
+	m1->registerListener(l1); // not async
+	m1->registerListener(l2); // not async
 
 	// register async listeners
-	m1->registerListener(l4, true); // async
-	m1->registerListener(l5, true); // async
-	m1->registerListener(l6, true); // async
+	m1->registerListener(l3); // async
+	m1->registerListener(l4); // async
+	m1->registerListener(l5); // async
 
 	// log another activity & expect activity in listeners	
 	m1->Log(new Activity());
 
 	// unregister a listner
-	m1->unregisterListener(l2, false);
+	std::cout << "\nUnregister l1, and test notify again. \n" << std::endl;
+	m1->unregisterListener(l1);
 
 	// expect 2 to get passed
 	m1->Log(new Activity());
 	m1->Log(new Activity());
-	m1->Log(new Activity());
-	m1->Log(new Activity());
 
 	std::cout << std::endl;
 
-	// keep track of every kind individually
-	std::vector<boost::thread> a_producers;
-	std::vector<boost::thread> l_producers;
-	std::vector<boost::thread> l_consumers;
-	
-	// boost threading experiment
+
+	std::cout << "Start producing Activities by threads" << std::endl;
     std::cout << "main: starting threads" << std::endl;  
 	std::cout << std::endl;
 
+	// keep track of every kind individually
+	std::vector<std::thread> a_producers;
+	std::vector<std::thread> l_producers;
+	std::vector<std::thread> l_consumers;
 
 	// create the threads
 	for(int i = 0; i < num_a_producers; ++i)
-		a_producers.push_back(boost::thread(a_producer));
+		a_producers.push_back(std::thread(a_producer)); // activity producers
 
 	for(int i = 0; i < num_l_producers; ++i)
-		l_producers.push_back(boost::thread(l_producer));
+	{
+		// registers listeners
+		l_producers.push_back(std::thread(l_producer)); 
+	}
 
 	for(int i = 0; i < num_l_consumers; ++i)
-		l_consumers.push_back(boost::thread(l_consumer));
+	{
+		// unregisters listeners
+		l_consumers.push_back(std::thread(l_consumer));
+	}
 
-    std::cout << "main: waiting for threads" << std::endl;  
+    std::cout << "\nmain: waiting for threads\n\n";  
 
 	for(auto& t : a_producers)
 		t.join();
@@ -142,7 +141,7 @@ int main(int argc, char const *argv[])
 	for(auto& t : l_consumers)
 		t.join();
 
-    std::cout << "main: done" << std::endl;
+    std::cout << std::endl << "main: done" << std::endl;
 	
 
 	return 0;

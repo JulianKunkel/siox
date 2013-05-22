@@ -8,6 +8,7 @@
  * ActivityMultiplexerListener
  * Interface plugins that want to register to a multiplexer need to implement. 
  */
+// TODO: add second listener type, async/sync    async need to have a signal
 class ActivityMultiplexerListener
 {
 public:
@@ -17,6 +18,21 @@ public:
 	 * @param	Activity	a logged Activity
 	 * @return	void
 	 */
+	virtual void Notify(Activity * activity) =0;
+
+
+};
+
+
+
+class ActivityMultiplexerListenerAsync : public ActivityMultiplexerListener
+{
+	virtual void Notify(Activity * activity) =0;
+};
+
+
+class ActivityMultiplexerListenerSync : public ActivityMultiplexerListener
+{
 	virtual void Notify(Activity * activity) =0;
 };
 

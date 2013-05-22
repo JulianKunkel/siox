@@ -1,6 +1,6 @@
 CC = g++
-CCFLAGS = -Wall -std=c++11
-LDFLAGS = -L/usr/include -lboost_system -lboost_thread
+CCFLAGS = -Wall -std=c++11 -g
+LDFLAGS = 
 # final binary name 
 binary = test_mpl_async
 

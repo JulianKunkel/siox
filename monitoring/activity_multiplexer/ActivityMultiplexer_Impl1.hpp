@@ -4,9 +4,11 @@
 #include <list>
 #include <queue>
 
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
 
 #include "../../include/monitoring/activity_multiplexer/ActivityMultiplexer.hpp"
 
@@ -24,6 +26,7 @@ public:
 	virtual ~ActivityMultiplexerQueue_Impl1();
 
 	bool Full();	
+	bool Empty();	
 	void Push(Activity * activity);
 	Activity * Pull();
 
@@ -33,9 +36,9 @@ private:
 
 	int capacity;
 
-	mutable boost::mutex mut;
-	//std::condition_variable is_not_full; 
-	//std::condition_variable is_not_empty;
+
+	// multi-threading
+	std::mutex mut;
 };
 
 
@@ -53,6 +56,8 @@ public:
 	void setQueue(ActivityMultiplexerQueue * queue); 
 	void setListenerList(std::list<ActivityMultiplexerListener*> * list);
 	void Wake();
+	void doStuff();
+	void Run();
 
 private:	
 	ActivityMultiplexerQueue * activities;	
@@ -73,15 +78,15 @@ public:
 	
 	void Log(Activity * activity);
 
-	void registerListener(ActivityMultiplexerListener * listener, bool async);
-	void unregisterListener(ActivityMultiplexerListener * listener, bool async);
+	void registerListener(ActivityMultiplexerListener * listener);
+	void unregisterListener(ActivityMultiplexerListener * listener);
 
 private:
 	// debug
 	int ID;
 	static int nextID;
 
-	// queue
+	// listener management
 	std::list<ActivityMultiplexerListener*> listeners_sync;
 	std::list<ActivityMultiplexerListener*> listeners_async;
 
@@ -89,12 +94,24 @@ private:
 	ActivityMultiplexerQueue * activities;
 	ActivityMultiplexerNotifier * notifier;
 
+	// TODO: move to queue
+	bool overloaded;
+	int dropped_count = 0;
+	int dropped_before = 0;
+
+	// boundaries
+	unsigned int max_sync_listeners = 20;
+	unsigned int max_async_listeners = 20;
+
+
 	// thread safety
-	int async_readers;
-	int sync_readers;
-	boost::condition_variable cond;
-	mutable boost::mutex mut_async;
-	mutable boost::mutex mut_sync;
+	std::mutex mut;
+
+	std::condition_variable sync_is_not_full;
+	std::condition_variable sync_is_not_empty;
+
+	std::condition_variable async_is_not_full;
+	std::condition_variable async_is_not_empty;
 };
 
 

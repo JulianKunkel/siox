@@ -4,6 +4,10 @@
 #include "ActivityMultiplexer_Impl1.hpp"
 
 
+// TODO: templates for notifier und queue for general use, erstmal nicht
+//			Problem: templates created at compile time
+
+
 /**
  * ActivityMultiplexerQueue - Implementation 1
  *
@@ -23,9 +27,15 @@ bool ActivityMultiplexerQueue_Impl1::Full()
 	return false;
 }
 
+bool ActivityMultiplexerQueue_Impl1::Empty()
+{
+	return false;
+}
+
 void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 {
-	boost::mutex::scoped_lock lock(mut);
+	// handle lost
+	std::unique_lock<std::mutex> lock(mut);
 	activities.push(activity);
 }
 
@@ -33,10 +43,11 @@ Activity * ActivityMultiplexerQueue_Impl1::Pull()
 {
 	Activity * activity = NULL;
 
-	boost::mutex::scoped_lock lock(mut);
+	std::unique_lock<std::mutex> lock(mut);
 	activity = activities.front();
 	activities.pop();
 	
+	// return lost
 	return activity;
 }
 
@@ -75,22 +86,48 @@ void ActivityMultiplexerNotifier_Impl1::setListenerList(std::list<ActivityMultip
 }
 
 
-void ActivityMultiplexerNotifier_Impl1::Wake()
+void ActivityMultiplexerNotifier_Impl1::Run()
 {
-	Activity * activity = activities->Pull();
 
-	if ( activity != NULL )
+
+	while(true)
 	{
-		// dispatch
-		std::list<ActivityMultiplexerListener*>::iterator listener = listeners_async->begin();
-		for ( ; listener != listeners_async->end(); ++listener) 
+		//std::cout << "runs..\n";
+		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	// if activity null
+	//		if terminate
+	//			-> terminate
+	// sleep
+	//
+
+	// test for reset
+
+	
+		Activity * activity = activities->Pull();
+
+		if ( activity != NULL )
 		{
-			(*listener)->Notify(activity);	
+			// dispatch
+			std::list<ActivityMultiplexerListener*>::iterator listener = listeners_async->begin();
+			for ( ; listener != listeners_async->end(); ++listener) 
+			{
+				(*listener)->Notify(activity);	
+			}
 		}
+
+
 	}
+
+	// if terminate
+
 }
 
 
+void ActivityMultiplexerNotifier_Impl1::Wake()
+{
+	std::thread t(&ActivityMultiplexerNotifier_Impl1::Run, this);
+	t.detach();
+}
 
 
 /**
@@ -116,13 +153,17 @@ ActivityMultiplexer_Impl1::~ActivityMultiplexer_Impl1()
 
 void ActivityMultiplexer_Impl1::Log(Activity * activity)
 {
-	/*
-	boost::mutex::scoped_lock lock(mut_sync);
-	sync_readers++;
-	lock.unlock();
-	*/
-
 	// logic
+	if ( overloaded )
+	{
+		if (activities->Empty() ) {
+			overloaded = false;
+			// SIGNAL
+		} else {
+			dropped_count++;
+		}
+	} 
+	
 	if ( !activities->Full() ) 
 	{
 		std::list<ActivityMultiplexerListener*>::iterator listener = listeners_sync.begin();
@@ -135,43 +176,35 @@ void ActivityMultiplexer_Impl1::Log(Activity * activity)
 		activities->Push(activity);
 
 		notifier->Wake();
-
 	} else {
-		// switch to overload mode
-		// TODO
-		std::cout << "MPL switch to overload mode!" << std::endl;
-	}
-
-	/*
-	boost::mutex::scoped_lock lock2(mut_sync);
-	sync_readers++;
-	lock2.unlock();
-	*/
-}
-
-void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * listener, bool async)
-{
-	if ( async ) {
-		boost::mutex::scoped_lock lock(mut_async);
-		if ( async_readers == 0 )
-			listeners_async.push_back(listener);
-	} else {
-		boost::mutex::scoped_lock lock(mut_sync);
-		if ( sync_readers == 0 )
-			listeners_sync.push_back(listener);
+		overloaded = true;
+		dropped_count = 1;
 	}
 }
 
-void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener * listener, bool async)
+void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * listener)
 {
-	if ( async ) {
-		boost::mutex::scoped_lock lock(mut_async);
-		if ( async_readers == 0 )
-			listeners_async.remove(listener);
+	std::unique_lock<std::mutex> lock(mut);
+	if ( dynamic_cast<ActivityMultiplexerListenerAsync*>(listener) ) {
+		async_is_not_full.wait(lock, [=] { return listeners_async.size() != max_async_listeners; });
+		listeners_async.push_back(listener);
+		async_is_not_empty.notify_all();
 	} else {
-		boost::mutex::scoped_lock lock(mut_sync);
-		if ( sync_readers == 0 )
-			listeners_sync.remove(listener);
+		sync_is_not_full.wait(lock, [=] { return listeners_async.size() != max_sync_listeners; });
+		listeners_sync.push_back(listener);
+		sync_is_not_empty.notify_all();
+	}
+}
+
+void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener * listener)
+{
+	std::unique_lock<std::mutex> lock(mut);
+	if ( dynamic_cast<ActivityMultiplexerListenerAsync*>(listener) ) {
+		async_is_not_empty.wait(lock, [=] { return listeners_async.size() > 0; });
+		listeners_async.remove(listener);
+	} else {
+		sync_is_not_empty.wait(lock, [=] { return listeners_sync.size() > 0; });
+		listeners_sync.remove(listener);
 	}
 
 }
