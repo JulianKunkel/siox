@@ -15,19 +15,16 @@
 
 ActivityMultiplexer * m1 = new ActivityMultiplexer_Impl1();
 
-// populations
+// population settings
 const int num_listeners = 5;
-const int num_a_producers = 5;
+const int num_a_producers = 70;
 const int num_l_producers = 5;
 const int num_l_consumers = 5;
 
 // behavior adjustments
-const int producer_delay_to_produce = 30;  // ms
-const int max_activities_per_producer = 3; 
-
-// storage
-std::vector<ActivityMultiplexerListener*> ls; // the only global as l_producer/l_consumers use it
-
+int producer_delay_to_produce = 30;  // ms, used by l and a producers
+const int lconsumer_delay_to_consume = 50;
+const int max_activities_per_producer = 10; // total max before termination 
 
 // thread behaivors
 void a_producer() {
@@ -37,6 +34,9 @@ void a_producer() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(producer_delay_to_produce));
 	}
 }
+
+// activity consumer is part of the multiplexer (notifier to be specific spawns a thread)
+
 
 void l_producer() {
 	for (int i = 0; i < max_activities_per_producer; ++i)
@@ -52,7 +52,8 @@ void l_consumer() {
 	{
 		//ActivityMultiplexerListener * listener = m1->getRandomListener();
 		//m1->registerListener(listener)
-		std::this_thread::sleep_for(std::chrono::milliseconds(producer_delay_to_produce));
+		dynamic_cast<ActivityMultiplexer_Impl1*>(m1)->unregisterRandom();
+		std::this_thread::sleep_for(std::chrono::milliseconds(lconsumer_delay_to_consume));
 	}
 }
 
@@ -61,13 +62,7 @@ int main(int argc, char const *argv[])
 {
 	srand (time(NULL));
 
-	// create finite number of listeners
-	for(int i = 0; i < num_listeners; ++i)
-	{
-		//ls.push_back(new ActivityMultiplexerNotifier_Impl1());
-	}
-
-	// create a few listeners
+	// create a few listeners for init testing
 	ActivityMultiplexerListener * l0 = new ActivityMultiplexerListenerSync_Impl1();
 	ActivityMultiplexerListener * l1 = new ActivityMultiplexerListenerSync_Impl1();
 	ActivityMultiplexerListener * l2 = new ActivityMultiplexerListenerSync_Impl1();
@@ -105,6 +100,8 @@ int main(int argc, char const *argv[])
 	std::cout << std::endl;
 
 
+
+
 	std::cout << "Start producing Activities by threads" << std::endl;
     std::cout << "main: starting threads" << std::endl;  
 	std::cout << std::endl;
@@ -132,17 +129,26 @@ int main(int argc, char const *argv[])
 
     std::cout << "\nmain: waiting for threads\n\n";  
 
+
+	// emitt activities
 	for(auto& t : a_producers)
 		t.join();
 
+	// randomly add listeners
 	for(auto& t : l_producers)
 		t.join();
 
+	// randomly remove listeners
 	for(auto& t : l_consumers)
 		t.join();
 
     std::cout << std::endl << "main: done" << std::endl;
 	
+
+
+	// give detached thread a chance to catch up
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
 
 	return 0;
 }

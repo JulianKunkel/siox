@@ -32,6 +32,13 @@ public:
 
 
 	/**
+	 * Check if queue is in overload mode
+	 *
+	 */
+	virtual bool Overloaded() =0;
+
+
+	/**
 	 * Add an activity to the queue
 	 *
 	 * @param	Activity *	an activity that need to be dispatched in the future
@@ -54,17 +61,8 @@ public:
 class ActivityMultiplexerNotifier
 {
 public:
-//	virtual void setQueue(ActivityMultiplexerQueue * queue) =0;
-//	virtual void setListenerList(std::list<ActivityMultiplexerListener*> * list) =0;
-
-	// signal upstream to Deamons others
-
-	/**
-	 * Called by the owning multiplexer to start dispatching activities to async
-	 * listeners in case Notifier was not wokring already.
-	 */
-	// queue und notifier wake each other
-	virtual void Wake() =0;
+	// TODO: signal upstream to Deamons others
+	
 };
 
 
@@ -86,19 +84,16 @@ public:
 	 * Register listener to multiplexer
 	 *
 	 * @param	ActivityMultiplexerListener *	listener	listener to notify in the future
-	 * @param	bool							asyc		async = true, sync = false
 	 */
-	// TODO: typecast check for async/sync
 	virtual void registerListener(ActivityMultiplexerListener * listener) =0;
 
 	/**
 	 * Unregister listener from multiplexer
 	 *
 	 * @param	ActivityMultiplexerListener *	listener	listener to remove
-	 * @param	bool							asyc		async = true, sync = false
 	 */
-	// TODO: typecast check for async/sync
 	virtual void unregisterListener(ActivityMultiplexerListener * listener) =0;
+
 };
 
 #endif /* ACTIVITYMULTIPLEXER_H */

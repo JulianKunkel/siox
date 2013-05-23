@@ -21,24 +21,36 @@
  */
 class ActivityMultiplexerQueue_Impl1 : public ActivityMultiplexerQueue
 {
+friend class ActivityMultiplexerNotifier_Impl1;
 public:
-	ActivityMultiplexerQueue_Impl1();
-	virtual ~ActivityMultiplexerQueue_Impl1();
 
-	bool Full();	
-	bool Empty();	
+
+	bool Full() { return activities.size() >= capacity; };
+	bool Empty() { return activities.size() == 0; };
+	bool Overloaded() { return overloaded; };
+
 	void Push(Activity * activity);
 	Activity * Pull();
 
+
+
 private:
-	// boost::message_queue? -> has priorities already built in
 	std::queue<Activity*> activities;
 
-	int capacity;
+	// bounds
+	unsigned int capacity = 10;  // TODO: offer other bounds (e.g. percentage of ram)
 
+	// states
+	bool overloaded;
+	int dropped_count = 0;
+	int dropped_before = 0;
 
 	// multi-threading
 	std::mutex mut;
+
+	std::condition_variable is_not_full;
+	std::condition_variable is_not_empty;
+
 };
 
 
@@ -46,7 +58,6 @@ private:
 class ActivityMultiplexerNotifier_Impl1 : public ActivityMultiplexerNotifier
 {
 public:
-	ActivityMultiplexerNotifier_Impl1 ();
 	ActivityMultiplexerNotifier_Impl1( 
 			ActivityMultiplexerQueue * queue, 
 			std::list<ActivityMultiplexerListener*> * list);
@@ -55,13 +66,14 @@ public:
 
 	void setQueue(ActivityMultiplexerQueue * queue); 
 	void setListenerList(std::list<ActivityMultiplexerListener*> * list);
-	void Wake();
-	void doStuff();
 	void Run();
 
 private:	
 	ActivityMultiplexerQueue * activities;	
 	std::list<ActivityMultiplexerListener*> * listeners_async;
+
+	// state
+	bool terminate;
 
 	int max_wait_time;
 
@@ -69,7 +81,15 @@ private:
 
 
 
-
+/**
+ * Activity Multiplexer Implementation 1
+ * 
+ * Implementation features:
+ *  - imediate sync dispatch
+ *  - threaded async dispatch
+ *  - overload handling -> bounded buffer -> reset signal to listeners
+ *
+ */
 class ActivityMultiplexer_Impl1 : public ActivityMultiplexer
 {
 public:
@@ -80,6 +100,9 @@ public:
 
 	void registerListener(ActivityMultiplexerListener * listener);
 	void unregisterListener(ActivityMultiplexerListener * listener);
+
+	// used for test purposed
+	void unregisterRandom();
 
 private:
 	// debug
@@ -95,20 +118,19 @@ private:
 	ActivityMultiplexerNotifier * notifier;
 
 	// TODO: move to queue
-	bool overloaded;
-	int dropped_count = 0;
-	int dropped_before = 0;
 
 	// boundaries
 	unsigned int max_sync_listeners = 20;
 	unsigned int max_async_listeners = 20;
-
 
 	// thread safety
 	std::mutex mut;
 
 	std::condition_variable sync_is_not_full;
 	std::condition_variable sync_is_not_empty;
+
+	std::condition_variable mod_sync;
+	std::condition_variable mod_async;
 
 	std::condition_variable async_is_not_full;
 	std::condition_variable async_is_not_empty;

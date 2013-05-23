@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <stdlib.h> // only used by unregisterRandom() 
+
 #include "ActivityMultiplexer_Impl1.hpp"
 
 
@@ -12,31 +14,38 @@
  * ActivityMultiplexerQueue - Implementation 1
  *
  */
-ActivityMultiplexerQueue_Impl1::ActivityMultiplexerQueue_Impl1()
-{
 
-}
-
-ActivityMultiplexerQueue_Impl1::~ActivityMultiplexerQueue_Impl1()
-{		
-
-}
-
-bool ActivityMultiplexerQueue_Impl1::Full()
-{
-	return false;
-}
-
-bool ActivityMultiplexerQueue_Impl1::Empty()
-{
-	return false;
-}
 
 void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 {
-	// handle lost
-	std::unique_lock<std::mutex> lock(mut);
-	activities.push(activity);
+	// handle overloaded buffer
+	if ( overloaded )
+	{
+		std::cout << "overloaded!\n";
+
+		if ( Full() ) {
+			overloaded = false;
+			// issue SIGNAL
+		} else {
+			dropped_count++;
+		}
+	} else {
+
+		if ( !Full() )
+		{
+			std::unique_lock<std::mutex> lock(mut);
+			
+			is_not_full.wait(lock, [=] { return activities.size() != capacity; });
+			activities.push(activity);
+			is_not_empty.notify_all();
+
+		} else {
+			overloaded = true;
+			dropped_count = 1;
+		}
+	} 
+
+	
 }
 
 Activity * ActivityMultiplexerQueue_Impl1::Pull()
@@ -44,8 +53,11 @@ Activity * ActivityMultiplexerQueue_Impl1::Pull()
 	Activity * activity = NULL;
 
 	std::unique_lock<std::mutex> lock(mut);
+	is_not_empty.wait(lock, [=] { return activities.size() > 0; });
+	
 	activity = activities.front();
 	activities.pop();
+	is_not_full.notify_all();
 	
 	// return lost
 	return activity;
@@ -56,17 +68,18 @@ Activity * ActivityMultiplexerQueue_Impl1::Pull()
  * ActivityMultiplexerNotifier - Implementation 1
  *
  */
-ActivityMultiplexerNotifier_Impl1::ActivityMultiplexerNotifier_Impl1()
-{
 
-}
 
 ActivityMultiplexerNotifier_Impl1::ActivityMultiplexerNotifier_Impl1(
 		ActivityMultiplexerQueue * queue,
 		std::list<ActivityMultiplexerListener*> * list
 ) {
+
 	activities = queue;	
 	listeners_async = list;
+
+	std::thread t(&ActivityMultiplexerNotifier_Impl1::Run, this);
+	t.detach();
 }
 
 ActivityMultiplexerNotifier_Impl1::~ActivityMultiplexerNotifier_Impl1()
@@ -88,33 +101,49 @@ void ActivityMultiplexerNotifier_Impl1::setListenerList(std::list<ActivityMultip
 
 void ActivityMultiplexerNotifier_Impl1::Run()
 {
+	std::cout << "Notifier running.. \n";
 
+	ActivityMultiplexerQueue_Impl1 * as = dynamic_cast<ActivityMultiplexerQueue_Impl1*>(activities); 
 
-	while(true)
+	bool delay_startup = false;
+
+	while( !terminate )
 	{
+
 		//std::cout << "runs..\n";
-		std::this_thread::sleep_for(std::chrono::milliseconds(20));
-	// if activity null
-	//		if terminate
-	//			-> terminate
-	// sleep
-	//
-
-	// test for reset
-
-	
-		Activity * activity = activities->Pull();
-
-		if ( activity != NULL )
+		if (delay_startup)
 		{
-			// dispatch
-			std::list<ActivityMultiplexerListener*>::iterator listener = listeners_async->begin();
-			for ( ; listener != listeners_async->end(); ++listener) 
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			delay_startup = false;
+		}
+		
+		//std::cout << "runs..\n";
+		
+		// if activities empty
+		//		if terminate
+		//			-> terminate
+		// sleep
+		//
+		// test for reset
+		// sleep until queue not empty
+
+		//std::unique_lock<std::mutex> lock(as->mut);
+		//as->is_not_empty.wait(lock, [=] { return activities->Empty(); });
+
+		if ( !as->Overloaded() )
+		{
+			Activity * activity = activities->Pull();
+
+			if ( activity != NULL )
 			{
-				(*listener)->Notify(activity);	
+				// dispatch
+				std::list<ActivityMultiplexerListener*>::iterator listener = listeners_async->begin();
+				for ( ; listener != listeners_async->end(); ++listener) 
+				{
+					(*listener)->Notify(activity);	
+				}
 			}
 		}
-
 
 	}
 
@@ -123,11 +152,6 @@ void ActivityMultiplexerNotifier_Impl1::Run()
 }
 
 
-void ActivityMultiplexerNotifier_Impl1::Wake()
-{
-	std::thread t(&ActivityMultiplexerNotifier_Impl1::Run, this);
-	t.detach();
-}
 
 
 /**
@@ -151,39 +175,28 @@ ActivityMultiplexer_Impl1::~ActivityMultiplexer_Impl1()
 
 }
 
+
 void ActivityMultiplexer_Impl1::Log(Activity * activity)
 {
-	// logic
-	if ( overloaded )
-	{
-		if (activities->Empty() ) {
-			overloaded = false;
-			// SIGNAL
-		} else {
-			dropped_count++;
-		}
-	} 
+
+	// readlock
+
+	mut.lock();
+	std::list<ActivityMultiplexerListener*>::iterator listener = listeners_sync.begin();
 	
-	if ( !activities->Full() ) 
+	for ( ; listener != listeners_sync.end(); ++listener) 
 	{
-		std::list<ActivityMultiplexerListener*>::iterator listener = listeners_sync.begin();
-		
-		for ( ; listener != listeners_sync.end(); ++listener) 
-		{
-			(*listener)->Notify(activity);	
-		}
-
-		activities->Push(activity);
-
-		notifier->Wake();
-	} else {
-		overloaded = true;
-		dropped_count = 1;
+		(*listener)->Notify(activity);	
 	}
+	mut.unlock();
+
+	activities->Push(activity);
+
 }
 
 void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * listener)
 {
+	// TODO: actually iterators for std::list should not be invalidated, mutex might be omitted 
 	std::unique_lock<std::mutex> lock(mut);
 	if ( dynamic_cast<ActivityMultiplexerListenerAsync*>(listener) ) {
 		async_is_not_full.wait(lock, [=] { return listeners_async.size() != max_async_listeners; });
@@ -198,15 +211,31 @@ void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * l
 
 void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener * listener)
 {
+	// list iterator is invalidated on erase therefor mutex
 	std::unique_lock<std::mutex> lock(mut);
 	if ( dynamic_cast<ActivityMultiplexerListenerAsync*>(listener) ) {
 		async_is_not_empty.wait(lock, [=] { return listeners_async.size() > 0; });
 		listeners_async.remove(listener);
+		async_is_not_full.notify_all();
 	} else {
 		sync_is_not_empty.wait(lock, [=] { return listeners_sync.size() > 0; });
 		listeners_sync.remove(listener);
+		sync_is_not_full.notify_all();
 	}
 
 }
 
+
+
+void ActivityMultiplexer_Impl1::unregisterRandom()
+{	
+	std::unique_lock<std::mutex> lock(mut);
+	async_is_not_empty.wait(lock, [=] { return listeners_async.size() > 0; });
+
+	//ActivityMultiplexerListener * listener = 
+
+	//unregisterListener();
+	
+	async_is_not_empty.wait(lock, [=] { return listeners_async.size() > 0; });
+}
 

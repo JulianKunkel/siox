@@ -5,21 +5,9 @@
 
 #include "../../include/monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp"
 
-class ActivityMultiplexerListenerAsync_Impl1 : public ActivityMultiplexerListenerAsync
-{
-public:
-	ActivityMultiplexerListenerAsync_Impl1 ();
-	virtual ~ActivityMultiplexerListenerAsync_Impl1();
-	void Notify(Activity * activity);
-
-	void print();
-
-private:
-	static int nextID;
-	int ID;
-};
-
-
+/**
+ * Sync Dummy Implementation of ActivityMultiplexer
+ */
 class ActivityMultiplexerListenerSync_Impl1 : public ActivityMultiplexerListenerSync
 {
 public:
@@ -34,5 +22,21 @@ private:
 	int ID;
 };
 
+/**
+ * Async Dummy Implementation of ActivityMultiplexer
+ */
+class ActivityMultiplexerListenerAsync_Impl1 : public ActivityMultiplexerListenerAsync
+{
+public:
+	ActivityMultiplexerListenerAsync_Impl1 ();
+	virtual ~ActivityMultiplexerListenerAsync_Impl1();
+	void Notify(Activity * activity);
+	void Reset(int dropped);
+
+	void print();
+private:
+	static int nextID;
+	int ID;
+};
 
 #endif /* ACTIVITYMULTIPLEXERLISTENER_IMPL1_H */
