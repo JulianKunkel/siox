@@ -11,6 +11,7 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS buffers/siox.proto)
 
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
+	"${CMAKE_SOURCE_DIR}/logger"
 	"${PROJECT_SOURCE_DIR}"
 	"${PROJECT_SOURCE_DIR}/misc"
 	"${PROJECT_SOURCE_DIR}/buffers"
@@ -22,7 +23,7 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt -lboost_system -lboost_thread")
 
-add_library(siox
+add_library(sioxcomm
 	misc/URI.h
 	misc/URI.cc
 	ConnectionMessage.h
@@ -51,5 +52,5 @@ add_library(siox
 	${PROTO_HDRS}
 )
 
-target_link_libraries(siox ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(sioxcomm sioxlog ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 

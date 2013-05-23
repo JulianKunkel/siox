@@ -13,9 +13,11 @@ public:
 	SyslogLogger(const std::string &logname);
 	
 	~SyslogLogger();
-	
-	void log(const Priority, const std::string &msg);
+
+protected:
+	void log_append(const Priority prio, const char *buffer);
 	
 };
+
 
 #endif

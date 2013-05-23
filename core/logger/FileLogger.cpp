@@ -16,8 +16,8 @@ FileLogger::~FileLogger()
 }
 
 
-void FileLogger::log(const Priority prio, const std::string &msg)
+void FileLogger::log_append(const Priority prio, const char *buffer)
 {
-	logfile_ << prio << ": " << msg;
+	logfile_ << "[" << prio << "] " << buffer;
 }
 

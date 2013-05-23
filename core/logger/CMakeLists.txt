@@ -9,6 +9,8 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
 
 add_library(sioxlog
+	BasicLogger.h
+	BasicLogger.cpp
 	Logger.h
 	Logger.cpp
 	FileLogger.h
@@ -16,7 +18,6 @@ add_library(sioxlog
 	SyslogLogger.h
 	SyslogLogger.cpp
 	SioxLogger.h
-	SioxLogger.cpp
 )
 
 target_link_libraries(sioxlog ${LINK_LIBRARIES})

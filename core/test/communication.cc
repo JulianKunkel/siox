@@ -5,15 +5,17 @@
 
 #include <iostream>
 
-// #include "siox.pb.h"
 #include "Callback.h"
 #include "ServerFactory.h"
 #include "ServiceClient.h"
+#include "SioxLogger.h"
 
 namespace asio = boost::asio;
 
 ConnectionMessage *m;
 boost::uint64_t unid_sum;
+
+Logger *logger;
 
 // The purpose of this callback is just to extract the message received by the
 // service in order to compare it to the one that was sent.
@@ -21,7 +23,7 @@ class TestCallback : public Callback {
 public:
 	void handle_message(ConnectionMessage &msg) const
 	{
-		syslog(LOG_NOTICE, "TestCallback handle_message");
+		logger->log(Logger::DEBUG, "TestCallback handle_message");
 		set_message(msg);
 	}
 	
@@ -41,23 +43,16 @@ public:
 	
 	void handle_message(ConnectionMessage &msg) const
 	{
-		syslog(LOG_NOTICE, "AddCallback handle_message");
+		logger->log(Logger::DEBUG, "AddCallback handle_message");
 		unid_sum += msg.get_msg()->unid();
 	}
 };
 
 
-void init_syslog()
-{
-	setlogmask(LOG_UPTO(LOG_NOTICE));
-	openlog("CommTest", LOG_CONS | LOG_NDELAY | LOG_NOWAIT | LOG_PERROR | 
-		LOG_PID, LOG_USER);
-};
-
-
 BOOST_AUTO_TEST_CASE(ipc_communication)
 {
-	init_syslog();
+	if (!logger)
+		logger = new Logger();
 	
 	std::string ipc_socket_path("ipc:///tmp/siox.socket");
 	ServiceServer *server = ServerFactory::create_server(ipc_socket_path);
@@ -110,8 +105,9 @@ BOOST_AUTO_TEST_CASE(ipc_communication)
 
 BOOST_AUTO_TEST_CASE(tcp_communication)
 {
-	init_syslog();
-	
+	if (!logger)
+		logger = new Logger();
+
 	std::string tcp_socket_addr("tcp://localhost:6677");
 	ServiceServer *server = ServerFactory::create_server(tcp_socket_addr);
 	server->run();
@@ -183,8 +179,9 @@ boost::uint64_t multisend(int n, ServiceClient &c)
 
 BOOST_AUTO_TEST_CASE(tcp_multisend_single)
 {
-	init_syslog();
-	
+	if (!logger)
+		logger = new Logger();
+
 	std::string tcp_socket_addr("tcp://localhost:6678");
 	ServiceServer *server = ServerFactory::create_server(tcp_socket_addr);
 	server->run();
@@ -208,8 +205,9 @@ BOOST_AUTO_TEST_CASE(tcp_multisend_single)
 
 BOOST_AUTO_TEST_CASE(ipc_multisend_single)
 {
-	init_syslog();
-	
+	if (!logger)
+		logger = new Logger();
+
 	std::string socket_addr("ipc:///tmp/socket");
 	ServiceServer *server = ServerFactory::create_server(socket_addr);
 	server->run();

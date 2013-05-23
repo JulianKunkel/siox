@@ -21,7 +21,7 @@ void ServiceServer::run()
 void ServiceServer::stop()
 {
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Waiting for server workers to finish."); 
+	logger->log(Logger::DEBUG, "Waiting for server workers to finish."); 
 #endif
 
 	handle_stop();
@@ -58,8 +58,8 @@ void ServiceServer::ipublish(boost::shared_ptr<ConnectionMessage> msg)
 	if (subscribed_connections.empty())
 		return;
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Publishing on %zu connections.", 
-	       subscribed_connections.size());
+	logger->log(Logger::DEBUG, "Publishing on %zu connections.", 
+		    subscribed_connections.size());
 #endif
 	std::pair<std::multimap<boost::uint32_t, Connection *>::iterator,
 		  std::multimap<boost::uint32_t, Connection *>::iterator> range 
@@ -105,7 +105,7 @@ void ServiceServer::subscribe(boost::uint32_t mtype, Connection &connection)
 void ServiceServer::handle_message(ConnectionMessage &msg, Connection &connection)
 {
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Handling message...");
+	logger->log(Logger::DEBUG, "Handling message...");
 #endif
 	if (msg.get_msg()->action() == siox::MessageBuffer::Subscribe) {
 		subscribe(msg.get_msg()->type(), connection);
@@ -114,7 +114,7 @@ void ServiceServer::handle_message(ConnectionMessage &msg, Connection &connectio
 	boost::ptr_list<Callback>::iterator i;
 	for (i = message_callbacks_.begin(); i != message_callbacks_.end(); ++i) {
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "Executing message response callback.");
+		logger->log(Logger::DEBUG, "Executing message response callback.");
 #endif
 		i->execute(msg);
 	}
@@ -125,7 +125,7 @@ void ServiceServer::handle_message(boost::shared_ptr<ConnectionMessage> msg,
 				   Connection &connection)
 {
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Handling message...");
+	logger->log(Logger::DEBUG, "Handling message...");
 #endif
 	if (msg->get_msg()->action() == siox::MessageBuffer::Subscribe) {
 		subscribe(msg->get_msg()->type(), connection);
@@ -134,7 +134,7 @@ void ServiceServer::handle_message(boost::shared_ptr<ConnectionMessage> msg,
 	boost::ptr_list<Callback>::iterator i;
 	for (i = message_callbacks_.begin(); i != message_callbacks_.end(); ++i) {
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "Executing message response callback.");
+		logger->log(Logger::DEBUG, "Executing message response callback.");
 #endif
 		i->execute(msg);
 	}
