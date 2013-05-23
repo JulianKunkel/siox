@@ -85,7 +85,7 @@ private:
  * Activity Multiplexer Implementation 1
  * 
  * Implementation features:
- *  - imediate sync dispatch
+ *  - immediate sync dispatch
  *  - threaded async dispatch
  *  - overload handling -> bounded buffer -> reset signal to listeners
  *
@@ -116,8 +116,6 @@ private:
 	// async path
 	ActivityMultiplexerQueue * activities;
 	ActivityMultiplexerNotifier * notifier;
-
-	// TODO: move to queue
 
 	// boundaries
 	unsigned int max_sync_listeners = 20;

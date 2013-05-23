@@ -1,6 +1,6 @@
 CC = g++
 CCFLAGS = -Wall -std=c++11 -g
-LDFLAGS = 
+LDFLAGS = -pthread
 # final binary name 
 binary = test_mpl_async
 

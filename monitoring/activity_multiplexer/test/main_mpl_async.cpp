@@ -63,9 +63,9 @@ int main(int argc, char const *argv[])
 	srand (time(NULL));
 
 	// create a few listeners for init testing
-	ActivityMultiplexerListener * l0 = new ActivityMultiplexerListenerSync_Impl1();
-	ActivityMultiplexerListener * l1 = new ActivityMultiplexerListenerSync_Impl1();
-	ActivityMultiplexerListener * l2 = new ActivityMultiplexerListenerSync_Impl1();
+	ActivityMultiplexerListener * l0 = new ActivityMultiplexerListenerSync_Impl1(); // for sync
+	ActivityMultiplexerListener * l1 = new ActivityMultiplexerListenerSync_Impl1(); // for sync 
+	ActivityMultiplexerListener * l2 = new ActivityMultiplexerListenerSync_Impl1(); // for sync 
 	ActivityMultiplexerListener * l3 = new ActivityMultiplexerListenerAsync_Impl1(); // for async
 	ActivityMultiplexerListener * l4 = new ActivityMultiplexerListenerAsync_Impl1(); // for async
 	ActivityMultiplexerListener * l5 = new ActivityMultiplexerListenerAsync_Impl1(); // for async
