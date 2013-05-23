@@ -9,6 +9,15 @@
  *
  */
 
+/*!
+ Software Structure
+ 1 Requirements
+ 2 UseCases
+ 3 Design und Text
+ 4 Testimplementation
+ */
+
+
 #ifndef __componentcontent_writer
 #define __componentcontent_writer
 
