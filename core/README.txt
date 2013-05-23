@@ -6,12 +6,14 @@ file, that is:
 
 * Google protocol buffers
 * Boost library (threads, system and unit_test_framework)
+* YAML-CPP
 
 During development the following versions were used:
 
 * Google protocol buffers 2.5.0
 * Boost 1.53
 * GCC 4.7 (for C++0x support)
+* YAML-CPP 0.3.0
 
 Compilation
 ===========

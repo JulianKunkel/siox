@@ -1,3 +1,27 @@
+/*!
+ * @file    ActivityMultiplexer_Impl1.hpp
+ *
+ * @description Synchronous and asynchronous listeners for the ActivityMultiplexer.
+ * @standard    Preferred standard is C++11
+ *
+ * @author Jacob, Marc Wiedemann
+ * @date   2013
+ *
+ */
+
+/*!
+ Software Structure
+ 1 Requirements
+
+ 2 UseCases
+
+ 3 Design und Text
+
+ 4 Testimplementation
+ 
+ */
+
+
 #ifndef ACTIVITYMULTIPLEXERLISTENER_IMPL1_H
 #define ACTIVITYMULTIPLEXERLISTENER_IMPL1_H 
 

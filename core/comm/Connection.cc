@@ -23,7 +23,7 @@ void Connection::handle_connect(const boost::system::error_code &e)
 {
 	if (!e) {
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "Connection successfully connected.");
+		logger->log(Logger::DEBUG, "Connection successfully connected.");
 #endif
 		start();
 	}
@@ -34,8 +34,8 @@ void Connection::handle_read_header(const boost::system::error_code &e)
 {
 	if (!e) {
 #ifdef NDEBUG
-		syslog(LOG_NOTICE, "Message header read (%s).", 
-			show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
+		logger->log(Logger::DEBUG, "Message header read (%s).", 
+			    show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
 #endif
 		unsigned msglen = msg_.decode_header(buffer_in_);
 		
@@ -45,8 +45,8 @@ void Connection::handle_read_header(const boost::system::error_code &e)
 			
 		} else {
 #ifndef NDEBUG
-			syslog(LOG_NOTICE, 
-			       "Discarding malformed message header.");
+			logger->log(Logger::DEBUG, 
+				    "Discarding malformed message header.");
 #endif
 			mtx_bufin_.unlock();
 			start();
@@ -54,8 +54,8 @@ void Connection::handle_read_header(const boost::system::error_code &e)
 		
 	} else {
 #ifndef NDEBUG
-		syslog(LOG_ERR, "Error reading message header: %s", 
-		       e.message().c_str());
+		logger->log(Logger::ERR, "Error reading message header: %s", 
+			    e.message().c_str());
 #endif
 		mtx_bufin_.unlock();
 		start();
@@ -68,14 +68,14 @@ void Connection::handle_read_body(const boost::system::error_code &e)
 {
 	if (!e) {
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "Message body read.");
+		logger->log(Logger::ERR, "Message body read.");
 #endif
 		handle_message();
 		
 	} else {
 #ifndef NDEBUG
-		syslog(LOG_ERR, "Error reading message body: %s", 
-		       e.message().c_str());
+		logger->log(Logger::ERR, "Error reading message body: %s", 
+			    e.message().c_str());
 #endif
 	}
 	
@@ -88,7 +88,7 @@ void Connection::handle_write(const boost::system::error_code &e)
 {
 	if (!e) {
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "Message successfully sent.");
+		logger->log(Logger::DEBUG, "Message successfully sent.");
 #endif
 	}
 	
@@ -101,7 +101,7 @@ void Connection::handle_write(boost::shared_ptr<ConnectionMessage> msg,
 {
 	if (!e) {
 #ifndef NDEBUG
-		syslog(LOG_NOTICE, "Message successfully sent.");
+		logger->log(Logger::DEBUG, "Message successfully sent.");
 #endif
 	}
 	
@@ -112,14 +112,14 @@ void Connection::handle_write(boost::shared_ptr<ConnectionMessage> msg,
 void Connection::handle_message()
 {
 #ifndef NDEBUG
-	syslog(LOG_NOTICE, "Received message (%s)", 
-	       show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
+	logger->log(Logger::DEBUG, "Received message (%s)", 
+		    show_hex<std::vector<boost::uint8_t> >(buffer_in_).c_str());
 #endif
 	if (msg_.unpack(buffer_in_))
 		service_->handle_message(msg_, *this);
 #ifndef NDEBUG
 	else 
-		syslog(LOG_NOTICE, "Error unpacking message.");
+		logger->log(Logger::ERR, "Error unpacking message.");
 #endif
 	
 }

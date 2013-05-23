@@ -6,7 +6,6 @@
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/shared_ptr.hpp>
 #include <vector>
-#include <syslog.h>
 
 #include "ServiceServer.h"
 #include "TCPConnection.h"

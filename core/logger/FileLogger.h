@@ -13,8 +13,9 @@ class FileLogger
 public:
 	FileLogger(const std::string &path);
 	~FileLogger();
-	
-	void log(const Priority prio, const std::string &msg);
+
+protected:
+	void log_append(const Priority prio, const char *buffer);
 
 private:
 	std::ofstream logfile_;

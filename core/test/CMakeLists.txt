@@ -7,6 +7,7 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}"
 	"${CMAKE_SOURCE_DIR}/comm"
 	"${CMAKE_SOURCE_DIR}/logger"
+	"${CMAKE_SOURCE_DIR}/config"
 	"${CMAKE_SOURCE_DIR}/comm/build"
 	${Boost_INCLUDE_DIR}
 )
@@ -16,5 +17,9 @@ set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt -lboost_system -lboo
 add_executable(communication_tests
 	communication.cc)
 
-target_link_libraries(communication_tests siox)
+target_link_libraries(communication_tests sioxcomm)
 
+add_executable(configuration_tests
+	configuration.cc)
+
+target_link_libraries(configuration_tests sioxconf sioxlog)

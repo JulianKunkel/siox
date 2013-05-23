@@ -52,6 +52,15 @@
 /*!
  This is a container class using the low-level activity that has ended and is complete
 
+ Requirements:
+
+ 1) holds unchangeable activities
+ 2) serializable to byte streams or to text files first human readable using protocol buffers or boost 
+ 3) Access to activity members possible
+ 4) When we do not have the activity builder we first use a dummy implementation of activity type
+
+Transaktionssystem baut
+
  We have four getter methods in the following areas:
  1 ID's (Aid, Cid (Componentid), Name, SWid, HWid, Iid)
  2 Attributes (Metrics)
