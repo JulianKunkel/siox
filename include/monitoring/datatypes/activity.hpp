@@ -15,8 +15,9 @@
  Requirements:
 
  1) holds unchangeable activities
- 2) serializable
- 3) Access have to be possible
+ 2) serializable to byte streams or to text files first human readable using protocol buffers or boost 
+ 3) Access to activity members possible
+ 4) When we do not have the activity builder we first use a dummy implementation of activity type
 
 Transaktionssystem baut
 
