@@ -9,6 +9,46 @@
  *
  */
 
+/**
+ * USE CASES
+ * =========
+ * 1 - Containerklasse, die eine zu einer beliebigen beendeten Aktivität gehörigen
+ * vom Low-Level-Interface aufgezeichneten Eigenschaften kapselt.
+ * NICHT das Arbeitsobjekt innerhalb der HW-Node, sondern das Objekt, das im
+ * Monitoringsystem archiviert wird.
+ * 2 - Objekte werden mit einer anderen Klasse ("ActivityBuilder") erstellt.
+ * Diese weist auch die IDs zu (und ermittelt sie, wo nötig).
+ * 3 - Individual POSIX file write of multifile to a storage target SAS controller
+ * which has a LUN
+ * In this case Component.HWid := HWid(LUN) = some kind of controller
+ * bus id = pci@0000:00:1f.2.
+ * The controller has a Component.name which is a string "SAS Controller Model".
+ * The Component.SWid is the software layer composition "POSIX-Kernel-PFS-Block"
+ * or any of those individually.
+ * 4 - MPI Write using etypes - going through ROMIO or OMPIO the through ADIO layer
+ * to kernel and to generic_Write
+ * How is in this case the component.HWid discovered?
+ * Component.SWid would be the string "MPI-OMPIO-ADIO" or any of those individually.
+ */
+
+/**
+ * REQUIREMENTS (und zugrundeliegende Use Cases)
+ * ============
+ * - Jede Aktivität muß beliebig viele Attribute, Metriken und Remote Calls aufnehmen können. (1)
+ */
+
+/**
+ * DESIGN CONSIDERATIONS
+ * =====================
+ *
+ */
+
+/**
+ * OPEN ISSUES
+ * ===========
+ * - Wie sind die IDs zusammengesetzt?
+ */
+
 /*!
  This is a container class using the low-level activity that has ended and is complete
 
@@ -29,39 +69,23 @@
  */
 
 
+using std::string;
+
+
 namespace monitoring {
-
-class get_Activity
-{
-public:
-  
-  const get_Activity& operate_info() const // const getter - returns the value of the private member of this class.
-  {
-    return get_activity_info;
-  }
-
-  get_Activity& operate_info() /*! variable getter with operate = get = set */
-  {
-    return get_activity_info;
-  }
-  const std::string& name() const;
-  void get_activity_name(const std::string& get_activity_name);
-
-  ~get_Activity();
-
-
-  
-private:
-
-  std::string get_activity_info_;
-  std::string get_activity_name_;
-};
 
 /*!
  State of activity
  For the state of the activity we use the enum instruction to combine the definitions of constants and variables 
  For example usage in the cpp: ActivityStatus actstat=initialized;
  */
+
+
+typedef Timestamp uint64_t;
+
+/*
+ // Of more use to the ActivityBuilder; any objects we're concerned with here are finished
+ // and complete.
 
 enum ActivityStatus {
     empty,
@@ -70,43 +94,41 @@ enum ActivityStatus {
     stopped,
     finished
 };
+ */
 
 
 class Activity
 {
-// or public?
 private:
-    long aid;
-    long paid;
-    long unid;
-    long time_start;
-    long time_stop;
+    uint64_t aid;
+    uint64_t paid;
+    uint64_t unid;
+    Timestamp time_start;
+    Timestamp time_stop;
     int status;
-    char[] comment;
+    string comment;
+    
+    // List<Attribute> attributes;
+    // List<RemoteCall> remotecalls;
 
 public:
   Activity(void);
-  Activity(Component component, Timestamp t_start = NULL, char[] comment="");
+  // Activity(Component component, Timestamp t_start = NULL, string comment="");
   ~Activity(void);
 
-  Component() {};
-  Component(const std::string &name, const std::string &HWid, const std::string &SWid, const std::string &Iid) : name_ (name), HWid_ (HWid), SWid_ (SWid), Iid_ (Iid) {};
-  std::string name() const {return name_; };
-  std::string HWid() const {return HWid_; };
-  std::string SWid() const {return SWid_; };
-  std::string Iid() const {return Iid_; };
-  ~Component(void);
+  /** Supply a dummy object for testing until ActivityBuilder exists.
+   * Call like this:
+   *      Activity dummyActivity = "Activity::getDummy()"
+   */
+  static Activity getDummy();
 
-  SWid() {};
-  SWid(const std::string layer_name, array<unsigned char,4> version)
-  ~SWid(void);
-
-
-    //List<Attribute> attributes;
-
-/*!
- the activity consists of component name and ids, start and stop and end after reporting
- */
+  // Getter methods
+  uint64_t get_aid();
+  uint64_t get_paid();
+  uint64_t get_unid();
+  Timestamp get_time_start();
+  Timestamp get_time_stop();
+  string get_comment();
 
 /*!
  Five Steps for code development in general
@@ -116,18 +138,7 @@ public:
  Write documentation for the developer and user
  See what's possible and implement it.
  */
-
-/*!
- Usecase 1 : Individual POSIX file write of multifile to a storage target SAS controller which has a LUN
-  In this case Component.HWid := HWid(LUN) = some kind of controller bus id = pci@0000:00:1f.2.
-  The controller has a Component.name which is a string "SAS Controller Model".
-  The Component.SWid is the software layer composition "POSIX-Kernel-PFS-Block" or any of those individually.
- */
-
-/*!
- Usecase 2 : MPI Write using etypes - going through ROMIO or OMPIO the through ADIO layer to kernel and to generic_Write
- How is in this case the component.HWid discovered? Component.SWid would be the string "MPI-OMPIO-ADIO" or any of those individually.
- */
+};
 
 }
 
