@@ -1,8 +1,0 @@
-- module: core-logging-remote
-  interface: logging
-- module: core-logging-remote
-  interface: logging_receiver
-- module: config-test-nested-options
-  interface: interface_parent
-
-

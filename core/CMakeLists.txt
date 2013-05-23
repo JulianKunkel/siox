@@ -8,4 +8,4 @@ add_subdirectory(tests)
 
 enable_testing()
 add_test("Communication" tests/communication_tests)
-add_test("Configuration" tests/configuration_tests "${CMAKE_CURRENT_BIN_DIR}/siox.yaml")
+add_test("Configuration" tests/configuration_tests "${CMAKE_CURRENT_BIN_DIR}/siox.conf")

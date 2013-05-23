@@ -18,8 +18,10 @@ During development the following versions were used:
 Compilation
 ===========
 
-To compile create a "build" directory and run the following commands inside it:
+To compile create a "build" directory and run cmake followed by make:
 
+mkdir build
+cd build
 cmake ..
 make
 

@@ -12,18 +12,23 @@ Configuration::Configuration(const std::string &filename)
 		
 		YAML::Node doc;
 		parser.GetNextDocument(doc);
-		
+
 		for (unsigned i = 0; i < doc.size(); i++) {
 			
 			Module module;
 			doc[i] >> module;
-#ifndef NDEBUG
-			logger->log(Logger::DEBUG, "Loaded configuration for module %s with interface %s.",
-				    module.name.c_str(), module.interface.c_str());
-#endif
+			
+			modules_.insert(std::pair<std::string, Module>(module.name, module));
 		}
 		
 	} catch (YAML::ParserException &e) {
 		logger->log(Logger::ERR, e.what());
 	}
 }
+
+
+Module Configuration::get_module_conf(std::string &modname)
+{
+	return modules_[modname];
+}
+
