@@ -12,6 +12,14 @@
 /*!
  This is a container class using the low-level activity that has ended and is complete
 
+ Requirements:
+
+ 1) holds unchangeable activities
+ 2) serializable
+ 3) Access have to be possible
+
+Transaktionssystem baut
+
  We have four getter methods in the following areas:
  1 ID's (Aid, Cid (Componentid), Name, SWid, HWid, Iid)
  2 Attributes (Metrics)
