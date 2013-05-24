@@ -6,6 +6,7 @@ message MessageBuffer {
 		Advertise = 0;
 		Subscribe = 1;
 		Activity  = 2;
+		Log       = 3;
 	}
 	
 	required Action action = 1 [default = Activity];
@@ -17,4 +18,6 @@ message MessageBuffer {
 	optional string comment    = 50;
 	repeated uint64 timestamps = 60;
 	
+	optional uint32 priority   = 80;
+	optional string logmsg     = 90;
 }
