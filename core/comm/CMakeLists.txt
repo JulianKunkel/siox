@@ -1,6 +1,3 @@
-cmake_minimum_required(VERSION 2.8)
-project(SIOX)
-
 include(FindProtobuf)
 
 find_package(Protobuf REQUIRED)
@@ -11,12 +8,12 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS buffers/siox.proto)
 
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
-	"${CMAKE_SOURCE_DIR}/logger"
-	"${PROJECT_SOURCE_DIR}"
-	"${PROJECT_SOURCE_DIR}/misc"
-	"${PROJECT_SOURCE_DIR}/buffers"
-	"${PROJECT_SOURCE_DIR}/ipc"
-	"${PROJECT_SOURCE_DIR}/tcp"
+	"${CMAKE_SOURCE_DIR}/core/logger"
+	"${CMAKE_SOURCE_DIR}/core/comm"
+	"${CMAKE_SOURCE_DIR}/core/comm/misc"
+	"${CMAKE_SOURCE_DIR}/core/comm/buffers"
+	"${CMAKE_SOURCE_DIR}/core/comm/ipc"
+	"${CMAKE_SOURCE_DIR}/core/comm/tcp"
 	"${PROTOBUF_INCLUDE_DIRS}"
 	${Boost_INCLUDE_DIR}
 )
