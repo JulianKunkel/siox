@@ -4,6 +4,9 @@ project(SIOX)
 include_directories(
 	"${CMAKE_BINARY_DIR}"
 	"${PROJECT_SOURCE_DIR}"
+	"${CMAKE_SOURCE_DIR}/core/comm"
+	"${CMAKE_SOURCE_DIR}/build/core/comm"
+
 )
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
@@ -18,6 +21,10 @@ add_library(sioxlog
 	SyslogLogger.h
 	SyslogLogger.cpp
 	SioxLogger.h
+	NetLogger.h
+	NetLogger.cpp
+	NetLoggerServer.h
+	NetLoggerServer.cpp
 )
 
-target_link_libraries(sioxlog ${LINK_LIBRARIES})
+target_link_libraries(sioxlog sioxcomm ${LINK_LIBRARIES})
