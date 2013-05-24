@@ -834,7 +834,6 @@ void report_read(struct userdata *u,  struct ioop *op)
 	siox_report_activity(op->aid, fid_t, &op->fileid, time_m, &op->duration, 
 			     "Duration of read call.");
 
-	
 }
 
 
@@ -857,7 +856,6 @@ void report_seek(struct userdata *u,  struct ioop *op)
 	siox_report_activity(op->aid, fid_t, &op->fileid, time_m, &op->duration, 
 			     "Duration of the file seek call.");
 
-	
 }
 
 
@@ -879,7 +877,6 @@ void report_close(struct userdata *u,  struct ioop *op)
 	
 	siox_report_activity(op->aid, fid_t, &op->fileid, time_m, &op->duration, 
 			     "Duration of the file close call.");
- 
 }
 
 
