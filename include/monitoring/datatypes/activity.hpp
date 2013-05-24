@@ -59,13 +59,17 @@
  3) Access to activity members possible
  4) When we do not have the activity builder we first use a dummy implementation of activity type
 
-Transaktionssystem baut
+The Transaction system gets information with datatypes from the following method types:
 
  We have four getter methods in the following areas:
  1 ID's (Aid, Cid (Componentid), Name, SWid, HWid, Iid)
  2 Attributes (Metrics)
  3 Remote Calls (from other nodes)
  4 Parents (Paid) with special case "Remote ?"
+
+ Summary:
+
+The processing can take place when activities are built and collected here in a container, serialized and brought to the transactionsystem using a plugin.
 
  */
 
