@@ -32,7 +32,7 @@
  */
 
 /**
- * REQUIREMENTS (und zugrundeliegende Use Cases)
+ * REQUIREMENTS (and the use cases they are based on)
  * ============
  * - Jede Aktivität muß beliebig viele Attribute, Metriken und Remote Calls aufnehmen können. (1)
  */
@@ -46,7 +46,7 @@
 /**
  * OPEN ISSUES
  * ===========
- * - Wie sind die IDs zusammengesetzt?
+ * - How do we form the IDs?
  */
 
 /*!
@@ -118,6 +118,7 @@ private:
     string comment;
     
     // List<Attribute> attributes;
+    // List<Metric> metrics; // List<Observable> ?
     // List<RemoteCall> remotecalls;
 
 public:
