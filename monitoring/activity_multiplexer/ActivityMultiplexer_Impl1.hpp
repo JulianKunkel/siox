@@ -90,13 +90,14 @@ public:
 	void setQueue(ActivityMultiplexerQueue * queue); 
 	void setListenerList(std::list<ActivityMultiplexerListener*> * list);
 	void Run();
+	void terminate() {};
 
 private:	
 	ActivityMultiplexerQueue * activities;	
 	std::list<ActivityMultiplexerListener*> * listeners_async;
 
 	// state
-	bool terminate;
+	bool terminate_flag;
 
 	int max_wait_time;
 
@@ -123,6 +124,8 @@ public:
 
 	void registerListener(ActivityMultiplexerListener * listener);
 	void unregisterListener(ActivityMultiplexerListener * listener);
+
+	void terminate() {};
 
 	// used for test purposed
 	void unregisterRandom();

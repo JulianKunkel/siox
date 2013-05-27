@@ -13,6 +13,9 @@ private:
 	int ID;
 	static int nextID;
 
+	// TODO: add timestamp
+	// TODO: name: z.B. A1(open) A2(doA) A3(close) A(open) A(doB) A(close) 
+
 	/* data */
 };
 

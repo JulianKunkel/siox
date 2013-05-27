@@ -63,6 +63,11 @@ class ActivityMultiplexerNotifier
 public:
 	// TODO: signal upstream to Deamons others
 	
+	/**
+	 * set terminate flag for Notifier, terminates as soon queue is emptied 
+	 */
+	virtual void terminate() =0;
+	
 };
 
 
@@ -93,6 +98,12 @@ public:
 	 * @param	ActivityMultiplexerListener *	listener	listener to remove
 	 */
 	virtual void unregisterListener(ActivityMultiplexerListener * listener) =0;
+
+
+	/**
+	 * pass termination to notifiers 
+	 */
+	virtual void terminate() =0;
 
 };
 

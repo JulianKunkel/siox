@@ -1,7 +1,6 @@
 CC = g++
 CCFLAGS = -Wall -std=c++11 -g
-LDFLAGS = -pthread
-# final binary name 
+LDFLAGS = -pthread 
 binary = test_mpl_async
 
 # object and source files
