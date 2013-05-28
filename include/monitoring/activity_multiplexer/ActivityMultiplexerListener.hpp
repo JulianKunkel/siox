@@ -19,6 +19,7 @@ public:
 	 * @return	void
 	 */
 	virtual void Notify(Activity * activity) =0;
+
 };
 
 /**

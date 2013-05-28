@@ -5,17 +5,22 @@
 
 #include "ActivityMultiplexer_Impl1.hpp"
 
+// TODO: Testcase: chain of multiplexer TEST!
+
+// TODO: Exceptions?
 
 // TODO: templates for notifier und queue for general use, erstmal nicht
-//			Problem: templates created at compile time
+//		 Problem: templates created at compile time
 
+// TODO: ??? merge queue and notifier,to simplefy template creation?
+//		 it seems like they only exist together anyways
+
+// TODO: maybe Notifier should manage its async listeners?
 
 /**
  * ActivityMultiplexerQueue - Implementation 1
- *
+ * Features: overload handling, thread-safe
  */
-
-
 void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 {
 	// handle overloaded buffer
@@ -23,7 +28,8 @@ void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 	{
 		std::cout << "overloaded!\n";
 
-		if ( Full() ) {
+		if ( Empty() ) {
+			std::cout << "recovered!\n";
 			overloaded = false;
 			// issue SIGNAL
 		} else {
@@ -44,18 +50,17 @@ void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 			dropped_count = 1;
 		}
 	} 
-
 	
 }
 
 Activity * ActivityMultiplexerQueue_Impl1::Pull()
 {
-	Activity * activity = NULL;
+	//Activity * activity = NULL;
 
 	std::unique_lock<std::mutex> lock(mut);
 	is_not_empty.wait(lock, [=] { return activities.size() > 0; });
 	
-	activity = activities.front();
+	Activity * activity = activities.front();
 	activities.pop();
 	is_not_full.notify_all();
 	
@@ -107,13 +112,18 @@ void ActivityMultiplexerNotifier_Impl1::Run()
 
 	bool delay_startup = false;
 
-	while( !terminate )
+	while( !terminate_flag )
 	{
+
+		
+		// TODO: handle starvation of activity
+
+
 
 		//std::cout << "runs..\n";
 		if (delay_startup)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			std::this_thread::sleep_for(std::chrono::milliseconds(300));
 			delay_startup = false;
 		}
 		
@@ -145,7 +155,18 @@ void ActivityMultiplexerNotifier_Impl1::Run()
 			}
 		}
 
+
+		// TODO: nice doku
+		// design choice: plugins do not need to complete queue
+		// problem is,finalize would get dependend..
+
+
 	}
+
+		
+
+	// call to plugin finalize
+
 
 	// if terminate
 
@@ -176,8 +197,12 @@ ActivityMultiplexer_Impl1::~ActivityMultiplexer_Impl1()
 }
 
 
+// caller should ensure threadsafety!!
+//
 void ActivityMultiplexer_Impl1::Log(Activity * activity)
 {
+	// Problem sync path is not threadsafe on the plugin side
+
 
 	// readlock
 
