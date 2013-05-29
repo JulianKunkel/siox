@@ -100,7 +100,10 @@ void componentcontent_writer()
 
 int main()
 {
+  Activity testactivity = Activity::getDummy();
+	std::cout << "Initiated activity object" ; print(testactivity);
+	
   tple systpl("systeminfo", 3.05, "PID", "TID", "CommandLine");
-  std::cout << "Initialized with values: "; print(systpl);
+    std::cout << "Initialized with values: "; print(systpl);
   componentcontent_writer()
 }
