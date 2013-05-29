@@ -32,13 +32,15 @@
  This module uses the boost serialization and text_archive for string archiving.
  
  5 Implementation
- 
+ Besonders in Bezug auf namespace zu namespace muss die activity verfügbar sein, da mein writer nicht unbedingt in monitoring angesiedelt ist sondern multiplen Modulen zur Verfügung stehen soll.
  
  */
 
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/string.hpp>
+// datatype for activity
+#include <activity.hpp>
 // Byte stream
 #include <iostream>
 // String stream
