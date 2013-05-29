@@ -35,12 +35,15 @@
  */
 
 
+
 #ifndef __componentcontent_writer
 #define __componentcontent_writer
 
 #include <__componentcontent_writer>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/string.hpp>
+// datatype for activity
+#include <activity.hpp>
 // Byte stream
 #include <iostream>
 // String stream
