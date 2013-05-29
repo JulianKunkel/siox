@@ -11,6 +11,7 @@
 
 /*!
  Software Structure
+ 
  1 Requirements
  Our goal is to put the activity module to action by writing and in this header writing to a string file.
  We use the string file to supervise if errors occur and to have a flexible format for the transaction system and knowledge base, later a bytestream is an option when everything is positively tested.
@@ -18,15 +19,19 @@
  In this first version the activity is hardcoded as a component with for the SIOX system relevant information pieces: name, HWid, SWid,Iid.
  To get the knowledge of the total information load of the activity we examine the activity.hpp in ../Implementation/include/monitoring/datatypes/. That format has to be adapted to our needs.
  These headers and the ones in ../Implementation/include/activity interact.
+ 
  2 UseCases
  Datatypes "activities" coming from the ActivityMultiplexer being written with componentcontent_writer to a text file can be read by this library module
  for use within modules of the knowledgepath as optimization basis.
+ 
  3 Design und Text
  We use the file serializiation as a functioning prototype with readable files resembling the transaction system of the siox system design.
+ 
  4 Testimplementation
   This is the first implementation of the SIOX component to string file transformation.
   Testing will be possible when the Implementation in cpp is finished.
   1 Testcase : Writing two activities to one or two? string file(s) and sending them with SIOX communication to the knowledge module. Which one?
+ 
  */
 
 
