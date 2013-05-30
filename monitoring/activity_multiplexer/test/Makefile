@@ -1,7 +1,7 @@
 CC = g++
 CCFLAGS = -Wall -std=c++11 -g
 LDFLAGS = -pthread 
-binary = test_mpl_async
+binary = test_01_basic-functionality
 
 # object and source files
 #########################
@@ -12,8 +12,8 @@ binary = test_mpl_async
 #OBJ = $(OBJ1:%.cpp=%.o)
 
 
-SRC = ../ActivityMultiplexerListener_Impl1.cpp ../ActivityMultiplexer_Impl1.cpp Activity.cpp main_mpl_async.cpp
-OBJ = ActivityMultiplexerListener_Impl1.o ActivityMultiplexer_Impl1.o Activity.o main_mpl_async.o
+SRC = ../ActivityMultiplexerListener_Impl1.cpp ../ActivityMultiplexer_Impl1.cpp Activity.cpp main_test_01_basic-functionality.cpp
+OBJ = ActivityMultiplexerListener_Impl1.o ActivityMultiplexer_Impl1.o Activity.o main_test_01_basic-functionality.o
 
 # likely you are already done 
 #############################
