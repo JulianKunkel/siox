@@ -10,6 +10,7 @@
  *
  * concurrent registration/unregistration does not corrupt listener-lists
  *
+ * RIAA termination
  * 
  */
 

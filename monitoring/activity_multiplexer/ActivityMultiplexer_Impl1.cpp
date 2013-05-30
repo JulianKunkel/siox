@@ -187,7 +187,10 @@ ActivityMultiplexer_Impl1::ActivityMultiplexer_Impl1()
 
 ActivityMultiplexer_Impl1::~ActivityMultiplexer_Impl1() 
 {
-
+	/* Issues warning but these should be destroyed
+	delete dynamic_cast<ActivityMultiplexerQueue_Impl1*>(activities);
+	delete dynamic_cast<ActivityMultiplexerNotifier_Impl1*>(notifier);
+	*/
 }
 
 
