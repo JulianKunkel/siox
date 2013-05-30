@@ -7,15 +7,9 @@
 
 // TODO: Testcase: chain of multiplexer TEST!
 
-// TODO: Exceptions?
-
 // TODO: templates for notifier und queue for general use, erstmal nicht
 //		 Problem: templates created at compile time
 
-// TODO: ??? merge queue and notifier,to simplefy template creation?
-//		 it seems like they only exist together anyways
-
-// TODO: maybe Notifier should manage its async listeners?
 
 /**
  * ActivityMultiplexerQueue - Implementation 1
@@ -73,8 +67,6 @@ Activity * ActivityMultiplexerQueue_Impl1::Pull()
  * ActivityMultiplexerNotifier - Implementation 1
  *
  */
-
-
 ActivityMultiplexerNotifier_Impl1::ActivityMultiplexerNotifier_Impl1(
 		ActivityMultiplexerQueue * queue,
 		std::list<ActivityMultiplexerListener*> * list
@@ -179,6 +171,8 @@ void ActivityMultiplexerNotifier_Impl1::Run()
  * ActivityMultiplexer - Implementation 1
  *
  */
+
+// nextID, for debug purposes
 int ActivityMultiplexer_Impl1::nextID = 0;
 
 ActivityMultiplexer_Impl1::ActivityMultiplexer_Impl1()
@@ -193,19 +187,23 @@ ActivityMultiplexer_Impl1::ActivityMultiplexer_Impl1()
 
 ActivityMultiplexer_Impl1::~ActivityMultiplexer_Impl1() 
 {
-
+	/* Issues warning but these should be destroyed
+	delete dynamic_cast<ActivityMultiplexerQueue_Impl1*>(activities);
+	delete dynamic_cast<ActivityMultiplexerNotifier_Impl1*>(notifier);
+	*/
 }
 
 
-// caller should ensure threadsafety!!
-//
+/**
+ * Log a message that is then propageted to listeners.
+ *
+ * Note: On the sync path, the caller should ensure thread safety.
+ */
 void ActivityMultiplexer_Impl1::Log(Activity * activity)
 {
 	// Problem sync path is not threadsafe on the plugin side
 
-
 	// readlock
-
 	mut.lock();
 	std::list<ActivityMultiplexerListener*>::iterator listener = listeners_sync.begin();
 	
@@ -214,11 +212,13 @@ void ActivityMultiplexer_Impl1::Log(Activity * activity)
 		(*listener)->Notify(activity);	
 	}
 	mut.unlock();
-
 	activities->Push(activity);
-
 }
 
+
+/**
+ * register a listener, type is determined by typecast
+ */
 void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * listener)
 {
 	// TODO: actually iterators for std::list should not be invalidated, mutex might be omitted 
@@ -234,6 +234,10 @@ void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * l
 	}
 }
 
+/**
+ * unregister a listener
+ * Note: it is ok to try to remove a listener that was not never added
+ */
 void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener * listener)
 {
 	// list iterator is invalidated on erase therefor mutex
@@ -251,7 +255,10 @@ void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener *
 }
 
 
-
+/**
+ * removes a random listener from the listener list
+ * this is needed for the thread-safety test
+ */
 void ActivityMultiplexer_Impl1::unregisterRandom()
 {	
 	std::unique_lock<std::mutex> lock(mut);

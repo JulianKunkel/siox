@@ -4,7 +4,7 @@
  * @description Synchronous and asynchronous listeners for the ActivityMultiplexer.
  * @standard    Preferred standard is C++11
  *
- * @author Jacob, Marc Wiedemann
+ * @author Jakob Luettgau, Marc Wiedemann, Julian Kunkel
  * @date   2013
  *
  */
@@ -30,7 +30,7 @@
 #include "../../include/monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp"
 
 /**
- * Sync Dummy Implementation of ActivityMultiplexer
+ * Sync Dummy Implementation of ActivityMultiplexer Sync Listener
  */
 class ActivityMultiplexerListenerSync_Impl1 : public ActivityMultiplexerListenerSync
 {
@@ -47,7 +47,7 @@ private:
 };
 
 /**
- * Async Dummy Implementation of ActivityMultiplexer
+ * Async Dummy Implementation of ActivityMultiplexer Async Listener
  */
 class ActivityMultiplexerListenerAsync_Impl1 : public ActivityMultiplexerListenerAsync
 {

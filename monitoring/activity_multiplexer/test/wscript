@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+# vim:filetype=python
+
+top = '.'
+out = 'build'
+
+def options(opt):
+    opt.load('compiler_c compiler_cxx')
+
+def configure(cnf):
+    #cnf.env.CC = 'g++'
+    #cnf.env.CXXFLAGS = ['-g', '-std=c++11', '-Wall']
+    #cnf.env.LDFLAGS = ['-pthread']
+    cnf.load('compiler_c compiler_cxx')
+    cnf.check(features='cxx cxxprogram', lib=['pthread'], cxxflags=['-Wall', '-g', '-std=c++11'], uselib_store='P')
+
+# TODO: rename to test, as this procedure builds the test cases
+def build(bld):
+    src = '../ActivityMultiplexerListener_Impl1.cpp ../ActivityMultiplexer_Impl1.cpp Activity.cpp main_test_01_basic-functionality.cpp'
+    bld(features = 'cxx cprogram', source = src, target = 'test_01_sync_async', use=['P'])
