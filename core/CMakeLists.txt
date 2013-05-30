@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 2.8)
 add_subdirectory(comm)
 add_subdirectory(logger)
 add_subdirectory(config)
