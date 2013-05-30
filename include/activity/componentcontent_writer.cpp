@@ -9,9 +9,38 @@
  *
  */
 
+/*!
+ Five Steps for code development in general
+ Think of and write Use Cases
+ Observe and write Requirements
+ Declare functions their behavior and relations between them
+ Write documentation for the developer and user
+ See what's possible and implement it.
+ */
+
+
+/*! 
+ This componentcontent_writer is for writing activities to files.
+ As a test Activity dummyActivity = "Activity::getDummy() is available from activity.hpp in /Implementation/monitoring/datatypes/
+ 
+ 2 Requirements
+ Functioning prototype for writing activities to string file
+ 
+ 3 Relations
+ 
+ 4 Documentation
+ This module uses the boost serialization and text_archive for string archiving.
+ 
+ 5 Implementation
+ Besonders in Bezug auf namespace zu namespace muss die activity verfügbar sein, da mein writer nicht unbedingt in monitoring angesiedelt ist sondern multiplen Modulen zur Verfügung stehen soll.
+ 
+ */
+
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/string.hpp>
+// datatype for activity
+#include <activity.hpp>
 // Byte stream
 #include <iostream>
 // String stream
@@ -71,7 +100,10 @@ void componentcontent_writer()
 
 int main()
 {
+  Activity testactivity = Activity::getDummy();
+	std::cout << "Initiated activity object" ; print(testactivity);
+	
   tple systpl("systeminfo", 3.05, "PID", "TID", "CommandLine");
-  std::cout << "Initialized with values: "; print(systpl);
+    std::cout << "Initialized with values: "; print(systpl);
   componentcontent_writer()
 }

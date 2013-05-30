@@ -9,6 +9,15 @@
  *
  */
 
+/*!
+ Five Steps for code development in general
+ Think of and write Use Cases
+ Observe and write Requirements
+ Declare functions their behavior and relations between them
+ Write documentation for the developer and user
+ See what's possible and implement it.
+ */
+
 /**
  * USE CASES
  * =========
@@ -106,14 +115,7 @@ public:
   Timestamp get_time_stop();
   string get_comment();
 
-/*!
- Five Steps for code development in general
- Think of and write Use Cases
- Observe and write Requirements
- Declare functions their behavior and relations between them
- Write documentation for the developer and user
- See what's possible and implement it.
- */
+
 };
 
 }
