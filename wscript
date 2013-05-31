@@ -60,7 +60,7 @@ def doc(ctx):
 	
 def build(bld):
 	#__recurse(bld)
-	bld.recurse(['core'], mandatory=True)
+	bld.recurse(['core', 'monitoring'], mandatory=True)
 	from waflib.Tools import waf_unit_test
         bld.add_post_fun(waf_unit_test.summary)
 

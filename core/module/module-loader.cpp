@@ -3,7 +3,6 @@
 #include <assert.h>
 
 #include <core/module/module-loader.hpp>
-// #include "module-loader.hpp"
 
 #define INSTANCE_FKT_PREFIX "get_instance_"
 
