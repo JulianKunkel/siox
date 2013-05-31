@@ -1,5 +1,5 @@
 CC = g++
-CCFLAGS = -Wall -std=c++11 -g
+CCFLAGS = -Wall -std=c++11 -g -D_GLIBCXX_USE_NANOSLEEP
 LDFLAGS = -pthread 
 binary = test_01_basic-functionality
 
@@ -23,7 +23,7 @@ $(binary): $(OBJ)
 	$(CC) $(CCFLAGS) -o $(binary) $(OBJ) $(LDFLAGS)
 
 $(OBJ): $(SRC)
-	$(CC) $(CCFLAGS) -c $(SRC)
+	$(CC) $(CCFLAGS) -c $(SRC) 
 
 clean:
 	rm -rf $(OBJ) $(binary)
