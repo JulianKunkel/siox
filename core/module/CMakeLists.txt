@@ -9,8 +9,6 @@ include_directories(
 	"${GLIB2_INCLUDE_DIRS}"
 )
 
-message("${CMAKE_SOURCE_DIR}/include/core/module")
-
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
 
 add_library(sioxmodloader
