@@ -1,4 +1,14 @@
-
+/**
+ * Test: Multiplexer: Overload recovery 
+ *
+ * Situation:
+ * The Multiplexer gets messages at a rate that the async dispatch can't catch up
+ *
+ * Assert:
+ * Recovery from overload mode
+ *
+ * TODO: integrate into basic functionality
+ */
 #include <stdlib.h> 
 #include <time.h> 
 
@@ -11,6 +21,9 @@
 
 #include "../ActivityMultiplexer_Impl1.hpp"
 #include "../ActivityMultiplexerListener_Impl1.hpp"
+
+
+// TODO: implement async listener that wastes time so the implemtation stays clean
 
 
 ActivityMultiplexer * m1 = new ActivityMultiplexer_Impl1();

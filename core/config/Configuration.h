@@ -67,7 +67,7 @@ class Configuration {
 	
 public:
 	Configuration(const std::string &filename);
-	Module get_module_conf(std::string &modname);
+	Module get_module_conf(const std::string &modname);
 	
 private:
 	std::map<std::string, Module> modules_;

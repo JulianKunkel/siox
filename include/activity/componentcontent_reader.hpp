@@ -38,12 +38,18 @@
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/string.hpp>
+// datatype for activity
+#include <activity.hpp>
 // Byte stream
 #include <iostream>
 // String stream
 #include <sstream>
 #include <string>
 #include <tuple>
+
+// necessary for activity's namespace
+using namespace monitoring;
+
 
 std::stringstream ssm;
 std::tuple<std::string, double, int, int, std::string> tple;

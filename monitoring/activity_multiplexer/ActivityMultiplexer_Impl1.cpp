@@ -5,17 +5,16 @@
 
 #include "ActivityMultiplexer_Impl1.hpp"
 
+// TODO: Testcase: chain of multiplexer TEST!
 
 // TODO: templates for notifier und queue for general use, erstmal nicht
-//			Problem: templates created at compile time
+//		 Problem: templates created at compile time
 
 
 /**
  * ActivityMultiplexerQueue - Implementation 1
- *
+ * Features: overload handling, thread-safe
  */
-
-
 void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 {
 	// handle overloaded buffer
@@ -23,7 +22,8 @@ void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 	{
 		std::cout << "overloaded!\n";
 
-		if ( Full() ) {
+		if ( Empty() ) {
+			std::cout << "recovered!\n";
 			overloaded = false;
 			// issue SIGNAL
 		} else {
@@ -44,18 +44,17 @@ void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 			dropped_count = 1;
 		}
 	} 
-
 	
 }
 
 Activity * ActivityMultiplexerQueue_Impl1::Pull()
 {
-	Activity * activity = NULL;
+	//Activity * activity = NULL;
 
 	std::unique_lock<std::mutex> lock(mut);
 	is_not_empty.wait(lock, [=] { return activities.size() > 0; });
 	
-	activity = activities.front();
+	Activity * activity = activities.front();
 	activities.pop();
 	is_not_full.notify_all();
 	
@@ -68,8 +67,6 @@ Activity * ActivityMultiplexerQueue_Impl1::Pull()
  * ActivityMultiplexerNotifier - Implementation 1
  *
  */
-
-
 ActivityMultiplexerNotifier_Impl1::ActivityMultiplexerNotifier_Impl1(
 		ActivityMultiplexerQueue * queue,
 		std::list<ActivityMultiplexerListener*> * list
@@ -107,13 +104,18 @@ void ActivityMultiplexerNotifier_Impl1::Run()
 
 	bool delay_startup = false;
 
-	while( !terminate )
+	while( !terminate_flag )
 	{
+
+		
+		// TODO: handle starvation of activity
+
+
 
 		//std::cout << "runs..\n";
 		if (delay_startup)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			std::this_thread::sleep_for(std::chrono::milliseconds(300));
 			delay_startup = false;
 		}
 		
@@ -145,7 +147,18 @@ void ActivityMultiplexerNotifier_Impl1::Run()
 			}
 		}
 
+
+		// TODO: nice doku
+		// design choice: plugins do not need to complete queue
+		// problem is,finalize would get dependend..
+
+
 	}
+
+		
+
+	// call to plugin finalize
+
 
 	// if terminate
 
@@ -158,6 +171,8 @@ void ActivityMultiplexerNotifier_Impl1::Run()
  * ActivityMultiplexer - Implementation 1
  *
  */
+
+// nextID, for debug purposes
 int ActivityMultiplexer_Impl1::nextID = 0;
 
 ActivityMultiplexer_Impl1::ActivityMultiplexer_Impl1()
@@ -172,15 +187,23 @@ ActivityMultiplexer_Impl1::ActivityMultiplexer_Impl1()
 
 ActivityMultiplexer_Impl1::~ActivityMultiplexer_Impl1() 
 {
-
+	/* Issues warning but these should be destroyed
+	delete dynamic_cast<ActivityMultiplexerQueue_Impl1*>(activities);
+	delete dynamic_cast<ActivityMultiplexerNotifier_Impl1*>(notifier);
+	*/
 }
 
 
+/**
+ * Log a message that is then propageted to listeners.
+ *
+ * Note: On the sync path, the caller should ensure thread safety.
+ */
 void ActivityMultiplexer_Impl1::Log(Activity * activity)
 {
+	// Problem sync path is not threadsafe on the plugin side
 
 	// readlock
-
 	mut.lock();
 	std::list<ActivityMultiplexerListener*>::iterator listener = listeners_sync.begin();
 	
@@ -189,11 +212,13 @@ void ActivityMultiplexer_Impl1::Log(Activity * activity)
 		(*listener)->Notify(activity);	
 	}
 	mut.unlock();
-
 	activities->Push(activity);
-
 }
 
+
+/**
+ * register a listener, type is determined by typecast
+ */
 void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * listener)
 {
 	// TODO: actually iterators for std::list should not be invalidated, mutex might be omitted 
@@ -209,6 +234,10 @@ void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * l
 	}
 }
 
+/**
+ * unregister a listener
+ * Note: it is ok to try to remove a listener that was not never added
+ */
 void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener * listener)
 {
 	// list iterator is invalidated on erase therefor mutex
@@ -226,7 +255,10 @@ void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener *
 }
 
 
-
+/**
+ * removes a random listener from the listener list
+ * this is needed for the thread-safety test
+ */
 void ActivityMultiplexer_Impl1::unregisterRandom()
 {	
 	std::unique_lock<std::mutex> lock(mut);

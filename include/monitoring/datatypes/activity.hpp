@@ -9,6 +9,15 @@
  *
  */
 
+/*!
+ Five Steps for code development in general
+ Think of and write Use Cases
+ Observe and write Requirements
+ Declare functions their behavior and relations between them
+ Write documentation for the developer and user
+ See what's possible and implement it.
+ */
+
 /**
  * USE CASES
  * =========
@@ -32,46 +41,27 @@
  */
 
 /**
- * REQUIREMENTS (und zugrundeliegende Use Cases)
+ * REQUIREMENTS (and the use cases they are based on)
  * ============
- * - Jede Aktivität muß beliebig viele Attribute, Metriken und Remote Calls aufnehmen können. (1)
+ * 1 - Every activity needs to acommodate an arbitrary number of attributes, metrics
+ * and remote calls. (1)
+ * 2 - Once set, the members are to be immutable. (1)
+ * 3 - serializable to byte streams or to text files first human readable
+ * using protocol buffers or boost
  */
 
 /**
  * DESIGN CONSIDERATIONS
  * =====================
- *
+ * 1 - We may need to provide a member to hold the activity's "opcode".
  */
 
 /**
  * OPEN ISSUES
  * ===========
- * - Wie sind die IDs zusammengesetzt?
+ * 1 - Add member vars, initialisation and read access for attributes, metrics and remote calls.
  */
 
-/*!
- This is a container class using the low-level activity that has ended and is complete
-
- Requirements:
-
- 1) holds unchangeable activities
- 2) serializable to byte streams or to text files first human readable using protocol buffers or boost 
- 3) Access to activity members possible
- 4) When we do not have the activity builder we first use a dummy implementation of activity type
-
-The Transaction system gets information with datatypes from the following method types:
-
- We have four getter methods in the following areas:
- 1 ID's (Aid, Cid (Componentid), Name, SWid, HWid, Iid)
- 2 Attributes (Metrics)
- 3 Remote Calls (from other nodes)
- 4 Parents (Paid) with special case "Remote ?"
-
- Summary:
-
-The processing can take place when activities are built and collected here in a container, serialized and brought to the transactionsystem using a plugin.
-
- */
 
 #infdef __SIOX_ACTIVITY_H
 #define __SIOX_ACTIVITY_H
@@ -87,27 +77,8 @@ using std::string;
 
 namespace monitoring {
 
-/*!
- State of activity
- For the state of the activity we use the enum instruction to combine the definitions of constants and variables 
- For example usage in the cpp: ActivityStatus actstat=initialized;
- */
-
 
 typedef Timestamp uint64_t;
-
-/*
- // Of more use to the ActivityBuilder; any objects we're concerned with here are finished
- // and complete.
-
-enum ActivityStatus {
-    empty,
-    initialized,
-    started,
-    stopped,
-    finished
-};
- */
 
 
 class Activity
@@ -115,13 +86,14 @@ class Activity
 private:
     uint64_t aid;
     uint64_t paid;
-    uint64_t unid;
+    uint64_t cid;
     Timestamp time_start;
     Timestamp time_stop;
     int status;
     string comment;
     
     // List<Attribute> attributes;
+    // List<Metric> metrics; // List<Observable> ?
     // List<RemoteCall> remotecalls;
 
 public:
@@ -143,14 +115,7 @@ public:
   Timestamp get_time_stop();
   string get_comment();
 
-/*!
- Five Steps for code development in general
- Think of and write Use Cases
- Observe and write Requirements
- Declare functions their behavior and relations between them
- Write documentation for the developer and user
- See what's possible and implement it.
- */
+
 };
 
 }

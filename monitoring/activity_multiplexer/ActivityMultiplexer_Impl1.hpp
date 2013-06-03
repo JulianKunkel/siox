@@ -4,7 +4,7 @@
  * @description As a follow up to the SIOX system history this is the activity multiplexer for concurrent activity handling.
  * @standard    Preferred standard is C++11
  *
- * @author Jacob, Marc Wiedemann
+ * @author Jakob Luettgau, Marc Wiedemann, Julian Kunkel
  * @date   2013
  *
  */
@@ -20,6 +20,7 @@
 /*! The detached threads for notify are running until the SIOX system finishes.
  When the instrumented client program finishes, a SIOX_finalize() call will be issued that sets a flag called "thrd_fin".
  */
+// that flag is global?
 
 #ifndef ACTIVITYMULTIPLEXER_IMPL1_H
 #define ACTIVITYMULTIPLEXER_IMPL1_H 
@@ -90,13 +91,14 @@ public:
 	void setQueue(ActivityMultiplexerQueue * queue); 
 	void setListenerList(std::list<ActivityMultiplexerListener*> * list);
 	void Run();
+	void terminate() {};
 
 private:	
 	ActivityMultiplexerQueue * activities;	
 	std::list<ActivityMultiplexerListener*> * listeners_async;
 
 	// state
-	bool terminate;
+	bool terminate_flag;
 
 	int max_wait_time;
 
@@ -123,6 +125,8 @@ public:
 
 	void registerListener(ActivityMultiplexerListener * listener);
 	void unregisterListener(ActivityMultiplexerListener * listener);
+
+	void terminate() {};
 
 	// used for test purposed
 	void unregisterRandom();
