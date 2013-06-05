@@ -12,11 +12,9 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/core/comm/buffer
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lpq -lrt")
 
 include_directories(
-	"${PROJECT_SOURCE_DIR}"
 	"${CMAKE_CURRENT_BINARY_DIR}"
 	"${CMAKE_SOURCE_DIR}/core/comm"
 	"${CMAKE_SOURCE_DIR}/core/logger"
-	"${CMAKE_SOURCE_DIR}/build/core/comm"
 	"${PROTOBUF_INCLUDE_DIRS}"
 	"${PostgreSQL_INCLUDE_DIR}"
 	"${Boost_INCLUDE_DIR}"
@@ -35,16 +33,18 @@ add_library(sioxts
 	${PROTO_HDRS}
 )
 
-target_link_libraries(sioxts sioxcomm sioxlog ${LINK_LIBRARIES} ${PostgreSQL_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(sioxts sioxcomm sioxlog ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${PostgreSQL_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(tsd
 	sioxtsd.cpp
 )
 
-target_link_libraries(tsd sioxts  ${Boost_LIBRARIES})
+target_link_libraries(tsd sioxts ${Boost_LIBRARIES})
 
 add_executable(testclient
 	testclient.cpp
+	${PROTO_SRCS}
+	${PROTO_HDRS}
 )
 
-target_link_libraries(testclient sioxcomm sioxlog ${Boost_LIBRARIES})
+target_link_libraries(testclient sioxcomm sioxlog ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})

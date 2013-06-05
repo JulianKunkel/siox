@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 2.8)
+project(SIOX)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-glib2/")
 
 find_package(GLIB2 REQUIRED)
