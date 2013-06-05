@@ -34,10 +34,10 @@ int TransactionService::stop()
 }
 
 
-void TransactionService::add_transaction_backend(TransactionBackend *tb)
+void TransactionService::register_transaction_backend(TransactionBackend *tb)
 {
 	backends_.push_back(tb);
-	add_callback(*(tb->create_callback()));
+	register_callback(*(tb->create_callback()));
 }
 
 
@@ -47,35 +47,15 @@ void TransactionService::clear_transaction_backends()
 }
 
 
-void TransactionService::handle_message(ConnectionMessage &msg, 
-					Connection &connection)
+void TransactionService::register_callback(Callback &cb)
 {
-	boost::ptr_list<Callback>::iterator i;
-	for (i = message_callbacks_.begin(); i != message_callbacks_.end(); ++i) {
-		i->execute(msg);
-	}
-}
-
-
-void TransactionService::handle_message(boost::shared_ptr<ConnectionMessage> msg, 
-					Connection &connection)
-{
-	boost::ptr_list<Callback>::iterator i;
-	for (i = message_callbacks_.begin(); i != message_callbacks_.end(); ++i) {
-		i->execute(msg);
-	}
-}
-
-
-void TransactionService::add_callback(Callback &cb)
-{
-	message_callbacks_.push_back(&cb);
+	network_service_->register_message_callback(cb);
 }
 
 
 void TransactionService::clear_callbacks()
 {
-	message_callbacks_.clear();
+	network_service_->clear_message_callbacks();
 }
 
 

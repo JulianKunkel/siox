@@ -12,8 +12,7 @@
 #include "SioxLogger.h"
 #include "TransactionBackend.h"
 
-class TransactionService 
-   : public Service {
+class TransactionService {
 	   
 public:
 	TransactionService(const std::string &address);
@@ -22,19 +21,14 @@ public:
 	int run();
 	int stop();
 	
-	void add_transaction_backend(TransactionBackend *tb);
+	void register_transaction_backend(TransactionBackend *tb);
 	void clear_transaction_backends();
-	
-	void handle_message(ConnectionMessage &msg, Connection &connection);
-	void handle_message(boost::shared_ptr<ConnectionMessage> msg, 
-			    Connection &connection);
 	
 private:
 	ServiceServer *network_service_;
 	boost::ptr_list<TransactionBackend> backends_;
-	boost::ptr_list<Callback> message_callbacks_;
 	
-	void add_callback(Callback &cb);
+	void register_callback(Callback &cb);
 	void clear_callbacks();
 };
 

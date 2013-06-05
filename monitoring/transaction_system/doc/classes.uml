@@ -1,6 +1,5 @@
 @startuml
 
-Service <|-- TransactionService
 TransactionBackend <|-- PostgreSQLBackend
 Callback <|-- PostgreSQLPumpCallback
 PostgreSQLPumpCallback -- PostgreSQLBackend
@@ -14,12 +13,12 @@ class Service {
 class TransactionService {
 	+ TransactionService(address_to_listen)
 	+ handle_message(connection_message, connection)
-	+ add_transaction_backend(transaction_backend)
+	+ register_transaction_backend(transaction_backend)
 	+ clear_transaction_backends()
 	+ run()
 	+ stop()
 	- network_service
-	- add_callback(callback)
+	- register_callback(callback)
 	- clear_callbacks()
 }
 

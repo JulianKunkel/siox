@@ -31,7 +31,7 @@ int transaction_daemon()
 	ts = new TransactionService(SIOX_TS_LISTENER);
 	
 	TransactionBackend *be = new PostgreSQLBackend(SIOX_DB_INFO);
-	ts->add_transaction_backend(be);
+	ts->register_transaction_backend(be);
 	ts->run();
 	
 	return 0;
