@@ -9,7 +9,7 @@ find_package(Boost 1.53.0 COMPONENTS system thread REQUIRED)
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/core/comm/buffers/siox.proto)
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lpq -lrt -lboost_system -lboost_thread")
+set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lpq -lrt")
 
 include_directories(
 	"${PROJECT_SOURCE_DIR}"
@@ -47,4 +47,4 @@ add_executable(testclient
 	testclient.cpp
 )
 
-target_link_libraries(testclient sioxcomm sioxlog)
+target_link_libraries(testclient sioxcomm sioxlog ${Boost_LIBRARIES})

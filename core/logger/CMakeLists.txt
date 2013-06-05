@@ -11,6 +11,7 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}/core/comm"
 	"${CMAKE_SOURCE_DIR}/build/core/comm"
 	"${PROTOBUF_INCLUDE_DIRS}"
+    "${Boost_INCLUDE_DIR}"
 )
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")

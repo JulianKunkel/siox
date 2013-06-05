@@ -15,7 +15,7 @@ include_directories(
 	${Boost_INCLUDE_DIR}
 )
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt -lboost_system -lboost_thread -lboost_unit_test_framework")
+set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 add_executable(communication_tests
 	communication.cc
@@ -23,7 +23,7 @@ add_executable(communication_tests
 	${PROTO_HDRS}
 )
 
-target_link_libraries(communication_tests sioxcomm)
+target_link_libraries(communication_tests sioxcomm ${Boost_LIBRARIES})
 
 add_executable(configuration_tests
 	configuration.cc
@@ -31,4 +31,4 @@ add_executable(configuration_tests
 	${PROTO_HDRS}
 )
 
-target_link_libraries(configuration_tests sioxconf sioxlog)
+target_link_libraries(configuration_tests sioxconf sioxlog ${Boost_LIBRARIES})

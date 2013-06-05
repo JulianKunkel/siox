@@ -7,6 +7,7 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}/core/logger"
 	"${PROJECT_SOURCE_DIR}"
 	"${YAMLCPP_INCLUDE_DIR}"
+    "${Boost_INCLUDE_DIR}"
 )
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
