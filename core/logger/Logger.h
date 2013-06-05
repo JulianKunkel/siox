@@ -12,7 +12,7 @@ public:
 	Logger();
 	~Logger();
 	
-	void add_logger(Logger &logger);
+	void add_logger(Logger *logger);
 	void clear_loggers();
 
 protected:

@@ -90,7 +90,7 @@ void PostgreSQLPumpCallback::store_activity(ConnectionMessage &msg)
 void PostgreSQLPumpCallback::insert_activity(ConnectionMessage &msg) const
 {
 	uint64_t  aid = htonull(msg.get_msg()->aid());
-	uint64_t paid = htonull(msg.get_msg()->paid());
+// 	uint64_t paid = htonull(msg.get_msg()->paid());
 	uint64_t unid = htonull(msg.get_msg()->unid());
 	uint64_t   tb = htonull(msg.get_msg()->time_start());
 	uint64_t   ts = htonull(msg.get_msg()->time_stop());

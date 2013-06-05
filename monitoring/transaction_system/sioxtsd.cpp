@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include "PostgreSQLBackend.h"
+#include "SyslogLogger.h"
 #include "TransactionBackend.h"
 #include "TransactionService.h"
 
@@ -65,6 +66,8 @@ int main(int argc, char *argv[])
 	signal(SIGQUIT, terminate_daemon);
 	signal(SIGTERM, terminate_daemon);
 
+	logger->add_logger(new SyslogLogger("sioxtsd"));
+	
 	// Begin Server Code
 
 	transaction_daemon();

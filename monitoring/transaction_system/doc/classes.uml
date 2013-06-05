@@ -6,10 +6,6 @@ PostgreSQLPumpCallback -- PostgreSQLBackend
 TransactionService *-- TransactionBackend : backends
 TransactionService *-- Callback : message_callbacks
 
-class Service {
-	+ {abstract} handle_message(connection_message, connection)
-}
-
 class TransactionService {
 	+ TransactionService(address_to_listen)
 	+ handle_message(connection_message, connection)

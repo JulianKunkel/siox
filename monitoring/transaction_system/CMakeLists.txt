@@ -42,3 +42,9 @@ add_executable(tsd
 )
 
 target_link_libraries(tsd sioxts  ${Boost_LIBRARIES})
+
+add_executable(testclient
+	testclient.cpp
+)
+
+target_link_libraries(testclient sioxcomm sioxlog)
