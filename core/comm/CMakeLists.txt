@@ -3,8 +3,7 @@ include(FindProtobuf)
 find_package(Protobuf REQUIRED)
 find_package(Boost 1.53.0 COMPONENTS system thread unit_test_framework REQUIRED)
 
-
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS buffers/siox.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/core/comm/buffers/siox.proto)
 
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
