@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <iostream>
 #include "systeminfo_containers.hpp"
 #include "systeminfo_persistency_interface.hpp"
@@ -10,24 +9,30 @@ using namespace std;
 using namespace pqxx;
 
 /*
- WIP WIP WIP WIP WIP
- Not working yet.
+ On SQL-Injections
 
- TODO: Retries.
- TODO: Zwischen SELECT und UPDATE/INSERT kann es schon drin sein.
- TODO: SQL injection verhindert -> Doku
+ pqxx's work-object has a method called "esc", which takes and returns a string.
+ Use it on _any_ user-changeable string before pushing it into the database.
 */
+
+// Exception for things that shouldn't go wrong (and thus arn't addresses by the databases exception handling)
+class integrityException: public exception
+{
+  virtual const char* what() const throw()
+  {
+    return "Database returned sometihing unexpected.";
+  }
+} integretyError;
 
 /* Constructor. Get/Build up Connection */
 DBLayer::DBLayer() {
     // hostaddr=x.x.x.x only for IP-Addresses! Use host=xxx for a hostname.
-    // TODO: Catch exception
     conn = new connection("hostaddr=136.172.14.14 port=48142 user=postgres password=postgres dbname=systeminfo_test");
 }
 
 /* Destructor. Dismiss Connection, free remaining stuff */
 DBLayer::~DBLayer() {
-
+    conn->disconnect();
 }
 
 /*
@@ -41,7 +46,6 @@ SioxNode * DBLayer::getNodeByHWID(string hwid) {
     work selectAction(*conn, "Select Transaction");
 
     // Perform a select
-    // TODO: Catch exception
     result resultSelect = selectAction.exec(("SELECT node_id FROM nodes WHERE hardware_uid='" + selectAction.esc(hwid) + "'"));
     selectAction.commit();
 
@@ -52,13 +56,16 @@ SioxNode * DBLayer::getNodeByHWID(string hwid) {
         SioxNode* returns = new SioxNode(hwid);
 
         // Check if results are sane (and convert them)
-        if (!resultSelect[0]["node_id"].to(id)) return NULL;
+        if (!resultSelect[0]["node_id"].to(id)) {
+            throw integretyError;
+            return NULL;
+        }
         returns->node_id = id;
 
         return returns;
     }
     else {
-        // Something went wrong
+        // Not found
         return NULL;
     }
 }
@@ -76,7 +83,6 @@ void DBLayer::updateNode(SioxNode * new_node) {
         work updateAction(*conn, "Update Transaction");
 
         // Perform the update
-        // TODO: Catch exception
         updateAction.exec(("UPDATE nodes SET node_id="+updateAction.esc(to_string(new_node->node_id))+" WHERE hardware_uid='"+updateAction.esc(new_node->hw_id)+"'"));
         updateAction.commit();
     }
@@ -87,7 +93,6 @@ void DBLayer::updateNode(SioxNode * new_node) {
         work insertAction(*conn, "Insert Transaction");
 
         // Perform the insert
-        // TODO: Catch exception
         insertAction.exec("INSERT INTO nodes (hardware_uid) VALUES ('"+insertAction.esc(new_node->hw_id)+"')");
         insertAction.commit();
         // Update the new_node reference to include the new node_id
@@ -105,7 +110,6 @@ list<storage_device> * DBLayer::getAllStorageDevicesByNode(unsigned int node_id)
     work selectAction(*conn, "Select Transaction");
 
     // Perform a select. The result will be automatically destroyed.
-    // TODO: Catch exception
     result resultSelect = selectAction.exec("SELECT device_id, model_name, local_address FROM storage_devices WHERE node_id="+selectAction.esc(to_string(node_id))+"");
     selectAction.commit();
 
@@ -124,9 +128,18 @@ list<storage_device> * DBLayer::getAllStorageDevicesByNode(unsigned int node_id)
         // Go thorugh all results
         for (result::size_type i = 0; i != resultSelect.size(); ++i) {
             // Sanity checks and convertions
-            if(!resultSelect[i]["device_id"].to(device_id)) return NULL;
-            if(!resultSelect[i]["model_name"].to(model_name)) return NULL;
-            if(!resultSelect[i]["local_address"].to(local_address)) return NULL;
+            if(!resultSelect[i]["device_id"].to(device_id)) {
+                throw integretyError;
+                return NULL;
+            }
+            if(!resultSelect[i]["model_name"].to(model_name)) {
+                throw integretyError;
+                return NULL;
+            }
+            if(!resultSelect[i]["local_address"].to(local_address)) {
+                throw integretyError;
+                return NULL;
+            }
             // Create a new object, fill it and push it into the list
             tempDevice = new storage_device();
             tempDevice->device_id = device_id;
@@ -177,7 +190,6 @@ void DBLayer::updateStorageDevice(storage_device * new_storage_device) {
         work updateAction(*conn, "Update Transaction");
 
         // Perform the update
-        // TODO: Catch exception
         updateAction.exec("UPDATE storage_devices SET model_name='"+updateAction.esc(to_string(new_storage_device->model_name))+"', local_address='"+updateAction.esc(to_string(new_storage_device->local_address))+"' WHERE node_id="+updateAction.esc(to_string(new_storage_device->node_id))+" AND device_id="+updateAction.esc(to_string(new_storage_device->device_id))+"");
         updateAction.commit();
     }
@@ -186,7 +198,6 @@ void DBLayer::updateStorageDevice(storage_device * new_storage_device) {
         // Create a new transaction. It gets automatically destroyed at the end of this funtion.
         work insertAction(*conn, "Insert Transaction");
         // Perform the insert
-        // TODO: Catch exception
         insertAction.exec("INSERT INTO storage_devices (model_name, local_address, node_id) VALUES ('"+insertAction.esc(to_string(new_storage_device->model_name))+"', '"+insertAction.esc(to_string(new_storage_device->local_address))+"', '"+insertAction.esc(to_string(new_storage_device->node_id))+"')");
         insertAction.commit();
 
@@ -199,13 +210,11 @@ void DBLayer::updateStorageDevice(storage_device * new_storage_device) {
         // Check if there is only one result
         if (resultSelect.size() == 1) {
             // Check if results are sane (and convert them)
-            // TODO: Error Handling
-            if (!resultSelect[0]["device_id"].to(id)) printf("Error\n");
+            if (!resultSelect[0]["device_id"].to(id)) throw integretyError;
         }
         else {
             // Something went wrong
-            // TODO: Error Handling
-            printf("Error\n");
+            //throw integretyError;
         }
         new_storage_device->device_id = id;
     }
@@ -221,7 +230,6 @@ filesystem * DBLayer::getFilesystemByUID(string uid) {
     work selectAction(*conn, "Select Transaction");
 
     // Perform a select
-    // TODO: Catch exception
     result resultSelect = selectAction.exec("SELECT fs_id FROM filesystems WHERE uid='"+selectAction.esc(uid)+"'");
     selectAction.commit();
 
@@ -232,12 +240,16 @@ filesystem * DBLayer::getFilesystemByUID(string uid) {
         filesystem* returns = new filesystem(uid);
 
         // Check if results are sane (and convert them)
-        if (!resultSelect[0]["fs_id"].to(id)) return NULL;
-            returns->filesystem_id = id;
-            return returns;
+        if (!resultSelect[0]["fs_id"].to(id)) {
+            throw integretyError;
+            return NULL;
+        }
+        returns->filesystem_id = id;
+        return returns;
     }
     else {
         // Something went wrong
+        //throw integretyError;
         return NULL;
     }
 }
@@ -254,7 +266,6 @@ void DBLayer::updateFilesystem(filesystem * new_filesystem) {
         work updateAction(*conn, "Update Transaction");
 
         // Perform the update
-        // TODO: Catch exception
         updateAction.exec("UPDATE filesystems SET fs_id="+updateAction.esc(to_string(new_filesystem->filesystem_id))+"WHERE uid='"+updateAction.esc(new_filesystem->unique_id)+"'");
         updateAction.commit();
     }
@@ -265,7 +276,6 @@ void DBLayer::updateFilesystem(filesystem * new_filesystem) {
         work insertAction(*conn, "Insert Transaction");
 
         // Perform the insert
-        // TODO: Catch exception
         insertAction.exec("INSERT INTO filesystems (uid) VALUES ('"+insertAction.esc(new_filesystem->unique_id)+"')");
         insertAction.commit();
 
@@ -273,97 +283,4 @@ void DBLayer::updateFilesystem(filesystem * new_filesystem) {
         new_filesystem->filesystem_id = DBLayer::getFilesystemByUID(new_filesystem->unique_id)->filesystem_id;
     }
 
-}
-
-/*
-*  This is here for testing purposes. Will be deleted.
-*/
-int main( int argc, const char* argv[] )
-{
-    DBLayer* test = new DBLayer();
-
-    // Node stuff test
-    assert(test->getNodeByHWID("test") == NULL);
-
-    SioxNode* testNode = new SioxNode("test");
-
-    test->updateNode(testNode);
-
-    assert(test->getNodeByHWID("test") != NULL);
-    assert(test->getNodeByHWID("test")->node_id > 0);
-    assert(test->getNodeByHWID("test")->hw_id == testNode->hw_id);
-    testNode->node_id = testNode->node_id+1;
-    test->updateNode(testNode);
-
-    assert(test->getNodeByHWID("test") != NULL);
-    assert(test->getNodeByHWID("test")->node_id == testNode->node_id);
-    assert(test->getNodeByHWID("test")->hw_id == testNode->hw_id);
-
-    // Storage Devices test
-    assert(test->getAllStorageDevicesByNode(testNode->node_id) == NULL);
-
-    storage_device* testDevice = new storage_device();
-    testDevice->node_id = testNode->node_id;
-    testDevice->model_name = "model_test";
-    testDevice->local_address = "address_test";
-
-    test->updateStorageDevice(testDevice);
-
-    assert(testDevice->device_id > 0);
-    assert(test->getAllStorageDevicesByNode(testNode->node_id) != NULL);
-    assert(test->getAllStorageDevicesByNode(testNode->node_id)->size() == 1);
-
-    assert(test->getAllStorageDevicesByNode(testNode->node_id)->begin()->model_name == "model_test");
-    assert(test->getAllStorageDevicesByNode(testNode->node_id)->begin()->local_address == "address_test");
-    assert(test->getAllStorageDevicesByNode(testNode->node_id)->begin()->node_id == testNode->node_id);
-
-    assert(test->getStorageDeviceByNodeAndDevice(testNode->node_id, testDevice->device_id)->equals(testDevice));
-
-    testDevice->model_name = "model_test_new";
-    testDevice->local_address = "address_test_new";
-
-    test->updateStorageDevice(testDevice);
-
-    assert(testDevice->device_id > 0);
-    assert(test->getAllStorageDevicesByNode(testNode->node_id) != NULL);
-    assert(test->getAllStorageDevicesByNode(testNode->node_id)->size() == 1);
-
-    assert(test->getAllStorageDevicesByNode(testNode->node_id)->begin()->model_name == "model_test_new");
-    assert(test->getAllStorageDevicesByNode(testNode->node_id)->begin()->local_address == "address_test_new");
-    assert(test->getAllStorageDevicesByNode(testNode->node_id)->begin()->node_id == testNode->node_id);
-
-    // filesystems test
-    assert(test->getFilesystemByUID("test") == NULL);
-
-    filesystem* fs = new filesystem("test");
-
-    test->updateFilesystem(fs);
-
-    assert(test->getFilesystemByUID("test") != NULL);
-    assert(test->getFilesystemByUID("test")->filesystem_id > 0);
-    assert(test->getFilesystemByUID("test")->unique_id == "test");
-
-    fs->filesystem_id = fs->filesystem_id+1;
-
-    test->updateFilesystem(fs);
-
-    assert(test->getFilesystemByUID("test") != NULL);
-    assert(test->getFilesystemByUID("test")->filesystem_id == fs->filesystem_id);
-    assert(test->getFilesystemByUID("test")->unique_id == "test");
-
-    // Delete all StorageDevice stuff
-    connection* conn = new connection("hostaddr=136.172.14.14 port=48142 user=postgres password=postgres dbname=systeminfo_test");
-    work deleteAction2(*conn, "Delete Transaction 2");
-    deleteAction2.exec("DELETE FROM storage_devices WHERE node_id ="+to_string(testNode->node_id));
-    deleteAction2.commit();
-
-    // Delete all filesystem stuff
-    work deleteAction3(*conn, "Delete Transaction 3");
-    deleteAction3.exec("DELETE FROM filesystems WHERE uid='test'");
-    deleteAction3.commit();
-
-    // Delete all node stuff
-    work deleteAction(*conn, "Delete Transaction");
-    deleteAction.exec("DELETE FROM nodes WHERE node_id ="+to_string(testNode->node_id));
-    deleteAction.commit();
 }
