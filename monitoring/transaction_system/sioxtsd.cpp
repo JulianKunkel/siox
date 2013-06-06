@@ -15,13 +15,16 @@
 #include "TransactionService.h"
 
 #define SIOX_TS_LISTENER  "tcp://localhost:7000"
-#define SIOX_DB_INFO "host = 'siox5' user = 'postgres' dbname = 'siox-ts'"
+#define SIOX_DB_INFO "host = '127.0.0.1' port = '5432' user = 'postgres' password = 'siox.db.X916' dbname = 'siox-ts'"
 
 TransactionService *ts;
 Logger *logger;
 
-static void terminate_daemon(int ecode)
+void terminate_daemon(int ecode)
 {
+#ifndef NDEBUG
+	logger->log(Logger::DEBUG, "Terminating dæmon.");
+#endif
 	ts->stop();
 	exit(ecode);
 }
@@ -33,7 +36,11 @@ int transaction_daemon()
 	
 	TransactionBackend *be = new PostgreSQLBackend(SIOX_DB_INFO);
 	ts->register_transaction_backend(be);
+	
 	ts->run();
+	
+	/** @todo better way to make the main thread idle. */
+	pause();
 	
 	return 0;
 }
@@ -59,14 +66,14 @@ int main(int argc, char *argv[])
 	if ((chdir("/")) < 0)
 		exit(EXIT_FAILURE);
 
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
+// 	close(STDIN_FILENO);
+// 	close(STDOUT_FILENO);
+// 	close(STDERR_FILENO);
 
 	signal(SIGQUIT, terminate_daemon);
 	signal(SIGTERM, terminate_daemon);
 
-	logger->add_logger(new SyslogLogger("sioxtsd"));
+	logger = new Logger();
 	
 	// Begin Server Code
 

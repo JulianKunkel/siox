@@ -1,5 +1,5 @@
 /**
- * @file    activity.hpp
+ * @file    Activity.hpp
  *
  * @description This activity is the structure to be read and written to txt using this header.
  * @standard    Preferred standard is C++11
@@ -63,62 +63,53 @@
  */
 
 
-#infdef __SIOX_ACTIVITY_H
-#define __SIOX_ACTIVITY_H
+#ifndef SIOX_ACTIVITY_H
+#define SIOX_ACTIVITY_H
 
 /*!
  We define classes in the namespace monitoring. Is it accessible from other namespaces?
  The activity should be public to have other multiplexer, componentcontent_reader and componentcontent_writer access possibilities.
  */
 
+#include <string>
+
+#include "ConnectionMessage.h"
 
 using std::string;
 
-
 namespace monitoring {
 
-
-typedef Timestamp uint64_t;
-
-
-class Activity
-{
+class Activity {
+	
 private:
-    uint64_t aid;
-    uint64_t paid;
-    uint64_t cid;
-    Timestamp time_start;
-    Timestamp time_stop;
-    int status;
-    string comment;
+	
+	uint64_t aid_;
+	uint64_t paid_;
+	uint64_t cid_;
+	uint64_t time_start_;
+	uint64_t time_stop_;
+	int status_;
+	string comment_;
     
-    // List<Attribute> attributes;
-    // List<Metric> metrics; // List<Observable> ?
-    // List<RemoteCall> remotecalls;
+	// List<Attribute> attributes;
+	// List<Metric> metrics; // List<Observable> ?
+	// List<RemoteCall> remotecalls;
 
 public:
-  Activity(void);
-  // Activity(Component component, Timestamp t_start = NULL, string comment="");
-  ~Activity(void);
-
-  /** Supply a dummy object for testing until ActivityBuilder exists.
-   * Call like this:
-   *      Activity dummyActivity = "Activity::getDummy()"
-   */
-  static Activity getDummy();
-
-  // Getter methods
-  uint64_t get_aid();
-  uint64_t get_paid();
-  uint64_t get_unid();
-  Timestamp get_time_start();
-  Timestamp get_time_stop();
-  string get_comment();
-
-
+	
+	Activity();
+	Activity(ConnectionMessage &msg);
+	Activity(const Activity &act);
+	
+	uint64_t aid() const;
+	uint64_t paid() const;
+	uint64_t cid() const;
+	uint64_t time_start() const;
+	uint64_t time_stop() const;
+	string comment() const;
+	
 };
 
 }
 
-
-#endif // __SIOX_ACTIVITY_H
+#endif // SIOX_ACTIVITY_H

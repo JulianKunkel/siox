@@ -1,5 +1,5 @@
 /**
- * @file    component.hpp
+ * @file    Component.h
  *
  * @description A (software) component.
  * @standard    Preferred standard is C++11
@@ -51,37 +51,31 @@
 #ifndef SIOX_COMPONENT_H
 #define SIOX_COMPONENT_H
 
+#include "ConnectionMessage.h"
 
-#include <attribute.h>
-#include <runtimeinfo.h>
+namespace monitoring {
 
-
-// using std::string;
-
-
-namespace monitoring
-{
-
-
-class Component
-{
+class Component {
+	
 private:
-    uint64_t cid;
-    uint64_t hwid;
-    uint64_t swid;
-    uint64_t iid;
-    // List<Attribute> attributes;
-    RuntimeInfo runtime;
+	uint64_t cid_;
+	uint64_t hwid_;
+	uint64_t swid_;
+	uint64_t iid_;
+	// List<Attribute> attributes;
+// 	RuntimeInfo runtime;
 
 public:
-  Component(void);
-  // Component(const uint64_t &Cid, const uint64_t &HWid, const uint64_t &SWid, const uint64_t &Iid) : cid (Cid), hwid (HWid), swid (SWid), iid (Iid) {};
-  ~Component(void);
+	Component();
+	Component(const uint64_t cid, const uint64_t hwid, const uint64_t swid, 
+		  const uint64_t iid);
+	Component(const Component &c);
 
-  uint64_t get_CId() const {return cid; };
-  uint64_t get_SwId() const {return swid; };
-  uint64_t get_HwId() const {return hwid; };
-  uint64_t get_IId() const {return iid; };
+	uint64_t cid() const;
+	uint64_t swid() const;
+	uint64_t hwid() const;
+	uint64_t iid() const;
+
 };
 
 }

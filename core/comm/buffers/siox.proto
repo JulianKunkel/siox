@@ -4,9 +4,10 @@ message MessageBuffer {
 
 	enum Action {
 		Advertise = 0;
-		Subscribe = 1;
-		Activity  = 2;
-		Log       = 3;
+		Component = 1;
+		Subscribe = 2;
+		Activity  = 3;
+		Log       = 4;
 	}
 	
 	required Action action = 1 [default = Activity];

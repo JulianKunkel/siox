@@ -16,16 +16,19 @@ PostgreSQLBackend::PostgreSQLBackend(const std::string &dbinfo)
 		
 	}
 	
-
+#ifndef NDEBUG
 	logger->log(Logger::NOTICE, "Successfully connected to the database.");
-
+#endif
 }
 
 
 PostgreSQLBackend::~PostgreSQLBackend()
 {
 	PQfinish(dbconn_);
+	
+#ifndef NDEBUG
 	logger->log(Logger::NOTICE, "Connection to the database terminated.");
+#endif
 }
 
 

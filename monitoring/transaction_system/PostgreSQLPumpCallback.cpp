@@ -11,7 +11,13 @@ PostgreSQLPumpCallback::PostgreSQLPumpCallback(PGconn &dbconn)
 void PostgreSQLPumpCallback::handle_message(ConnectionMessage &msg) const
 {
 	if (msg.get_msg()->action() == siox::MessageBuffer::Activity) {
-		insert_activity(msg);
+		
+		store_activity(msg);
+		
+	} else if (msg.get_msg()->action() == siox::MessageBuffer::Component) {
+		
+		store_component(msg);
+		
 	}
 }
 
@@ -21,7 +27,7 @@ void PostgreSQLPumpCallback::handle_message(boost::shared_ptr<ConnectionMessage>
 }
 
 
-void PostgreSQLPumpCallback::store_node(ConnectionMessage &msg)
+void PostgreSQLPumpCallback::store_component(ConnectionMessage &msg) const
 {
 #ifndef NDEBUG
 	logger->log(Logger::NOTICE, "Prepared to insert node.");
@@ -30,7 +36,8 @@ void PostgreSQLPumpCallback::store_node(ConnectionMessage &msg)
 	uint64_t swid = insert_swdesc(msg.get_msg()->swdesc());
 	uint64_t  iid = insert_indesc(msg.get_msg()->indesc());
 
-	insert_node(hwid, swid, iid);
+	Component c(0, hwid, swid, iid);
+	insert_component(c);
 
 #ifndef NDEBUG
 // 	logger->log(LOG_NOTICE, "Inserted: %" PRIx64 " %" PRIx64 "  %" PRIx64 
@@ -39,61 +46,20 @@ void PostgreSQLPumpCallback::store_node(ConnectionMessage &msg)
 }
 
 
-void PostgreSQLPumpCallback::store_activity(ConnectionMessage &msg)
+void PostgreSQLPumpCallback::store_activity(ConnectionMessage &msg) const
 {
-
-	uint64_t  aid = htonull(msg.get_msg()->aid());
-	//      uint64_t paid = htonull(msg.get_msg()->paid());
-	uint64_t unid = htonull(msg.get_msg()->unid());
-	uint64_t    tb = htonull(msg.get_msg()->time_start());
-	uint64_t    ts = htonull(msg.get_msg()->time_stop());
-
-#ifndef NDEBUG
-// 	logger->log(Logger::DEBUG, "Going to insert activity(%" PRIu64 " %" 
-// 		    PRIu64 ", %" PRIu64 ", %s)", aid, unid, tb, 
-// 		    msg.get_msg()->comment());
-#endif
-	int nparams = 5;
-	const Oid param_types[5] = {20, 20, 20, 20, 1043};
-	const char *param_values[5] = {(char *) &aid, (char *) &unid,
-					(char *) &tb, (char *) &ts,
-					msg.get_msg()->comment().c_str()};
-	const int param_lengths[5] = {sizeof(aid), sizeof(unid), sizeof(tb),
-				      sizeof(ts), 
-				      (int) msg.get_msg()->comment().length()};
-	const int param_formats[5] = {1, 1, 1, 1, 0};
-	const int result_format = 0;
-	const char *command =
-		"INSERT INTO activities (aid, unid, time_start, time_stop, comment) \
-			VALUES ($1::int8, $2::int8, $3::int8, $4::int8, $5)";
-
-	PGresult *res = PQexecParams(dbconn_, command, nparams, param_types, 
-				     param_values, param_lengths, param_formats, 
-				     result_format);
-
-	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-
-		logger->log(Logger::ERR, "DB insert failed: %s.", 
-			    PQresultErrorMessage(res));
-
-		PQclear(res);
-
-	}
-
-#ifndef NDEBUG
-	logger->log(Logger::DEBUG, "Successfully inserted activity.");
-#endif
-	PQclear(res);
-
+	Activity act(msg);
+	insert_activity(act);
 }
 
-void PostgreSQLPumpCallback::insert_activity(ConnectionMessage &msg) const
+
+void PostgreSQLPumpCallback::insert_activity(Activity &act) const
 {
-	uint64_t  aid = htonull(msg.get_msg()->aid());
-// 	uint64_t paid = htonull(msg.get_msg()->paid());
-	uint64_t unid = htonull(msg.get_msg()->unid());
-	uint64_t   tb = htonull(msg.get_msg()->time_start());
-	uint64_t   ts = htonull(msg.get_msg()->time_stop());
+	uint64_t  aid = htonull(act.aid());
+// 	uint64_t paid = htonull(act.paid());
+	uint64_t  cid = htonull(act.cid());
+	uint64_t   tb = htonull(act.time_start());
+	uint64_t   ts = htonull(act.time_stop());
 
 #ifndef NDEBUG	
 // 	logger->log(Logger::DEBUG, "Going to insert activity(%" PRIu64 " %" 
@@ -101,15 +67,15 @@ void PostgreSQLPumpCallback::insert_activity(ConnectionMessage &msg) const
 #endif
 	int nparams = 5;
 	const Oid param_types[5] = {20, 20, 20, 20, 1043};
-	const char *param_values[5] = {(char *) &aid, (char *) &unid,
+	const char *param_values[5] = {(char *) &aid, (char *) &cid,
 				       (char *) &tb, (char *) &ts,
-					msg.get_msg()->comment().c_str()};
-	const int param_lengths[5] = {sizeof(aid), sizeof(unid), sizeof(tb),
-				      sizeof(ts), (int) msg.get_msg()->comment().length()};
+					act.comment().c_str()};
+	const int param_lengths[5] = {sizeof(aid), sizeof(cid), sizeof(tb),
+				      sizeof(ts), (int) act.comment().length()};
 	const int param_formats[5] = {1, 1, 1, 1, 0};
 	const int result_format = 0;
 	const char *command =
-		"INSERT INTO activities (aid, unid, time_start, time_stop, comment) \
+		"INSERT INTO activities (aid, cid, time_start, time_stop, comment) \
 			VALUES ($1::int8, $2::int8, $3::int8, $4::int8, $5)";
 
 	PGresult *res = PQexecParams(dbconn_, command, nparams, param_types, 
@@ -132,17 +98,16 @@ void PostgreSQLPumpCallback::insert_activity(ConnectionMessage &msg) const
 }
 
 
-uint64_t PostgreSQLPumpCallback::insert_node(uint64_t hwid, uint64_t swid, 
-					     uint64_t iid)
+uint64_t PostgreSQLPumpCallback::insert_component(Component &c) const
 {
 #ifndef NDEBUG
 // 	logger->log(Logger::DEBUG, "Going to insert node (%" PRIu64 ", %" 
 // 		    PRIu64 ", %" PRIu64 ").", hwid, swid, iid);
 #endif
 
-	hwid = htonull(hwid);
-	swid = htonull(swid);
-	iid  = htonull(iid);
+	uint64_t hwid = htonull(c.hwid());
+	uint64_t swid = htonull(c.swid());
+	uint64_t iid  = htonull(c.iid());
 
 	int nparams = 3;
 	const Oid param_types[3] = {20, 20, 20};
@@ -183,7 +148,7 @@ uint64_t PostgreSQLPumpCallback::insert_node(uint64_t hwid, uint64_t swid,
 }
 
 
-uint64_t PostgreSQLPumpCallback::insert_hwdesc(const std::string &hwdesc)
+uint64_t PostgreSQLPumpCallback::insert_hwdesc(const std::string &hwdesc) const
 {
 #ifndef NDEBUG
 	logger->log(Logger::DEBUG, "Going to insert hwdesc: %s.", 
@@ -230,7 +195,7 @@ uint64_t PostgreSQLPumpCallback::insert_hwdesc(const std::string &hwdesc)
 }
 
 
-uint64_t PostgreSQLPumpCallback::insert_swdesc(const std::string &swdesc)
+uint64_t PostgreSQLPumpCallback::insert_swdesc(const std::string &swdesc) const
 {
 #ifndef NDEBUG
 	logger->log(Logger::DEBUG, "Going to insert swdesc: %s.", 
@@ -275,7 +240,7 @@ uint64_t PostgreSQLPumpCallback::insert_swdesc(const std::string &swdesc)
 }
 
 
-uint64_t PostgreSQLPumpCallback::insert_indesc(const std::string &indesc)
+uint64_t PostgreSQLPumpCallback::insert_indesc(const std::string &indesc) const
 {
 #ifndef NDEBUG
         logger->log(Logger::DEBUG, "Going to insert indesc: %s.", indesc.c_str());
