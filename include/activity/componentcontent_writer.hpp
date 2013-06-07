@@ -20,6 +20,9 @@
  To get the knowledge of the total information load of the activity we examine the activity.hpp in ../Implementation/include/monitoring/datatypes/. That format has to be adapted to our needs.
  These headers and the ones in ../Implementation/include/activity interact.
  
+ Resilient:
+ Second step: Write two iostreams one to fast Ram based storage (nvram or ram based database) and one to archive quality Transaction system database
+ 
  2 UseCases
  Datatypes "activities" coming from the ActivityMultiplexer being written with componentcontent_writer to a text file can be read by this library module
  for use within modules of the knowledgepath as optimization basis.
