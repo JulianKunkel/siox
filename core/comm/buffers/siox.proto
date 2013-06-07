@@ -4,9 +4,10 @@ message MessageBuffer {
 
 	enum Action {
 		Advertise = 0;
-		Subscribe = 1;
-		Activity  = 2;
-		Log       = 3;
+		Component = 1;
+		Subscribe = 2;
+		Activity  = 3;
+		Log       = 4;
 	}
 	
 	required Action action = 1 [default = Activity];
@@ -16,8 +17,12 @@ message MessageBuffer {
 	optional uint64 aid        = 30;
 	optional uint64 paid       = 40;
 	optional string comment    = 50;
-	repeated uint64 timestamps = 60;
-	
+	optional uint64 time_start = 55;
+	optional uint64 time_stop  = 56;
+	repeated uint64 timestamps = 57;
 	optional uint32 priority   = 80;
 	optional string logmsg     = 90;
+	optional string hwdesc     = 100;
+	optional string swdesc     = 110;
+	optional string indesc     = 120;
 }

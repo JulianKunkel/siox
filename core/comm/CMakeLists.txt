@@ -1,10 +1,12 @@
+cmake_minimum_required(VERSION 2.8)
+project(SIOX)
+
 include(FindProtobuf)
 
 find_package(Protobuf REQUIRED)
 find_package(Boost 1.53.0 COMPONENTS system thread unit_test_framework REQUIRED)
 
-
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS buffers/siox.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/core/comm/buffers/siox.proto)
 
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
@@ -15,10 +17,10 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}/core/comm/ipc"
 	"${CMAKE_SOURCE_DIR}/core/comm/tcp"
 	"${PROTOBUF_INCLUDE_DIRS}"
-	${Boost_INCLUDE_DIR}
+	"${Boost_INCLUDE_DIR}"
 )
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt -lboost_system -lboost_thread")
+set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 add_library(sioxcomm
 	misc/URI.h

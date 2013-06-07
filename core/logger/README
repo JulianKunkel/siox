@@ -52,8 +52,7 @@ syslog-logger that uses the system's syslog to store the messages.
 To use them you just have to instantiate the one you want, and add it to the 
 logger:
 
-FileLogger flogger("siox-.log");
-logger->add(flogger);
+logger->add(new FileLogger("siox-.log"));
 
 You can add more than one logger. The log() function will then append the 
 messages into all added loggers.

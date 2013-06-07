@@ -40,7 +40,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/string.hpp>
 // datatype for activity
-#include <activity.hpp>
+#include "Activity.h"
 // Byte stream
 #include <iostream>
 // String stream

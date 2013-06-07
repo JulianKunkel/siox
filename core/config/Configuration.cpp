@@ -27,7 +27,7 @@ Configuration::Configuration(const std::string &filename)
 }
 
 
-Module Configuration::get_module_conf(std::string &modname)
+Module Configuration::get_module_conf(const std::string &modname)
 {
 	return modules_[modname];
 }

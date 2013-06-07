@@ -11,9 +11,9 @@ Logger::~Logger()
 }
 
 
-void Logger::add_logger(Logger &logger)
+void Logger::add_logger(Logger *logger)
 {
-	loggers_.push_back(&logger);
+	loggers_.push_back(logger);
 }
 
 

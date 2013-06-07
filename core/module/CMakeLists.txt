@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 2.8)
+project(SIOX)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-glib2/")
 
 find_package(GLIB2 REQUIRED)
@@ -8,8 +11,6 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}/include/core/module/"
 	"${GLIB2_INCLUDE_DIRS}"
 )
-
-message("${CMAKE_SOURCE_DIR}/include/core/module")
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
 
