@@ -1,10 +1,10 @@
 #ifndef ACTIVITYMULTIPLEXER_H
 #define ACTIVITYMULTIPLEXER_H 
 
-//TODO: replace by non dummy activity
-#include "../../../monitoring/activity_multiplexer/test/Activity.hpp"
-#include "ActivityMultiplexerListener.hpp"
+#include <monitoring/datatypes/Activity.hpp>
+#include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
+namespace monitoring{
 /**
  * Special queue used by the ActivityMultiplexer to buffer activities
  * that are notified in an asyncrnous way.
@@ -107,4 +107,6 @@ public:
 
 };
 
+
+}
 #endif /* ACTIVITYMULTIPLEXER_H */

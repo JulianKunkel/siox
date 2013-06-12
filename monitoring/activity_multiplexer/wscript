@@ -3,7 +3,8 @@
 
 
 def build(bld):
-    #bld.shlib( use = "GMODULES" ,  target = 'activity_multiplexer', source = 'activity_multiplexer.cpp' )
+    bld.shlib( use = "GMODULES" ,  target = 'ActivityMultiplexer_Impl1',  lib=['pthread'], source = 'ActivityMultiplexer_Impl1.cpp' )
+
     bld.recurse(['test'], mandatory=True)
 
 

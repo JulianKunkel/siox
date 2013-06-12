@@ -20,8 +20,9 @@
 #include <chrono>
 
 #include "../ActivityMultiplexer_Impl1.hpp"
-#include "../ActivityMultiplexerListener_Impl1.hpp"
+#include "ActivityMultiplexerListener_Impl1.hpp"
 
+using namespace monitoring;
 
 // TODO: implement async listener that wastes time so the implemtation stays clean
 

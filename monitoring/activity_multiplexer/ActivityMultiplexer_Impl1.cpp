@@ -5,6 +5,8 @@
 
 #include "ActivityMultiplexer_Impl1.hpp"
 
+namespace monitoring{
+
 // TODO: Testcase: chain of multiplexer TEST!
 
 // TODO: templates for notifier und queue for general use, erstmal nicht
@@ -269,5 +271,7 @@ void ActivityMultiplexer_Impl1::unregisterRandom()
 	//unregisterListener();
 	
 	async_is_not_empty.wait(lock, [=] { return listeners_async.size() > 0; });
+}
+
 }
 

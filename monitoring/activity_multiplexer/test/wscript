@@ -2,8 +2,11 @@
 # encoding: utf-8
 
 def build(bld):
-    #bld.shlib( use = "activity_multiplexer" ,  target = 'test-module', source = 'test-module.cpp', install_path = None,)
-    src = '../ActivityMultiplexerListener_Impl1.cpp ../ActivityMultiplexer_Impl1.cpp Activity.cpp main_test_01_basic-functionality.cpp'
-    bld.program( features='test cxx cxxprogram', target = 'activity-multiplexer-test', lib=['pthread'], source = src, install_path = None,)
+    bld.shlib( use = "GMODULES" ,  target = 'ActivityMultiplexerListener_Impl1', source = 'ActivityMultiplexerListener_Impl1.cpp' )
+
+    bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 ActivityMultiplexerListener_Impl1", target = 'main_test_01_basic-functionality', source = "main_test_01_basic-functionality.cpp", install_path = None,)
+    bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 ActivityMultiplexerListener_Impl1", target = 'main_test_02_overload', source = "main_test_02_overload.cpp", install_path = None,)
+
+    bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1", target = 'anomaly-plugin', source = "AnomalyPlugin.cpp", install_path = None,)
 
 # -*- indent-tabs-mode: t -*-

@@ -1,9 +1,9 @@
 #ifndef ACTIVITYMULTIPLEXERLISTENER_H
 #define ACTIVITYMULTIPLEXERLISTENER_H 
 
-//TODO: change to non dummy activity
-#include "../../../monitoring/activity_multiplexer/test/Activity.hpp"
+#include <monitoring/datatypes/Activity.hpp>
 
+namespace monitoring{
 /**
  * ActivityMultiplexerListener
  * Interface plugins that want to register to a multiplexer need to implement. 
@@ -52,5 +52,7 @@ class ActivityMultiplexerListenerAsync : public ActivityMultiplexerListener
 	 */
 	virtual void Reset(int dropped) =0;
 };
+
+}
 
 #endif /* ACTIVITYMULTIPLEXERLISTENER_H */

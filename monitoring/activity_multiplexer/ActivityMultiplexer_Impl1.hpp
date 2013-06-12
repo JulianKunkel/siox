@@ -34,10 +34,10 @@
 #include <condition_variable>
 #include <chrono>
 
-#include "../../include/monitoring/activity_multiplexer/ActivityMultiplexer.hpp"
+#include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
+#include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
-#include "ActivityMultiplexerListener_Impl1.hpp"
-
+namespace monitoring{
 
 /**
  * ActivityMultiplexerQueue_Impl1 Considerations
@@ -161,5 +161,6 @@ private:
 	std::condition_variable async_is_not_empty;
 };
 
+}
 
 #endif /* ACTIVITYMULTIPLEXER_IMPL1_H */

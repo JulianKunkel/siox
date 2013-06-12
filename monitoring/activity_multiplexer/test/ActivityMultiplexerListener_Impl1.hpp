@@ -25,9 +25,10 @@
 #ifndef ACTIVITYMULTIPLEXERLISTENER_IMPL1_H
 #define ACTIVITYMULTIPLEXERLISTENER_IMPL1_H 
 
+#include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
 
-#include "../../include/monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp"
+namespace monitoring{
 
 /**
  * Sync Dummy Implementation of ActivityMultiplexer Sync Listener
@@ -62,5 +63,6 @@ private:
 	static int nextID;
 	int ID;
 };
+}
 
 #endif /* ACTIVITYMULTIPLEXERLISTENER_IMPL1_H */

@@ -72,10 +72,9 @@
  */
 
 #include <string>
+#include <list>
 
-#include "ConnectionMessage.h"
-
-using std::string;
+using namespace std;
 
 namespace monitoring {
 
@@ -89,24 +88,45 @@ private:
 	uint64_t time_start_;
 	uint64_t time_stop_;
 	int status_;
-	string comment_;
+	string name_;
     
+	// Zur Einfachheit halber hier mal string-attribute
+	list<string> * attributes_;
+
 	// List<Attribute> attributes;
 	// List<Metric> metrics; // List<Observable> ?
 	// List<RemoteCall> remotecalls;
 
 public:
-	
-	Activity();
-	Activity(ConnectionMessage &msg);
-	Activity(const Activity &act);
-	
 	uint64_t aid() const;
 	uint64_t paid() const;
 	uint64_t cid() const;
-	uint64_t time_start() const;
-	uint64_t time_stop() const;
-	string comment() const;
+	
+	Activity(string name, uint64_t start_t, uint64_t end_t, list<string> * attributes){
+		time_start_ = start_t;
+		time_stop_ = end_t;
+		attributes_ = attributes;
+		name_ = name;
+	}
+
+	Activity(){
+	}
+		
+	uint64_t time_start() const{
+		return time_start_;
+	}
+
+	uint64_t time_stop() const{
+		return time_stop_;
+	}
+
+	string name() const{
+		return name_;
+	}
+
+	list<string> * attributes() const{
+		return attributes_;
+	}	
 	
 };
 

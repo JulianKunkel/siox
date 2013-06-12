@@ -25,8 +25,9 @@
 #include <chrono>
 
 #include "../ActivityMultiplexer_Impl1.hpp"
-#include "../ActivityMultiplexerListener_Impl1.hpp"
+#include "ActivityMultiplexerListener_Impl1.hpp"
 
+using namespace monitoring;
 
 ActivityMultiplexer * m1 = new ActivityMultiplexer_Impl1();
 

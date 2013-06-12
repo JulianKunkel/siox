@@ -3,6 +3,8 @@
 
 #include "ActivityMultiplexerListener_Impl1.hpp"
 
+namespace monitoring{
+
 
 std::mutex mut_print;
 
@@ -33,7 +35,7 @@ void ActivityMultiplexerListenerSync_Impl1::Notify(Activity * activity)
 	
 	// debug	
 	std::cout << "Notify("; 
-	activity->print();	
+	cout << activity;
 	std::cout << ")";
 	std::cout << " <- ";
 	this->print();
@@ -71,7 +73,7 @@ void ActivityMultiplexerListenerAsync_Impl1::Notify(Activity * activity)
 	
 	// debug	
 	std::cout << "Notify("; 
-	activity->print();	
+	cout << activity;
 	std::cout << ")";
 	std::cout << " <- ";
 	this->print();
@@ -84,4 +86,6 @@ void ActivityMultiplexerListenerAsync_Impl1::Notify(Activity * activity)
 void ActivityMultiplexerListenerAsync_Impl1::Reset(int dropped)
 {
 	// handle..
+}
+
 }
