@@ -103,7 +103,7 @@ AnomalyPlugin::AnomalyPlugin(ActivityMultiplexer * multiplexer){
 
 
 int main(int argc, char const *argv[]){
-	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexer_Impl1", "mmultiplexer");
+	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexer_Impl1", "monitoring_activitymultiplexer");
 
 	// wir registrieren das Plugin (normal geschieht das automatisch)
 	AnomalyPlugin * ap = new AnomalyPlugin(m1);

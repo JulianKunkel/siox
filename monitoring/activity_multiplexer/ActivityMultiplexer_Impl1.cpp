@@ -276,9 +276,10 @@ void ActivityMultiplexer_Impl1::unregisterRandom()
 
 
 extern "C"{
-#include "module.h"
+#include <monitoring/activity_multiplexer/module.h>
 
-void * get_instance_mmultiplexer(){
+void * get_instance_monitoring_activitymultiplexer(){
 	return new monitoring::ActivityMultiplexer_Impl1();
 }
 }
+
