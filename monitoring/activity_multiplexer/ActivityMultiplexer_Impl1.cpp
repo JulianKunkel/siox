@@ -272,6 +272,13 @@ void ActivityMultiplexer_Impl1::unregisterRandom()
 	
 	async_is_not_empty.wait(lock, [=] { return listeners_async.size() > 0; });
 }
-
 }
 
+
+extern "C"{
+#include "module.h"
+
+void * get_instance_mmultiplexer(){
+	return new monitoring::ActivityMultiplexer_Impl1();
+}
+}

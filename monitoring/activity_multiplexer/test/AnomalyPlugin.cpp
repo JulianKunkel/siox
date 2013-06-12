@@ -2,9 +2,8 @@
 #include <list>
 
 #include <monitoring/datatypes/Activity.hpp>
-
-#include "../ActivityMultiplexer_Impl1.hpp"
-
+#include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
+#include <core/module/module-loader.hpp>
 
 using namespace std;
 using namespace monitoring;
@@ -104,7 +103,7 @@ AnomalyPlugin::AnomalyPlugin(ActivityMultiplexer * multiplexer){
 
 
 int main(int argc, char const *argv[]){
-	ActivityMultiplexer * m1 = new ActivityMultiplexer_Impl1();
+	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexer_Impl1", "mmultiplexer");
 
 	// wir registrieren das Plugin (normal geschieht das automatisch)
 	AnomalyPlugin * ap = new AnomalyPlugin(m1);

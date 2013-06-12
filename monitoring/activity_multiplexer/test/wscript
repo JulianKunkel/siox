@@ -7,6 +7,6 @@ def build(bld):
     bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 ActivityMultiplexerListener_Impl1", target = 'main_test_01_basic-functionality', source = "main_test_01_basic-functionality.cpp", install_path = None,)
     bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 ActivityMultiplexerListener_Impl1", target = 'main_test_02_overload', source = "main_test_02_overload.cpp", install_path = None,)
 
-    bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1", target = 'anomaly-plugin', source = "AnomalyPlugin.cpp", install_path = None,)
+    bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 module-loader", target = 'anomaly-plugin', source = "AnomalyPlugin.cpp", install_path = None,)
 
 # -*- indent-tabs-mode: t -*-
