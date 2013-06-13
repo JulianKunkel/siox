@@ -1,7 +1,10 @@
 #include <string>
-#include "systeminfo_containers.hpp"
+
+#include <knowledge/knowledge_base/systeminfo_containers.hpp>
+
 using namespace std;
 
+namespace knowledge{
 
 SioxNode::SioxNode(string p_hw_id) {
     hw_id = p_hw_id;
@@ -30,4 +33,6 @@ filesystem::filesystem(string uid) {
 
 bool filesystem::equals(filesystem* fs) {
     return ( (fs->filesystem_id == this->filesystem_id) && (fs->unique_id == this->unique_id) );
+}
+
 }

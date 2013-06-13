@@ -4,9 +4,11 @@
 #include <string>
 using namespace std;
 
-class SioxNode {
+namespace knowledge{
+
+class Node {
     public:
-        SioxNode(string p_hw_id);
+        Node(string p_hw_id);
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
         unsigned int      node_id;
         /* The hardware id. */
@@ -14,13 +16,13 @@ class SioxNode {
         /*
         * Other metrics here
         */
-        bool equals(SioxNode* node);
+        bool equals(Node* node);
 
 };
 
-class storage_device {
+class StorageDevice {
     public:
-        storage_device();
+        StorageDevice();
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
         unsigned int      device_id;
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
@@ -32,12 +34,12 @@ class storage_device {
         /*
         * Other metrics here
         */
-        bool equals(storage_device* device);
+        bool equals(StorageDevice* device);
 };
 
-class filesystem {
+class Filesystem {
     public:
-        filesystem(string uid);
+        Filesystem(string uid);
         /* The filesystem id. Serial (database type) saves up to 2^16, so int16 is fine */
         unsigned int       filesystem_id;
         /* The unique identifier of the filesystem. */
@@ -45,7 +47,9 @@ class filesystem {
         /*
         * Other metrics here
         */
-        bool equals(filesystem* fs);
+        bool equals(Filesystem* fs);
 };
+
+}
 
 #endif

@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include "systeminfo_containers.hpp"
-#include "systeminfo_persistency_interface.hpp"
+
+#include <knowledge/knowledge_base/systeminfo_containers.hpp>
+#include <knowledge/knowledge_base/systeminfo_persistency_interface.hpp>
 
 // No conflicts between std and pqxx
 using namespace std;
 using namespace pqxx;
+
+namespace knowledge{
 
 /*
  On SQL-Injections
@@ -284,3 +287,6 @@ void DBLayer::updateFilesystem(filesystem * new_filesystem) {
     }
 
 }
+}
+
+
