@@ -39,6 +39,9 @@ def configure(conf):
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
 	conf.check_cfg(package='gmodule-2.0', use="GLIB", uselib_store='GMODULES',   args=['--cflags', '--libs'], mandatory=True)
 
+	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
+	
+
         conf.check_boost(lib='system thread')
 
 
@@ -60,7 +63,7 @@ def doc(ctx):
 	
 def build(bld):
 	#__recurse(bld)
-	bld.recurse(['core', 'monitoring'], mandatory=True)
+	bld.recurse(['core', 'monitoring', 'knowledge'], mandatory=True)
 	from waflib.Tools import waf_unit_test
         bld.add_post_fun(waf_unit_test.summary)
 

@@ -64,10 +64,14 @@ public:
 	// TODO: signal upstream to Deamons others
 	
 	/**
+	 * cleanup data structures and finish immediately
+	 */
+	virtual void terminate() = 0;
+	
+	/**
 	 * set terminate flag for Notifier, terminates as soon queue is emptied 
 	 */
-	virtual void terminate() =0;
-	
+	virtual	void finalize() = 0;
 };
 
 

@@ -97,6 +97,11 @@ void ActivityMultiplexerNotifier_Impl1::setListenerList(std::list<ActivityMultip
 	listeners_async = list;
 }
 
+void ActivityMultiplexerNotifier_Impl1::terminate(){
+}
+
+void ActivityMultiplexerNotifier_Impl1::finalize(){
+}
 
 void ActivityMultiplexerNotifier_Impl1::Run()
 {

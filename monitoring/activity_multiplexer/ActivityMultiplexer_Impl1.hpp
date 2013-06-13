@@ -91,7 +91,8 @@ public:
 	void setQueue(ActivityMultiplexerQueue * queue); 
 	void setListenerList(std::list<ActivityMultiplexerListener*> * list);
 	void Run();
-	void terminate() {};
+	void terminate();
+	void finalize();
 
 private:	
 	ActivityMultiplexerQueue * activities;	
