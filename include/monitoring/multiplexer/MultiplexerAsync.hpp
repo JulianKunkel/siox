@@ -1,8 +1,7 @@
 #ifndef ACTIVITYMULTIPLEXER_H
 #define ACTIVITYMULTIPLEXER_H 
 
-#include <monitoring/datatypes/Activity.hpp>
-#include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
+#include <monitoring/multiplexer/MultiplexerListener.hpp>
 
 namespace monitoring{
 /**
@@ -11,9 +10,8 @@ namespace monitoring{
  *
  */
 
-// could implement async buffer that is used by various components
-//
-class ActivityMultiplexerQueue 
+template <class TYPE>
+class MultiplexerQueue 
 {
 public:
 	/**

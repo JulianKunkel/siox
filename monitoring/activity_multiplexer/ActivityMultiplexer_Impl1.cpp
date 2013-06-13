@@ -12,7 +12,6 @@ namespace monitoring{
 // TODO: templates for notifier und queue for general use, erstmal nicht
 //		 Problem: templates created at compile time
 
-
 /**
  * ActivityMultiplexerQueue - Implementation 1
  * Features: overload handling, thread-safe
@@ -59,6 +58,7 @@ Activity * ActivityMultiplexerQueue_Impl1::Pull()
 	activities.pop();
 
 	cout << activity->name() << " " << endl;
+
 
 	is_not_full.notify_all();
 	
