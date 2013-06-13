@@ -46,7 +46,6 @@ void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 			dropped_count = 1;
 		}
 	} 
-	
 }
 
 Activity * ActivityMultiplexerQueue_Impl1::Pull()
@@ -58,6 +57,9 @@ Activity * ActivityMultiplexerQueue_Impl1::Pull()
 	
 	Activity * activity = activities.front();
 	activities.pop();
+
+	cout << activity->name() << " " << endl;
+
 	is_not_full.notify_all();
 	
 	// return lost
@@ -139,7 +141,7 @@ void ActivityMultiplexerNotifier_Impl1::Run()
 		//std::unique_lock<std::mutex> lock(as->mut);
 		//as->is_not_empty.wait(lock, [=] { return activities->Empty(); });
 
-		if ( !as->Overloaded() )
+		if ( ! as->Overloaded() )
 		{
 			Activity * activity = activities->Pull();
 

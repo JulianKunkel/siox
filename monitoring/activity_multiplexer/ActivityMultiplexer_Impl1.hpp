@@ -4,7 +4,7 @@
  * @description As a follow up to the SIOX system history this is the activity multiplexer for concurrent activity handling.
  * @standard    Preferred standard is C++11
  *
- * @author Jakob Luettgau, Marc Wiedemann, Julian Kunkel
+ * @author Jakob Luettgau, Julian Kunkel
  * @date   2013
  *
  */
@@ -21,7 +21,6 @@
  When the instrumented client program finishes, a SIOX_finalize() call will be issued that sets a flag called "thrd_fin".
  */
 // that flag is global?
-
 #ifndef ACTIVITYMULTIPLEXER_IMPL1_H
 #define ACTIVITYMULTIPLEXER_IMPL1_H 
 

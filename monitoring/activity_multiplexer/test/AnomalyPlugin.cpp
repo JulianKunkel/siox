@@ -38,7 +38,7 @@ public:
 	}
 
 	void processAsync(Activity * activity){
-		// cout << activity->name() << " ASYNC" << endl;
+		cout << activity->name() << " ASYNC" << endl;
 		// Dieser Pfad wird erst für das zweite Plugin relevant, ist zu testzwecken aber mal eingetragen.
 	}
 };
@@ -113,6 +113,7 @@ int main(int argc, char const *argv[]){
 
 	// Hier mal Testcode, beliebig erweitern!!!
 	// TODO weitere testaktivitäten loggen...
+
 	list<string> * list1 = new list<string>();
 	list1->push_front("attribute1");
 	list1->push_front("attribute2");
