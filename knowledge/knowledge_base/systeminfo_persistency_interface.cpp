@@ -8,7 +8,7 @@
 using namespace std;
 using namespace pqxx;
 
-namespace knowledge{
+namespace knowledge {
 
 /*
  On SQL-Injections
@@ -22,50 +22,48 @@ class integrityException: public exception
 {
   virtual const char* what() const throw()
   {
-    return "Database returned sometihing unexpected.";
+    return "Database returned something unexpected.";
   }
 } integretyError;
 
+void DBLayer::init(ComponentOptions * options) {
+	ComponentOptions * myOpts = options;
 
-/* Destructor. Dismiss Connection, free remaining stuff */
-DBLayer::~DBLayer() {
-    conn->disconnect();
-}
+    list<ComponentOptionEntry>* myList;
+    myList = new list<ComponentOptionEntry>;
 
-class DBLayerComponentOptions : core::ComponentOptions{
-public:
-	map<string, ComponentOptionEntry> * get_component_options(){
-	map<name, (datatype<CLASS>, address)>, ("hostaddr", (string<CLASS>, & hostaddr))
-	}
+    string hostaddr;
+    int port;
+    string user;
+    string password;
+    string dbname;
 
-	string hostaddr;
-	int port;
-	string user;
-	string password;
-	string dbname;
-};
+    myList->push_back(new ComponentOptionEntry("hostaddress", typeid(string), &hostaddr));
+    myList->push_back(new ComponentOptionEntry("port", typeid(int), &port));
+    myList->push_back(new ComponentOptionEntry("user", typeid(string), &user));
+    myList->push_back(new ComponentOptionEntry("password", typeid(string), &password));
+    myList->push_back(new ComponentOptionEntry("dbname", typeid(string), &dbname));
 
+    options->get_component_options(myList);
 
-void DBLayer::init(ComponentOptions * options){
-	DBLayerComponentOptions * myOpts = (DBLayerComponentOptions) options;
-	conn = new connection("hostaddr=136.172.14.14 port=48142 user=postgres password=postgres dbname=systeminfo_test");
+	conn = new connection("hostaddr="+hostaddr+" port="+port+" user="+user+" password="+password+" dbname="+dbname);
 	// hostaddr=x.x.x.x only for IP-Addresses! Use host=xxx for a hostname.
 }
 
-ComponentOptions * DBLayer::get_options(){
-	return new DBLayerComponentOptions();
+ComponentOptions * DBLayer::get_options() {
+	return new ComponentOptions();
 }
 
-void DBLayer::shutdown(){
+void DBLayer::shutdown() {
+    conn->disconnect();
 }
 
 /*
 *  Used to get a full node object out of the database. If no matching item is in the database no one will be created (use updateNode).
 *  Usefull for comparision to current states and updates.
 *  Also includes the nodes id, which is needed for further querying.
-*
 */
-SioxNode * DBLayer::getNodeByHWID(string hwid) {
+Node * DBLayer::getNodeByHWID(string hwid) {
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "Select Transaction");
 
@@ -75,9 +73,9 @@ SioxNode * DBLayer::getNodeByHWID(string hwid) {
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
-        // Create SioxNode and save the results
+        // Create Node and save the results
         unsigned int id = 0;
-        SioxNode* returns = new SioxNode(hwid);
+        Node* returns = new Node(hwid);
 
         // Check if results are sane (and convert them)
         if (!resultSelect[0]["node_id"].to(id)) {
@@ -99,7 +97,7 @@ SioxNode * DBLayer::getNodeByHWID(string hwid) {
 *  The node is identified by node_id in the struct.
 *  Returns the nodes struct.
 */
-void DBLayer::updateNode(SioxNode * new_node) {
+void DBLayer::updateNode(Node * new_node) {
     if(DBLayer::getNodeByHWID(new_node->hw_id) != NULL) {
         // Entry already exists. Perform an update.
 
@@ -129,26 +127,26 @@ void DBLayer::updateNode(SioxNode * new_node) {
 *  Returns a list of all storage devices which are connected to a node (specified by node_id).
 *  To get the node_id use getNodeByHWID.
 */
-list<storage_device> * DBLayer::getAllStorageDevicesByNode(unsigned int node_id) {
+list<StorageDevice> * DBLayer::getAllStorageDevicesByNode(unsigned int node_id) {
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "Select Transaction");
 
     // Perform a select. The result will be automatically destroyed.
-    result resultSelect = selectAction.exec("SELECT device_id, model_name, local_address FROM storage_devices WHERE node_id="+selectAction.esc(to_string(node_id))+"");
+    result resultSelect = selectAction.exec("SELECT device_id, model_name, local_address FROM StorageDevices WHERE node_id="+selectAction.esc(to_string(node_id))+"");
     selectAction.commit();
 
     // Check if there's at least one result
     if (resultSelect.size() > 0) {
-        // Create SioxNode and save the results
+        // Create Node and save the results
         unsigned int device_id;
         string model_name;
         string local_address;
 
         // Allocate space
-        list<storage_device>* returns;
-        returns = new list<storage_device>;
+        list<StorageDevice>* returns;
+        returns = new list<StorageDevice>;
         // TODO: Will this be freed on the end of the function?
-        storage_device* tempDevice;
+        StorageDevice* tempDevice;
         // Go thorugh all results
         for (result::size_type i = 0; i != resultSelect.size(); ++i) {
             // Sanity checks and convertions
@@ -165,7 +163,7 @@ list<storage_device> * DBLayer::getAllStorageDevicesByNode(unsigned int node_id)
                 return NULL;
             }
             // Create a new object, fill it and push it into the list
-            tempDevice = new storage_device();
+            tempDevice = new StorageDevice();
             tempDevice->device_id = device_id;
             tempDevice->model_name = model_name;
             tempDevice->local_address = local_address;
@@ -187,12 +185,12 @@ list<storage_device> * DBLayer::getAllStorageDevicesByNode(unsigned int node_id)
 *  Get the node_id by using getNodeByHWID.
 *  Useful if the device_id is already known with anormaly incident.
 */
-storage_device * DBLayer::getStorageDeviceByNodeAndDevice(unsigned int node_id, unsigned int device_id) {
+StorageDevice * DBLayer::getStorageDeviceByNodeAndDevice(unsigned int node_id, unsigned int device_id) {
     // Get all Storage Devices
-    list<storage_device> * AllStorageDevices = DBLayer::getAllStorageDevicesByNode(node_id);
+    list<StorageDevice> * AllStorageDevices = DBLayer::getAllStorageDevicesByNode(node_id);
     // Run trough all storage devices
     if(AllStorageDevices != NULL) {
-        for (list<storage_device>::iterator it=AllStorageDevices->begin(); it != AllStorageDevices->end(); ++it) {
+        for (list<StorageDevice>::iterator it=AllStorageDevices->begin(); it != AllStorageDevices->end(); ++it) {
             if (it->device_id == device_id) return &*it;
         }
     }
@@ -207,14 +205,14 @@ storage_device * DBLayer::getStorageDeviceByNodeAndDevice(unsigned int node_id, 
 *  The device is identified by its node_id and device_id in the struct.
 *  If the corresponding device does not exist in the database it will be created.
 */
-void DBLayer::updateStorageDevice(storage_device * new_storage_device) {
-    if(DBLayer::getStorageDeviceByNodeAndDevice(new_storage_device->node_id, new_storage_device->device_id) != NULL) {
+void DBLayer::updateStorageDevice(StorageDevice * new_StorageDevice) {
+    if(DBLayer::getStorageDeviceByNodeAndDevice(new_StorageDevice->node_id, new_StorageDevice->device_id) != NULL) {
         // Entry already exists. Perform an update.
         // Create a new transaction. It gets automatically destroyed at the end of this funtion.
         work updateAction(*conn, "Update Transaction");
 
         // Perform the update
-        updateAction.exec("UPDATE storage_devices SET model_name='"+updateAction.esc(to_string(new_storage_device->model_name))+"', local_address='"+updateAction.esc(to_string(new_storage_device->local_address))+"' WHERE node_id="+updateAction.esc(to_string(new_storage_device->node_id))+" AND device_id="+updateAction.esc(to_string(new_storage_device->device_id))+"");
+        updateAction.exec("UPDATE StorageDevices SET model_name='"+updateAction.esc(to_string(new_StorageDevice->model_name))+"', local_address='"+updateAction.esc(to_string(new_StorageDevice->local_address))+"' WHERE node_id="+updateAction.esc(to_string(new_StorageDevice->node_id))+" AND device_id="+updateAction.esc(to_string(new_StorageDevice->device_id))+"");
         updateAction.commit();
     }
     else {
@@ -222,13 +220,13 @@ void DBLayer::updateStorageDevice(storage_device * new_storage_device) {
         // Create a new transaction. It gets automatically destroyed at the end of this funtion.
         work insertAction(*conn, "Insert Transaction");
         // Perform the insert
-        insertAction.exec("INSERT INTO storage_devices (model_name, local_address, node_id) VALUES ('"+insertAction.esc(to_string(new_storage_device->model_name))+"', '"+insertAction.esc(to_string(new_storage_device->local_address))+"', '"+insertAction.esc(to_string(new_storage_device->node_id))+"')");
+        insertAction.exec("INSERT INTO StorageDevices (model_name, local_address, node_id) VALUES ('"+insertAction.esc(to_string(new_StorageDevice->model_name))+"', '"+insertAction.esc(to_string(new_StorageDevice->local_address))+"', '"+insertAction.esc(to_string(new_StorageDevice->node_id))+"')");
         insertAction.commit();
 
-        // Update new_storage_device
+        // Update new_StorageDevice
         unsigned int id = 0;
         work selectAction(*conn, "Select Transaction");
-        result resultSelect = selectAction.exec("SELECT device_id FROM storage_devices WHERE model_name='"+insertAction.esc(to_string(new_storage_device->model_name))+"' AND local_address = '"+insertAction.esc(to_string(new_storage_device->local_address))+"' AND node_id = '"+insertAction.esc(to_string(new_storage_device->node_id))+"'");
+        result resultSelect = selectAction.exec("SELECT device_id FROM StorageDevices WHERE model_name='"+insertAction.esc(to_string(new_StorageDevice->model_name))+"' AND local_address = '"+insertAction.esc(to_string(new_StorageDevice->local_address))+"' AND node_id = '"+insertAction.esc(to_string(new_StorageDevice->node_id))+"'");
         selectAction.commit();
 
         // Check if there is only one result
@@ -240,35 +238,35 @@ void DBLayer::updateStorageDevice(storage_device * new_storage_device) {
             // Something went wrong
             //throw integretyError;
         }
-        new_storage_device->device_id = id;
+        new_StorageDevice->device_id = id;
     }
 
 }
 
 /*
-*  Returns a filesystem identified by its unique identifier.
+*  Returns a Filesystem identified by its unique identifier.
 *  Filesystems are not node dependent.
 */
-filesystem * DBLayer::getFilesystemByUID(string uid) {
+Filesystem * DBLayer::getFilesystemByUID(string uid) {
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "Select Transaction");
 
     // Perform a select
-    result resultSelect = selectAction.exec("SELECT fs_id FROM filesystems WHERE uid='"+selectAction.esc(uid)+"'");
+    result resultSelect = selectAction.exec("SELECT fs_id FROM Filesystems WHERE uid='"+selectAction.esc(uid)+"'");
     selectAction.commit();
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
-        // Create filesystem and save the results
+        // Create Filesystem and save the results
         unsigned int id;
-        filesystem* returns = new filesystem(uid);
+        Filesystem* returns = new Filesystem(uid);
 
         // Check if results are sane (and convert them)
         if (!resultSelect[0]["fs_id"].to(id)) {
             throw integretyError;
             return NULL;
         }
-        returns->filesystem_id = id;
+        returns->Filesystem_id = id;
         return returns;
     }
     else {
@@ -279,18 +277,18 @@ filesystem * DBLayer::getFilesystemByUID(string uid) {
 }
 
 /*
-*  Updates a filesystem in the database. It is identified by its the unique identifier.
-*  If the corresponding filesystem does not exist it will be created.
+*  Updates a Filesystem in the database. It is identified by its the unique identifier.
+*  If the corresponding Filesystem does not exist it will be created.
 */
-void DBLayer::updateFilesystem(filesystem * new_filesystem) {
-    if(DBLayer::getFilesystemByUID(new_filesystem->unique_id) != NULL) {
+void DBLayer::updateFilesystem(Filesystem * new_Filesystem) {
+    if(DBLayer::getFilesystemByUID(new_Filesystem->unique_id) != NULL) {
         // Entry already exists. Perform an update.
 
         // Create a new transaction. It gets automatically destroyed at the end of this funtion.
         work updateAction(*conn, "Update Transaction");
 
         // Perform the update
-        updateAction.exec("UPDATE filesystems SET fs_id="+updateAction.esc(to_string(new_filesystem->filesystem_id))+"WHERE uid='"+updateAction.esc(new_filesystem->unique_id)+"'");
+        updateAction.exec("UPDATE Filesystems SET fs_id="+updateAction.esc(to_string(new_Filesystem->Filesystem_id))+"WHERE uid='"+updateAction.esc(new_Filesystem->unique_id)+"'");
         updateAction.commit();
     }
     else {
@@ -300,11 +298,11 @@ void DBLayer::updateFilesystem(filesystem * new_filesystem) {
         work insertAction(*conn, "Insert Transaction");
 
         // Perform the insert
-        insertAction.exec("INSERT INTO filesystems (uid) VALUES ('"+insertAction.esc(new_filesystem->unique_id)+"')");
+        insertAction.exec("INSERT INTO Filesystems (uid) VALUES ('"+insertAction.esc(new_Filesystem->unique_id)+"')");
         insertAction.commit();
 
-        // Update new_filesystem reference to include the new fs_id
-        new_filesystem->filesystem_id = DBLayer::getFilesystemByUID(new_filesystem->unique_id)->filesystem_id;
+        // Update new_Filesystem reference to include the new fs_id
+        new_Filesystem->Filesystem_id = DBLayer::getFilesystemByUID(new_Filesystem->unique_id)->Filesystem_id;
     }
 
 }

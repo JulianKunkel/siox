@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace core{
+namespace core {
 
 class ComponentOptionEntry{
 public:
@@ -15,19 +15,19 @@ public:
 	type_info typ;
 	void * address;
 
-	ComponentOptionEntry(string name, type_info typ, void * address){
+	ComponentOptionEntry(string name, type_info typ, void * address) {
 		this.name = name;
 		this.typ = typ;
 		this.address = address;
 	}
 };
 
-class ComponentOptions{
+class ComponentOptions {
 public:
 	virtual void get_component_options(list<ComponentOptionEntry> & out_params);
-}
+};
 
-class Component{
+class Component {
 	void init(ComponentOptions * options);
 	ComponentOptions * get_options();
 	void shutdown();
