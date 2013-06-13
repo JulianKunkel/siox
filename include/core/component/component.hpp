@@ -2,6 +2,8 @@
 #define SIOX_COMPONENT_H
 
 #include <list>
+#include <string>
+#include <typeinfo>
 
 using namespace std;
 
@@ -9,13 +11,20 @@ namespace core{
 
 class ComponentOptionEntry{
 public:
-	class<?> typ;
+	string name;
+	type_info typ;
 	void * address;
-}
+
+	ComponentOptionEntry(string name, type_info typ, void * address){
+		this.name = name;
+		this.typ = typ;
+		this.address = address;
+	}
+};
 
 class ComponentOptions{
 public:
-	virtual map<string, ComponentOptionEntry> * get_component_options();
+	virtual void get_component_options(list<ComponentOptionEntry> & out_params);
 }
 
 class Component{
