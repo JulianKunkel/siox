@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include <knowledge/knowledge_base/systeminfo_containers.hpp>
 #include <knowledge/knowledge_base/systeminfo_persistency_interface.hpp>
 
 // No conflicts between std and pqxx
@@ -27,15 +26,37 @@ class integrityException: public exception
   }
 } integretyError;
 
-/* Constructor. Get/Build up Connection */
-DBLayer::DBLayer() {
-    // hostaddr=x.x.x.x only for IP-Addresses! Use host=xxx for a hostname.
-    conn = new connection("hostaddr=136.172.14.14 port=48142 user=postgres password=postgres dbname=systeminfo_test");
-}
 
 /* Destructor. Dismiss Connection, free remaining stuff */
 DBLayer::~DBLayer() {
     conn->disconnect();
+}
+
+class DBLayerComponentOptions : core::ComponentOptions{
+public:
+	map<string, ComponentOptionEntry> * get_component_options(){
+	map<name, (datatype<CLASS>, address)>, ("hostaddr", (string<CLASS>, & hostaddr))
+	}
+
+	string hostaddr;
+	int port;
+	string user;
+	string password;
+	string dbname;
+};
+
+
+void DBLayer::init(ComponentOptions * options){
+	DBLayerComponentOptions * myOpts = (DBLayerComponentOptions) options;
+	conn = new connection("hostaddr=136.172.14.14 port=48142 user=postgres password=postgres dbname=systeminfo_test");
+	// hostaddr=x.x.x.x only for IP-Addresses! Use host=xxx for a hostname.
+}
+
+ComponentOptions * DBLayer::get_options(){
+	return new DBLayerComponentOptions();
+}
+
+void DBLayer::shutdown(){
 }
 
 /*

@@ -7,19 +7,17 @@
 #include <pqxx/pqxx>
 
 #include <knowledge/knowledge_base/systeminfo_containers.hpp>
+#include <core/component/component.hpp>
 
 using namespace std;
 using namespace pqxx;
 
 namespace knowledge{
 
-class DBLayer {
+class DBLayer : core::Component {
     private:
         connection* conn;
     public:
-        /* Constructor. Get/Build up Connection */
-        DBLayer();
-
         /* Destructor. Dismiss Connection, free remaining stuff */
         ~DBLayer();
 
