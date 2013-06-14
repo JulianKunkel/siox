@@ -9,16 +9,16 @@ namespace monitoring{
 
 // TODO: Testcase: chain of multiplexer TEST!
 
-// TODO: templates for notifier und queue for general use, erstmal nicht
+// TODO: Templates for notifier und queue for general use, not know
 //		 Problem: templates created at compile time
 
 /**
  * ActivityMultiplexerQueue - Implementation 1
- * Features: overload handling, thread-safe
+ * Features: overload handling, thread-safety
  */
 void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 {
-	// handle overloaded buffer
+	// Handle overloaded buffer
 	if ( overloaded )
 	{
 		std::cout << "overloaded!\n";
@@ -26,7 +26,7 @@ void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 		if ( Empty() ) {
 			std::cout << "recovered!\n";
 			overloaded = false;
-			// issue SIGNAL
+			// Issue SIGNAL
 		} else {
 			dropped_count++;
 		}
@@ -46,6 +46,8 @@ void ActivityMultiplexerQueue_Impl1::Push(Activity * activity)
 		}
 	} 
 }
+
+// Pull Activity to Queue
 
 Activity * ActivityMultiplexerQueue_Impl1::Pull()
 {
@@ -190,7 +192,7 @@ ActivityMultiplexer_Impl1::ActivityMultiplexer_Impl1()
 	nextID++;
 
 	activities = new ActivityMultiplexerQueue_Impl1();
-	// add Notifier and introduce to ActivityQueue and ListenersList
+	// Add Notifier and introduce to ActivityQueue and ListenersList
 	notifier = new ActivityMultiplexerNotifier_Impl1(activities, &listeners_async);
 }
 
@@ -204,16 +206,17 @@ ActivityMultiplexer_Impl1::~ActivityMultiplexer_Impl1()
 
 
 /**
- * Log a message that is then propageted to listeners.
+ * Log a message that is then propagated to listeners. Synchronous listening with Logging of activities
  *
  * Note: On the sync path, the caller should ensure thread safety.
  */
 void ActivityMultiplexer_Impl1::Log(Activity * activity)
 {
-	// Problem sync path is not threadsafe on the plugin side
+	// Problem: Sync path is not threadsafe on the plugin side
 
-	// readlock
+	// Lock mut to read
 	mut.lock();
+	// Sync listeners in list
 	std::list<ActivityMultiplexerListener*>::iterator listener = listeners_sync.begin();
 	
 	for ( ; listener != listeners_sync.end(); ++listener) 
@@ -244,12 +247,12 @@ void ActivityMultiplexer_Impl1::registerListener(ActivityMultiplexerListener * l
 }
 
 /**
- * unregister a listener
- * Note: it is ok to try to remove a listener that was not never added
+ * Unregister a listener
+ * Note: it is ok to try to remove a listener that was never added ?
  */
 void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener * listener)
 {
-	// list iterator is invalidated on erase therefor mutex
+	// list iterator is invalidated on erase therefore we exclusively lock the mut
 	std::unique_lock<std::mutex> lock(mut);
 	if ( dynamic_cast<ActivityMultiplexerListenerAsync*>(listener) ) {
 		async_is_not_empty.wait(lock, [=] { return listeners_async.size() > 0; });
@@ -265,7 +268,7 @@ void ActivityMultiplexer_Impl1::unregisterListener(ActivityMultiplexerListener *
 
 
 /**
- * removes a random listener from the listener list
+ * Remove a random listener from the listener list
  * this is needed for the thread-safety test
  */
 void ActivityMultiplexer_Impl1::unregisterRandom()
