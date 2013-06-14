@@ -62,8 +62,13 @@ struct member_t
 
   
   template<class TYPE>
-  inline TYPE * value(void * const instance_) const {	  
+  inline TYPE* get(void * const instance_) const {	  
 	return (TYPE*) (offset + (char*)(instance_));
+  }
+
+  template<class TYPE>
+  inline void set(void * const instance_, TYPE && value) const {	  
+	*(TYPE*)(offset + (char*)(instance_)) = value;
   }
 };
 

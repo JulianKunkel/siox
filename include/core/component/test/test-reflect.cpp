@@ -43,10 +43,11 @@ int main() {
       f->info().members()[i].type->size(), f->info().members()[i].type->name());
     
     if(f->info().members()[i].type->id() == typeid(int)){
-	printf ("Int: %d\n", *f->info().members()[i].value<int>(f));
+	f->info().members()[i].set<int>(f, 42);
+	printf ("Int: %d\n", *f->info().members()[i].get<int>(f));
     }
     if(f->info().members()[i].type->id() == typeid(string)){
-	cout << "String: " << *f->info().members()[i].value<string>(f) << endl;
+	cout << "String: " << *f->info().members()[i].get<string>(f) << endl;
     }
   }
   return 0;
