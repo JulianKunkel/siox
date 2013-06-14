@@ -42,7 +42,7 @@ def configure(conf):
 	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
 	
 
-        conf.check_boost(lib='system thread')
+        conf.check_boost(lib='system thread serialization')
 
 
 	workDir = conf.path.abspath()
@@ -63,7 +63,8 @@ def doc(ctx):
 	
 def build(bld):
 	#__recurse(bld)
-	bld.recurse(['core', 'monitoring', 'knowledge'], mandatory=True)
+	bld.recurse(['core'], mandatory=True)
+	#bld.recurse(['core', 'monitoring', 'knowledge'], mandatory=True)
 	from waflib.Tools import waf_unit_test
         bld.add_post_fun(waf_unit_test.summary)
 
