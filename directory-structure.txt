@@ -1,0 +1,22 @@
+Public interfaces are placed under:
+include/<package>/<component>/<interface>.h[pp]
+include/siox-ll/monitoring.h,optimization.h
+
+All component implementations are derived from:
+include/core/component/component.hpp
+
+Rationale:
+* All these files offer global and mandatory interfaces for all implementations.
+* These files should be installed globally to allow everybody to write a new implementation against these interfaces.
+
+
+Implementations:
+<package>/<component>/module.h # Contains the interfaces required for the given component. All implementations of the given component should include this file.
+<package>/<component>/<implementation>/module.c
+<package>/<component>/<implementation>/<implementation>_<interface>.[c|cpp]
+<package>/<component>/<implementation>/test/test.cpp
+
+Documentation:
+* is provided inside the header files for the interfaces and in the implementations
+* required images / uml diagrams etc. are located in
+** doc/<package>/<component>/

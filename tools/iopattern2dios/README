@@ -1,0 +1,19 @@
+
+Usage: python iopattern2dios.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  --encoding=ENCODING   Encoding of the XML-file.
+  -v, --verbose         Turn verbosity on.
+  -f INPUTDATA, --file=INPUTDATA
+                        Path to the input-file.
+  -o OUTFILE, --outfile=OUTFILE
+                        Path to the output-file.
+
+The default encoding is ISO-8859-1.
+
+INPUTDATA must be a file, which contains the information, which is written
+to stdout when running iopattern.
+
+The format of OUTFILE is XML.
+

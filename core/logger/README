@@ -1,0 +1,60 @@
+The classes in this directory provide SIOX with a logging facility for the 
+management of logging information.
+
+To use the logger, just include the file SioxLogger.h and define the global 
+variable "logger" pointing to a Logger object:
+
+----
+#include "SioxLogger.h"
+
+Logger *logger;
+----
+
+Afterward you can use the logger->log() function to log the information you want.
+
+Syntax:
+=======
+
+The log() function is defined in the class BasicLogger:
+ 
+	logger->log(Logger::Priority, char *format, ...)
+
+As priority you can use one of the following values:
+
+	Logger::EMERG
+	Logger::ALERT
+	Logger::CRIT
+	Logger::ERR
+	Logger::WARNING
+	Logger::NOTICE
+	Logger::INFO
+	Logger::DEBUG
+
+They originate from syslog and are sorted in order of decreasing importance 
+(see "man 3 syslog").
+
+The rest of the arguments work like the well-known printf() function.
+
+For example:
+
+	logger->log(Logger::DEBUG, "The ID of the node %s is %d.", node_name, 
+		    node_id);
+
+Composed Logging:
+=================
+
+By default, the logger outputs the messages into stderr (for priorities 0-4) and 
+stdout (for priority >4). 
+
+However, there is a file-logger that stores the message into a file, and a 
+syslog-logger that uses the system's syslog to store the messages.
+
+To use them you just have to instantiate the one you want, and add it to the 
+logger:
+
+logger->add(new FileLogger("siox-.log"));
+
+You can add more than one logger. The log() function will then append the 
+messages into all added loggers.
+
+

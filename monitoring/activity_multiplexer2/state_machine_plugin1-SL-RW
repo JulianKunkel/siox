@@ -1,0 +1,34 @@
+O = state()
+ initial
+end
+
+SR1 = state(O)
+end
+
+LR1 = state(LR1)
+ initial
+end
+
+LR1 = state(O)
+end
+
+SR2 = state(SR2)
+ initial
+end
+
+SR2 = state(SR1)
+end
+
+LR2 = state(LR1)
+ initial
+end
+
+LR2 = state(LR1)
+end
+
+SR1 = state(LR2)
+end
+
+SR1 = state(LR1)
+end
+

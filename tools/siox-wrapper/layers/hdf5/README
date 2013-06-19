@@ -1,0 +1,109 @@
+The first part of this readme is optional, it describes the usage of the siox-wrapper. The necessary files to compile the program are already generated.
+
+--- OPTIONAL PART ---
+
+0. -- Generate the header file
+
+At first, a clean header file of the HDF5 lib has to be created. The clean header
+file only contains the required includes and the function definition of the
+parsed header file. The clean header file will be annotated with the commands
+from the template.
+
+-b create a clean header file
+-t the template which will be used
+-o name of the output file
+
+  ../../siox-wrapper.py -b -t ../../template.py -o hdf5.h /usr/include/hdf5.h
+
+Add the necessary includes at the beginning of the hdf5.h file.
+
+  #include <hdf5.h>
+
+It is possible to add additional includes in the template with the includes
+variable. Multiple includes of the same header file will be filtered.
+
+Now the commands of the template can be used to instrument the code.
+In this example C code is added before and after the H5Fcreate function call.
+All other HDF5 function have been deleted for clearness.
+
+splice_before adds C code before the HDF5 function call
+splice_after adds C code after the HDF5 function call
+
+  // splice_before printf("SIOX: Call H5Fcreate.\n");
+  // splice_after printf("SIOX: H5Fcreate terminated.\n");
+  hid_t H5Fcreate(const char *filename, unsigned flags, hid_t create_plist,
+  hid_t access_plist);
+
+1. -- Generate the source code
+
+The C source code file of the library can be generated in two ways, with the
+ld.so of the linker (dlsym) or the wrapper functionality of the gcc (wrap).
+
+To generate the C source with dlsym (default):
+
+-t provide the template
+-o output file
+
+  ../../siox-wrapper.py -t ../../template.py -o hdf5-dlsym.c hdf5.h
+
+
+To create the C code for the instrumented library with the gcc wrap
+functionality:
+
+-s wrap the style which should be used to generate the C code (default dlsym)
+
+  ../../siox-wrapper.py -s wrap -t ../../template.py -o hdf5-wrap.c hdf5.h
+
+The siox-wrapper prints the name of the function prefixed with the wrap
+parameter to let the gcc know which function should be wrapped. This output
+must be passed to gcc. The compile-wrap.sh already contains the
+necessary list.
+
+--- END OPTIONAL PART ---
+
+2 -- Build the wrapped program
+
+Depending on how the C code is generated it's possible to build the wrapper
+source code as a shared library or link the program directly against the
+wrapper source code.
+
+2.1 -- Build the library wrapper as a shared library (default)
+
+To build the wrapper code as a shared use:
+
+  ./compile-dlsym.sh
+
+This shell script generates a shared library hdf5.so out of the hdf5-dlsym.c
+file, and compiles the test program filter-test.
+
+2.2 -- Link the program directly to the wrapper
+
+This method uses the gcc wrap functionality.
+
+  ./compile-wrap.sh
+
+This script generates the test program filter-test-wrap which is directly
+linked against the wrapper code.
+The wrap option of the gcc has the disadvantage that the executable needs to
+be rebuild.
+
+3 -- Call the test program
+
+3.1 -- Call filter-test with the generated shared library
+
+To call filter-test with hdf5.so:
+
+  LD_PRELOAD=./hdf5.so ./filter-test
+
+It is possible to load multiple instrumented libraries.
+If the posix example is already build it is possible to load this library
+to and trace the path of the I/O even further.
+
+  LD_PRELOAD="./hdf5.so ../posix/posix-dlsym.so" ./filter-test
+
+3.2 -- Call filter-test-wrap
+
+
+  ./filter-test-wrap
+
+LD_PRELOAD is not needed any more because the program is directly linked against the wrapper code.

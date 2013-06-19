@@ -1,0 +1,8 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+	bld.shlib( use = "module-loader" ,  target = 'test-module', source = 'test-module.cpp', install_path = None,)
+	bld.program( features='test cxx cxxprogram', use = "module-loader" ,  target = 'module-loader-test',	source = 'main.cpp', install_path = None,)
+
+# -*- indent-tabs-mode: t -*-

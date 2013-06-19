@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+# Waf documentation, see http://docs.waf.googlecode.com/git/book_16/single.html
+# Build and run unit tests:
+# See: http://docs.waf.googlecode.com/git/apidocs_16/tools/waf_unit_test.html#module-waflib.Tools.waf_unit_test
+
+# Waf has been build using: ./waf-light --tools=boost,doxygen,eclipse,proc,review,why
+
+def options(opt):
+	opt.load('compiler_c')
+        gr = opt.get_option_group('configure options')
+	gr.add_option('--siox', action='store', dest="SIOX_DIR", default=False, help='Directory to the SIOX installation')
+
+def configure(conf):
+	conf.load('compiler_c')
+
+        if conf.options.SIOX_DIR:
+		conf.env.INCLUDES = [ conf.options.SIOX_DIR + "/include" ]
+
+        conf.check(header_name='monitoring/low-level-c/siox-ll.h', features='c cprogram')	
+        conf.env.SIOX_LL_HEADER = conf.find_file('monitoring/low-level-c/siox-ll.h', conf.env.INCLUDES)
+
+	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
+	conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall'] 
+
+def build(bld):
+        def wrapPlain(task): 
+                src = task.inputs[0].abspath()
+                tgt = task.outputs[0].abspath()
+                cmd =bld.path.abspath() + '/../siox-wrapper.py -o %s -t %s -s %s %s' % (tgt, src, "plain", bld.env.SIOX_LL_HEADER)
+                return task.exec_command(cmd)
+
+	bld(rule=wrapPlain, source="printf/template-printf.py", target='printf/siox-ll-api.c')
+	bld(rule=wrapPlain, source="testlist/template-list.py", target='testlist/siox-ll-api.c')
+
+	bld.shlib( use = "GLIB" ,  target = 'printf/siox-ll-api', source = 'printf/siox-ll-api.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/printf/" )
+	bld.shlib( use = "GLIB" ,  target = 'testlist/siox-ll-api', source = 'testlist/siox-ll-api.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/testlist/" )
+	
+	
+

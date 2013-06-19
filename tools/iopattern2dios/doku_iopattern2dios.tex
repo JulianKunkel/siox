@@ -1,0 +1,287 @@
+\documentclass{scrartcl}
+\usepackage[ngerman]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{xcolor}
+\usepackage{longtable}
+
+\usepackage[colorlinks=true,urlcolor=blue,linkcolor=purple]{hyperref}
+
+\newcommand\email[1]{\texttt{#1}}
+\title{Dokumentation zum Programm iopattern2dios}
+\author{Daniela Koudela\\ ZIH\\ Technische Universität Dresden}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+% folgende Kapitel sind noch zu bearbeiten:
+% - Benutzung von iopattern/rabbit
+\section{Wofür ist das Programm gut?} % erste Version fertig
+Das Programm \emph{iopattern2dios} nimmt die Ausgabe von 
+\emph{iopattern/rabbit} 
+und wandelt sie in ein XML-Format um, welches als Eingabe für das Programm 
+\emph{DIOS} verwendet werden kann.
+
+\subsection{Was macht das Open Trace Format (OTF)} % erste Version fertig
+Mit dem \emph{Open Trace Format} (OTF) werden Trace-Informationen während dem 
+Laufen von massiv parallelen Programmen gesammelt, um das Programmverhalten
+mittels geeigneter Analyseprogramme detailliert untersuchen zu 
+können.\footnote{Für weitere Informationen zu OTF siehe
+\url{http://www.tu-dresden.de/die_tu_dresden/zentrale_einrichtungen/zih/forschung/software_werkzeuge_zur_unterstuetzung_von_programmierung_und_optimierung/otf}}
+
+% Was macht iopattern/rabbit?
+\subsection{Was macht iopattern/rabbit?} % erste Version fertig
+Das Programm \emph{iopattern/rabbit} analysiert und klassifiziert I/O-Aufrufe
+innerhalb einer OTF-Datei.
+
+Um das Programm \emph{iopattern/rabbit} zu erhalten, schickt man am besten eine
+entsprechende Anfrage an Michael Kluge (\email{michael.kluge@tu-dresden.de}).
+
+% Was macht DIOS?
+\subsection{Was macht DIOS?} % erste Version fertig
+DIOS ist ein in C++ geschriebener Dateisystem-Benchmark, 
+um I/O-Aktivitäten einer Anwendung zu wiederholen
+Die Input-Datei muss im XML-Format sein. Diese beschreibt, welche 
+I/O-Aktivitäten jeder Prozess ausführt.\footnote{Weitere Details sind in 
+der Dokumentation von \emph{DIOS} erklärt. Diese befindet sich in der 
+\emph{DIOS}-Installation im Verzeichnis \texttt{docu/latex}.}
+
+Um das Programm \emph{DIOS} zu erhalten, schickt man am besten eine 
+entsprechende Anfrage an Michael Kluge (\email{michael.kluge@tu-dresden.de}).
+%%% Installation %%%
+\section{Installation} % erste Version fertig
+Damit man eine Trace-Datei in XML umwandeln kann, muss man OTF und 
+\emph{iopattern/rabbit} installieren. Hat man bereits die Ausgabe von 
+\emph{iopattern/rabbit}, so ist keine Installation der beiden Programme nötig. 
+
+\emph{iopattern2dios} ist ein python-Programm und muss somit nicht groß 
+installiert werden. Es reicht, die Datei \texttt{iopattern2dios.py} 
+in ein geeignetes Verzeichnis zu legen.
+\subsection{Installation von OTF} % erste Version fertig
+Zuerst muss OTF-1.11 aus dem Internet 
+(\url{http://www.tu-dresden.de/die_tu_dresden/zentrale_einrichtungen/zih/forschung/software_werkzeuge_zur_unterstuetzung_von_programmierung_und_optimierung/otf}) 
+heruntergeladen werden. Man entpackt es in einem geeigneten Verzeichnis. 
+Zusätzlich braucht man noch das devel-Paket der libz. Dazu muss das Paket
+\texttt{zlib1g-dev} installiert werden. Dann 
+wechselt man in das neu entstandene Verzeichnis \texttt{OTF-1.11.2goldfish}
+und installiert das Programm entsprechend den Anweisungen aus der Datei
+\texttt{INSTALL}. Dabei muss beachtet werden, dass die Anweisung 
+\texttt{make install} durch \texttt{sudo make install} ersetzt werden muss,
+damit es funktioniert.
+
+\subsection{Installation von iopattern/rabbit} % erste Version fertig
+Man folgt der Anleitung, die sich in der Datei \texttt{INSTALL} im Verzeichnis
+\texttt{iopattern} befindet. Eventuell muss man anstatt \texttt{./configure}
+\begin{verbatim}
+   ./configure --with-otf-root="/usr/local"
+\end{verbatim}
+eingeben, um \emph{iopattern/rabbit} zu sagen, wo sich OTF befindet.
+%%% Benutzung %%%
+\section{Benutzung} % zu bearbeiten
+%% Benutzung von iopattern/rabbit %%
+\subsection{Benutzung von iopattern/rabbit} % zu bearbeiten
+Als Eingabe braucht \emph{iopattern/rabbit} ein von \emph{VampirTrace} 
+erzeugtes Trace. Dieses besteht aus einer globalen Datei mit der 
+Endung \texttt{.otf},
+einer Definitionsdatei mit der Endung \texttt{.def.z} und für jeden Prozeß
+eine Datei, die die mit \emph{libz} komprimierte Programmspur im OTF-Format
+enthält.
+
+Um das Programm \emph{iopattern/rabbit} zu starten, ruft man das Programm 
+\emph{rabbit} im Verzeichnis \texttt{iopattern/rabbit} auf und übergibt 
+diesem die globale OTF-Datei.
+
+Zum Beispiel:
+\begin{verbatim}
+~/iopattern/rabbit> ./rabbit --anonptr -b /home/userxy/testtrace/iot.otf
+\end{verbatim}
+
+Als Ausgabe erhält man dann die folgenden 3 Dateien:
+\begin{itemize}
+\item Eine Datei namens \texttt{raw.dot}.
+\item Eine Datei namens \texttt{cleaned.dot}. Im Vergleich zu \texttt{raw.dot}
+        sind hier redundante Synchronisationsknoten entfernt.
+\item Informationen, die nach \texttt{stdout} geschrieben werden.
+\end{itemize}
+
+\paragraph{Kurzanleitung von iopattern/rabbit}
+\begin{verbatim}
+ rabbit   -  analyze/classify I/O call within an Vampirtrace               
+                                                                           
+ Options:                                                                  
+  -h,--help                 show this help message                         
+  -m,--monitor <directory>  monitor only files in this directory           
+                            can be given more than once                    
+  -b,--barrier              sync I/O operations with blocking MPI events   
+  --mask                    put mask over generated tokens before handing  
+                            it over to the compression algorithm           
+  --dumpall                 dump all generated tokens                      
+  --anonptr                 use anonymous pointers where appropriate       
+  --nocompress              don't compress graph during construction       
+  --graphgen                dump dot file after each generation step       
+  -g,--group <name>         sets the function group to be inspected,       
+  -f,--func <name>          sets the function name to be inspected,        
+                            option can be given more than once!            
+  --plaindump               dumps the raw data for each call        
+\end{verbatim}
+%% Benutzung von iopattern2dios %%
+\subsection{Benutzung von iopattern2dios} % erste Version fertig
+\paragraph{Kurzanleitung}
+\begin{verbatim}
+Usage: python iopattern2dios.py [options]
+
+Options:
+  -h, --help                            show this help message and exit
+  --encoding=ENCODING                   Encoding of the XML-file.
+  -v, --verbose                         Turn verbosity on.
+  -f INPUTDATA, --file=INPUTDATA        Path to the input-file.
+  -o OUTFILE, --outfile=OUTFILE         Path to the output-file.
+
+The default encoding is ISO-8859-1.
+
+INPUTDATA must be a file, which contains the information, which is written
+to stdout when running iopattern.
+
+The format of OUTFILE is XML.
+\end{verbatim}
+\paragraph{Ausführliche Anleitung}~\\
+Das Programm \emph{iopattern/rabbit} liefert drei verschiedene Ausgaben:
+\begin{itemize}
+\item Eine Datei namens \texttt{raw.dot}.
+\item Eine Datei namens \texttt{cleaned.dot}. Im Vergleich zu \texttt{raw.dot}
+	sind hier redundante Synchronisationsknoten entfernt.
+\item Informationen, die nach \texttt{stdout} geschrieben werden.
+\end{itemize}
+Die beiden \texttt{*.dot}-Dateien werden von \emph{iopattern2dios} nicht 
+benötigt, sondern nur das, was nach \texttt{stdout} geschrieben wird. 
+Diese Ausgabe muß als Datei vorliegen, zum Beispiel durch Umleitung von 
+\texttt{stdout} in eine Datei beim Ausführen von \emph{iopattern/rabbit}.
+
+Zum Ausführen von \emph{iopattern2dios} übergibt man die Datei 
+\texttt{iopattern2dios.py} dem Programm Python:
+\begin{verbatim}
+ python iopattern2dios.py
+\end{verbatim}
+Befindet man sich nicht in dem Verzeichnis, in dem die Datei 
+\texttt{iopattern2dios.py} liegt, so muß man die Datei mit dem vollständigen
+Pfad übergeben. 
+
+Werden keine Optionen angegeben, so geht \emph{iopattern2dios} davon aus,
+daß die Ausgabe des Programms \emph{iopattern/rabbit} in der Datei 
+\texttt{input} gespeichert ist, die sich im aktuellen Verzeichnis 
+befindet. Die Ausgabe von \emph{iopattern2dios} wird dann in der 
+Datei \texttt{out.xml} im selben Verzeichnis mit dem Encoding ISO-8859-1 
+gespeichert.
+
+Einen Überblick über die möglichen Optionen von \emph{iopattern2dios} erhält
+man, wenn man das Programm mit der Option \texttt{-h} bzw. \texttt{--help}
+aufruft.
+\begin{verbatim}
+ python iopattern2dios.py --help
+\end{verbatim}
+Folgende Optionen sind möglich:\\~\\
+\renewcommand{\arraystretch}{1.5}
+\begin{longtable}{|l|l|p{0.4\textwidth}|}
+\hline
+\textbf{Langform} & \textbf{Kurzform} & \textbf{Erklärung}\\
+\hline
+\texttt{--help} & \texttt{-h} & Zeigt die in der Kurzanleitung dargestellte
+				Übersicht über die möglichen Optionen. \\
+\texttt{--encoding=<Kodierung>} &  & Gibt die Kodierung der XML-Datei, die
+				die Ausgabe des Programms darstellt, an. 
+				Ist keine Kodierung angegeben, so wird die 
+				Kodierung ISO-8859-1 verwendet.\\
+\texttt{--verbose} & \texttt{-v} & Bei Verwendung dieser Option wird 
+				\emph{iopattern2dios} gesprächig und teilt mit,
+				welche Optionen gewählt wurden, welche Datei 
+				als Eingabe-Datei verwendet wird, in welche 
+				Datei die Ausgabe geschrieben wird, welche 
+				Kodierung benutzt wird und welche 
+				Zeilen aus der Eingabe-Datei nicht verarbeitet
+				wurden.\\
+\texttt{--file=<Eingabe-Datei>} & \texttt{-f <Eingabe-Datei>} & Mit dieser 
+				Option kann der Name der Eingabe-Datei von 
+				\texttt{input} auf einen beliebigen Wert
+				geändert werden. Liegt die Eingabe-Datei in 
+				einem anderen als dem aktuellen Verzeichnis,
+				so gibt man vor dem Dateinamen den 
+				vollständigen Pfad an.\\
+\texttt{--outfile=<Ausgabe-Datei>} & \texttt{-o <Ausgabe-Datei>} & Mit dieser 
+				Option kann der Name der Ausgabe-Datei von 
+				\texttt{out.xml} auf einen beliebigen Wert 
+				geändert werden. Liegt die Ausgabe-Datei in 
+				einem anderen als dem aktuellen Verzeichnis,
+				so gibt man vor dem Dateinamen den 
+				vollständigen Pfad an.\\
+\hline
+\end{longtable}
+~\\
+Die Ausgabe-Datei hat das richtige Format, um als Eingabe-Datei für das 
+Programm \emph{DIOS} zu fungieren.
+%%% Wichtige Hinweise %%%
+\section{Wichtige Hinweise} % in erster Version fertig
+\emph{iopattern2dios} ist in der Programmiersprache Python geschrieben. 
+Die in der Datei \texttt{dios.dtd} definierten Tags und Attribute sind 
+in \emph{iopattern2dios} implementiert. Es ist möglich und auch 
+wahrscheinlich, dass die Ausgabe von \emph{iopattern/rabbit} 
+Funktionen enthält, die 
+nicht in \texttt{dios.dtd} definiert sind. In diesem Fall wird eine 
+Warnung auf \texttt{stdout} geschrieben.
+Ferner nimmt \emph{iopattern2dios} an, dass das Argument jeder Funktion in der 
+Eingabe-Datei eine durch Komma getrennte Liste aus Schlüssel-Wert-Paaren ist, 
+bei denen die einzelnen Schlüssel-Wert-Paare durch einen Doppelpunkt den 
+Schlüssel vom Wert trennen.
+Dies ist jedoch nicht immer der Fall. So kann die Ausgabe von 
+\emph{iopattern/rabbit} zum Beispiel die Funktion 
+\begin{verbatim}
+  barrier_sync( 4)
+\end{verbatim}
+enthalten. Wie man sieht, ist hier das Argument kein Schlüssel-Wert-Paar.
+Auch ist die Funktion \texttt{barrier\_sync} nicht in \texttt{dios.dtd}
+definiert.
+In diesem Fall verwandelt \emph{iopattern2dios} die Information wie folgt in
+XML:
+\begin{itemize}
+\item Die Funktion \texttt{barrier\_sync} wird zu einem Tag. 
+\item Die $4$ wird als Wert dem Attribut \verb="unknown"= zugeordnet.
+\item[$\Rightarrow$] \verb+<barrier_sync unknown="4" />+
+\end{itemize}
+Des Weiteren werden zwei Warnungen nach \texttt{stdout} geschrieben:
+\begin{verbatim}
+Warning: 4 is not a key-value object. Can not find delimiter ':' in this string.
+Warning: The function barrier_sync is not defined in dios.dtd!
+\end{verbatim}
+Durch die nach \texttt{stdout} geschriebenen Warnungen ist man immer informiert,
+welche Informationen der Eingabe-Datei nicht in \texttt{dios.dtd} definiert 
+sind und eventuell Probleme bereiten könnten. Warnungen werden übrigens auch
+dann ausgegeben, wenn die Verbose-Option nicht benutzt wird.
+\paragraph{Mapping}~\\
+Dateien werden in einem bestimmten Modus geöffnet, z.\,B.
+lesend oder schreibend. Üblicherweise wird dieser Modus durch einen 
+Buchstaben (z.\,B. \emph{r} oder \emph{w}) angegeben. In der Ausgabe von
+\emph{iopattern/rabbit} wird dieser Modus jedoch durch Zahlen kodiert, da dies 
+\emph{VampierTrace} so macht. Diese Zahlen müssen wieder in Buchstaben 
+zurückverwandelt werden. Dies ist in \emph{iopattern2dios} nach folgendem 
+Schema implementiert:
+\renewcommand{\arraystretch}{1.0}
+\begin{center}
+\begin{tabular}{ll}
+1 & \emph{r}\\
+2 & \emph{w}\\
+4 & \emph{a}
+\end{tabular}
+\end{center}
+Enthält die Eingabe-Datei an der entsprechenden Stelle eine andere Zahl als
+die in der obigen Tabelle erwähnten, so wird eine Warnung nach \texttt{stdout}
+geschrieben.
+%%% Weitere in diesem Zusammenhang möglicherweise nützliche Programme %%%
+\section{Weitere in diesem Zusammenhang möglicherweise nützliche Programme}
+\begin{itemize}
+\item Um sich die Struktur und den Inhalt einer XML-Datei gut anschauen zu 
+	können, ist das Programm \emph{treeline} hilfreich.
+\item Um sich den Inhalt der beiden \texttt{*.dot}-Dateien, die 
+	\emph{iopattern/rabbit} als Ausgabe liefert, anschauen zu können, 
+	ist das Programm \emph{Graphviz} hilfreich.
+\end{itemize}
+\end{document}
+

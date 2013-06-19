@@ -239,7 +239,11 @@ EXTENSION_MAPPING      =
 # func(std::string) {}). This also makes the inheritance and collaboration
 # diagrams that involve STL classes more complete and accurate.
 
+<<<<<<< HEAD
 BUILTIN_STL_SUPPORT    = NO
+=======
+BUILTIN_STL_SUPPORT    = YES
+>>>>>>> 1669b35b3cb5a4fed20d1428648cdefad0a27b03
 
 # If you use Microsoft's C++/CLI language, you should set this option to YES to
 # enable parsing support.
@@ -604,7 +608,11 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
+<<<<<<< HEAD
 INPUT                  = doc low-level-C-interface ontology
+=======
+INPUT                  = doc low-level-C-interface ontology communication
+>>>>>>> 1669b35b3cb5a4fed20d1428648cdefad0a27b03
 # tools
 
 # This tag can be used to specify the character encoding of the source files
@@ -623,7 +631,11 @@ INPUT_ENCODING         = UTF-8
 # *.hxx *.hpp *.h++ *.idl *.odl *.cs *.php *.php3 *.inc *.m *.mm *.dox *.py
 # *.f90 *.f *.for *.vhd *.vhdl
 
+<<<<<<< HEAD
 FILE_PATTERNS          = *.h *.c *.doxygen
+=======
+FILE_PATTERNS          = *.h *.c *.cpp *.doxygen
+>>>>>>> 1669b35b3cb5a4fed20d1428648cdefad0a27b03
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories
 # should be searched for input files as well. Possible values are YES and NO.
@@ -670,7 +682,11 @@ EXAMPLE_PATH           = examples
 # and *.h) to filter out the source-files in the directories. If left
 # blank all files are included.
 
+<<<<<<< HEAD
 EXAMPLE_PATTERNS       = *.h *.c
+=======
+EXAMPLE_PATTERNS       = *.h *.c *.cpp
+>>>>>>> 1669b35b3cb5a4fed20d1428648cdefad0a27b03
 
 # If the EXAMPLE_RECURSIVE tag is set to YES then subdirectories will be
 # searched for input files to be used with the \include or \dontinclude
@@ -1554,14 +1570,22 @@ DOT_FONTPATH           =
 # indirect inheritance relations. Setting this tag to YES will force the
 # the CLASS_DIAGRAMS tag to NO.
 
+<<<<<<< HEAD
 CLASS_GRAPH            = NO
+=======
+CLASS_GRAPH            = YES
+>>>>>>> 1669b35b3cb5a4fed20d1428648cdefad0a27b03
 
 # If the COLLABORATION_GRAPH and HAVE_DOT tags are set to YES then doxygen
 # will generate a graph for each documented class showing the direct and
 # indirect implementation dependencies (inheritance, containment, and
 # class references variables) of the class with other documented classes.
 
+<<<<<<< HEAD
 COLLABORATION_GRAPH    = NO
+=======
+COLLABORATION_GRAPH    = YES
+>>>>>>> 1669b35b3cb5a4fed20d1428648cdefad0a27b03
 
 # If the GROUP_GRAPHS and HAVE_DOT tags are set to YES then doxygen
 # will generate a graph for groups, showing the direct groups dependencies
@@ -1577,7 +1601,11 @@ UML_LOOK               = YES
 # If set to YES, the inheritance and collaboration graphs will show the
 # relations between templates and their instances.
 
+<<<<<<< HEAD
 TEMPLATE_RELATIONS     = NO
+=======
+TEMPLATE_RELATIONS     = YES
+>>>>>>> 1669b35b3cb5a4fed20d1428648cdefad0a27b03
 
 # If the ENABLE_PREPROCESSING, SEARCH_INCLUDES, INCLUDE_GRAPH, and HAVE_DOT
 # tags are set to YES then doxygen will generate a graph for each documented
