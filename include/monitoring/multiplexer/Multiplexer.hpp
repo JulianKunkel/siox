@@ -1,5 +1,5 @@
-#ifndef ACTIVITYMULTIPLEXER_H
-#define ACTIVITYMULTIPLEXER_H 
+#ifndef MULTIPLEXER_H
+#define MULTIPLEXER_H 
 
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
 #include <core/component/Component.hpp>
@@ -49,4 +49,4 @@ public:
 
 
 }
-#endif /* ACTIVITYMULTIPLEXER_H */
+#endif /* MULTIPLEXER_H */

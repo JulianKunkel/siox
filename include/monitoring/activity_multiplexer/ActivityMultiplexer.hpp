@@ -2,77 +2,10 @@
 #define ACTIVITYMULTIPLEXER_H 
 
 #include <monitoring/datatypes/Activity.hpp>
+#include <monitoring/multiplexer/Multiplexer.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
 namespace monitoring{
-/**
- * Special queue used by the ActivityMultiplexer to buffer activities
- * that are notified in an asyncrnous way.
- *
- */
-
-// could implement async buffer that is used by various components
-//
-class ActivityMultiplexerQueue 
-{
-public:
-	/**
-	 * Check whether or not the queue has still capacity
-	 *
-	 * @return	bool	true = queue is full, false = not full
-	 */
-	virtual bool Full() =0;
-	
-
-	/* Check whether of not the queue is empty
-	 * 
-	 * @return bool		true = queue is empty, false = not empty
-	 */
-	virtual bool Empty() =0;
-
-
-	/**
-	 * Check if queue is in overload mode
-	 *
-	 */
-	virtual bool Overloaded() =0;
-
-
-	/**
-	 * Add an activity to the queue
-	 *
-	 * @param	Activity *	an activity that need to be dispatched in the future
-	 */
-	virtual void Push(Activity * activity) =0;
-	
-	/**
-	 * Get an activity from queue, returned element is popped!
-	 *
-	 * @return	Activity	an activity that needs to be dispatched to async listeners
-	 */
-	virtual Activity * Pull() =0;
-};
-
-
-/**
- * ActivityMultiplexerNotifier
- * Used by the ActivityMultiplexer to dispatch to async listeners
- */
-class ActivityMultiplexerNotifier
-{
-public:
-	// TODO: signal upstream to Deamons others
-	
-	/**
-	 * cleanup data structures and finish immediately
-	 */
-	virtual void shutdown() = 0;
-	
-	/**
-	 * set terminate flag for Notifier, terminates as soon queue is emptied 
-	 */
-	virtual	void finalize() = 0;
-};
 
 
 /**
@@ -108,6 +41,8 @@ public:
 	 * pass termination to notifiers 
 	 */
 	virtual void terminate() =0;
+	
+	virtual	void finalize() = 0;
 
 };
 

@@ -1,5 +1,5 @@
-#ifndef ACTIVITYMULTIPLEXER_H
-#define ACTIVITYMULTIPLEXER_H 
+#ifndef MULTIPLEXERASYNC_H
+#define MULTIPLEXERASYNC_H 
 
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
 
@@ -111,4 +111,4 @@ public:
 
 
 }
-#endif /* ACTIVITYMULTIPLEXER_H */
+#endif /* MULTIPLEXERASYNC_H */
