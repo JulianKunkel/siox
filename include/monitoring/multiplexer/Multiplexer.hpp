@@ -13,7 +13,8 @@ namespace monitoring{
  * in an syncronised or asyncronous manner.
  */
 template <class TYPE>
-class Multiplexer : core::Component
+//class Multiplexer : core::Component // TODO: inherit component
+class Multiplexer
 {
 public:
 	/**
@@ -42,9 +43,10 @@ public:
 	 */
 	virtual void terminate() =0;
 
-	void init(ComponentOptions * options);
-	ComponentOptions * get_options();
-	void shutdown();
+	// TODO: uncomment when component inheritance can work
+	//void init(ComponentOptions * options);
+	//ComponentOptions * get_options();
+	//void shutdown();
 };
 
 
