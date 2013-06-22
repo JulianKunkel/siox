@@ -71,6 +71,7 @@
  */
 
 #include <string>
+#include <vector>
 
 #include <monitoring/datatypes/ids.hpp>
 
@@ -92,11 +93,11 @@ typedef struct {
 
 typedef struct {
 	RemoteCallIdentifier target;
-	Attribute * attributeArray; // NULL terminated
+	vector<Attribute> attributeArray;
 } RemoteCall;
 
-class Activity {
-private:
+class Activity{
+protected:
 	ComponentID cid_;
 	
 	uint64_t time_start_;
@@ -107,19 +108,26 @@ private:
 	int32_t errorValue_;
 
 	// If we are caused by a remote, we have to identify it.
-	RemoteCallIdentifier * remoteInvokee; // NULL if none
+	RemoteCallIdentifier * remoteInvokee_; // NULL if none
 
-	ComponentID * parentArray; // NULL terminated
-	Attribute * attributeArray; // NULL terminated
-	RemoteCall * remoteCallsArray; // NULL terminated
+	vector<Attribute> attributeArray_; 
+	vector<ComponentID> parentArray_; 
+	vector<RemoteCall> remoteCallsArray_;
+
 public:
 	uint64_t aid() const;
 	
-	Activity(string name, uint64_t start_t, uint64_t end_t){
-		time_start_ = start_t;
-		time_stop_ = end_t;
-		name_ = name;
-	}
+	Activity(string name, uint64_t start_t, uint64_t end_t, ComponentID cid, 
+		vector<ComponentID> * parentArray, 
+		vector<Attribute> * attributeArray, 
+		vector<RemoteCall> * remoteCallsArray, 
+		RemoteCallIdentifier * remoteInvokee,  int32_t errorValue)
+		: 
+		time_start_ (start_t), time_stop_ (end_t), name_ (name),
+		cid_ (cid), parentArray_ ( std::move(*parentArray)),
+		attributeArray_ (std::move(*attributeArray)),
+		remoteCallsArray_ (std::move(*remoteCallsArray)),
+		remoteInvokee_ (remoteInvokee),errorValue_(errorValue){}
 
 	Activity(){
 	}
@@ -138,5 +146,7 @@ public:
 };
 
 }
+
+
 
 #endif // SIOX_ACTIVITY_H

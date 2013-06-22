@@ -5,6 +5,7 @@
  */
 
 #ifndef SIOX_IDS_H
+#define SIOX_IDS_H
 
 #include <stdint.h>
 
