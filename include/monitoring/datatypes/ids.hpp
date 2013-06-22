@@ -52,6 +52,7 @@ typedef struct{
 	UniqueInterfaceID uuid;
 } ComponentID;
 // ComponentID create_component_id(ProcessID 3*32 B, UIID);
+// The instance identifier such as "Port 4711" is relevant for matching of remote calls
 // See @TODO
 
 /* Identifying an activity */
@@ -73,24 +74,24 @@ typedef uint32_t OntologyAttributeID;
 /////////////////////////////////////////////////////////////////////////////////////////
 // Functions which check the validity of an optional ID
 
-inline bool is_valid(uint32_t id){
+inline bool is_valid_id(uint32_t id){
 	return id != 0;
 }
 
-inline bool is_valid(UniqueInterfaceID & id){
+inline bool is_valid_id(UniqueInterfaceID & id){
 	return id.interface != 0;
 }
 
-inline bool is_valid(ProcessID & id){
-	return is_valid(id.hw);
+inline bool is_valid_id(ProcessID & id){
+	return is_valid_id(id.hw);
 }
 
-inline bool is_valid(ComponentID & id){
-	return is_valid(id.pid);
+inline bool is_valid_id(ComponentID & id){
+	return is_valid_id(id.pid);
 }
 
-inline bool is_valid(ActivityID & id){
-	return is_valid(id.cid);
+inline bool is_valid_id(ActivityID & id){
+	return is_valid_id(id.cid);
 }
 }
 

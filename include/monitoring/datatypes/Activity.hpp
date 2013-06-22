@@ -4,7 +4,7 @@
  * @description This activity is the structure to be read and written to txt using this header.
  * @standard    Preferred standard is C++11
  *
- * @author Michaela Zimmer, Marc Wiedemann
+ * @author Julian Kunkel, Michaela Zimmer, Marc Wiedemann
  * @date   2013
  *
  */
@@ -59,7 +59,7 @@
 /**
  * OPEN ISSUES
  * ===========
- * 1 - Add member vars, initialisation and read access for attributes, metrics and remote calls.
+ * 1 - 
  */
 
 
@@ -67,45 +67,57 @@
 #define SIOX_ACTIVITY_H
 
 /*!
- We define classes in the namespace monitoring. Is it accessible from other namespaces?
  The activity should be public to have other multiplexer, componentcontent_reader and componentcontent_writer access possibilities.
  */
 
 #include <string>
-#include <list>
+
+#include <monitoring/datatypes/ids.hpp>
 
 using namespace std;
 
 namespace monitoring {
 
+typedef struct {
+	OntologyAttributeID id;
+	void * value;
+} Attribute;
+
+typedef struct {
+	// Several parameters assist matching of remote calls
+	HwID hwid; // optional
+	UniqueInterfaceID uuid; // optional
+	string instance; // optional, remote call instance identifier	
+} RemoteCallIdentifier;
+
+typedef struct {
+	RemoteCallIdentifier target;
+	Attribute * attributeArray; // NULL terminated
+} RemoteCall;
+
 class Activity {
-	
 private:
+	ComponentID cid_;
 	
-	uint64_t aid_;
-	uint64_t paid_;
-	uint64_t cid_;
 	uint64_t time_start_;
 	uint64_t time_stop_;
-	int status_;
+
 	string name_;
     
-	// Zur Einfachheit halber hier mal string-attribute
-	list<string> * attributes_;
+	int32_t errorValue_;
 
-	// List<Attribute> attributes;
-	// List<Metric> metrics; // List<Observable> ?
-	// List<RemoteCall> remotecalls;
+	// If we are caused by a remote, we have to identify it.
+	RemoteCallIdentifier * remoteInvokee; // NULL if none
 
+	ComponentID * parentArray; // NULL terminated
+	Attribute * attributeArray; // NULL terminated
+	RemoteCall * remoteCallsArray; // NULL terminated
 public:
 	uint64_t aid() const;
-	uint64_t paid() const;
-	uint64_t cid() const;
 	
-	Activity(string name, uint64_t start_t, uint64_t end_t, list<string> * attributes){
+	Activity(string name, uint64_t start_t, uint64_t end_t){
 		time_start_ = start_t;
 		time_stop_ = end_t;
-		attributes_ = attributes;
 		name_ = name;
 	}
 
@@ -122,12 +134,7 @@ public:
 
 	string name() const{
 		return name_;
-	}
-
-	list<string> * attributes() const{
-		return attributes_;
 	}	
-	
 };
 
 }
