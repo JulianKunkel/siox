@@ -11,7 +11,9 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/nvp.hpp>
+
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/variant.hpp>
 
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/datatypes/ids.hpp>
@@ -41,7 +43,8 @@ template<class Archive>
 void serialize(Archive & ar, Attribute & id, const unsigned int file_version){
 	SER("o", id.id)
 	// TODO value depends on the type of the attribute which is available in the ontology cache...
-	//SER("v", id.value)
+	// Right now use a boost::variant
+	SER("v", id.value)
 }
 
 

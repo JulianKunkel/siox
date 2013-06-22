@@ -5,7 +5,7 @@
 def build(bld):
     bld.shlib( use = "GMODULES" ,  target = 'ActivityMultiplexer_Impl1',  lib=['pthread'], source = 'ActivityMultiplexer_Impl1.cpp' )
 
-    bld.recurse(['test'], mandatory=True)
+    bld.recurse(['test', 'plugins'], mandatory=True)
 
 
 # -*- indent-tabs-mode: t -*-

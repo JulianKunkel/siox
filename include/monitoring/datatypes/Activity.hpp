@@ -72,6 +72,7 @@
 
 #include <string>
 #include <vector>
+#include <boost/variant.hpp>
 
 #include <monitoring/datatypes/ids.hpp>
 
@@ -81,7 +82,7 @@ namespace monitoring {
 
 typedef struct {
 	OntologyAttributeID id;
-	void * value;
+	boost::variant<int64_t, uint64_t, int32_t, uint32_t, string, float, double> value;
 } Attribute;
 
 typedef struct {

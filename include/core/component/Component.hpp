@@ -9,9 +9,10 @@ class ComponentOptions : Container{
 };
 
 class Component {
-	void init(ComponentOptions * options);
-	ComponentOptions * get_options();
-	void shutdown();
+public:
+	virtual void init(ComponentOptions * options) = 0;
+	virtual ComponentOptions * get_options() = 0;
+	virtual void shutdown() = 0;
 };
 
 }

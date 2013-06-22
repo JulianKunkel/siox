@@ -12,7 +12,7 @@ int main(){
 	ComponentID cid = {.pid = {2,3,4}, .uuid= {1,2}};
 
 	auto * parentArray = new vector<ComponentID>{{.pid = {1,2,3}, .uuid= {2,2}}};
-	auto * attributeArray = new vector<Attribute>();
+	auto * attributeArray = new vector<Attribute>{{.id=111, .value = "myData"}, {.id=3, . value = (uint64_t) 4711}};
 	auto * remoteCallsArray = new vector<RemoteCall>();
 
 	// Cast the real activity to the serializable object class wrapper
