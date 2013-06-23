@@ -31,7 +31,8 @@ namespace monitoring{
 
 class ActivityMultiplexer_Impl1 : public ActivityMultiplexer
 {
-
+public:
+	void Log(Activity * element);
 };
 
 }

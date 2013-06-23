@@ -1,7 +1,12 @@
+#include <iostream>
+
 #include "ActivityMultiplexer_Impl1.hpp"
 
 namespace monitoring{
 
+void ActivityMultiplexer_Impl1::Log(Activity * element) {
+	std::cout << "Log()\n";
+}
 
 
 
