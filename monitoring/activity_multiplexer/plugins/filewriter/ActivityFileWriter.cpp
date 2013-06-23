@@ -1,7 +1,9 @@
 #include <iostream>
 #include <list>
 
+
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
+#include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 #include <monitoring/datatypes/ActivitySerializable.hpp>
 #include <core/container/container-serializer-text.hpp>
 
@@ -12,7 +14,7 @@ using namespace monitoring;
 using namespace core;
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
-class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerSync{
+class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener {
 private:
 	FileSerializer<ActivitySerializable> * serializer = nullptr;
 public:

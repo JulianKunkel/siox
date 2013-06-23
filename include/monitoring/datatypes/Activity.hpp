@@ -126,7 +126,6 @@ public:
 		: 
 		time_start_ (start_t), time_stop_ (end_t), name_ (name),
 		cid_ (cid), parentArray_ ( std::move(*parentArray)),
-		attributeArray_ (std::move(*attributeArray)),
 		remoteCallsArray_ (std::move(*remoteCallsArray)),
 		remoteInvokee_ (remoteInvokee),errorValue_(errorValue){}
 

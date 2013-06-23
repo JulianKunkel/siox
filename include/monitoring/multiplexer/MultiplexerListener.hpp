@@ -17,7 +17,7 @@ public:
 	 * @param	Activity	a logged Activity
 	 * @return	void
 	 */
-	virtual void Notify(TYPE * element) =0;
+	virtual void Notify(TYPE * element) {};
 
 };
 

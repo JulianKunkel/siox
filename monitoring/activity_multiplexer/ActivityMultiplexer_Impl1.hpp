@@ -29,9 +29,8 @@
 
 namespace monitoring{
 
-class ActivityMultiplexer_Impl1
+class ActivityMultiplexer_Impl1 : public ActivityMultiplexer
 {
-
 
 };
 

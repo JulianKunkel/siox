@@ -21,27 +21,27 @@ public:
 	 * Called by layer to report about activity, passes activities to sync listeners
 	 * and enqueqes activity for async dispatch.
 	 */
-	virtual void Log(TYPE * element) =0;
+	virtual void Log(TYPE * element) {};
 
 	/**
 	 * Register listener to multiplexer
 	 *
 	 * @param	ActivityMultiplexerListener *	listener	listener to notify in the future
 	 */
-	virtual void registerListener(MultiplexerListener<TYPE> * listener) =0;
+	virtual void registerListener(MultiplexerListener<TYPE> * listener) {};
 
 	/**
 	 * Unregister listener from multiplexer
 	 *
 	 * @param	ActivityMultiplexerListener *	listener	listener to remove
 	 */
-	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) =0;
+	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) {};
 
 
 	/**
 	 * pass termination to notifiers 
 	 */
-	virtual void terminate() =0;
+	virtual void terminate() {};
 
 	// TODO: uncomment when component inheritance can work
 	//void init(ComponentOptions * options);
