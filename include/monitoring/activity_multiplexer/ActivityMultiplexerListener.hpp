@@ -15,6 +15,16 @@ class ActivityMultiplexerListener : public MultiplexerListener<Activity>
 
 };
 
+
+class ActivityMultiplexerListenerSync : public ActivityMultiplexerListener
+{
+};
+
+class ActivityMultiplexerListenerAsync : public ActivityMultiplexerListener
+{
+};
+
+
 }
 
 #endif /* ACTIVITYMULTIPLEXERLISTENER_H */

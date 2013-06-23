@@ -113,13 +113,19 @@ int main(int argc, char const *argv[]){
 
 	// Hier mal Testcode, beliebig erweitern!!!
 	// TODO weitere testaktivitäten loggen...
+	ComponentID cid = {.pid = {2,3,4}, .uuid= {1,2}};
+	auto * parentArray = new vector<ComponentID>{{.pid = {1,2,3}, .uuid= {2,2}}};
+	auto * attributeArray = new vector<Attribute>{{.id=111, .value = "myData"}, {.id=3, . value = (uint64_t) 4711}};
+	auto * remoteCallsArray = new vector<RemoteCall>();
+	// Cast the real activity to the serializable object class wrapper
+	Activity * activity = new Activity("test", 3, 5, cid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
 
-	list<string> * list1 = new list<string>();
-	list1->push_front("attribute1");
-	list1->push_front("attribute2");
-	m1->Log(new Activity("open", 1, 2, list1));
+	m1->Log(activity);
+
 
 	m1->terminate();
+
+	return 0;
 }
 
 

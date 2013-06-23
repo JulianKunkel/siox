@@ -14,7 +14,7 @@ using namespace monitoring;
 using namespace core;
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
-class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener {
+class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerSync {
 private:
 	FileSerializer<ActivitySerializable> * serializer = nullptr;
 public:

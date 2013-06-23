@@ -5,7 +5,7 @@ def build(bld):
     #bld.shlib( use = "GMODULES" ,  target = 'ActivityMultiplexerListener_Impl1', source = 'ActivityMultiplexerListener_Impl1.cpp' )
 
     # TODO: build tests
-    #bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 module-loader", target = 'anomaly-plugin', source = "AnomalyPlugin.cpp", install_path = None)
+    bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 module-loader", target = 'anomaly-plugin', source = "AnomalyPlugin.cpp", install_path = None)
 
     bld.program( features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 module-loader", target = 'minimal', source = "minimal.cpp", install_path = None)
 
