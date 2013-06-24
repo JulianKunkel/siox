@@ -24,11 +24,12 @@
 	Inserting is usually fine (for lists uneffected, vectors until resize)
 
 	Solutions:
-	1.	snapshot list	-> memory + time panelty
+	1.	snapshot list -> memory + time panelty
 
 	2.	change remove to null, check when iterating, 
 		clean up in additional loop, might skip if time is precious
 
+	3. simple rw locking -> introduce race conditions
  */
 
 /*! The detached threads for notify are running until the SIOX system finishes.
@@ -46,13 +47,12 @@ namespace monitoring{
 
 class ActivityMultiplexer_Impl1 : public ActivityMultiplexer
 {
+	list<MultiplexerListener<Activity> *> listeners;
+
 public:
 	virtual void Log(Activity * element);
 	virtual void registerListener(MultiplexerListener<Activity> * listener);	
 	virtual void unregisterListener(MultiplexerListener<Activity> * listener);
-
-private:
-	list<MultiplexerListener<Activity> *> listeners;
 };
 
 }
