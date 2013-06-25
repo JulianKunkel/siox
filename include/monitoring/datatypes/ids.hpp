@@ -9,8 +9,6 @@
 
 #include <stdint.h>
 
-namespace monitoring{
-
 // In the following the approaches to create and/or lookup IDs is illustrated for each ID type.
 // This includes necessary input data and a description who will create the ID and 
 // where creation/lookup is implemented
@@ -93,7 +91,6 @@ inline bool is_valid_id(ComponentID & id){
 
 inline bool is_valid_id(ActivityID & id){
 	return is_valid_id(id.cid);
-}
 }
 
 #endif
