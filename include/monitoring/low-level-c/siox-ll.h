@@ -11,7 +11,7 @@
 #ifndef siox_LL_H
 #define siox_LL_H
 
-#include <stdint.h>
+#include <monitoring/datatypes/ids.hpp>
 #include <monitoring/ontology/ontology.h>
 
 
@@ -48,12 +48,37 @@ typedef struct siox_remote_call siox_remote_call;
 typedef uint64_t * siox_timestamp;
 
 
+
 /**
- * @name Attributes
- * Attributes represent details of other entities, such as a cache component's cache size
- * or an activity's or a remote call's parameters.
+ * Register a process (program, could be a server as well)
+ * This will be done automatically by register_component() if not provided. 
+ * 
+ * @param[in]   hwid    identifies the hardware the process is running on. e.g. „Blizzard Node 5“ or the MacIDof an NAS hard drive.
+ * 
+ * If it is null it will be looked up automatically.
+ * pid identifies the process.
+ * If it is null it will be looked up automatically.
+ * 
+ * Subsequent calls to this function will ignore the pid and hwid parameters but add new attributes.
+ * Rationales:
+ * 1) Multiple calls to this function must be possible to simplify usage in applications.
+ * 2) Explicit setting of values is used for testing.
  */
-/**@{*/
+void siox_process_register(HwID * hwid, ProcessID * pid);
+
+/**
+ Adding of attributes allows different layers to add global valid runtime information (such as MPI rank).
+ Although it is possible to realize this with attributes attached to individual components.
+ */
+void siox_process_set_attribute(siox_attribute * attribute, void * value);
+
+/*
+ * This call indicates the completion of the application.
+ * SIOX might cleanup internal datastructures and/or flush information along the monitoring and knowledge paths.
+ * Subsequent calls to any SIOX interface should be avoided.
+ */
+void siox_process_finalize();
+
 
 /**
  * Register an attribute type with SIOX.
@@ -65,9 +90,6 @@ typedef uint64_t * siox_timestamp;
 siox_attribute * siox_attribute_register(const char * name, enum siox_ont_storage_type storage_type);
 
 /**@}*/
-
-
-
 
 /**
  * @name Components
@@ -89,19 +111,18 @@ siox_attribute * siox_attribute_register(const char * name, enum siox_ont_storag
  *
  * SIOX will use the information given to create a new component in its IOPm model of the system.
  *
- * @param[in]   hwid    The component's @em HardwareID, e.g. „Blizzard Node 5“ or the MacID
- *                      of an NAS hard drive.
- * @param[in]   swid    The component's @em SoftwareID, e.g. „MPI“ oder „POSIX“.
+ * @param[in]   uid    The component's @em SoftwareInterface identifier, e.g. „MPI2“ oder „POSIX“.
  * @param[in]   iid     The component's @em InstanceID (according to component type, e.g.
  *                      the ProcessID of a Thread or the IP address and Port od a server cache).
- *
+ * These arguments provide a human readable name for the software layer and are used for matching of remote calls.
+ * 
  * @return  A fresh @em siox_component to be used in all the component's future communications
  *          with SIOX.
  *
  * @note Any parameter SIOX can find out on its own (such as a ProcessID) may be @c NULL.
  */
 //@test ''%s-%s-%s'' hwid,swid,iid
-siox_component * siox_component_register(const char * hwid, const char * swid, const char * iid);
+siox_component * siox_component_register(UniqueInterfaceID * uid, const char * iid);
 
 /**
  * Report an attribute of this component to SIOX.
@@ -116,7 +137,7 @@ siox_component * siox_component_register(const char * hwid, const char * swid, c
 void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, void * value);
 
 /**
- * Register an attribute as a descriptor for this component.
+ * Register an attribute as a descriptor for activities (!) of this component.
  *
  * @em Example:    POSIX registering the attribute type "file handle" to serve as descriptor.
  *
@@ -330,7 +351,7 @@ void siox_report(siox_component * component,  siox_metric * metric, void * value
  * @param[in]   component     The component.
  * @param[in]   target_hwid   The target component's @em HardwareID (e.g. „Blizzard Node 5“ or the MacID
  *                            of an NAS hard drive), if known; otherwise, @c NULL.
- * @param[in]   target_swid   The target component's @em SoftwareID (e.g. „MPI“ oder „POSIX“),
+ * @param[in]   target_uid   The target component's @em Software interface (e.g. „MPI“ oder „POSIX“),
  *                            if known; otherwise, @c NULL.
  * @param[in]   target_iid    The target component's @em InstanceID (according to component type,
  *                            e.g. the ProcessID of a Thread or the IP address and Port
@@ -341,9 +362,9 @@ void siox_report(siox_component * component,  siox_metric * metric, void * value
  */
 //@test ''%p,%s-%s-%s'' component,target_hwid,target_swid,target_iid
 siox_remote_call * siox_remote_call_start(siox_component *  component,
-                                          const char *      target_hwid,
-                                          const char *      target_swid,
-                                          const char *      target_iid);
+                                          HwID 				* target_hwid,
+                                          UniqueInterfaceID * target_uid,
+                                          const char 		* target_iid);
 
 /**
  * Report an attribute to be sent via a remote call.
@@ -371,24 +392,14 @@ void siox_remote_call_execute(siox_remote_call * remote_call);
  * functions siox_remote_call_start() and siox_remote_call_execute() are not needed.
  *
  * @param[in]   component   The component.
- * @param[in]   attribute   The attribute.
- * @param[in]   value       A pointer to the attribute's value.
- */
+ * 
+ * Optional parameters identify the callee if possible.
+ * 
+ */ 
 //@test ''%p,%p,%p'' component,attribute,value
-void siox_remote_call_received(siox_component * component, siox_attribute * attribute, void * value);
+void siox_remote_call_received(siox_component * component, 	HwID * hwid, UniqueInterfaceID * uuid, const char * instance);
 
 /**@}*/
-
-
-/**
- * Connect to a SIOX ontology.
- *
- * In SIOX, details about any metrics are held in an ontology.
- * The details about the ontology (such as storage location) will be taken from a
- * configuration file.
- */
-//@test
-siox_ontology * siox_ontology_connect();
 
 /**
  * Register a metric with SIOX.
@@ -401,20 +412,21 @@ siox_ontology * siox_ontology_connect();
  * @param[in]   unit        The unit used to measure values in the metric.
  * @param[in]   storage     The minimum storage type required to store data of the metric.
  *                          This type will also be assumed for type casts!
- * @param[in]   scope       The way in which the data collected was derived.
- *
  * @returns                 The @em siox_metric for the metric or NULL, if the data given
- *                          is inconsistent with an exisiting metric of the same name..
+ *                          is inconsistent with an existing metric of the same name..
  */
 //@test ''%p,%s,%s,%d,%d'' ontology,name,unit,storage,scope
-siox_metric * siox_ontology_register_metric(siox_ontology *             ontology,
-                                            const char *                name,
+siox_metric * siox_ontology_register_metric(const char *                canonical_name,
                                             const char *                unit,
-                                            enum siox_ont_storage_type  storage,
-                                            enum siox_ont_scope_type    scope );
+                                            enum siox_ont_storage_type  storage);
+/* Attributes describe a metrics further:
+                          e.g. "component" = "network", "derivation_rules" = "time / size", "type" = "throughput"
+*/
+void siox_metric_set_attribute(siox_metric * metric, siox_attribute * attribute, void * value);
+
 
 /**
- * Retrieve a metric by its name.
+ * Retrieve a metric by its name. TODO: use attributes to retrieve it.
  *
  * @param[in]   ontology    The ontology.
  * @param[in]   name        The metric's full qualified name.
@@ -423,7 +435,7 @@ siox_metric * siox_ontology_register_metric(siox_ontology *             ontology
  *                          could be found.
  */
 //@test ''%p,%s'' ontology,name
-siox_metric * siox_ontology_find_metric_by_name( siox_ontology * ontology, const char * name);
+siox_metric * siox_ontology_find_metric_by_name( const char * canonical_name);
 
 /**@}*/
 
