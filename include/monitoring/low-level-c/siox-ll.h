@@ -12,8 +12,7 @@
 #define siox_LL_H
 
 #include <monitoring/datatypes/ids.hpp>
-#include <monitoring/ontology/ontology.h>
-
+#include <monitoring/datatypes/basic-types.hpp>
 
 /*
  * ==================================
@@ -27,25 +26,9 @@
  * ==================================
  */
 
-/**
- * A component, as represented in SIOX.
- */
-typedef struct siox_component siox_component;
-
-/**
- * An activity, as represented in SIOX.
- */
-typedef struct siox_activity siox_activity;
-
-/**
- * A remote call, as represented in SIOX.
- */
-typedef struct siox_remote_call siox_remote_call;
-
-/**
- * A time stamp, as represented in SIOX.
- */
-typedef uint64_t * siox_timestamp;
+#ifdef __cplusplus
+extern "C"{
+#endif
 
 
 
@@ -438,5 +421,9 @@ void siox_metric_set_attribute(siox_metric * metric, siox_attribute * attribute,
 siox_metric * siox_ontology_find_metric_by_name( const char * canonical_name);
 
 /**@}*/
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

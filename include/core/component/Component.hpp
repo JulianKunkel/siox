@@ -13,6 +13,8 @@ public:
 	virtual void init(ComponentOptions * options) = 0;
 	virtual ComponentOptions * get_options() = 0;
 	virtual void shutdown() = 0;
+
+	virtual ~Component(){}
 };
 
 }

@@ -18,7 +18,7 @@ def __recurse(ctx):
 	ctx.recurse(dirs, mandatory=False)
 
 def options(opt):
-	opt.load('compiler_cxx waf_unit_test')
+	opt.load('compiler_cxx waf_unit_test compiler_c')
 	opt.load('boost')
 
 	#bo = opt.add_option_group("Build options")
@@ -29,6 +29,7 @@ def options(opt):
 	
 def configure(conf):
 	conf.load('compiler_cxx')
+	conf.load('compiler_c')
         conf.load('waf_unit_test')
 	conf.load('boost')
 
