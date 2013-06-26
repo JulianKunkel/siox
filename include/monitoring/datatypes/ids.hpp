@@ -73,6 +73,8 @@ typedef uint32_t OntologyAttributeID;
 /////////////////////////////////////////////////////////////////////////////////////////
 // Functions which check the validity of an optional ID
 
+#ifdef __cplusplus
+
 inline bool is_valid_id(uint32_t id){
 	return id != 0;
 }
@@ -92,5 +94,7 @@ inline bool is_valid_id(ComponentID & id){
 inline bool is_valid_id(ActivityID & id){
 	return is_valid_id(id.cid);
 }
+
+#endif
 
 #endif

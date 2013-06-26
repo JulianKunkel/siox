@@ -12,7 +12,64 @@
 #define siox_LL_H
 
 #include <monitoring/datatypes/ids.hpp>
-#include <monitoring/ontology/ontology.h>
+#include <monitoring/datatypes/basic-types.hpp>
+
+
+/*
+
+@startuml
+title Interactions between the Low-Level-C-API, SIOX-Components and Modules
+
+folder "Process" {
+
+component [Thread] #Wheat
+
+folder "Low-Level-C-API" {
+	component [SIOX-LL] #Wheat
+	interface "Monitoring" #Orange
+	component [Activity Builder] #Orange
+
+	note left of [SIOX-LL]
+	 Bridge between C
+	 and C++ datatypes
+	end note
+
+	[Thread] ..> [SIOX-LL] : use
+}
+
+interface "ConfigurationProvider"
+interface "Ontology" #Orange
+'component [FileOntology] #Orange
+'component [DBOntology] #Orange
+component [Optimizer] #Plum
+component [AMux] #Orange
+component [AForwarder] #Orange
+component [ModuleLoader]
+component [AutoConfigurator]
+
+component [SOPI] #Plum
+
+[AutoConfigurator] ..> [ConfigurationProvider] : use
+[AutoConfigurator] ..> [ModuleLoader] : use
+[SIOX-LL] ..> [Ontology] : use
+'Ontology - [FileOntology]
+'Ontology - [DBOntology]
+[SIOX-LL] ..> [Optimizer] : use 
+[SIOX-LL] ..> [AutoConfigurator] : use
+[SIOX-LL] ..> [Monitoring] : use
+
+[Monitoring] ..> [Activity Builder] : use
+[Monitoring] --> [AMux] : Activity
+
+
+[AMux] --> [SOPI] 
+[AMux] --> [AForwarder] 
+[Optimizer] --> [SOPI] : chooses \n relevant
+
+}
+@enduml
+
+ */
 
 
 /*
@@ -27,25 +84,9 @@
  * ==================================
  */
 
-/**
- * A component, as represented in SIOX.
- */
-typedef struct siox_component siox_component;
-
-/**
- * An activity, as represented in SIOX.
- */
-typedef struct siox_activity siox_activity;
-
-/**
- * A remote call, as represented in SIOX.
- */
-typedef struct siox_remote_call siox_remote_call;
-
-/**
- * A time stamp, as represented in SIOX.
- */
-typedef uint64_t * siox_timestamp;
+#ifdef __cplusplus
+extern "C"{
+#endif
 
 
 
@@ -438,5 +479,9 @@ void siox_metric_set_attribute(siox_metric * metric, siox_attribute * attribute,
 siox_metric * siox_ontology_find_metric_by_name( const char * canonical_name);
 
 /**@}*/
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
