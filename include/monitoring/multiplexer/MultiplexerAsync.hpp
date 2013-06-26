@@ -1,6 +1,7 @@
 #ifndef MULTIPLEXERASYNC_H
 #define MULTIPLEXERASYNC_H 
 
+#include <monitoring/multiplexer/Multiplexer.hpp>
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
 
 namespace monitoring{
@@ -78,34 +79,8 @@ public:
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-class ActivityMultiplexer
+class ActivityMultiplexerAsync : public ActivityMultiplexer
 {
-public:
-	/**
-	 * Called by layer to report about activity, passes activities to sync listeners
-	 * and enqueqes activity for async dispatch.
-	 */
-	virtual void Log(Activity * activity) =0;
-
-	/**
-	 * Register listener to multiplexer
-	 *
-	 * @param	ActivityMultiplexerListener *	listener	listener to notify in the future
-	 */
-	virtual void registerListener(ActivityMultiplexerListener * listener) =0;
-
-	/**
-	 * Unregister listener from multiplexer
-	 *
-	 * @param	ActivityMultiplexerListener *	listener	listener to remove
-	 */
-	virtual void unregisterListener(ActivityMultiplexerListener * listener) =0;
-
-
-	/**
-	 * pass termination to notifiers 
-	 */
-	virtual void terminate() =0;
 
 };
 
