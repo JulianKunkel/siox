@@ -1,11 +1,18 @@
 #ifndef MULTIPLEXERASYNC_H
 #define MULTIPLEXERASYNC_H 
 
+#include <deque>
+
+#include <mutex>
+#include <condition_variable>
+#include <thread>
+
+#include <monitoring/multiplexer/Multiplexer.hpp>
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
 
 namespace monitoring{
 /**
- * Special queue used by the ActivityMultiplexer to buffer activities
+ * Special queue used by the Multiplexer to buffer activities
  * that are notified in an asyncrnous way.
  *
  */
@@ -13,42 +20,54 @@ namespace monitoring{
 template <class TYPE>
 class MultiplexerQueue 
 {
+	// for syncronisation
+	std::mutex mut;
+	std::condition_variable not_full;
+	std::condition_variable not_empty;
+	bool v = false;
+
 public:
 	/**
 	 * Check whether or not the queue has still capacity
 	 *
 	 * @return	bool	true = queue is full, false = not full
 	 */
-	virtual bool Full() =0;
+	virtual bool Full() {
+		return false;
+	};
 	
 
 	/* Check whether of not the queue is empty
 	 * 
 	 * @return bool		true = queue is empty, false = not empty
 	 */
-	virtual bool Empty() =0;
+	virtual bool Empty() {
+		return false;
+	};
 
 
 	/**
 	 * Check if queue is in overload mode
 	 *
 	 */
-	virtual bool Overloaded() =0;
+	virtual bool Overloaded() {
+		return false;
+	};
 
 
 	/**
 	 * Add an activity to the queue
 	 *
-	 * @param	Activity *	an activity that need to be dispatched in the future
+	 * @param	TYPE *	an activity that need to be dispatched in the future
 	 */
-	virtual void Push(Activity * activity) =0;
+	virtual void Push(TYPE * element) {};
 	
 	/**
 	 * Get an activity from queue, returned element is popped!
 	 *
-	 * @return	Activity	an activity that needs to be dispatched to async listeners
+	 * @return	TYPE	an activity that needs to be dispatched to async listeners
 	 */
-	virtual Activity * Pull() =0;
+	virtual TYPE * Pull() { return new TYPE; };
 };
 
 
@@ -56,8 +75,10 @@ public:
  * ActivityMultiplexerNotifier
  * Used by the ActivityMultiplexer to dispatch to async listeners
  */
-class ActivityMultiplexerNotifier
+class MultiplexerNotifier
 {
+	
+
 public:
 	// TODO: signal upstream to Deamons others
 	
@@ -78,35 +99,11 @@ public:
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-class ActivityMultiplexer
+template <class TYPE>
+class MultiplexerAsync : protected Multiplexer<TYPE>
 {
-public:
-	/**
-	 * Called by layer to report about activity, passes activities to sync listeners
-	 * and enqueqes activity for async dispatch.
-	 */
-	virtual void Log(Activity * activity) =0;
 
-	/**
-	 * Register listener to multiplexer
-	 *
-	 * @param	ActivityMultiplexerListener *	listener	listener to notify in the future
-	 */
-	virtual void registerListener(ActivityMultiplexerListener * listener) =0;
-
-	/**
-	 * Unregister listener from multiplexer
-	 *
-	 * @param	ActivityMultiplexerListener *	listener	listener to remove
-	 */
-	virtual void unregisterListener(ActivityMultiplexerListener * listener) =0;
-
-
-	/**
-	 * pass termination to notifiers 
-	 */
-	virtual void terminate() =0;
-
+	
 };
 
 
