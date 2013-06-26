@@ -18,7 +18,7 @@
 /*
 
 @startuml
-title Interactions between the Low-Level-C-API and SIOX-Components
+title Interactions between the Low-Level-C-API, SIOX-Components and Modules
 
 folder "Process" {
 
@@ -26,7 +26,7 @@ component [Thread] #Wheat
 
 folder "Low-Level-C-API" {
 	component [SIOX-LL] #Wheat
-	component [Monitoring] #Orange
+	interface "Monitoring" #Orange
 	component [Activity Builder] #Orange
 
 	note left of [SIOX-LL]
@@ -37,26 +37,38 @@ folder "Low-Level-C-API" {
 	[Thread] ..> [SIOX-LL] : use
 }
 
-component [ConfigurationProvider]
-component [Ontology] #Orange
+interface "ConfigurationProvider"
+interface "Ontology" #Orange
+'component [FileOntology] #Orange
+'component [DBOntology] #Orange
 component [Optimizer] #Plum
 component [AMux] #Orange
+component [AForwarder] #Orange
 component [ModuleLoader]
 component [AutoConfigurator]
+
+component [SOPI] #Plum
 
 [AutoConfigurator] ..> [ConfigurationProvider] : use
 [AutoConfigurator] ..> [ModuleLoader] : use
 [SIOX-LL] ..> [Ontology] : use
+'Ontology - [FileOntology]
+'Ontology - [DBOntology]
 [SIOX-LL] ..> [Optimizer] : use 
 [SIOX-LL] ..> [AutoConfigurator] : use
 [SIOX-LL] ..> [Monitoring] : use
 
 [Monitoring] ..> [Activity Builder] : use
-[Monitoring] ..> [AMux] : use
+[Monitoring] --> [AMux] : Activity
+
+
+[AMux] --> [SOPI] 
+[AMux] --> [AForwarder] 
+[Optimizer] --> [SOPI] : chooses \n relevant
 
 }
-
 @enduml
+
  */
 
 
