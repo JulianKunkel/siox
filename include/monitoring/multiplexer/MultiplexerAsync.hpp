@@ -1,6 +1,12 @@
 #ifndef MULTIPLEXERASYNC_H
 #define MULTIPLEXERASYNC_H 
 
+#include <deque>
+
+#include <mutex>
+#include <condition_variable>
+#include <thread>
+
 #include <monitoring/multiplexer/Multiplexer.hpp>
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
 
@@ -14,27 +20,39 @@ namespace monitoring{
 template <class TYPE>
 class MultiplexerQueue 
 {
+	// for syncronisation
+	std::mutex mut;
+	std::condition_variable not_full;
+	std::condition_variable not_empty;
+	bool v = false;
+
 public:
 	/**
 	 * Check whether or not the queue has still capacity
 	 *
 	 * @return	bool	true = queue is full, false = not full
 	 */
-	virtual bool Full() =0;
+	virtual bool Full() {
+		return false;
+	};
 	
 
 	/* Check whether of not the queue is empty
 	 * 
 	 * @return bool		true = queue is empty, false = not empty
 	 */
-	virtual bool Empty() =0;
+	virtual bool Empty() {
+		return false;
+	};
 
 
 	/**
 	 * Check if queue is in overload mode
 	 *
 	 */
-	virtual bool Overloaded() =0;
+	virtual bool Overloaded() {
+		return false;
+	};
 
 
 	/**
@@ -42,14 +60,14 @@ public:
 	 *
 	 * @param	TYPE *	an activity that need to be dispatched in the future
 	 */
-	virtual void Push(TYPE * element) =0;
+	virtual void Push(TYPE * element) {};
 	
 	/**
 	 * Get an activity from queue, returned element is popped!
 	 *
 	 * @return	TYPE	an activity that needs to be dispatched to async listeners
 	 */
-	virtual TYPE * Pull() =0;
+	virtual TYPE * Pull() { return new TYPE; };
 };
 
 
@@ -59,6 +77,8 @@ public:
  */
 class MultiplexerNotifier
 {
+	
+
 public:
 	// TODO: signal upstream to Deamons others
 	
@@ -79,9 +99,11 @@ public:
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-class MultiplexerAsync : public Multiplexer
+template <class TYPE>
+class MultiplexerAsync : protected Multiplexer<TYPE>
 {
 
+	
 };
 
 

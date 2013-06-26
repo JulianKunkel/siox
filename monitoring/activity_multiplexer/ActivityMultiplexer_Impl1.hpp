@@ -15,31 +15,18 @@
 	- multiple Log() calls shall run in parallel
 	- adding and removal of listener without corrupting iterator
 
+	- 
+
  2 Use Cases
 	- multiple plugins want use activities of a layer, the multiplexer
 	  offers a facility to manage listeners and notify them on demand
 
  3 Design and Text
-	Removing a listener might invalidate iterator
-	Inserting is usually fine (for lists uneffected, vectors until resize)
-
-	Possible solutions:
-		1.	snapshot list	-> memory + time panelty
-
-		2.	change remove to null, check when iterating, 
-			clean up in additional loop, might skip if time is precious
-
-		3.	boost::shared_lock (was actually proposend and rejected for C++11)
-			would implement readers/writers 
-
-		4. readers count + mutex
-
-	C++11 does not provide a shared lock by it self, reasoning:
-	http://permalink.gmane.org/gmane.comp.lib.boost.devel/211180
+	plain Listener/Observer martured, see Multiplexer.hpp for details
 
 
-	//std::unique_lock<std::mutex> lock(mut);
-	//std::lock_guard<std::mutex> lock(mut);
+
+
 
  4 Test Implementation
 	
@@ -57,13 +44,13 @@
 #include <list>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
+#include <monitoring/activity_multiplexer/ActivityMultiplexerAsync.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
 
 namespace monitoring{
 
 class ActivityMultiplexer_Impl1 : public ActivityMultiplexer
-								
 {
 	/*
 	list<MultiplexerListener<Activity> *> listeners;
