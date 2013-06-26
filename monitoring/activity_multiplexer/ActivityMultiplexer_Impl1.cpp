@@ -6,7 +6,7 @@ using namespace std;
 
 namespace monitoring{
 
-
+/*
 void ActivityMultiplexer_Impl1::Log(Activity * element) 
 {
 	// readers and adding are alike (valid iterator), share ability to dec/inc
@@ -50,6 +50,7 @@ void ActivityMultiplexer_Impl1::unregisterListener(MultiplexerListener<Activity>
 	}
 	listeners.remove(listener);
 }
+*/
 
 }
 

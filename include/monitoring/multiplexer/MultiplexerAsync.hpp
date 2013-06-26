@@ -6,7 +6,7 @@
 
 namespace monitoring{
 /**
- * Special queue used by the ActivityMultiplexer to buffer activities
+ * Special queue used by the Multiplexer to buffer activities
  * that are notified in an asyncrnous way.
  *
  */
@@ -40,16 +40,16 @@ public:
 	/**
 	 * Add an activity to the queue
 	 *
-	 * @param	Activity *	an activity that need to be dispatched in the future
+	 * @param	TYPE *	an activity that need to be dispatched in the future
 	 */
-	virtual void Push(Activity * activity) =0;
+	virtual void Push(TYPE * element) =0;
 	
 	/**
 	 * Get an activity from queue, returned element is popped!
 	 *
-	 * @return	Activity	an activity that needs to be dispatched to async listeners
+	 * @return	TYPE	an activity that needs to be dispatched to async listeners
 	 */
-	virtual Activity * Pull() =0;
+	virtual TYPE * Pull() =0;
 };
 
 
@@ -57,7 +57,7 @@ public:
  * ActivityMultiplexerNotifier
  * Used by the ActivityMultiplexer to dispatch to async listeners
  */
-class ActivityMultiplexerNotifier
+class MultiplexerNotifier
 {
 public:
 	// TODO: signal upstream to Deamons others
@@ -79,7 +79,7 @@ public:
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-class ActivityMultiplexerAsync : public ActivityMultiplexer
+class MultiplexerAsync : public Multiplexer
 {
 
 };

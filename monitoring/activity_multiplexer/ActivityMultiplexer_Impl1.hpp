@@ -63,7 +63,9 @@
 namespace monitoring{
 
 class ActivityMultiplexer_Impl1 : public ActivityMultiplexer
+								
 {
+	/*
 	list<MultiplexerListener<Activity> *> listeners;
 
 	// thread safety, kept namespace verbose for clarity
@@ -78,6 +80,7 @@ public:
 	virtual void registerListener(MultiplexerListener<Activity> * listener);	
 	virtual void unregisterListener(MultiplexerListener<Activity> * listener);
 
+	*/
 };
 
 }

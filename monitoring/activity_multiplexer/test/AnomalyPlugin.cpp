@@ -121,6 +121,8 @@ int main(int argc, char const *argv[]){
 	Activity * activity = new Activity("test", 3, 5, cid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
 
 	m1->Log(activity);
+	m1->Log(activity);
+	m1->Log(activity);
 
 
 	m1->shutdown();
