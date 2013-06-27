@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 # encoding: utf-8
 from __future__ import print_function
@@ -8,16 +8,15 @@ globalOnce = ""
 import re
 import sys
 import argparse
-import subprocess
 
 
-##
+#
 # @brief Generate and handle the command line parsing.
 #
 # This class is just a simple Wrapper of the python argparser.
-class  Option():
+class Option():
 
-    ##
+    #
     # @brief Parse the command line arguments.
     #
     # Parses the command line arguments, using the python argparser.
@@ -30,35 +29,35 @@ libraries, by calling trace functions before and after the actual library call.'
         argParser = argparse.ArgumentParser(description=description, prog=prog)
 
         argParser.add_argument('--output', '-o', action='store', nargs=1,
-        dest='outputFile', default=['out'], help='Provide a file to write the output.')
+                               dest='outputFile', default=['out'], help='Provide a file to write the output.')
 
         argParser.add_argument('--blank-header', '-b', action='store_true',
-                default=False, dest='blankHeader',
-                help='''Generate a clean header file, which can be instrumented,
+                               default=False, dest='blankHeader',
+                               help='''Generate a clean header file, which can be instrumented,
 from a other header file.''')
 
-        #argParser.add_argument('--cpp-args', '-a', action='store', nargs=1, default=[],
-        #dest='cppArgs', help='''Pass arguments to the cpp.''')
+        # argParser.add_argument('--cpp-args', '-a', action='store', nargs=1, default=[],
+        # dest='cppArgs', help='''Pass arguments to the cpp.''')
 
         argParser.add_argument('--style', '-s',
-        action='store', default='dlsym', dest='style',
-        choices=['wrap', 'dlsym', 'plain'],
-        help='''Choose which output-style to use.''')
+                               action='store', default='dlsym', dest='style',
+                               choices=['wrap', 'dlsym', 'plain'],
+                               help='''Choose which output-style to use.''')
 
         argParser.add_argument('inputFile', default=None,
-        help='Source or header file to parse.')
+                               help='Source or header file to parse.')
 
         argParser.add_argument('--debug', '-d',
-            action='store_true', dest='debug',
-            help='Debug every line')
+                               action='store_true', dest='debug',
+                               help='Debug every line')
 
         argParser.add_argument('--output-wrap-file', '-W',
-            action='store', dest='wrapFile',  help='File to store GCC wrap options')
-
+                               action='store', dest='wrapFile', default="options.gcc",
+                               help='Redirect the GCC wrap options from stdout into a file')
 
         argParser.add_argument('--template', '-t',
-            action='store', default='./template.py', dest='template',
-            help='Provide an alternative template.')
+                               action='store', default='./template.py', dest='template',
+                               help='Provide an alternative template.')
         args = argParser.parse_args()
 
         if args.outputFile:
@@ -66,70 +65,72 @@ from a other header file.''')
 
         # import the templates (symbol template)
         namespace = {}
-        execfile(args.template, namespace)
+        with open(args.template, "r") as fh:
+            exec(fh.read(), namespace)
         globals().update(namespace)
+        # update the datastructures for the templates
 
-	# update the datastructures for the templates
+        for t in template.keys():
+            entries = template[t]
+            if not "global" in entries:
+                entries["global"] = ""
+            entries["variablesDefaults"] = {}
+            if not "variables" in entries:
+                entries["variables"] = []
+            else:
+                var = entries["variables"].split()
+                processedVars = []
+                # extract default values:
+                for v in var:
+                    if "=" in v:
+                        # we have a default
+                        (name, default) = v.split("=")
+                        processedVars.append(name)
+                        entries["variablesDefaults"][name] = default
+                    else:
+                        processedVars.append(v)
+                entries["variables"] = processedVars
 
-	for t in template.keys():
-		entries = template[t]
-		if not "global" in entries:
-			entries["global"] = ""
-		entries["variablesDefaults"] = {}
-		if not "variables" in entries:
-			entries["variables"] = []
-		else:
-			var = re.split("[ \t,]+", entries["variables"])
-			processedVars = []
-			# extract default values:
-			for v in var:
-			   if "=" in v:
-				# we have a default
-				(name, default) = v.split("=")
-				processedVars.append(name)
-				entries["variablesDefaults"][name] = default
-			   else:
-			        processedVars.append(v)
-			entries["variables"] =  processedVars
-
-		if not "init" in entries:
-			entries["init"] = ""
-		if not "before" in entries:
-			entries["before"] = ""
-		if not "after" in entries:
-			entries["after"] = ""
-		if not "cleanup" in entries:
-			entries["cleanup"] = ""
-		if not "final" in entries:
-			entries["final"] = ""
+            if not "init" in entries:
+                entries["init"] = ""
+            if not "before" in entries:
+                entries["before"] = ""
+            if not "after" in entries:
+                entries["after"] = ""
+            if not "cleanup" in entries:
+                entries["cleanup"] = ""
+            if not "final" in entries:
+                entries["final"] = ""
 
         return args
 
-##
+#
 # @brief A storage class for a function.
 #
 # Stores a Function and offers functions for formatted output.
+
+
 class Function():
 
     def __init__(self):
 
-        ## Return type of the function (int*, char, etc.)
+        # Return type of the function (int*, char, etc.)
         self.type = ''
-        ## Name of the function
+        # Name of the function
         self.name = ''
-        ## A list of Parameters, a parameter is a extra class for storing.
+        # A list of Parameters, a parameter is a extra class for storing.
         self.parameterList = []
-        ## A list of templates associated with the function.
+        # A list of templates associated with the function.
         self.definition = ''
         self.usedTemplateList = []
-        ## Indicates that the function is the first called function of the
+        # Indicates that the function is the first called function of the
         # library and initialize SIOX.
         self.init = False
-        ## Indicates that the function is the last called function of the
+        # Indicates that the function is the last called function of the
         # library.
         self.final = False
 
-    ##
+    #
     # @brief Generate the function call.
     #
     # @param self The reference to this object.
@@ -144,9 +145,9 @@ class Function():
                 return '%s()' % (self.name)
 
         return '%s(%s)' % (self.name,
-         ', '.join(parameter.name for parameter in self.parameterList))
+                           ', '.join(parameter.name for parameter in self.parameterList))
 
-    ##
+    #
     # @brief Generate the function definition.
     #
     # @param self The reference to this object.
@@ -158,13 +159,13 @@ class Function():
 
         if self.definition == '':
             return '%s %s(%s)' % (self.type, self.name,
-                ', '.join(' '.join([parameter.type, parameter.name])
-                for parameter in self.parameterList))
+                                  ', '.join(' '.join([parameter.type, parameter.name])
+                                            for parameter in self.parameterList))
 
         else:
             return '%s %s%s' % (self.type, self.name, self.definition)
 
-    ##
+    #
     # @brief Generate the function call prefixed with __real_.
     #
     # @param self The reference to this object.
@@ -180,9 +181,9 @@ class Function():
             if self.parameterList[0].name == 'void':
                 return '__real_%s()' % (self.name)
         return '__real_%s(%s)' % (self.name,
-         ', '.join(parameter.name for parameter in self.parameterList))
+                                  ', '.join(parameter.name for parameter in self.parameterList))
 
-    ##
+    #
     # @brief Generate the function definition prefixed with __real_.
     #
     # @param self The reference to this object.
@@ -195,13 +196,13 @@ class Function():
 
         if self.definition == '':
             return '%s __real_%s(%s)' % (self.type, self.name,
-                ', '.join(' '.join([parameter.type, parameter.name])
-                for parameter in self.parameterList))
+                                         ', '.join(' '.join([parameter.type, parameter.name])
+                                                   for parameter in self.parameterList))
 
         else:
             return '%s __real_%s %s' % (self.type, self.name, self.definition)
 
-    ##
+    #
     # @brief Generate the function definition prefixed with __wrap_.
     #
     # @param self The reference to this object.
@@ -214,13 +215,13 @@ class Function():
 
         if self.definition == '':
             return '%s __wrap_%s(%s)' % (self.type, self.name,
-                ', '.join(' '.join([parameter.type, parameter.name])
-                for parameter in self.parameterList))
+                                         ', '.join(' '.join([parameter.type, parameter.name])
+                                                   for parameter in self.parameterList))
 
         else:
             return '%s __warp_%s%s' % (self.type, self.name, self.definition)
 
-    ##
+    #
     # @brief Generate the function call with a function pointer for dlsym.
     #
     # @param self The reference to this object.
@@ -235,9 +236,9 @@ class Function():
             if self.parameterList[0].name == 'void':
                 return '(__real_*%s)()' % (self.name)
         return '(__real_%s)(%s)' % (self.name,
-            ', '.join(parameter.name for parameter in self.parameterList))
+                                    ', '.join(parameter.name for parameter in self.parameterList))
 
-    ##
+    #
     # @brief Generate the function pointer definition for dlsym.
     #
     # @param self The reference to this object.
@@ -245,21 +246,22 @@ class Function():
     # @return A string containing the pointer definition of the function.
     #
     # Generate the function pointer definition for dlsym. The function pointer
-    # definition looks something like: funcType (*_real_funcName)(parType parName).
+    # definition looks something like: funcType (*_real_funcName)(parType
+    # parName).
     def getDefinitionPointer(self):
 
         if self.definition == '':
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
-                for parameter in self.parameterList)
+                                   for parameter in self.parameterList)
 
             return ('static %s (*__real_%s) (%s);' % (self.type, self.name, parameters))
 
         else:
 
             return ('static %s (*__real_%s) (%s);' % (self.type, self.name,
-                self.definition))
+                                                      self.definition))
 
-    ##
+    #
     # @brief Generate the C code to open the function with dlsym.
     #
     # @param self The reference to this object.
@@ -272,17 +274,17 @@ class Function():
         if self.definition == '':
 
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
-                for parameter in self.parameterList)
+                                   for parameter in self.parameterList)
 
             return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
-                (self.name, self.type, parameters, self.name))
+                   (self.name, self.type, parameters, self.name))
 
         else:
 
             return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
-                (self.name, self.type, self.definition, self.name))
+                   (self.name, self.type, self.definition, self.name))
 
-    ##
+    #
     # @brief Generate an identifier of the function.
     #
     # @param self The reference to this object.
@@ -294,50 +296,50 @@ class Function():
     def getIdentifier(self):
 
         identifier = '%s%s(%s);' % (self.type, self.name,
-                ''.join(''.join([parameter.type, parameter.name]) for
-                    parameter in self.parameterList))
+                                    ''.join(''.join([parameter.type, parameter.name]) for
+                                            parameter in self.parameterList))
 
         return re.sub('[,\s]', '', identifier)
 
 
-##
+#
 # @brief One parameter of a function.
 #
 # This class holds only data.
 class Parameter():
 
     def __init__(self):
-        ## The type of the parameter.
+        # The type of the parameter.
         self.type = ''
-        ## The name of the parameter.
+        # The name of the parameter.
         self.name = ''
 
 
-##
+#
 # @brief An instruction form an instrumented header file.
 #
 # The instructions a read form a instrumented header file. The instruction
 # names are the entries found in the template file.
 class Instruction():
 
-    ##
+    #
     # @brief Constructor for the Instruction class.
     #
     # @param self The reference to this object.
     def __init__(self):
-        ## Name of the instruction.
+        # Name of the instruction.
         self.name = ''
-        ## Parameters of the instruction.
+        # Parameters of the instruction.
         self.parameterList = []
 
 
-##
+#
 # @brief Parses a header file and looks for function definitions.
 #
 # The function parser searches through a header file using regular expressions.
 class FunctionParser():
 
-    ##
+    #
     # @brief Constructor for the FunctionParser class.
     #
     # @param self The reference to this object.
@@ -346,10 +348,10 @@ class FunctionParser():
     def __init__(self, options):
 
         self.inputFile = options.inputFile
-        #self.cppArgs = options.cppArgs
+        # self.cppArgs = options.cppArgs
         self.blankHeader = options.blankHeader
 
-        ## This regular expression searches for the general function definition.
+        # This regular expression searches for the general function definition.
         # ([\w*\s]) matches the return type of the function.
         # (?:\s*\w+\s*\()) is a look ahead that ensures that the first part of
         # the regex ends right before the function name. The look ahead searches for
@@ -358,11 +360,13 @@ class FunctionParser():
         # doesn't consume text).
         # \(([,\w*\s\[\]]*)\) matches the parentheses of the function definition
         # and groups everything inside them. The regex can't match single
-        # parameters because a regex must have a fixed number of groups to match.
-        self.regexFunctionDefinition = re.compile('(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].]*)\)[\w+]*?;',
-        re.S | re.M)
+        # parameters because a regex must have a fixed number of groups to
+        # match.
+        self.regexFunctionDefinition = re.compile(
+            '(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].]*)\)[\w+]*?;',
+            re.S | re.M)
 
-        ## This regular expression matches parameter type and name.
+        # This regular expression matches parameter type and name.
         # The Parameter which is matched needs to have a type and a name and is
         # only used when the C code of the instrumented header file is
         # generated. The instrumented header must provide the type and the name
@@ -371,14 +375,15 @@ class FunctionParser():
         # (?:\*\s*|\s+) matches the last * or blank
         # ([\w]+ matches the parameter name
         # (?:\s*\[\s*\])? matches array [] if exist
-        self.regexParamterDefinition = re.compile('([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[\s*\])?)')
+        self.regexParamterDefinition = re.compile(
+            '([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[\s*\])?)')
 
-        ## This tuple of filter words searches for reseverd words in the
-        ## function return type.
+        # This tuple of filter words searches for reseverd words in the
+        # function return type.
         # Some typedefs can look like function a definition the regex.
         self.filter = ('typedef', '//', '#', 'return')
 
-    ##
+    #
     # @brief This function parses the header file.
     #
     #
@@ -395,7 +400,8 @@ class FunctionParser():
         functionList = []
 
         # Match all function definitions
-        iterateFunctionDefinition = self.regexFunctionDefinition.finditer(string)
+        iterateFunctionDefinition = self.regexFunctionDefinition.finditer(
+            string)
 
         for functionDefinition in iterateFunctionDefinition:
             filtered = False
@@ -404,7 +410,8 @@ class FunctionParser():
                 if functionDefinition.group(1).find(element) != -1:
                     filtered = True
 
-            # At this point we are quite certain, we found a function definition
+            # At this point we are quite certain, we found a function
+            # definition
 
             if filtered is True:
                 continue
@@ -424,9 +431,10 @@ class FunctionParser():
             # If only the blank header file should be generated pass the
             # string of parameters to the Function object.
             if self.blankHeader:
-                    function.definition = "(" + parameterString + ")"
+                function.definition = "(" + parameterString + ")"
             # If the C source code should be generated split the string into a
-            # list of parameters and extract the type and name of the parameter.
+            # list of parameters and extract the type and name of the
+            # parameter.
             else:
                 parameterList = parameterString.strip().split(',')
 
@@ -439,7 +447,8 @@ class FunctionParser():
                         parameterType = parameter
 
                     else:
-                        parameterMatch = self.regexParamterDefinition.match(parameter)
+                        parameterMatch = self.regexParamterDefinition.match(
+                            parameter)
                         parameterType = parameterMatch.group(1)
                         parameterName = parameterMatch.group(2)
 
@@ -447,7 +456,8 @@ class FunctionParser():
                         # 'int* list'
                         regexBracketes = re.compile('\[\s*\]')
                         if regexBracketes.search(parameterName):
-                            parameterName = regexBracketes.sub('', parameterName)
+                            parameterName = regexBracketes.sub(
+                                '', parameterName)
                             parameterType += '*'
 
                     parameterObject.name = parameterName
@@ -457,7 +467,7 @@ class FunctionParser():
             functionList.append(function)
         return functionList
 
-    ##
+    #
     # @brief Wrapper function for parse().
     #
     # @return A list of function objects
@@ -489,7 +499,7 @@ class FunctionParser():
         return functionList
 
 
-##
+#
 # @brief The command parser which reads the instrumentation instructions.
 #
 # The command parser reads the instrumentation form a commented header file.
@@ -498,12 +508,12 @@ class CommandParser():
 
     def __init__(self, options):
         self.inputFile = options.inputFile
-        ## This regular expression matches the instructions which begin with //
+        # This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*@(\w+)\s*(.*)')
         self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\'/]+)\s*')
         self.options = options
 
-    ##
+    #
     # @brief This function parses the header file.
     #
     # @param self The reference to the object.
@@ -519,8 +529,7 @@ class CommandParser():
     def parse(self):
         functionParser = FunctionParser(self.options)
 
-	# create default values for templates.
-
+        # create default values for templates.
 
         availableCommands = template.keys()
         input = open(self.inputFile, 'r')
@@ -530,58 +539,49 @@ class CommandParser():
         functionList = []
 
         # Strip comments
-        inputString = re.sub('/\*.*?\*/', '', inputString, flags=re.M|re.S)
+        inputString = re.sub('/\*.*?\*/', '', inputString, flags=re.M | re.S)
 
         inputLineList = inputString.split('\n')
         # Iterate over every line and search for instrumentation instructions.
         i = 0
-        try:
-            while i < len(inputLineList):
 
-                commandFinished = False
-                functionFinished = False
-                currentFunction = Function()
+        while i < len(inputLineList):
+            commandFinished = False
+            currentFunction = Function()
 
-                # match the line against the include regex
-                include = self.matchInclude(inputLineList[i])
-                if include and include not in includes:
-                    if self.options.debug:
-                        print("New include '%s' at line %i" % (include, i))
-                    includes.append(include)
-                    functionString = ""
+            # match the line against the include regex
+            include = self.matchInclude(inputLineList[i])
+            if include and include not in includes:
+                if self.options.debug:
+                    print("New include '%s' at line %i" % (include, i))
+                includes.append(include)
+                functionString = ""
+                if i < len(inputLineList) - 1:
                     i += 1
 
-                # Because a instrumentation command can be longer than one line we
-                # we have to insure to read the whole command.
-                while not commandFinished:
-
-                    commandFinished = self.matchCommand(inputLineList[i], templateList)
-                    if not commandFinished:
-                        functionString = ""
-                        if self.options.debug:
-                            print("Instrumention command '%s' at line %i"
-                                % (templateList[-1].name, i))
-                        i += 1
-                        functionString = ""
-
-                functionString += inputLineList[i]
-                if self.options.debug:
-                    print("Scanning '%s' for functions at line %i" % (functionString, i))
-
-                # Try to parse the inputLine as a function string
-                currentFunctionList = functionParser.parseString(functionString)
-                if len(currentFunctionList) > 0:
-
-                    currentFunction = currentFunctionList[0]
-                    if self.options.debug:
-                        print("Function '%s' at line %i" % (currentFunction.name, i))
-                    currentFunction.usedTemplateList = templateList[:]
-                    functionList.append(currentFunction)
-                    templateList = []
+            # Because a instrumentation command can be longer than one line we
+            # we have to insure to read the whole command.
+            while not commandFinished:
+                commandFinished = self.matchCommand(
+                    inputLineList[i], templateList)
+                if not commandFinished:
                     functionString = ""
-                i+=1
-        except IndexError:
-            pass
+                    if i < len(inputLineList):
+                        i += 1
+                    functionString = ""
+            functionString += inputLineList[i]
+
+            # Try to parse the inputLine as a function string
+            currentFunctionList = functionParser.parseString(functionString)
+            if len(currentFunctionList) > 0:
+
+                currentFunction = currentFunctionList[0]
+                currentFunction.usedTemplateList = templateList[:]
+                functionList.append(currentFunction)
+                templateList = []
+                functionString = ""
+            if i < len(inputLineList):
+                i += 1
 
         if self.options.debug:
             print("Finished scanning input header file.")
@@ -599,7 +599,7 @@ at the end of """)
         else:
             return False
 
-    ##
+    #
     # @brief This function matches a instruction command with the prefix //@
     #
     def matchCommand(self, inputLine, templateList):
@@ -624,32 +624,38 @@ at the end of """)
             elif commandName in availableCommands:
                 commandName = match.group(1)
                 commandArgs = match.group(2) + " "
-                newTemplate = Template(template[commandName], commandName, commandArgs)
+                newTemplate = Template(
+                    template[commandName], commandName, commandArgs)
                 templateList.append(newTemplate)
 
             # If the command name is not in the template the parsed line
             # belongs to the command parsed in a earlier line and the line only
             # contains command arguments.
             else:
-                templateList[-1].commandArgs = commandName +\
-                    " " + commandArgs
+                if commandArgs[0] == "=":
+                    templateList[-1].setParameters(commandName + commandArgs)
+                else:
+                    templateList[-1].setParameters(
+                        commandName + " " + commandArgs)
 
             return False
 
         else:
             return True
 
-##
+#
 # @brief A template function including parameters and arguments
+
+
 class Template():
-    ##
+    #
     # @brief The constructor
     #
     # @param name The name of the used template
     # @param variables The used variables
-    def __init__(self, templateDict, name, variables):
 
-        self.templateDict = templateDict;
+    def __init__(self, templateDict, name, variables):
+        self.templateDict = templateDict
         self.name = name
         self.parameterList = {}
 
@@ -658,11 +664,10 @@ class Template():
         # match the first bare word of the values
         # match double quoted strings
         # match single quoted strings
-	# Additionally, it is allowed to prefix the assignment with <variableName>=
-        self.valueRegex = re.compile('\s*(\w+=)?(([-\w%_\(\)\[\]&*]+)|(\".*?\")|(\'.+?\'+))\s*', re.S | re.M)
-
-        # Generate strings for output from given input
-        self.setParameters(self.templateDict['variables'], self.templateDict['variablesDefaults'], variables)
+        # Additionally, it is allowed to prefix the assignment with
+        # <variableName>=
+        self.valueRegex = re.compile(
+            '\s*(\w+=)?(([-\w%_\(\)\[\]&*]+)|(\".*?\")|(\'.+?\'+))\s*', re.S | re.M)
 
         # Remember template-access for easier usage
         self.world = self.templateDict['global']
@@ -671,47 +676,85 @@ class Template():
         self.after = self.templateDict['after']
         self.final = self.templateDict['final']
         self.cleanup = self.templateDict['cleanup']
+        self.currentParameterIndex = 0
+        self.containsNamedParameters = False
+        self.insideString = False
+        # Generate strings for output from given input
 
-    ##
+        self.default_value_dictionary = {}
+        nameList = self.templateDict['variables']
+        if 'variablesDefaults' in self.templateDict.keys():
+            self.default_value_dictionary = self.templateDict[
+                'variablesDefaults']
+        # initialize variables, this is needed for named parameters
+        for name in nameList:
+            if name in self.default_value_dictionary:
+                self.parameterList[name] = self.default_value_dictionary[name]
+            else:
+                self.parameterList[name] = ""
+        self.setParameters(variables)
+
+    #
     # @brief Reads the parameters and generates the needed output
     #
     # @param names The name of the used template
     # @param values The used variables
-    def setParameters(self, nameList, default_value_dictionary, values):
+    def setParameters(self, values):
         # TODO: raise error and error handling
         # generate a list of all names and values
 
-	# initialize variables, this is needed for named parameters
-        for name in nameList:
-            if name in default_value_dictionary:
-               self.parameterList[name] = default_value_dictionary[name]
+        nameList = self.templateDict['variables']
+        print(nameList)
+        valueList = values.split()
+        for value in valueList:
+
+            valueString = ""
+            valueParts = value.split("=", 1)
+            name = ""
+
+            if len(valueParts) == 2:
+                nameTmp = valueParts[0].strip()
+                if nameTmp in nameList:
+                    name = nameTmp
+                    valueParts[0] = valueParts[1]
+                else:
+                    valueParts[0] += valueParts[1]
+
+            if self.currentParameterIndex < len(nameList):
+                name = nameList[self.currentParameterIndex]
+                print (name, valueParts[0])
             else:
-                self.parameterList[name] = ""
+                name = nameList[-1]
+            # the variable with the given name is set
+            if not name in nameList:
+                print("Error name " + name +
+                      " is not part of the defined function " + self.name)
+                exit(1)
+            # Set the matched value
+            valueString += valueParts[0]
+            if(valueString.startswith("''")):
+                valueString = valueString.strip("'")
 
-        for name in nameList:
-            # Match the next value and only one value out of the string
-            value = self.valueRegex.match(values)
-            if value:
-		if(value.group(1)):
-			name = value.group(1).strip("=")
-			# the variable with the given name is set
-			if not name in nameList:
-				print("Error name " + name + " is not part of the defined function " + self.name)
-				exit(1)
-                # Set the matched value
-                valueString = value.group(2).strip()
-                if(valueString.startswith("''")):
-                	valueString = valueString.strip("'")
-                self.parameterList[name] = valueString
+            if valueString.startswith('"'):
+                self.insideString = True
+            if valueString.endswith('"'):
+                self.insideString = False
 
-                # Truncate the found value from the value string
-                values = self.valueRegex.sub('', values, 1)
+            if name in self.default_value_dictionary.keys():
+                if self.parameterList[name] == self.default_value_dictionary[name] and valueString != "":
+                    self.parameterList[name] = valueString
+                else:
+                    self.parameterList[name] += valueString
+            else:
+                self.parameterList[name] += valueString
 
-        # All further text belongs to the last parameter.
-        lastName = nameList[-1]
-	self.parameterList[lastName] += " " + values.strip()
+            if not self.insideString:
+                self.currentParameterIndex += 1
 
-    ##
+        print(self.parameterList)
+        print(self.default_value_dictionary)
+
+    #
     # @brief Used for selective output
     #
     # @param type What part of the template should be given
@@ -721,6 +764,8 @@ class Template():
         if (type == 'global'):
             return self.world % self.parameterList
         elif (type == 'init'):
+            print(self.init)
+            print(self.parameterList)
             return self.init % self.parameterList
         elif (type == 'before'):
             return self.before % self.parameterList
@@ -736,21 +781,21 @@ class Template():
             sys.exit(1)
 
 
-##
+#
 # @brief The output class (write a file to disk)
 #
 class Writer():
 
-    ##
+    #
     # @brief The constructor
     #
     # @param options The supplied arguments
     def __init__(self, options):
         self.outputFile = options.outputFile
-	self.wrapFile = options.wrapFile
-	self.writeWrapFile = (options.style == "wrap")
+        self.wrapFile = options.wrapFile
+        self.writeWrapFile = (options.style == "wrap")
 
-    ##
+    #
     # @brief Write a header file
     #
     # @param functions A list of function-objects to write
@@ -776,7 +821,7 @@ class Writer():
         # close the file
         output.close()
 
-    ##
+    #
     # @brief Write a source file
     #
     # @param functions A list of function-objects to write
@@ -831,14 +876,16 @@ class Writer():
             # write function signature
 
             print(function.getDefinitionWrap(),
-                    end='\n{\n', sep='', file=output)
+                  end='\n{\n', sep='', file=output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
                 print('\tva_list args;', file=output)
-                print('\tva_start(args, %s);' % function.parameterList[-2].name,
-                        file=output)
-                print('\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
+                print(
+                    '\tva_start(args, %s);' % function.parameterList[-2].name,
+                    file=output)
+                print(
+                    '\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
                     function.parameterList[-2].type), file=output)
 
                 # set the name to args
@@ -849,7 +896,7 @@ class Writer():
 
             if returnType != "void":
                 print('\t', returnType, ' ret;', end='\n', sep='',
-                        file=output)
+                      file=output)
 
             # write the before-template for this function
             for templ in function.usedTemplateList:
@@ -860,10 +907,10 @@ class Writer():
             # write the function call
             if returnType != "void":
                 print('\tret = ', function.getCallReal(), end=';\n', sep='',
-                        file=output)
+                      file=output)
             else:
                 print('\t', function.getCallReal(), end=';\n', sep='',
-                        file=output)
+                      file=output)
 
             # write all after-templates for this function
             for templ in function.usedTemplateList:
@@ -891,17 +938,17 @@ class Writer():
         output.close()
 
         # generate gcc string for the user
-	if self.wrapFile and self.writeWrapFile :
-	        output = open(self.wrapFile, 'w')
-	        gccHelper = '-Wl'
+        if self.wrapFile and self.writeWrapFile:
+            output = open(self.wrapFile, 'w')
+            gccHelper = '-Wl'
 
-        	for function in functionList:
-	            gccHelper = "%s,--wrap=%s" % (gccHelper, function.name)
+            for function in functionList:
+                gccHelper = "%s,--wrap=%s" % (gccHelper, function.name)
 
-        	print(gccHelper, file=output)
-	        output.close()
+            print(gccHelper, file=output)
+            output.close()
 
-    ##
+    #
     # @brief Write a source file
     #
     # @param functions A list of function-objects to write
@@ -929,14 +976,16 @@ class Writer():
             # write function signature
 
             print(function.getDefinition(),
-                    end='\n{\n', sep='', file=output)
+                  end='\n{\n', sep='', file=output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
                 print('\tva_list args;', file=output)
-                print('\tva_start(args, %s);' % function.parameterList[-2].name,
-                    file = output)
-                print('\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
+                print(
+                    '\tva_start(args, %s);' % function.parameterList[-2].name,
+                    file=output)
+                print(
+                    '\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
                     function.parameterList[-2].type), file=output)
                 # set the name to args
                 function.parameterList[-1].name = "val"
@@ -946,7 +995,7 @@ class Writer():
 
             if returnType != "void":
                 print('\t', returnType, ' ret;', end='\n', sep='',
-                        file=output)
+                      file=output)
 
             # write the before-template for this function
             for templ in function.usedTemplateList:
@@ -973,7 +1022,7 @@ class Writer():
         # close the file
         output.close()
 
-    ##
+    #
     # @brief Write a source file
     #
     # @param functions A list of function-objects to write
@@ -1033,14 +1082,16 @@ class Writer():
 
             # write function signature
             print(function.getDefinition(), end='\n{\n', sep=' ',
-                file=output)
+                  file=output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
                 print('\tva_list args;', file=output)
-                print('\tva_start(args, %s);' % function.parameterList[-2].name,
-                    file = output)
-                print('\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
+                print(
+                    '\tva_start(args, %s);' % function.parameterList[-2].name,
+                    file=output)
+                print(
+                    '\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
                     function.parameterList[-2].type), file=output)
                 # set the name to args
                 function.parameterList[-1].name = "val"
@@ -1050,7 +1101,7 @@ class Writer():
 
             if returnType != "void":
                 print('\t', returnType, ' ret;', end='\n', sep='',
-                        file=output)
+                      file=output)
 
             # write the before-template for this function
             for templ in function.usedTemplateList:
@@ -1061,10 +1112,10 @@ class Writer():
             # write the function call
             if returnType != "void":
                 print('\tret = ', function.getCallPointer(), end=';\n',
-                    sep='', file=output)
+                      sep='', file=output)
             else:
                 print('\t', function.getCallPointer(), end=';\n', sep='',
-                        file=output)
+                      file=output)
 
             # write all after-templates for this function
             for templ in function.usedTemplateList:
@@ -1093,7 +1144,7 @@ class Writer():
         output.close()
 
 
-##
+#
 # @brief The main function.
 #
 def main():

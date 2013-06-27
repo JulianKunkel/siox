@@ -1,6 +1,7 @@
 #include <core/autoconfigurator/AutoConfigurator.hpp>
 #include <core/module/module-loader.hpp>
 #include <core/container/container-serializer.hpp>
+#include <core/container/container-macros.hpp>
 
 
 using namespace std;
@@ -32,7 +33,7 @@ namespace core{
 		parent_component.init(options);
 	}
 
-	string AutoConfigurator::DumEmptyConfiguration(Component & parent_component){
+	string AutoConfigurator::DumpEmptyConfiguration(Component & parent_component){
 		ComponentOptions * options = parent_component.get_options();
 
 		ContainerSerializer * cs = new ContainerSerializer();
