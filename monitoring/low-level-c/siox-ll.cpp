@@ -82,7 +82,7 @@ __attribute__ ((destructor)) void siox_ll_dtor()
 
 ///////////////////// Implementation of SIOX-LL /////////////
 
-void siox_process_register(HwID * hwid, ProcessID * pid){
+void siox_process_register(HwID * hwid, ProcessID * pid){ // , const char * configuration_parameters?
 	if (hwid != NULL){
 		process_data.hwid = *hwid;
 	}else{
@@ -108,7 +108,7 @@ void siox_process_register(HwID * hwid, ProcessID * pid){
 		process_data.ontology = o;
 		ComponentOptions * options = o->get_options();
 		// Init using an empty configuration (for now).
-		o->init(options);		
+		o->init(options);
 
 	}
 

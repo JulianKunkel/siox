@@ -14,6 +14,64 @@
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/datatypes/basic-types.hpp>
 
+
+/*
+
+@startuml
+title Interactions between the Low-Level-C-API, SIOX-Components and Modules
+
+folder "Process" {
+
+component [Thread] #Wheat
+
+folder "Low-Level-C-API" {
+	component [SIOX-LL] #Wheat
+	interface "Monitoring" #Orange
+	component [Activity Builder] #Orange
+
+	note left of [SIOX-LL]
+	 Bridge between C
+	 and C++ datatypes
+	end note
+
+	[Thread] ..> [SIOX-LL] : use
+}
+
+interface "ConfigurationProvider"
+interface "Ontology" #Orange
+'component [FileOntology] #Orange
+'component [DBOntology] #Orange
+component [Optimizer] #Plum
+component [AMux] #Orange
+component [AForwarder] #Orange
+component [ModuleLoader]
+component [AutoConfigurator]
+
+component [SOPI] #Plum
+
+[AutoConfigurator] ..> [ConfigurationProvider] : use
+[AutoConfigurator] ..> [ModuleLoader] : use
+[SIOX-LL] ..> [Ontology] : use
+'Ontology - [FileOntology]
+'Ontology - [DBOntology]
+[SIOX-LL] ..> [Optimizer] : use 
+[SIOX-LL] ..> [AutoConfigurator] : use
+[SIOX-LL] ..> [Monitoring] : use
+
+[Monitoring] ..> [Activity Builder] : use
+[Monitoring] --> [AMux] : Activity
+
+
+[AMux] --> [SOPI] 
+[AMux] --> [AForwarder] 
+[Optimizer] --> [SOPI] : chooses \n relevant
+
+}
+@enduml
+
+ */
+
+
 /*
  * ==================================
  * A note on storage mangement:

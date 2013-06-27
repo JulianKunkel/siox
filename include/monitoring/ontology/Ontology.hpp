@@ -11,6 +11,79 @@
 
 #include <monitoring/datatypes/basic-types.hpp>
 
+/*
+@startuml Ontology.png
+
+'set namespaceSeparator ::
+
+package boost #DDDDDD
+'    class variant {
+'    }
+end package
+
+
+namespace core #SkyBlue
+
+    class Component{
+    }
+
+end namespace
+
+
+namespace std #SkyBlue
+
+    class Value {
+    }
+    boost.variant <|-- Value
+
+    class StorageType {
+    }
+    
+    class Attribute {
+        +string name
+        +StorageType storage_type
+
+        +Attribute( name, storage_type )
+    }
+    Attribute o-- StorageType
+
+    class Metric {
+        +string canonical_name
+        +StorageType storage_type
+        +string unit
+        +List<Attribute> attributes
+
+        +Metric( name, unit, storage_type )
+    }
+    Metric o-- StorageType
+    Metric *-- Attribute
+
+end namespace
+
+
+namespace monitoring #Orange
+
+    abstract class Ontology {
+        -List<Metric> metrics
+        -List<Attribute> attributes
+        +Attribute attribute_register( name, storage_type ) {abstract}
+        +Metric register_metric( canonical_name, unit, storage ) {abstract}
+        +Metric find_metric_by_name( canonical_name ) {abstract}
+        +void metric_set_attribute( metric, attribute, value ) {abstract}
+    }
+    core.Component <|-- Ontology
+    Ontology *-- std.Metric
+    Ontology *-- std.Attribute
+
+    class FileOntology {
+    }
+    Ontology <|-- FileOntology
+end namespace
+
+
+@enduml
+*/
+
 using namespace std;
 
 typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> Value;
@@ -48,7 +121,6 @@ public:
 	virtual siox_metric * find_metric_by_name( string & canonical_name) = 0;
 
 	virtual void metric_set_attribute(siox_metric * metric, siox_attribute * attribute, Value & value) = 0;
-
 };
 
 
