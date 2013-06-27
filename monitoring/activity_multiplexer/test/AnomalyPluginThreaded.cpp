@@ -1,5 +1,6 @@
 #include <iostream>
 #include <list>
+#include <thread>
 
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
@@ -102,6 +103,23 @@ AnomalyPlugin::AnomalyPlugin(ActivityMultiplexer * multiplexer){
 
 
 
+void activity_producer(ActivityMultiplexer * m) {
+	int num_activities = 3;
+
+	// TODO weitere testaktivitäten loggen...
+	ComponentID cid = {.pid = {2,3,4}, .uuid= {1,2}};
+	auto * parentArray = new vector<ComponentID>{{.pid = {1,2,3}, .uuid= {2,2}}};
+	auto * attributeArray = new vector<Attribute>{{.id=111, .value = "myData"}, {.id=3, . value = (uint64_t) 4711}};
+	auto * remoteCallsArray = new vector<RemoteCall>();
+	// Cast the real activity to the serializable object class wrapper
+	Activity * activity = new Activity("test", 3, 5, cid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
+
+	// in this case, just log the same activity multiple times
+	for (int i = 0; i < num_activities; ++i ) {
+		m->Log(activity);
+	}
+}
+
 int main(int argc, char const *argv[]){
 	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexer_Impl1", "monitoring_activitymultiplexer");
 
@@ -111,20 +129,20 @@ int main(int argc, char const *argv[]){
 	// Werden nun Aktivitäten eingegeben, so werden diese über Notify an das Plugin übergeben. Bspw:
 	// string name, uint64_t start_t, uint64_t end_t, list<string> * attributes
 
-	// Hier mal Testcode, beliebig erweitern!!!
-	// TODO weitere testaktivitäten loggen...
-	ComponentID cid = {.pid = {2,3,4}, .uuid= {1,2}};
-	auto * parentArray = new vector<ComponentID>{{.pid = {1,2,3}, .uuid= {2,2}}};
-	auto * attributeArray = new vector<Attribute>{{.id=111, .value = "myData"}, {.id=3, . value = (uint64_t) 4711}};
-	auto * remoteCallsArray = new vector<RemoteCall>();
-	// Cast the real activity to the serializable object class wrapper
-	Activity * activity = new Activity("test", 3, 5, cid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
+	// starte einige threads
+	list<std::thread> t;
 
-	m1->Log(activity);
-	m1->Log(activity);
-	m1->Log(activity);
+	int num_producers = 3;
+	for(int i = 0; i < num_producers; ++i) {
+		t.push_back(std::thread(activity_producer, m1));
+	}
 
+	// warte auf threads to finish
+	for(auto it = t.begin(); it != t.end(); ++it ) {
+		(*it).join();
+	}
 
+	// shutdown multiplexer
 	m1->shutdown();
 
 	return 0;

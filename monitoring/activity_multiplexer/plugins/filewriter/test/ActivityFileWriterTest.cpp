@@ -34,7 +34,7 @@ int main(int argc, char const *argv[]){
 
 	m1->Log(activity);
 
-	m1->terminate();
+	m1->shutdown();
 }
 
 
