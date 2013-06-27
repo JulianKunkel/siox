@@ -48,7 +48,6 @@ public:
 	virtual siox_metric * find_metric_by_name( string & canonical_name) = 0;
 
 	virtual void metric_set_attribute(siox_metric * metric, siox_attribute * attribute, Value & value) = 0;
-
 };
 
 

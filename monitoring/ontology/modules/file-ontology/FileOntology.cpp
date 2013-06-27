@@ -75,7 +75,6 @@ class FileOntology: public Ontology{
 
 private:
 	map<string, VectorMetric*> metrics_map;
-
 };
 
 }
