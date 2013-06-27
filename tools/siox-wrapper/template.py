@@ -6,17 +6,14 @@ template = {
 #
 # SWID: The name (software id) for this component
 'component': {
-	'variables': 'SWID',
+	'variables': 'Uid',
 	'global': '''siox_component * global_component;
 				 siox_ontology * global_ontology;
                  char global_pid;
-                 char hostname[1024];
 				''',
-    'init': '''hostname[1023] = '\\0';
-			   gethostname(hostname, 1023);
-               sprintf( &global_pid, "%%d", getpid() );
-               global_component = siox_component_register(hostname, %(SWID)s, &global_pid);
-               global_ontology = siox_ontology_connect();''',
+    'init': '''
+              sprintf( &global_pid, "%%d", getpid() );
+              global_component = siox_component_register((UniqueInterfaceID*) %(Uid)s, &global_pid);''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
@@ -123,7 +120,7 @@ template = {
 'register_metric': {
 	'variables': 'MetricVariable Name UnitType StorageType ScopeType',
 	'global': '''siox_metric * %(MetricVariable)s;''',
-	'init': '''%(MetricVariable)s = siox_ontology_register_metric( global_ontology, %(Name)s, %(UnitType)s, %(StorageType)s, %(ScopeType)s );''',
+	'init': '''%(MetricVariable)s = siox_ontology_register_metric(%(Name)s, %(UnitType)s, %(StorageType)s);''',
     'before': '''''',
 	'after': '',
 	'cleanup': '',
@@ -332,7 +329,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_activity_report( %(Activity)s, %(Metric)s, (void *) &%(Value)s );',
+	'after': 'siox_activity_report(%(Activity)s, %(Metric)s, (void *) &%(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -441,10 +438,10 @@ template = {
 # Value: The actual value received
 # Activity: The activity; defaults to sioxActivity
 'remote_call_received': {
-	'variables': 'Attribute Value Activity=sioxActivity',
+	'variables': 'Attribute Hwid Uid Instance',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_remote_call_received( global_component, %(Attribute)s, (void *) &%(Value)s );''',
+    'before': '''siox_remote_call_received( global_component, %(Hwid)s, %(Uid)s, %(Instance)s);''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
