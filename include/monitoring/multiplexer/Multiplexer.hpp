@@ -72,15 +72,15 @@ public:
 	 * Called by layer to report about activity, passes activities to sync listeners
 	 * and enqueqes activity for async dispatch.
 	 */
+	// TODO sadly for the mutexes it is always needed
 	virtual void Log(TYPE * element) {
-		// readers and adding are alike (valid iterator), share ability to dec/inc
 		{
 			std::lock_guard<std::mutex> lock(inc);
 			not_invalidating++;
 		}
 
-		for (auto listener=listeners.begin(); listener!=listeners.end(); ++listener) {
-			(*listener)->Notify(element);
+		for (auto it=listeners.begin(); it!=listeners.end(); ++it) {
+			(*it)->Notify(element);
 		}
 
 		{
@@ -94,30 +94,22 @@ public:
 	/**
 	 * Register listener to multiplexer
 	 *
-	 * @param	ActivityMultiplexerListener *	listener	listener to notify in the future
+	 * @param	MultiplexerListener *	listener	listener to notify in the future
 	 */
 	virtual void registerListener(MultiplexerListener<TYPE> * listener) {
-		// readers and adding are alike (valid iterator), share ability to dec/inc
-		{
-			std::lock_guard<std::mutex> lock(inc);
-			not_invalidating++;
+		// exclusive, adding multiple listerns might result in race condition
+		std::lock_guard<std::mutex> lock(inc);
+		while( not_invalidating != 0 ) {
+			// wait
+			// TODO candidate for condition vairable?
 		}
-
-		// TODO should be prone to race condition in case of multiple adds
-		listeners.push_back(listener);	
-		
-		{
-			std::lock_guard<std::mutex> lock(dec);
-			not_invalidating--;
-		}
-
-		// TODO cond.notify_one();
+		listeners.push_back(listener);
 	}
 
 	/**
 	 * Unregister listener from multiplexer
 	 *
-	 * @param	ActivityMultiplexerListener *	listener	listener to remove
+	 * @param	MultiplexerListener *	listener	listener to remove
 	 */
 	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) {
 		// exclusive, as removing may invalidate iterator
