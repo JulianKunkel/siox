@@ -7,9 +7,7 @@
 
 namespace core {
 
-class ComponentOptions : public Container{
-};
-
+typedef Container ComponentOptions;
 
 class Component {
 public:

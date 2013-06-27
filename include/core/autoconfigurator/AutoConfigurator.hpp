@@ -4,6 +4,7 @@
 #include <core/autoconfigurator/ConfigurationProvider.hpp>
 #include <core/component/Component.hpp>
 
+
 //#include <core/module/module-loader.hpp>
 
 /*
@@ -36,10 +37,11 @@ public:
 
 	/*
 	 * Load/Parse the configuration options into the options object.
+	 * TODO Think about interface
 	 */
 	void LoadConfiguration(Component & parent_component, string type, map<string, string> & optional_matchings_priority);
 
-	string DumEmptyConfiguration(Component & parent_component);
+	string DumpEmptyConfiguration(Component & parent_component);
 
 private:	
 	ConfigurationProvider * configurationProvider;

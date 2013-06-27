@@ -1,8 +1,6 @@
 #ifndef CONTAINER_MACROS_HPP
 #define CONTAINER_MACROS_HPP
 
-#include <core/container/container.hpp>
-
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/utility.hpp>
@@ -20,6 +18,13 @@
 // see http://www.boost.org/doc/libs/1_53_0/libs/serialization/doc/special.html
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
+#include <boost/serialization/split_member.hpp>
+
+
+
+
+#include <core/container/container.hpp>
+#include <core/container/container-serializable.hpp>
 
 /*
  Use the following macros to enable automatic serialization/parsing of configuration information.
@@ -29,10 +34,8 @@
     friend class boost::serialization::access; \
     template<class Archive> \
     void serialize(Archive & ar, const unsigned int /* file_version */){ \
-	ar VAR_ \
-    ;\
+	VAR_ \
     }
-
 
 /*
  * Use this macro if the serialization is not done by the derived class, but relies on the virtual base class "Container"
@@ -49,32 +52,8 @@
 
 
 
-#define MEMBER(x) & BOOST_SERIALIZATION_NVP(x)
-#define PARENT_CLASS(x) & BOOST_SERIALIZATION_BASE_OBJECT_NVP(x)
-
-
-
-/**
- * Describes a module to load. 
- * Add this datatype to componentOptions to enable loading of the module by using the AutoConfigurator.
- */
-template<class MODULETYPE>
-class Module{
-public:
-	// name of the module
-	std::string name;
-	// path to search for the module
-	std::string path;
-	// required interface
-	std::string interface;
-
-	MODULETYPE * instance;
-
-    template <typename Archive>
-	void serialize(Archive& ar, const unsigned int version){
-	}
-	
-};
+#define MEMBER(x) ar & BOOST_SERIALIZATION_NVP(x);
+#define PARENT_CLASS(x) ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(x);
 
 
 

@@ -9,7 +9,7 @@ import os
 
 
 def build(bld):
-	bld.shlib( use = "module-loader BOOST" ,  target = 'AutoConfigurator', source = 'AutoConfigurator.cpp' )
+	bld.shlib( use = "module-loader BOOST core-container-serializer" ,  target = 'AutoConfigurator', source = 'AutoConfigurator.cpp' )
 	bld.recurse(["ConfigurationProviderPlugins"]);
 
 

@@ -3,7 +3,7 @@
 
 #include <core/autoconfigurator/AutoConfigurator.hpp>
 #include <core/component/Component.hpp>
-#include <core/container/container-macros.hpp>
+#include <core/component/component-macros.hpp>
 
 using namespace core;
 
@@ -15,7 +15,7 @@ public:
 	string name;
 	int value;
 
-	SERIALIZE(MEMBER(name) MEMBER(value) )
+	SERIALIZE_CONTAINER(MEMBER(name) MEMBER(value) )
 };
 CREATE_SERIALIZEABLE_CLS(MyChildModuleOptions)
 
@@ -44,7 +44,11 @@ public:
 
 	Module<MyChildModule> submodule;
 
-	SERIALIZE(MEMBER(pname) MEMBER(pvalue) MEMBER(submodule) )
+	MyParentModuleOptions(){
+
+	}
+
+	SERIALIZE_CONTAINER(MEMBER(pname) MEMBER(pvalue) MEMBER(submodule) )
 };
 CREATE_SERIALIZEABLE_CLS(MyParentModuleOptions)
 
@@ -73,13 +77,17 @@ public:
 int main(){
 	AutoConfigurator * a = new AutoConfigurator("FileConfigurationProvider", "", "test.config");
 
+
+	MyChildModule child;
 	MyParentModule parent;
 
 	map<string, string> optional;
 
 	a->LoadConfiguration(parent, "daemon", optional);
 
-	cout << a->DumEmptyConfiguration(parent) << endl;
+	cout << a->DumpEmptyConfiguration(parent) << endl;
+
+	cout << a->DumpEmptyConfiguration(child) << endl;
 
 	return 0;
 }

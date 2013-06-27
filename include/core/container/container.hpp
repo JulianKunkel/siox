@@ -4,7 +4,7 @@
 namespace core{
 
 class Container{
-	public:	virtual ~Container(){};
+	public:	virtual ~Container(){}
 };
 
 

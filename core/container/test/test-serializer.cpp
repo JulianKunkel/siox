@@ -1,9 +1,10 @@
 #include <iostream>
 
 #include <core/container/container-serializer.hpp>
-#include <core/container/container-macros.hpp>
+#include <core/component/component-macros.hpp>
 
 using namespace core;
+using namespace std;
 
 class MyContainer: public Container{
 public:
