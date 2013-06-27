@@ -26,22 +26,22 @@ def options(opt):
 	opt.add_option('--doc', action='store_true', default=False, dest='debug', help="Enable debugging mode")
 
 	__recurse(opt)
-	
+
 def configure(conf):
 	conf.load('compiler_cxx')
 	conf.load('compiler_c')
-        conf.load('waf_unit_test')
+	conf.load('waf_unit_test')
 	conf.load('boost')
 
 	conf.find_program('doxygen', var='DOXYGEN', mandatory=False)
 	if not "DOXYGEN" in conf.env:
 		print "\tI cannot create the API documentation, but please proceed!"
-	
+
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
 	conf.check_cfg(package='gmodule-2.0', use="GLIB", uselib_store='GMODULES',   args=['--cflags', '--libs'], mandatory=True)
 
 	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
-	
+
 
         conf.check_boost(lib='system thread serialization')
 
@@ -50,9 +50,9 @@ def configure(conf):
 	conf.env.INCLUDES = [workDir + '/include' ]
 
         if conf.options.production:
-	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall'] 
+	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall']
 	else:
-		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall'] 
+		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall']
 
 
 	print ""
@@ -61,7 +61,7 @@ def configure(conf):
 
 def doc(ctx):
 	ctx.exec_command("doxygen")
-	
+
 def build(bld):
 	#__recurse(bld)
 	bld.recurse(['core'], mandatory=True)
@@ -71,7 +71,7 @@ def build(bld):
         bld.add_post_fun(waf_unit_test.summary)
 
 	# installation of header files
-	for root, dirs, files in os.walk("include"):	        
+	for root, dirs, files in os.walk("include"):
 		for f in files:
 			bld.install_files("${PREFIX}/" + root, root + "/" + f)
 
