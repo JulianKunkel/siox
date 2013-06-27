@@ -1,7 +1,10 @@
 /*!
  * @file    ActivityMultiplexer_Impl1.hpp
  *
- * @description As a follow up to the SIOX system history this is the activity multiplexer for concurrent activity handling.
+ * @description 
+ * As a follow up to the SIOX system history this is the activity multiplexer 
+ * for concurrent activity handling.
+ * 
  * @standard    Preferred standard is C++11
  *
  * @author Jakob Luettgau, Julian Kunkel
@@ -34,14 +37,13 @@
  */
 
 /*! The detached threads for notify are running until the SIOX system finishes.
- When the instrumented client program finishes, a SIOX_finalize() call will be issued that sets a flag called "thrd_fin".
+ When the instrumented client program finishes, a SIOX_finalize() call will be 
+ issued that sets a flag called "thrd_fin".
  */
 #ifndef ACTIVITYMULTIPLEXER_IMPL1_H
 #define ACTIVITYMULTIPLEXER_IMPL1_H 
 
-#include <mutex>
-#include <condition_variable>
-#include <list>
+#include <iostream>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerAsync.hpp>
@@ -50,24 +52,9 @@
 
 namespace monitoring{
 
-class ActivityMultiplexer_Impl1 : public ActivityMultiplexer
+class ActivityMultiplexer_Impl1 : ActivityMultiplexerAsync
 {
-	/*
-	list<MultiplexerListener<Activity> *> listeners;
 
-	// thread safety, kept namespace verbose for clarity
-	std::mutex inc;
-	std::mutex dec;
-	int not_invalidating = 0;
-
-
-
-public:
-	virtual void Log(Activity * element);
-	virtual void registerListener(MultiplexerListener<Activity> * listener);	
-	virtual void unregisterListener(MultiplexerListener<Activity> * listener);
-
-	*/
 };
 
 }
