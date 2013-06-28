@@ -22,7 +22,7 @@ int main(){
 	// output test to variable
 	stringstream ss;
 	boost::archive::text_oarchive oa(ss); 
-	oa << *test;
+	oa << test;
 	cout << ss.str() << endl;
 	
 	// output to file
@@ -31,10 +31,10 @@ int main(){
 	outFile.close();
 
 	// read test from variable
-	ActivitySerializable parsedActivity;
+	ActivitySerializable * parsedActivity;
 	boost::archive::text_iarchive ia(ss); 
 	ia >> parsedActivity;
-	cout << parsedActivity.name() << endl;
+	cout << parsedActivity->name() << endl;
 
 	// read back from file
 	FileDeserializer<ActivitySerializable> inFile("data.txt");

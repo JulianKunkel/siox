@@ -21,6 +21,7 @@ public:
 
 	inline void append(CONTAINER * obj){
 		archive << obj;
+		// add end of line to force floshing
 		file << endl;
 	}
 
@@ -45,7 +46,9 @@ public:
 	inline CONTAINER * parseNext(){
 		CONTAINER * obj;
 		archive >> obj;
-		
+		// fetch end of line...
+		char c;
+		archive >> c;
 		return obj;
 	}
 
