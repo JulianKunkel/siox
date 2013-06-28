@@ -2,8 +2,10 @@
 #include <list>
 
 
-#include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
+#include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
+
+#include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/datatypes/ActivitySerializable.hpp>
 #include <core/container/container-serializer-text.hpp>
 
@@ -30,6 +32,7 @@ public:
 	void init(ActivityMultiplexerPluginOptions * options, ActivityMultiplexer & multiplexer){
 		FileWriterPluginOptions * o = (FileWriterPluginOptions*) options;
 		serializer = new FileSerializer<ActivitySerializable>(o->filename);
+		
 		multiplexer.registerListener(this);
 	}
 

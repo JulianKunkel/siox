@@ -42,6 +42,8 @@ public:
 
 }
 
+#define ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE "monitoring_activitymultiplexer_plugin"
+
 
 
 #endif

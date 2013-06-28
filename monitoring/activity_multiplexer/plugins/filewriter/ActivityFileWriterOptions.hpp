@@ -3,7 +3,6 @@
 
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
-#include <monitoring/activity_multiplexer/plugin/module.h>
 
 using namespace std;
 using namespace monitoring;

@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]){
 	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexer_Impl1", "monitoring_activitymultiplexer");
 
 	// wir registrieren das Plugin (normal geschieht dies automatisch)
-	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>("", "ActivityFileWriter", "monitoring_activitymultiplexer_plugin");
+	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>("", "ActivityFileWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE);
 
 	// init plugin
 	// not necessary, but for testing...
