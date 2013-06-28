@@ -19,8 +19,9 @@ private:
 public:
 	FileSerializer(string filename): file(filename), archive(file, boost::archive::no_header | boost::archive::no_codecvt){}
 
-	inline void append(CONTAINER & obj){
+	inline void append(CONTAINER * obj){
 		archive << obj;
+		file << endl;
 	}
 
 	void close(){
@@ -42,8 +43,9 @@ public:
 	FileDeserializer(string filename): file(filename), archive(file, boost::archive::no_header | boost::archive::no_codecvt){}
 
 	inline CONTAINER * parseNext(){
-		CONTAINER * obj = new CONTAINER();
-		archive >> *obj;
+		CONTAINER * obj;
+		archive >> obj;
+		
 		return obj;
 	}
 

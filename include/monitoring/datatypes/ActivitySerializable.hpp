@@ -21,33 +21,32 @@
 
 using namespace std;
 
-namespace monitoring {
-
-
-
-
+namespace boost{
+namespace serialization {
 template<class Archive>
-void serialize(Archive & ar,  RemoteCall & id, const unsigned int file_version){
+void serialize(Archive & ar,  monitoring::RemoteCall & id, const unsigned int file_version){
 	SER("t", id.target)
 	SER("a", id.attributeArray)
 }
 
 template<class Archive>
-void serialize(Archive & ar, RemoteCallIdentifier & id, const unsigned int file_version){
+void serialize(Archive & ar, monitoring::RemoteCallIdentifier & id, const unsigned int file_version){
 	SER("h", id.hwid)
 	SER("uuid", id.uuid)
 	SER("i", id.instance)
 }
 
 template<class Archive>
-void serialize(Archive & ar, Attribute & id, const unsigned int file_version){
+void serialize(Archive & ar, monitoring::Attribute & id, const unsigned int file_version){
 	SER("o", id.id)
 	// TODO value depends on the type of the attribute which is available in the ontology cache...
 	// Right now use a boost::variant
 	SER("v", id.value)
 }
+}
+}
 
-
+namespace monitoring {
 
 class ActivitySerializable : public Activity{
 public:

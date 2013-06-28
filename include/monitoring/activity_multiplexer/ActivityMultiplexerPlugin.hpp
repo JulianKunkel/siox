@@ -6,7 +6,6 @@
 #include <core/component/Component.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 
-#include <monitoring/activity_multiplexer/plugin/module.h>
 
 using namespace core;
 
@@ -42,5 +41,7 @@ public:
 };
 
 }
+
+
 
 #endif

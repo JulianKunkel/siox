@@ -20,15 +20,14 @@ private:
 public:
 	void Notify(Activity * activity)
 	{ 
-		ActivitySerializable * a = (ActivitySerializable*)  activity;
-		serializer->append(*a);
+		serializer->append((ActivitySerializable *) activity);
 	}
 
 	ComponentOptions * get_options(){
 		return new FileWriterPluginOptions();
 	}
 
-	void init(ActivityMultiplexerPluginOptions * options, ActivityMultiplexer& multiplexer){
+	void init(ActivityMultiplexerPluginOptions * options, ActivityMultiplexer & multiplexer){
 		FileWriterPluginOptions * o = (FileWriterPluginOptions*) options;
 		serializer = new FileSerializer<ActivitySerializable>(o->filename);
 		multiplexer.registerListener(this);

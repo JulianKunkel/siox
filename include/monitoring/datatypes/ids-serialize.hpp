@@ -10,8 +10,8 @@
 #include <monitoring/datatypes/ids.hpp>
 
 #define SER(x,y) ar & boost::serialization::make_nvp(x, y);
-
-namespace monitoring{
+namespace boost{
+namespace serialization {
 	template<class Archive>
 	void serialize(Archive & ar, ComponentID & id, const unsigned int file_version){
 		SER("pid", id.pid)
@@ -31,8 +31,7 @@ namespace monitoring{
 		SER("pid", id.pid)
 		SER("t", id.time);
 	}
-
-
+}
 }
 
 #endif

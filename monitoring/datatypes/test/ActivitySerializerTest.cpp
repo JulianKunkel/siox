@@ -27,7 +27,7 @@ int main(){
 	
 	// output to file
 	FileSerializer<ActivitySerializable> outFile("data.txt");
-	outFile.append(*test);
+	outFile.append(test);
 	outFile.close();
 
 	// read test from variable
