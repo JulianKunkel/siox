@@ -53,6 +53,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 #include <thread>
 
 #include <monitoring/multiplexer/Multiplexer.hpp>
@@ -69,7 +70,7 @@ namespace monitoring{
 
 // forward declaration for friendship 
 template <class TYPE>class MultiplexerQueue;
-class MultiplexerNotifier;
+template <class TYPE>class MultiplexerNotifier;
 template <class TYPE>class MultiplexerAsync;
 
 
@@ -80,6 +81,8 @@ template <class TYPE>class MultiplexerAsync;
 template <class TYPE>
 class MultiplexerQueue 
 {
+	//MultiplexerAsync<TYPE> * multiplexer;
+	
 	deque<TYPE *> queue; 
 	int capacity = 1000;
 
@@ -163,7 +166,7 @@ public:
 		TYPE * element;
 		
 		element = queue.front();
-		queue.pop();
+		queue.pop_front();
 
 		return element;
 	};
@@ -174,23 +177,25 @@ public:
  * ActivityMultiplexerNotifier
  * Used by the ActivityMultiplexer to dispatch to async listeners
  */
+template <class TYPE>
 class MultiplexerNotifier
 {
+	MultiplexerAsync<TYPE> * multiplexer;
+
+
 public:
 	// TODO: signal upstream to Deamons others
-
-
 	virtual void Reset(int lost) {}
 
 	/**
 	 * cleanup data structures and finish immediately
 	 */
-	virtual void shutdown() = 0;
+	virtual void shutdown() {};
 	
 	/**
 	 * set terminate flag for Notifier, terminates as soon queue is emptied 
 	 */
-	virtual	void finalize() = 0;
+	virtual	void finalize() {};
 };
 
 
@@ -202,8 +207,6 @@ public:
 template <class TYPE>
 class MultiplexerAsync : Multiplexer<TYPE>
 {
-
-
 	list<MultiplexerListener<TYPE> *> listeners;
 	list<MultiplexerListener<TYPE> *> listeners_sync;
 	list<MultiplexerListener<TYPE> *> listeners_async;
@@ -214,14 +217,22 @@ class MultiplexerAsync : Multiplexer<TYPE>
 	int not_invalidating = 0;
 
 	MultiplexerQueue<TYPE> * queue;
-	MultiplexerNotifier * notifier;
+	MultiplexerNotifier<TYPE> * notifier;
 
 public:
 
 	MultiplexerAsync () {
-		
-	
+		queue = new MultiplexerQueue<TYPE>;	
+		notifier = new MultiplexerNotifier<TYPE>;		
 	}
+
+	
+	~MultiplexerAsync() {
+		// TODO remove(queue);
+		// TODO remove(notifier);
+	}
+	
+	
 
 	/**
 	 * Called by layer to report about activity, passes activities to sync listeners

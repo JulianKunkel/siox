@@ -43,6 +43,8 @@
 #define MULTIPLEXER_H 
 
 #include <list>
+
+#include <atomic>
 #include <mutex>
 
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
