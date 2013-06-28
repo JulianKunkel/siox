@@ -1,11 +1,11 @@
 /**
  * This file contains structures and constructors for SIOX ID, e.g.
  * hardware, processes, components and attributes.
- * @Author JK
+ * @Authors Julian Kunkel Marc Wiedemann
  */
 
-#ifndef SIOX_IDS_H
-#define SIOX_IDS_H
+#ifndef __SIOX_IDS_HPP
+#define __SIOX_IDS_HPP
 
 #include <stdint.h>
 
@@ -15,15 +15,21 @@
 
 /* Hardware ID, identifying the hardware component running on 
  * It is invalid if ID == 0
+ * Type such as network card or storage node and model such as 10Gbit or vendor/ivybridge would identify the hardware
+ * There are device ids 0x1014 for wireless and vendor ids such as 0x168C for Atheros already. We could use this coding or explicit description.
  */
-typedef uint32_t HwID;
+typedef  struct{
+	uint32_t numerical identifier;
+	string type;
+	model description;
+} HwID;
 // The daemon fetches the HwID from the knowledge base (or initiates creation if necessary)
 // HwID lookup_hardware_id(const char * hostname);
 // See @TODO
 
 /* Software ID, identifying the application programm, may be a server as well */
 typedef struct{
-	HwID hw;
+//	HwID hw; // necessary to connect here?
 	uint32_t pid;
 	uint32_t time;
 } ProcessID;
@@ -48,7 +54,7 @@ typedef struct{
 /* Identifying a SIOX component */
 typedef struct{  
 	ProcessID pid;
-	UniqueInterfaceID uuid;
+	UniqueInterfaceID uiid;
 } ComponentID;
 // ComponentID create_component_id(ProcessID 3*32 B, UIID);
 // The instance identifier such as "Port 4711" is relevant for matching of remote calls
