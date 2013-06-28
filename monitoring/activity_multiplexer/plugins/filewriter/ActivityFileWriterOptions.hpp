@@ -1,4 +1,3 @@
-#include <core/container/container-serializer.hpp>
 #include <core/component/component-macros.hpp>
 
 
