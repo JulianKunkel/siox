@@ -99,21 +99,22 @@ typedef struct {
 
 class Activity{
 protected:
-	ComponentID cid_;
+	string name_;
 	
 	uint64_t time_start_;
 	uint64_t time_stop_;
 
-	string name_;
-    
-	int32_t errorValue_;
+	ComponentID cid_;	
+
+	vector<ComponentID> parentArray_; 
+	vector<RemoteCall> remoteCallsArray_;
+	vector<Attribute> attributeArray_; 	
 
 	// If we are caused by a remote, we have to identify it.
 	RemoteCallIdentifier * remoteInvokee_; // NULL if none
 
-	vector<Attribute> attributeArray_; 
-	vector<ComponentID> parentArray_; 
-	vector<RemoteCall> remoteCallsArray_;
+
+	int32_t errorValue_;
 
 public:
 	uint64_t aid() const;
@@ -124,13 +125,12 @@ public:
 		vector<RemoteCall> * remoteCallsArray, 
 		RemoteCallIdentifier * remoteInvokee,  int32_t errorValue)
 		: 
-		time_start_ (start_t), time_stop_ (end_t), name_ (name),
+		name_ (name), time_start_ (start_t), time_stop_ (end_t),
 		cid_ (cid), parentArray_ ( std::move(*parentArray)),
 		remoteCallsArray_ (std::move(*remoteCallsArray)),
 		remoteInvokee_ (remoteInvokee),errorValue_(errorValue){}
 
-	Activity(){
-	}
+	Activity(){}
 		
 	uint64_t time_start() const{
 		return time_start_;

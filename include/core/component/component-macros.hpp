@@ -49,7 +49,8 @@ public:
 	template<class Archive>
 	void load(Archive & ar, const unsigned int version)
 	{
-		// instantiate child module and load it...
+		// Instantiate child module and load it..
+		// TODO
 	}
 
 
