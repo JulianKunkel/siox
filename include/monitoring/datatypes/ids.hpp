@@ -1,7 +1,7 @@
 /**
  * This file contains structures and constructors for SIOX ID, e.g.
  * hardware, processes, components and attributes.
- * @Authors Julian Kunkel Marc Wiedemann
+ * @Authors Julian Kunkel
  */
 
 #ifndef __SIOX_IDS_HPP
@@ -9,6 +9,10 @@
 
 #include <stdint.h>
 
+
+// Every hardware component which is addressable by the network is expected to have a unique (host)name.
+// This name is translated to the HwID.
+// 
 // In the following the approaches to create and/or lookup IDs is illustrated for each ID type.
 // This includes necessary input data and a description who will create the ID and 
 // where creation/lookup is implemented
@@ -18,18 +22,15 @@
  * Type such as network card or storage node and model such as 10Gbit or vendor/ivybridge would identify the hardware
  * There are device ids 0x1014 for wireless and vendor ids such as 0x168C for Atheros already. We could use this coding or explicit description.
  */
-typedef  struct{
-	uint32_t numerical identifier;
-	string type;
-	model description;
-} HwID;
+typedef uint32_t HwID;
+
 // The daemon fetches the HwID from the knowledge base (or initiates creation if necessary)
 // HwID lookup_hardware_id(const char * hostname);
 // See @TODO
 
 /* Software ID, identifying the application programm, may be a server as well */
 typedef struct{
-//	HwID hw; // necessary to connect here?
+	HwID hw;
 	uint32_t pid;
 	uint32_t time;
 } ProcessID;
@@ -51,12 +52,16 @@ typedef struct{
 // See @TODO
 
 
+// What happens if one process uses one layer multiple times?
+// Increase num...
+
 /* Identifying a SIOX component */
 typedef struct{  
 	ProcessID pid;
-	UniqueInterfaceID uiid;
+	//UniqueInterfaceID uiid;
+	uint16_t num;
 } ComponentID;
-// ComponentID create_component_id(ProcessID 3*32 B, UIID);
+// ComponentID create_component_id(ProcessID 3*32 B, UIID + 16 bit);
 // The instance identifier such as "Port 4711" is relevant for matching of remote calls
 // See @TODO
 
@@ -65,11 +70,15 @@ typedef struct{
 	ComponentID cid;
 	uint32_t num;
 } ActivityID;
+
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);
 // See @TODO
 
 /* Identifies an attribute in the ontology */
 typedef uint32_t OntologyAttributeID;
+
+/* Idendifies a component specific activity in the ontology */
+typedef uint32_t UniqueComponentActivityID;
 // The identifier is fetched from the knowledge base
 // OntologyAttributeID lookup_ontology_attribute(string uniqueOntologyIdentifier);
 // OntologyAttributeID lookup_or_create_ontology_attribute(string uniqueOntologyIdentifier, string unit, enum STORAGE_TYPE)

@@ -89,7 +89,7 @@ typedef struct {
 	// Several parameters assist matching of remote calls
 	HwID hwid; // optional
 	UniqueInterfaceID uuid; // optional
-	string instance; // optional, remote call instance identifier	
+	AssociateID instance; // optional, remote call instance identifier	
 } RemoteCallIdentifier;
 
 typedef struct {
@@ -99,36 +99,37 @@ typedef struct {
 
 class Activity{
 protected:
-	string name_;
+	// The ontology provides a single ID for each ActivityType of a component, e.g. POSIX "open()"
+	UniqueComponentActivityID aid_;
 	
 	uint64_t time_start_;
 	uint64_t time_stop_;
 
-	ComponentID cid_;	
+	ComponentID cid_;
 
-	vector<ComponentID> parentArray_; 
+	vector<ActivityID> parentArray_; 
 	vector<RemoteCall> remoteCallsArray_;
 	vector<Attribute> attributeArray_; 	
 
 	// If we are caused by a remote, we have to identify it.
-	RemoteCallIdentifier * remoteInvokee_; // NULL if none
+	RemoteCallIdentifier * remoteInvoker_; // NULL if none
 
-
+	// interface specific error value.
 	int32_t errorValue_;
 
 public:
-	uint64_t aid() const;
+	UniqueComponentActivityID aid() const;
 	
-	Activity(string name, uint64_t start_t, uint64_t end_t, ComponentID cid, 
-		vector<ComponentID> * parentArray, 
+	Activity(UniqueComponentActivityID aid, uint64_t start_t, uint64_t end_t, ComponentID cid, 
+		vector<ActivityID> * parentArray, 
 		vector<Attribute> * attributeArray, 
 		vector<RemoteCall> * remoteCallsArray, 
-		RemoteCallIdentifier * remoteInvokee,  int32_t errorValue)
+		RemoteCallIdentifier * remoteInvoker,  int32_t errorValue)
 		: 
-		name_ (name), time_start_ (start_t), time_stop_ (end_t),
+		aid_ (aid), time_start_ (start_t), time_stop_ (end_t),
 		cid_ (cid), parentArray_ ( std::move(*parentArray)),
 		remoteCallsArray_ (std::move(*remoteCallsArray)),
-		remoteInvokee_ (remoteInvokee),errorValue_(errorValue){}
+		remoteInvoker_ (remoteInvoker),errorValue_(errorValue){}
 
 	Activity(){}
 		

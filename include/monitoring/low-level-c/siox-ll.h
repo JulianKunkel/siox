@@ -89,6 +89,16 @@ extern "C"{
 #endif
 
 
+/*
+ * If hostname is set to NULL, the implementation will use the local hostname.
+ */
+HwID lookup_hardware_id(const char * hostname);
+
+/*
+ * Create a local ProcessID
+ */
+ProcessID create_process_id(HwID hw);
+
 
 /**
  * Register a process (program, could be a server as well)
@@ -104,6 +114,8 @@ extern "C"{
  * Rationales:
  * 1) Multiple calls to this function must be possible to simplify usage in applications.
  * 2) Explicit setting of values is used for testing.
+ * 
+ * If hwid or pid is NULL it is filled with the local hostname and the current process.
  */
 void siox_process_register(HwID * hwid, ProcessID * pid);
 
@@ -122,15 +134,81 @@ void siox_process_finalize();
 
 
 /**
- * Register an attribute type with SIOX.
+ * Register an attribute type within the ontology.
  *
- * In contrast to metrics, attributes are not supposed to be globally unique - their semantics
- * will vary with the entity they apply to.
+ * domain defines where this attribute belongs to, e.g. "Node", "Process", "POSIX", "MPI" AND sth. like "OpenMPIV1"
+ * 
+ * The key (domain, name) must be unique, so it is not allowed to use different storage types and/or attributes on one attribute.
  */
-//@test ''%s,%d'' name,storage_type
-siox_attribute * siox_attribute_register(const char * name, enum siox_ont_storage_type storage_type);
+//@test ''%s,%s,%d'' domain,name,storage_type
+siox_attribute * siox_ontology_register_attribute(const char * domain, const char * name, enum siox_ont_storage_type storage_type);
 
 /**@}*/
+
+/**
+ * Register a metric with SIOX.
+ *
+ * If no metric with the name given is found in the ontology, a new entry will be created.
+ * If a metric with the same name but inconsistent data is found, @c NULL will be returned.
+ *
+ * @param[in]   ontology    The ontology.
+ * @param[in]   name        The metric's full qualified name.
+ * @param[in]   unit        The unit used to measure values in the metric.
+ * @param[in]   storage     The minimum storage type required to store data of the metric.
+ *                          This type will also be assumed for type casts!
+ * @returns                 The @em siox_metric for the metric or NULL, if the data given
+ *                          is inconsistent with an existing metric of the same name..
+
+ * Uses siox_attribute_set_meta_attribute to attach the UNIT meta-attribute to the attribute.
+ */
+//@test ''%p,%s,%s,%d,%d'' domain,name,unit,storage,scope
+siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain, const char * name,
+                                            const char *                unit,
+                                            enum siox_ont_storage_type  storage);
+
+/**
+ * Set a meta-attribute on an attribute, e.g. "UNIT"
+ * Return false if an conflict with the current set attribute exists.
+ */ 
+ //@test ''%p,%p'' parent,meta_attribute
+int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * meta_attribute, void * value);
+
+/**
+ * Retrieve a metric by its name. TODO: use attributes to retrieve it.
+ *
+ * @param[in]   ontology    The ontology.
+ * @param[in]   name        The metric's full qualified name.
+ *
+ * @returns                 The @em siox_metric with the name given or NULL, if no such metric
+ *                          could be found.
+ */
+//@test ''%p,%s'' ontology,name
+siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name);
+
+/**
+ * Example: interface_name POSIX, MPI, MPIv3 ...
+ * Interface is "POSIX"
+ * Implementation could be MPICHv3 (major number, please ensure compatibility)
+ * If implementation_identifier is not set, ANY implementation of the interface is valid.
+ */
+UniqueInterfaceID * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier);
+
+/**
+ * Report performance data @em not associated with a single activity.
+ *
+ * @em Example:   Every second, the component reports its average processor load,
+ *                maximum memory usage and total idle time to SIOX.
+ *
+ * @param[in]   hw   The Node to report for.
+ * @param[in]   metric     The metric.
+ * @param[in]   value   A pointer to the metric's actual value.
+ * 
+ * The value describes the difference / delta of the statistic metric between start and end, e.g. 54 MiB has been read between start and end.
+ * 
+ */
+//@test ''%p,%p,%p'' component,metric,value
+void siox_report_node_statistics(HwID hw, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value);
+
 
 /**
  * @name Components
@@ -146,6 +224,14 @@ siox_attribute * siox_attribute_register(const char * name, enum siox_ont_storag
  * </ol>
  */
 /**@{*/
+
+
+/*
+ * This function creates a process-local ID in the association mapper and relates it to the string.
+ * Therefore, subsequent usages of the string can be replaced by the id.
+ * The same string may be linked to the same ID.
+ */
+AssociateID * siox_associate_instance(const char * iid);
 
 /**
  * Register this component with SIOX.
@@ -163,7 +249,7 @@ siox_attribute * siox_attribute_register(const char * name, enum siox_ont_storag
  * @note Any parameter SIOX can find out on its own (such as a ProcessID) may be @c NULL.
  */
 //@test ''%s-%s-%s'' hwid,swid,iid
-siox_component * siox_component_register(UniqueInterfaceID * uid, const char * iid);
+siox_component * siox_component_register(UniqueInterfaceID * uid, const char * instance_name);
 
 /**
  * Report an attribute of this component to SIOX.
@@ -177,6 +263,11 @@ siox_component * siox_component_register(UniqueInterfaceID * uid, const char * i
 //@test ''%p,%p,%p'' component,attribute,value
 void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, void * value);
 
+/*
+ Register a potential activity on a component.
+ */
+siox_component_activity * siox_component_register_activity(UniqueInterfaceID * uid, const char * activity_name);
+
 /**
  * Register an attribute as a descriptor for activities (!) of this component.
  *
@@ -185,8 +276,8 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
  * @param[in]   component   The component.
  * @param[in]   attribute   The attribute.
  */
-//@test ''%p,%p'' component,attribute
-void siox_component_register_descriptor(siox_component * component, siox_attribute * attribute);
+//test ''%p,%p'' component,attribute
+//void siox_register_descriptor(siox_attribute * attribute);
 
 /**
  * Retrieve a named attribute of a component.
@@ -194,8 +285,8 @@ void siox_component_register_descriptor(siox_component * component, siox_attribu
  * @param[in]   component   The component.
  * @param[in]   name        The name of the attribute to be retrieved.
  */
-//@test ''%p,%s'' component,name
-siox_attribute * siox_component_get_attribute(siox_component * component, const char * name);
+//test ''%p,%s'' component,name
+//siox_attribute * siox_component_get_attribute(siox_component * component, const char * name);
 
 /**
  * Unregister a component with SIOX.
@@ -253,7 +344,7 @@ void siox_component_unregister(siox_component * component);
  *                          further dealings with SIOX.
  */
 //@test ''%p'' component
-siox_activity * siox_activity_start(siox_component * component, siox_timestamp timestamp, const char * comment);
+siox_activity * siox_activity_start(siox_component_activity * activity, siox_timestamp timestamp);
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.
@@ -287,8 +378,8 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
  * @param[in]   activity    The activity.
  * @param[in]   name        The name of the attribute to be retrieved.
   */
-//@test ''%p,%s'' activity,name
-siox_attribute * siox_activity_get_attribute(siox_activity * activity, const char * name);
+//test ''%p,%s'' activity,name
+//siox_attribute * siox_activity_get_attribute(siox_activity * activity, const char * name);
 
 /**
  * Report performance data to be associated with the activity.
@@ -301,8 +392,8 @@ siox_attribute * siox_activity_get_attribute(siox_activity * activity, const cha
  * @param[in]   metric          The metric describing the data.
  * @param[in]   value           A pointer to the metric's actual value.
  */
-//@test ''%p,%p,%p'' activity,metric,value
-void siox_activity_report(siox_activity * activity, siox_metric * metric, void * value);
+//test ''%p,%p,%p'' activity,metric,value
+//void siox_activity_report(siox_activity * activity, siox_metric * metric, void * value);
 
 /**
  * Report that the current call resulted in the error code @em error so that SIOX can mark any
@@ -341,21 +432,8 @@ void siox_activity_end(siox_activity * activity);
 //@test ''%p,%p'' activity_child,activity_parent
 void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent);
 
-/**
- * Report performance data @em not associated with a single activity.
- *
- * @em Example:   Every second, the component reports its average processor load,
- *                maximum memory usage and total idle time to SIOX.
- *
- * @param[in]   component   The component.
- * @param[in]   metric     The metric.
- * @param[in]   value   A pointer to the metric's actual value.
- */
-//@test ''%p,%p,%p'' component,metric,value
-void siox_report(siox_component * component,  siox_metric * metric, void * value);
-
-/**@}*/
-
+// TODO maybe just using ID?
+//void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity_ID?);
 
 
 /**
@@ -402,10 +480,10 @@ void siox_report(siox_component * component,  siox_metric * metric, void * value
  *                            future communications with SIOX.
  */
 //@test ''%p,%s-%s-%s'' component,target_hwid,target_swid,target_iid
-siox_remote_call * siox_remote_call_start(siox_component *  component,
+siox_remote_call * siox_remote_call_start(siox_activity 	* activity,
                                           HwID 				* target_hwid,
                                           UniqueInterfaceID * target_uid,
-                                          const char 		* target_iid);
+                                          AssociateID 		* target_iid);
 
 /**
  * Report an attribute to be sent via a remote call.
@@ -424,7 +502,7 @@ void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribu
  * @param[in]   remote_call    The remote call.
  */
 //@test ''%p'' remote_call
-void siox_remote_call_execute(siox_remote_call * remote_call);
+void siox_remote_call_submitted(siox_remote_call * remote_call);
 
 /**
  * Report the reception of an attribute via a remote call.
@@ -438,47 +516,7 @@ void siox_remote_call_execute(siox_remote_call * remote_call);
  * 
  */ 
 //@test ''%p,%p,%p'' component,attribute,value
-void siox_remote_call_received(siox_component * component, 	HwID * hwid, UniqueInterfaceID * uuid, const char * instance);
-
-/**@}*/
-
-/**
- * Register a metric with SIOX.
- *
- * If no metric with the name given is found in the ontology, a new entry will be created.
- * If a metric with the same name but inconsistent data is found, @c NULL will be returned.
- *
- * @param[in]   ontology    The ontology.
- * @param[in]   name        The metric's full qualified name.
- * @param[in]   unit        The unit used to measure values in the metric.
- * @param[in]   storage     The minimum storage type required to store data of the metric.
- *                          This type will also be assumed for type casts!
- * @returns                 The @em siox_metric for the metric or NULL, if the data given
- *                          is inconsistent with an existing metric of the same name..
- */
-//@test ''%p,%s,%s,%d,%d'' ontology,name,unit,storage,scope
-siox_metric * siox_ontology_register_metric(const char *                canonical_name,
-                                            const char *                unit,
-                                            enum siox_ont_storage_type  storage);
-/* Attributes describe a metrics further:
-                          e.g. "component" = "network", "derivation_rules" = "time / size", "type" = "throughput"
-*/
-void siox_metric_set_attribute(siox_metric * metric, siox_attribute * attribute, void * value);
-
-
-/**
- * Retrieve a metric by its name. TODO: use attributes to retrieve it.
- *
- * @param[in]   ontology    The ontology.
- * @param[in]   name        The metric's full qualified name.
- *
- * @returns                 The @em siox_metric with the name given or NULL, if no such metric
- *                          could be found.
- */
-//@test ''%p,%s'' ontology,name
-siox_metric * siox_ontology_find_metric_by_name( const char * canonical_name);
-
-/**@}*/
+void siox_activity_started_by_remote_call(siox_activity * activity, HwID * caller_hwid_if_known, UniqueInterfaceID * caller_uid_if_known, AssociateID * caller_instance_if_known);
 
 #ifdef __cplusplus
 }

@@ -22,10 +22,8 @@ struct process_info{
 };
 
 
-HwID lookup_hardware_id();
 
 ProcessID build_process_id(HwID hw, uint32_t pid, 	uint32_t time);
-ProcessID create_process_id(HwID hw);
 
 
 #endif
