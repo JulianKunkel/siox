@@ -11,7 +11,7 @@
 
 
 // Every hardware component which is addressable by the network is expected to have a unique (host)name.
-// This name is translated to the HwID.
+// This name is translated to the NodeID.
 // 
 // In the following the approaches to create and/or lookup IDs is illustrated for each ID type.
 // This includes necessary input data and a description who will create the ID and 
@@ -22,20 +22,33 @@
  * Type such as network card or storage node and model such as 10Gbit or vendor/ivybridge would identify the hardware
  * There are device ids 0x1014 for wireless and vendor ids such as 0x168C for Atheros already. We could use this coding or explicit description.
  */
-typedef uint32_t HwID;
+typedef uint32_t NodeID;
 
-// The daemon fetches the HwID from the knowledge base (or initiates creation if necessary)
-// HwID lookup_hardware_id(const char * hostname);
+typedef uint32_t DeviceID;
+
+typedef uint32_t FilesystemID;
+
+/* Identifies an attribute in the ontology */
+typedef uint32_t OntologyAttributeID;
+
+/* Idendifies a component specific activity in the ontology */
+typedef uint32_t UniqueComponentActivityID;
+
+/* The associate ID is valid only within a particular process */
+typedef uint32_t RemoteInstanceID;
+
+// The daemon fetches the NodeID from the knowledge base (or initiates creation if necessary)
+// NodeID lookup_hardware_id(const char * hostname);
 // See @TODO
 
 /* Software ID, identifying the application programm, may be a server as well */
 typedef struct{
-	HwID hw;
+	NodeID hw;
 	uint32_t pid;
 	uint32_t time;
 } ProcessID;
-// Each process can create a runtime ID locally KNOWING the HwID from the daemon
-// RuntimeID create_runtime_id(HwID 32 B,  getpid() 32B, gettimeofday(seconds) 32B );
+// Each process can create a runtime ID locally KNOWING the NodeID from the daemon
+// RuntimeID create_runtime_id(NodeID 32 B,  getpid() 32B, gettimeofday(seconds) 32B );
 // See @TODO
 
 
@@ -74,11 +87,6 @@ typedef struct{
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);
 // See @TODO
 
-/* Identifies an attribute in the ontology */
-typedef uint32_t OntologyAttributeID;
-
-/* Idendifies a component specific activity in the ontology */
-typedef uint32_t UniqueComponentActivityID;
 // The identifier is fetched from the knowledge base
 // OntologyAttributeID lookup_ontology_attribute(string uniqueOntologyIdentifier);
 // OntologyAttributeID lookup_or_create_ontology_attribute(string uniqueOntologyIdentifier, string unit, enum STORAGE_TYPE)

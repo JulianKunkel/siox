@@ -2,14 +2,11 @@
 #define SIOX_ONT_H
 
 #include <string>
-#include <memory>
 #include <vector>
-
-#include <boost/variant.hpp>
-//#include <boost/shared_ptr.hpp>
 
 #include <core/component/Component.hpp>
 
+#include <monitoring/ontology/OntologyDatatypes.hpp>
 #include <monitoring/datatypes/basic-types.hpp>
 
 /*
@@ -91,19 +88,7 @@ namespace monitoring{
 
 namespace ontology{
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> Value;
-
-class Attribute {
-public:
-    OntologyAttributeID aID;
-
-    string name;
-    enum siox_ont_storage_type storage_type;
-
-    Attribute(OntologyAttributeID aid, string & name, enum siox_ont_storage_type storage_type) : aID(aid), name(name), storage_type(storage_type) {}
-};
-
-class OntologyProvider : public core::Component {
+class Ontology : public core::Component {
 
 public: 
 	virtual Attribute * register_attribute(string & domain, string & name, enum siox_ont_storage_type storage_type) = 0 ;
@@ -126,7 +111,7 @@ public:
     // the device ID -> system specific
     // the filesystem ID -> system specific
 
-    // Global Association Store
+    // => SystemInformationGlobalIDManager
     // virtual UniqueInterfaceID           lookup_interface_id(string & interface, string & implementation);
     // virtual UniqueComponentActivityID   lookup_activity_id(UniqueInterfaceID & id, string & name);
     // virtual const string & lookup_interface_name(UniqueInterfaceID id);
@@ -147,16 +132,6 @@ public:
 }
 }
 
-
-
-
-
-// Module interfaces 
-
-#define COMPONENT(x) \
-extern "C"{\
-void * get_instance_monitoring_ontology() { return new x(); }\
-}
 
 #define ONTOLOGY_INTERFACE "monitoring_ontology"
 

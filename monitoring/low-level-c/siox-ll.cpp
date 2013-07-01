@@ -33,7 +33,7 @@ struct process_info process_data = {0};
 
 // Functions used for testing the interfaces.
 
-ProcessID build_process_id(HwID hw, uint32_t pid, 	uint32_t time){
+ProcessID build_process_id(HwID hw, uint32_t pid, uint32_t time){
 	return {.hw = hw, .pid = pid, .time = time};
 }
 

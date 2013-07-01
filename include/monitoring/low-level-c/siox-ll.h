@@ -92,32 +92,32 @@ extern "C"{
 /*
  * If hostname is set to NULL, the implementation will use the local hostname.
  */
-HwID lookup_hardware_id(const char * hostname);
+NodeID lookup_hardware_id(const char * hostname);
 
 /*
  * Create a local ProcessID
  */
-ProcessID create_process_id(HwID hw);
+ProcessID create_process_id(NodeID hw);
 
 
 /**
  * Register a process (program, could be a server as well)
  * This will be done automatically by register_component() if not provided. 
  * 
- * @param[in]   hwid    identifies the hardware the process is running on. e.g. „Blizzard Node 5“ or the MacIDof an NAS hard drive.
+ * @param[in]   NodeID    identifies the hardware the process is running on. e.g. „Blizzard Node 5“ or the MacIDof an NAS hard drive.
  * 
  * If it is null it will be looked up automatically.
  * pid identifies the process.
  * If it is null it will be looked up automatically.
  * 
- * Subsequent calls to this function will ignore the pid and hwid parameters but add new attributes.
+ * Subsequent calls to this function will ignore the pid and NodeID parameters but add new attributes.
  * Rationales:
  * 1) Multiple calls to this function must be possible to simplify usage in applications.
  * 2) Explicit setting of values is used for testing.
  * 
- * If hwid or pid is NULL it is filled with the local hostname and the current process.
+ * If NodeID or pid is NULL it is filled with the local hostname and the current process.
  */
-void siox_process_register(HwID * hwid, ProcessID * pid);
+void siox_process_register(NodeID * nodeID, ProcessID * pid);
 
 /**
  Adding of attributes allows different layers to add global valid runtime information (such as MPI rank).
@@ -207,7 +207,7 @@ UniqueInterfaceID * siox_system_information_lookup_interface_id(const char * int
  * 
  */
 //@test ''%p,%p,%p'' component,metric,value
-void siox_report_node_statistics(HwID hw, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value);
+void siox_report_node_statistics(NodeID hw, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value);
 
 
 /**
@@ -231,7 +231,7 @@ void siox_report_node_statistics(HwID hw, siox_attribute * statistic, siox_times
  * Therefore, subsequent usages of the string can be replaced by the id.
  * The same string may be linked to the same ID.
  */
-AssociateID * siox_associate_instance(const char * iid);
+RemoteInstanceID * siox_associate_instance(const char * iid);
 
 /**
  * Register this component with SIOX.
@@ -248,7 +248,7 @@ AssociateID * siox_associate_instance(const char * iid);
  *
  * @note Any parameter SIOX can find out on its own (such as a ProcessID) may be @c NULL.
  */
-//@test ''%s-%s-%s'' hwid,swid,iid
+//@test ''%s-%s-%s'' NodeID,swid,iid
 siox_component * siox_component_register(UniqueInterfaceID * uid, const char * instance_name);
 
 /**
@@ -468,7 +468,7 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
  * Open attribute list for a remote call, indicate its target and receive @em RCID.
  *
  * @param[in]   component     The component.
- * @param[in]   target_hwid   The target component's @em HardwareID (e.g. „Blizzard Node 5“ or the MacID
+ * @param[in]   target_NodeID   The target component's @em HardwareID (e.g. „Blizzard Node 5“ or the MacID
  *                            of an NAS hard drive), if known; otherwise, @c NULL.
  * @param[in]   target_uid   The target component's @em Software interface (e.g. „MPI“ oder „POSIX“),
  *                            if known; otherwise, @c NULL.
@@ -479,9 +479,9 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
  * @return                    A fresh @em RCID to be used in all the remote call's
  *                            future communications with SIOX.
  */
-//@test ''%p,%s-%s-%s'' component,target_hwid,target_swid,target_iid
+//@test ''%p,%s-%s-%s'' component,target_NodeID,target_swid,target_iid
 siox_remote_call * siox_remote_call_start(siox_activity 	* activity,
-                                          HwID 				* target_hwid,
+                                          NodeID 				* target_NodeID,
                                           UniqueInterfaceID * target_uid,
                                           AssociateID 		* target_iid);
 
@@ -516,7 +516,7 @@ void siox_remote_call_submitted(siox_remote_call * remote_call);
  * 
  */ 
 //@test ''%p,%p,%p'' component,attribute,value
-void siox_activity_started_by_remote_call(siox_activity * activity, HwID * caller_hwid_if_known, UniqueInterfaceID * caller_uid_if_known, AssociateID * caller_instance_if_known);
+void siox_activity_started_by_remote_call(siox_activity * activity, NodeID * caller_NodeID_if_known, UniqueInterfaceID * caller_uid_if_known, AssociateID * caller_instance_if_known);
 
 #ifdef __cplusplus
 }
