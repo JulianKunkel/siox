@@ -2,92 +2,43 @@
 #include <iostream>
 
 #include <core/autoconfigurator/AutoConfigurator.hpp>
-#include <core/component/Component.hpp>
-#include <core/component/component-macros.hpp>
+
+#include "test-serialize-modules.hpp"
 
 using namespace core;
 
-/**
- * Test objects to create/init from configuration file.
- */
-class MyChildModuleOptions : public ComponentOptions{
-public:
-	string name;
-	int value;
-
-	SERIALIZE_CONTAINER(MEMBER(name) MEMBER(value) )
-};
-CREATE_SERIALIZEABLE_CLS(MyChildModuleOptions)
-
-class MyChildModule : public Component{
-public:	
-	void init(ComponentOptions * options){
-		MyChildModuleOptions * o = (MyChildModuleOptions*) options;
-		cout << "Child" << o->name << " " << o->value << endl;
-
-		delete(o);
-	}
-
-	ComponentOptions * get_options(){
-		return new MyChildModuleOptions();
-	}
-
-	void shutdown(){
-
-	}
-};
-
-class MyParentModuleOptions : public ComponentOptions{
-public:
-	string pname;
-	int pvalue;
-
-	Module<MyChildModule> submodule;
-
-	MyParentModuleOptions(){
-
-	}
-
-	SERIALIZE_CONTAINER(MEMBER(pname) MEMBER(pvalue) MEMBER(submodule) )
-};
-CREATE_SERIALIZEABLE_CLS(MyParentModuleOptions)
-
-class MyParentModule : public Component{
-public:
-	void init(ComponentOptions * options){
-		MyParentModuleOptions * o = (MyParentModuleOptions*) options;
-		cout << "Parent " << o->pname << " " << o->pvalue << " " << o->submodule.instance << endl;
-
-		// free the options afterwards
-		delete(o);
-	}
-
-	ComponentOptions * get_options(){
-		return new MyParentModuleOptions();
-	}
-
-	void shutdown(){
-
-	}
-};
-
-
-
-
 int main(){
-	AutoConfigurator * a = new AutoConfigurator("FileConfigurationProvider", "", "test.config");
+	ComponentRegistrar * registrar = new ComponentRegistrar();
+	AutoConfigurator * a = new AutoConfigurator(registrar, "FileConfigurationProvider", "", "core/autoconfigurator/ConfigurationProviderPlugins/FileConfigurationProvider/test/test.config");
 
+	MyChildModule * child = new MyChildModule();
+	MyParentModule * parent = new MyParentModule();
 
-	MyChildModule child;
-	MyParentModule parent;
+	cout << "Parent Empty Configuration" << endl;
+	cout << a->DumpConfiguration(parent->get_options()) << endl;
 
-	map<string, string> optional;
+	cout << "Child Empty Configuration" << endl;
+	cout << a->DumpConfiguration(child->get_options()) << endl;
 
-	a->LoadConfiguration(parent, "daemon", optional);
+	cout << "Loading configuration from file" << endl;
+	vector<Component*> components = a->LoadConfiguration("daemon", "hostname=\"node1\" mode=\"debug\"");
+	
+	parent = dynamic_cast<MyParentModule*>(components[1]); 
+	assert(parent);
+	child = dynamic_cast<MyChildModule*>(components[0]);
+	assert(child);
 
-	cout << a->DumpEmptyConfiguration(parent) << endl;
+	assert(parent->options);
+	assert(child->options);
 
-	cout << a->DumpEmptyConfiguration(child) << endl;
+	cout << parent->options->pname << endl;
+	cout << child->options->name << endl;
+	cout << parent->options->childInterface.componentID << endl;
+	assert(parent->options->childInterface.componentID);
+
+	assert(parent->options->childInterface.instance<MyChildModule>() == child);
+
+	delete(registrar);
 
 	return 0;
 }

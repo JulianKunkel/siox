@@ -3,59 +3,38 @@
 
 #include <core/component/Component.hpp>
 #include <core/container/container-macros.hpp>
+#include <boost/serialization/split_free.hpp>
+
+#include <core/component/ComponentRegistrar.hpp>
 
 
 #define SERIALIZE_CONTAINER(VAR_) SERIALIZE(VAR_ PARENT_CLASS(Container))
 
-using namespace core;
+extern core::ComponentRegistrar * autoConfiguratorRegistrar;
 
 
-/**
- * Describes a module to load. 
- * Add this datatype to componentOptions to enable loading of the module by using the AutoConfigurator.
- */
-template<class MODULETYPE>
-class Module{
-public:
-	// name of the module
-	std::string name;
-	// path to search for the module
-	std::string path;
-	// required interface
-	std::string interface;
-
-	MODULETYPE * instance = NULL;
-
-    template <typename Archive>
-	void serialize(Archive& ar, const unsigned int version){
-		ar & BOOST_SERIALIZATION_NVP(name);
-		ar & BOOST_SERIALIZATION_NVP(path);
-		ar & BOOST_SERIALIZATION_NVP(interface);
-
-		boost::serialization::split_member(ar, *this, version);
+namespace boost{
+namespace serialization {
+	template<class Archive>
+	void serialize(Archive & ar, core::ComponentReference & g, const unsigned int version)
+	{
+		ar & boost::serialization::make_nvp("componentID", g.componentID);
+		split_free(ar, g, version);
 	}
 
 	template<class Archive>
-	void save(Archive & ar, const unsigned int version) const
-	{
-		// just save the options of the child module
-		if (instance != NULL){
-			Component * c = (Component*) instance;
-			ComponentOptions * o = c->get_options();
-			delete(o);
-		}
-	}
+	void save(Archive & ar, const core::ComponentReference & g, const unsigned int version)
+	{}
 
 	template<class Archive>
-	void load(Archive & ar, const unsigned int version)
+	void load(Archive & ar,  core::ComponentReference & g, const unsigned int version)
 	{
-		// Instantiate child module and load it..
-		// TODO
+		// load component from ModuleRegistrar
+		 g.componentID = (core::ComponentReferenceID) autoConfiguratorRegistrar->lookup_component(g.componentID);
 	}
 
-
-};
-
-
+}
+}
+//CREATE_SERIALIZEABLE_CLS_EXTERNAL(core::ComponentReference)
 
 #endif

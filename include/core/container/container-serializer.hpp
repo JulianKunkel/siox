@@ -9,6 +9,9 @@
 
 namespace core{
 
+/**
+ * Serialize a container into/from XML
+ */
 class ContainerSerializer{
 public:
 	std::string serialize(const Container * object);

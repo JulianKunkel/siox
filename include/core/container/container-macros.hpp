@@ -49,6 +49,13 @@
  	template void CLS_::serialize(boost::archive::xml_oarchive & ar, const unsigned int version); \
 	template void CLS_::serialize(boost::archive::xml_iarchive & ar, const unsigned int version);
 
+#define CREATE_SERIALIZEABLE_CLS_EXTERNAL(CLS_) \
+ 	BOOST_SERIALIZATION_FACTORY_0(CLS_)\
+ 	BOOST_CLASS_EXPORT(CLS_)\
+ 	BOOST_CLASS_IMPLEMENTATION(CLS_, boost::serialization::object_serializable)\
+ 	BOOST_CLASS_TRACKING(CLS_, boost::serialization::track_never) \
+ 	template void boost::serialization::serialize(boost::archive::xml_oarchive & ar, CLS_ & g, const unsigned int version); \
+	template void boost::serialization::serialize(boost::archive::xml_iarchive & ar, CLS_ & g, const unsigned int version);
 
 
 

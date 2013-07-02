@@ -21,9 +21,8 @@ class MyContainerChild: public MyContainer{
 public:
 	string str;
 	list<string> elems;
-	Module<MyContainer> child;
 	
-	SERIALIZE(MEMBER(str) MEMBER(elems) MEMBER(child) PARENT_CLASS(MyContainer) )
+	SERIALIZE(MEMBER(str) MEMBER(elems) PARENT_CLASS(MyContainer) )
 };
 CREATE_SERIALIZEABLE_CLS(MyContainerChild)
 

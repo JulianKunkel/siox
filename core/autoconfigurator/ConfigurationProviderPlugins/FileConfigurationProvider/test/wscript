@@ -2,6 +2,8 @@
 # encoding: utf-8
 
 def build(bld):
-	bld.program( features='test cxx cxxprogram', use = "AutoConfigurator" ,  target = 'fileconfiguration-test',	source = 'fileconfiguration-test.cpp', install_path = None,)
+	bld.shlib( target = 'test-serialize-modules', source = 'test-serialize-modules.cpp' )
+
+	bld.program( features='test cxx cxxprogram', use = "AutoConfigurator test-serialize-modules" ,  target = 'fileconfiguration-test',	source = 'fileconfiguration-test.cpp', install_path = None,)
 
 # -*- indent-tabs-mode: t -*-
