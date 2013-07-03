@@ -74,6 +74,8 @@ typedef struct{
 	//UniqueInterfaceID uiid;
 	uint16_t num;
 } ComponentID;
+// TODO:
+// ComponentID(siox_component){}
 // ComponentID create_component_id(ProcessID 3*32 B, UIID + 16 bit);
 // The instance identifier such as "Port 4711" is relevant for matching of remote calls
 // See @TODO

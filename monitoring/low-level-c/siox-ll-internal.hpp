@@ -4,6 +4,8 @@
 
 #include <monitoring/low-level-c/siox-ll.h>
 #include <monitoring/ontology/Ontology.hpp>
+#include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
+#include <monitoring/association_mapper/AssociationMapper.hpp>
 
 /**
  * Implementation of the low-level API
@@ -16,7 +18,10 @@ struct process_info{
 
 	// Loaded ontology implementation
 	monitoring::Ontology * ontology;
-
+    // Loaded system information manager implementation
+    monitoring::SystemInformationGlobalIDManager * system_information_manager;
+    // Loaded association mapper implementation
+    monitoring::AssociationMapper * association_mapper;
 	// Loaded monitoring implementation 
 	// TODO
 };
