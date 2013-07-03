@@ -39,9 +39,9 @@ public:
 	 * The configuration entry_point describes where to get the basic information, e.g. file or DB / demon connection to use for fetching the info.
 	 * An implementation may use the hwid to request only relevant configuration pieces.
 	 */
-	virtual void connect(std::string configuration_entry_point) = 0;
+	virtual void connect(std::string & configuration_entry_point) = 0;
 
-	virtual std::string getConfiguration(std::string type, std::map<std::string, std::string> & optional_matchings_priority) = 0;
+	virtual std::string getConfiguration(std::string & type, std::string & matchingRules) = 0;
 
 	virtual ~ConfigurationProvider() {};
 };

@@ -9,6 +9,21 @@ namespace core {
 
 typedef Container ComponentOptions;
 
+typedef uint64_t ComponentReferenceID;
+
+/*
+ * Use this class in the options to create a reference to a required component (interface).
+ */
+class ComponentReference{
+public:
+	ComponentReferenceID componentID;
+
+	template<class TYPE>
+	TYPE* instance(){
+		return (TYPE*)(componentID);
+	}
+};
+
 class Component {
 public:
 	// The init method uses the configuration options to configure the component.
@@ -17,7 +32,7 @@ public:
 	virtual ComponentOptions * get_options() = 0;
 	virtual void shutdown() = 0;
 
-	virtual ~Component(){}
+	virtual ~Component(){ }
 };
 
 }

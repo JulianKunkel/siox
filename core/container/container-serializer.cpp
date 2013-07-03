@@ -39,14 +39,35 @@ namespace core{
 		Container * object;
 		unsigned int flags = boost::archive::no_header;
 		assert(stream.good());
+		assert(! stream.eof());
 		boost::archive::xml_iarchive ia(stream, flags);
-		ia >> BOOST_SERIALIZATION_NVP(object);
+		try{
+			ia >> BOOST_SERIALIZATION_NVP(object);
+		}catch(boost::archive::archive_exception & e){		
+			cerr << "Error at: " << stream.tellg() << endl;
+			// output whole stream input
+			string s;
+			while(! stream.eof()){
+				stream >> s;
+				cerr << s << endl;
+			}
+			throw e;
+		}
+
 		return object;
 	}
 
 	Container * ContainerSerializer::parse(string data){
 		stringstream s(data);
-		return parse(s);
+		Container * obj;
+		try{
+			obj = parse(s);
+		}catch(boost::archive::archive_exception & e){		
+			cerr << "Error while parsing string " << endl;
+			cerr << data << endl;
+			throw e;		
+		}
+		return obj;
 	}
 
 }

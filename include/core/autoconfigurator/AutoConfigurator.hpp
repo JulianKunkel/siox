@@ -3,9 +3,9 @@
 
 #include <core/autoconfigurator/ConfigurationProvider.hpp>
 #include <core/component/Component.hpp>
+#include <core/component/ComponentRegistrar.hpp>
 
-
-//#include <core/module/module-loader.hpp>
+#include <vector>
 
 /*
  * Since this class does provide/parse the configuration it does not need to be derived from Component.
@@ -25,26 +25,29 @@ public:
 	 * configuration_entry_point is module specific and allows the module to fetch information from this entry point, e.g. a file.
 	 * This is useful, for example, if the user sets a file_configuration upon startup of the daemon.
 	 */
-	AutoConfigurator(string conf_provider_module, string module_path, string configuration_entry_point);
+	AutoConfigurator(ComponentRegistrar *r, string conf_provider_module, string module_path, string configuration_entry_point);
 
 	/*
 	 * This constructur allows to inject a ConfigurationProvider with its own settings.
 	 * Mainly for testing purpose.	 
 	 */
-	AutoConfigurator(ConfigurationProvider * conf_provider);
+	AutoConfigurator(ComponentRegistrar *r, ConfigurationProvider * conf_provider);
 
 	~AutoConfigurator();
 
 	/*
-	 * Load/Parse the configuration options into the options object.
-	 * TODO Think about interface
+	 * Load/Parse the configuration options, create the necessary components and link their attributes.
 	 */
-	void LoadConfiguration(Component & parent_component, string type, map<string, string> & optional_matchings_priority);
+	vector<Component*> LoadConfiguration(string type, string matchingRules);
 
-	string DumpEmptyConfiguration(Component & parent_component);
+	/*
+	 * Create an empty configuration entry for the given component
+	 */
+	string DumpConfiguration(ComponentOptions * options);
 
 private:	
 	ConfigurationProvider * configurationProvider;
+	ComponentRegistrar * registrar;
  };
 
 
