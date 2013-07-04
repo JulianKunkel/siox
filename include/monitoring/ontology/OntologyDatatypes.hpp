@@ -23,10 +23,6 @@ public:
     enum siox_ont_storage_type storage_type;
 
     Attribute(OntologyAttributeID aid, string & name, enum siox_ont_storage_type storage_type) : aID(aid), name(name), storage_type(storage_type) {}
-
-    Attribute(siox_attribute) {
-        // TODO
-    }
 };
 }
 }

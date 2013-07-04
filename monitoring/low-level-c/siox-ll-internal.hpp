@@ -7,6 +7,8 @@
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 
+#include <core/autoconfigurator/AutoConfigurator.hpp>
+
 /**
  * Implementation of the low-level API
  * The C-implementation serves as lightweight wrapper for C++ classes.
@@ -22,8 +24,12 @@ struct process_info{
     monitoring::SystemInformationGlobalIDManager * system_information_manager;
     // Loaded association mapper implementation
     monitoring::AssociationMapper * association_mapper;
-	// Loaded monitoring implementation 
-	// TODO
+
+    // Contains all components
+    core::ComponentRegistrar * registrar;
+
+    // Loads all component modules
+    core::AutoConfigurator * configurator;
 };
 
 
