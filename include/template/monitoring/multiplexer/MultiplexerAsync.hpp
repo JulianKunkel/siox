@@ -39,6 +39,29 @@
 	reasoning: 
 	http://permalink.gmane.org/gmane.comp.lib.boost.devel/211180
 
+
+
+	Lock relations:
+	
+	unregister
+		sync		blocks sync dispatch, blocks register of sync
+		async		blocks async dispatch, blocks register of async
+
+	register
+		sync		blocks unregister and register of sync
+		async		blocks unregister and register of async
+
+		does not block any dispatch, as for std::list iterator is not invalidated
+
+	dispatch
+		sync		blocks unregister
+		async		blocks unregister
+
+	
+	queue
+
+
+
 	//std::unique_lock<std::mutex> lock(mut);
 	//std::lock_guard<std::mutex> lock(mut);
 
@@ -73,7 +96,6 @@ template <class TYPE>class MultiplexerQueueTemplate;
 template <class TYPE>class MultiplexerNotifierTemplate;
 template <class TYPE>class MultiplexerAsyncTemplate;
 
-
 /**
  * A bounded buffer, to store elements that need to be dispatched by the 
  * Notifier
@@ -93,7 +115,7 @@ class MultiplexerQueueTemplate : public MultiplexerQueue<TYPE>
 	std::mutex mut;
 	std::condition_variable not_full;
 	std::condition_variable not_empty;
-	bool v = false;
+	bool v = false; // prevents starvation
 
 public:
 	/**
@@ -126,18 +148,22 @@ public:
 	};
 
 	/**
-	 * Add an activity to the queue
+	 * Add an activity to the queue if there is capacity, set overload flag
+	 * otherwhise.
 	 *
 	 * @param	TYPE *	an activity that need to be dispatched in the future
 	 */
 	virtual void Push(TYPE * element) {
 		std::lock_guard<std::mutex> lock(mut);
 
+		// maybe this should happen in notifier run()
+		/*
 		if (Overloaded() && Empty()) {	
 			// TODO notifier.Reset(lost);
 			lost = 0;
 			overloaded = false;
 		}
+		*/
 
 		if (Overloaded()) {
 			lost++;
@@ -160,7 +186,6 @@ public:
 	virtual TYPE * Pop() {
 		// TODO actually it should be absolutely ok to have the condition in 
 		//		here, as the thread should still be put to sleep 
-
 		std::lock_guard<std::mutex> lock(mut);
 
 		TYPE * element;
@@ -172,7 +197,6 @@ public:
 	};
 };
 
-
 /**
  * ActivityMultiplexerNotifier
  * Used by the ActivityMultiplexer to dispatch to async listeners
@@ -180,24 +204,70 @@ public:
 template <class TYPE>
 class MultiplexerNotifierTemplate : public MultiplexerNotifier<TYPE>
 {
+	bool terminate = false;
+
 	MultiplexerAsync<TYPE> * multiplexer;
 
+	
+	int dispatcher = 1;
+	list<std::thread> t;
 
 public:
+	MultiplexerNotifierTemplate() {
+	//MultiplexerNotifierTemplate(MultiplexerAsync<TYPE> * multiplexer) {
+		//this->multiplexer = multiplexer;
+		
+		for (int i = 0; i < dispatcher; ++i) {
+			t.push_back(std::thread(&MultiplexerNotifierTemplate::Run, this));
+			
+		}
+	}
+
+	/**
+	 * dispatch protocol with overload handling 
+	 */
+	virtual void Run() {
+
+		// if queue.empty() && terminate
+			// shutdown
+		// else
+			// if queue.overloaded() && queue.empty()
+				// Reset();
+			// else
+				// Dispatch();
+		while(true){
+			cout << "Run();\n";
+		}
+	}
+
+	/**
+	 * dispatch an Activity to async listeners
+	 */
+	virtual void Dispatch() {
+		
+	}
+
+
 	// TODO: signal upstream to Deamons others
 	virtual void Reset(int lost) {}
 
 	/**
-	 * cleanup data structures and finish immediately
+	 * free ressources and finish immediately
 	 */
-	virtual void shutdown() {};
+	virtual void shutdown() {
+		// wait for threads to finish
+		for(auto it = t.begin(); it != t.end(); ++it ) {
+			(*it).join();
+		}	
+	};
 	
 	/**
 	 * set terminate flag for Notifier, terminates as soon queue is emptied 
 	 */
-	virtual	void finalize() {};
+	virtual	void finalize() {
+		terminate = true;
+	};
 };
-
 
 /**
  * ActivityMultiplexer
@@ -286,8 +356,6 @@ public:
 		}
 		listeners.remove(listener);
 	}
-
-
 
 	//
 	// satisfy abstract parents

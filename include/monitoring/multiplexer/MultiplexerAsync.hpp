@@ -1,6 +1,8 @@
 /*!
  * @description
- * observer pattern, for easy notification of listeners with event buffer
+ * observer pattern, for easy notification of listeners with event buffer and
+ * async dispatch to listeners (while also preserving the sync path to sync
+ * listeners)
  *
  * @author Jakob Luettgau, Julian Kunkel
  * @date   2013
@@ -15,46 +17,11 @@
 
  2 Use Cases
 	- pass a message/element to multiple registered listeners
-	
- 3 Design and Text
-	Removing a listener might invalidate iterator
-	Inserting is usually fine (for lists uneffected, vectors until resize)
-
-	Possible solutions:
-		1.	snapshot list	
-			-> memory + time panelty
-
-		2.	change remove to null, check when iterating, 
-			clean up in additional loop, might skip if time is precious
-			-> management overhead (additional loops somewhere)
-
-		3.	boost::shared_lock (was actually proposend and rejected for C++11)
-			would implement readers/writers 
-			-> greater dependency on BOOST
-
-		4.	readers count + mutexes
-			-> quite fair, but in current implemantion busy wait when registering
-
-	C++11 does not provide a shared lock by it self (as needed for a RW-Scheme)
-	reasoning: 
-	http://permalink.gmane.org/gmane.comp.lib.boost.devel/211180
-
-	//std::unique_lock<std::mutex> lock(mut);
-	//std::lock_guard<std::mutex> lock(mut);
-
+	- when order of alements hold no meaning, the async path allows for
+	  a lower impact of siox on the application
  */
 #ifndef MULTIPLEXERASYNC_H
 #define MULTIPLEXERASYNC_H 
-
-#include <iostream>
-
-#include <list>
-#include <deque>
-
-#include <mutex>
-#include <condition_variable>
-#include <atomic>
-#include <thread>
 
 #include <monitoring/multiplexer/Multiplexer.hpp>
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
