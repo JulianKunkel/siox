@@ -5,21 +5,34 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <vector>
+#include <boost/algorithm/string.hpp>
 
 #include <assert.h>
 
 using namespace core;
 using namespace std;
 
+
 class FileConfigurationProvider : public ConfigurationProvider{
 public:
 
 	void connect(string & configuration_filename){
-		if(configuration_filename == ""){
-			// TODO use/try the default configuration files
+		// try for existance of potentially multiple files multiple configuration_filename are separated by ":" or tab.
+
+		vector<string> filelist;
+		boost::split(filelist, configuration_filename, boost::is_any_of(":\t"));
+
+		ifstream fin;
+		for(auto it = filelist.begin(); it != filelist.end(); ++it) {
+			fin.open(configuration_filename);
+			if(fin.good()){
+				break;
+			}
 		}
-		ifstream fin(configuration_filename);
-		assert (fin);
+		if(! fin.good()){
+			throw "Error configuration in files is not readable";
+		}
 
 		string line;
 		stringstream data;
@@ -41,7 +54,7 @@ public:
 		fin.close();
 	}
 
-	std::string getConfiguration(string & type, string & matchingRules){
+	string getConfiguration(string & type, string & matchingRules){
 		string what = type + " " + matchingRules;
 		return configurationSections[what];
 	}

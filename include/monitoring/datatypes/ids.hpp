@@ -69,7 +69,7 @@ typedef struct{
 // Increase num...
 
 /* Identifying a SIOX component */
-typedef struct{  
+typedef struct{
 	ProcessID pid;
 	//UniqueInterfaceID uiid;
 	uint16_t num;

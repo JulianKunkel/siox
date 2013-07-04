@@ -143,7 +143,7 @@ public:
 
 	string name() const{
 		return name_;
-	}	
+	}
 };
 
 }

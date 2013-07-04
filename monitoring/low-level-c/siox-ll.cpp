@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <core/module/module-loader.hpp>
 #include <assert.h>
@@ -41,15 +42,8 @@ ProcessID build_process_id(HwID hw, uint32_t pid, uint32_t time){
 
 //////////////////////////////////////////////////////////
 
-NodeID lookup_hardware_id(const char * hostname){
+NodeID lookup_hardware_id(string & hostname){
     // Dummy implementation 
-    if ( hostname == NULL)
-    {
-        // TODO: Adapt this to C++?
-        char hostname[1024];
-        hostname[1023] = '\0';
-        gethostname(hostname, 1023);
-    }
 
     // TODO contact daemon / SIOX kb to get unique ID based on the hostname.
     return process_data.system_information_manager->node_id(hostname);
@@ -88,13 +82,23 @@ __attribute__ ((destructor)) void siox_ll_dtor()
 
 ///////////////////// Implementation of SIOX-LL /////////////
 
-void siox_process_register(NodeID * nodeID, ProcessID * pid){ // , const char * configuration_parameters?
+void siox_process_register(const char * hostname_param, NodeID * nodeID, ProcessID * pid){ // , const char * configuration_parameters?
+    string hostname(hostname_param);
+    if ( hostname == NULL)
+    {
+        // TODO: Adapt this to C++?
+        char local_hostname[1024];
+        local_hostname[1023] = '\0';
+        gethostname(local_hostname, 1023);
+        string d(local_hostname);
+        hostname = d;
+    }
 
 
     if (nodeID != NULL){
         process_data.nodeID = *nodeID;
     }else{
-        process_data.nodeID = lookup_hardware_id();
+        process_data.nodeID = lookup_hardware_id(hostname);
     }
 
     if(pid != NULL){    
@@ -109,40 +113,46 @@ void siox_process_register(NodeID * nodeID, ProcessID * pid){ // , const char * 
         // Lookup and initialize configurations based on nodeID and pid...
         // Load required modules and pull the interfaces into global datastructures
         // Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
-        // TODO 
-        // For the moment use the file ontology module.     
+        process_data.registrar = new ComponentRegistrar();
 
-        // Acquire reference to a fully configured Ontology object
-        Ontology * o = module_create_instance<Ontology>("", "FileOntology", ONTOLOGY_INTERFACE);
-        ComponentOptions * o_options = o->get_options();
-        // Init using an empty configuration (for now).
-        o->init(o_options);
-        process_data.ontology = o;
+        // Check relevant environment modules:
+        {
+        char * provider = getenv("SIOX_CONFIGURATION_PROVIDER_MODULE");
+        char * path = getenv("SIOX_CONFIGURATION_PROVIDER_PATH");
+        char * configuration = getenv("SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT");
 
-        // Acquire reference to a fully configured SystemInformationGlobalIDManager object
-        // TODO: Set correct parameters for this call!!!
-        SystemInformationGlobalIDManager * sigidm = module_create_instance<SystemInformationGlobalIDManager>("", "FileOntology", ONTOLOGY_INTERFACE);
-        // TODO: Depending on how o_options was used, we may make do
-        // without a fresh ComponentOtions object
-        ComponentOptions * sigidm_options = sigidm->get_options();
-        // Init using an empty configuration (for now).
-        sigidm->init(sigidm_options);
-        process_data.system_information_manager = sigidm;
+        provider = (provider != NULL) ? provider : "FileConfigurationProvider" ;
+        path = (path != NULL) ? path : "";        
+        configuration = (configuration != NULL) ? configuration :  "siox.conf:/etc/siox.conf" ;
 
-        // Acquire reference to a fully configured AssociationMapper object
-        // TODO: Set correct parameters for this call!!!
-        AssociationMapper * am = module_create_instance<AssociationMapper>("", "FileOntology", ONTOLOGY_INTERFACE);
-        // TODO: Depending on how o_options was used, we may make do
-        // without a fresh ComponentOtions object
-        ComponentOptions * sigidm_options = am->get_options();
-        // Init using an empty configuration (for now).
-        am->init(sigidm_options);
-        process_data.association_mapper = am;
+        process_data.configurator = new AutoConfigurator(process_data.registrar, provider, path, configuration);
 
 
-        //TODO: Hier andere "globale" Objekte holen und init'en!
-        // Information providers and tools, to be acquired ASAP!
-        // ActivityBuilder, AMux, SMUx, ...
+        char * configurationMode = getenv("SIOX_CONFIGURATION_PROVIDER_MODE");
+
+        // hostname configurationMode (is optional)        
+        sstream configName;
+        configName << hostname;
+        if(configurationMode != NULL){
+            configName << " " << configurationMode;
+        }
+
+        vector<Component*> loadedComponents = process_data.configurator->LoadConfiguration("Process", configName.str());
+        if(loadedComponents == NULL){
+            cerr << "FATAL Invalid configuration set: " << endl; 
+            cerr << "SIOX_CONFIGURATION_PROVIDER_MODULE=" << provider << endl;
+            cerr << "SIOX_CONFIGURATION_PROVIDER_PATH=" << path << endl;
+            cerr << "SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT=" << configuration << endl;
+            cerr << "SIOX_CONFIGURATION_PROVIDER_MODE=" << configurationMode << endl;
+            // TODO use FATAL function somehow?
+            exit(1);
+        }
+
+        // check loaded components and asssign them to the right struct elements.
+        process_data.ontology = dynamic_cast<Ontology>(loadedComponents[0]);
+        process_data.system_information_manager =  dynamic_cast<SystemInformationGlobalIDManager>(loadedComponents[0]);
+        process_data.association_mapper =  dynamic_cast<AssociationMapper>(loadedComponents[0]);
+        }
 	}
 
 	finalized = false;
@@ -297,7 +307,7 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
 
 }
 
-//////////////// REMOTE CALL  ///////////////////////////////////
+//////////////// REMOTE CALL ///////////////////////////////////
 
 siox_remote_call * siox_remote_call_start(siox_activity     * activity,
                                           NodeID                * target_NodeID,
