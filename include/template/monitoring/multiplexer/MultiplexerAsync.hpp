@@ -79,7 +79,7 @@ template <class TYPE>class MultiplexerAsyncTemplate;
  * Notifier
  */
 template <class TYPE>
-class MultiplexerQueueTemplate : MultiplexerQueue<TYPE>
+class MultiplexerQueueTemplate : public MultiplexerQueue<TYPE>
 {
 	//MultiplexerAsync<TYPE> * multiplexer;
 	
@@ -178,7 +178,7 @@ public:
  * Used by the ActivityMultiplexer to dispatch to async listeners
  */
 template <class TYPE>
-class MultiplexerNotifierTemplate : MultiplexerNotifier<TYPE>
+class MultiplexerNotifierTemplate : public MultiplexerNotifier<TYPE>
 {
 	MultiplexerAsync<TYPE> * multiplexer;
 
@@ -222,8 +222,8 @@ class MultiplexerAsyncTemplate : MultiplexerAsync<TYPE>
 public:
 
 	MultiplexerAsyncTemplate () {
-//		queue = new MultiplexerQueueTemplate<TYPE>;	
-//		notifier = new MultiplexerNotifierTemplate<TYPE>;		
+		queue = new MultiplexerQueueTemplate<TYPE>;	
+		notifier = new MultiplexerNotifierTemplate<TYPE>;		
 	}
 
 	

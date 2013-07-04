@@ -81,95 +81,40 @@ template <class TYPE>class MultiplexerAsync;
 template <class TYPE>
 class MultiplexerQueue 
 {
-	//MultiplexerAsync<TYPE> * multiplexer;
-	
-	deque<TYPE *> queue; 
-	int capacity = 1000;
-
-	bool overloaded = false;
-	int lost = 0;
-
-	// for syncronisation
-	std::mutex mut;
-	std::condition_variable not_full;
-	std::condition_variable not_empty;
-	bool v = false;
-
 public:
 	/**
 	 * Check whether or not the queue has still capacity
 	 *
 	 * @return	bool	true = queue is full, false = not full
 	 */
-	virtual bool Full() {
-		bool result = ( queue.size() > capacity );
-		return result;
-	};
+	virtual bool Full() =0; 
 	
 
 	/* Check whether of not the queue is empty
 	 * 
 	 * @return bool		true = queue is empty, false = not empty
 	 */
-	virtual bool Empty() {
-		bool result = ( queue.size() == 0 );
-		return result;
-	};
-
+	virtual bool Empty() =0;
 
 	/**
 	 * Check if queue is in overload mode
 	 *
 	 */
-	virtual bool Overloaded() {
-		return overloaded;
-	};
+	virtual bool Overloaded() =0; 
 
 	/**
 	 * Add an activity to the queue
 	 *
 	 * @param	TYPE *	an activity that need to be dispatched in the future
 	 */
-	virtual void Push(TYPE * element) {
-		std::lock_guard<std::mutex> lock(mut);
-
-		if (Overloaded() && Empty()) {	
-			// TODO notifier.Reset(lost);
-			lost = 0;
-			overloaded = false;
-		}
-
-		if (Overloaded()) {
-			lost++;
-		} else {
-
-			if (Full()) {
-				overloaded = true;
-				lost = 1;
-			} else {
-				queue.push_back(element);
-			}
-		}
-	};
+	virtual void Push(TYPE * element) =0; 
 	
 	/**
 	 * Get an activity from queue, returned element is popped!
 	 *
 	 * @return	TYPE	an activity that needs to be dispatched to async listeners
 	 */
-	virtual TYPE * Pop() {
-		// TODO actually it should be absolutely ok to have the condition in 
-		//		here, as the thread should still be put to sleep 
-
-		std::lock_guard<std::mutex> lock(mut);
-
-		TYPE * element;
-		
-		element = queue.front();
-		queue.pop_front();
-
-		return element;
-	};
+	virtual TYPE * Pop() =0; 
 };
 
 
@@ -185,17 +130,17 @@ class MultiplexerNotifier
 
 public:
 	// TODO: signal upstream to Deamons others
-	virtual void Reset(int lost) {}
+	virtual void Reset(int lost) =0;
 
 	/**
 	 * cleanup data structures and finish immediately
 	 */
-	virtual void shutdown() {};
+	virtual void shutdown() =0;
 	
 	/**
 	 * set terminate flag for Notifier, terminates as soon queue is emptied 
 	 */
-	virtual	void finalize() {};
+	virtual	void finalize() =0;
 };
 
 
