@@ -56,10 +56,10 @@
 	dispatch
 		sync		blocks unregister
 		async		blocks unregister
-
 	
 	queue
-
+		pop	<-------> push
+			  block
 
 
 	//std::unique_lock<std::mutex> lock(mut);
