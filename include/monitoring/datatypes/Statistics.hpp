@@ -36,4 +36,9 @@ Es gibt eine Shared Memory Region in der die Werte abgelegt werden müssen.
 Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
 => Global pro Knoten nur genau eine.
 
+
+
+StatisticsSeries, for data effective storage
+
+
 #endif
