@@ -323,9 +323,11 @@ void siox_activity_started_by_remote_call(siox_activity * activity, NodeID * cal
 siox_attribute * siox_ontology_register_attribute(const char * domain, const char * name, enum siox_ont_storage_type storage_type){
 	assert(name != NULL);
 
-	string s(name);
-	return process_data.ontology->register_attribute(domain, name, storage_type);
+    string d(domain);
+	string n(name);
+	return process_data.ontology->register_attribute(d, n, storage_type);
 }
+
 
 int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * meta_attribute, void * value){
     // MZ: How to handle value?!?
