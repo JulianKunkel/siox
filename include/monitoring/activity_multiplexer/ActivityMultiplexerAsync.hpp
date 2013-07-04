@@ -2,7 +2,7 @@
 #define ACTIVITYMULTIPLEXERASYNC_H 
 
 #include <monitoring/datatypes/Activity.hpp>
-#include <monitoring/multiplexer/MultiplexerAsync.hpp>
+#include <template/monitoring/multiplexer/MultiplexerAsync.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
 namespace monitoring{
@@ -13,7 +13,7 @@ namespace monitoring{
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-class ActivityMultiplexerAsync : public MultiplexerAsync<Activity>
+class ActivityMultiplexerAsync : public MultiplexerAsyncTemplate<Activity>
 {
 
 };

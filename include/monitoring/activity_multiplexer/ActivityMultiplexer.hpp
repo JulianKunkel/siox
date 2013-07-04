@@ -2,7 +2,8 @@
 #define ACTIVITYMULTIPLEXER_H 
 
 #include <monitoring/datatypes/Activity.hpp>
-#include <monitoring/multiplexer/Multiplexer.hpp>
+//#include <monitoring/multiplexer/Multiplexer.hpp>
+#include <template/monitoring/multiplexer/Multiplexer.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
 namespace monitoring{
@@ -13,7 +14,7 @@ namespace monitoring{
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-class ActivityMultiplexer : public Multiplexer<Activity>
+class ActivityMultiplexer : public MultiplexerTemplate<Activity>
 {
 
 };

@@ -43,8 +43,8 @@
 	//std::lock_guard<std::mutex> lock(mut);
 
  */
-#ifndef MULTIPLEXERASYNC_H
-#define MULTIPLEXERASYNC_H 
+#ifndef MULTIPLEXERASYNC_TEMPLATE_H
+#define MULTIPLEXERASYNC_TEMPLATE_H 
 
 #include <iostream>
 
@@ -56,7 +56,7 @@
 #include <atomic>
 #include <thread>
 
-#include <monitoring/multiplexer/Multiplexer.hpp>
+#include <monitoring/multiplexer/MultiplexerAsync.hpp>
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
 
 using namespace std;
@@ -69,9 +69,9 @@ namespace monitoring{
  */
 
 // forward declaration for friendship 
-template <class TYPE>class MultiplexerQueue;
-template <class TYPE>class MultiplexerNotifier;
-template <class TYPE>class MultiplexerAsync;
+template <class TYPE>class MultiplexerQueueTemplate;
+template <class TYPE>class MultiplexerNotifierTemplate;
+template <class TYPE>class MultiplexerAsyncTemplate;
 
 
 /**
@@ -79,7 +79,7 @@ template <class TYPE>class MultiplexerAsync;
  * Notifier
  */
 template <class TYPE>
-class MultiplexerQueue 
+class MultiplexerQueueTemplate : MultiplexerQueue<TYPE>
 {
 	//MultiplexerAsync<TYPE> * multiplexer;
 	
@@ -178,7 +178,7 @@ public:
  * Used by the ActivityMultiplexer to dispatch to async listeners
  */
 template <class TYPE>
-class MultiplexerNotifier
+class MultiplexerNotifierTemplate : MultiplexerNotifier<TYPE>
 {
 	MultiplexerAsync<TYPE> * multiplexer;
 
@@ -205,48 +205,103 @@ public:
  * in an syncronised or asyncronous manner.
  */
 template <class TYPE>
-class MultiplexerAsync : Multiplexer<TYPE>
+class MultiplexerAsyncTemplate : MultiplexerAsync<TYPE>
 {
+	list<MultiplexerListener<TYPE> *> listeners;
+	list<MultiplexerListener<TYPE> *> listeners_sync;
+	list<MultiplexerListener<TYPE> *> listeners_async;
+
+	// thread safety, kept namespace verbose for clarity
+	std::mutex inc;
+	std::mutex dec;
+	int not_invalidating = 0;
+
+	MultiplexerQueue<TYPE> * queue;
+	MultiplexerNotifier<TYPE> * notifier;
+
 public:
+
+	MultiplexerAsyncTemplate () {
+//		queue = new MultiplexerQueueTemplate<TYPE>;	
+//		notifier = new MultiplexerNotifierTemplate<TYPE>;		
+	}
+
+	
+	~MultiplexerAsyncTemplate() {
+		// TODO remove(queue);
+		// TODO remove(notifier);
+	}
+	
+	
 
 	/**
 	 * Called by layer to report about activity, passes activities to sync listeners
 	 * and enqueqes activity for async dispatch.
 	 */
 	// TODO sadly for the mutexes it is always needed
-	virtual void Log(TYPE * element) =0;
+	virtual void Log(TYPE * element) {
+		{
+			std::lock_guard<std::mutex> lock(inc);
+			not_invalidating++;
+		}
+
+		for (auto it=listeners.begin(); it!=listeners.end(); ++it) {
+			(*it)->Notify(element);
+		}
+
+		{
+			std::lock_guard<std::mutex> lock(dec);
+			not_invalidating--;
+		}	
+		
+		// TODO cond.notify_one();
+	}
 
 	/**
 	 * Register listener to multiplexer
 	 *
 	 * @param	MultiplexerListener *	listener	listener to notify in the future
 	 */
-	virtual void registerListener(MultiplexerListener<TYPE> * listener) =0; 
+	virtual void registerListener(MultiplexerListener<TYPE> * listener) {
+		// exclusive, adding multiple listerns might result in race condition
+		std::lock_guard<std::mutex> lock(inc);
+		while( not_invalidating != 0 ) {
+			// wait
+			// TODO candidate for condition vairable?
+		}
+		listeners.push_back(listener);
+	}
 
 	/**
 	 * Unregister listener from multiplexer
 	 *
 	 * @param	MultiplexerListener *	listener	listener to remove
 	 */
-	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) =0;
+	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) {
+		// exclusive, as removing may invalidate iterator
+		std::lock_guard<std::mutex> lock(inc);
+		while( not_invalidating != 0 ) {
+			// wait
+			// TODO candidate for condition vairable?
+		}
+		listeners.remove(listener);
+	}
 
 
 
-	virtual void finalize() =0;
-	
 	//
 	// satisfy abstract parents
 	//
-	/*
+	virtual void finalize() {};
+
 	// TODO propose possible option parameters
 	void init(core::ComponentOptions * options) {}; 
 	// TODO clarify if return an empty ComponentOptions has no side effects
 	core::ComponentOptions * get_options() { return new core::ComponentOptions(); };
 	void shutdown() {};	
-	*/
 
 };
 
 
 }
-#endif /* MULTIPLEXERASYNC_H */
+#endif /* MULTIPLEXERASYNC_TEMPLATE_H */
