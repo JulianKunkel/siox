@@ -19,15 +19,15 @@ public:
 	Domain "component"
 	Key: cid + OntologyAttributeID, VALUE as value...
 	*/
-	virtual void set_process_attribute(ProcessID pid, OntologyAttribute * att, OntologyValue & value) = 0;
-	virtual OntologyValue & lookup_process_attribute(ProcessID pid, OntologyAttribute * att) = 0;
+	virtual bool set_process_attribute(ProcessID * pid, OntologyAttribute * att, OntologyValue & value) = 0;
+	virtual OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att) = 0;
 
-	virtual void set_component_attribute(ComponentID cid, OntologyAttribute * att, OntologyValue & value) = 0;
-	virtual OntologyValue & lookup_component_attribute(ComponentID cid, OntologyAttribute * att) = 0;
+	virtual bool set_component_attribute(ComponentID * cid, OntologyAttribute * att, OntologyValue & value) = 0;
+	virtual OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att) = 0;
 
 	/* This functions are used to create the RemoteInstanceID */
-	virtual AssociateID & create_instance_mapping(const string & value) = 0;
-	virtual const string & lookup_instance_mapping(uint32_t id) = 0;
+	virtual AssociateID create_instance_mapping(const string & value) = 0;
+	virtual const string * lookup_instance_mapping(AssociateID id) = 0;
 };
 
 }
