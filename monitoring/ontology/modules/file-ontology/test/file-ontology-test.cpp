@@ -39,11 +39,20 @@ int main(int argc, char const *argv[]){
 	cout << "ID2: " << a2->aID << endl;
 
 
+	a4 = o->lookup_attribute_by_name(domain, s_a1);
+	assert(a4 == a1);
+
+
 	a4 = o->lookup_attribute_by_ID(a1->aID);
 	assert(a4 == a1);
 
 	OntologyValue val(35);
-	o->attribute_set_meta_attribute(a1, a2, val);
+	assert(o->attribute_set_meta_attribute(a1, a2, val));
+	assert(o->attribute_set_meta_attribute(a1, a2, val));
+
+
+	OntologyValue val2(36);
+	assert(false == o->attribute_set_meta_attribute(a1, a2, val2));
 
 	assert(o->enumerate_meta_attributes(a1).size() == 1);
 
@@ -53,6 +62,8 @@ int main(int argc, char const *argv[]){
 	o->shutdown();
 
 	cout << "OK" << endl;
+
+	return 0;
 }
 
 

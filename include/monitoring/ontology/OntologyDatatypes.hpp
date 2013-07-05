@@ -19,6 +19,7 @@ class OntologyAttribute {
 public:
     OntologyAttributeID aID;
 
+    string domain;
     string name;
     enum siox_ont_storage_type storage_type;
 

@@ -2,11 +2,21 @@
 #include <map>
 #include <vector>
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <mutex>
 
 #include <monitoring/ontology/OntologyImplementation.hpp>
+
+#include <boost/archive/xml_oarchive.hpp> 
+#include <boost/archive/xml_iarchive.hpp> 
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/variant.hpp>
+
+
+
 #include "FileOntologyOptions.hpp"
 
 
@@ -14,11 +24,12 @@ using namespace std;
 
 using namespace monitoring;
 using namespace core;
+using namespace boost;
 
 
 CREATE_SERIALIZEABLE_CLS(FileOntologyOptions)
 
-namespace monitoring{
+
 
 class AttributeWithValues{
 public:
@@ -27,14 +38,77 @@ public:
 	vector<OntologyValue> values;
 };
 
+
+namespace boost{
+namespace serialization {
+template<class Archive>
+void serialize(Archive & ar, AttributeWithValues & g, const unsigned int version)
+{
+	ar & boost::serialization::make_nvp("attribute", g.attribute);
+	ar & boost::serialization::make_nvp("metas", g.meta_attributes);
+	ar & boost::serialization::make_nvp("values", g.values);
+}
+
+template<class Archive>
+void serialize(Archive & ar, OntologyAttribute & g, const unsigned int version)
+{
+	ar & boost::serialization::make_nvp("id", g.aID);
+	ar & boost::serialization::make_nvp("name", g.name);
+	ar & boost::serialization::make_nvp("domain", g.domain);
+	ar & boost::serialization::make_nvp("storageType", g.storage_type);
+}
+
+}
+}
+CREATE_SERIALIZEABLE_CLS_EXTERNAL(AttributeWithValues)
+CREATE_SERIALIZEABLE_CLS_EXTERNAL(OntologyAttribute)
+
+
+namespace monitoring{
+
+
 class FileOntology: public Ontology{
 
 	void load(string filename){
+		domain_name_map.clear();
+		attribute_map.clear();
 
+		ifstream file(filename);
+		if(! file.good())
+			return;
+		try{
+			boost::archive::xml_iarchive archive(file, boost::archive::no_header | boost::archive::no_codecvt);
+			archive >> boost::serialization::make_nvp("MAX_VALUE", nextID);
+			archive >> boost::serialization::make_nvp("map", attribute_map);
+
+			// recreate domain_name_map
+			for(auto itr = attribute_map.begin(); itr != attribute_map.end(); itr++){
+				auto pair = *itr;
+				AttributeWithValues * av = pair.second;
+
+				stringstream unique(av->attribute.domain);
+				unique << "|" << av->attribute.name;
+				string fqn(unique.str());
+
+				domain_name_map[fqn] = av; 
+			}
+		}catch(boost::archive::archive_exception e){
+			cerr << "Input file " << filename << " is damaged, recreating ontology!" << endl;
+			domain_name_map.clear();
+			attribute_map.clear();
+			nextID = 1;
+		}
+
+		file.close();
 	}
 
 	void save(string filename){
+		ofstream file(filename);
+		boost::archive::xml_oarchive archive(file, boost::archive::no_header | boost::archive::no_codecvt);
+		archive << boost::serialization::make_nvp("MAX_VALUE", nextID);
+		archive << boost::serialization::make_nvp("map", attribute_map);
 
+		file.close();
 	}
 
 	void init(ComponentOptions * options){
@@ -70,7 +144,8 @@ class FileOntology: public Ontology{
 			if (domain_name_map[fqn] == NULL){
 				AttributeWithValues * av = new AttributeWithValues();
 				av->attribute.aID = nextID++;
-				av->attribute.name = name; 
+				av->attribute.name = name;
+				av->attribute.domain = domain; 
 				av->attribute.storage_type = storage_type;
 				domain_name_map[fqn] = av;
 				attribute_map[av->attribute.aID] = av;
