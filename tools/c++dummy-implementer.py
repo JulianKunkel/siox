@@ -331,8 +331,8 @@ class Writer():
 	  print("  " + function.type + " " + function.name + "(" + function.parameterString + "){", file=output)
 	  if style == "cout":
 	      print("    cout << \"" + className + " - " + function.name + "(\";", file=output)
-	      for parameter in function.parameterList:
-	        print("    cout << " + parameter.name + ' << ", ";', file=output)
+	      #for parameter in function.parameterList:
+	      #  print("    cout << " + parameter.name + ' << ", ";', file=output)
               print('    cout << ")" << endl ;', file=output)
 
 	  if (function.type != "void"):

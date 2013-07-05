@@ -80,14 +80,16 @@ using namespace std;
 
 namespace monitoring {
 
+typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, string, float, double> AttributeValue;
+
 typedef struct {
 	OntologyAttributeID id;
-	boost::variant<int64_t, uint64_t, int32_t, uint32_t, string, float, double> value;
+	AttributeValue value;
 } Attribute;
 
 typedef struct {
 	// Several parameters assist matching of remote calls
-	HwID hwid; // optional
+	NodeID hwid; // optional
 	UniqueInterfaceID uuid; // optional
 	AssociateID instance; // optional, remote call instance identifier	
 } RemoteCallIdentifier;
@@ -141,9 +143,6 @@ public:
 		return time_stop_;
 	}
 
-	string name() const{
-		return name_;
-	}
 };
 
 }

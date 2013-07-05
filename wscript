@@ -9,6 +9,7 @@
 
 from waflib import Logs
 from waflib import Options
+#from waflib.Tools import c_preproc
 
 import fnmatch
 import mmap
@@ -86,9 +87,9 @@ def build(bld):
 	def dummyCPP(self, source, target):
 		Logs.debug(source)
 		bld(rule=dummyPlugin, source=source, target=target + "DummyCout.cpp")
-		bld.shlib(source = target+ "DummyCout.cpp", target = target + "DummyPrintf")
+		bld.shlib(include="include", source = target+ "DummyCout.cpp", target = target + "DummyPrintf")
 		bld(rule=dummyListPlugin, source=source, target=target + "DummyList.cpp")
-		bld.shlib(source = target + "DummyList.cpp", target = target + "DummyList")
+		bld.shlib(include="include", source = target + "DummyList.cpp", target = target + "DummyList")
 
 	bld.dummyCPP = dummyCPP
 
@@ -111,7 +112,7 @@ def build(bld):
 		  match = test_interface_re.search(lastlines)
 		  if match != None:
 			  target = match.group(1)
-			  print (fqfilename + " " + target)
+			  #print (fqfilename + " " + target)
 			  bld.dummyCPP(bld, source=fqfilename, target=target)
 
 

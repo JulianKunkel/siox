@@ -4,6 +4,7 @@
 #include <core/component/Component.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 
+using namespace monitoring::ontology;
 
 namespace monitoring{
 
@@ -27,7 +28,7 @@ public:
 	virtual Value & lookup_component_attribute(ComponentID cid, Attribute * att) = 0;
 
 	/* This functions are used to create the RemoteInstanceID */
-	virtual RemoteInstanceID & create_instance_mapping(const string & value) = 0;
+	virtual AssociateID & create_instance_mapping(const string & value) = 0;
 	virtual const string & lookup_instance_mapping(uint32_t id) = 0;
 };
 

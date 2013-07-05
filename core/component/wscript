@@ -3,7 +3,7 @@
 
 
 def build(bld):
-	bld.shlib( target = 'core-component-registrar', source = 'ComponentRegistrar.cpp' )
+	bld.shlib(include="include",  target = 'core-component-registrar', source = 'ComponentRegistrar.cpp' )
 	#bld.recurse(['test'], mandatory=True)
 
 

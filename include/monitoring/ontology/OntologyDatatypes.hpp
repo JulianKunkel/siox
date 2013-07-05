@@ -6,7 +6,7 @@
 #include <boost/variant.hpp>
 
 #include <monitoring/datatypes/ids.hpp>
-#include <monitoring/datatypes/basic-types.hpp>
+#include <monitoring/datatypes/c-types.h>
 
 using namespace std;
 
@@ -15,7 +15,7 @@ namespace monitoring{
 namespace ontology{
 
 typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> Value;
-
+ 
 class Attribute {
 public:
     OntologyAttributeID aID;

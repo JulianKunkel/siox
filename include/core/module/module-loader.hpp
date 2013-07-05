@@ -13,7 +13,7 @@ namespace core{
 /** 
 * The module loader interface provides a simple abstraction to "plugin"  component modules at runtime.
 * Load a single module and extracts any numbers of components with different interfaces from it.
-*/
+*/ 
  
 /**
  * Exception thrown upon an error of the module instantiation.

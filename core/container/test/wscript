@@ -2,6 +2,6 @@
 # encoding: utf-8
 
 def build(bld):
-	bld.program( features='test cxx cxxprogram', use = "BOOST core-container-serializer",  target = 'test-serializer', source = 'test-serializer.cpp', install_path = None,)
+	bld.program(include="include",  features='test cxx cxxprogram', use = "BOOST core-container-serializer",  target = 'test-serializer', source = 'test-serializer.cpp', install_path = None,)
 
 # -*- indent-tabs-mode: t -*-

@@ -37,9 +37,11 @@ typedef uint32_t UniqueComponentActivityID;
 /* The associate ID is valid only within a particular process */
 typedef uint32_t RemoteInstanceID;
 
+typedef uint32_t AssociateID;
+
 // The daemon fetches the NodeID from the knowledge base (or initiates creation if necessary)
 // NodeID lookup_hardware_id(const char * hostname);
-// See @TODO
+// See @TODO 
 
 /* Software ID, identifying the application programm, may be a server as well */
 typedef struct{
@@ -98,8 +100,6 @@ typedef struct{
 /////////////////////////////////////////////////////////////////////////////////////////
 // Functions which check the validity of an optional ID
 
-#ifdef __cplusplus
-
 inline bool is_valid_id(uint32_t id){
 	return id != 0;
 }
@@ -119,7 +119,5 @@ inline bool is_valid_id(ComponentID & id){
 inline bool is_valid_id(ActivityID & id){
 	return is_valid_id(id.cid);
 }
-
-#endif
 
 #endif

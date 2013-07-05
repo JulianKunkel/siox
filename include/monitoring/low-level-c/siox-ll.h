@@ -11,9 +11,7 @@
 #ifndef siox_LL_H
 #define siox_LL_H
 
-#include <monitoring/datatypes/ids.hpp>
-#include <monitoring/datatypes/basic-types.hpp>
-
+#include <monitoring/datatypes/c-types.h>
 
 /*
 

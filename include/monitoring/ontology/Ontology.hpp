@@ -7,7 +7,6 @@
 #include <core/component/Component.hpp>
 
 #include <monitoring/ontology/OntologyDatatypes.hpp>
-#include <monitoring/datatypes/basic-types.hpp>
 
 /*
 @startuml Ontology.png
@@ -17,7 +16,7 @@
 package boost #DDDDDD
 '    class variant {
 '    }
-end package
+end package 
 
 
 namespace core #SkyBlue
@@ -78,7 +77,7 @@ namespace monitoring #Orange
     Ontology <|-- FileOntology
 end namespace
 
-
+ 
 @enduml
 */
 
