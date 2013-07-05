@@ -166,14 +166,6 @@ class FunctionParser():
         self.regexSIOXInterface = re.compile( "#define\s+(\w+_INTERFACE)\s+\"(\w+)\"")
 
         # This regular expression matches parameter type and name.
-        # The Parameter which is matched needs to have a type and a name and is
-        # only used when the C code of the instrumented header file is
-        # generated. The instrumented header must provide the type and the name
-        # of every parameter.
-        # [\w*\s]+ matches everything until the last * or space.
-        # (?:\*\s*|\s+) matches the last * or blank
-        # ([\w]+ matches the parameter name
-        # (?:\s*\[\s*\])? matches array [] if exist
         self.regexParamterDefinition = re.compile('(.*)[\s]+(\w+)[\s]*')
 
         # This tuple of filter words searches for reseverd words in the
@@ -337,13 +329,14 @@ class Writer():
         # implement all functions:
         for function in functionList:
 	  print("  " + function.type + " " + function.name + "(" + function.parameterString + "){", file=output)
-	  if (function.type != "void"):
-	    print("    " + function.typeBasic + " var;", file=output)
-	    if style == "cout":
+	  if style == "cout":
 	      print("    cout << \"" + className + " - " + function.name + "(\";", file=output)
 	      for parameter in function.parameterList:
 	        print("    cout << " + parameter.name + ' << ", ";', file=output)
               print('    cout << ")" << endl ;', file=output)
+
+	  if (function.type != "void"):
+	    print("    " + function.typeBasic + " var;", file=output)	    
 	    print("    return var;\n", file=output)
 
 	  print("  }", file=output)
