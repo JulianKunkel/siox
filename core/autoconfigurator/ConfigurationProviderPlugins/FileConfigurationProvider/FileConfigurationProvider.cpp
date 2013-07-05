@@ -1,4 +1,4 @@
-#include <core/autoconfigurator/ConfigurationProvider.hpp>
+#include <core/autoconfigurator/ConfigurationProviderImplementation.hpp>
 #include <core/container/container-serializer.hpp>
 
 #include <fstream>
@@ -111,3 +111,4 @@ private:
 		// }
 
 COMPONENT(FileConfigurationProvider)
+

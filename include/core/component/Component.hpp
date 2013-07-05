@@ -2,6 +2,7 @@
 #define SIOX_COMPONENT_H
 
 #include <string>
+#include <stdint.h>
 
 #include <core/container/container.hpp>
 

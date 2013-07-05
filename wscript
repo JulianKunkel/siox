@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# Waf documentation, see http://docs.waf.googlecode.com/git/book_16/single.html
+# Waf documentation, see http://docs.waf.googlecode.com/git/book_17/single.html
 # Build and run unit tests:
 # See: http://docs.waf.googlecode.com/git/apidocs_16/tools/waf_unit_test.html#module-waflib.Tools.waf_unit_test
 
 # Waf has been build using: ./waf-light --tools=boost,doxygen,eclipse,proc,review,why
 
 from waflib import Logs
+from waflib import Options
 
+import fnmatch
+import mmap
 import os
+import re
 
 def __recurse(ctx):
 	workDir = ctx.path.abspath()
@@ -23,7 +27,8 @@ def options(opt):
 
 	#bo = opt.add_option_group("Build options")
 	opt.add_option('--production', action='store_true', default=False, dest='production', help="Disable debugging mode")
-	opt.add_option('--doc', action='store_true', default=False, dest='debug', help="Enable debugging mode")
+	opt.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
+	opt.add_option('--dummyCPPImplementations', action='store_true', default=False, dest='dummyCPPImplementations', help="Build dummy modules/plugins for all supporting layers")
 
 	__recurse(opt)
 
@@ -49,7 +54,7 @@ def configure(conf):
 	workDir = conf.path.abspath()
 	conf.env.INCLUDES = [workDir + '/include' ]
 
-        if conf.options.production:
+        if not conf.options.debug:
 	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall']
 	else:
 		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall']
@@ -62,11 +67,54 @@ def configure(conf):
 def doc(ctx):
 	ctx.exec_command("doxygen")
 
+
 def build(bld):
-	#__recurse(bld)
+	# Allow autogeneration of dummy C++ classes:
+	def dummyPlugin(task): 
+                src = task.inputs[0].abspath()
+                tgt = task.outputs[0].abspath()
+		Logs.debug(src)
+                cmd = bld.path.abspath() + '/tools/c++dummy-implementer.py -o %s --style %s %s' % (tgt, "cout", src)
+                return task.exec_command(cmd)
+
+	def dummyListPlugin(task): 
+                src = task.inputs[0].abspath()
+                tgt = task.outputs[0].abspath()
+                cmd = bld.path.abspath() + '/tools/c++dummy-implementer.py -o %s --style %s %s' % (tgt, "list", src)
+                return task.exec_command(cmd)
+	
+	def dummyCPP(self, source, target):
+		Logs.debug(source)
+		bld(rule=dummyPlugin, source=source, target=target + "DummyCout.cpp")
+		bld.shlib(source = target+ "DummyCout.cpp", target = target + "DummyPrintf")
+		bld(rule=dummyListPlugin, source=source, target=target + "DummyList.cpp")
+		bld.shlib(source = target + "DummyList.cpp", target = target + "DummyList")
+
+	bld.dummyCPP = dummyCPP
+
+
 	bld.recurse(['core'], mandatory=True)
-#	bld.recurse(['core', 'monitoring'], mandatory=True)
-#	bld.recurse(['core', 'monitoring', 'knowledge'], mandatory=True)
+#	bld.recurse(['monitoring'], mandatory=True)
+#	bld.recurse(['knowledge'], mandatory=True)
+
+	# build test interfaces
+	# Manual usage would be:
+	#bld.dummyCPP(bld, source="include/monitoring/ontology/Ontology.hpp", target='monitoring/ontology/modules/Ontology')
+	if Options.options.dummyCPPImplementations:
+	  test_interface_re = re.compile("BUILD_TEST_INTERFACE\s+([^ \n]+)",  re.M)
+	  for root, dirnames, filenames in os.walk('include'):
+	    for filename in fnmatch.filter(filenames, '*.hpp'):
+		  fqfilename = os.path.join(root, filename)
+		  lastlines = tail(fqfilename)
+		  if lastlines == 0:
+			  continue
+		  match = test_interface_re.search(lastlines)
+		  if match != None:
+			  target = match.group(1)
+			  print (fqfilename + " " + target)
+			  bld.dummyCPP(bld, source=fqfilename, target=target)
+
+
 	from waflib.Tools import waf_unit_test
         bld.add_post_fun(waf_unit_test.summary)
 
@@ -76,4 +124,19 @@ def build(bld):
 			bld.install_files("${PREFIX}/" + root, root + "/" + f)
 
 
-# -*- indent-tabs-mode: t -*-
+# Code from Stackoverflow:
+def tail(filename, n = 5):
+    """Returns last n lines from the filename. No exception handling"""
+    size = os.path.getsize(filename)
+    with open(filename, "rb") as f:
+        # for Windows the mmap parameters are different
+        fm = mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED, mmap.PROT_READ)
+        try:
+            for i in xrange(size - 1, -1, -1):
+                if fm[i] == '\n':
+                    n -= 1
+                    if n == -1:
+                        break
+            return fm[i + 1 if i else 0:]
+        finally:
+            fm.close()

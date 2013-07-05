@@ -91,15 +91,15 @@ namespace ontology{
 class Ontology : public core::Component {
 
 public: 
-	virtual Attribute * register_attribute(string & domain, string & name, enum siox_ont_storage_type storage_type) = 0 ;
+	virtual Attribute * register_attribute(string & domain, string & name, enum siox_ont_storage_type storage_type) = 0;
 
-    virtual bool attribute_set_meta_attribute(Attribute * att, Attribute * meta, Value & value);
+    virtual bool attribute_set_meta_attribute(Attribute * att, Attribute * meta, Value & value) = 0;
 
 	virtual Attribute * lookup_attribute_by_name(string & domain, string & name) = 0;
 
     virtual Attribute * lookup_attribute_by_ID(OntologyAttributeID aID) = 0;
 
-    virtual const vector<Attribute> & lookup_meta_attributes(Attribute * attribute);
+    virtual const vector<Attribute> & lookup_meta_attributes(Attribute * attribute) = 0;
 
     virtual const Value & lookup_meta_attribute(Attribute * attribute, Attribute * meta) = 0;
 
@@ -135,6 +135,6 @@ public:
 
 #define ONTOLOGY_INTERFACE "monitoring_ontology"
 
-
-
 #endif
+
+// BUILD_TEST_INTERFACE monitoring/ontology/modules/Ontology

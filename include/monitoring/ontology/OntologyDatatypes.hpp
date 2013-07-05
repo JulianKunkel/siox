@@ -1,11 +1,12 @@
 #ifndef SIOX_ONTOLOGY_DATATYPE_H
 #define SIOX_ONTOLOGY_DATATYPE_H
 
-#include <monitoring/datatypes/ids.hpp>
-#include <monitoring/datatypes/basic-types.hpp>
-
 #include <string>
 #include <vector>
+#include <boost/variant.hpp>
+
+#include <monitoring/datatypes/ids.hpp>
+#include <monitoring/datatypes/basic-types.hpp>
 
 using namespace std;
 

@@ -48,12 +48,6 @@ public:
 
 }
 
-
-#define COMPONENT(x) \
-extern "C"{\
-void * get_instance_core_configuration_provider() { return new x(); }\
-}
-
 #define CONFIGURATION_PROVIDER_INTERFACE "core_configuration_provider"
 
 

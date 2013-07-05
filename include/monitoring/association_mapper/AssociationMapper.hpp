@@ -35,5 +35,6 @@ public:
 
 #define MONITORING_ASSOCIATION_MAPPER_INTERFACE "monitoring_association_mapper"
 
-
 #endif
+
+// BUILD_TEST_INTERFACE monitoring/association_mapper/modules/
