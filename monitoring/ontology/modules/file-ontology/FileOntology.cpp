@@ -128,6 +128,12 @@ class FileOntology: public Ontology{
 
 	void shutdown(){
 		save(filename);
+
+		for(auto itr = attribute_map.begin(); itr != attribute_map.end(); itr++){
+			auto pair = *itr;
+			AttributeWithValues * av = pair.second;
+			delete(av);
+		}
 	}
 
 	///////////////////////////////////////////////////
@@ -211,7 +217,6 @@ class FileOntology: public Ontology{
 		}
     	return nullptr;
     }
-
 
 private:
 	OntologyAttributeID nextID = 1; 

@@ -10,4 +10,3 @@ public:
 	SERIALIZE_CONTAINER(MEMBER(filename))
 };
 
-

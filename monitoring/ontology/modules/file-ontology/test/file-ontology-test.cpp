@@ -63,6 +63,8 @@ int main(int argc, char const *argv[]){
 
 	cout << "OK" << endl;
 
+	delete(o);
+
 	return 0;
 }
 
