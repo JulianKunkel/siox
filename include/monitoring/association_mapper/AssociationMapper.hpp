@@ -4,8 +4,6 @@
 #include <core/component/Component.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 
-using namespace monitoring::ontology;
-
 namespace monitoring{
 
 class AssociationMapper : public core::Component{
@@ -21,11 +19,11 @@ public:
 	Domain "component"
 	Key: cid + OntologyAttributeID, VALUE as value...
 	*/
-	virtual void set_process_attribute(ProcessID pid, Attribute * att, Value & value) = 0;
-	virtual Value & lookup_process_attribute(ProcessID pid, Attribute * att) = 0;
+	virtual void set_process_attribute(ProcessID pid, OntologyAttribute * att, OntologyValue & value) = 0;
+	virtual OntologyValue & lookup_process_attribute(ProcessID pid, OntologyAttribute * att) = 0;
 
-	virtual void set_component_attribute(ComponentID cid, Attribute * att, Value & value) = 0;
-	virtual Value & lookup_component_attribute(ComponentID cid, Attribute * att) = 0;
+	virtual void set_component_attribute(ComponentID cid, OntologyAttribute * att, OntologyValue & value) = 0;
+	virtual OntologyValue & lookup_component_attribute(ComponentID cid, OntologyAttribute * att) = 0;
 
 	/* This functions are used to create the RemoteInstanceID */
 	virtual AssociateID & create_instance_mapping(const string & value) = 0;

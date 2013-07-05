@@ -15,7 +15,7 @@ namespace system_information{
 class Node {
     public:
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
-        HwID        node_id;
+        NodeID        node_id;
         /* The hardware id. */
         string       hw_id;
         /*
@@ -30,7 +30,7 @@ class StorageDevice {
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
         DeviceID      device_id;
         /* The node id. Serial (database type) saves up to 2^16, so int16 is fine */
-        HwID          node_id;
+        NodeID          node_id;
         /* The model name. */
         string        model_name;
         /* The local adress of the device. */

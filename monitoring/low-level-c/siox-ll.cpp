@@ -320,7 +320,7 @@ void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribu
 
 }
 
-void siox_remote_call_submitted(siox_remote_call * remote_call)…{
+void siox_remote_call_submitted(siox_remote_call * remote_call){
 
 }
 

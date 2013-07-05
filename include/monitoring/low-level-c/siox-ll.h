@@ -13,6 +13,20 @@
 
 #include <monitoring/datatypes/c-types.h>
 
+#ifndef __cplusplus
+ 
+ // We hide all types from the implementation
+typedef void siox_activity;
+typedef void siox_associate;
+typedef void siox_attribute;
+typedef void siox_component;
+typedef void siox_component_activity;
+typedef void siox_node;
+typedef void siox_remote_call;
+typedef void siox_unique_interface;
+#endif
+
+
 /*
 
 @startuml
@@ -82,40 +96,32 @@ component [SOPI] #Plum
  * ==================================
  */
 
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 
 /*
  * If hostname is set to NULL, the implementation will use the local hostname.
  */
-NodeID lookup_hardware_id(const char * hostname);
-
-/*
- * Create a local ProcessID
- */
-ProcessID create_process_id(NodeID hw);
+siox_node * lookup_hardware_id(const char * hostname);
 
 
 /**
  * Register a process (program, could be a server as well)
  * This will be done automatically by register_component() if not provided. 
  * 
- * @param[in]   NodeID    identifies the hardware the process is running on. e.g. „Blizzard Node 5“ or the MacIDof an NAS hard drive.
+ * @param[in]   siox_node    identifies the hardware the process is running on. e.g. „Blizzard Node 5“ or the MacIDof an NAS hard drive.
  * 
  * If it is null it will be looked up automatically.
  * pid identifies the process.
  * If it is null it will be looked up automatically.
  * 
- * Subsequent calls to this function will ignore the pid and NodeID parameters but add new attributes.
+ * Subsequent calls to this function will ignore the pid and siox_node parameters but add new attributes.
  * Rationales:
  * 1) Multiple calls to this function must be possible to simplify usage in applications.
  * 2) Explicit setting of values is used for testing.
  * 
- * If NodeID or pid is NULL it is filled with the local hostname and the current process.
+ * If siox_node or pid is NULL it is filled with the local hostname and the current process.
  */
-void siox_process_register(NodeID * nodeID, ProcessID * pid);
+// void siox_process_register(siox_node * siox_node, ProcessID * pid);
 
 /**
  Adding of attributes allows different layers to add global valid runtime information (such as MPI rank).
@@ -128,7 +134,7 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value);
  * SIOX might cleanup internal datastructures and/or flush information along the monitoring and knowledge paths.
  * Subsequent calls to any SIOX interface should be avoided.
  */
-void siox_process_finalize();
+// void siox_process_finalize();
 
 
 /**
@@ -181,7 +187,7 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * m
  *                          could be found.
  */
 //@test ''%p,%s'' ontology,name
-siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name);
+siox_attribute * siox_ontology_lookup_attribute_by_name(const char * domain, const char * name);
 
 /**
  * Example: interface_name POSIX, MPI, MPIv3 ...
@@ -189,7 +195,7 @@ siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, co
  * Implementation could be MPICHv3 (major number, please ensure compatibility)
  * If implementation_identifier is not set, ANY implementation of the interface is valid.
  */
-UniqueInterfaceID * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier);
+siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier);
 
 /**
  * Report performance data @em not associated with a single activity.
@@ -205,7 +211,7 @@ UniqueInterfaceID * siox_system_information_lookup_interface_id(const char * int
  * 
  */
 //@test ''%p,%p,%p'' component,metric,value
-void siox_report_node_statistics(NodeID hw, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value);
+//void siox_report_node_statistics(siox_node hw, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value);
 
 
 /**
@@ -229,7 +235,7 @@ void siox_report_node_statistics(NodeID hw, siox_attribute * statistic, siox_tim
  * Therefore, subsequent usages of the string can be replaced by the id.
  * The same string may be linked to the same ID.
  */
-RemoteInstanceID * siox_associate_instance(const char * iid);
+siox_associate * siox_associate_instance(const char * iid);
 
 /**
  * Register this component with SIOX.
@@ -246,8 +252,8 @@ RemoteInstanceID * siox_associate_instance(const char * iid);
  *
  * @note Any parameter SIOX can find out on its own (such as a ProcessID) may be @c NULL.
  */
-//@test ''%s-%s-%s'' NodeID,swid,iid
-siox_component * siox_component_register(UniqueInterfaceID * uid, const char * instance_name);
+//@test ''%s-%s-%s'' siox_node,swid,iid
+siox_component * siox_component_register(siox_unique_interface * uid, const char * instance_name);
 
 /**
  * Report an attribute of this component to SIOX.
@@ -264,7 +270,7 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
 /*
  Register a potential activity on a component.
  */
-siox_component_activity * siox_component_register_activity(UniqueInterfaceID * uid, const char * activity_name);
+siox_component_activity * siox_component_register_activity(siox_unique_interface * uid, const char * activity_name);
 
 /**
  * Register an attribute as a descriptor for activities (!) of this component.
@@ -276,15 +282,6 @@ siox_component_activity * siox_component_register_activity(UniqueInterfaceID * u
  */
 //test ''%p,%p'' component,attribute
 //void siox_register_descriptor(siox_attribute * attribute);
-
-/**
- * Retrieve a named attribute of a component.
- *
- * @param[in]   component   The component.
- * @param[in]   name        The name of the attribute to be retrieved.
- */
-//test ''%p,%s'' component,name
-//siox_attribute * siox_component_get_attribute(siox_component * component, const char * name);
 
 /**
  * Unregister a component with SIOX.
@@ -334,15 +331,11 @@ void siox_component_unregister(siox_component * component);
  *
  *
  * @param[in]   component   The component.
- * @param[in]   timestamp   A time stamp or @c NULL,
- *                          which will result in SIOX using the current time.
- * @param[in]   comment     Possible details about the activity, or @c NULL.
- *                          This is meant for plain text comments only.
  * @return                  A fresh @em siox_activity, to be used in all the activity's
  *                          further dealings with SIOX.
  */
 //@test ''%p'' component
-siox_activity * siox_activity_start(siox_component_activity * activity, siox_timestamp timestamp);
+siox_activity * siox_activity_start(siox_component_activity * activity);
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.
@@ -351,11 +344,9 @@ siox_activity * siox_activity_start(siox_component_activity * activity, siox_tim
  * performance metrics associated that are measured over time.
  *
  * @param[in]   activity    The activity.
- * @param[in]   timestamp   A time stamp or @c NULL,
- *                          which will result in SIOX using the current time.
  */
 //@test ''%p,%p'' activity,timestamp
-void siox_activity_stop(siox_activity * activity, siox_timestamp timestamp);
+void siox_activity_stop(siox_activity * activity);
 
 /**
  * Report an attribute of an activity.
@@ -371,38 +362,15 @@ void siox_activity_stop(siox_activity * activity, siox_timestamp timestamp);
 void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, void * value);
 
 /**
- * Retrieve an attribute of an activity.
- *
- * @param[in]   activity    The activity.
- * @param[in]   name        The name of the attribute to be retrieved.
-  */
-//test ''%p,%s'' activity,name
-//siox_attribute * siox_activity_get_attribute(siox_activity * activity, const char * name);
-
-/**
- * Report performance data to be associated with the activity.
- *
- * @em Example:     After being called to write a number of bytes to block storage,
- *                  the component reports the number of bytes successfully written,
- *                  the average cache fill level oder the maximum throughput achieved.
- *
- * @param[in]   activity        The activity.
- * @param[in]   metric          The metric describing the data.
- * @param[in]   value           A pointer to the metric's actual value.
- */
-//test ''%p,%p,%p'' activity,metric,value
-//void siox_activity_report(siox_activity * activity, siox_metric * metric, void * value);
-
-/**
  * Report that the current call resulted in the error code @em error so that SIOX can mark any
  * performance metrics gathered accordingly.
  * This should be done as part of any regular error processing by calls issued by the activity.
  *
  * @param[in]   activity    The activity.
- * @param[in]   error       The error code returned by the function.
+ * @param[in]   error       The error code returned by the function. A value of 0 indicates SUCCESS.
  */
 //@test ''%p,%d'' activity,error
-void siox_activity_report_error(siox_activity * activity, int error);
+void siox_activity_report_error(siox_activity * activity, int64_t error);
 
 /**
  * Mark the end of an activity's report phase and close it.
@@ -466,7 +434,7 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
  * Open attribute list for a remote call, indicate its target and receive @em RCID.
  *
  * @param[in]   component     The component.
- * @param[in]   target_NodeID   The target component's @em HardwareID (e.g. „Blizzard Node 5“ or the MacID
+ * @param[in]   target_siox_node   The target component's @em HardwareID (e.g. „Blizzard Node 5“ or the MacID
  *                            of an NAS hard drive), if known; otherwise, @c NULL.
  * @param[in]   target_uid   The target component's @em Software interface (e.g. „MPI“ oder „POSIX“),
  *                            if known; otherwise, @c NULL.
@@ -477,11 +445,11 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
  * @return                    A fresh @em RCID to be used in all the remote call's
  *                            future communications with SIOX.
  */
-//@test ''%p,%s-%s-%s'' component,target_NodeID,target_swid,target_iid
+//@test ''%p,%s-%s-%s'' component,target_siox_node,target_swid,target_iid
 siox_remote_call * siox_remote_call_start(siox_activity 	* activity,
-                                          NodeID 				* target_NodeID,
-                                          UniqueInterfaceID * target_uid,
-                                          AssociateID 		* target_iid);
+                                          siox_node 			* target_siox_node,
+                                          siox_unique_interface * target_uid,
+                                          siox_associate 		* target_iid);
 
 /**
  * Report an attribute to be sent via a remote call.
@@ -514,10 +482,7 @@ void siox_remote_call_submitted(siox_remote_call * remote_call);
  * 
  */ 
 //@test ''%p,%p,%p'' component,attribute,value
-void siox_activity_started_by_remote_call(siox_activity * activity, NodeID * caller_NodeID_if_known, UniqueInterfaceID * caller_uid_if_known, AssociateID * caller_instance_if_known);
+void siox_activity_started_by_remote_call(siox_activity * activity, siox_node * caller_siox_node_if_known, siox_unique_interface * caller_uid_if_known, siox_associate * caller_instance_if_known);
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif

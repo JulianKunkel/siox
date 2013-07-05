@@ -1,5 +1,8 @@
 #ifndef SIOX_C_TYPES_H
 #define SIOX_C_TYPES_H
+
+#include <stdint.h>
+
 /**
  * A time stamp, as represented in SIOX.
  */

@@ -36,24 +36,24 @@ namespace std #SkyBlue
     class StorageType {
     }
     
-    class Attribute {
+    class OntologyAttribute {
         +string name
         +StorageType storage_type
 
-        +Attribute( name, storage_type )
+        +OntologyAttribute( name, storage_type )
     }
-    Attribute o-- StorageType
+    OntologyAttribute o-- StorageType
 
     class Metric {
         +string canonical_name
         +StorageType storage_type
         +string unit
-        +List<Attribute> attributes
+        +List<OntologyAttribute> attributes
 
         +Metric( name, unit, storage_type )
     }
     Metric o-- StorageType
-    Metric *-- Attribute
+    Metric *-- OntologyAttribute
 
 end namespace
 
@@ -62,15 +62,15 @@ namespace monitoring #Orange
 
     abstract class Ontology {
         -List<Metric> metrics
-        -List<Attribute> attributes
-        +Attribute attribute_register( name, storage_type ) {abstract}
+        -List<OntologyAttribute> attributes
+        +OntologyAttribute attribute_register( name, storage_type ) {abstract}
         +Metric register_metric( canonical_name, unit, storage ) {abstract}
         +Metric find_metric_by_name( canonical_name ) {abstract}
         +void metric_set_attribute( metric, attribute, value ) {abstract}
     }
     core.Component <|-- Ontology
     Ontology *-- std.Metric
-    Ontology *-- std.Attribute
+    Ontology *-- std.OntologyAttribute
 
     class FileOntology {
     }
@@ -85,22 +85,20 @@ using namespace std;
 
 namespace monitoring{
 
-namespace ontology{
-
 class Ontology : public core::Component {
 
 public: 
-	virtual Attribute * register_attribute(string & domain, string & name, enum siox_ont_storage_type storage_type) = 0;
+    virtual OntologyAttribute * register_attribute(string & domain, string & name, enum siox_ont_storage_type storage_type) = 0;
 
-    virtual bool attribute_set_meta_attribute(Attribute * att, Attribute * meta, Value & value) = 0;
+    virtual bool attribute_set_meta_attribute(OntologyAttribute * att, OntologyAttribute * meta, OntologyValue & value) = 0;
 
-	virtual Attribute * lookup_attribute_by_name(string & domain, string & name) = 0;
+    virtual OntologyAttribute * lookup_attribute_by_name(string & domain, string & name) = 0;
 
-    virtual Attribute * lookup_attribute_by_ID(OntologyAttributeID aID) = 0;
+    virtual OntologyAttribute * lookup_attribute_by_ID(OntologyAttributeID aID) = 0;
 
-    virtual const vector<Attribute> & lookup_meta_attributes(Attribute * attribute) = 0;
+    virtual const vector<OntologyAttribute*> & enumerate_meta_attributes(OntologyAttribute * attribute) = 0;
 
-    virtual const Value & lookup_meta_attribute(Attribute * attribute, Attribute * meta) = 0;
+    virtual const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta) = 0;
 
     // the interface ID -> may exist across systems, global
     // register_activity ( UniqueInterface ID, Activity Name) -> may exist across systems, global
@@ -128,7 +126,6 @@ public:
     // ALL activity calls including remote calls follow this rule.
 };
 
-}
 }
 
 

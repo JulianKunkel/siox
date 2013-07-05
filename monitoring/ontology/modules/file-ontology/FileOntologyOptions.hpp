@@ -1,5 +1,4 @@
-#include <core/container/container-serializer.hpp>
-#include <core/container/container-macros.hpp>
+#include <core/component/component-macros.hpp>
 
 using namespace std;
 using namespace monitoring;
@@ -8,7 +7,7 @@ class FileOntologyOptions: public core::ComponentOptions{
 public:
 	string filename;
 
-	SERIALIZE(MEMBER(filename))
+	SERIALIZE_CONTAINER(MEMBER(filename))
 };
 
 

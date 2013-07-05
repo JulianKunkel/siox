@@ -11,8 +11,6 @@ using namespace std;
 
 namespace monitoring{
 
-namespace system_information{
-
 class SystemInformationGlobalIDManager : public core::Component{
 public:
 
@@ -33,7 +31,6 @@ public:
     virtual const string & 				activity_name(UniqueComponentActivityID id) = 0;
 };
 
-}
 }
 
 #endif

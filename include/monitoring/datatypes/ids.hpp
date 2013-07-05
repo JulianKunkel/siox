@@ -35,8 +35,6 @@ typedef uint32_t OntologyAttributeID;
 typedef uint32_t UniqueComponentActivityID;
 
 /* The associate ID is valid only within a particular process */
-typedef uint32_t RemoteInstanceID;
-
 typedef uint32_t AssociateID;
 
 // The daemon fetches the NodeID from the knowledge base (or initiates creation if necessary)
