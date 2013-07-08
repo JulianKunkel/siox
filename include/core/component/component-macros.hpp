@@ -30,7 +30,9 @@ namespace serialization {
 	void load(Archive & ar,  core::ComponentReference & g, const unsigned int version)
 	{
 		// load component from ModuleRegistrar
-		 g.componentID = (core::ComponentReferenceID) autoConfiguratorRegistrar->lookup_component(g.componentID);
+		if( g.componentID != 0){
+		 	g.componentID = (core::ComponentReferenceID) autoConfiguratorRegistrar->lookup_component(g.componentID);
+		}
 	}
 
 }
