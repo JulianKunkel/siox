@@ -8,7 +8,7 @@
 
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 
-/*
+/* CLASS DIAGRAM OBSOLETE!!!
 @startuml Ontology.png
 
 'set namespaceSeparator ::

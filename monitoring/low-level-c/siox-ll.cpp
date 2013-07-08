@@ -1,3 +1,10 @@
+//////////////////////////////////////////////////////////
+/// @file siox-ll.cpp
+//////////////////////////////////////////////////////////
+/// Implementation of the SIOX Low-Level API,
+/// realised as a light-weight wrapper of C++ classes,
+//////////////////////////////////////////////////////////
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <time.h>
@@ -15,17 +22,12 @@ using namespace core;
 using namespace monitoring;
 
 
-/**
- * Implementation of the low-level API
- * The C-implementation serves as lightweight wrapper for C++ classes.
- */
-
-
 ///////////////// GLOBAL VARIABLES ///////////////////////
 
-// variable indiciating if SIOX is finalized and needs initalization.
+/// Flag indiciating whether SIOX is finalized and needing initalization.
 bool finalized = true;
 
+/// Struct to hold references to global objects needed.
 struct process_info process_data = {0};
 
 
@@ -35,95 +37,68 @@ struct process_info process_data = {0};
 
 
 // Functions used for testing the interfaces.
-ProcessID build_process_id(HwID hw, uint32_t pid, uint32_t time){
+/*ProcessID build_process_id(NodeID hw, uint32_t pid, uint32_t time){
     return {.hw = hw, .pid = pid, .time = time};
 }
-
+*/
 
 //////////////////////////////////////////////////////////
 
-NodeID lookup_hardware_id(string & hostname){
-    // Dummy implementation 
-
-    // TODO contact daemon / SIOX kb to get unique ID based on the hostname.
+NodeID lookup_node_id(string & hostname){
     return process_data.system_information_manager->node_id(hostname);
 }
 
 
 // Each process can create a runtime ID locally KNOWING the NodeID from the daemon
-ProcessID create_process_id(NodeID hw){
+ProcessID create_process_id(NodeID nid){
     pid_t pid = getpid();
     struct timespec tv;
     
     clock_gettime(CLOCK_MONOTONIC, & tv);
 
-    // casting will strip of the most significant bits on X86 and hence preserve the current seconds and PID
-    return {.hw = hw, .pid = (uint32_t) pid , .time = (uint32_t) tv.tv_sec};
+    // casting will strip off the most significant bits on X86 and hence preserve the current seconds and PID
+    ProcessID result = ProcessID();
+    result.nid = nid;
+    result.pid = (uint32_t) pid;
+    result.time = (uint32_t) tv.tv_sec;
+    return result;
+//    return {.nid = nid, .pid = (uint32_t) pid , .time = (uint32_t) tv.tv_sec};
 }
 
 
 
 extern "C"{
 
-
 // constructor for the shared library
 __attribute__ ((constructor)) void siox_ll_ctor()
 {
-    // load local configuration if possible.
-    siox_process_register(NULL, NULL);
-}
+    // Retrieve hostname, NodeID and PID
+    // TODO: Adapt this to C++?
+    char local_hostname[1024];
+    local_hostname[1023] = '\0';
+    gethostname(local_hostname, 1023);
+    string hostname(local_hostname);
+    process_data.nid = lookup_node_id(hostname);
+    process_data.pid = create_process_id(process_data.nid);
 
-// destructor for the shared library
-__attribute__ ((destructor)) void siox_ll_dtor()
-{
-    siox_process_finalize();
-}
-
-
-///////////////////// Implementation of SIOX-LL /////////////
-
-void siox_process_register(const char * hostname_param, NodeID * nodeID, ProcessID * pid){ // , const char * configuration_parameters?
-    string hostname(hostname_param);
-    if ( hostname == NULL)
-    {
-        // TODO: Adapt this to C++?
-        char local_hostname[1024];
-        local_hostname[1023] = '\0';
-        gethostname(local_hostname, 1023);
-        string d(local_hostname);
-        hostname = d;
-    }
-
-
-    if (nodeID != NULL){
-        process_data.nodeID = *nodeID;
-    }else{
-        process_data.nodeID = lookup_hardware_id(hostname);
-    }
-
-    if(pid != NULL){    
-        process_data.pid = *pid;
-    }else{
-        process_data.pid = create_process_id(process_data.nodeID);
-    }
-
+    // If necessary, do actual initialisation
     if(finalized){
         printf("Initializing SIOX library\n");
 
-        // Lookup and initialize configurations based on nodeID and pid...
+        // Lookup and initialize configurations based on nid and pid...
         // Load required modules and pull the interfaces into global datastructures
         // Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
         process_data.registrar = new ComponentRegistrar();
 
         // Check relevant environment modules:
         {
-        char * provider = getenv("SIOX_CONFIGURATION_PROVIDER_MODULE");
-        char * path = getenv("SIOX_CONFIGURATION_PROVIDER_PATH");
-        char * configuration = getenv("SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT");
+        const char * provider = getenv("SIOX_CONFIGURATION_PROVIDER_MODULE");
+        const char * path = getenv("SIOX_CONFIGURATION_PROVIDER_PATH");
+        const char * configuration = getenv("SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT");
 
-        provider = (provider != NULL) ? provider : "FileConfigurationProvider" ;
-        path = (path != NULL) ? path : "";        
-        configuration = (configuration != NULL) ? configuration :  "siox.conf:/etc/siox.conf" ;
+        provider = (provider != nullptr) ? provider : "FileConfigurationProvider" ;
+        path = (path != nullptr) ? path : "";        
+        configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf" ;
 
         process_data.configurator = new AutoConfigurator(process_data.registrar, provider, path, configuration);
 
@@ -131,14 +106,15 @@ void siox_process_register(const char * hostname_param, NodeID * nodeID, Process
         char * configurationMode = getenv("SIOX_CONFIGURATION_PROVIDER_MODE");
 
         // hostname configurationMode (is optional)        
-        sstream configName;
+        stringstream configName;
         configName << hostname;
-        if(configurationMode != NULL){
+        if(configurationMode != nullptr){
             configName << " " << configurationMode;
         }
 
         vector<Component*> loadedComponents = process_data.configurator->LoadConfiguration("Process", configName.str());
-        if(loadedComponents == NULL){
+        // if(loadedComponents == nullptr){ // MZ: Error, "==" not defined
+        if(loadedComponents.empty()){
             cerr << "FATAL Invalid configuration set: " << endl; 
             cerr << "SIOX_CONFIGURATION_PROVIDER_MODULE=" << provider << endl;
             cerr << "SIOX_CONFIGURATION_PROVIDER_PATH=" << path << endl;
@@ -149,46 +125,52 @@ void siox_process_register(const char * hostname_param, NodeID * nodeID, Process
         }
 
         // check loaded components and asssign them to the right struct elements.
-        process_data.ontology = dynamic_cast<Ontology>(loadedComponents[0]);
-        process_data.system_information_manager =  dynamic_cast<SystemInformationGlobalIDManager>(loadedComponents[0]);
-        process_data.association_mapper =  dynamic_cast<AssociationMapper>(loadedComponents[0]);
+        process_data.ontology = dynamic_cast<Ontology*>(loadedComponents[0]);
+        process_data.system_information_manager =  dynamic_cast<SystemInformationGlobalIDManager*>(loadedComponents[0]);
+        process_data.association_mapper =  dynamic_cast<AssociationMapper*>(loadedComponents[0]);
         }
-	}
+    }
 
-	finalized = false;
+    finalized = false;
 }
 
-void siox_process_finalize(){
-	if (finalized){
-		return;
-	}
+// destructor for the shared library
+__attribute__ ((destructor)) void siox_ll_dtor()
+{
+    if (finalized){
+        return;
+    }
 
-	// cleanup datastructures etc.
-	// TODO
+    // cleanup datastructures etc.
+    // TODO
 
     // cleanup ontology
     process_data.ontology->shutdown();
     delete(process_data.ontology);
-    process_data.ontology = NULL;
+    process_data.ontology = nullptr;
 
     // cleanup system_information_manager
     process_data.system_information_manager->shutdown();
     delete(process_data.system_information_manager);
-    process_data.system_information_manager = NULL;
+    process_data.system_information_manager = nullptr;
 
-	// cleanup association_mapper
-	process_data.association_mapper->shutdown();
-	delete(process_data.association_mapper);
-	process_data.association_mapper = NULL;
+    // cleanup association_mapper
+    process_data.association_mapper->shutdown();
+    delete(process_data.association_mapper);
+    process_data.association_mapper = nullptr;
 
-	finalized = true;
+    finalized = true;
 }
 
 
+///////////////////// Implementation of SIOX-LL /////////////
+
+typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> Value;
+
 
 // copy value based on datatype in the attribute
-static Value convert_attribute(siox_attribute * attribute, void * value){
-	Value v;
+static OntologyValue convert_attribute(siox_attribute * attribute, void * value){
+	OntologyValue v;
 	switch(attribute->storage_type){
 	case(SIOX_STORAGE_32_BIT_UINTEGER):
     case(SIOX_STORAGE_32_BIT_INTEGER):{
@@ -220,19 +202,15 @@ static Value convert_attribute(siox_attribute * attribute, void * value){
 
 
 void siox_process_set_attribute(siox_attribute * attribute, void * value){
-	assert(attribute != NULL);
-	assert(value != NULL);
+	assert(attribute != nullptr);
+	assert(value != nullptr);
 
-    Attribute att(attribute);
-    Value val = convert_attribute(attribute, value);
-    process_data.association_mapper->set_process_attribute(process_data.pid, attribute, val);
-
-	// TODO propose value into monitoring path
-    // MZ: ?!?
+    OntologyValue val = convert_attribute(attribute, value);
+    process_data.association_mapper->set_process_attribute( & process_data.pid, attribute, val);
 }
 
 
-RemoteInstanceID * siox_associate_instance(const char * iid){
+siox_associate * siox_associate_instance(const char * iid){
     string instance(iid);
     return process_data.association_mapper->create_instance_mapping(instance);
 }
@@ -242,28 +220,29 @@ RemoteInstanceID * siox_associate_instance(const char * iid){
 // Signaturen C-verdaulich anpassen!!
 
 siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * instance_name){
-    assert(uiid != NULL);
-    // instance_name could be NULL
+    assert(uiid != nullptr);
+    // instance_name could be nullptr
 
     // TODO
-    return NULL;
+    return nullptr;
 }
 
 
 void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, void * value){
-    assert(attribute != NULL);
-    assert(value != NULL);
+    assert(attribute != nullptr);
+    assert(value != nullptr);
 
-    ComponentID cid(component);
-    Attribute att(attribute);
-    Value val = convert_attribute(attribute, value);
-    process_data.association_mapper->set_component_attribute(cid, att, val);
+    // MZ: TODO siox_component in ComponentID wandeln
+    ComponentID * cid = nullptr; // FIXME
+    OntologyValue val = convert_attribute(attribute, value);
+    process_data.association_mapper->set_component_attribute(cid, attribute, val);
 }
 
 
-siox_component_activity * siox_component_register_activity(UniqueInterfaceID * uiid, const char * activity_name){
+siox_component_activity * siox_component_register_activity(siox_unique_interface * uiid, const char * activity_name){
 // MZ: Wo denn nun registrieren - o, am oder sigidm?!?
-    xyz.register_activity(uuid, activity_name);
+    // xyz.register_activity(uuid, activity_name);
+    return nullptr;
 }
 
 
@@ -273,7 +252,7 @@ void siox_component_unregister(siox_component * component){
 }
 
 
-void siox_report_node_statistics(NodeID hw, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value){
+void siox_report_node_statistics(siox_node node, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value){
 
     // MZ: Das reicht eigentlich an den SMux weiter, oder?
     // TODO
@@ -284,6 +263,7 @@ void siox_report_node_statistics(NodeID hw, siox_attribute * statistic, siox_tim
 // MZ: Alle an ActivityBuilder (to be acquired!!!) weiterreichen
 
 siox_activity * siox_activity_start(siox_component_activity * activity, siox_timestamp timestamp){
+    return nullptr;
 }
 
 void siox_activity_stop(siox_activity * activity, siox_timestamp timestamp){
@@ -309,11 +289,12 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
 
 //////////////// REMOTE CALL ///////////////////////////////////
 
-siox_remote_call * siox_remote_call_start(siox_activity     * activity,
-                                          NodeID                * target_NodeID,
-                                          UniqueInterfaceID * target_uid,
-                                          AssociateID       * target_iid){
-
+siox_remote_call * siox_remote_call_start(siox_activity         * activity,
+                                          siox_node             * target_nid,
+                                          siox_unique_interface * target_uid,
+                                          siox_associate        * target_iid){
+    // MZ: TODO Festlegen, was (wenn überhaupt etwas) einen Remote Call ausmacht!
+    return nullptr;
 }
 
 void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, void * value){
@@ -331,7 +312,8 @@ void siox_activity_started_by_remote_call(siox_activity * activity, NodeID * cal
 //////////////// ONTOLOGY  ///////////////////////////////////
 
 siox_attribute * siox_ontology_register_attribute(const char * domain, const char * name, enum siox_ont_storage_type storage_type){
-	assert(name != NULL);
+    assert(domain != nullptr);
+	assert(name != nullptr);
 
     string d(domain);
 	string n(name);
@@ -340,17 +322,16 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
 
 
 int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * meta_attribute, void * value){
-    // MZ: How to handle value?!?
-    process_data.ontology->attribute_set_meta_attribute(parent, meta_attribute, value);
-    return 1; // MZ: Oder return (Zeile darüber)?!?
+    Value val = convert_attribute(meta_attribute, value);
+    return process_data.ontology->attribute_set_meta_attribute(parent, meta_attribute, val);
 }
 
 /*void siox_metric_set_attribute(siox_metric * metric, siox_attribute * attribute, void * value){	
-	assert(metric != NULL);
-	assert(attribute != NULL);
-	assert(value != NULL);
+	assert(metric != nullptr);
+	assert(attribute != nullptr);
+	assert(value != nullptr);
 
-	Value v = convert_attribute(attribute, value);
+	OntologyValue v = convert_attribute(attribute, value);
 	process_data.ontology->metric_set_attribute(metric, attribute, v);
 }
 */
@@ -358,26 +339,30 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * m
 siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain, const char * name,
                                             const char *                unit,
                                             enum siox_ont_storage_type  storage){
-	assert(canonical_name != NULL);
-	assert(unit != NULL);
+	assert(name != nullptr);
+	assert(unit != nullptr);
 
     string d(domain);
-    string n(canonical_name);
+    string n(name);
     string u(unit);
-    siox_attribute result = process_data.ontology->register_attribute(d, n, storage);
-    Attribute * unit_attribute = process_data.ontology->lookup_attribute_by_name(u);
+    OntologyAttribute * result = process_data.ontology->register_attribute(d, n, storage);
+    // MZ: Hier besser eigene Domain für Units verwenden?!
+    // OntologyAttribute * unit_attribute = process_data.ontology->lookup_attribute_by_name(d, u);
     // MZ: process_data.ontology->attribute_set_meta_attribute(result, unit_attribute, ?!?);
+
+    return result;
 }
 
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name){
-    assert(canonical_name != NULL);
+    assert(name != nullptr);
 
     string d(domain);
-	string n(canonical_name);
+	string n(name);
 	return process_data.ontology->lookup_attribute_by_name(d, n);
 }
 
 
-UniqueInterfaceID * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier){
+siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier){
+    return nullptr;
 }
 }

@@ -15,7 +15,7 @@ class SystemInformationGlobalIDManager : public core::Component{
 public:
 
 	virtual NodeID						node_id(string & hostname) = 0;
-	virtual DeviceID					device_id(NodeID hw, string & local_unique_identifier) = 0;
+	virtual DeviceID					device_id(NodeID id, string & local_unique_identifier) = 0;
 	virtual FilesystemID				filesystem_id(string & global_unique_identifier) = 0;
 
     virtual const string &              node_hostname(NodeID id) = 0;

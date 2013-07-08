@@ -38,12 +38,12 @@ typedef uint32_t UniqueComponentActivityID;
 typedef uint32_t AssociateID;
 
 // The daemon fetches the NodeID from the knowledge base (or initiates creation if necessary)
-// NodeID lookup_hardware_id(const char * hostname);
+// NodeID lookup_node_id(const char * hostname);
 // See @TODO 
 
 /* Software ID, identifying the application programm, may be a server as well */
 typedef struct{
-	NodeID hw;
+	NodeID nid;
 	uint32_t pid;
 	uint32_t time;
 } ProcessID;
@@ -107,7 +107,7 @@ inline bool is_valid_id(UniqueInterfaceID & id){
 }
 
 inline bool is_valid_id(ProcessID & id){
-	return is_valid_id(id.hw);
+	return is_valid_id(id.nid);
 }
 
 inline bool is_valid_id(ComponentID & id){

@@ -34,7 +34,7 @@ typedef void siox_remote_call;
  */
 
 struct process_info{
-	NodeID hwid;
+	NodeID nid;
 	ProcessID pid;
 
 	// Loaded ontology implementation
@@ -53,12 +53,13 @@ struct process_info{
 
 
 
-ProcessID forge_process_id(NodeID hw, uint32_t pid, uint32_t time);
+// MZ: Obsolete?
+// ProcessID forge_process_id(NodeID node, uint32_t pid, uint32_t time);
 
 /*
  * Create a local ProcessID
  */
-ProcessID create_process_id(NodeID hw);
+ProcessID create_process_id(NodeID node);
 
 
 /*
