@@ -13,6 +13,7 @@ namespace core {
 		return c;
 	}
 	void ComponentRegistrar::register_component(ComponentReferenceID nr, Component * component){
+		assert(nr != 0); // 0 is an invalid / none component
 		assert(map[nr] == nullptr);
 		map[nr] = component;
 		list.push_back(component);
