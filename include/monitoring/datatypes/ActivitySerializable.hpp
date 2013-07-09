@@ -43,6 +43,9 @@ void serialize(Archive & ar, monitoring::Attribute & id, const unsigned int file
 	// Right now use a boost::variant
 	SER("v", id.value)
 }
+
+
+
 }
 }
 
@@ -69,10 +72,10 @@ private:
 		//ComponentID * parentArray_; // NULL terminated
 		//RemoteCall * cur = remoteCallsArray_;
 
-		bool do_serialize = (remoteInvokee_ != nullptr);
+		bool do_serialize = (remoteInvoker_ != nullptr);
 		ar << boost::serialization::make_nvp("is_r", do_serialize);
 		if( do_serialize ){
-			ar << boost::serialization::make_nvp("remote", remoteInvokee_);
+			ar << boost::serialization::make_nvp("remote", remoteInvoker_);
 		}
 	}
 
@@ -82,13 +85,13 @@ private:
 		bool serialized;
 		ar >>  boost::serialization::make_nvp("is_r", serialized);
 		if (serialized){
-			ar >> boost::serialization::make_nvp("remote", remoteInvokee_);
+			ar >> boost::serialization::make_nvp("remote", remoteInvoker_);
 		}
 	}
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int file_version){
-		SER("n", name_)
+		SER("aid", aid_)
 		SER("ts", time_start_)
 		SER("te", time_stop_)
 		SER("err", errorValue_)

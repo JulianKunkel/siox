@@ -15,7 +15,7 @@ namespace serialization {
 	template<class Archive>
 	void serialize(Archive & ar, ComponentID & id, const unsigned int file_version){
 		SER("pid", id.pid)
-		SER("uuid", id.uuid)
+		SER("num", id.num)
 	}
 
 	template<class Archive>
@@ -27,9 +27,16 @@ namespace serialization {
 
 	template<class Archive>
 	void serialize(Archive & ar, ProcessID & id, const unsigned int file_version){
-		SER("hw", id.hw)
+		SER("nid", id.nid)
 		SER("pid", id.pid)
 		SER("t", id.time);
+	}
+
+		
+	template<class Archive>
+	void serialize(Archive & ar, ActivityID & id, const unsigned int file_version){
+		SER("cid", id.cid)
+		SER("num", id.num)
 	}
 }
 }

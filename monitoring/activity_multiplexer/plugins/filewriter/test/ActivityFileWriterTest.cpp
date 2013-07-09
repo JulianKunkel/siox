@@ -23,14 +23,16 @@ int main(int argc, char const *argv[]){
 
 	ap->init(op);
 
-	ComponentID cid = {.pid = {2,3,4}, .uuid= {1,2}};
+	ComponentID cid = {.pid = {2,3,4}, .num=1};
 
-	auto * parentArray = new vector<ComponentID>{{.pid = {1,2,3}, .uuid= {2,2}}};
+	auto * parentArray = new vector<ActivityID>{{{.pid = {1,2,3}, .num=2}, .num = 1} };
 	auto * attributeArray = new vector<Attribute>{{.id=111, .value = "myData"}, {.id=3, . value = (uint64_t) 4711}};
 	auto * remoteCallsArray = new vector<RemoteCall>();
 
+
+	UniqueComponentActivityID aid = 4;
 	// Cast the real activity to the serializable object class wrapper
-	Activity * activity = new Activity("test", 3, 5, cid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
+	Activity * activity = new Activity(aid, 3, 5, cid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
 
 	m1->Log(activity);
 

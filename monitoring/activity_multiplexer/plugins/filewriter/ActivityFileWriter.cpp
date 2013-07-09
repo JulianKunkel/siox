@@ -41,5 +41,7 @@ public:
 	}
 };
 
+CREATE_SERIALIZEABLE_CLS(FileWriterPluginOptions)
+
 PLUGIN(FileWriterPlugin)
 

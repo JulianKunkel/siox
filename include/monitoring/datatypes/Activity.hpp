@@ -74,6 +74,8 @@
 #include <vector>
 #include <boost/variant.hpp>
 
+#include <monitoring/datatypes/c-types.h>
+
 #include <monitoring/datatypes/ids.hpp>
 
 using namespace std;
@@ -104,8 +106,8 @@ protected:
 	// The ontology provides a single ID for each ActivityType of a component, e.g. POSIX "open()"
 	UniqueComponentActivityID aid_;
 	
-	uint64_t time_start_;
-	uint64_t time_stop_;
+	siox_timestamp time_start_;
+	siox_timestamp time_stop_;
 
 	ComponentID cid_;
 
@@ -122,7 +124,7 @@ protected:
 public:
 	UniqueComponentActivityID aid() const;
 	
-	Activity(UniqueComponentActivityID aid, uint64_t start_t, uint64_t end_t, ComponentID cid, 
+	Activity(UniqueComponentActivityID aid, siox_timestamp start_t, siox_timestamp end_t, ComponentID cid, 
 		vector<ActivityID> * parentArray, 
 		vector<Attribute> * attributeArray, 
 		vector<RemoteCall> * remoteCallsArray, 
