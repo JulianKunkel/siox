@@ -8,5 +8,4 @@ extern "C"{\
 void * get_instance_monitoring_activitymultiplexer() { return new x(); }\
 }
 
-
 #endif

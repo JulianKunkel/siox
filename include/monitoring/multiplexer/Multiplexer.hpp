@@ -48,6 +48,8 @@
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
 #include <core/component/Component.hpp>
 
+using namespace core;
+
 namespace monitoring{
 
 /**
@@ -56,7 +58,7 @@ namespace monitoring{
  * in an syncronised or asyncronous manner.
  */
 template <class TYPE>
-class Multiplexer : core::Component
+class Multiplexer
 {
 
 	list<MultiplexerListener<TYPE> *> listeners;
@@ -73,7 +75,7 @@ public:
 	 * and enqueqes activity for async dispatch.
 	 */
 	// TODO sadly for the mutexes it is always needed
-	virtual void Log(TYPE * element) {
+	void Log(TYPE * element) {
 		{
 			std::lock_guard<std::mutex> lock(inc);
 			not_invalidating++;
@@ -96,7 +98,7 @@ public:
 	 *
 	 * @param	MultiplexerListener *	listener	listener to notify in the future
 	 */
-	virtual void registerListener(MultiplexerListener<TYPE> * listener) {
+	void registerListener(MultiplexerListener<TYPE> * listener) {
 		// exclusive, adding multiple listerns might result in race condition
 		std::lock_guard<std::mutex> lock(inc);
 		while( not_invalidating != 0 ) {
@@ -111,7 +113,7 @@ public:
 	 *
 	 * @param	MultiplexerListener *	listener	listener to remove
 	 */
-	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) {
+	void unregisterListener(MultiplexerListener<TYPE> * listener) {
 		// exclusive, as removing may invalidate iterator
 		std::lock_guard<std::mutex> lock(inc);
 		while( not_invalidating != 0 ) {
@@ -124,16 +126,7 @@ public:
 	/**
 	 * prepare for shutdown of component 
 	 */
-	virtual void finalize() {};
-
-
-	
-	// TODO propose possible option parameters
-	void init(core::ComponentOptions * options) {}; 
-	// TODO clarify if return an empty ComponentOptions has no side effects
-	core::ComponentOptions * get_options() { return new core::ComponentOptions(); };
-	void shutdown() {};
-	
+	void finalize() {};
 };
 
 

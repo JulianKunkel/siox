@@ -10,10 +10,7 @@ namespace monitoring{
  * Interface plugins that want to register to a multiplexer need to implement. 
  */
 // TODO: add second listener type, async/sync    async need to have a signal
-class ActivityMultiplexerListener : public MultiplexerListener<Activity>
-{
-
-};
+typedef MultiplexerListener<Activity> ActivityMultiplexerListener;
 
 
 class ActivityMultiplexerListenerSync : public ActivityMultiplexerListener

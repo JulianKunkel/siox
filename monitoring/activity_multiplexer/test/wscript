@@ -5,9 +5,9 @@ def build(bld):
     #bld.shlib(include="include",  use = "GMODULES" ,  target = 'ActivityMultiplexerListener_Impl1', source = 'ActivityMultiplexerListener_Impl1.cpp' )
 
     # TODO: build tests
-    bld.program(include="include",  features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 module-loader", target = 'anomaly-plugin', source = "AnomalyPlugin.cpp", install_path = None)
+    bld.program(include="include",  features='test cxx cxxprogram', use = "ActivityMultiplexerAsyncThreaded module-loader", target = 'anomaly-plugin', source = "AnomalyPlugin.cpp", install_path = None)
     
-    bld.program(include="include",  features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 module-loader", target = 'anomaly-plugin-threaded', source = "AnomalyPluginThreaded.cpp", install_path = None)
+    bld.program(include="include",  features='test cxx cxxprogram', use = "ActivityMultiplexerAsyncThreaded module-loader", target = 'anomaly-plugin-threaded', source = "AnomalyPluginThreaded.cpp", install_path = None)
 
 
 

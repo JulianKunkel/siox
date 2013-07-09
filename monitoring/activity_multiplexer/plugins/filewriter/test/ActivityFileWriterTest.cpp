@@ -10,7 +10,7 @@ using namespace monitoring;
 using namespace core;
 
 int main(int argc, char const *argv[]){
-	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexer_Impl1", "monitoring_activitymultiplexer");
+	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexerAsyncThreaded", "monitoring_activitymultiplexer");
 
 	// wir registrieren das Plugin (normal geschieht dies automatisch)
 	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>("", "ActivityFileWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE);

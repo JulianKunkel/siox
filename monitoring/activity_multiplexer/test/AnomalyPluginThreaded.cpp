@@ -121,7 +121,7 @@ void activity_producer(ActivityMultiplexer * m) {
 }
 
 int main(int argc, char const *argv[]){
-	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexer_Impl1", "monitoring_activitymultiplexer");
+	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexerAsyncThreaded", "monitoring_activitymultiplexer");
 
 	// wir registrieren das Plugin (normal geschieht das automatisch)
 	AnomalyPlugin * ap = new AnomalyPlugin(m1);

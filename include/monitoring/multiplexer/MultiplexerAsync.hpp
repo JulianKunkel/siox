@@ -56,7 +56,10 @@
 #include <thread>
 
 #include <monitoring/multiplexer/Multiplexer.hpp>
+#include <monitoring/multiplexer/MultiplexerAsyncOptions.hpp>
+	
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
+#include <core/component/Component.hpp>
 
 using namespace std;
 
@@ -70,7 +73,7 @@ namespace monitoring{
 // forward declaration for friendship 
 template <class TYPE>class MultiplexerQueue;
 class MultiplexerNotifier;
-template <class TYPE>class MultiplexerAsync;
+template <class TYPE, class PARENT>class MultiplexerAsync;
 
 
 /**
@@ -199,8 +202,8 @@ public:
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-template <class TYPE>
-class MultiplexerAsync : Multiplexer<TYPE>
+template <class TYPE, class PARENT>
+class MultiplexerAsync  : public PARENT
 {
 
 
@@ -218,17 +221,12 @@ class MultiplexerAsync : Multiplexer<TYPE>
 
 public:
 
-	MultiplexerAsync () {
-		
-	
-	}
-
 	/**
 	 * Called by layer to report about activity, passes activities to sync listeners
 	 * and enqueqes activity for async dispatch.
 	 */
 	// TODO sadly for the mutexes it is always needed
-	virtual void Log(TYPE * element) {
+	void Log(TYPE * element) {
 		{
 			std::lock_guard<std::mutex> lock(inc);
 			not_invalidating++;
@@ -251,7 +249,7 @@ public:
 	 *
 	 * @param	MultiplexerListener *	listener	listener to notify in the future
 	 */
-	virtual void registerListener(MultiplexerListener<TYPE> * listener) {
+	void registerListener(MultiplexerListener<TYPE> * listener) {
 		// exclusive, adding multiple listerns might result in race condition
 		std::lock_guard<std::mutex> lock(inc);
 		while( not_invalidating != 0 ) {
@@ -266,7 +264,7 @@ public:
 	 *
 	 * @param	MultiplexerListener *	listener	listener to remove
 	 */
-	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) {
+	void unregisterListener(MultiplexerListener<TYPE> * listener) {
 		// exclusive, as removing may invalidate iterator
 		std::lock_guard<std::mutex> lock(inc);
 		while( not_invalidating != 0 ) {
@@ -276,6 +274,18 @@ public:
 		listeners.remove(listener);
 	}
 	
+	void init(ComponentOptions * options) {
+		delete(options);
+	}; 
+
+	ComponentOptions * get_options() { 
+		return new MultiplexerAsyncOptions();
+	};
+
+	void shutdown() {
+
+	};	
+
 };
 
 
