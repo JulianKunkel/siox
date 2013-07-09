@@ -1,6 +1,7 @@
 #include <core/module/module-loader.hpp>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
+#include <core/autoconfigurator/AutoConfigurator.hpp>
 
 
 #include "../AnomalySkeletonOptions.hpp"
@@ -11,18 +12,21 @@ using namespace monitoring;
 using namespace core;
 
 int main(int argc, char const *argv[]){
-	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexer_Impl1", "monitoring_activitymultiplexer");
+	ComponentRegistrar * registrar = new ComponentRegistrar();
+	AutoConfigurator * a = new AutoConfigurator(registrar, "FileConfigurationProvider", "", "monitoring/activity_multiplexer/plugins/anomaly-skeleton/test/siox.conf");
 
-	// wir registrieren das Plugin (normal geschieht dies automatisch)
-	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>("", "AnomalySkeleton", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE);
-
-	AnomalySkeletonOptions * op = (AnomalySkeletonOptions*) ap->get_options();
-	ActivityPluginDereferencing * facade = core::module_create_instance<ActivityPluginDereferencing>("", "ActivityPluginDereferencingStandardImpl", ACTIVITY_DEREFERENCING_FACADE_INTERFACE);
-
-	ap->init(op, m1, facade);
+	// AnomalySkeletonOptions * op = (AnomalySkeletonOptions*) ap->get_options();
+	// ap->init(op, m1, facade);
 
 
+	vector<Component*> components = a->LoadConfiguration("skeletonTest", "");
+	cout << "Loaded: " << components.size() << " Components/Plugins" << endl;
+	for(auto itr = components.begin() ; itr != components.end(); itr++){
+		cout << *itr << endl;
+	}
 
+
+	ActivityMultiplexer * m1 = dynamic_cast<ActivityMultiplexer*>(components[0]);
 
 	ComponentID cid = {.pid = {2,3,4}, .num=1};
 

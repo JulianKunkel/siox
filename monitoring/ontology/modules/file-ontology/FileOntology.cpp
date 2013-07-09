@@ -30,6 +30,7 @@ using namespace boost;
 CREATE_SERIALIZEABLE_CLS(FileOntologyOptions)
 
 
+namespace monitoring{
 
 class AttributeWithValues{
 public:
@@ -37,35 +38,6 @@ public:
 	vector<OntologyAttribute*> meta_attributes;
 	vector<OntologyValue> values;
 };
-
-
-namespace boost{
-namespace serialization {
-template<class Archive>
-void serialize(Archive & ar, AttributeWithValues & g, const unsigned int version)
-{
-	ar & boost::serialization::make_nvp("attribute", g.attribute);
-	ar & boost::serialization::make_nvp("metas", g.meta_attributes);
-	ar & boost::serialization::make_nvp("values", g.values);
-}
-
-template<class Archive>
-void serialize(Archive & ar, OntologyAttribute & g, const unsigned int version)
-{
-	ar & boost::serialization::make_nvp("id", g.aID);
-	ar & boost::serialization::make_nvp("name", g.name);
-	ar & boost::serialization::make_nvp("domain", g.domain);
-	ar & boost::serialization::make_nvp("storageType", g.storage_type);
-}
-
-}
-}
-CREATE_SERIALIZEABLE_CLS_EXTERNAL(AttributeWithValues)
-CREATE_SERIALIZEABLE_CLS_EXTERNAL(OntologyAttribute)
-
-
-namespace monitoring{
-
 
 class FileOntology: public Ontology{
 
@@ -232,5 +204,30 @@ private:
 
 }
 
+
+
+namespace boost{
+namespace serialization {
+template<class Archive>
+void serialize(Archive & ar, AttributeWithValues & g, const unsigned int version)
+{
+	ar & boost::serialization::make_nvp("attribute", g.attribute);
+	ar & boost::serialization::make_nvp("metas", g.meta_attributes);
+	ar & boost::serialization::make_nvp("values", g.values);
+}
+
+template<class Archive>
+void serialize(Archive & ar, OntologyAttribute & g, const unsigned int version)
+{
+	ar & boost::serialization::make_nvp("id", g.aID);
+	ar & boost::serialization::make_nvp("name", g.name);
+	ar & boost::serialization::make_nvp("domain", g.domain);
+	ar & boost::serialization::make_nvp("storageType", g.storage_type);
+}
+
+}
+}
+CREATE_SERIALIZEABLE_CLS_EXTERNAL(AttributeWithValues)
+CREATE_SERIALIZEABLE_CLS_EXTERNAL(OntologyAttribute)
 
 COMPONENT(FileOntology)

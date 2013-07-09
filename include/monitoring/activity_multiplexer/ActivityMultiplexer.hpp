@@ -21,5 +21,10 @@ class ActivityMultiplexer : public Multiplexer<Activity>
 
 #define ACTIVITY_MULTIPLEXER_INTERFACE "monitoring_activitymultiplexer"
 
+#define AMUX(x) \
+extern "C"{\
+void * get_instance_monitoring_activitymultiplexer() { return new x(); }\
+}
+
 }
 #endif /* ACTIVITYMULTIPLEXER_H */

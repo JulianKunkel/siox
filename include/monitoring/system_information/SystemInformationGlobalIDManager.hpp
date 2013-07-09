@@ -33,4 +33,9 @@ public:
 
 }
 
+#define SYSTEMINFORMATION_GLOBALID_MANAGER_INTERFACE "monitoring_systeminformation_global_id"
+
+
 #endif
+
+// BUILD_TEST_INTERFACE monitoring/systeminformation/modules/systeminformationIDManager

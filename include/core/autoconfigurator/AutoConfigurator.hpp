@@ -4,12 +4,29 @@
 #include <core/autoconfigurator/ConfigurationProvider.hpp>
 #include <core/component/Component.hpp>
 #include <core/component/ComponentRegistrar.hpp>
+#include <exception>
 
 #include <vector>
 
 /*
  * Since this class does provide/parse the configuration it does not need to be derived from Component.
  */
+
+
+class InvalidConfiguration: public std::exception{
+private:
+   const char * cause;
+
+public:
+  InvalidConfiguration(const char * cause){
+	this->cause = cause;
+  }
+
+  virtual const char* what() const throw()
+  {
+  	return cause;
+  }
+};
 
 using namespace std;
 
@@ -38,7 +55,7 @@ public:
 	/*
 	 * Load/Parse the configuration options, create the necessary components and link their attributes.
 	 */
-	vector<Component*> LoadConfiguration(string type, string matchingRules);
+	vector<Component*> LoadConfiguration(string type, string matchingRules) throw (InvalidComponentException, InvalidConfiguration);
 
 	/*
 	 * Create an empty configuration entry for the given component

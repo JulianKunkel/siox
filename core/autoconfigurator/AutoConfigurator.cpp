@@ -55,8 +55,11 @@ namespace core{
 		configurationProvider->connect(val);
 	}
 
-	vector<Component*> AutoConfigurator::LoadConfiguration(string type, string matchingRules){		
+	vector<Component*> AutoConfigurator::LoadConfiguration(string type, string matchingRules) throw (InvalidComponentException, InvalidConfiguration){		
 		string config = configurationProvider->getConfiguration(type, matchingRules);
+		if(config.length() < 10){
+			throw InvalidConfiguration("Configuration is unavailable or too short");
+		}
 
 		// replace <X> with  <object class_id="1" class_name="X"> 
 		// replace </X> with Container></Container></object>
@@ -69,9 +72,12 @@ namespace core{
 		  current = next + 1;
 		  next = config.find("\n<", current);
 		  size_t end_pos = config.find(">", current);
+		  size_t component = config.find("<Container></Container>", current);
 
 		  if(config[current+1] == '/'){
-		  	transformed_config << "\t<Container></Container>" << endl;
+		  	if(component > next){
+		  		transformed_config << "\t<Container></Container>" << endl;
+		  	}
 		  	transformed_config << "</object>" << endl;
 		  }else{
 		 	transformed_config << "<object class_id=\"1\" class_name=\"" << config.substr(current + 1, end_pos - current - 1) << "\">" << endl;
@@ -83,7 +89,6 @@ namespace core{
 
 
 		// parse string
-
 		vector<Component*> components;
 
 		registrarMutex.lock();
@@ -91,6 +96,7 @@ namespace core{
 
 		ContainerSerializer cs = ContainerSerializer();
 		stringstream already_parsed_config(transformed_config.str());
+		// cout << transformed_config.str() << endl;		
 		while(! already_parsed_config.eof()) {
 			// check if the stream is empty
 			char c; 
@@ -104,21 +110,44 @@ namespace core{
 			ComponentOptions * options;
 			Component * component;
 	
-			cout << "Parsing a module" << endl;
-			module = dynamic_cast<LoadModule*>(cs.parse(already_parsed_config));
+			//cout << "Parsing a module" << endl;
+			try{
+				module = dynamic_cast<LoadModule*>(cs.parse(already_parsed_config));
+			}catch(exception & e){
+				autoConfiguratorRegistrar = nullptr;
+				registrarMutex.unlock();
 
-			cout << "Parsed module description" << endl;
+				throw InvalidConfiguration("Error while parsing module configuration");
+			}
+
+			//cout << "Parsed module description" << endl;
+			component = module_create_instance<Component>(module->path, module->name, module->interface);
+			//cout << DumpConfiguration(component->get_options()) << endl;
+
+
 
 			try{
-				options = cs.parse(already_parsed_config);
-			}catch(InvalidComponentException & e){
-				cerr << "Error in configuration, the component " << e.invalidNr << " has not been found in configuration: " << endl << config << endl;
-				throw e;
+			options = cs.parse(already_parsed_config);
+			}catch(exception & e){
+				autoConfiguratorRegistrar = nullptr;
+				registrarMutex.unlock();
+				options = component->get_options();
+				string  str = cs.serialize(options);
+				cerr << "Expected configuration: " << str << endl;
+				delete(options);
+				throw InvalidConfiguration("Error during parsing of options");
 			}
-			component = module_create_instance<Component>(module->path, module->name, module->interface);
 
+			try{
+				component->init(options);
+			}catch(exception & e){
+				autoConfiguratorRegistrar = nullptr;
+				registrarMutex.unlock();
 
-			component->init(options);
+				string  str = cs.serialize(options);
+				cerr << "Configuration values: " << str << endl;
+				throw InvalidConfiguration("Error during initialization of module");
+			}
 			registrar->register_component(module->componentID, component);
 
 			components.push_back(component);

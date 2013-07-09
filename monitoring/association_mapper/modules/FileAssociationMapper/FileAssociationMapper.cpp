@@ -22,46 +22,7 @@
 using namespace core;
 using namespace std;
 
-class AttributeIDsAndValues{
-public:
-	vector<OntologyAttributeID> ids;
-	vector<OntologyValue> values;
-};
-
-
-namespace boost{
-namespace serialization {
-template<class Archive>
-void serialize(Archive & ar, AttributeIDsAndValues & g, const unsigned int version)
-{
-	ar & boost::serialization::make_nvp("attids", g.ids);
-	ar & boost::serialization::make_nvp("values", g.values);
-}
-
-
-template<class Archive>
-void serialize(Archive & ar, ProcessID & g, const unsigned int version)
-{
-	ar & boost::serialization::make_nvp("nid", g.nid);
-	ar & boost::serialization::make_nvp("pid", g.pid);
-	ar & boost::serialization::make_nvp("time", g.time);
-}
-
-
-template<class Archive>
-void serialize(Archive & ar, ComponentID & g, const unsigned int version)
-{
-	ar & boost::serialization::make_nvp("pid", g.pid);
-	ar & boost::serialization::make_nvp("num", g.num);
-}
-
-
-
-}
-}
-CREATE_SERIALIZEABLE_CLS_EXTERNAL(AttributeIDsAndValues)
-CREATE_SERIALIZEABLE_CLS_EXTERNAL(ProcessID)
-CREATE_SERIALIZEABLE_CLS_EXTERNAL(ComponentID)
+CREATE_SERIALIZEABLE_CLS(FileAssociationMapperOptions)
 
 
 template<int LENGTH>
@@ -76,6 +37,14 @@ struct ByteRangeComparator
 
 namespace monitoring{
 
+
+class AttributeIDsAndValues{
+public:
+	vector<OntologyAttributeID> ids;
+	vector<OntologyValue> values;
+};
+
+
 class FileAssociationMapper: public AssociationMapper{
 public:
 	void save(string filename){
@@ -89,9 +58,23 @@ public:
 		file.close();
 	}
 
+	void load(string filename){
+		ifstream file(filename);
+		if( ! file.good())
+			return;
+		boost::archive::xml_iarchive archive(file, boost::archive::no_header | boost::archive::no_codecvt);
+		archive >> boost::serialization::make_nvp("LastAssociateID", lastID);
+		archive >> boost::serialization::make_nvp("AssociateMap", map_str_aid);
+		archive >> boost::serialization::make_nvp("ProcessMap", map_processAttributes);
+		archive >> boost::serialization::make_nvp("ComponentMap", map_componentAttributes);
+	
+		file.close();
+	}
+
 	void init(ComponentOptions * options){
 		FileAssociationMapperOptions * o = (FileAssociationMapperOptions*) options;
 		filename = o->filename;
+		load(filename);
 	}
 
 	ComponentOptions * get_options() {
@@ -216,6 +199,42 @@ private:
 };
 
 }
+
+
+
+namespace boost{
+namespace serialization {
+template<class Archive>
+void serialize(Archive & ar, AttributeIDsAndValues & g, const unsigned int version)
+{
+	ar & boost::serialization::make_nvp("attids", g.ids);
+	ar & boost::serialization::make_nvp("values", g.values);
+}
+
+
+template<class Archive>
+void serialize(Archive & ar, ProcessID & g, const unsigned int version)
+{
+	ar & boost::serialization::make_nvp("nid", g.nid);
+	ar & boost::serialization::make_nvp("pid", g.pid);
+	ar & boost::serialization::make_nvp("time", g.time);
+}
+
+
+template<class Archive>
+void serialize(Archive & ar, ComponentID & g, const unsigned int version)
+{
+	ar & boost::serialization::make_nvp("pid", g.pid);
+	ar & boost::serialization::make_nvp("num", g.num);
+}
+
+
+
+}
+}
+CREATE_SERIALIZEABLE_CLS_EXTERNAL(AttributeIDsAndValues)
+CREATE_SERIALIZEABLE_CLS_EXTERNAL(ProcessID)
+CREATE_SERIALIZEABLE_CLS_EXTERNAL(ComponentID)
 
 
 

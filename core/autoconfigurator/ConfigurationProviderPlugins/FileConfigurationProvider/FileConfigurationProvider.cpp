@@ -55,7 +55,7 @@ public:
 	}
 
 	string getConfiguration(string & type, string & matchingRules){
-		string what = type + " " + matchingRules;
+		string what = type + (matchingRules.length() > 0 ? " " + matchingRules : "");
 		return configurationSections[what];
 	}
 
