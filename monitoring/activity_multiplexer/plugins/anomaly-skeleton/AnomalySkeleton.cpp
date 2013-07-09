@@ -16,9 +16,22 @@ CREATE_SERIALIZEABLE_CLS(AnomalySkeletonOptions)
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
 class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerSync {
+private:
+	SystemInformationGlobalIDManager * sys;
+	OntologyAttribute * filesize;
 public:
 	void Notify(Activity * activity)
 	{ 
+		cout << "Notified: type: " ;// << sys->activity_name(activity->aid())	<< endl;
+		// check for a specific attribute.
+		vector<Attribute> attributes = activity->attributeArray();
+		for(auto itr = attributes.begin() ; itr != attributes.end(); itr++){
+			Attribute & att = *itr;
+			cout << "attribute: " << att.id << endl;
+			if( att.id == filesize->aID){
+					cout << "Filesize: " << att.value << endl;
+			}			
+		}
 	}
 
 	ComponentOptions * get_options(){
@@ -29,10 +42,15 @@ public:
 		//AnomalySkeletonOptions * o = (AnomalySkeletonOptions*) options;
 
 		assert(this->dereferenceFacade != nullptr);
-		//ActivityPluginDereferencing * apdf = this->dereferenceFacade;
+		assert(this->dereferenceFacade->get_system_information() != nullptr);
+		sys = this->dereferenceFacade->get_system_information();
 
-		
+		filesize = dereferenceFacade->lookup_attribute_by_name("test", "filesize");
+		assert(filesize != nullptr);
+
 		multiplexer.registerListener(this);
+
+		delete(options);
 	}
 };
 

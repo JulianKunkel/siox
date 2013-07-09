@@ -6,6 +6,7 @@
 class HelloWorld {
 	public:
 		virtual std::string testfunc();
+		virtual ~HelloWorld(){};
 };
 
 #endif

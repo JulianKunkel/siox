@@ -42,9 +42,6 @@ public:
 	 */
 	void shutdown();
 
-	~ComponentRegistrar(){
-		shutdown();
-	}
 private:
 	std::map<ComponentReferenceID, Component*> map;
 	std::list<Component*> list;

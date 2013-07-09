@@ -24,9 +24,9 @@ int main(int argc, char const *argv[]){
 
 	ComponentID cid = {.pid = {2,3,4}, .num=1};
 
-	auto * parentArray = new vector<ActivityID>{{{.pid = {1,2,3}, .num=2}, .num = 1} };
-	auto * attributeArray = new vector<Attribute>{{.id=111, .value = "myData"}, {.id=3, . value = (uint64_t) 4711}};
-	auto * remoteCallsArray = new vector<RemoteCall>();
+	auto parentArray = vector<ActivityID>{{{.pid = {1,2,3}, .num=2}, .num = 1} };
+	auto attributeArray = vector<Attribute>{{.id=111, .value = "myData"}, {.id=3, . value = (uint64_t) 4711}};
+	auto remoteCallsArray = vector<RemoteCall>();
 
 
 	UniqueComponentActivityID aid = 4;

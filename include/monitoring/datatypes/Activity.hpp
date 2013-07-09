@@ -122,27 +122,56 @@ protected:
 	int32_t errorValue_;
 
 public:
-	UniqueComponentActivityID aid() const;
-	
 	Activity(UniqueComponentActivityID aid, siox_timestamp start_t, siox_timestamp end_t, ComponentID cid, 
-		vector<ActivityID> * parentArray, 
-		vector<Attribute> * attributeArray, 
-		vector<RemoteCall> * remoteCallsArray, 
+		vector<ActivityID> & parentArray, 
+		vector<Attribute> & attributeArray, 
+		vector<RemoteCall> & remoteCallsArray, 
 		RemoteCallIdentifier * remoteInvoker,  int32_t errorValue)
 		: 
 		aid_ (aid), time_start_ (start_t), time_stop_ (end_t),
-		cid_ (cid), parentArray_ ( std::move(*parentArray)),
-		remoteCallsArray_ (std::move(*remoteCallsArray)),
+		cid_ (cid), parentArray_ ( std::move(parentArray)),
+		remoteCallsArray_ (std::move(remoteCallsArray)),
+		attributeArray_ (std:: move(attributeArray)),		
 		remoteInvoker_ (remoteInvoker),errorValue_(errorValue){}
 
-	Activity(){}
+	Activity(){
+	}
 		
-	uint64_t time_start() const{
+	inline siox_timestamp time_start() const{
 		return time_start_;
 	}
 
-	uint64_t time_stop() const{
+	inline siox_timestamp time_stop() const{
 		return time_stop_;
+	}
+
+
+	inline UniqueComponentActivityID aid() const{
+		return aid_;
+	}
+	
+	inline ComponentID cid() const{
+		return cid_;
+	}
+
+	inline const vector<ActivityID>& parentArray() const{
+		return parentArray_;
+	}
+
+	inline const vector<RemoteCall>& remoteCallsArray() const{
+		return remoteCallsArray_;
+	}
+
+	inline const vector<Attribute>& attributeArray() const{
+		return attributeArray_;
+	}
+
+	inline const RemoteCallIdentifier * remoteInvoker() const{
+		return remoteInvoker_;
+	}
+
+	inline int32_t errorValue() const{
+		return errorValue_;
 	}
 
 };

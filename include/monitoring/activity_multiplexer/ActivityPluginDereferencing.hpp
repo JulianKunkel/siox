@@ -17,7 +17,7 @@ namespace monitoring{
 
 class ActivityPluginDereferencing : public Component{
 public:
-    virtual OntologyAttribute * lookup_attribute_by_name(string & domain, string & name) = 0;
+    virtual OntologyAttribute * lookup_attribute_by_name(const string & domain, const string & name) = 0;
 
     virtual OntologyAttribute * lookup_attribute_by_ID(OntologyAttributeID aID) = 0;
 
@@ -29,7 +29,7 @@ public:
 
 	virtual const string * lookup_instance_mapping(AssociateID id) = 0;
 
-	virtual const SystemInformationGlobalIDManager * get_system_information() = 0;
+	virtual SystemInformationGlobalIDManager * get_system_information() = 0;
 }; 
 }
 

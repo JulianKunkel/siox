@@ -17,9 +17,9 @@ int main(int argc, char const *argv[]){
 
 	// init plugin
 	// not necessary, but for testing...
-	FileOntologyOptions op;
-	op.filename = "ontology-example.txt";
-	o->init(& op);
+	FileOntologyOptions * op = new FileOntologyOptions();
+	op->filename = "ontology-example.txt";
+	o->init(op);
 
 	string domain("test");
 	string s_a1("a1");

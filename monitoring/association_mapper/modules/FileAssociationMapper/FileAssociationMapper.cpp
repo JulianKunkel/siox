@@ -90,7 +90,7 @@ public:
 		return lookup_attribute(av, att);
 	}
 
-	bool set_process_attribute(ProcessID * pid, OntologyAttribute * att, OntologyValue & value){
+	bool set_process_attribute(ProcessID * pid, OntologyAttribute * att, const  OntologyValue & value){
 		globalMutex.lock();
 		AttributeIDsAndValues * av = map_processAttributes[pid];
 		if( av == nullptr){
@@ -103,7 +103,7 @@ public:
 	}
 
 
-	bool set_component_attribute(ComponentID * cid, OntologyAttribute * att, OntologyValue & value){
+	bool set_component_attribute(ComponentID * cid, OntologyAttribute * att,const  OntologyValue & value){
 		globalMutex.lock();
 		AttributeIDsAndValues * av = map_componentAttributes[cid];	
 		if( av == nullptr){
@@ -147,7 +147,7 @@ public:
 
 
 private:
-	bool set_attribute(AttributeIDsAndValues * av, OntologyAttribute * att, OntologyValue & value){
+	bool set_attribute(AttributeIDsAndValues * av, OntologyAttribute * att, const  OntologyValue & value){
 		OntologyAttributeID searchFor = att->aID;
 
     	int which = 0;

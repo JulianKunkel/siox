@@ -88,11 +88,11 @@ namespace monitoring{
 class Ontology : public core::Component {
 
 public: 
-    virtual OntologyAttribute * register_attribute(string & domain, string & name, enum siox_ont_storage_type storage_type) = 0;
+    virtual OntologyAttribute * register_attribute(const string & domain, const string & name, enum siox_ont_storage_type storage_type) = 0;
 
-    virtual bool attribute_set_meta_attribute(OntologyAttribute * att, OntologyAttribute * meta, OntologyValue & value) = 0;
+    virtual bool attribute_set_meta_attribute(OntologyAttribute * att, OntologyAttribute * meta, const OntologyValue & value) = 0;
 
-    virtual OntologyAttribute * lookup_attribute_by_name(string & domain, string & name) = 0;
+    virtual OntologyAttribute * lookup_attribute_by_name(const string & domain, const string & name) = 0;
 
     virtual OntologyAttribute * lookup_attribute_by_ID(OntologyAttributeID aID) = 0;
 

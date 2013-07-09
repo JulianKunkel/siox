@@ -92,6 +92,8 @@ class FileOntology: public Ontology{
 		cout << "Initializing file ontology using " << filename << endl;
 
 		load(filename);
+
+		delete(options);
 	}
 
 	ComponentOptions * get_options() {
@@ -111,7 +113,7 @@ class FileOntology: public Ontology{
 	///////////////////////////////////////////////////
 
 
-    OntologyAttribute * register_attribute(string & domain, string & name, enum siox_ont_storage_type storage_type){
+    OntologyAttribute * register_attribute(const string & domain, const string & name, enum siox_ont_storage_type storage_type){
     	// lookup if the domain + name exists in the table.
 		stringstream unique(domain);
 		unique << "|" << name;
@@ -140,7 +142,7 @@ class FileOntology: public Ontology{
 		return & domain_name_map[fqn]->attribute;
     }
 
-    bool attribute_set_meta_attribute(OntologyAttribute * att, OntologyAttribute * meta, OntologyValue & value){    	
+    bool attribute_set_meta_attribute(OntologyAttribute * att, OntologyAttribute * meta, const OntologyValue & value){    	
     	attributeMutex.lock();
     	// check if the attribute has been set in the past:
     	const OntologyValue * val = lookup_meta_attribute(att, meta);
@@ -160,7 +162,7 @@ class FileOntology: public Ontology{
     	return true;
     }
 
-    OntologyAttribute * lookup_attribute_by_name(string & domain, string & name){
+    OntologyAttribute * lookup_attribute_by_name(const string & domain, const string & name){
 		stringstream unique(domain);
 		unique << "|" << name;
 		return & domain_name_map[unique.str()]->attribute;

@@ -25,7 +25,7 @@ class ModuleError: public std::exception{
 		string msg;
 	public:
 		ModuleError(string module_path, string module_name, string interface, string msg);
-		 const char* what() const throw();
+		const char* what() const throw();
 };
 
 namespace module_internal{

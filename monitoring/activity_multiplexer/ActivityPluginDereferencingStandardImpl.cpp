@@ -13,7 +13,7 @@ CREATE_SERIALIZEABLE_CLS(ActivityPluginDereferencingFacadeOptions)
 
 class ActivityPluginDereferencingImplementation : public ActivityPluginDereferencing{
 public:
-    OntologyAttribute * lookup_attribute_by_name(string & domain, string & name){
+    OntologyAttribute * lookup_attribute_by_name(const string & domain,const  string & name){
     	return ontology->lookup_attribute_by_name(domain, name);
     }
 
@@ -37,7 +37,7 @@ public:
 		return association_mapper->lookup_instance_mapping(id);
 	}
 
-	const SystemInformationGlobalIDManager * get_system_information(){
+	SystemInformationGlobalIDManager * get_system_information(){
 		assert(system_information_manager != nullptr);
 		return system_information_manager;
 	}

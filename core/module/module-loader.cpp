@@ -18,13 +18,14 @@ ModuleError::ModuleError(string module_path, string module_name,
 		this->module = module + "/" + module_name + ".so";
 	else
 		this->module = module_name + ".so";
+
+	this->msg = "Critical error upon loading module \"" + module + "\" with interface \"" + interface + "\". " + msg;
 }
 
 
 const char *ModuleError::what() const throw() 
 {
-	return ("Critical error upon loading module \"" + module + 
-	        "\" with interface \"" + interface + "\". " + msg).c_str();
+	return this->msg.c_str();
 }
 
 namespace module_internal {

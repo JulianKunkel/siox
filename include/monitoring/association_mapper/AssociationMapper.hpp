@@ -19,10 +19,10 @@ public:
 	Domain "component"
 	Key: cid + OntologyAttributeID, VALUE as value...
 	*/
-	virtual bool set_process_attribute(ProcessID * pid, OntologyAttribute * att, OntologyValue & value) = 0;
+	virtual bool set_process_attribute(ProcessID * pid, OntologyAttribute * att, const OntologyValue & value) = 0;
 	virtual OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att) = 0;
 
-	virtual bool set_component_attribute(ComponentID * cid, OntologyAttribute * att, OntologyValue & value) = 0;
+	virtual bool set_component_attribute(ComponentID * cid, OntologyAttribute * att, const  OntologyValue & value) = 0;
 	virtual OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att) = 0;
 
 	/* This functions are used to create the RemoteInstanceID */

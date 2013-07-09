@@ -43,7 +43,7 @@ namespace core{
 		boost::archive::xml_iarchive ia(stream, flags);
 		try{
 			ia >> BOOST_SERIALIZATION_NVP(object);
-		}catch(boost::archive::archive_exception & e){		
+		}catch(boost::archive::archive_exception & e){			
 			cerr << "Error at: " << stream.tellg() << endl;
 			// output whole stream input
 			string s;
