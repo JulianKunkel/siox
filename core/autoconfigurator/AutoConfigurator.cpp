@@ -58,13 +58,39 @@ namespace core{
 	vector<Component*> AutoConfigurator::LoadConfiguration(string type, string matchingRules){		
 		string config = configurationProvider->getConfiguration(type, matchingRules);
 
+		// replace <X> with  <object class_id="1" class_name="X"> 
+		// replace </X> with Container></Container></object>
+
+		stringstream transformed_config;
+
+		size_t current;
+		size_t next = std::string::npos;
+		do {
+		  current = next + 1;
+		  next = config.find("\n<", current);
+		  size_t end_pos = config.find(">", current);
+
+		  if(config[current+1] == '/'){
+		  	transformed_config << "\t<Container></Container>" << endl;
+		  	transformed_config << "</object>" << endl;
+		  }else{
+		 	transformed_config << "<object class_id=\"1\" class_name=\"" << config.substr(current + 1, end_pos - current - 1) << "\">" << endl;
+		 	transformed_config << config.substr(end_pos + 2, next - end_pos - 2) << endl;
+		  }
+
+		  //cout << "  [" << config.substr(current, next - current) << "]" << endl;
+		} while (next != std::string::npos);
+
+
+		// parse string
+
 		vector<Component*> components;
 
 		registrarMutex.lock();
 		autoConfiguratorRegistrar = registrar;
 
 		ContainerSerializer cs = ContainerSerializer();
-		stringstream already_parsed_config(config);
+		stringstream already_parsed_config(transformed_config.str());
 		while(! already_parsed_config.eof()) {
 			// check if the stream is empty
 			char c; 
