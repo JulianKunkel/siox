@@ -42,7 +42,7 @@ void serialize(Archive & ar, AttributeIDsAndValues & g, const unsigned int versi
 template<class Archive>
 void serialize(Archive & ar, ProcessID & g, const unsigned int version)
 {
-	ar & boost::serialization::make_nvp("node", g.hw);
+	ar & boost::serialization::make_nvp("nid", g.nid);
 	ar & boost::serialization::make_nvp("pid", g.pid);
 	ar & boost::serialization::make_nvp("time", g.time);
 }
