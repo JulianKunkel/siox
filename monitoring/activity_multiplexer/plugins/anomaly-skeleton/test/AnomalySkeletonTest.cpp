@@ -2,7 +2,8 @@
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
 
-#include "../ActivityFileWriterOptions.hpp"
+
+#include "../AnomalySkeletonOptions.hpp"
 
 using namespace std;
 
@@ -13,14 +14,15 @@ int main(int argc, char const *argv[]){
 	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexer_Impl1", "monitoring_activitymultiplexer");
 
 	// wir registrieren das Plugin (normal geschieht dies automatisch)
-	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>("", "ActivityFileWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE);
+	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>("", "AnomalySkeleton", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE);
 
-	// init plugin
-	// not necessary, but for testing...
-	FileWriterPluginOptions * op = (FileWriterPluginOptions*) ap->get_options();
-	op->filename = "test.txt";
+	AnomalySkeletonOptions * op = (AnomalySkeletonOptions*) ap->get_options();
+	ActivityPluginDereferencing * facade = core::module_create_instance<ActivityPluginDereferencing>("", "ActivityPluginDereferencingStandardImpl", ACTIVITY_DEREFERENCING_FACADE_INTERFACE);
 
-	ap->init(op, m1, nullptr);
+	ap->init(op, m1, facade);
+
+
+
 
 	ComponentID cid = {.pid = {2,3,4}, .num=1};
 
@@ -31,7 +33,7 @@ int main(int argc, char const *argv[]){
 
 	UniqueComponentActivityID aid = 4;
 	// Cast the real activity to the serializable object class wrapper
-	Activity * activity = new Activity(aid, 3, 5, cid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
+	Activity * activity = new Activity(aid, 3, 5, cid, parentArray, attributeArray, remoteCallsArray, nullptr, 0);
 
 	m1->Log(activity);
 

@@ -5,39 +5,39 @@
 
 #include <core/component/Component.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
-
+#include <monitoring/activity_multiplexer/ActivityMultiplexerPluginOptions.hpp>
+#include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
 
 using namespace core;
 
 namespace monitoring{
 
-
-class ActivityMultiplexerPluginOptions: public ComponentOptions{
-// protected:
-// If needed: prevent accidential creation of object
-//	ActivityMultiplexerPluginOptions(){}
-public:
-	// must be provided
-	ActivityMultiplexer * multiplexer = 0;
-};
-
 class ActivityMultiplexerPlugin: public Component{
 protected:
 	ActivityMultiplexer * parent_multiplexer;
+	ActivityPluginDereferencing * dereferenceFacade;
 
 	virtual void init(ActivityMultiplexerPluginOptions * options, ActivityMultiplexer & multiplexer) = 0;
 
 public:
+	void init(ActivityMultiplexerPluginOptions * options, ActivityMultiplexer * activity_multiplexer, ActivityPluginDereferencing * dereferenceFacade){
+		parent_multiplexer = activity_multiplexer;
+		// may be 0.
+		this->dereferenceFacade = dereferenceFacade;
+
+		init(options, *parent_multiplexer );		
+	}
+
 	void init(ComponentOptions * options){
 		ActivityMultiplexerPluginOptions * o = (ActivityMultiplexerPluginOptions *) options;
 		assert(options != nullptr);
-		assert(o->multiplexer != nullptr);
-		init(o, * (o->multiplexer) );
+		assert(o->multiplexer.componentID != 0);
+
+		init(o, o->multiplexer.instance<ActivityMultiplexer>(), o->dereferenceFacade.instance<ActivityPluginDereferencing>());
 	}
 
 	void shutdown(){
 	}
-
 };
 
 }

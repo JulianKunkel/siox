@@ -1,22 +1,21 @@
 #include <core/component/component-macros.hpp>
-#include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
 
 
+using namespace core;
 
-using namespace std;
-using namespace monitoring;
+namespace monitoring{
 
-// You may or may not use this advanced options.
-class AnomalyDetectionAbstractPluginOptions: public ActivityMultiplexerPluginOptions{
-private:
-	ComponentReference dereferenceFacade;
+
+class ActivityMultiplexerPluginOptions: public ComponentOptions{
 public:
-	ActivityPluginDereferencing * dereferencingFacade(){
-		return dereferenceFacade.instance<ActivityPluginDereferencing>();
-	}
+	ComponentReference multiplexer;
+	ComponentReference dereferenceFacade;
 
-	SERIALIZE_CONTAINER(MEMBER(dereferenceFacade))
+	SERIALIZE_CONTAINER(MEMBER(multiplexer) MEMBER(dereferenceFacade))
 };
 
-#undef SERIALIZE_CONTAINER
-#define SERIALIZE_CONTAINER(VAR_) SERIALIZE(VAR_ PARENT_CLASS(AnomalyDetectionAbstractPluginOptions))
+}
+
+
+#define SERIALIZE_OPTIONS(VAR_) SERIALIZE(VAR_ PARENT_CLASS(ActivityMultiplexerPluginOptions))
+

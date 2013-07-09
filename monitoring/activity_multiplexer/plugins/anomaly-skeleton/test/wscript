@@ -1,0 +1,7 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+    bld.program(include="include",  features='test cxx cxxprogram', use = "ActivityMultiplexer_Impl1 module-loader AnomalySkeleton", target = 'AnomalySkeletonTest', source = 'AnomalySkeletonTest.cpp', install_path = None,)
+
+# -*- indent-tabs-mode: t -*-
