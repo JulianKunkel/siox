@@ -11,5 +11,4 @@ void * get_instance_monitoring_activity_plugin_dereferencing() { return new x();
 
 #endif
 
-#define ACTIVITY_DEREFERENCING_FACADE_INTERFACE "monitoring_activity_plugin_dereferencing"
 

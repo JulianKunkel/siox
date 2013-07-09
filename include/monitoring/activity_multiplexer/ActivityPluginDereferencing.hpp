@@ -1,69 +1,39 @@
 #ifndef ACTIVITY_PLUGIN_DEREFERENCING_FACADE_H_
 #define ACTIVITY_PLUGIN_DEREFERENCING_FACADE_H_
 
-#include <monitoring/component/Component.hpp>
+#include <core/component/Component.hpp>
 
-#include <monitoring/ontology/Ontology.hpp>
+#include <monitoring/ontology/OntologyDatatypes.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
-#include <monitoring/association_mapper/AssociationMapper.hpp>
 
 using namespace std;
 using namespace core;
 using namespace monitoring;
 
+/*
+ This class provides a facade for quering details for activities.
+ */
+namespace monitoring{
+
 class ActivityPluginDereferencing : public Component{
 public:
-    inline OntologyAttribute * lookup_attribute_by_name(string & domain, string & name){
-    	return ontology->lookup_attribute_by_name(domain, name);
-    }
+    virtual OntologyAttribute * lookup_attribute_by_name(string & domain, string & name) = 0;
 
-    inline OntologyAttribute * lookup_attribute_by_ID(OntologyAttributeID aID){
-    	return ontology->lookup_attribute_by_ID(aID);
-    }
+    virtual OntologyAttribute * lookup_attribute_by_ID(OntologyAttributeID aID) = 0;
 
-    inline const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta){
-    	return ontology->lookup_meta_attribute(attribute, meta);
-    }
+    virtual const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta) = 0;
 
-	inline OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att){
-		return association_mapper->lookup_process_attribute(pid, att);
-	}
+	virtual OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att) = 0;
 
-	inline OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att){
-		return association_mapper->lookup_component_attribute(cid, att);
-	}
+	virtual OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att) = 0;
 
-	inline const string * lookup_instance_mapping(AssociateID id){
-		return association_mapper->lookup_instance_mapping(id);
-	}
+	virtual const string * lookup_instance_mapping(AssociateID id) = 0;
 
-	inline const SystemInformationGlobalIDManager * get_system_information(){
-		assert(system_information_manager != nullptr);
-		return system_information_manager;
-	}
-
-	void init(ComponentOptions * options){
-		ActivityPluginDereferencingFacadeOptions * o = dynamic_cast<ActivityPluginDereferencingFacadeOptions*>(options);
-		ontology = 	o->ontology.instance<Ontology>();
-		system_information_manager = o->system_information_manager.instance<SystemInformationGlobalIDManager>();
-		association_mapper = o->association_mapper.instance<AssociationMapper>();
-		delete(options);
-	}
-
-	ComponentOptions * get_options(){
-		return new ActivityPluginDereferencingFacadeOptions();
-	}
-
-	void shutdown(){}
-
-private:
-	// Loaded ontology implementation
-	Ontology * ontology = nullptr;
-    // Loaded system information manager implementation
-    SystemInformationGlobalIDManager * system_information_manager = nullptr;
-    // Loaded association mapper implementation
-    AssociationMapper * association_mapper = nullptr;
+	virtual const SystemInformationGlobalIDManager * get_system_information() = 0;
 }; 
+}
+
+#define ACTIVITY_DEREFERENCING_FACADE_INTERFACE "monitoring_activity_plugin_dereferencing"
 
 
 #endif

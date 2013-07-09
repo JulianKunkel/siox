@@ -1,43 +1,51 @@
-#include <monitoring/component/Component.hpp>
+#include <monitoring/activity_multiplexer/ActivityPluginDereferencingImplementation.hpp>
+
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 
-#include <monitoring/activity_multiplexer/ActivityPluginDereferencingImplementation.hpp>
-#include <monitoring/activity_multiplexer/ActivityPluginDereferencingOptions.hpp>
+#include "ActivityPluginDereferencingOptions.hpp"
 
 using namespace std;
 using namespace core;
 using namespace monitoring;
 
+CREATE_SERIALIZEABLE_CLS(ActivityPluginDereferencingFacadeOptions)
+
 class ActivityPluginDereferencingImplementation : public ActivityPluginDereferencing{
 public:
-    inline OntologyAttribute * lookup_attribute_by_name(string & domain, string & name){
+    OntologyAttribute * lookup_attribute_by_name(string & domain, string & name){
     	return ontology->lookup_attribute_by_name(domain, name);
     }
 
-    inline OntologyAttribute * lookup_attribute_by_ID(OntologyAttributeID aID){
+    OntologyAttribute * lookup_attribute_by_ID(OntologyAttributeID aID){
     	return ontology->lookup_attribute_by_ID(aID);
-    }
+    } 
 
-    inline const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta){
+    const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta){
     	return ontology->lookup_meta_attribute(attribute, meta);
     }
 
-	inline OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att){
+	OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att){
 		return association_mapper->lookup_process_attribute(pid, att);
 	}
 
-	inline OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att){
+	OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att){
 		return association_mapper->lookup_component_attribute(cid, att);
 	}
 
-	inline const string * lookup_instance_mapping(AssociateID id){
+	const string * lookup_instance_mapping(AssociateID id){
 		return association_mapper->lookup_instance_mapping(id);
 	}
 
-	inline const SystemInformationGlobalIDManager * get_system_information(){
+	const SystemInformationGlobalIDManager * get_system_information(){
 		assert(system_information_manager != nullptr);
 		return system_information_manager;
+	}
+
+	void init(Ontology * o, SystemInformationGlobalIDManager * id, AssociationMapper * as){
+		ontology = o;
+		system_information_manager = id;
+		association_mapper = as;
 	}
 
 	void init(ComponentOptions * options){
