@@ -26,7 +26,9 @@ typedef void siox_component;
 typedef void siox_activity;
 typedef void siox_remote_call;
 
+extern "C"{
 #include <monitoring/low-level-c/siox-ll.h>
+}
 
 /**
  * Implementation of the low-level API
