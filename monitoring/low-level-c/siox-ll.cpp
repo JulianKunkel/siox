@@ -262,11 +262,11 @@ void siox_report_node_statistics(siox_node node, siox_attribute * statistic, sio
 
 // MZ: Alle an ActivityBuilder (to be acquired!!!) weiterreichen
 
-siox_activity * siox_activity_start(siox_component_activity * activity, siox_timestamp timestamp){
+siox_activity * siox_activity_start(siox_component_activity * activity){
     return nullptr;
 }
 
-void siox_activity_stop(siox_activity * activity, siox_timestamp timestamp){
+void siox_activity_stop(siox_activity * activity){
 
 }
 
@@ -274,7 +274,7 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
 
 }
 
-void siox_activity_report_error(siox_activity * activity, int error){
+void siox_activity_report_error(siox_activity * activity, int64_t error){
 
 }
 
