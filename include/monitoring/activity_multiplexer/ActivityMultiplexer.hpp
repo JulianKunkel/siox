@@ -19,5 +19,7 @@ class ActivityMultiplexer : public Multiplexer<Activity>
 };
 
 
+#define ACTIVITY_MULTIPLEXER_INTERFACE "monitoring_activitymultiplexer"
+
 }
 #endif /* ACTIVITYMULTIPLEXER_H */
