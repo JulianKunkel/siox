@@ -212,7 +212,9 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value){
 
 siox_associate * siox_associate_instance(const char * iid){
     string instance(iid);
-    return process_data.association_mapper->create_instance_mapping(instance);
+    uint64_t id = process_data.association_mapper->create_instance_mapping(instance);
+    // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
+    return (AssociateID*) id;
 }
 
 /////////////// MONITORING /////////////////////////////

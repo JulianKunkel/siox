@@ -28,10 +28,10 @@ int main(int argc, char const *argv[]){
 	SystemInformationGlobalIDManager * sys = dynamic_cast<SystemInformationGlobalIDManager*>(components[3]);	
 
 	UniqueInterfaceID uid = sys->interface_id("test", "impl1");
-    UniqueComponentActivityID aid = sys->activity_id(uid, "open");
-    OntologyAttribute * o1 = o->register_attribute("test", "filesize", SIOX_STORAGE_64_BIT_UINTEGER);
-    OntologyAttribute * o2 = o->register_attribute("test", "filename", SIOX_STORAGE_STRING);
-    OntologyAttribute * o3 = o->register_attribute("test", "filesystem", SIOX_STORAGE_32_BIT_UINTEGER);
+    	UniqueComponentActivityID aid = sys->activity_id(uid, "open");
+    	OntologyAttribute * o1 = o->register_attribute("test", "filesize", SIOX_STORAGE_64_BIT_UINTEGER);
+    	OntologyAttribute * o2 = o->register_attribute("test", "filename", SIOX_STORAGE_STRING);
+    	OntologyAttribute * o3 = o->register_attribute("test", "filesystem", SIOX_STORAGE_32_BIT_UINTEGER);
 
 	ComponentID cid = {.pid = {2,3,4}, .num=1};
 
