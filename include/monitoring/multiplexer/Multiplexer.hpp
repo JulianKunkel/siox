@@ -15,6 +15,14 @@
  2 Use Cases
 	- pass a message/element to multiple registered listeners
 
+ 3 Warnings
+	Virtual functions and locks bear some risks for deadlocks or may corrupt
+	data due to race conditions when implemented slopply.
+
+	Depending on the implementation it may be very likely to create unexpected
+	behaivor if only one of the three functions Log(), unregisterListener() or
+	registerListener() is changed, as they may share a mutex.
+
  */
 
 #ifndef MULTIPLEXER_H
@@ -33,8 +41,6 @@ namespace monitoring{
 template <class TYPE>
 class Multiplexer : core::Component
 {
-
-
 
 public:
 	/**
