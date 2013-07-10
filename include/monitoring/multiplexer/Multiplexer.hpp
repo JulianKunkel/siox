@@ -40,10 +40,8 @@ namespace monitoring{
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-template <class TYPE>
-class Multiplexer
-{
-
+template <class TYPE, class PARENT>
+class Multiplexer : public PARENT{
 public:
 	/**
 	 * Called by layer to report about activity, passes activities to sync listeners

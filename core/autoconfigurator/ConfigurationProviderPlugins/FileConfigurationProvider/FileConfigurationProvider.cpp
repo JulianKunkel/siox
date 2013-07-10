@@ -25,7 +25,8 @@ public:
 
 		ifstream fin;
 		for(auto it = filelist.begin(); it != filelist.end(); ++it) {
-			fin.open(configuration_filename);
+			fin.open(*it);
+			cout << "> Checking config " << *it << endl;
 			if(fin.good()){
 				break;
 			}

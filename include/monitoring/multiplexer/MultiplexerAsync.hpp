@@ -40,9 +40,9 @@ namespace monitoring{
 
 // forward declaration for friendship 
 template <class TYPE>class MultiplexerQueue;
-template <class TYPE>class MultiplexerNotifier;
+template <class TYPE, class PARENT>class MultiplexerNotifier;
 //template <class TYPE, class PARENT>class MultiplexerAsync;
-template <class TYPE>class MultiplexerAsync;
+template <class TYPE, class PARENT>class MultiplexerAsync;
 
 
 /**
@@ -93,10 +93,10 @@ public:
  * ActivityMultiplexerNotifier
  * Used by the ActivityMultiplexer to dispatch to async listeners
  */
-template <class TYPE>
+template <class TYPE, class PARENT>
 class MultiplexerNotifier
 {
-	MultiplexerAsync<TYPE> * multiplexer;
+	MultiplexerAsync<TYPE, PARENT> * multiplexer;
 
 
 public:
@@ -123,8 +123,8 @@ public:
 //template <class TYPE, class PARENT>
 //class MultiplexerAsync  : public PARENT
 
-template <class TYPE>
-class MultiplexerAsync : Multiplexer<TYPE>
+template <class TYPE, class PARENT>
+class MultiplexerAsync : Multiplexer<TYPE, PARENT>
 {
 public:
 
