@@ -32,7 +32,7 @@ public:
 
 	// Remote activities
 	siox_remote_call * setupRemoteCall(ActivityID *aid, NodeID *target_node_id, UniqueInterfaceID *target_unique_interface_id, AssociateID *target_associate_id);
-	void addRemoteCallAttribute(siox_remote_call *remote_call, Attribute *attribute, void *value);
+	void addRemoteCallAttribute(siox_remote_call *remote_call, Attribute *attribute);
 	void startRemoteCall(siox_remote_call *remote_call);
 	void startActivityFromRemoteCall(ActivityID *aid, NodeID *caller_node_id, UniqueInterfaceID *caller_unique_interface_id, AssociateID *caller_associate_id);
 };
