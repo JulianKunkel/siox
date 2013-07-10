@@ -5,6 +5,7 @@
 #include <core/container/container-serializer.hpp>
 #include <core/component/component-macros.hpp>
 
+#include <core/component/ComponentReferenceSerializable.hpp>
 
 using namespace std;
 
@@ -15,6 +16,7 @@ using namespace core;
 // 
 // With Vala the whole code was much easier to understand, shorter and ways better to maintain.
 ComponentRegistrar * autoConfiguratorRegistrar;
+int autoConfiguratorOffset;	
 static mutex registrarMutex;
 
 
@@ -75,7 +77,7 @@ namespace core{
 		  size_t component = config.find("<Container></Container>", current);
 
 		  if(config[current+1] == '/'){
-		  	if(component > next){
+		  	if(component >= next){
 		  		transformed_config << "\t<Container></Container>" << endl;
 		  	}
 		  	transformed_config << "</object>" << endl;
@@ -92,6 +94,7 @@ namespace core{
 		vector<Component*> components;
 
 		registrarMutex.lock();
+		autoConfiguratorOffset = registrar->number_of_registered_components();
 		autoConfiguratorRegistrar = registrar;
 
 		ContainerSerializer cs = ContainerSerializer();
@@ -120,21 +123,20 @@ namespace core{
 				throw InvalidConfiguration("Error while parsing module configuration");
 			}
 
-			//cout << "Parsed module description" << endl;
+			//cout << "Parsed module description: "  << already_parsed_config.tellg() << endl;
 			component = module_create_instance<Component>(module->path, module->name, module->interface);
 			//cout << DumpConfiguration(component->get_options()) << endl;
 
-
-
 			try{
-			options = cs.parse(already_parsed_config);
+				options = cs.parse(already_parsed_config);
 			}catch(exception & e){
 				autoConfiguratorRegistrar = nullptr;
 				registrarMutex.unlock();
 				options = component->get_options();
 				string  str = cs.serialize(options);
-				cerr << "Expected configuration: " << str << endl;
+				cerr << endl << "Expected configuration: " << str << endl;
 				delete(options);
+
 				throw InvalidConfiguration("Error during parsing of options");
 			}
 

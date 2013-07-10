@@ -234,7 +234,7 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
  * This function creates a process-local ID in the association mapper and relates it to the string.
  * Therefore, subsequent usages of the string can be replaced by the id.
  * The same string may be linked to the same ID.
- */
+ */ 
 siox_associate * siox_associate_instance(const char * iid);
 
 /**

@@ -22,6 +22,8 @@ private:
 public:
 	void Notify(Activity * activity)
 	{ 
+		if(filesize == nullptr) // initial state
+			return;
 		cout << "Notified: type: " ;// << sys->activity_name(activity->aid())	<< endl;
 		// check for a specific attribute.
 		vector<Attribute> attributes = activity->attributeArray();
@@ -46,7 +48,7 @@ public:
 		sys = this->dereferenceFacade->get_system_information();
 
 		filesize = dereferenceFacade->lookup_attribute_by_name("test", "filesize");
-		assert(filesize != nullptr);
+		// assert(filesize != nullptr); generally true but not for the first run
 
 		multiplexer.registerListener(this);
 

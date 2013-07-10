@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(include="include",  use = "BOOST core-container-serializer", target = 'ActivityFileWriter', source = 'ActivityFileWriter.cpp' )
+    bld.shlib(include="include",  use = "BOOST core-container-serializer AutoConfigurator", target = 'ActivityFileWriter', source = 'ActivityFileWriter.cpp' )
 
     bld.recurse(['test'], mandatory=True)
 

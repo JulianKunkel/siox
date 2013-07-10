@@ -1,4 +1,6 @@
 #include "test-serialize-modules.hpp"
+#include <core/component/ComponentReferenceSerializable.hpp>
+
 
 using namespace core;
 

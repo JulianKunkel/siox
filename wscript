@@ -55,7 +55,7 @@ def configure(conf):
 	workDir = conf.path.abspath()
 	conf.env.INCLUDES = [workDir + '/include' ]
 
-        if not conf.options.debug:
+        if conf.options.debug:
 	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall']
 	else:
 		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall']
@@ -129,6 +129,8 @@ def build(bld):
 def tail(filename, n = 5):
     """Returns last n lines from the filename. No exception handling"""
     size = os.path.getsize(filename)
+    if size < 10: 
+	return ""
     with open(filename, "rb") as f:
         # for Windows the mmap parameters are different
         fm = mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED, mmap.PROT_READ)

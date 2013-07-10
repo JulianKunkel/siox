@@ -78,14 +78,11 @@ __attribute__ ((constructor)) void siox_ll_ctor()
     local_hostname[1023] = '\0';
     gethostname(local_hostname, 1023);
     string hostname(local_hostname);
-    process_data.nid = lookup_node_id(hostname);
-    process_data.pid = create_process_id(process_data.nid);
 
     // If necessary, do actual initialisation
     if(finalized){
         printf("Initializing SIOX library\n");
 
-        // Lookup and initialize configurations based on nid and pid...
         // Load required modules and pull the interfaces into global datastructures
         // Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
         process_data.registrar = new ComponentRegistrar();
@@ -98,21 +95,40 @@ __attribute__ ((constructor)) void siox_ll_ctor()
 
         provider = (provider != nullptr) ? provider : "FileConfigurationProvider" ;
         path = (path != nullptr) ? path : "";        
-        configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf" ;
+        configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf" ;
 
         process_data.configurator = new AutoConfigurator(process_data.registrar, provider, path, configuration);
 
+        const char * configurationMode = getenv("SIOX_CONFIGURATION_PROVIDER_MODE");
+        const char * configurationOverride = getenv("SIOX_CONFIGURATION_SECTION_TO_USE");
 
-        char * configurationMode = getenv("SIOX_CONFIGURATION_PROVIDER_MODE");
+	string configName;
+	if (configurationOverride != NULL){
+		configName = configurationOverride;
+	}else{
+	        // hostname configurationMode (is optional)        
 
-        // hostname configurationMode (is optional)        
-        stringstream configName;
-        configName << hostname;
-        if(configurationMode != nullptr){
-            configName << " " << configurationMode;
-        }
+		{
+	        stringstream configName_s;
+	        configName_s << hostname;
+        	if(configurationMode != nullptr){
+	            configName_s << " " << configurationMode;
+        	}
+		configName = configName_s.str();
+		}
+	}
 
-        vector<Component*> loadedComponents = process_data.configurator->LoadConfiguration("Process", configName.str());
+	cout << provider << " path " << path << " " << configuration << " ConfigName: \"" << configName << "\"" << endl;
+
+	vector<Component*> loadedComponents;
+	try{
+		loadedComponents = process_data.configurator->LoadConfiguration("Process", configName);
+	}catch(InvalidConfiguration& e){
+		// fallback to global configuration
+		loadedComponents = process_data.configurator->LoadConfiguration("Process", "");
+	}
+	
+
         // if(loadedComponents == nullptr){ // MZ: Error, "==" not defined
         if(loadedComponents.empty()){
             cerr << "FATAL Invalid configuration set: " << endl; 
@@ -129,6 +145,8 @@ __attribute__ ((constructor)) void siox_ll_ctor()
         process_data.system_information_manager =  dynamic_cast<SystemInformationGlobalIDManager*>(loadedComponents[0]);
         process_data.association_mapper =  dynamic_cast<AssociationMapper*>(loadedComponents[0]);
         }
+	process_data.nid = lookup_node_id(hostname);
+	process_data.pid = create_process_id(process_data.nid);
     }
 
     finalized = false;
