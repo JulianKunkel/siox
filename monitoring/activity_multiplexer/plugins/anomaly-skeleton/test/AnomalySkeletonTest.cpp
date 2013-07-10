@@ -14,6 +14,11 @@ using namespace core;
 
 int main(int argc, char const *argv[]){
 	ComponentRegistrar registrar = ComponentRegistrar();
+	// make test runable using waf which is a different directory.
+	if (chdir ("../../../../../../monitoring") == 0){
+		chdir("../");
+	}
+
 	AutoConfigurator * a = new AutoConfigurator(& registrar, "FileConfigurationProvider", "", "monitoring/activity_multiplexer/plugins/anomaly-skeleton/test/siox.conf");
 
 	vector<Component*> components = a->LoadConfiguration("skeletonTest", "");
@@ -23,9 +28,9 @@ int main(int argc, char const *argv[]){
 	}
 
 	// the activity multiplexer is expected to be first:
-	ActivityMultiplexer * m1 = dynamic_cast<ActivityMultiplexer*>(components[0]);
-	Ontology * o = dynamic_cast<Ontology*>(components[1]);
-	SystemInformationGlobalIDManager * sys = dynamic_cast<SystemInformationGlobalIDManager*>(components[3]);	
+	ActivityMultiplexer * m1 = a->searchFor<ActivityMultiplexer>(components);
+	Ontology * o = a->searchFor<Ontology>(components);
+	SystemInformationGlobalIDManager * sys = a->searchFor<SystemInformationGlobalIDManager>(components);	
 
 	UniqueInterfaceID uid = sys->interface_id("test", "impl1");
     	UniqueComponentActivityID aid = sys->activity_id(uid, "open");

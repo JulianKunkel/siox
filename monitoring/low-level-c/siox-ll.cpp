@@ -95,7 +95,7 @@ __attribute__ ((constructor)) void siox_ll_ctor()
 
         provider = (provider != nullptr) ? provider : "FileConfigurationProvider" ;
         path = (path != nullptr) ? path : "";        
-        configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf" ;
+        configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf" ;
 
         process_data.configurator = new AutoConfigurator(process_data.registrar, provider, path, configuration);
 
@@ -141,9 +141,9 @@ __attribute__ ((constructor)) void siox_ll_ctor()
         }
 
         // check loaded components and asssign them to the right struct elements.
-        process_data.ontology = dynamic_cast<Ontology*>(loadedComponents[0]);
-        process_data.system_information_manager =  dynamic_cast<SystemInformationGlobalIDManager*>(loadedComponents[0]);
-        process_data.association_mapper =  dynamic_cast<AssociationMapper*>(loadedComponents[0]);
+        process_data.ontology = process_data.configurator->searchFor<Ontology>(loadedComponents);
+        process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>(loadedComponents);
+        process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>(loadedComponents);
         }
 	process_data.nid = lookup_node_id(hostname);
 	process_data.pid = create_process_id(process_data.nid);

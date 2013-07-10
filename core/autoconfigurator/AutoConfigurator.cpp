@@ -70,18 +70,20 @@ namespace core{
 
 		size_t current;
 		size_t next = std::string::npos;
+		size_t container_set_pos;
 		do {
 		  current = next + 1;
 		  next = config.find("\n<", current);
-		  size_t end_pos = config.find(">", current);
-		  size_t component = config.find("<Container></Container>", current);
+		  size_t end_pos = config.find(">", current);	  
+
 
 		  if(config[current+1] == '/'){
-		  	if(component >= next){
+		  	if(container_set_pos >= next){
 		  		transformed_config << "\t<Container></Container>" << endl;
 		  	}
 		  	transformed_config << "</object>" << endl;
 		  }else{
+		  	container_set_pos = config.find("<Container></Container>", current);
 		 	transformed_config << "<object class_id=\"1\" class_name=\"" << config.substr(current + 1, end_pos - current - 1) << "\">" << endl;
 		 	transformed_config << config.substr(end_pos + 2, next - end_pos - 2) << endl;
 		  }
