@@ -53,8 +53,10 @@ NodeID lookup_node_id(string & hostname){
 ProcessID create_process_id(NodeID nid){
     pid_t pid = getpid();
     struct timespec tv;
-    
+
+#ifndef __APPLE__
     clock_gettime(CLOCK_MONOTONIC, & tv);
+#endif
 
     // casting will strip off the most significant bits on X86 and hence preserve the current seconds and PID
     ProcessID result = ProcessID();
