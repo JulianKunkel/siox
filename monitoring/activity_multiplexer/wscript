@@ -3,8 +3,8 @@
 
 def build(bld):
 
-    bld.shlib(include="include", use="AutoRegistrar", target='ActivityPluginDereferencingStandardImpl', source='ActivityPluginDereferencingStandardImpl.cpp' )
-    bld.shlib(include="include", use="AutoRegistrar", target='ActivityMultiplexerAsyncThreaded', source='ActivityMultiplexerAsyncThreaded.cpp' )
+    bld.shlib(include="include", use="BOOST core-container-serializer AutoConfigurator AutoRegistrar", target='ActivityPluginDereferencingStandardImpl', source='ActivityPluginDereferencingStandardImpl.cpp' )
+    bld.shlib(include="include", use="BOOST core-container-serializer AutoConfigurator AutoRegistrar", target='ActivityMultiplexerAsyncThreaded', source='ActivityMultiplexerAsyncThreaded.cpp' )
 
     bld.recurse(['plugins'], mandatory=True)
 
