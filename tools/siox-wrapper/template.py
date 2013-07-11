@@ -8,10 +8,9 @@ template = {
 'component': {
 	'variables': 'InterfaceName ImplementationIdentifier InstanceName',
 	'global': '''siox_component * global_component;
-				 siox_ontology * global_ontology;
 				 siox_unique_interface * global_uid;
 				''',
-    'init': '''global_uid = siox_system_information_lookup_interface_id(%(InterName)s, %(ImplementationIdentifier)s);
+    'init': '''global_uid = siox_system_information_lookup_interface_id(%(InterfaceName)s, %(ImplementationIdentifier)s);
               global_component = siox_component_register(global_uid, %(InstanceName)s);''',
 	'before': '',
 	'after': '',
@@ -99,7 +98,7 @@ template = {
 'activity': {
 	'variables': 'Name=G_STRFUNC ComponentVariable ActivityVariable',
 	'global': '''''',
-	'init': '''siox_component_activity * %(ComponentVariable)s = siox_component_register_activity( uid, %(Name)s );''',
+	'init': '''siox_component_activity * %(ComponentVariable)s = siox_component_register_activity( global_uid, %(Name)s );''',
     'before': '''siox_activity * %(ActivityVariable)s = siox_activity_start( %(ComponentVariable)s );''',
 	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
