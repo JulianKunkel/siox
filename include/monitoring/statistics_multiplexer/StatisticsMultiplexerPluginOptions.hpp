@@ -1,5 +1,6 @@
-#ifndef ACTIVITY_MULTIPLEXER_PLUGIN_OPTIONS
-#define ACTIVITY_MULTIPLEXER_PLUGIN_OPTIONS
+#ifndef STATISTICS_MULTIPLEXER_PLUGIN_OPTIONS
+#define STATISTICS_MULTIPLEXER_PLUGIN_OPTIONS
+
 #include <core/component/component-macros.hpp>
 
 
@@ -8,7 +9,7 @@ using namespace core;
 namespace monitoring{
 
 
-class ActivityMultiplexerPluginOptions: public ComponentOptions{
+class StatisticsMultiplexerPluginOptions: public ComponentOptions{
 public:
 	ComponentReference multiplexer;
 	ComponentReference dereferenceFacade;
@@ -19,6 +20,6 @@ public:
 }
 
 
-#define SERIALIZE_OPTIONS(VAR_) SERIALIZE(VAR_ PARENT_CLASS(ActivityMultiplexerPluginOptions))
+#define SERIALIZE_OPTIONS(VAR_) SERIALIZE(VAR_ PARENT_CLASS(StatisticsMultiplexerPluginOptions))
 
 #endif

@@ -3,7 +3,7 @@
 
 
 def build(bld):
-	bld.shlib(include="include",  use ="BOOST", target = 'core-container-serializer', source = 'container-serializer.cpp' )
+	bld.shlib(include="include",  use ="BOOST AutoRegistrar", target = 'core-container-serializer', source = 'container-serializer.cpp' )
 	bld.recurse(['test'], mandatory=True)
 
 

@@ -1,5 +1,5 @@
-#ifndef ACTIVITYMULTIPLEXERLISTENER_H
-#define ACTIVITYMULTIPLEXERLISTENER_H 
+#ifndef ACTIVITY_MULTIPLEXER_LISTENER_H
+#define ACTIVITY_MULTIPLEXER_LISTENER_H 
 
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
@@ -24,4 +24,4 @@ class ActivityMultiplexerListenerAsync : public ActivityMultiplexerListener
 
 }
 
-#endif /* ACTIVITYMULTIPLEXERLISTENER_H */
+#endif /* ACTIVITY_MULTIPLEXER_LISTENER_H */
