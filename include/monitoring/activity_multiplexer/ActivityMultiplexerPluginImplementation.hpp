@@ -1,5 +1,5 @@
-#ifndef SIOX_MMULTIPLEXER_MODULE_PLUGIN_
-#define SIOX_MMULTIPLEXER_MODULE_PLUGIN_
+#ifndef SIOX_ACTIVITY_MULTIPLEXER_MODULE_PLUGIN_
+#define SIOX_ACTIVITY_MULTIPLEXER_MODULE_PLUGIN_
 #include <core/component/ComponentReferenceSerializable.hpp>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
