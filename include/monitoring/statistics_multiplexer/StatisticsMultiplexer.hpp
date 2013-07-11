@@ -1,18 +1,43 @@
-#include <monitoring/multiplexer/MultiplexerListener.hpp>
-#include <string>
+#ifndef STATISTICS_MULTIPLEXER_H
+#define STATISTICS_MULTIPLEXER_H 
+
+#include <monitoring/datatypes/Statistics.hpp>
+#include <monitoring/statistics_multiplexer/StatisticsMultiplexerListener.hpp>
+#include <core/component/Component.hpp>
 
 namespace monitoring{
 
-class StatisticsMultiplexerListener : MultiplexerListener<Statistics>{
+
+/**
+ * StatisticsMultiplexer
+ * Forwards and filters statistics to registered listeners (e.g. Plugins) either
+ * in an syncronised or asyncronous manner.
+ */
+
+
+class StatisticsMultiplexer : public core::Component{
 public:
-	string [] requiredMetrics();  // TODO return std::list of ontolagies instead of string names of attributes
-	void Notify(Statistics statistics, Attribute & attribute);
+
+	virtual void Log(Statistics * element) = 0;
+
+	/**
+	 * Register listener to multiplexer
+	 *
+	 * @param	MultiplexerListener *	listener	listener to notify in the future
+	 */
+	virtual void registerListener(StatisticsMultiplexerListener * listener) = 0;
+
+	/**
+	 * Unregister listener from multiplexer
+	 *
+	 * @param	MultiplexerListener *	listener	listener to remove
+	 */
+	virtual void unregisterListener(StatisticsMultiplexerListener * listener) = 0;
+	
 };
 
+
+#define STATISTICS_MULTIPLEXER_INTERFACE "monitoring_statisticsmultiplexer"
+
 }
-
-
-//requiredMetrics(){
-// return ["ALL"] is possible !!!
-//	return ["metric1", "metric2", NULL];
-//}
+#endif /* STATISTICS_MULTIPLEXER_H */
