@@ -72,19 +72,18 @@ extern "C"{
 // constructor for the shared library
 __attribute__ ((constructor)) void siox_ll_ctor()
 {
-    // Retrieve hostname, NodeID and PID
+    // Retrieve hostname; NodeID and PID will follow once process_data is set up
     // TODO: Adapt this to C++?
     char local_hostname[1024];
     local_hostname[1023] = '\0';
     gethostname(local_hostname, 1023);
     string hostname(local_hostname);
-    process_data.nid = lookup_node_id(hostname);
-    process_data.pid = create_process_id(process_data.nid);
 
     // If necessary, do actual initialisation
     if(finalized){
         printf("Initializing SIOX library\n");
 
+        // MZ: Do we really need nid and pid for this?!?
         // Lookup and initialize configurations based on nid and pid...
         // Load required modules and pull the interfaces into global datastructures
         // Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
@@ -128,6 +127,10 @@ __attribute__ ((constructor)) void siox_ll_ctor()
         process_data.ontology = dynamic_cast<Ontology*>(loadedComponents[0]);
         process_data.system_information_manager =  dynamic_cast<SystemInformationGlobalIDManager*>(loadedComponents[0]);
         process_data.association_mapper =  dynamic_cast<AssociationMapper*>(loadedComponents[0]);
+
+        // Retrieve NodeID and PID now that we have a valid SystemInformationManager
+        process_data.nid = lookup_node_id(hostname);
+        process_data.pid = create_process_id(process_data.nid);
         }
     }
 
@@ -165,10 +168,12 @@ __attribute__ ((destructor)) void siox_ll_dtor()
 
 ///////////////////// Implementation of SIOX-LL /////////////
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> Value;
+typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> AttributeValue;
 
-
-// copy value based on datatype in the attribute
+/// Convert an attribute's value to the generic datatype used in the ontology.
+/// @param attribute [in]
+/// @param value [in]
+/// @return
 static OntologyValue convert_attribute(siox_attribute * attribute, void * value){
 	OntologyValue v;
 	switch(attribute->storage_type){
@@ -201,6 +206,9 @@ static OntologyValue convert_attribute(siox_attribute * attribute, void * value)
 }
 
 
+/// Set a global attribute for a process.
+/// @param attribute [in]
+/// @param value [in]
 void siox_process_set_attribute(siox_attribute * attribute, void * value){
 	assert(attribute != nullptr);
 	assert(value != nullptr);
@@ -210,6 +218,9 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value){
 }
 
 
+/// Associate some instance information (such as IP port or thread ID) with the current invocation.
+/// @param iid [in]
+/// @return
 siox_associate * siox_associate_instance(const char * iid){
     string instance(iid);
     uint64_t id = process_data.association_mapper->create_instance_mapping(instance);
@@ -219,8 +230,10 @@ siox_associate * siox_associate_instance(const char * iid){
 
 /////////////// MONITORING /////////////////////////////
 
-// Signaturen C-verdaulich anpassen!!
-
+/// 
+/// @param uiid [in]
+/// @param instance_name [in]
+/// @return
 siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * instance_name){
     assert(uiid != nullptr);
     // instance_name could be nullptr
