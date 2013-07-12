@@ -1,0 +1,10 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+
+def build(bld):
+    bld.shlib(include="include", use="BOOST AutoRegistrar", target = "FileBasedSystemInformation", source = 'FileBasedSystemInformation.cpp' )
+    bld.recurse(['test'], mandatory=True)
+
+
+# -*- indent-tabs-mode: t -*-

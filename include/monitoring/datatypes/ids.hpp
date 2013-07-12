@@ -56,9 +56,18 @@ typedef struct{
  * Globally unique => lookup in knowledge base is mandatory for each layer.
  * The config file for the layer may hold this additional information, so lookup comes for free.
  */
-typedef struct{ 
+typedef struct UniqueInterfaceID_{ 
 	uint16_t interface; /*  It is invalid if interface == 0 */
 	uint16_t implementation;
+
+	bool operator==(UniqueInterfaceID_ const& r){
+		return this->interface == r.interface && r.implementation == this->implementation;
+	}
+
+	bool operator != (UniqueInterfaceID_ const& r)
+	{
+  		return !(this->interface == r.interface && r.implementation == this->implementation);
+	}
 } UniqueInterfaceID;
 // The first 16 bit identify the interface, e.g. MPI2 or POSIX, the latter 16 the implementation version, e.g. MPICH2 vs. OpenMPI
 // UniqueInterfaceID lookup_unique_interface_id(<InterfaceName>, <Version/implementation Name>);
