@@ -24,11 +24,13 @@ public:
 	~ActivityBuilder();
 
 	// Local activities
+	// MZ: What about the UniqueComponentActivityID here?
 	ActivityID * startActivity(ComponentID *cid);
 	void stopActivity(ActivityID *aid);
 	void endActivity(ActivityID *aid);
 	void addActivityAttribute(ActivityID *aid, Attribute *attribute);
 	void reportActivityError(ActivityID *aid, int64_t error);
+	// MZ: Still missing: linkActivityToParent()
 
 	// Remote activities
 	siox_remote_call * setupRemoteCall(ActivityID *aid, NodeID *target_node_id, UniqueInterfaceID *target_unique_interface_id, AssociateID *target_associate_id);

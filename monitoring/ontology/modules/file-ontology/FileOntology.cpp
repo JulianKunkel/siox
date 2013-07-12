@@ -121,7 +121,7 @@ class FileOntology: public Ontology{
 
 		if (domain_name_map[fqn] == NULL){
 			attributeMutex.lock();
-			if (domain_name_map[fqn] == NULL){
+			if (domain_name_map[fqn] == NULL){ // MZ: Isn't this check superfluous?
 				AttributeWithValues * av = new AttributeWithValues();
 				av->attribute.aID = nextID++;
 				av->attribute.name = name;

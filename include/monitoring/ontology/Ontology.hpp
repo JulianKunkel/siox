@@ -100,8 +100,6 @@ public:
 
     virtual const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta) = 0;
 
-    // the interface ID -> may exist across systems, global
-    // register_activity ( UniqueInterface ID, Activity Name) -> may exist across systems, global
 
     // From the system information table:
     // the hardware ID -> is system specific
@@ -109,6 +107,8 @@ public:
     // the filesystem ID -> system specific
 
     // => SystemInformationGlobalIDManager
+    // the interface ID -> may exist across systems, global
+    // register_activity ( UniqueInterface ID, Activity Name) -> may exist across systems, global
     // virtual UniqueInterfaceID           lookup_interface_id(string & interface, string & implementation);
     // virtual UniqueComponentActivityID   lookup_activity_id(UniqueInterfaceID & id, string & name);
     // virtual const string & lookup_interface_name(UniqueInterfaceID id);
