@@ -14,9 +14,10 @@ using namespace core;
 
 int main(int argc, char const *argv[]){
 	AssociationMapper * o = core::module_create_instance<AssociationMapper>("", "FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE);
+	assert(o != nullptr);
 
 	FileAssociationMapperOptions op;
-	op.filename = "association-mapper.txt";
+	op.filename = "association-mapper.dat";
 	o->init(& op);
 
 	string i1("test 1");
@@ -36,7 +37,10 @@ int main(int argc, char const *argv[]){
 	
 	assert(aid1 == aid3);
 
-	cout << (*o->lookup_instance_mapping(aid1)) << endl;
+	const string * ref = o->lookup_instance_mapping(aid1);
+	assert(ref != nullptr);
+
+	cout << (*ref) << endl;
 
 	assert( (*o->lookup_instance_mapping(aid1)) == i1 );
 

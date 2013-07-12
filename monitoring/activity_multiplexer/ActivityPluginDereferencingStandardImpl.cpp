@@ -3,6 +3,8 @@
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 
+#include <core/component/ComponentReferenceSerializable.hpp>
+
 #include "ActivityPluginDereferencingOptions.hpp"
 
 using namespace std;

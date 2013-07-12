@@ -37,6 +37,10 @@ public:
 		return list;
 	}
 
+	const int number_of_registered_components(){
+		return list.size();
+	}
+
 	/*
 	 * Free all allocated components and call their shutdown() method.
 	 */

@@ -57,6 +57,16 @@ public:
 	 */
 	vector<Component*> LoadConfiguration(string type, string matchingRules) throw (InvalidComponentException, InvalidConfiguration);
 
+	template<class TYPE>
+	TYPE * searchFor(vector<Component*> vector){
+		for(auto itr = vector.begin(); itr != vector.end(); itr++){
+			TYPE * ret = dynamic_cast<TYPE*>(*itr);
+			if (ret != nullptr)
+				return ret;
+		}
+		return nullptr;
+	}
+
 	/*
 	 * Create an empty configuration entry for the given component
 	 */

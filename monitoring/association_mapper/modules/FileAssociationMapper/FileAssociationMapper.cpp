@@ -67,8 +67,16 @@ public:
 		archive >> boost::serialization::make_nvp("AssociateMap", map_str_aid);
 		archive >> boost::serialization::make_nvp("ProcessMap", map_processAttributes);
 		archive >> boost::serialization::make_nvp("ComponentMap", map_componentAttributes);
-	
+
 		file.close();
+
+		map_aid_str.resize(map_str_aid.size());
+
+		// recreate  map_aid_str
+		for(auto itr = map_str_aid.begin(); itr != map_str_aid.end(); itr++){			
+			cout << itr->second << " " << itr->first << endl;
+			map_aid_str[itr->second - 1] = itr->first;
+		}
 	}
 
 	void init(ComponentOptions * options){

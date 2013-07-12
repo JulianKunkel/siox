@@ -53,8 +53,10 @@ NodeID lookup_node_id(string & hostname){
 ProcessID create_process_id(NodeID nid){
     pid_t pid = getpid();
     struct timespec tv;
-    
+
+#ifndef __APPLE__
     clock_gettime(CLOCK_MONOTONIC, & tv);
+#endif
 
     // casting will strip off the most significant bits on X86 and hence preserve the current seconds and PID
     ProcessID result = ProcessID();
@@ -83,8 +85,6 @@ __attribute__ ((constructor)) void siox_ll_ctor()
     if(finalized){
         printf("Initializing SIOX library\n");
 
-        // MZ: Do we really need nid and pid for this?!?
-        // Lookup and initialize configurations based on nid and pid...
         // Load required modules and pull the interfaces into global datastructures
         // Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
         process_data.registrar = new ComponentRegistrar();
@@ -97,21 +97,40 @@ __attribute__ ((constructor)) void siox_ll_ctor()
 
         provider = (provider != nullptr) ? provider : "FileConfigurationProvider" ;
         path = (path != nullptr) ? path : "";        
-        configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf" ;
+        configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf" ;
 
         process_data.configurator = new AutoConfigurator(process_data.registrar, provider, path, configuration);
 
+        const char * configurationMode = getenv("SIOX_CONFIGURATION_PROVIDER_MODE");
+        const char * configurationOverride = getenv("SIOX_CONFIGURATION_SECTION_TO_USE");
 
-        char * configurationMode = getenv("SIOX_CONFIGURATION_PROVIDER_MODE");
+	string configName;
+	if (configurationOverride != nullptr){
+		configName = configurationOverride;
+	}else{
+	        // hostname configurationMode (is optional)        
 
-        // hostname configurationMode (is optional)        
-        stringstream configName;
-        configName << hostname;
-        if(configurationMode != nullptr){
-            configName << " " << configurationMode;
-        }
+		{
+	        stringstream configName_s;
+	        configName_s << hostname;
+        	if(configurationMode != nullptr){
+	            configName_s << " " << configurationMode;
+        	}
+		configName = configName_s.str();
+		}
+	}
 
-        vector<Component*> loadedComponents = process_data.configurator->LoadConfiguration("Process", configName.str());
+	cout << provider << " path " << path << " " << configuration << " ConfigName: \"" << configName << "\"" << endl;
+
+	vector<Component*> loadedComponents;
+	try{
+		loadedComponents = process_data.configurator->LoadConfiguration("Process", configName);
+	}catch(InvalidConfiguration& e){
+		// fallback to global configuration
+		loadedComponents = process_data.configurator->LoadConfiguration("Process", "");
+	}
+	
+
         // if(loadedComponents == nullptr){ // MZ: Error, "==" not defined
         if(loadedComponents.empty()){
             cerr << "FATAL Invalid configuration set: " << endl; 
@@ -123,15 +142,14 @@ __attribute__ ((constructor)) void siox_ll_ctor()
             exit(1);
         }
 
-        // check loaded components and asssign them to the right struct elements.
-        process_data.ontology = dynamic_cast<Ontology*>(loadedComponents[0]);
-        process_data.system_information_manager =  dynamic_cast<SystemInformationGlobalIDManager*>(loadedComponents[0]);
-        process_data.association_mapper =  dynamic_cast<AssociationMapper*>(loadedComponents[0]);
-
-        // Retrieve NodeID and PID now that we have a valid SystemInformationManager
-        process_data.nid = lookup_node_id(hostname);
-        process_data.pid = create_process_id(process_data.nid);
+        // check loaded components and assign them to the right struct elements.
+        process_data.ontology = process_data.configurator->searchFor<Ontology>(loadedComponents);
+        process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>(loadedComponents);
+        process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>(loadedComponents);
         }
+    // Retrieve NodeID and PID now that we have a valid SystemInformationManager
+	process_data.nid = lookup_node_id(hostname);
+	process_data.pid = create_process_id(process_data.nid);
     }
 
     finalized = false;

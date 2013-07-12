@@ -18,6 +18,7 @@ typedef uint64_t ComponentReferenceID;
 class ComponentReference{
 public:
 	ComponentReferenceID componentID;
+	bool global;
 
 	template<class TYPE>
 	TYPE* instance(){

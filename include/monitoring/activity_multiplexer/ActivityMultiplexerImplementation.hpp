@@ -1,5 +1,5 @@
-#ifndef SIOX_MMULTIPLEXER_MODULE
-#define SIOX_MMULTIPLEXER_MODULE
+#ifndef SIOX_ACTIVITY_MULTIPLEXER_MODULE
+#define SIOX_ACTIVITY_MULTIPLEXER_MODULE
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 

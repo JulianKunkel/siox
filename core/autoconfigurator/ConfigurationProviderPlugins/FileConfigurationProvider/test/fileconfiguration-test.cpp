@@ -9,6 +9,11 @@ using namespace core;
 
 int main(){
 	ComponentRegistrar * registrar = new ComponentRegistrar();
+	// make test runable using waf
+	if (chdir ("../../../../../../monitoring") == 0){
+		chdir("../");
+	}
+
 	AutoConfigurator * a = new AutoConfigurator(registrar, "FileConfigurationProvider", "", "core/autoconfigurator/ConfigurationProviderPlugins/FileConfigurationProvider/test/test.config");
 
 	MyChildModule * child = new MyChildModule();

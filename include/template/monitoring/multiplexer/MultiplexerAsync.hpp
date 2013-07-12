@@ -93,8 +93,8 @@ namespace monitoring{
 
 // forward declaration for friendship 
 template <class TYPE>class MultiplexerQueueTemplate;
-template <class TYPE>class MultiplexerNotifierTemplate;
-template <class TYPE>class MultiplexerAsyncTemplate;
+template <class TYPE, class PARENT>class MultiplexerNotifierTemplate;
+template <class TYPE, class PARENT>class MultiplexerAsyncTemplate;
 
 /**
  * A bounded buffer, to store elements that need to be dispatched by the 
@@ -201,12 +201,12 @@ public:
  * ActivityMultiplexerNotifier
  * Used by the ActivityMultiplexer to dispatch to async listeners
  */
-template <class TYPE>
-class MultiplexerNotifierTemplate : public MultiplexerNotifier<TYPE>
+template <class TYPE, class PARENT>
+class MultiplexerNotifierTemplate : public MultiplexerNotifier<TYPE, PARENT>
 {
 	bool terminate = false;
 
-	MultiplexerAsync<TYPE> * multiplexer;
+	MultiplexerAsync<TYPE, PARENT> * multiplexer;
 
 	
 	int dispatcher = 1;
@@ -235,9 +235,9 @@ public:
 				// Reset();
 			// else
 				// Dispatch();
-		while(true){
-			cout << "Run();\n";
-		}
+		//while(true){
+		//	cout << "Run();\n";
+		//}
 	}
 
 	/**
@@ -274,8 +274,8 @@ public:
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-template <class TYPE>
-class MultiplexerAsyncTemplate : MultiplexerAsync<TYPE>
+template <class TYPE, class PARENT>
+class MultiplexerAsyncTemplate : MultiplexerAsync<TYPE, PARENT>
 {
 	list<MultiplexerListener<TYPE> *> listeners;
 	list<MultiplexerListener<TYPE> *> listeners_sync;
@@ -287,13 +287,13 @@ class MultiplexerAsyncTemplate : MultiplexerAsync<TYPE>
 	int not_invalidating = 0;
 
 	MultiplexerQueue<TYPE> * queue;
-	MultiplexerNotifier<TYPE> * notifier;
+	MultiplexerNotifier<TYPE, PARENT> * notifier;
 
 public:
 
 	MultiplexerAsyncTemplate () {
 		queue = new MultiplexerQueueTemplate<TYPE>;	
-		notifier = new MultiplexerNotifierTemplate<TYPE>;		
+		notifier = new MultiplexerNotifierTemplate<TYPE, PARENT>;		
 	}
 
 	

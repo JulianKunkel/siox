@@ -4,7 +4,8 @@
 # Waf documentation, see http://docs.waf.googlecode.com/git/book_16/single.html
 
 def build(bld):
-	bld.shlib(include="include",  use = "AutoConfigurator core-container-serializer" ,  target = 'FileConfigurationProvider', source = 'FileConfigurationProvider.cpp' )
+        # ZTU1
+	bld.shlib(include="include",  use = "AutoConfigurator core-container-serializer AutoRegistrar" ,  target = 'FileConfigurationProvider', source = 'FileConfigurationProvider.cpp' )
 	bld.recurse(['test'], mandatory=True)
 
 

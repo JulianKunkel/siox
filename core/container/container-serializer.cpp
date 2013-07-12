@@ -43,9 +43,20 @@ namespace core{
 		boost::archive::xml_iarchive ia(stream, flags);
 		try{
 			ia >> BOOST_SERIALIZATION_NVP(object);
-		}catch(boost::archive::archive_exception & e){			
-			cerr << "Error at: " << stream.tellg() << endl;
+		}catch(boost::archive::archive_exception & e){		
+			int pos = stream.tellg();
+
+			cerr << e.what() << endl;
+			cerr << "Error at: " << pos << endl;
 			// output whole stream input
+			stream.seekg(0);
+			char str[pos+1];
+			stream.read(str, pos);
+			str[pos] = 0;
+
+			cerr << str << endl;
+			cerr << " <<ERROR IS HERE>> " << endl;
+
 			string s;
 			while(! stream.eof()){
 				stream >> s;
