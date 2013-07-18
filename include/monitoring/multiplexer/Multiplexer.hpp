@@ -1,5 +1,4 @@
-/*!
- * @description
+/** @file
  * observer pattern, for easy notification of listeners
  *
  * @author Jakob Luettgau, Julian Kunkel
@@ -53,14 +52,14 @@ public:
 	/**
 	 * Register listener to multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to notify in the future
+	 * @param	listener	listener to notify in the future
 	 */
 	virtual void registerListener(MultiplexerListener<TYPE> * listener) =0; 
 
 	/**
 	 * Unregister listener from multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to remove
+	 * @param	listener	listener to remove
 	 */
 	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) =0; 
 

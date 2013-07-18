@@ -14,8 +14,7 @@ public:
 	/**
 	 * Receive logged activity from a multiplexer
 	 *
-	 * @param	Activity	a logged Activity
-	 * @return	void
+	 * @param	element	a logged Activity
 	 */
 	virtual void Notify(TYPE * element) {};
 

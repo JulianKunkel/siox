@@ -19,6 +19,11 @@ class OntologyAttribute {
 public:
     OntologyAttributeID aID;
 
+	/*
+	 * Reserved domains:
+	 * unit		for units of attribute values
+	 * 			(attach the unit as meta attribute of type SIOX_STORAGE_STRING to base attribute)
+	 */
     string domain;
     string name;
     enum siox_ont_storage_type storage_type;

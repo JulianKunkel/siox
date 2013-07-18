@@ -66,6 +66,10 @@ def configure(conf):
 	print "Debugging:                               : %s" % conf.options.debug
 
 def doc(ctx):
+	# Run plantuml to create *.png files from embedded code.
+	# Files are placed in ./doc/images/plantuml
+	# Recusively search from current folder scanning *.c, *.cpp, *.h, and *.doc files
+	# ctx.exec_command('java  -Djava.awt.headless=true -jar $PLANTUML_JAR -v -o $PWD/doc/images/plantuml  "./**.(c|cpp|doc|h|uml)"')
 	ctx.exec_command("doxygen")
 
 

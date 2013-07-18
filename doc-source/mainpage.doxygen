@@ -223,7 +223,9 @@
  *
  * The following example shows how some of the MPI-I/O functions could be 
  * instrumented.
- * 
+ */
+
+/* 
  * @include mpi-example.c
  * @example mpi-example.c
  */

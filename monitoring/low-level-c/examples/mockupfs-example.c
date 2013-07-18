@@ -1,5 +1,5 @@
 /**
- * @file    siox-mockupfs-example.c
+ * @file    mockupfs-example.c
  *          Beispiel für die Nutzung des SIOX-Low-Level-Interfaces mit einem fiktiven Dateisystem,
  *          welches ebenfalls für SIOX intrumentiert wurde.
  *

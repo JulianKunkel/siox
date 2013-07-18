@@ -1,5 +1,5 @@
 /**
- * @file siox-hdf5-example.c
+ * @file hdf5-example.c
  *
  * Beispiel für die Nutzung des SIOX-Low-Level-Interfaces mit HDF5.
  * Es demonstriert, wie ein Client für SIOX instrumentiert wird.

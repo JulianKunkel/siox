@@ -23,14 +23,14 @@ public:
 	/**
 	 * Register listener to multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to notify in the future
+	 * @param	listener	listener to notify in the future
 	 */
 	virtual void registerListener(StatisticsMultiplexerListener * listener) = 0;
 
 	/**
 	 * Unregister listener from multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to remove
+	 * @param	listener	listener to remove
 	 */
 	virtual void unregisterListener(StatisticsMultiplexerListener * listener) = 0;
 	

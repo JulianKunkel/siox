@@ -1,11 +1,11 @@
 The classes in this directory provide SIOX with a logging facility for the 
 management of logging information.
 
-To use the logger, just include the file SioxLogger.h and define the global 
+To use the logger, just include the file SioxLogger.hpp and define the global 
 variable "logger" pointing to a Logger object:
 
 ----
-#include "SioxLogger.h"
+#include "SioxLogger.hpp"
 
 Logger *logger;
 ----
