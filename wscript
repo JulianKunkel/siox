@@ -39,6 +39,10 @@ def configure(conf):
 	conf.load('waf_unit_test')
 	conf.load('boost')
 
+	conf.find_program('/usr/share/plantuml/plantuml.jar', var='PLANTUML', mandatory=False)
+	#conf.find_file('plantuml.jar', ['/usr'])
+	if not "PLANTUML" in conf.env:
+		print "\tI cannot create the UML images for the API documentation, but please proceed!"
 	conf.find_program('doxygen', var='DOXYGEN', mandatory=False)
 	if not "DOXYGEN" in conf.env:
 		print "\tI cannot create the API documentation, but please proceed!"
@@ -68,8 +72,9 @@ def configure(conf):
 def doc(ctx):
 	# Run plantuml to create *.png files from embedded code.
 	# Files are placed in ./doc/images/plantuml
-	# Recusively search from current folder scanning *.c, *.cpp, *.h, and *.doc files
-	# ctx.exec_command('java  -Djava.awt.headless=true -jar $PLANTUML_JAR -v -o $PWD/doc/images/plantuml  "./**.(c|cpp|doc|h|uml)"')
+	# Recusively search from current folder scanning files fittin the file patterns
+	# ctx.exec_command("java  -Djava.awt.headless=true -jar ${PLANTUML} -v -o ${PWD}/doc/images/plantuml  ./**.(c|cpp|doxygen|h|hpp|uml) >plantuml.log")
+	ctx.exec_command("plantuml -v -o ${PWD}/doc/images/plantuml  './**.(c|cpp|doxygen|h|hpp|uml)' >plantuml.log")
 	ctx.exec_command("doxygen")
 
 
