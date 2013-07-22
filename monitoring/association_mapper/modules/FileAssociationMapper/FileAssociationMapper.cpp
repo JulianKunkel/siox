@@ -132,7 +132,7 @@ public:
 	}
 
 
-	/* This functions are used to create the RemoteInstanceID */
+	/* These functions are used to create the RemoteInstanceID */
 	AssociateID create_instance_mapping(const string & value){
 
 		globalMutex.lock();
