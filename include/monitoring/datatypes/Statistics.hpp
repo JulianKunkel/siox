@@ -1,6 +1,9 @@
 #ifndef DATATYPES_STATISTICS_H
 #define DATATYPES_STATISTICS_H
 
+#include "boost/variant.hpp"
+#include <iostream>
+
 /*
 Statistics
 - startime
@@ -41,5 +44,9 @@ Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
 
 StatisticsSeries, for data effective storage
 */
+
+typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> StatisticsValue;
+
+typedef boost::variant<String, string, string, string, string, string, uint32_t> MetricAttributes;
 
 #endif
