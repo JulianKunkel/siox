@@ -370,7 +370,7 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
  * @param[in]   error       The error code returned by the function. A value of 0 indicates SUCCESS.
  */
 //@test ''%p,%d'' activity,error
-void siox_activity_report_error(siox_activity * activity, int64_t error);
+void siox_activity_report_error(siox_activity * activity, siox_activity_error error);
 
 /**
  * Mark the end of an activity's report phase and close it.
