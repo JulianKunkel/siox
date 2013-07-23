@@ -12,8 +12,12 @@
 #ifndef ACTIVITYBUILDER_HPP_
 #define ACTIVITYBUILDER_HPP_
 
+#include <map>
+
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/datatypes/ids.hpp>
+
+using namespace std;
 
 namespace monitoring {
 
@@ -24,17 +28,21 @@ public:
 	~ActivityBuilder();
 
 	// Local activities
-	ActivityID * startActivity(ComponentID *cid);
-	void stopActivity(ActivityID *aid);
+	ActivityID * startActivity(ComponentID *cid, UniqueComponentActivityID *caid, siox_timestamp *t);
+	void stopActivity(ActivityID *aid, siox_timestamp *t);
 	void endActivity(ActivityID *aid);
 	void addActivityAttribute(ActivityID *aid, Attribute *attribute);
-	void reportActivityError(ActivityID *aid, int64_t error);
+	void reportActivityError(ActivityID *aid, siox_activity_error error);
+	void linkActivities(ActivityID *child, ActivityID *parent);
 
 	// Remote activities
-	siox_remote_call * setupRemoteCall(ActivityID *aid, NodeID *target_node_id, UniqueInterfaceID *target_unique_interface_id, AssociateID *target_associate_id);
-	void addRemoteCallAttribute(siox_remote_call *remote_call, Attribute *attribute);
-	void startRemoteCall(siox_remote_call *remote_call);
-	void startActivityFromRemoteCall(ActivityID *aid, NodeID *caller_node_id, UniqueInterfaceID *caller_unique_interface_id, AssociateID *caller_associate_id);
+	RemoteCallID * setupRemoteCall(ActivityID *aid, NodeID *target_node_id, UniqueInterfaceID *target_unique_interface_id, AssociateID *target_associate_id);
+	void addRemoteCallAttribute(RemoteCallID *remote_call, Attribute *attribute);
+	void startRemoteCall(RemoteCallID *remote_call, siox_timestamp *t);
+	void startActivityFromRemoteCall(ActivityID *aid, NodeID *caller_node_id, UniqueInterfaceID *caller_unique_interface_id, AssociateID *caller_associate_id, siox_timestamp *t);
+
+protected:
+	map<ActivityID *, ActivityID *> activities_in_flight;
 };
 
 }
