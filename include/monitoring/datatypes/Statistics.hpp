@@ -1,6 +1,7 @@
 #ifndef DATATYPES_STATISTICS_H
 #define DATATYPES_STATISTICS_H
 
+/*
 Statistics
 - startime
 - entime
@@ -39,6 +40,6 @@ Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
 
 
 StatisticsSeries, for data effective storage
-
+*/
 
 #endif

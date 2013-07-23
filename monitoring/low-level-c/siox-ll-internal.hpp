@@ -45,6 +45,10 @@ struct process_info{
     // Loaded association mapper implementation
     monitoring::AssociationMapper * association_mapper;
 
+    // MZ: TODO Add code to load this somewhere!
+    // Loaded activity builder implementation
+    // monitoring::ActivityBuilder * activity_builder;
+
     // Contains all components
     core::ComponentRegistrar * registrar;
 
@@ -52,10 +56,6 @@ struct process_info{
     core::AutoConfigurator * configurator;
 };
 
-
-
-// MZ: Obsolete?
-// ProcessID forge_process_id(NodeID node, uint32_t pid, uint32_t time);
 
 /*
  * Create a local ProcessID

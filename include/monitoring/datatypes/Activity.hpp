@@ -1,15 +1,14 @@
-/**
- * @file    Activity.hpp
+/** @file
  *
- * @description This activity is the structure to be read and written to txt using this header.
- * @standard    Preferred standard is C++11
+ * This activity is the structure to be read and written to
+ * txt using this header.
  *
  * @author Julian Kunkel, Michaela Zimmer, Marc Wiedemann
  * @date   2013
  *
  */
 
-/*!
+/**
  Five Steps for code development in general
  Think of and write Use Cases
  Observe and write Requirements

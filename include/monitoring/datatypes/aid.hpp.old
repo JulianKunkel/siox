@@ -1,0 +1,47 @@
+/**
+ * @file    aid.hpp
+ *
+ * @description A class describing an activity id entity.
+ * @standard    Preferred standard is C++11
+ *
+ * @author Michaela Zimmer
+ * @date   2013
+ *
+ */
+
+/**
+ * USE CASES
+ * =========
+ */
+
+/**
+ * REQUIREMENTS (and the use cases they are based on)
+ * ============
+ */
+
+/**
+ * DESIGN CONSIDERATIONS
+ * =====================
+ */
+
+/**
+ * OPEN ISSUES
+ * ===========
+ */
+
+#ifndef SIOX_AID_H
+#define SIOX_AID_H
+
+namespace monitoring
+{
+
+
+class AId
+{
+};
+
+
+}
+
+#endif // SIOX_AID_H
+

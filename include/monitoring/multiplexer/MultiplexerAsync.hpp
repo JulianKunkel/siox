@@ -1,5 +1,4 @@
-/*!
- * @description
+/** @file
  * observer pattern, for easy notification of listeners with event buffer and
  * async dispatch to listeners (while also preserving the sync path to sync
  * listeners)
@@ -8,7 +7,7 @@
  * @date   2013
  */
 
-/*!
+/**
  Software Structure
  1 Requirements
 	- same as for the normal Multiplexer, concurrent Log() calls while keeping
@@ -56,14 +55,14 @@ public:
 	/**
 	 * Check whether or not the queue has still capacity
 	 *
-	 * @return	bool	true = queue is full, false = not full
+	 * @return		true = queue is full, false = not full
 	 */
 	virtual bool Full() =0; 
 	
 
 	/* Check whether of not the queue is empty
 	 * 
-	 * @return bool		true = queue is empty, false = not empty
+	 * @return 		true = queue is empty, false = not empty
 	 */
 	virtual bool Empty() =0;
 
@@ -76,14 +75,14 @@ public:
 	/**
 	 * Add an activity to the queue
 	 *
-	 * @param	TYPE *	an activity that need to be dispatched in the future
+	 * @param	element 	an activity that need to be dispatched in the future
 	 */
 	virtual void Push(TYPE * element) =0; 
 	
 	/**
 	 * Get an activity from queue, returned element is popped!
 	 *
-	 * @return	TYPE	an activity that needs to be dispatched to async listeners
+	 * @return		an activity that needs to be dispatched to async listeners
 	 */
 	virtual TYPE * Pop() =0; 
 };
@@ -138,14 +137,14 @@ public:
 	/**
 	 * Register listener to multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to notify in the future
+	 * @param	listener	listener to notify in the future
 	 */
 	virtual void registerListener(MultiplexerListener<TYPE> * listener) =0; 
 
 	/**
 	 * Unregister listener from multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to remove
+	 * @param	listener	listener to remove
 	 */
 	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) =0;
 

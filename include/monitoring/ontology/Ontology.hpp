@@ -88,8 +88,15 @@ namespace monitoring{
 class Ontology : public core::Component {
 
 public: 
+    /// Retrieve an attribute's data object from the ontology.
+    /// If necessary, a new entry will be created.
     virtual OntologyAttribute * register_attribute(const string & domain, const string & name, enum siox_ont_storage_type storage_type) = 0;
 
+    /// Set a (meta) attribute applying to another attribute.
+    /// Examples are an attribute's status as descriptor or a unit for the value
+    /// of the (base) attribute.
+    /// In the latter case, the meta attribute "[unit name]" of the domain "unit"
+    /// and the storage type SIOX_STORAGE_STRING would first be registered
     virtual bool attribute_set_meta_attribute(OntologyAttribute * att, OntologyAttribute * meta, const OntologyValue & value) = 0;
 
     virtual OntologyAttribute * lookup_attribute_by_name(const string & domain, const string & name) = 0;
@@ -100,8 +107,6 @@ public:
 
     virtual const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta) = 0;
 
-    // the interface ID -> may exist across systems, global
-    // register_activity ( UniqueInterface ID, Activity Name) -> may exist across systems, global
 
     // From the system information table:
     // the hardware ID -> is system specific
@@ -109,6 +114,8 @@ public:
     // the filesystem ID -> system specific
 
     // => SystemInformationGlobalIDManager
+    // the interface ID -> may exist across systems, global
+    // register_activity ( UniqueInterface ID, Activity Name) -> may exist across systems, global
     // virtual UniqueInterfaceID           lookup_interface_id(string & interface, string & implementation);
     // virtual UniqueComponentActivityID   lookup_activity_id(UniqueInterfaceID & id, string & name);
     // virtual const string & lookup_interface_name(UniqueInterfaceID id);

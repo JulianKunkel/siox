@@ -1,5 +1,5 @@
 /**
- * @file URI.h Uniform Resource Identifiers
+ * @file URI.hpp Uniform Resource Identifiers
  * 
  * @version 0.1
  * @authors Alvaro Aguilera, Holger Mickler

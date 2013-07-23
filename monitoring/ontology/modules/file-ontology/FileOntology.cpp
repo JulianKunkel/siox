@@ -119,9 +119,9 @@ class FileOntology: public Ontology{
 		unique << "|" << name;
 		string fqn(unique.str());
 
-		if (domain_name_map[fqn] == NULL){
+		if (domain_name_map[fqn] == nullptr){
 			attributeMutex.lock();
-			if (domain_name_map[fqn] == NULL){
+			if (domain_name_map[fqn] == nullptr){// Necessary due to possible race conditions!
 				AttributeWithValues * av = new AttributeWithValues();
 				av->attribute.aID = nextID++;
 				av->attribute.name = name;
@@ -146,7 +146,7 @@ class FileOntology: public Ontology{
     	attributeMutex.lock();
     	// check if the attribute has been set in the past:
     	const OntologyValue * val = lookup_meta_attribute(att, meta);
-    	if( val != NULL){
+    	if( val != nullptr){
     		attributeMutex.unlock();
     		if( *val == value )
     			return true;

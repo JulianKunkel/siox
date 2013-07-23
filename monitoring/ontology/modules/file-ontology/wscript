@@ -3,7 +3,7 @@
 
 
 def build(bld):
-    bld.shlib(include="include", use="BOOST", target = "FileOntology", source = 'FileOntology.cpp' )
+    bld.shlib(include="include", use="BOOST AutoRegistrar", target = "FileOntology", source = 'FileOntology.cpp' )
     bld.recurse(['test'], mandatory=True)
 
 

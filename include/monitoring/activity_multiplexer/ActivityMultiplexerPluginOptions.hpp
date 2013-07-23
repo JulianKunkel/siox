@@ -1,3 +1,5 @@
+#ifndef ACTIVITY_MULTIPLEXER_PLUGIN_OPTIONS
+#define ACTIVITY_MULTIPLEXER_PLUGIN_OPTIONS
 #include <core/component/component-macros.hpp>
 
 
@@ -19,3 +21,4 @@ public:
 
 #define SERIALIZE_OPTIONS(VAR_) SERIALIZE(VAR_ PARENT_CLASS(ActivityMultiplexerPluginOptions))
 
+#endif

@@ -6,14 +6,12 @@ template = {
 #
 # SWID: The name (software id) for this component
 'component': {
-	'variables': 'Uid',
+	'variables': 'InterfaceName ImplementationIdentifier InstanceName',
 	'global': '''siox_component * global_component;
-				 siox_ontology * global_ontology;
-                 char global_pid;
+				 siox_unique_interface * global_uid;
 				''',
-    'init': '''
-              sprintf( &global_pid, "%%d", getpid() );
-              global_component = siox_component_register((UniqueInterfaceID*) %(Uid)s, &global_pid);''',
+    'init': '''global_uid = siox_system_information_lookup_interface_id(%(InterfaceName)s, %(ImplementationIdentifier)s);
+              global_component = siox_component_register(global_uid, %(InstanceName)s);''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
@@ -30,30 +28,9 @@ template = {
 # MinStorage: The minimum storage type required to store this
 #			  attribute
 'register_attribute': {
-	'variables': 'AttributeVariable Name MinStorage',
+	'variables': 'AttributeVariable Domain Name StorageType',
 	'global': '''siox_attribute * %(AttributeVariable)s;''',
-	'init': '''%(AttributeVariable)s = siox_attribute_register( %(Name)s, %(MinStorage)s );''',
-    'before': '''''',
-	'after': '',
-	'cleanup': '',
-	'final': ''
-},
-# register_descriptor
-#
-# Registers a new descriptor type with siox, so that later calls
-# can set values for this type of descriptor on certain entities.
-#
-# DescriptorVariable: Name of the variable which is used to store the
-#		   			 pointer to the descriptor type
-# Name: Name of the descriptor
-# MinStorage: The minimum storage type required to store this
-#			  descriptor
-'register_descriptor': {
-	'variables': 'DescriptorVariable Name MinStorage',
-	'global': '''siox_attribute * %(DescriptorVariable)s;''',
-	'init': '''%(DescriptorVariable)s = siox_attribute_register( %(Name)s, %(MinStorage)s );
-			   siox_component_register_descriptor( global_component, %(DescriptorVariable)s );''',
-
+	'init': '''%(AttributeVariable)s = siox_ontology_register_attribute( %(Domain)s, %(Name)s, %(StorageType)s );''',
     'before': '''''',
 	'after': '',
 	'cleanup': '',
@@ -108,24 +85,6 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-# register_metric
-#
-# Registers a new metric with SIOX.
-#
-# MetricVariable: Name of the variable to store the metric type in
-# Name: Name of the metric
-# UnitType: SIOX unit-type for the metric
-# StorageType: SIOX storage-type for the metric
-# ScopeType: SIOX scope-type for the metric
-'register_metric': {
-	'variables': 'MetricVariable Name UnitType StorageType ScopeType',
-	'global': '''siox_metric * %(MetricVariable)s;''',
-	'init': '''%(MetricVariable)s = siox_ontology_register_metric(%(Name)s, %(UnitType)s, %(StorageType)s);''',
-    'before': '''''',
-	'after': '',
-	'cleanup': '',
-	'final': ''
-},
 # activity
 #
 # Starts (at the beginning) and stops (at the end) a new
@@ -137,15 +96,14 @@ template = {
 # TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
 # TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
 'activity': {
-	'variables': 'Name=G_STRFUNC Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
+	'variables': 'Name=G_STRFUNC ComponentVariable ActivityVariable',
 	'global': '''''',
-	'init': '''''',
-    'before': '''siox_activity * %(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
-	'after': '''siox_activity_stop( %(Activity)s, %(TimeStop)s );''',
-	'cleanup': 'siox_activity_end( %(Activity)s );',
+	'init': '''siox_component_activity * %(ComponentVariable)s = siox_component_register_activity( global_uid, %(Name)s );''',
+    'before': '''siox_activity * %(ActivityVariable)s = siox_activity_start( %(ComponentVariable)s );''',
+	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
+	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
 },
-
 # activity with hints
 #
 # Starts (at the beginning) and stops (at the end) a new
@@ -184,24 +142,6 @@ template = {
 	'variables': 'Attribute Value Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );''',
-	'after': '',
-	'cleanup': '',
-	'final': ''
-},
-# activity_descriptor
-#
-# Tie an attibute serving as a descriptor to an activity.
-# Attributes for activities are either its parameters or other values computed from them.
-# Metrics or statistics resulting from the call use activity_report instead.
-#
-# Attribute: The attribute type to be reported
-# Value: The actual value to be reported
-# Activity: The activity; defaults to sioxActivity
-'activity_descriptor': {
-	'variables': 'Attribute Value Activity=sioxActivity',
-	'global': '''''',
-	'init': '''siox_component_register_descriptor( global_component, %(Attribute)s );''',
     'before': '''siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );''',
 	'after': '',
 	'cleanup': '',
@@ -317,22 +257,6 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-# activity_report
-#
-# Reports a metric tied to an activity
-#
-# Metric: Metric type of the value to be reported; must be registered with register_metric!
-# Value: The value to be reported
-# Activity: The activity; defaults to sioxActivity
-'activity_report': {
-	'variables': 'Metric Value Activity=sioxActivity',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_activity_report(%(Activity)s, %(Metric)s, (void *) &%(Value)s );',
-	'cleanup': '',
-	'final': ''
-},
 # error
 #
 # Reports that an activity terminated with an error
@@ -352,21 +276,6 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-# report
-#
-# Reports a metric that cannot be tied directly an activity
-#
-# Metric: Metric type of the value to be reported
-# Value: The value to be reported
-'report': {
-	'variables': 'Metric Value',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_report( global_component, %(Metric)s, (void *) &%(Value)s );',
-	'cleanup': '',
-	'final': ''
-},
 # remote_call_start
 #
 # Initiates a new remote call
@@ -376,10 +285,10 @@ template = {
 # TargetSWID: The software id of the target machine
 # TargetIID: The instance id of the target machine
 'remote_call_start': {
-	'variables': 'RemoteCallVariable TargetHWID TargetSWID TargetIID',
+	'variables': 'RemoteCallVariable activity TargetNode TargetUID TargetIID',
 	'global': '''''',
 	'init': '''siox_remote_call * %(RemoteCallVariable)s;\n''',
-    'before': '''%(RemoteCallVariable)s = siox_remote_call_start( global_component, %(TargetHWID)s, %(TargetSWID)s, %(TargetIID)s );''',
+    'before': '''%(RemoteCallVariable)s = siox_remote_call_start( %(activity)s, %(targetNode)s, %(targetUID)s, %(TargetIID)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -400,36 +309,6 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-# remote_call_descriptor
-#
-# Attach an attribute serving as a descriptor to a remote call
-#
-# RemoteCall: The corresponding remote call
-# Attribute: The attribute type of the value
-# Value: The actual value to be sent
-'remote_call_descriptor': {
-	'variables': 'RemoteCall Attribute Value',
-	'global': '''''',
-	'init': '''siox_component_register_descriptor( global_component, %(Attribute)s );''',
-    'before': '''siox_remote_call_set_attribute( %(RemoteCall)s, %(Attribute)s, (void *) &%(Value)s );''',
-	'after': '',
-	'cleanup': '',
-	'final': ''
-},
-# remote_call_execute
-#
-# Closes a remote call's attribute list
-#
-# RemoteCall: The remote call to be closed
-'remote_call_execute': {
-	'variables': 'RemoteCall',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_remote_call_execute( %(RemoteCall)s );',
-	'cleanup': '',
-	'final': ''
-},
 # remote_call_received
 #
 # Reports an attribute of a remote call just received
@@ -438,10 +317,10 @@ template = {
 # Value: The actual value received
 # Activity: The activity; defaults to sioxActivity
 'remote_call_received': {
-	'variables': 'Attribute Hwid Uid Instance',
+	'variables': 'RemoteCall',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_remote_call_received( global_component, %(Hwid)s, %(Uid)s, %(Instance)s);''',
+    'before': '''siox_remote_call_submitted( %(RemoteCall)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
