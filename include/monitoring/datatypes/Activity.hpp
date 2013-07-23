@@ -72,7 +72,6 @@
 
 #include <string>
 #include <vector>
-#include <boost/variant.hpp>
 
 #include <monitoring/datatypes/c-types.h>
 
@@ -81,25 +80,6 @@
 using namespace std;
 
 namespace monitoring {
-
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, string, float, double> AttributeValue;
-
-typedef struct {
-	OntologyAttributeID id;
-	AttributeValue value;
-} Attribute;
-
-typedef struct {
-	// Several parameters assist matching of remote calls
-	NodeID hwid; // optional
-	UniqueInterfaceID uuid; // optional
-	AssociateID instance; // optional, remote call instance identifier	
-} RemoteCallIdentifier;
-
-typedef struct {
-	RemoteCallIdentifier target;
-	vector<Attribute> attributeArray;
-} RemoteCall;
 
 class Activity{
 protected:
@@ -119,24 +99,20 @@ protected:
 	RemoteCallIdentifier * remoteInvoker_; // NULL if none
 
 	// interface specific error value.
-	int32_t errorValue_;
+	siox_activity_error errorValue_;
 
 public:
-	Activity(UniqueComponentActivityID aid, siox_timestamp start_t, siox_timestamp end_t, ComponentID cid, 
-		vector<ActivityID> & parentArray, 
-		vector<Attribute> & attributeArray, 
-		vector<RemoteCall> & remoteCallsArray, 
-		RemoteCallIdentifier * remoteInvoker,  int32_t errorValue)
+	Activity(UniqueComponentActivityID aid, siox_timestamp start_t, siox_timestamp end_t, ComponentID cid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, siox_activity_error errorValue)
 		: 
 		aid_ (aid), time_start_ (start_t), time_stop_ (end_t),
-		cid_ (cid), parentArray_ ( std::move(parentArray)),
+		cid_ (cid), parentArray_ (std::move(parentArray)),
 		remoteCallsArray_ (std::move(remoteCallsArray)),
 		attributeArray_ (std:: move(attributeArray)),		
 		remoteInvoker_ (remoteInvoker),errorValue_(errorValue){}
 
 	Activity(){
 	}
-		
+
 	inline siox_timestamp time_start() const{
 		return time_start_;
 	}
@@ -170,7 +146,7 @@ public:
 		return remoteInvoker_;
 	}
 
-	inline int32_t errorValue() const{
+	inline siox_activity_error errorValue() const{
 		return errorValue_;
 	}
 
