@@ -19,14 +19,18 @@ namespace monitoring{
 class StatisticsCollector {
 public:
 
-	virtual void register_metrics(MetricAttributes * metricattrbtes);
+	virtual void register_metrics(int i,MetricAttribute mattr,[list_of_specialties]);
 // Hier kann auch der predefined variant-Datatype MetricAttributes genutzt werden.
 
 // Description  means local or remote metric
 // Type = gauge if interval - We are converting incremental to gauge
 
-	virtual void get_metrics(StatisticsValue * statvalue);
+	virtual void get_value(StatisticsValue * statvalue);
 
+/*!
+ Die Werte für die Metrikattribute werden für den nächsten Timestep angezeigt.
+ */
+    virtual void next_timestep(i,specialties);
 
 
 };

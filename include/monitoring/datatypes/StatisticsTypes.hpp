@@ -68,7 +68,9 @@ StatisticsSeries, for data effective storage
 
 typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double, double double> StatisticsValue;
 
-typedef boost::variant<string, string, string, string, string, string, uint32_t> MetricAttributes;
+/**
+
+*/
 
 class StatisticsValue {
 public:
@@ -86,11 +88,34 @@ public:
 
 };
 
-class MetricAttributes {
+/**
+Constructor bauen für Aufruf in Klasse
+*/
+
+class MetricAttribute {
 public:
+/**
+
+*/
+
 	string metricname;
-	string type;
+/**
+
+*/
+	enum siox_ont_storage_type;
+/**
+
+   
+
+*/
+
+	enum intervaltype;
+
+
 	string domain;
+/**
+
+*/
 	string hostname; 
 	string si_unit;
 	string description;

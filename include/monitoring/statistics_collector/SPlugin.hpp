@@ -12,6 +12,14 @@ class ReferenceToStatisticsCollector {
 
 	virtual void collect_fast(const MetricObject& x) { /* ... */ }
 
+/**
+ mit init in available metrics
+*/
+
+	virtual available_metrics;
+
+
+
 }
 
 #endif
