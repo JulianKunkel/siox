@@ -20,11 +20,10 @@ typedef OntologyAttribute siox_attribute;
 typedef UniqueComponentActivityID siox_component_activity;
 typedef NodeID siox_node;
 typedef UniqueInterfaceID siox_unique_interface;
+typedef ComponentID siox_component;
+typedef ActivityID siox_activity;
+typedef RemoteCallID siox_remote_call;
 
-// TODO:
-typedef void siox_component;
-typedef void siox_activity;
-typedef void siox_remote_call;
 
 extern "C"{
 #include <monitoring/low-level-c/siox-ll.h>

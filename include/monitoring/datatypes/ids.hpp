@@ -7,8 +7,13 @@
 #ifndef __SIOX_IDS_HPP
 #define __SIOX_IDS_HPP
 
-#include <stdint.h>
+#include "monitoring/datatypes/c-types.h"
 
+#include <cstdint>
+#include <vector>
+#include <boost/variant.hpp>
+
+using namespace std;
 
 // Every hardware component which is addressable by the network is expected to have a unique (host)name.
 // This name is translated to the NodeID.
@@ -36,6 +41,16 @@ typedef uint32_t UniqueComponentActivityID;
 
 /* The associate ID is valid only within a particular process */
 typedef uint32_t AssociateID;
+
+typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, string, float, double> AttributeValue;
+
+typedef struct {
+	OntologyAttributeID id;
+	AttributeValue value;
+} Attribute;
+
+/* Forward declaration */
+struct ActivityID;
 
 // The daemon fetches the NodeID from the knowledge base (or initiates creation if necessary)
 // NodeID lookup_node_id(const char * hostname);
@@ -95,10 +110,29 @@ typedef struct{
 // The instance identifier such as "Port 4711" is relevant for matching of remote calls
 // See @TODO
 
+typedef struct {
+	ActivityID *caller_aid;
+	NodeID *target_node_id;
+	UniqueInterfaceID *target_unique_interface_id;
+	AssociateID *target_associate_id;
+} RemoteCallID;
+
+typedef struct {
+	// Several parameters assist matching of remote calls
+	NodeID hwid; // optional
+	UniqueInterfaceID uuid; // optional
+	AssociateID instance; // optional, remote call instance identifier
+} RemoteCallIdentifier;
+
+typedef struct {
+	RemoteCallIdentifier target;
+	vector<Attribute> attributeArray;
+} RemoteCall;
+
 /* Identifying an activity */
-typedef struct{
+typedef struct ActivityID{
+	uint32_t id;
 	ComponentID cid;
-	uint32_t num;
 } ActivityID;
 
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);
@@ -108,7 +142,6 @@ typedef struct{
 // OntologyAttributeID lookup_ontology_attribute(string uniqueOntologyIdentifier);
 // OntologyAttributeID lookup_or_create_ontology_attribute(string uniqueOntologyIdentifier, string unit, enum STORAGE_TYPE)
 // See @TODO
-
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Functions which check the validity of an optional ID
