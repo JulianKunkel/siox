@@ -50,6 +50,7 @@ public:
 	void save(string filename){
 		ofstream file(filename);
 		boost::archive::xml_oarchive archive(file, boost::archive::no_header | boost::archive::no_codecvt);
+/*! This xml_archive needs for the XML tags these string parameters in " " othewise it would be good enough to use ' archive & lastID; ' */
 		archive << boost::serialization::make_nvp("LastAssociateID", lastID);
 		archive << boost::serialization::make_nvp("AssociateMap", map_str_aid);
 		archive << boost::serialization::make_nvp("ProcessMap", map_processAttributes);

@@ -1,3 +1,14 @@
+/**
+ * @file    StatisticsCollector.hpp
+ *
+ * @description A (software) component for collecting statistical values.
+ * @standard    Preferred standard is C++11
+ *
+ * @author Marc Wiedemann
+ * @date   2013
+ *
+ */
+
 #ifndef STATISTICS_COLLECTOR_H
 #define STATISTICS_COLLECTOR_H
 
