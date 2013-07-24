@@ -133,6 +133,7 @@ typedef struct {
 	NodeID *target_node_id;
 	UniqueInterfaceID *target_unique_interface_id;
 	AssociateID *target_associate_id;
+	vector<Attribute> attributes;
 } RemoteCall;
 
 // The identifier is fetched from the knowledge base
