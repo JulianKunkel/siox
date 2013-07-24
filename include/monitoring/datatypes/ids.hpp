@@ -115,7 +115,7 @@ typedef struct {
 typedef struct {
 	RemoteCallIdentifier target;
 	vector<Attribute> attributeArray;
-} RemoteCall;
+} RemoteCallID;
 
 /* Identifying an activity */
 typedef struct ActivityID{
@@ -133,7 +133,7 @@ typedef struct {
 	NodeID *target_node_id;
 	UniqueInterfaceID *target_unique_interface_id;
 	AssociateID *target_associate_id;
-} RemoteCallID;
+} RemoteCall;
 
 // The identifier is fetched from the knowledge base
 // OntologyAttributeID lookup_ontology_attribute(string uniqueOntologyIdentifier);
