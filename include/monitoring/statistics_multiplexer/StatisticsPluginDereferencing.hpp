@@ -23,12 +23,6 @@ public:
 
     virtual const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta) = 0;
 
-	virtual OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att) = 0;
-
-	virtual OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att) = 0;
-
-	virtual const string * lookup_instance_mapping(AssociateID id) = 0;
-
 	virtual SystemInformationGlobalIDManager * get_system_information() = 0;
 }; 
 }
