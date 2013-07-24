@@ -43,10 +43,10 @@ public:
 	void linkActivities(Activity* child, ActivityID* parent);
 
 	// Remote activities
-	RemoteCallID* setupRemoteCall(Activity* a, NodeID* target_node_id, UniqueInterfaceID* target_unique_interface_id, AssociateID* target_associate_id);
-	void addRemoteCallAttribute(RemoteCallID* remote_call, Attribute* attribute);
-	void startRemoteCall(RemoteCallID* remote_call, siox_timestamp* t);
-	void startActivityFromRemoteCall(ActivityID* a, NodeID* caller_node_id, UniqueInterfaceID* caller_unique_interface_id, AssociateID* caller_associate_id, siox_timestamp* t);
+	RemoteCall* setupRemoteCall(Activity* a, NodeID* target_node_id, UniqueInterfaceID* target_unique_interface_id, AssociateID* target_associate_id);
+	void addRemoteCallAttribute(RemoteCall* remote_call, Attribute* attribute);
+	void startRemoteCall(RemoteCall* remote_call, siox_timestamp* t);
+	Activity* startActivityFromRemoteCall(ComponentID* cid, UniqueComponentActivityID* ucaid, NodeID* caller_node_id, UniqueInterfaceID* caller_unique_interface_id, AssociateID* caller_associate_id, siox_timestamp* t);
 
 protected:
 	map<uint32_t, Activity *> activities_in_flight;

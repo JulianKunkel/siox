@@ -13,25 +13,12 @@
 using namespace std;
 using namespace monitoring;
 
-/*
- * 
- */
-int main(int argc, char** argv)
+static void test_single_activity(ActivityBuilder* ab, ComponentID& cid, UniqueComponentActivityID& ucaid)
 {
-	ComponentID cid;
-	UniqueComponentActivityID caid;
 	Activity* a;
 	Attribute attr, attr2;
-	ActivityBuilder* ab;
 
-	cid.pid.nid = 1;
-	cid.pid.pid = 1;
-	cid.pid.time = 234;
-	cid.num = 0;
-	caid = 7;
-
-	ab = ActivityBuilder::getInstance();
-	a = ab->startActivity( &cid, &caid, NULL);
+	a = ab->startActivity( &cid, &ucaid, NULL);
 	ab->stopActivity(a, NULL);
 
 	attr.id = 1;
@@ -43,6 +30,28 @@ int main(int argc, char** argv)
 
 	ab->endActivity(a);
 	a->print();
+	delete a;
+}
+/*
+ * 
+ */
+int main(int argc, char** argv)
+{
+	ComponentID cid;
+	UniqueComponentActivityID ucaid;
+	ActivityBuilder* ab;
+
+	cid.pid.nid = 1;
+	cid.pid.pid = 1;
+	cid.pid.time = 234;
+	cid.num = 0;
+	ucaid = 7;
+
+	ab = ActivityBuilder::getInstance();
+
+	test_single_activity(ab, cid, ucaid);
+
+
 	return 0;
 }
 

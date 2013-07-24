@@ -3,6 +3,30 @@
 
 using namespace std;
 
+static void fillRemoteCallIdentifier(RemoteCallIdentifier &rcid, NodeID* nid, UniqueInterfaceID* uiid, AssociateID* assid)
+{
+	if(nid != NULL) {
+		rcid.hwid = *nid;
+	}
+	else {
+		rcid.hwid = 0;
+	}
+	if(uiid != NULL) {
+		rcid.uuid = *uiid;
+	}
+	else {
+		rcid.uuid.implementation = 0;
+		rcid.uuid.interface = 0;
+	}
+	if(assid != NULL) {
+		rcid.instance = *assid;
+	}
+	else {
+		rcid.instance = 0;
+	}
+}
+
+
 namespace monitoring {
 
 ActivityBuilder::ActivityBuilder()
@@ -113,29 +137,48 @@ void ActivityBuilder::linkActivities(Activity* child, ActivityID* parent)
 	child->parentArray_.push_back(*parent);
 }
 
-RemoteCallID* ActivityBuilder::setupRemoteCall(Activity* a, NodeID* target_node_id, UniqueInterfaceID* target_unique_interface_id, AssociateID* target_associate_id)
+RemoteCall* ActivityBuilder::setupRemoteCall(Activity* a, NodeID* target_node_id, UniqueInterfaceID* target_unique_interface_id, AssociateID* target_associate_id)
 {
 	assert(a != NULL);
 
-	return NULL;
+	RemoteCall* rc = new RemoteCall;
+	rc->caller_activity = a;
+	rc->target_node_id = target_node_id;
+	rc->target_unique_interface_id = target_unique_interface_id;
+	rc->target_associate_id = target_associate_id;
+
+	return rc;
 }
 
-void ActivityBuilder::addRemoteCallAttribute(RemoteCallID* remote_call, Attribute* attribute)
+void ActivityBuilder::addRemoteCallAttribute(RemoteCall* rc, Attribute* attribute)
 {
-	assert(remote_call != NULL);
+	assert(rc != NULL);
 	assert(attribute != NULL);
 
+	rc->attributes.push_back(*attribute);
 }
 
-void ActivityBuilder::startRemoteCall(RemoteCallID* remote_call, siox_timestamp* t)
+void ActivityBuilder::startRemoteCall(RemoteCall* rc, siox_timestamp* t)
 {
-	assert(remote_call != NULL);
+	assert(rc != NULL);
 
+	RemoteCallID rcid;
+	fillRemoteCallIdentifier(rcid.target, rc->target_node_id, rc->target_unique_interface_id, rc->target_associate_id);
+
+	rc->caller_activity->remoteCallsArray_.push_back(rcid);
 }
 
-void ActivityBuilder::startActivityFromRemoteCall(ActivityID* aid, NodeID* caller_node_id, UniqueInterfaceID* caller_unique_interface_id, AssociateID* caller_associate_id, siox_timestamp* t)
+Activity* ActivityBuilder::startActivityFromRemoteCall(ComponentID* cid, UniqueComponentActivityID* ucaid, NodeID* nid, UniqueInterfaceID* uiid, AssociateID* assid, siox_timestamp* t)
 {
+	// REMARK: If t == NULL, then startActivity will draw the current timestamp and all code in this function will count towards the time of the activity. As of now, it will be left this way for the sake of simplicity.
 
+	Activity* a;
+
+	a = startActivity(cid, ucaid, t);
+	a->remoteInvoker_ = new RemoteCallIdentifier;
+	fillRemoteCallIdentifier(*(a->remoteInvoker_), nid, uiid, assid);
+
+	return a;
 }
 
 
