@@ -1,5 +1,5 @@
 /**
- * @file    Statistics.hpp
+ * @file    StatisticsTypes.hpp
  *
  * @description A (software) component for datatypes used in statistics.
  * @standard    Preferred standard is C++11
@@ -15,6 +15,16 @@
 
 #include "boost/variant.hpp"
 #include <iostream>
+
+#include <string>
+#include <vector>
+
+#include <monitoring/datatypes/ids.hpp>
+#include <monitoring/datatypes/c-types.h>
+
+using std::string;
+
+namespace monitoring{
 
 /*
 Statistical Attributes 
@@ -56,8 +66,45 @@ Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
 StatisticsSeries, for data effective storage
 */
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> StatisticsValue;
+typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double, double double> StatisticsValue;
 
 typedef boost::variant<String, string, string, string, string, string, uint32_t> MetricAttributes;
 
+class StatisticsValue {
+public:
+    
+	/*
+	 * Reserved domains:
+	 * unit		for units of attribute values
+	 * 			(attach the unit as meta attribute of type SIOX_STORAGE_STRING to base attribute)
+	 */
+	int64_t counts;
+	uint64_t measured time;
+	double measured value;
+	double double mean value;
+	string name;
+
+};
+
+class MetricAttributes {
+public:
+	string metricname;
+	string type;
+	string domain;
+	string hostname; 
+	string si_unit;
+	string description;
+	uint32_t min_poll_interval_ms
+}
+
+
+
+}
+
+
+
+
+
+
 #endif
+
