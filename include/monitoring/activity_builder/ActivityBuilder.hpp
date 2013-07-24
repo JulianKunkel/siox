@@ -23,26 +23,33 @@ namespace monitoring {
 
 class ActivityBuilder
 {
-public:
+private:
+	vector<Activity*> activity_stack;
+	uint32_t next_activity_id;
+
+protected:
 	ActivityBuilder();
+
+public:
+	static ActivityBuilder* getInstance();
 	~ActivityBuilder();
 
 	// Local activities
-	ActivityID * startActivity(ComponentID *cid, UniqueComponentActivityID *caid, siox_timestamp *t);
-	void stopActivity(ActivityID *aid, siox_timestamp *t);
-	void endActivity(ActivityID *aid);
-	void addActivityAttribute(ActivityID *aid, Attribute *attribute);
-	void reportActivityError(ActivityID *aid, siox_activity_error error);
-	void linkActivities(ActivityID *child, ActivityID *parent);
+	Activity* startActivity(ComponentID* cid, UniqueComponentActivityID* ucaid, siox_timestamp* t);
+	void stopActivity(Activity* a, siox_timestamp* t);
+	void endActivity(Activity* a);
+	void addActivityAttribute(Activity* a, Attribute* attribute);
+	void reportActivityError(Activity* a, siox_activity_error error);
+	void linkActivities(Activity* child, ActivityID* parent);
 
 	// Remote activities
-	RemoteCallID * setupRemoteCall(ActivityID *aid, NodeID *target_node_id, UniqueInterfaceID *target_unique_interface_id, AssociateID *target_associate_id);
-	void addRemoteCallAttribute(RemoteCallID *remote_call, Attribute *attribute);
-	void startRemoteCall(RemoteCallID *remote_call, siox_timestamp *t);
-	void startActivityFromRemoteCall(ActivityID *aid, NodeID *caller_node_id, UniqueInterfaceID *caller_unique_interface_id, AssociateID *caller_associate_id, siox_timestamp *t);
+	RemoteCallID* setupRemoteCall(Activity* a, NodeID* target_node_id, UniqueInterfaceID* target_unique_interface_id, AssociateID* target_associate_id);
+	void addRemoteCallAttribute(RemoteCallID* remote_call, Attribute* attribute);
+	void startRemoteCall(RemoteCallID* remote_call, siox_timestamp* t);
+	void startActivityFromRemoteCall(ActivityID* a, NodeID* caller_node_id, UniqueInterfaceID* caller_unique_interface_id, AssociateID* caller_associate_id, siox_timestamp* t);
 
 protected:
-	map<ActivityID *, ActivityID *> activities_in_flight;
+	map<uint32_t, Activity *> activities_in_flight;
 };
 
 }
