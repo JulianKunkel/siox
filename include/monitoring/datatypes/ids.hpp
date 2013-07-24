@@ -126,16 +126,6 @@ typedef struct ActivityID{
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);
 // See @TODO
 
-// The instance identifier such as "Port 4711" is relevant for matching of remote calls
-// See @TODO
-typedef struct {
-	ActivityID *caller_aid;
-	NodeID *target_node_id;
-	UniqueInterfaceID *target_unique_interface_id;
-	AssociateID *target_associate_id;
-	vector<Attribute> attributes;
-} RemoteCall;
-
 // The identifier is fetched from the knowledge base
 // OntologyAttributeID lookup_ontology_attribute(string uniqueOntologyIdentifier);
 // OntologyAttributeID lookup_or_create_ontology_attribute(string uniqueOntologyIdentifier, string unit, enum STORAGE_TYPE)

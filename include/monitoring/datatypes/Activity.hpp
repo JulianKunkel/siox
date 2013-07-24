@@ -78,6 +78,17 @@
 
 using namespace std;
 
+// The instance identifier such as "Port 4711" is relevant for matching of remote calls
+// See @TODO
+typedef struct {
+	ActivityID *caller_aid;
+	NodeID *target_node_id;
+	UniqueInterfaceID *target_unique_interface_id;
+	AssociateID *target_associate_id;
+	vector<Attribute> attributes;
+} RemoteCall;
+
+
 namespace monitoring {
 
 class ActivityBuilder;
@@ -125,7 +136,6 @@ public:
 		cout << "ActivityID.ComponentID.ProcessID.pid    = " << aid_.cid.pid.pid << endl;
 		cout << "ActivityID.ComponentID.ProcessID.time   = " << aid_.cid.pid.time << endl;
 		cout << "Attributes (" << attributeArray_.size() << "):" << endl;
-
 	}
 
 	inline siox_timestamp time_start() const{
