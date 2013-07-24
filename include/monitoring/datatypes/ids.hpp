@@ -61,7 +61,6 @@ typedef struct{
 	NodeID nid;
 	uint32_t pid;
 	uint32_t time;
-	vector<ActivityID *> activity_stack;
 } ProcessID;
 // Each process can create a runtime ID locally KNOWING the NodeID from the daemon
 // RuntimeID create_runtime_id(NodeID 32 B,  getpid() 32B, gettimeofday(seconds) 32B );
@@ -104,7 +103,6 @@ typedef struct{
 	ProcessID pid;
 	//UniqueInterfaceID uiid;
 	uint16_t num;
-	uint32_t next_activity_id;
 } ComponentID;
 // TODO:
 // ComponentID(siox_component){}
@@ -134,15 +132,7 @@ typedef struct {
 /* Identifying an activity */
 typedef struct ActivityID{
 	uint32_t id;
-	ComponentID *cid;
-	UniqueComponentActivityID *caid;
-	siox_timestamp t_start;
-	siox_timestamp t_end;
-	siox_activity_error error;
-	RemoteCallIdentifier *remote_caller;
-	vector<ActivityID> parent_activities;
-	vector<Attribute> attributes;
-	vector<RemoteCall> remote_calls;
+	ComponentID cid;
 } ActivityID;
 
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);
@@ -173,7 +163,7 @@ inline bool is_valid_id(ComponentID & id){
 }
 
 inline bool is_valid_id(ActivityID & id){
-	return is_valid_id(*(id.cid));
+	return is_valid_id(id.cid);
 }
 
 #endif
