@@ -26,6 +26,9 @@ typedef enum siox_activity_error {
 
 /**
  * Supported datatypes in SIOX
+ * The transaction system needs fixed datatypes - Any changes here will have the effect of the transactionsystem to stop working
+ * In that case the scripts for the transaction system have to be modified.
+ * Postgres needs twice as large datatypes as these for storage due to its internal structure.
  */
 enum siox_ont_storage_type{
     SIOX_STORAGE_UNASSIGNED,

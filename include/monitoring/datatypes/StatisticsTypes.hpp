@@ -35,7 +35,7 @@ Statistical Attributes
 - Value
 - HWID
 
-Was machen wir mit multipler Hardware? z.B. Ethernet + IB? Beides network Associated Info ist dann "NetworkType"
+Was machen wir mit multipler Hardware? z.B. Ethernet + IB? Beides network. Associated Info ist dann "NetworkType"
 => throughput/network/filesystem, throughput/network/management
 
 Semantische Plugins?
@@ -46,7 +46,7 @@ Wäre möglich, dann aber evtl. Ursprungsmetriken beim Forwarding ignorieren.
 => Jede Metrik/Plugin kann in der Konfig fürs Forwarding deaktiviert werden.
 
 
-- type / gauge / incrementelle etc. => By default: delta value für delta time
+- Typ: gauge / inkrementell etc. => Wir verwenden: delta value für delta time
 
 -- Alle Metriken werden dahingehend konvertiert => Alles Hilfsprogramme / Wrapper => SIOX_Extensions!!!
 - Selbiges für Speichertypen
@@ -68,7 +68,7 @@ StatisticsSeries, for data effective storage
 
 typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double, double double> StatisticsValue;
 
-typedef boost::variant<String, string, string, string, string, string, uint32_t> MetricAttributes;
+typedef boost::variant<string, string, string, string, string, string, uint32_t> MetricAttributes;
 
 class StatisticsValue {
 public:

@@ -19,7 +19,7 @@ namespace monitoring{
 class StatisticsCollector {
 public:
 
-	virtual void register_metrics(String metricname, string type, string domain, string hostname, string si_unit, string description, uint32_t min_poll_interval_ms);
+	virtual void register_metrics(MetricAttributes * metricattrbtes);
 // Hier kann auch der predefined variant-Datatype MetricAttributes genutzt werden.
 
 // Description  means local or remote metric
