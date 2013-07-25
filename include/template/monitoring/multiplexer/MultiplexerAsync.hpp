@@ -1,12 +1,11 @@
-/*!
- * @description
+/** @file
  * observer pattern, for easy notification of listeners with event buffer
  *
  * @author Jakob Luettgau, Julian Kunkel
  * @date   2013
  */
 
-/*!
+/**
  Software Structure
  1 Requirements
 	- same as for the normal Multiplexer, concurrent Log() calls while keeping
@@ -151,7 +150,7 @@ public:
 	 * Add an activity to the queue if there is capacity, set overload flag
 	 * otherwhise.
 	 *
-	 * @param	TYPE *	an activity that need to be dispatched in the future
+	 * @param	element		an activity that need to be dispatched in the future
 	 */
 	virtual void Push(TYPE * element) {
 		std::lock_guard<std::mutex> lock(mut);
@@ -330,7 +329,7 @@ public:
 	/**
 	 * Register listener to multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to notify in the future
+	 * @param	listener	listener to notify in the future
 	 */
 	virtual void registerListener(MultiplexerListener<TYPE> * listener) {
 		// exclusive, adding multiple listerns might result in race condition
@@ -345,7 +344,7 @@ public:
 	/**
 	 * Unregister listener from multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to remove
+	 * @param	listener	listener to remove
 	 */
 	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) {
 		// exclusive, as removing may invalidate iterator

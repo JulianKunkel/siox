@@ -1,4 +1,4 @@
-#include "SioxLogger.h"
+#include "SioxLogger.hpp"
 
 void SioxLogger::add_logger(Logger &logger)
 {

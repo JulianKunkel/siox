@@ -44,14 +44,17 @@ struct process_info process_data = {0};
 
 //////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 NodeID lookup_node_id(string & hostname){
     return process_data.system_information_manager->node_id(hostname);
 }
 
 
 //////////////////////////////////////////////////////////////////////////////
+/// Create a proces id object .
+//////////////////////////////////////////////////////////////////////////////
+/// @param nid [in] The node id of the hardware node the process runs on
+//////////////////////////////////////////////////////////////////////////////
+/// @return A process id, which is system-wide unique
 //////////////////////////////////////////////////////////////////////////////
 // Each process can create a runtime ID locally KNOWING the NodeID from the daemon
 ProcessID create_process_id(NodeID nid){
@@ -108,10 +111,10 @@ __attribute__ ((constructor)) void siox_ll_ctor()
         const char * configurationMode = getenv("SIOX_CONFIGURATION_PROVIDER_MODE");
         const char * configurationOverride = getenv("SIOX_CONFIGURATION_SECTION_TO_USE");
 
-    string configName;
-    if (configurationOverride != nullptr){
-        configName = configurationOverride;
-    }else{
+        string configName;
+        if (configurationOverride != nullptr){
+            configName = configurationOverride;
+        }else{
             // hostname configurationMode (is optional)        
 
         {
@@ -191,6 +194,7 @@ __attribute__ ((destructor)) void siox_ll_dtor()
 ///////////////////// Implementation of SIOX-LL /////////////
 //############################################################################
 
+/// Variant datatype to uniformly represent the multitude of different attibutes
 typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> AttributeValue;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -198,6 +202,7 @@ typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float,
 //////////////////////////////////////////////////////////////////////////////
 /// @param attribute [in]
 /// @param value [in]
+//////////////////////////////////////////////////////////////////////////////
 /// @return
 //////////////////////////////////////////////////////////////////////////////
 static AttributeValue convert_attribute(siox_attribute * attribute, void * value){
@@ -232,12 +237,6 @@ static AttributeValue convert_attribute(siox_attribute * attribute, void * value
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-/// Set a global attribute and its value for a process.
-//////////////////////////////////////////////////////////////////////////////
-/// @param attribute [in]
-/// @param value [in]
-//////////////////////////////////////////////////////////////////////////////
 void siox_process_set_attribute(siox_attribute * attribute, void * value){
     assert(attribute != nullptr);
     assert(value != nullptr);
@@ -247,16 +246,8 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value){
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-/// Associate some instance information (such as IP port or thread ID) with
-/// the current invocation.
-//////////////////////////////////////////////////////////////////////////////
-/// @param iid [in]
-//////////////////////////////////////////////////////////////////////////////
-/// @return
-//////////////////////////////////////////////////////////////////////////////
-siox_associate * siox_associate_instance(const char * iid){
-    string instance(iid);
+siox_associate * siox_associate_instance(const char * instance_information){
+    string instance(instance_information);
     uint64_t id = process_data.association_mapper->create_instance_mapping(instance);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     return (AssociateID*) id;
@@ -266,19 +257,24 @@ siox_associate * siox_associate_instance(const char * iid){
 /////////////// MONITORING /////////////////////////////
 //############################################################################
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * instance_name){
     assert(uiid != nullptr);
     // instance_name could be nullptr
 
-    // TODO
-    return nullptr;
+    ComponentID * result = new ComponentID();
+    result->pid = process_data.pid;
+
+    // MZ: TODO Hier eigentlich:
+    // Autoconfigurator konfiguriert Schicht, (MZ: Wie ruft man das auf?!?)
+    // AMux wird erstellt und zugewiesen, (MZ: Wie ruft man das auf?!?)
+    // ABuilder wird erstellt und zugewiesen, (MZ: Wie ruft man das auf?!?)
+    // ...
+    // MZ: How about the SMux?!
+
+    return result;
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, void * value){
     assert(attribute != nullptr);
     assert(value != nullptr);
@@ -290,36 +286,32 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-/// 
-//////////////////////////////////////////////////////////////////////////////
-/// @param uiid [in]
-/// @param instance_name [in]
-//////////////////////////////////////////////////////////////////////////////
-/// @return
-//////////////////////////////////////////////////////////////////////////////
 siox_component_activity * siox_component_register_activity(siox_unique_interface * uiid, const char * activity_name){
     assert(uiid != nullptr);
     assert(activity_name != nullptr);
 
     string n(activity_name);
-    return process_data.system_information_manager->activity_id(uiid, n);
+    uint64_t id = process_data.system_information_manager->activity_id(*uiid, n);
+    // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
+    return (UniqueComponentActivityID*) id;
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 void siox_component_unregister(siox_component * component){
     // MZ: Hat noch keine Zielfunktion!
     // TODO
+
+    // Plugins runterfahren,
+    // Speicher freigeben,
+    // ...
+    // IM MOMENT NICHT ZU IMPLEMENTIEREN!!!
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 void siox_report_node_statistics(siox_node node, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value){
 
     // MZ: Das reicht eigentlich bloß an den SMux weiter, oder?
+    // Vorher: Statistik zusammenbauen!
     // TODO
 }
 
@@ -332,32 +324,22 @@ void siox_report_node_statistics(siox_node node, siox_attribute * statistic, sio
 // MZ: How do we get our finished activity object back?!
 //     In ..._activity_stop()?
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
+
 siox_activity * siox_activity_start(siox_component_activity * activity){
     assert(activity != nullptr);
 
-    return process_data.activity_builder->;
+    // MZ: return process_data.activity_builder->...;
+    return nullptr;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-/// 
-//////////////////////////////////////////////////////////////////////////////
-/// @param activity [in]
-//////////////////////////////////////////////////////////////////////////////
+
 void siox_activity_stop(siox_activity * activity){
-    assert(activity ! nullptr);
+    assert(activity != nullptr);
 
-    process_data.activity_builder->stopActivity(activity);
+    // process_data.activity_builder->stopActivity(activity);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-/// 
-//////////////////////////////////////////////////////////////////////////////
-/// @param activity [in]
-/// @param attribute [in]
-/// @param value [in]
-//////////////////////////////////////////////////////////////////////////////
+
 void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, void * value){
     assert(activity != nullptr);
     assert(attribute != nullptr);
@@ -365,90 +347,67 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
 
     AttributeValue val = convert_attribute(attribute, value);
     // MZ: TODO Signatur anpassen!
-    process_data.activity_builder->addActivityAttribute(activity, attribute, val);
+    // process_data.activity_builder->addActivityAttribute(activity, attribute, val);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-/// 
-//////////////////////////////////////////////////////////////////////////////
-/// @param activity [in]
-/// @param error [in]
-//////////////////////////////////////////////////////////////////////////////
+
 void siox_activity_report_error(siox_activity * activity, int64_t error){
     assert(activity != nullptr);
 
-    process_data.activity_builder->reportActivityError(activity, error);
+    // process_data.activity_builder->reportActivityError(activity, error);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-/// 
-//////////////////////////////////////////////////////////////////////////////
-/// @param activity [in]
-//////////////////////////////////////////////////////////////////////////////
+
 void siox_activity_end(siox_activity * activity){
     assert(activity != nullptr);
 
-    process_data.activity_builder->endActivity(activity);
+    // process_data.activity_builder->endActivity(activity);
 
-    // MZ: TODO Fertige Activity von activity_builder abfordern und an AMux (objekt?!?)
+    // TODO Fertige Activity von activity_builder abfordern und an AMux (objekt?!?)
     //     weiterreichen?
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent){
 
+void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent){
+    // TODO
 }
 
 //############################################################################
 //////////////// REMOTE CALL ///////////////////////////////////
 //############################################################################
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
+
 siox_remote_call * siox_remote_call_start(siox_activity         * activity,
                                           siox_node             * target_nid,
                                           siox_unique_interface * target_uid,
                                           siox_associate        * target_iid){
-    // MZ: TODO Festlegen, was (wenn überhaupt etwas) einen Remote Call ausmacht!
+    // TODO
     return nullptr;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
+
 void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, void * value){
 
+    // TODO
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
+
 void siox_remote_call_submitted(siox_remote_call * remote_call){
 
+    // TODO
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
+
 void siox_activity_started_by_remote_call(siox_activity * activity, NodeID * caller_NodeID_if_known, UniqueInterfaceID * caller_uid_if_known, AssociateID * caller_instance_if_known){
 
+    // TODO
 }
+
 
 //############################################################################
 //////////////// ONTOLOGY  ///////////////////////////////////
 //############################################################################
 
-//////////////////////////////////////////////////////////////////////////////
-/// Look up an attribute in the SIOX ontology, creating a new entry if not
-/// found.
-//////////////////////////////////////////////////////////////////////////////
-/// @param domain
-/// @param name
-/// @param storage_type
-//////////////////////////////////////////////////////////////////////////////
-/// @return A pointer to a globally unique representation in a siox_attribute,
-/// unless there already exists an attribute with identical domain and name
-/// but different storage_type.
-/// In the latter case, a nullptr is returned.
-//////////////////////////////////////////////////////////////////////////////
 siox_attribute * siox_ontology_register_attribute(const char * domain, const char * name, enum siox_ont_storage_type storage_type){
     assert(domain != nullptr);
     assert(name != nullptr);
@@ -458,15 +417,7 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
     return process_data.ontology->register_attribute(d, n, storage_type);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-/// Attach a meta attribute and its value to a given attribute.
-//////////////////////////////////////////////////////////////////////////////
-/// @param parent
-/// @param meta_attribute
-/// @param value
-//////////////////////////////////////////////////////////////////////////////
-/// @return @c true if everything went well; otherwise, @c false.
-//////////////////////////////////////////////////////////////////////////////
+
 // MZ: TODO change return value to bool, unless this proves C++-incompatible
 int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_attribute * meta_attribute, void * value){
     assert(parent_attribute != nullptr);
@@ -477,19 +428,7 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_att
     return process_data.ontology->attribute_set_meta_attribute(parent_attribute, meta_attribute, val);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-///
-//////////////////////////////////////////////////////////////////////////////
-/// @param domain
-/// @param name
-/// @param unit
-/// @param storage_type
-//////////////////////////////////////////////////////////////////////////////
-/// @return 
-//////////////////////////////////////////////////////////////////////////////
-/// @note Units themselves are implemented as meta attributes with storage
-/// type SIOX_STORAGE_STRING.
-//////////////////////////////////////////////////////////////////////////////
+
 siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain, const char * name, const char * unit, enum siox_ont_storage_type  storage_type){
     assert(domain != nullptr);
     assert(name != nullptr);
@@ -508,16 +447,7 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
     return attribute;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-/// MZ: Nonsense right now; identical to ..._register_... w/o the check
-/// for existence! Should maybe look up the att's *value* or return the whole
-/// attribute object, as we still lack functions for both?!
-//////////////////////////////////////////////////////////////////////////////
-/// @param domain
-/// @param name
-//////////////////////////////////////////////////////////////////////////////
-/// @return
-//////////////////////////////////////////////////////////////////////////////
+
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name){
     assert(name != nullptr);
 
@@ -527,22 +457,17 @@ siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, co
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-/// Find the (or, if necessary, create a) unique ID for a given interface
-/// and implementation identifier.
-//////////////////////////////////////////////////////////////////////////////
-/// @param domain
-/// @param name
-//////////////////////////////////////////////////////////////////////////////
-/// @return An ID that will be unique system-wide.
-//////////////////////////////////////////////////////////////////////////////
 siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier){
     assert(interface_name != nullptr);
     assert(implementation_identifier != nullptr);
 
     string in(interface_name);
     string ii(implementation_identifier);
-    return process_data.system_information_manager->interface_id(in, ii);
+    //uint64_t id = process_data.system_information_manager->interface_id(in, ii);
+    // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
+    //return (UniqueInterfaceID_*) id;
+    UniqueInterfaceID * result = new UniqueInterfaceID(process_data.system_information_manager->interface_id(in, ii));
+    return result;
 }
 
 } // extern "C"

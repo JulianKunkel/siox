@@ -1,12 +1,11 @@
-/*!
- * @description
+/** @file
  * observer pattern, for easy notification of listeners
  *
  * @author Jakob Luettgau, Julian Kunkel
  * @date   2013
  */
 
-/*!
+/**
  Software Structure
  1 Requirements
 	- multiple Log() calls shall run in parallel
@@ -97,7 +96,7 @@ public:
 	/**
 	 * Register listener to multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to notify in the future
+	 * @param	listener	listener to notify in the future
 	 */
 	virtual void registerListener(MultiplexerListener<TYPE> * listener) {
 		// exclusive, adding multiple listerns might result in race condition
@@ -112,7 +111,7 @@ public:
 	/**
 	 * Unregister listener from multiplexer
 	 *
-	 * @param	MultiplexerListener *	listener	listener to remove
+	 * @param	listener	listener to remove
 	 */
 	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) {
 		// exclusive, as removing may invalidate iterator

@@ -1,7 +1,7 @@
-/**
+/** @file
  * This file contains structures and constructors for SIOX ID, e.g.
  * hardware, processes, components and attributes.
- * @Author JK
+ * @author JK
  */
 
 #ifndef SIOX_IDS_SERIALIZE_H
