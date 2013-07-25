@@ -71,7 +71,6 @@
 
 #include <string>
 #include <vector>
-#include <boost/variant.hpp>
 
 #include <monitoring/datatypes/c-types.h>
 
@@ -81,34 +80,19 @@ using namespace std;
 
 namespace monitoring {
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, string, float, double> AttributeValue;
-
-typedef struct {
-	OntologyAttributeID id;
-	AttributeValue value;
-} Attribute;
-
-typedef struct {
-	// Several parameters assist matching of remote calls
-	NodeID hwid; // optional
-	UniqueInterfaceID uuid; // optional
-	AssociateID instance; // optional, remote call instance identifier	
-} RemoteCallIdentifier;
-
-typedef struct {
-	RemoteCallIdentifier target;
-	vector<Attribute> attributeArray;
-} RemoteCall;
+class ActivityBuilder;
 
 class Activity{
+	friend class ActivityBuilder;
+
 protected:
 	// The ontology provides a single ID for each ActivityType of a component, e.g. POSIX "open()"
-	UniqueComponentActivityID aid_;
+	UniqueComponentActivityID ucaid_;
 	
 	siox_timestamp time_start_;
 	siox_timestamp time_stop_;
 
-	ComponentID cid_;
+	ActivityID aid_;
 
 	vector<ActivityID> parentArray_; 
 	vector<RemoteCall> remoteCallsArray_;
@@ -118,24 +102,32 @@ protected:
 	RemoteCallIdentifier * remoteInvoker_; // NULL if none
 
 	// interface specific error value.
-	int32_t errorValue_;
+	siox_activity_error errorValue_;
 
 public:
-	Activity(UniqueComponentActivityID aid, siox_timestamp start_t, siox_timestamp end_t, ComponentID cid, 
-		vector<ActivityID> & parentArray, 
-		vector<Attribute> & attributeArray, 
-		vector<RemoteCall> & remoteCallsArray, 
-		RemoteCallIdentifier * remoteInvoker,  int32_t errorValue)
+	Activity(UniqueComponentActivityID ucaid, siox_timestamp start_t, siox_timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, siox_activity_error errorValue)
 		: 
-		aid_ (aid), time_start_ (start_t), time_stop_ (end_t),
-		cid_ (cid), parentArray_ ( std::move(parentArray)),
+		ucaid_ (ucaid), time_start_ (start_t), time_stop_ (end_t),
+		aid_ (aid), parentArray_ (std::move(parentArray)),
 		remoteCallsArray_ (std::move(remoteCallsArray)),
 		attributeArray_ (std:: move(attributeArray)),		
 		remoteInvoker_ (remoteInvoker),errorValue_(errorValue){}
 
 	Activity(){
 	}
-		
+
+	void print() {
+		cout << "t_start = " << time_start_ << endl;
+		cout << "t_stop  = " << time_stop_ << endl;
+		cout << "ActivityID.id = " << aid_.id << endl;
+		cout << "ActivityID.ComponentID.num = " << aid_.cid.num << endl;
+		cout << "ActivityID.ComponentID.ProcessID.NodeID = " << aid_.cid.pid.nid << endl;
+		cout << "ActivityID.ComponentID.ProcessID.pid    = " << aid_.cid.pid.pid << endl;
+		cout << "ActivityID.ComponentID.ProcessID.time   = " << aid_.cid.pid.time << endl;
+		cout << "Attributes (" << attributeArray_.size() << "):" << endl;
+
+	}
+
 	inline siox_timestamp time_start() const{
 		return time_start_;
 	}
@@ -145,12 +137,12 @@ public:
 	}
 
 
-	inline UniqueComponentActivityID aid() const{
-		return aid_;
+	inline UniqueComponentActivityID ucaid() const{
+		return ucaid_;
 	}
 	
-	inline ComponentID cid() const{
-		return cid_;
+	inline ActivityID aid() const{
+		return aid_;
 	}
 
 	inline const vector<ActivityID>& parentArray() const{
@@ -169,7 +161,7 @@ public:
 		return remoteInvoker_;
 	}
 
-	inline int32_t errorValue() const{
+	inline siox_activity_error errorValue() const{
 		return errorValue_;
 	}
 
