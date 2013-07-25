@@ -1,5 +1,6 @@
 #ifndef STATISTICS_MULTIPLEXER_H
-#define STATISTICS_MULTIPLEXER_H 
+#define STATISTICS_MULTIPLEXER_H
+
 
 #include <monitoring/datatypes/Statistics.hpp>
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexerListener.hpp>
@@ -7,6 +8,11 @@
 
 namespace monitoring{
 
+
+//requiredMetrics(){
+// return ["ALL"] is possible !!!
+//	return ["metric1", "metric2", NULL];
+//}
 
 /**
  * StatisticsMultiplexer
@@ -33,7 +39,7 @@ public:
 	 * @param	listener	listener to remove
 	 */
 	virtual void unregisterListener(StatisticsMultiplexerListener * listener) = 0;
-	
+
 };
 
 

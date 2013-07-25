@@ -1,5 +1,5 @@
 #ifndef STATISTICSMULTIPLEXERLISTENER_H
-#define STATISTICSMULTIPLEXERLISTENER_H 
+#define STATISTICSMULTIPLEXERLISTENER_H
 
 #include <monitoring/multiplexer/MultiplexerListener.hpp>
 #include <string>
@@ -25,6 +25,13 @@ class StatisticsMultiplexerListenerAsync : public StatisticsMultiplexerListener
 {
 };
 */
+
+
+//requiredMetrics(){
+// return ["ALL"] is possible !!!
+//	return ["metric1", "metric2", NULL];
+//}
+
 
 
 }
