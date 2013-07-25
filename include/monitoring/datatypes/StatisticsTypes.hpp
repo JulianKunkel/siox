@@ -124,7 +124,7 @@ The international system unit
 	string si_unit;
 
 /**
-
+Details if any, otherwise empty ""
 */
 	string description;
 

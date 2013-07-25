@@ -14,23 +14,30 @@
 
 #include "../datatypes/Statistics.hpp"
 
+#include <vector>
+#include <string>
+using namespace std;
+
 namespace monitoring{
 
 class StatisticsCollector {
 public:
 
-	virtual void register_metrics(int i,MetricAttribute mattr,string list_of_specialties);
-// Hier kann auch der predefined variant-Datatype MetricAttributes genutzt werden.
+/*!
+ This virtual method is to register the metric, while calling it with its attribute and a special location such as "Storagedevice/SSD Blocklayer/sda"
+ */
+
+	virtual void register_metrics(int i,MetricAttribute mattr,vector<string> list_of_specialties);
 
 // Description  means local or remote metric
 // Type = gauge if interval - We are converting incremental to gauge
 
-	virtual void get_value(int i, string list_of_specialties);
+	virtual void get_value(int i, vector<string> list_of_specialties);
 
 /*!
  Die Werte für die Metrikattribute werden für den nächsten Timestep angezeigt.
  */
-    virtual void next_timestep(int i,string list_of_specialties);
+    virtual void next_timestep(int i,vector<string> list_of_specialties);
 
 
 };
