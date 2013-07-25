@@ -15,29 +15,31 @@
 #include <stdlib.h>
 
 /* Set the interface name for the library*/
-//@register_node SWID="POSIX"
+//@component "POSIX" "LINUX" "Test-Kiste"
+
+//@horizontal_map_create_str
 
 /* Register the metrics to grab the performance data */
-//@metric_register mid_bytesWritten "Bytes written."
-//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
+//@register_attribute attr_write "POSIX" "Bytes written"
+//@SIOX_STORAGE_64_BIT_UINTEGER
 
-//@metric_register mid_bytesRead "Bytes read."
-//SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
+//@register_attribute attr_read "POSIX" "Bytes read"
+//@SIOX_STORAGE_64_BIT_UINTEGER
 
 /*------------------------------------------------------------------------------
 End of global part
 ------------------------------------------------------------------------------*/
 
-//@activity
+//@activity ComponentVariable=activ_open ActivityVariable=cur_open
+//@horizontal_map_put_str "file open" Activity=cur_open
 int open(const char *pathname, int flags, ...);
 
 
-//@activity aID_close Name="close"
-//@activity_link aID "fd"
+//@activity ActivityVariable=cur_close ComponentVariable=activ_close
+//@activiry_link_str "file open" Activity=cur_close
 int close(int fd);
 
-//@activity aID_write NULL NULL NULL "Write to file."
-//@report global_unid mid_bytesWritten count
-//@activity_link aID "fd"
+//@activity  ActivityVariable=activity_wirte ComponentVariable=cur_wirte
+//@activity_link_str "file open" Activity=cur_wirte
 ssize_t write(int fd, const void *buf, size_t count);
 
