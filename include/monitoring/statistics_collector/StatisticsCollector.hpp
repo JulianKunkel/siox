@@ -1,3 +1,14 @@
+/**
+ * @file    StatisticsCollector.hpp
+ *
+ * @description A (software) component for collecting statistical values.
+ * @standard    Preferred standard is C++11
+ *
+ * @author Marc Wiedemann
+ * @date   2013
+ *
+ */
+
 #ifndef STATISTICS_COLLECTOR_H
 #define STATISTICS_COLLECTOR_H
 
@@ -8,14 +19,15 @@ namespace monitoring{
 class StatisticsCollector {
 public:
 
-	virtual void register_metrics(StatisticsValue * statvalue);
+	virtual void register_metrics(String metricname, string type, string domain, string hostname, string si_unit, string description, uint32_t min_poll_interval_ms);
+// Hier kann auch der predefined variant-Datatype MetricAttributes genutzt werden.
 
 // Description  means local or remote metric
 // Type = gauge if interval - We are converting incremental to gauge
 
-	virtual void get_metrics(String metricname, string type, string domain, string hostname, string si_unit, string description, uint32_t min_poll_interval_ms);
+	virtual void get_metrics(StatisticsValue * statvalue);
 
-// Hier Datatype MetricAttributes
+
 
 };
 

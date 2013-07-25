@@ -1,3 +1,15 @@
+/**
+ * @file    Statistics.hpp
+ *
+ * @description A (software) component for datatypes used in statistics.
+ * @standard    Preferred standard is C++11
+ *
+ * @author Marc Wiedemann
+ * @date   2013
+ *
+ */
+
+
 #ifndef DATATYPES_STATISTICS_H
 #define DATATYPES_STATISTICS_H
 
@@ -5,16 +17,15 @@
 #include <iostream>
 
 /*
-Statistics
-- startime
-- entime
-- metric identifier in ontology: "throughput/network/[MIN/MAX/AVG]" 
+Statistical Attributes 
+- Startzeit und Endzeit = Intervall
+- "Metric identifier" in Ontologie: "throughput/network/[MIN/MAX/AVG]" 
 --- STORAGE_TYPE
---- Base Unit
+--- SI_Unit
 - Value
 - HWID
 
-Was machen wir mit multiplen Hardware? z.B. Ethernet + IB?
+Was machen wir mit multipler Hardware? z.B. Ethernet + IB? Beides network Associated Info ist dann "NetworkType"
 => throughput/network/filesystem, throughput/network/management
 
 Semantische Plugins?
