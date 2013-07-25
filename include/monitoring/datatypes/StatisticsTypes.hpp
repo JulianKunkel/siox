@@ -88,24 +88,24 @@ public:
 
 };
 
-/**
-Constructor bauen für Aufruf in Klasse
-*/
 
 class MetricAttribute {
-public:
-/**
+private:
 
+/**
+Semantic name
 */
 
 	string metricname;
 /**
 
+Types
+
 */
 	enum siox_ont_storage_type;
 /**
 
-   
+Gauge interval - incremental will be converted
 
 */
 
@@ -114,13 +114,43 @@ public:
 
 	string domain;
 /**
-
+The storage node identifier
 */
 	string hostname; 
+
+/**
+The international system unit
+*/
 	string si_unit;
+
+/**
+
+*/
 	string description;
+
+/**
+Minimal Measurement interval in ms - Delta sample value / Delta time is good for the moment.
+*/
 	uint32_t min_poll_interval_ms
+
+/**
+Build Constructor for Call of the class
+*/
+public:
+MetricAttribute(void)
+{
+
 }
+
+MetricAttribute(string metricname,enum siox_ont_storage_type,enum intervaltype,string domain,string hostname,string si_unit,string description,uint32_t min_poll_interval_ms)
+{
+
+}
+
+
+~MetricAttribute(void);
+
+};
 
 
 
