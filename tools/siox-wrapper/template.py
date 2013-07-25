@@ -97,8 +97,8 @@ template = {
 # TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
 'activity': {
 	'variables': 'Name=G_STRFUNC ComponentVariable ActivityVariable',
-	'global': '''''',
-	'init': '''siox_component_activity * %(ComponentVariable)s = siox_component_register_activity( global_uid, %(Name)s );''',
+	'global': '''siox_component_activity * %(ComponentVariable)s;''',
+	'init': '''%(ComponentVariable)s = siox_component_register_activity( global_uid, %(Name)s );''',
     'before': '''siox_activity * %(ActivityVariable)s = siox_activity_start( %(ComponentVariable)s );''',
 	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',

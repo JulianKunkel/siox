@@ -509,7 +509,7 @@ class CommandParser():
     def __init__(self, options):
         self.inputFile = options.inputFile
         # This regular expression matches the instructions which begin with //
-        self.commandRegex = re.compile('^\s*//\s*@(\w+)\s*(.*)')
+        self.commandRegex = re.compile('^\s*//\s*@\s*(\w+)\s*(.*)')
         self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\'/]+)\s*')
         self.options = options
 
@@ -570,7 +570,6 @@ class CommandParser():
                         i += 1
                     functionString = ""
             functionString += inputLineList[i]
-
             # Try to parse the inputLine as a function string
             currentFunctionList = functionParser.parseString(functionString)
             if len(currentFunctionList) > 0:
@@ -658,7 +657,7 @@ class Template():
         self.templateDict = templateDict
         self.name = name
         self.parameterList = {}
-
+        self.namedVar = False
         # This regex parses the values string in the function setParameters.
         # It distinguishes between 3 cases:
         # match the first bare word of the values
@@ -703,11 +702,13 @@ class Template():
         # TODO: raise error and error handling
         # generate a list of all names and values
 
-        nameList = self.templateDict['variables']
-        print(nameList)
-        valueList = values.split()
-        for value in valueList:
+        for key in self.default_value_dictionary.keys():
+            self.parameterList[key] = self.default_value_dictionary[key]
 
+        nameList = self.templateDict['variables']
+        valueList = values.split()
+
+        for value in valueList:
             valueString = ""
             valueParts = value.split("=", 1)
             name = ""
@@ -716,43 +717,35 @@ class Template():
                 nameTmp = valueParts[0].strip()
                 if nameTmp in nameList:
                     name = nameTmp
+                    self.namedVar = True
                     valueParts[0] = valueParts[1]
                 else:
-                    valueParts[0] += valueParts[1]
+                    valueParts[0] += "=" + valueParts[1]
 
-            if self.currentParameterIndex < len(nameList):
-                name = nameList[self.currentParameterIndex]
-                print (name, valueParts[0])
-            else:
-                name = nameList[-1]
-            # the variable with the given name is set
-            if not name in nameList:
-                print("Error name " + name +
-                      " is not part of the defined function " + self.name)
-                exit(1)
+            if name == "" and not self.namedVar:
+                if self.currentParameterIndex < len(nameList):
+                    name = nameList[self.currentParameterIndex]
+                else:
+                    name = nameList[-1]
+
             # Set the matched value
             valueString += valueParts[0]
             if(valueString.startswith("''")):
                 valueString = valueString.strip("'")
+
+            if self.insideString:
+                self.parameterList[name] += " " + valueString
+            else:
+                self.parameterList[name] = valueString
 
             if valueString.startswith('"'):
                 self.insideString = True
             if valueString.endswith('"'):
                 self.insideString = False
 
-            if name in self.default_value_dictionary.keys():
-                if self.parameterList[name] == self.default_value_dictionary[name] and valueString != "":
-                    self.parameterList[name] = valueString
-                else:
-                    self.parameterList[name] += valueString
-            else:
-                self.parameterList[name] += valueString
-
             if not self.insideString:
                 self.currentParameterIndex += 1
 
-        print(self.parameterList)
-        print(self.default_value_dictionary)
 
     #
     # @brief Used for selective output
@@ -764,8 +757,6 @@ class Template():
         if (type == 'global'):
             return self.world % self.parameterList
         elif (type == 'init'):
-            print(self.init)
-            print(self.parameterList)
             return self.init % self.parameterList
         elif (type == 'before'):
             return self.before % self.parameterList
