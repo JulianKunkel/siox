@@ -119,7 +119,7 @@ public:
 
 	void print() {
 		// @TODO: Really need reflection - have a look at Boost :-)
-		int i;
+		unsigned i;
 		cout << "t_start = " << time_start_ << endl;
 		cout << "t_stop  = " << time_stop_ << endl;
 		cout << "ActivityID.id = " << aid_.id << endl;
@@ -128,7 +128,7 @@ public:
 		cout << "ActivityID.ComponentID.ProcessID.pid    = " << aid_.cid.pid.pid << endl;
 		cout << "ActivityID.ComponentID.ProcessID.time   = " << aid_.cid.pid.time << endl;
 		cout << "Attributes (" << attributeArray_.size() << " items):" << endl;
-		for(i=0; i<attributeArray_.size(); i++) {
+		for(i=0; i< attributeArray_.size(); i++) {
 			cout << "(" << i << ")" << endl;
 			cout << "\tid    = " << attributeArray_[i].id << endl;
 			cout << "\tvalue = " << attributeArray_[i].value << endl;
