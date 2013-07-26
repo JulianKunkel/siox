@@ -1,4 +1,4 @@
-#include "IPCServer.h"
+#include "IPCServer.hpp"
 
 IPCServer::IPCServer(const std::string &path, 
 		     const std::size_t worker_pool_size)

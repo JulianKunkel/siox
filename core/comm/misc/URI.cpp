@@ -1,4 +1,4 @@
-#include "URI.h"
+#include "URI.hpp"
 
 #include <algorithm>
 #include <cctype>

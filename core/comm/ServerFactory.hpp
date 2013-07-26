@@ -4,9 +4,9 @@
 #include <exception>
 #include <string>
 
-#include "ipc/IPCServer.h"
-#include "tcp/TCPServer.h"
-#include "misc/URI.h"
+#include "ipc/IPCServer.hpp"
+#include "tcp/TCPServer.hpp"
+#include "misc/URI.hpp"
 
 namespace asio = boost::asio;
 
