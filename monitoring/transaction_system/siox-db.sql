@@ -8,251 +8,125 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 
---
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
 SET search_path = public, pg_catalog;
+
+--
+-- Name: process_id; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE process_id AS (
+	nid bigint,
+	pid bigint,
+	"time" bigint
+);
+
+
+ALTER TYPE public.process_id OWNER TO postgres;
+
+--
+-- Name: component_id; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE component_id AS (
+	pid process_id,
+	num integer
+);
+
+
+ALTER TYPE public.component_id OWNER TO postgres;
+
+--
+-- Name: activity_id; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE activity_id AS (
+	id bigint,
+	cid component_id
+);
+
+
+ALTER TYPE public.activity_id OWNER TO postgres;
+
+--
+-- Name: attribute; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE attribute AS (
+	key bigint,
+	value character varying(255)
+);
+
+
+ALTER TYPE public.attribute OWNER TO postgres;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: activities; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: activity; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE activities (
-    aid bigint NOT NULL,
-    paid bigint,
-    cid bigint NOT NULL,
+CREATE TABLE activity (
+    aid activity_id NOT NULL,
+    ucaid bigint NOT NULL,
     time_start bigint NOT NULL,
     time_stop bigint,
-    status smallint DEFAULT 1,
-    comment character varying(255)
+    error_value integer,
+    parents activity_id[],
+    attributes attribute[]
 );
 
 
-ALTER TABLE public.activities OWNER TO postgres;
+ALTER TABLE public.activity OWNER TO postgres;
 
 --
--- Name: COLUMN activities.paid; Type: COMMENT; Schema: public; Owner: postgres
+-- Name: node; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
-COMMENT ON COLUMN activities.paid IS 'Parent-ID';
-
-
---
--- Name: components; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE components (
-    cid bigint NOT NULL,
-    hwid bigint NOT NULL,
-    swid bigint NOT NULL,
-    iid bigint NOT NULL,
-    status smallint DEFAULT 1
+CREATE TABLE node (
+    id bigint NOT NULL,
+    hardware character varying(255),
+    software character varying(255),
+    instance character varying(255)
 );
 
 
-ALTER TABLE public.components OWNER TO postgres;
+ALTER TABLE public.node OWNER TO postgres;
 
 --
--- Name: hardware; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ontology; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE hardware (
-    hwid bigint NOT NULL,
-    description character varying(255) NOT NULL
+CREATE TABLE ontology (
+    id bigint NOT NULL,
+    domain character varying(255),
+    name character varying(255),
+    type smallint
 );
 
 
-ALTER TABLE public.hardware OWNER TO postgres;
+ALTER TABLE public.ontology OWNER TO postgres;
 
 --
--- Name: hardware_hwid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: aid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE SEQUENCE hardware_hwid_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.hardware_hwid_seq OWNER TO postgres;
-
---
--- Name: hardware_hwid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE hardware_hwid_seq OWNED BY hardware.hwid;
+CREATE UNIQUE INDEX aid_idx ON activity USING btree (aid);
 
 
 --
--- Name: instances; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE instances (
-    iid bigint NOT NULL,
-    description character varying(255) NOT NULL
-);
-
-
-ALTER TABLE public.instances OWNER TO postgres;
-
---
--- Name: instances_iid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE instances_iid_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.instances_iid_seq OWNER TO postgres;
-
---
--- Name: instances_iid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE instances_iid_seq OWNED BY instances.iid;
+CREATE UNIQUE INDEX id_idx ON node USING btree (id);
 
 
 --
--- Name: nodes_unid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: node_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE SEQUENCE nodes_unid_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.nodes_unid_seq OWNER TO postgres;
-
---
--- Name: nodes_unid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE nodes_unid_seq OWNED BY components.cid;
-
-
---
--- Name: software; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE software (
-    swid bigint NOT NULL,
-    description character varying(255) NOT NULL
-);
-
-
-ALTER TABLE public.software OWNER TO postgres;
-
---
--- Name: software_swid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE software_swid_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.software_swid_seq OWNER TO postgres;
-
---
--- Name: software_swid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE software_swid_seq OWNED BY software.swid;
-
-
---
--- Name: cid; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY components ALTER COLUMN cid SET DEFAULT nextval('nodes_unid_seq'::regclass);
-
-
---
--- Name: hwid; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hardware ALTER COLUMN hwid SET DEFAULT nextval('hardware_hwid_seq'::regclass);
-
-
---
--- Name: iid; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY instances ALTER COLUMN iid SET DEFAULT nextval('instances_iid_seq'::regclass);
-
-
---
--- Name: swid; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY software ALTER COLUMN swid SET DEFAULT nextval('software_swid_seq'::regclass);
-
-
---
--- Name: activities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY activities
-    ADD CONSTRAINT activities_pkey PRIMARY KEY (aid, cid);
-
-
---
--- Name: hardware_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY hardware
-    ADD CONSTRAINT hardware_pkey PRIMARY KEY (hwid);
-
-
---
--- Name: instances_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY instances
-    ADD CONSTRAINT instances_pkey PRIMARY KEY (iid);
-
-
---
--- Name: nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY components
-    ADD CONSTRAINT nodes_pkey PRIMARY KEY (cid);
-
-
---
--- Name: software_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY software
-    ADD CONSTRAINT software_pkey PRIMARY KEY (swid);
+CREATE UNIQUE INDEX node_id_idx ON ontology USING btree (id);
 
 
 --
