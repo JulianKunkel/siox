@@ -9,6 +9,20 @@
  *
  */
 
+/*!
+Statistics Collector
+
+Example Abstract Context Topologies plus Instance done by the collector and defined in the configuration:
+I/O             Device          Throughput/network              (Node, Device) = ("<LOCAL_NODE>", "eth*")
+Into:
+I/O             Node            Throughput/network              (Node, Aggregate) = ("<LOCAL_NODE>", "Ethernet")
+
+The second one is an aggregate of all available "Ethernet" devices.
+
+Note that a plugin could offer the node aggregated info by itself.
+ */
+
+
 #ifndef STATISTICS_COLLECTOR_H
 #define STATISTICS_COLLECTOR_H
 

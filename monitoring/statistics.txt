@@ -126,7 +126,7 @@ Entity, SystemScope, Semantics of the Metric, Abstract Context Topology, & Insta
  
 B. Collector
 
-Example aggregates done by the collector and defined in the configuration:
+Example Abstract Context Topologies plus Instance done by the collector and defined in the configuration:
 I/O		Device		Throughput/network		(Node, Device) = ("<LOCAL_NODE>", "eth*")
 Into:
 I/O		Node		Throughput/network		(Node, Aggregate) = ("<LOCAL_NODE>", "Ethernet")
