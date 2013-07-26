@@ -49,9 +49,6 @@ typedef struct {
 	AttributeValue value;
 } Attribute;
 
-/* Forward declaration */
-struct ActivityID;
-
 // The daemon fetches the NodeID from the knowledge base (or initiates creation if necessary)
 // NodeID lookup_node_id(const char * hostname);
 // See @TODO 
@@ -107,15 +104,6 @@ typedef struct{
 // TODO:
 // ComponentID(siox_component){}
 // ComponentID create_component_id(ProcessID 3*32 B, UIID + 16 bit);
-// The instance identifier such as "Port 4711" is relevant for matching of remote calls
-// See @TODO
-
-typedef struct {
-	ActivityID *caller_aid;
-	NodeID *target_node_id;
-	UniqueInterfaceID *target_unique_interface_id;
-	AssociateID *target_associate_id;
-} RemoteCallID;
 
 typedef struct {
 	// Several parameters assist matching of remote calls
@@ -127,7 +115,7 @@ typedef struct {
 typedef struct {
 	RemoteCallIdentifier target;
 	vector<Attribute> attributeArray;
-} RemoteCall;
+} RemoteCallID;
 
 /* Identifying an activity */
 typedef struct ActivityID{
