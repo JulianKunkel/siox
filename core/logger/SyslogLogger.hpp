@@ -4,7 +4,7 @@
 #include <string>
 #include <syslog.h>
 
-#include "Logger.h"
+#include "Logger.hpp"
 
 class SyslogLogger 
    : public Logger {
