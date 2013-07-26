@@ -5,8 +5,8 @@
 
 #include <iostream>
 
-#include "Configuration.h"
-#include "SioxLogger.h"
+#include "Configuration.hpp"
+#include "SioxLogger.hpp"
 
 Logger *logger;
 

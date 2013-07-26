@@ -5,10 +5,10 @@
 
 #include <iostream>
 
-#include "Callback.h"
-#include "ServerFactory.h"
-#include "ServiceClient.h"
-#include "SioxLogger.h"
+#include "Callback.hpp"
+#include "ServerFactory.hpp"
+#include "ServiceClient.hpp"
+#include "SioxLogger.hpp"
 
 namespace asio = boost::asio;
 
