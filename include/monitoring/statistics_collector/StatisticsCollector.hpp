@@ -20,6 +20,10 @@ I/O             Node            Throughput/network              (Node, Aggregate
 The second one is an aggregate of all available "Ethernet" devices.
 
 Note that a plugin could offer the node aggregated info by itself.
+
+Node statistics should always be collected as they are of general interest. 
+On certain occasions such as a deeper second search phase after the general information is gathered, 
+the specific device statistics can be optionally collected.
  */
 
 
@@ -49,10 +53,21 @@ public:
 	virtual void get_value(int i, vector<string> list_of_specialties);
 
 /*!
- Die Werte für die Metrikattribute werden für den nächsten Timestep angezeigt.
+ All the updated information of specific metrics of interest will be accessed when stepping to the next timestep;
  */
-    virtual void next_timestep(int i,vector<string> list_of_specialties);
+	virtual void next_timestep(int i,vector<string> list_of_specialties);
 
+/*!
+ startup the Collector;
+ */
+	virtual void initCollector();
+
+
+/*!
+ What are the available source metrics and available sources for metrics if they are combined ones?
+ */
+
+	virtual void available metrics();
 
 };
 

@@ -10,7 +10,7 @@ typedef MultiplexerListener<Statistics> StatisticsMultiplexerListener;
 
 class StatisticsMultiplexerListener : MultiplexerListener<Statistics> {
 public:
-	virtual string [] requiredMetrics() =0;  // TODO return std::list of ontolagies instead of string names of attributes
+	virtual string [] requiredMetrics() =0;  // TODO return std::list of ontologies instead of string names of attributes
 	virtual void Notify(Statistics statistics, Attribute & attribute) =0;
 };
 
