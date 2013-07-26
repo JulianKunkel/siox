@@ -1,3 +1,7 @@
+=================================================
+|| ATTENTION: This module has been deprecated. ||
+=================================================
+
 The Configuration class reads a configuration file in YAML format and stores 
 the values for query.
 
