@@ -1,25 +1,24 @@
-#ifndef SPLUGIN_H
-#define SPLUGIN_H
+#ifndef STATISTICS_PROVIDER_PLUGIN_H
+#define STATISTICS_PROVIDER_PLUGIN_H
 
 #include <string>
 #include <iostream>
 #include <list>
 #include <boost/variant.hpp>
 
-
-#include <monitoring/datatypes/StatisticsTypes.hpp>
 #include <core/component/Component.hpp>
+#include <monitoring/statistics_collector/StatisticsCollector.hpp>
+#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics_collector/StatisticsProviderPluginOptions.hpp>
 
 
 using namespace std;
 
 namespace monitoring{
 
-
 class StatisticsProviderPlugin : public core::Component{
 private:
 	StatisticsCollector * collector;
-
 public:
 	/*
 	 The StatisticsProviderPlugin gets a reference to the StatisticsCollector.
@@ -31,28 +30,16 @@ public:
 		init(o);
 
 		// now register this plugin on the collector
-		collector = o->collector.instance<StatisticsCollector>();
+		collector = o->statisticsCollector.instance<StatisticsCollector>();
 
-		auto list = availableMetrics();
+		assert(collector != nullptr);
 
-		for(auto it = list.begin() ; it != list.end(); it ++){
-			StatisticsProviderDatatypes & stat = *it;
-			collector->registerStatistics(stat);
-		}
+		collector->registerPlugin(this);
 	}
 
-	virtual ComponentOptions * get_options(){
-		return new StatisticsProviderPluginOptions();
+	virtual void shutdown(){		
+		collector->unregisterPlugin(this);
 	}
-
-	virtual void shutdown(){
-		// deregister plugins from the collector
-		for(auto it = list.begin() ; it != list.end(); it ++){						
-			StatisticsProviderDatatypes & stat = *it;
-			collector->unregisterStatistics(stat);
-		}
-	}
-
 
 	/* */
 	virtual void nextTimestep() = 0;

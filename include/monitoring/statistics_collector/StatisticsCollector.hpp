@@ -30,14 +30,22 @@ the specific device statistics can be optionally collected.
 #ifndef STATISTICS_COLLECTOR_H
 #define STATISTICS_COLLECTOR_H
 
-#include <core/component/Component.hpp>
-#include <monitoring/datatypes/StatisticsTypes.hpp>
 
+#include <array>
 #include <list>
 #include <string>
+
+
+#include <core/component/Component.hpp>
+
+#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
+
 using namespace std;
 
 namespace monitoring{
+
+class StatisticsProviderPlugin;
 
 enum StatisticsIntervall{
 	SECOND,
@@ -57,9 +65,9 @@ public:
 	/*
  	 *	This virtual method is to register the metric, while calling it with its attribute and a special location such as "Storagedevice/SSD Blocklayer/sda"
  	 */
+	virtual void registerPlugin(StatisticsProviderPlugin * plugin) = 0;
 
-	virtual void registerStatistics(StatisticsProviderDatatypes & statistics) = 0;
-	virtual void unregisterStatistics(StatisticsProviderDatatypes & statistics) = 0;
+	virtual void unregisterPlugin(StatisticsProviderPlugin * plugin) = 0;
 
 	/* 
 	 * The return value may be updated in the background?
@@ -70,21 +78,21 @@ public:
 	 * - 100 seconds in 10 second increments
 	 * - 10 minutes in 1 minute increments
 	 */
-	virtual const StatisticsValue[10] getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat) = 0;
+	virtual array<StatisticsValue,10> getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat) = 0;
 
-	virtual const StatisticsValue getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op) = 0;
+	virtual StatisticsValue getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op) = 0;
 
 	// virtual StatisticsDescription & queryStatistics(StatisticsToQuery & stat) = 0;
 
 	/*
  	 * What are the available source metrics and available sources for metrics if they are combined ones?
  	 */
-	virtual void list<StatisticsDescription> availableMetrics() = 0;
+	virtual list<StatisticsDescription> availableMetrics() = 0;
 };
+
+}
 
 
 #define STATISTICS_INTERFACE "monitoring_statistics_collector"
-
-}
 
 #endif /* STATISTICS_COLLECTOR_H */

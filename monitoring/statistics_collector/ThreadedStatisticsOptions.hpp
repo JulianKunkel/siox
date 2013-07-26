@@ -11,10 +11,10 @@ using namespace std;
 
 namespace monitoring{
 
-class StatisticOptions: Container{
+class ThreadedCollectorStatistics: Container{
 public:
-	StatisticsEntity entity;
-	StatisticsScope  scope;
+	string entity;
+	string scope;
 
 	string metrics;
 
@@ -30,11 +30,11 @@ public:
 class ThreadedStatisticsOptions: public ComponentOptions{
 public:
 	ComponentReference facade;
-	list<StatisticOptions> statistics;
+	ComponentReference smux;
 
-	// put all options here ...
+	list<ThreadedCollectorStatistics> statistics;
 
-	SERIALIZE_CONTAINER(MEMBER(facade) MEMBER(statistics))
+	SERIALIZE_CONTAINER(MEMBER(smux) MEMBER(facade) MEMBER(statistics))
 };
 
 }

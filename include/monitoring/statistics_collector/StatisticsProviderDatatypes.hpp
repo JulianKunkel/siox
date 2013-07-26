@@ -1,3 +1,14 @@
+#ifndef STATISTICS_PROVIDER_DATATYPES_H
+#define STATISTICS_PROVIDER_DATATYPES_H
+
+#include <vector>
+#include <utility>
+
+using namespace std;
+
+#define LOCAL_HOSTNAME "LOCAL_HOSTNAME"
+
+namespace monitoring{
 
 enum StatisticIntervalType{
 	GAUGE, // gauge if interval - We are converting incremental to gauge
@@ -19,9 +30,8 @@ public:
 	 * e.g. (node, device) = ("west1", "0")
 	*/
 
-	const string topology[];
+	vector<pair<string,string> > topology;
 
-	const string topology_instance[];
 
 	// This is a pointer to the value which is updated by the SPlugin.
 	StatisticsValue & value;
@@ -47,5 +57,20 @@ public:
 	StatisticsValue overflow_max_value;  // maximum value of the counter
 	StatisticsValue overflow_next_value; // if the value overflows we begin with this value.
 
-	StatisticsProviderDatatypes(StatisticsEntity entity, StatisticsScope  scope, ..., StatisticsValue & value) : entity(entity), scope(scope), value(value){}
+	StatisticsProviderDatatypes(StatisticsEntity entity, 
+		StatisticsScope  scope, 
+		string metrics, 
+		const vector<pair<string,string> > &  topology,
+		StatisticsValue & value,
+		string si_unit, 
+		string description,
+		uint32_t min_poll_interval_ms,
+		uint64_t overflow_max_value,
+		uint64_t overflow_next_value
+		 ) 
+		: entity(entity), scope(scope), metrics(metrics), topology(std::move(topology)),value(value), si_unit(std::move(si_unit)), description(description), min_poll_interval_ms(min_poll_interval_ms), overflow_max_value(overflow_max_value), overflow_next_value(overflow_next_value) {}
 };
+
+}
+
+#endif

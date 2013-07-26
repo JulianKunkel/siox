@@ -1,5 +1,6 @@
 #ifndef ACTIVITY_MULTIPLEXER_PLUGIN_OPTIONS
 #define ACTIVITY_MULTIPLEXER_PLUGIN_OPTIONS
+
 #include <core/component/component-macros.hpp>
 
 

@@ -63,7 +63,7 @@ Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
 StatisticsSeries, for data effective storage
 */
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double, double double> StatisticsValue;
+typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, float, double> StatisticsValue;
 
 enum StatisticsEntity{
 	NETWORK,
@@ -95,9 +95,10 @@ public:
 
 	string unit;
 
-	StatisticsDescription(XX){}
+	// TODO Marks Job: StatisticsDescription(XX){}
 };
 
+}
 
 #endif
 
