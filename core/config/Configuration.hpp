@@ -9,7 +9,7 @@
 #include <utility>
 #include <yaml-cpp/yaml.h>
 
-#include "SioxLogger.h"
+#include "SioxLogger.hpp"
 
 struct Module {
 	std::string name;

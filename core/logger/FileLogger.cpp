@@ -1,4 +1,4 @@
-#include "FileLogger.h"
+#include "FileLogger.hpp"
 
 FileLogger::FileLogger(const std::string &path)
 {

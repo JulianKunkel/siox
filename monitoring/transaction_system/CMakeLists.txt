@@ -15,6 +15,7 @@ include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
 	"${CMAKE_SOURCE_DIR}/core/comm"
 	"${CMAKE_SOURCE_DIR}/core/logger"
+	"${CMAKE_SOURCE_DIR}/include/"
 	"${CMAKE_SOURCE_DIR}/include/monitoring/datatypes"
 	"${CMAKE_SOURCE_DIR}/monitoring/datatypes"
 	"${PROTOBUF_INCLUDE_DIRS}"
@@ -23,17 +24,17 @@ include_directories(
 )
 
 add_library(sioxts
-	TransactionBackend.h
-	PostgreSQLBackend.h
+	TransactionBackend.hpp
+	PostgreSQLBackend.hpp
 	PostgreSQLBackend.cpp
-	PostgreSQLPumpCallback.h
+	PostgreSQLPumpCallback.hpp
 	PostgreSQLPumpCallback.cpp
-	TransactionService.h
+	TransactionService.hpp
 	TransactionService.cpp
-	${CMAKE_SOURCE_DIR}/include/monitoring/datatypes/Activity.h
-	${CMAKE_SOURCE_DIR}/monitoring/datatypes/Activity.cpp
-	${CMAKE_SOURCE_DIR}/include/monitoring/datatypes/Component.h
-	${CMAKE_SOURCE_DIR}/monitoring/datatypes/Component.cpp
+ 	${CMAKE_SOURCE_DIR}/include/monitoring/datatypes/Activity.hpp
+# 	${CMAKE_SOURCE_DIR}/monitoring/datatypes/Activity.cpp
+# 	${CMAKE_SOURCE_DIR}/include/monitoring/datatypes/Component.h
+# 	${CMAKE_SOURCE_DIR}/monitoring/datatypes/Component.cpp
 	${PROTO_SRCS}
 	${PROTO_HDRS}
 )
