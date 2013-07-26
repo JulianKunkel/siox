@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.program(include="include",  features='test cxx cxxprogram', use = "ActivityMultiplexerAsyncThreaded module-loader ActivityFileWriter AutoRegistrar", target = 'ActivityFileWriterTest', source = 'ActivityFileWriterTest.cpp', install_path = None,)
+    pass
+    #bld.program(include="include",  features='test cxx cxxprogram', use = "ActivityMultiplexerAsyncThreaded module-loader ActivityFileWriter AutoRegistrar", target = 'ActivityFileWriterTest', source = 'ActivityFileWriterTest.cpp', install_path = None,)
 
 # -*- indent-tabs-mode: t -*-

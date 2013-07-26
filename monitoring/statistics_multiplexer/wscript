@@ -3,7 +3,7 @@
 
 def build(bld):
 
-    bld.shlib(include="include", use="BOOST core-container-serializer AutoConfigurator AutoRegistrar", target='StatisticsMultiplexerSync', source='StatisticsMultiplexerSync.cpp')
+    #bld.shlib(include="include", use="BOOST core-container-serializer AutoConfigurator AutoRegistrar", target='StatisticsMultiplexerSync', source='StatisticsMultiplexerSync.cpp')
 
     bld.recurse(['test'], mandatory=True)
 

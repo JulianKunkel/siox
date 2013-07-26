@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(include="include", use="BOOST core-container-serializer AutoConfigurator AutoRegistrar", target='ThreadedStatisticsCollector', source='ThreadedStatisticsCollector.cpp' )
+    #bld.shlib(include="include", use="BOOST core-container-serializer AutoConfigurator AutoRegistrar", target='ThreadedStatisticsCollector', source='ThreadedStatisticsCollector.cpp' )
 
     bld.recurse(['plugins'], mandatory=True)
 

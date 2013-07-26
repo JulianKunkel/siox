@@ -57,7 +57,8 @@ public:
 	StatisticsValue overflow_max_value;  // maximum value of the counter
 	StatisticsValue overflow_next_value; // if the value overflows we begin with this value.
 
-	StatisticsProviderDatatypes(StatisticsEntity entity, 
+	StatisticsProviderDatatypes(
+		StatisticsEntity entity, 
 		StatisticsScope  scope, 
 		string metrics, 
 		const vector<pair<string,string> > &  topology,

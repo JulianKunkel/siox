@@ -32,7 +32,7 @@ class ProviderSkeleton: public StatisticsProviderPlugin{
 
 		lst.push_back({SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", {{"node", LOCAL_HOSTNAME}, {"semantics", "testing"}}, i, "%", "test desc", 100, 0, 0});
 		lst.push_back({HARDWARE_SPECIFIC, NODE, "test/weather", {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}}, f, "uhh", "desc2", 10, 0, 0});
-
+		lst.push_back({HARDWARE_SPECIFIC, DEVICE, "test/metric", {{"node", LOCAL_HOSTNAME}, {"sda", "test3"}}, f, "GB/s", "Throughput", 50, 0, 0});
 
 		return lst;
 	}
