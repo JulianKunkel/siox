@@ -14,7 +14,7 @@ Hardware/Software entity:
 Network 	(Throughput, packet loss, energy consumption ...)
 Input/Output 	(Throughput, ms-waittime)
 CPU 		(Avg. Freq, Cache misses, ...)
-Memory 		(Throughput)
+Memory 		(Throughput, Available size of Free Memory)
 OS		(Context switches, Processcount, Interrupts)
 HardwareSpecific (z.b. EnergyConsumption of a <depending on scope>)
 SoftwareSpecific
@@ -22,8 +22,8 @@ SoftwareSpecific
 
 Scope
 
-Global 		(Systemglobal counter, may be filesystem global etc.)
-Node   		(Nodelocal counter)
+Global 		(Systemglobal counter, may be filesystem global etc. - Global means several sources in the system over many nodes are combined to one metric covering alltogether)
+Node   		(Nodelocal counter - could be also several sources within one node)
 Device 		(Blockdevice, Networkdevice, => we only have IDs for blockdevices right now, CPU0)
 Component 	(in SIOX).
 
@@ -39,6 +39,7 @@ Quantity/QueueDepth
 Quantity/PacketsReceived
 Quantity/PacketsReceived/Errors[/Corrupted|/CRC]
 Capacity/CacheFree
+Capacity/RamFree
 Utilization/Cache/HitRate/L1
 Utilization/Cache/HitRate/L2
 Utilization/System
@@ -49,8 +50,8 @@ Utilization/IO
 Identifier 	(Is not stored in ontology!)
 
 eth0 		(requires hostname?)
-sda
-ib1
+sda		(requires node)
+ib1		(requires node, component, device)
 pvfs://XY	(if not global requires hostname?)
 luster://Z
 
