@@ -69,6 +69,10 @@ public:
 		: entity(entity), scope(scope), metrics(metrics), topology(std::move(topology)),value(value), intervalType(intervalType), si_unit(std::move(si_unit)), description(description), overflow_max_value(overflow_max_value), overflow_next_value(overflow_next_value) {}
 };
 
+class StatisticsProviderDerivedDatatype{
+
+};
+
 }
 
 #endif
