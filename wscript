@@ -53,7 +53,7 @@ def configure(conf):
 	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
 
 
-        conf.check_boost(lib='system thread serialization')
+        conf.check_boost(lib='system thread serialization regex')
 
 
 	workDir = conf.path.abspath()

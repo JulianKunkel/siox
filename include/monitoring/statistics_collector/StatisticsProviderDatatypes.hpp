@@ -4,6 +4,8 @@
 #include <vector>
 #include <utility>
 
+#include <monitoring/datatypes/StatisticsTypes.hpp>
+
 using namespace std;
 
 #define LOCAL_HOSTNAME "LOCAL_HOSTNAME"
@@ -48,11 +50,6 @@ public:
 	*/
 	string description;
 
-	/**
-	Minimal Measurement interval in ms - Delta sample value / Delta time is good for the moment.
-	*/
-	uint32_t min_poll_interval_ms;
-
 	// These counters are used for INCREMENTAL intervalType only.
 	StatisticsValue overflow_max_value;  // maximum value of the counter
 	StatisticsValue overflow_next_value; // if the value overflows we begin with this value.
@@ -63,13 +60,13 @@ public:
 		string metrics, 
 		const vector<pair<string,string> > &  topology,
 		StatisticsValue & value,
+		enum StatisticIntervalType intervalType,
 		string si_unit, 
 		string description,
-		uint32_t min_poll_interval_ms,
 		uint64_t overflow_max_value,
 		uint64_t overflow_next_value
 		 ) 
-		: entity(entity), scope(scope), metrics(metrics), topology(std::move(topology)),value(value), si_unit(std::move(si_unit)), description(description), min_poll_interval_ms(min_poll_interval_ms), overflow_max_value(overflow_max_value), overflow_next_value(overflow_next_value) {}
+		: entity(entity), scope(scope), metrics(metrics), topology(std::move(topology)),value(value), intervalType(intervalType), si_unit(std::move(si_unit)), description(description), overflow_max_value(overflow_max_value), overflow_next_value(overflow_next_value) {}
 };
 
 }

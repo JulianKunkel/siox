@@ -1,6 +1,7 @@
-#include "monitoring/statistics_collector/StatisticsProviderPluginImplementation.hpp"
-#include "ProviderSkeletonOptions.hpp"
+#include <monitoring/statistics_collector/StatisticsProviderPluginImplementation.hpp>
 #include <core/component/ComponentReferenceSerializable.hpp>
+
+#include "ProviderSkeletonOptions.hpp"
 
 
 using namespace std;
@@ -30,15 +31,15 @@ class ProviderSkeleton: public StatisticsProviderPlugin{
 	virtual list<StatisticsProviderDatatypes> availableMetrics(){
 		auto lst = list<StatisticsProviderDatatypes>();
 
-		lst.push_back({SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", {{"node", LOCAL_HOSTNAME}, {"semantics", "testing"}}, i, "%", "test desc", 100, 0, 0});
-		lst.push_back({HARDWARE_SPECIFIC, NODE, "test/weather", {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}}, f, "uhh", "desc2", 10, 0, 0});
-		lst.push_back({HARDWARE_SPECIFIC, DEVICE, "test/metric", {{"node", LOCAL_HOSTNAME}, {"sda", "test3"}}, f, "GB/s", "Throughput", 50, 0, 0});
+		lst.push_back({SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", {{"node", LOCAL_HOSTNAME}, {"semantics", "testing"}}, i, GAUGE, "%", "test desc", 0, 0});
+		lst.push_back({HARDWARE_SPECIFIC, NODE, "test/weather", {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}}, f, INCREMENTAL, "unit", "desc2", 0, 0});
+		lst.push_back({HARDWARE_SPECIFIC, DEVICE, "test/metric", {{"node", LOCAL_HOSTNAME}, {"sda", "test3"}}, f, INCREMENTAL, "GB/s", "Throughput", 0, 0});
 
 		return lst;
 	}
 
 	virtual void init(StatisticsProviderPluginOptions * options){
-		ProviderSkeletonOptions * o = (ProviderSkeletonOptions*) options;
+		// ProviderSkeletonOptions * o = (ProviderSkeletonOptions*) options;
 		// no options in the skeleton
 	}
 };

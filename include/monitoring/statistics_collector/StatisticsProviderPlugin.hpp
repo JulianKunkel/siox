@@ -36,6 +36,10 @@ protected:
 	}	
 public:
 
+	virtual uint32_t minPollInterval_ms(){
+		return 1;
+	}
+
 	virtual void init(){
 		StatisticsProviderPluginOptions o = getOptions<StatisticsProviderPluginOptions>();
 
@@ -44,13 +48,13 @@ public:
 		// now register this plugin on the collector
 		collector = GET_INSTANCE(StatisticsCollector, o.statisticsCollector);
 
-		assert(collector != nullptr);
-
-		collector->registerPlugin(this);
+		if(collector != nullptr)
+				collector->registerPlugin(this);
 	}
 
 	virtual void shutdown(){
-		collector->unregisterPlugin(this);
+		if(collector != nullptr)
+			collector->unregisterPlugin(this);
 	}
 
 	/* */

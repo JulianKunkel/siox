@@ -4,7 +4,7 @@
  * @description A (software) component for datatypes used in statistics.
  * @standard    Preferred standard is C++11
  *
- * @author Marc Wiedemann
+ * @author Julian Kunkel, Marc Wiedemann
  * @date   2013
  *
  */
