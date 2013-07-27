@@ -14,12 +14,12 @@ using namespace boost;
 
 template<int MAX_NUM>
 class ProcSingeFilePlugin: public StatisticsProviderPlugin{
+protected: 
+	regex re;
 private:
 
 	template<int INIT>
 	void parseProcLine(const string & filename){
-		regex re("[ \t]*[^ \t]+");
-
 		ifstream file(filename);
 		if(! file.good()){
 			// TODO add error value.
@@ -41,13 +41,13 @@ private:
 			int i=0;
 			while (rit!=rend && i < MAX_NUM) {
 				// trim leading spaces
-				const string & match  = rit->str();
+				const string & match  = rit->str();				
 				size_t startpos = match.find_first_not_of(" \t");
 				if( string::npos != startpos )
 				{
 			    	splittedArray.push_back(match.substr( startpos ));
 				}else{			
-						splittedArray.push_back(match);
+					splittedArray.push_back(match);
 				}
 				
 				i++;
@@ -71,9 +71,14 @@ protected:
 	//virtual void init(int linecount);
 	// During the initalization this function is called.
 	virtual void initLine(int lineNr, vector<string> & entries) = 0;
+
+	virtual string initRegex(){
+		return "[ \t]*[^ \t]+";
+	}
 public:
 
 	void init(){
+		re = initRegex();		
 		parseProcLine<1>(filename());
 	}
 
