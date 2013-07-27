@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-	bld.shlib(include="include",  use = "PQXX" ,  target = 'knowledge-systeminfo', source = 'systeminfo_containers.cpp systeminfo_persistency_interface.cpp' )
+	bld.shlib(includes="include",  use = "PQXX" ,  target = 'knowledge-systeminfo', source = 'systeminfo_containers.cpp systeminfo_persistency_interface.cpp' )
 	bld.recurse(['test'], mandatory=True)
 
 

@@ -3,7 +3,7 @@
 
 def build(bld):
    pass
-   #bld.program(include="include",  use = "siox-ll",  features='test c cprogram', target = 'siox-ll-c-test', source = 'siox-ll-c-test.c', install_path = None,)
+   #bld.program(includes="include",  use = "siox-ll",  features='test c cprogram', target = 'siox-ll-c-test', source = 'siox-ll-c-test.c', install_path = None,)
 
 
 # -*- indent-tabs-mode: t -*-

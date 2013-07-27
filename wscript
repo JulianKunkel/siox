@@ -96,9 +96,9 @@ def build(bld):
 	def dummyCPP(self, source, target):
 		Logs.debug(source)
 		bld(rule=dummyPlugin, source=source, target=target + "DummyCout.cpp")
-		bld.shlib(include="include", source = target+ "DummyCout.cpp", target = target + "DummyPrintf")
+		bld.shlib(includes="include", source = target+ "DummyCout.cpp", target = target + "DummyPrintf")
 		bld(rule=dummyListPlugin, source=source, target=target + "DummyList.cpp")
-		bld.shlib(include="include", source = target + "DummyList.cpp", target = target + "DummyList")
+		bld.shlib(includes="include", source = target + "DummyList.cpp", target = target + "DummyList")
 
 	bld.dummyCPP = dummyCPP
 

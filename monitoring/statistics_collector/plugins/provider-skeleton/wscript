@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(include="include",  use = "AutoConfigurator", target = 'StatisticsProviderSkeleton', source = 'ProviderSkeleton.cpp' )
+    bld.shlib(includes="include",  use = "AutoConfigurator", target = 'StatisticsProviderSkeleton', source = 'ProviderSkeleton.cpp' )
 
     bld.recurse(['test'], mandatory=True)
 

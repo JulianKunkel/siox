@@ -3,4 +3,4 @@
 
 def build(bld):
     pass
-    #bld.program(include="include",  features='test cxx cxxprogram', use = "AnomalySkeleton", target = 'AnomalySkeletonTest', source = 'AnomalySkeletonTest.cpp', install_path = 'None')
+    #bld.program(includes="include",  features='test cxx cxxprogram', use = "AnomalySkeleton", target = 'AnomalySkeletonTest', source = 'AnomalySkeletonTest.cpp', install_path = 'None')
