@@ -16,7 +16,17 @@ protected:
 
 		std::array<StatisticsValue, 11> & cur = currentValues[name];
 
-		for(int i=0; i < 11; i++){
+		for(int i=0; i < 2; i++){
+			cur[i] = (uint64_t) atoll(entries[i+3].c_str());
+		}
+		cur[2] = ((uint64_t) atoll(entries[2+3].c_str())) * 512;
+
+		for(int i=3; i < 6; i++){
+			cur[i] = (uint64_t) atoll(entries[i+3].c_str());
+		}
+		cur[6] = ((uint64_t) atoll(entries[6+3].c_str())) * 512;
+
+		for(int i=7; i < 11; i++){
 			cur[i] = (uint64_t) atoll(entries[i+3].c_str());
 		}
 	}
@@ -52,18 +62,18 @@ public:
 
 			std::array<StatisticsValue, 11> & cur = currentValues[name];
 			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/reads", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "", "Field 1 -- # of reads issued", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/reads/merged", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "", "Field 2 -- # of reads merged", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/reads/sectors", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "", "Field 3 -- # of sectors read", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "time/block/reads", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "ms", "Field 4 -- # of milliseconds spent reading", overflow_value, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/reads/merged", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[1], INCREMENTAL, "", "Field 2 -- # of reads merged", overflow_value, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/dataRead", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[2], INCREMENTAL, "Byte", "Data read based on Field 3 -- # of sectors read", overflow_value, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "time/block/reads", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[3], INCREMENTAL, "ms", "Field 4 -- # of milliseconds spent reading", overflow_value, 0});
 
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/writes", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "", "Field 5 -- # of writes completed", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "quanity/block/writes/merged", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "", "Field 6 -- # of writes merged", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/reads/sectors", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "", "Field 7 -- # of sectors written", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "time/block/writes", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "ms", "Field 8 -- # of milliseconds spent writing", overflow_value, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/writes", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[4], INCREMENTAL, "", "Field 5 -- # of writes completed", overflow_value, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "quanity/block/writes/merged", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[5], INCREMENTAL, "", "Field 6 -- # of writes merged", overflow_value, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/dataWritten", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[6], INCREMENTAL, "Byte", "Data written based on Field 7 -- # of sectors written", overflow_value, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "time/block/writes", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[7], INCREMENTAL, "ms", "Field 8 -- # of milliseconds spent writing", overflow_value, 0});
 						
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/pendingIOs", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], SAMPLED, "", "Field 9 -- # of I/Os currently in progress", 0, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "time/block/access", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "ms", "Field 10 -- # of milliseconds spent doing I/Os", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "time/block/weighted", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "ms", "Field 11 -- weighted # of milliseconds spent doing I/Os", overflow_value, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/pendingIOs", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[8], SAMPLED, "", "Field 9 -- # of I/Os currently in progress", 0, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "time/block/access", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[9], INCREMENTAL, "ms", "Field 10 -- # of milliseconds spent doing I/Os", overflow_value, 0});
+			lst.push_back({INPUT_OUTPUT, NODE, "time/block/weighted", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[10], INCREMENTAL, "ms", "Field 11 -- weighted # of milliseconds spent doing I/Os", overflow_value, 0});
 		}
 
 		return lst;
