@@ -77,20 +77,18 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 		file.close();
 	}
 
-	void init(ComponentOptions * options){
-		FileBasedSystemInformationOptions * o = (FileBasedSystemInformationOptions*) options;
-		filename = o->filename;
+	void init(){
+		FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
+		filename = o.filename;
 		if (filename.length() == 0){
 			filename = "system_info.dat";
 		}
 		cout << "Initializing ID-mapper from file using " << filename << endl;
 
 		load(filename);
-
-		delete(options);
 	}
 
-	ComponentOptions * get_options() {
+	ComponentOptions * AvailableOptions() {
 		return new FileBasedSystemInformationOptions();
 	}
 

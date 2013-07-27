@@ -5,17 +5,10 @@
 using namespace core;
 
 
-CREATE_SERIALIZEABLE_CLS(MyChildModuleOptions)
-CREATE_SERIALIZEABLE_CLS(MyParentModuleOptions)
-
-
-
-void MyChildModule::init(ComponentOptions * options){
-	assert(options);
-	this->options = (MyChildModuleOptions*) options;	
+void MyChildModule::init(){
 }
 
-ComponentOptions * MyChildModule::get_options(){
+ComponentOptions * MyChildModule::AvailableOptions(){
 	return new MyChildModuleOptions();
 }
 
@@ -23,20 +16,20 @@ void MyChildModule::shutdown(){
 	cout << "Shutting down MyChildModule" << endl;
 }
 
-
-
-void MyParentModule::init(ComponentOptions * options){
-	assert(options);
-	this->options = (MyParentModuleOptions*) options;
+void MyParentModule::init(){
 }
 
-ComponentOptions * MyParentModule::get_options(){
+ComponentOptions * MyParentModule::AvailableOptions(){
 	return new MyParentModuleOptions();
 }
 
 void MyParentModule::shutdown(){
 	cout << "Shutting down MyParentModule" << endl;
-}
+} 
+
+CREATE_SERIALIZEABLE_CLS(MyChildModuleOptions)
+CREATE_SERIALIZEABLE_CLS(MyParentModuleOptions)
+
 
 extern "C"{\
 void * get_instance_parent() { return new MyParentModule(); }\

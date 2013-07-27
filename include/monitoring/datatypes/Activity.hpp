@@ -119,7 +119,7 @@ public:
 
 	void print() {
 		// @TODO: Really need reflection - have a look at Boost :-)
-		int i;
+		uint i;
 		cout << "t_start = " << time_start_ << endl;
 		cout << "t_stop  = " << time_stop_ << endl;
 		cout << "ActivityID.id = " << aid_.id << endl;

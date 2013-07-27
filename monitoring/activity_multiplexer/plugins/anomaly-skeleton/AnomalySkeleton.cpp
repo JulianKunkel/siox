@@ -36,7 +36,7 @@ public:
 		}
 	}
 
-	ComponentOptions * get_options(){
+	ComponentOptions * AvailableOptions(){
 		return new AnomalySkeletonOptions();
 	}
 

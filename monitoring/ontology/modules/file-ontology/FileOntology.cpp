@@ -83,20 +83,18 @@ class FileOntology: public Ontology{
 		file.close();
 	}
 
-	void init(ComponentOptions * options){
-		FileOntologyOptions * o = (FileOntologyOptions*) options;
-		filename = o->filename;
+	void init(){
+		FileOntologyOptions & o = getOptions<FileOntologyOptions>();
+		filename = o.filename;
 		if (filename.length() == 0){
 			filename = "ontology.dat";
 		}
 		cout << "Initializing file ontology using " << filename << endl;
 
 		load(filename);
-
-		delete(options);
 	}
 
-	ComponentOptions * get_options() {
+	ComponentOptions * AvailableOptions() {
 		return new FileOntologyOptions();
 	}
 

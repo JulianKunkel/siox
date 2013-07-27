@@ -16,9 +16,9 @@ int main(int argc, char const *argv[]){
 	AssociationMapper * o = core::module_create_instance<AssociationMapper>("", "FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE);
 	assert(o != nullptr);
 
-	FileAssociationMapperOptions op;
-	op.filename = "association-mapper.dat";
-	o->init(& op);
+	FileAssociationMapperOptions * op = new FileAssociationMapperOptions();
+	op->filename = "association-mapper.dat";
+	o->init(op);
 
 	string i1("test 1");
 	string i2("ich bin C++");

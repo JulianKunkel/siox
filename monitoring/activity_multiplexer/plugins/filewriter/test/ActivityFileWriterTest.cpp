@@ -17,7 +17,7 @@ int main(int argc, char const *argv[]){
 
 	// init plugin
 	// not necessary, but for testing...
-	FileWriterPluginOptions * op = (FileWriterPluginOptions*) ap->get_options();
+	FileWriterPluginOptions * op = (FileWriterPluginOptions*) ap->AvailableOptions();
 	op->filename = "test.txt";
 
 	ap->init(op, m1, nullptr);

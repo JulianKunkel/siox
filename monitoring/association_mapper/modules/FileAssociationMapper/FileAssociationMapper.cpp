@@ -80,13 +80,15 @@ public:
 		}
 	}
 
-	void init(ComponentOptions * options){
-		FileAssociationMapperOptions * o = (FileAssociationMapperOptions*) options;
-		filename = o->filename;
+	void init(){
+		FileAssociationMapperOptions & o = getOptions<FileAssociationMapperOptions>();
+		filename = o.filename;
+		assert(filename != "");
+		cout << "file " << filename << endl;
 		load(filename);
 	}
 
-	ComponentOptions * get_options() {
+	ComponentOptions * AvailableOptions() {
 		return new FileAssociationMapperOptions();
 	}
 

@@ -15,7 +15,7 @@ class ProviderSkeleton: public StatisticsProviderPlugin{
 	StatisticsValue i = (int32_t) 0;
 	StatisticsValue f = (double) 0.4;
 
-	virtual ComponentOptions * get_options(){
+	virtual ComponentOptions * AvailableOptions(){
 		return new ProviderSkeletonOptions();
 	}
 

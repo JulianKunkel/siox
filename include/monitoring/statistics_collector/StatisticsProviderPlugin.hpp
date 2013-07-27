@@ -16,28 +16,40 @@ using namespace std;
 
 namespace monitoring{
 
+/*
+ The StatisticsProviderPlugin gets a reference to the StatisticsCollector.
+ It registers itself in the Collector.
+*/
 class StatisticsProviderPlugin : public core::Component{
 private:
 	StatisticsCollector * collector;
+protected:
+
+	virtual ComponentOptions * AvailableOptions(){
+		return new StatisticsProviderPluginOptions();
+	}
+
+
+	virtual void init(StatisticsProviderPluginOptions & options){
+		// default implementation is empty. 
+		// Override it to provide additional modulespecific options.
+	}	
 public:
-	/*
-	 The StatisticsProviderPlugin gets a reference to the StatisticsCollector.
-	 It registers all the available metrics in the Collector.
-	 */
-	virtual void init(ComponentOptions * options){
-		StatisticsProviderPluginOptions * o = (StatisticsProviderPluginOptions*) options;
+
+	virtual void init(){
+		StatisticsProviderPluginOptions o = getOptions<StatisticsProviderPluginOptions>();
 
 		init(o);
 
 		// now register this plugin on the collector
-		collector = o->statisticsCollector.instance<StatisticsCollector>();
+		collector = GET_INSTANCE(StatisticsCollector, o.statisticsCollector);
 
 		assert(collector != nullptr);
 
 		collector->registerPlugin(this);
 	}
 
-	virtual void shutdown(){		
+	virtual void shutdown(){
 		collector->unregisterPlugin(this);
 	}
 
@@ -46,10 +58,6 @@ public:
 
 	/* For testing purpose the two methods are public, so you can use the plugin even without collector */
 	virtual list<StatisticsProviderDatatypes> availableMetrics() = 0;
-
-	virtual void init(StatisticsProviderPluginOptions * options){
-		// default implementation is empty.
-	}
 
 };
 

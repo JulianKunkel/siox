@@ -51,7 +51,7 @@ public:
 		init(facade);
 	}
 
-	virtual ComponentOptions * get_options(){
+	virtual ComponentOptions * AvailableOptions(){
 		return new ThreadedStatisticsOptions();
 	}
 

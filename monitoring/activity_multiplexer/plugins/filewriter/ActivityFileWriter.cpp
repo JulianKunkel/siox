@@ -25,7 +25,7 @@ public:
 		serializer->append((ActivitySerializable *) activity);
 	}
 
-	ComponentOptions * get_options(){
+	ComponentOptions * AvailableOptions(){
 		return new FileWriterPluginOptions();
 	}
 

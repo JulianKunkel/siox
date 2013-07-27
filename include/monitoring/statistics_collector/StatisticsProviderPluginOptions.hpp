@@ -13,7 +13,7 @@ class StatisticsProviderPluginOptions: public ComponentOptions{
 public:
 	ComponentReference statisticsCollector;
 
-	SERIALIZE_CONTAINER(MEMBER(statisticsCollector))
+	SERIALIZE_CONTAINER(MEMBER_INJECTION(statisticsCollector))
 };
 
 }

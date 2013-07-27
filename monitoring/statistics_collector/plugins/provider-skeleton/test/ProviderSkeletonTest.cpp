@@ -48,12 +48,12 @@ public:
 	}
 
 
-	virtual void init(ComponentOptions * options){
+	virtual void init(){
 
 	}
 
-	virtual ComponentOptions * get_options(){
-
+	virtual ComponentOptions * AvailableOptions(){
+		return new ComponentOptions();
 	}
 
 	virtual void shutdown(){
@@ -66,10 +66,9 @@ public:
 int main(int argc, char const *argv[]){
 	StatisticsProviderPlugin * ps = module_create_instance<StatisticsProviderPlugin>("", "StatisticsProviderSkeleton" , MONITORING_STATISTICS_PLUGIN_INTERFACE);
 
-	ProviderSkeletonOptions * options = new ProviderSkeletonOptions();
-	options->statisticsCollector.componentID = (ComponentReferenceID) new StatisticsCollectorTester();
+	ps->getOptions<ProviderSkeletonOptions>().statisticsCollector.componentID = (ComponentReferenceID) new StatisticsCollectorTester();
 
-	ps->init((ComponentOptions*) options);	
+	ps->init();
 
 	ps->shutdown();
 

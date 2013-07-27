@@ -362,9 +362,9 @@ public:
 	virtual void finalize() {};
 
 	// TODO propose possible option parameters
-	void init(core::ComponentOptions * options) {}; 
+	void init() {}; 
 	// TODO clarify if return an empty ComponentOptions has no side effects
-	core::ComponentOptions * get_options() { return new core::ComponentOptions(); };
+	core::ComponentOptions * AvailableOptions() { return new core::ComponentOptions(); };
 	void shutdown() {};	
 
 };
