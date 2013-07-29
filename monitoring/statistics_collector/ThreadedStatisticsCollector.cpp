@@ -2,6 +2,7 @@
 
 #include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
 
+#include "ThreadedStatisticsOptions.hpp"
 
 using namespace std;
 using namespace core;
@@ -12,7 +13,7 @@ using namespace monitoring;
  */
 class ThreadedStatisticsCollector: StatisticsCollector{
 private:
-	// ActivityPluginDereferencing * facade;
+	 ActivityPluginDereferencing * facade;
 	// Statistics Multiplexer
 
 public:
@@ -42,13 +43,10 @@ public:
 		this->facade = facade;
 	}
 
-	virtual void init(ThreadedStatisticsOptions * options){
-		ThreadedStatisticsOptions * o = (ThreadedStatisticsOptions*) options;
+	virtual void init(){
+		ThreadedStatisticsOptions & o = getOptions<ThreadedStatisticsOptions>();
 
-		// init facade etc.
-
-		ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
-		init(facade);
+		//ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
 	}
 
 	virtual ComponentOptions * AvailableOptions(){
@@ -61,6 +59,6 @@ public:
 };
 
 CREATE_SERIALIZEABLE_CLS(ThreadedStatisticsOptions)
-CREATE_SERIALIZEABLE_CLS(ThreadedCollectorStatistics)
+//CREATE_SERIALIZEABLE_CLS(ThreadedCollectorStatistics)
 
 COMPONENT(ThreadedStatisticsCollector)

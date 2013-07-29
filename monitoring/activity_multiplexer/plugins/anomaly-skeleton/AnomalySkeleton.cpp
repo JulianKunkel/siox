@@ -40,8 +40,8 @@ public:
 		return new AnomalySkeletonOptions();
 	}
 
-	void init(ActivityMultiplexerPluginOptions * options, ActivityMultiplexer & multiplexer){
-		//AnomalySkeletonOptions * o = (AnomalySkeletonOptions*) options;
+	void init(ActivityMultiplexer & multiplexer){
+		AnomalySkeletonOptions & options = getOptions<AnomalySkeletonOptions>();
 
 		assert(this->dereferenceFacade != nullptr);
 		assert(this->dereferenceFacade->get_system_information() != nullptr);
@@ -51,8 +51,6 @@ public:
 		// assert(filesize != nullptr); generally true but not for the first run
 
 		multiplexer.registerListener(this);
-
-		delete(options);
 	}
 };
 

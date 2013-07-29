@@ -79,7 +79,7 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 
 	void init(){
 		FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
-		filename = o.filename;
+		string filename = o.filename;
 		if (filename.length() == 0){
 			filename = "system_info.dat";
 		}
@@ -93,6 +93,9 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 	}
 
 	void shutdown(){
+		FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
+		string filename = o.filename;
+
 		save(filename);
 
 		for(auto itr = valueStringMap.begin(); itr != valueStringMap.end(); itr++){
@@ -265,8 +268,6 @@ private:
 	map<UniqueComponentActivityID, UniqueInterfaceID> activityInterfaceIDMap;
 
 	map<pair<uint32_t, string>, uint32_t> activityMap;
-
-	string filename;
 };
 
 }

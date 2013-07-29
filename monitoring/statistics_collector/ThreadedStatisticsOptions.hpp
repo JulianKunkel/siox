@@ -23,7 +23,7 @@ public:
 
 	uint32_t poll_interval_ms;
 
-	SERIALIZE_CONTAINER(MEMBER(poll_interval_ms) ... )
+	SERIALIZE_CONTAINER(MEMBER(poll_interval_ms) )
 };
 
 

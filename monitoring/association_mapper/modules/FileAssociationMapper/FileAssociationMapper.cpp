@@ -236,7 +236,7 @@ template<class Archive>
 void serialize(Archive & ar, ComponentID & g, const unsigned int version)
 {
 	ar & boost::serialization::make_nvp("pid", g.pid);
-	ar & boost::serialization::make_nvp("num", g.num);
+	ar & boost::serialization::make_nvp("id", g.id);
 }
 
 
