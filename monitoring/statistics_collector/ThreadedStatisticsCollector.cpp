@@ -3,6 +3,7 @@
 #include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
 
 #include <thread>
+#include <iostream>
 #include <mutex>
 #include <cstdlib> //(stdlib.h)
 #include <ctime> //(time.h)
@@ -18,6 +19,12 @@ using namespace monitoring;
  */
 
 static const int PartsAsThreads = 10;
+std::thread t[num_threads];
+
+//This function will be called from a thread
+void call_from_thread(in Tid) {
+    	     std::cout << "Launched by thread " << tid << std::endl;
+    	}
 
 class ThreadedStatisticsCollector: StatisticsCollector{
 private:
@@ -30,11 +37,12 @@ public:
 	 */
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){
 
-    	//This function will be called from a thread
+    	//Launch a group of threads
+        for (int i = 0; i < num_threads; ++i) {
+            t[i] = std::thread(call_from_thread, i);
+        }
 
-    	void call_from_thread(in Tid) {
-    	     std::cout << "Launched by thread " << tid << std::endl;
-    	}
+    	
 	}
 
 	/**
