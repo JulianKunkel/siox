@@ -17,7 +17,7 @@ using namespace monitoring;
  * ?Single threaded?, ?compute next waittime based on options.?
  */
 
-
+static const int PartsAsThreads = 10;
 
 class ThreadedStatisticsCollector: StatisticsCollector{
 private:
@@ -30,14 +30,11 @@ public:
 	 */
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){
 
-    //This function will be called from a thread
+    	//This function will be called from a thread
 
-    void call_from_thread() {
-        std::cout << "Hello, World" << std::endl;
-    }
-}
-
-
+    	void call_from_thread(in Tid) {
+    	     std::cout << "Launched by thread " << tid << std::endl;
+    	}
 	}
 
 	/**
