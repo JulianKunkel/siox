@@ -1,4 +1,4 @@
-#include "Logger.h"
+#include "Logger.hpp"
 
 extern Logger *logger;
 

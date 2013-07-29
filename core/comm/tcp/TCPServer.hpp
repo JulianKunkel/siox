@@ -7,8 +7,8 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
-#include "ServiceServer.h"
-#include "TCPConnection.h"
+#include "ServiceServer.hpp"
+#include "TCPConnection.hpp"
 
 namespace asio = boost::asio;
 

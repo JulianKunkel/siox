@@ -1,4 +1,4 @@
-#include "Configuration.h"
+#include "Configuration.hpp"
 
 Configuration::Configuration(const std::string &filename)
 {

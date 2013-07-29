@@ -20,17 +20,17 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 add_executable(communication_tests
-	communication.cc
+	communication.cpp
 	${PROTO_SRCS}
 	${PROTO_HDRS}
 )
 
 target_link_libraries(communication_tests sioxcomm ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 
-add_executable(configuration_tests
-	configuration.cc
-	${PROTO_SRCS}
-	${PROTO_HDRS}
-)
-
-target_link_libraries(configuration_tests sioxconf sioxlog ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
+# add_executable(configuration_tests
+# 	configuration.cpp
+# 	${PROTO_SRCS}
+# 	${PROTO_HDRS}
+# )
+#
+#target_link_libraries(configuration_tests sioxconf sioxlog ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})

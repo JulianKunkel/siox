@@ -1,5 +1,5 @@
-#include "ServiceClient.h"
-#include "SioxLogger.h"
+#include "ServiceClient.hpp"
+#include "SioxLogger.hpp"
 
 #define SIOX_TS_ADDR  "tcp://localhost:7000"
 
