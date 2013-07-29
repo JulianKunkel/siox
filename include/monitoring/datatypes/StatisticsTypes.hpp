@@ -4,7 +4,7 @@
  * @description A (software) component for datatypes used in statistics.
  * @standard    Preferred standard is C++11
  *
- * @author Marc Wiedemann
+ * @author Julian Kunkel, Marc Wiedemann
  * @date   2013
  *
  */
@@ -13,14 +13,11 @@
 #ifndef DATATYPES_STATISTICS_H
 #define DATATYPES_STATISTICS_H
 
-#include "boost/variant.hpp"
+#include <boost/variant.hpp>
 #include <iostream>
 
 #include <string>
 #include <vector>
-
-#include <monitoring/datatypes/ids.hpp>
-#include <monitoring/datatypes/c-types.h>
 
 using std::string;
 
@@ -66,100 +63,42 @@ Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
 StatisticsSeries, for data effective storage
 */
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double, double double> StatisticsValue;
+typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, float, double> StatisticsValue;
 
-/**
+enum StatisticsEntity{
+	NETWORK,
+	INPUT_OUTPUT,
+	CPU,
+	MEMORY,
+	OS,
+	HARDWARE_SPECIFIC,
+	SOFTWARE_SPECIFIC
+};
 
-*/
-
-class StatisticsValue {
-public:
-    
-	/*
-	 * Reserved domains:
-	 * unit		for units of attribute values
-	 * 			(attach the unit as meta attribute of type SIOX_STORAGE_STRING to base attribute)
-	 */
-	int64_t counts;
-	uint64_t measured time;
-	double measured value;
-	double double mean value;
-	string name;
-
+enum StatisticsScope{
+	GLOBAL,
+	NODE,
+	DEVICE,
+	COMPONENT
 };
 
 
-class MetricAttribute {
-private:
-
-/**
-Semantic name
-*/
-
-	string metricname;
-/**
-
-Types
-
-*/
-	enum siox_ont_storage_type;
-/**
-
-Gauge interval - incremental will be converted
-
-*/
-
-	enum intervaltype;
-
-
-	string domain;
-/**
-The storage node identifier
-*/
-	string hostname; 
-
-/**
-The international system unit
-*/
-	string si_unit;
-
-/**
-Details if any, otherwise empty ""
-*/
-	string description;
-
-/**
-Minimal Measurement interval in ms - Delta sample value / Delta time is good for the moment.
-*/
-	uint32_t min_poll_interval_ms
-
-/**
-Build Constructor for Call of the class
-*/
+class StatisticsDescription{
 public:
-MetricAttribute(void)
-{
+	StatisticsEntity entity;
+	StatisticsScope  scope;
 
-}
+	string metrics;
 
-MetricAttribute(string metricname,enum siox_ont_storage_type,enum intervaltype,string domain,string hostname,string si_unit,string description,uint32_t min_poll_interval_ms)
-{
+	string topology[];
+	string topology_instance[];	
 
-}
+	string unit;
 
-
-~MetricAttribute(void);
-
+	// TODO Marks Job: StatisticsDescription(XX){}
 };
 
-
-
 }
-
-
-
-
-
 
 #endif
 

@@ -50,15 +50,14 @@ public:
 		association_mapper = as;
 	}
 
-	void init(ComponentOptions * options){
-		ActivityPluginDereferencingFacadeOptions * o = dynamic_cast<ActivityPluginDereferencingFacadeOptions*>(options);
-		ontology = 	o->ontology.instance<Ontology>();
-		system_information_manager = o->system_information_manager.instance<SystemInformationGlobalIDManager>();
-		association_mapper = o->association_mapper.instance<AssociationMapper>();
-		delete(options);
+	void init(){
+		ActivityPluginDereferencingFacadeOptions & o = getOptions<ActivityPluginDereferencingFacadeOptions>();
+		ontology = 	o.ontology.instance<Ontology>();
+		system_information_manager = o.system_information_manager.instance<SystemInformationGlobalIDManager>();
+		association_mapper = o.association_mapper.instance<AssociationMapper>();
 	}
 
-	ComponentOptions * get_options(){
+	ComponentOptions * AvailableOptions(){
 		return new ActivityPluginDereferencingFacadeOptions();
 	}
 

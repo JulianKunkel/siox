@@ -3,7 +3,7 @@
 
 
 def build(bld):
-    bld.shlib(include="include", use="BOOST AutoRegistrar", target = "FileAssociationMapper", source = 'FileAssociationMapper.cpp' )
+    bld.shlib(includes="include", use="BOOST AutoRegistrar", target = "FileAssociationMapper", source = 'FileAssociationMapper.cpp' )
     bld.recurse(['test'], mandatory=True)
 
 

@@ -110,18 +110,31 @@ SProvider:
 	AvailableMetric: Entity (Enum)		SystemScope (Enum)	Semantics of the Metric		Abstract Context Topology (Array as strings)   Instance(Values as strings) 	PointerToValue !!!
 
 
+Questions and answers:
 
-How do we map this information into Ontology Attributes?
+1) How do we map this information into Ontology Attributes?
 We map Systemscope to Domain, Semantics of the Metric to the name, additional attributes are mapped as follows:
 
 *********TODO*********
 	Entity,	Abstract Context Topology, & Instance
 
-How can someone ask for a given Attribute, e.g. in a statistics plugin or in a amux plugin?
+2) How can someone ask for a given Attribute, e.g. in a statistics plugin or in a amux plugin?
 The easy answer: Specify the 5-Tuple:
 Entity, SystemScope, Semantics of the Metric, Abstract Context Topology, & Instance
 
-*********TODO*********
+Like this:
+	StatisticsEntity entity;
+	StatisticsScope  scope;
+
+	string metrics;
+	
+	string topology;
+	string topology_instance;
+
+
+3) How do we get statistics maxima / minima ?
+	virtual const StatisticsValue getStatistics(StatisticsIntervall intervall, StatisticDescription & stat, StatisticsReduceOperator op) = 0;
+	Global Min/Max has to be stored in the knowledge base and must be accessed by the respective AMUX/SMUX plugin by itself.
 
  
 B. Collector

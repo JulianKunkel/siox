@@ -30,50 +30,69 @@ the specific device statistics can be optionally collected.
 #ifndef STATISTICS_COLLECTOR_H
 #define STATISTICS_COLLECTOR_H
 
-#include "../datatypes/Statistics.hpp"
 
-#include <vector>
+#include <array>
+#include <list>
 #include <string>
+
+
+#include <core/component/Component.hpp>
+
+#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
+
 using namespace std;
 
 namespace monitoring{
 
-class StatisticsCollector {
+class StatisticsProviderPlugin;
+
+enum StatisticsIntervall{
+	SECOND,
+	TEN_SECONDS,
+	MINUTE
+};
+
+enum StatisticsReduceOperator{
+	MIN,
+	MAX,
+	AVERAGE
+};
+
+class StatisticsCollector : public core::Component {
 public:
 
-/*!
- This virtual method is to register the metric, while calling it with its attribute and a special location such as "Storagedevice/SSD Blocklayer/sda"
- */
+	/*
+ 	 *	This virtual method is to register the metric, while calling it with its attribute and a special location such as "Storagedevice/SSD Blocklayer/sda"
+ 	 */
+	virtual void registerPlugin(StatisticsProviderPlugin * plugin) = 0;
 
-	virtual void register_metrics(int i,MetricAttribute mattr,vector<string> list_of_specialties);
+	virtual void unregisterPlugin(StatisticsProviderPlugin * plugin) = 0;
 
-// Description  means local or remote metric
-// Type = gauge if interval - We are converting incremental to gauge
+	/* 
+	 * The return value may be updated in the background?
+	 * Double buffering of values
+	 * 
+	 * We store statistics for the last:
+	 * - 10 seconds in 1 second increments
+	 * - 100 seconds in 10 second increments
+	 * - 10 minutes in 1 minute increments
+	 */
+	virtual array<StatisticsValue,10> getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat) = 0;
 
-	virtual void get_value(int i, vector<string> list_of_specialties);
+	virtual StatisticsValue getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op) = 0;
 
-/*!
- All the updated information of specific metrics of interest will be accessed when stepping to the next timestep;
- */
-	virtual void next_timestep(int i,vector<string> list_of_specialties);
+	// virtual StatisticsDescription & queryStatistics(StatisticsToQuery & stat) = 0;
 
-/*!
- startup the Collector;
- */
-	virtual void initCollector();
-
-
-/*!
- What are the available source metrics and available sources for metrics if they are combined ones?
- */
-
-	virtual void available metrics();
-
+	/*
+ 	 * What are the available source metrics and available sources for metrics if they are combined ones?
+ 	 */
+	virtual list<StatisticsDescription> availableMetrics() = 0;
 };
+
+}
 
 
 #define STATISTICS_INTERFACE "monitoring_statistics_collector"
-
-}
 
 #endif /* STATISTICS_COLLECTOR_H */

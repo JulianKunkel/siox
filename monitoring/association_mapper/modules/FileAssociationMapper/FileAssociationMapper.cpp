@@ -80,13 +80,15 @@ public:
 		}
 	}
 
-	void init(ComponentOptions * options){
-		FileAssociationMapperOptions * o = (FileAssociationMapperOptions*) options;
-		filename = o->filename;
+	void init(){
+		FileAssociationMapperOptions & o = getOptions<FileAssociationMapperOptions>();
+		filename = o.filename;
+		assert(filename != "");
+		cout << "file " << filename << endl;
 		load(filename);
 	}
 
-	ComponentOptions * get_options() {
+	ComponentOptions * AvailableOptions() {
 		return new FileAssociationMapperOptions();
 	}
 
@@ -234,7 +236,7 @@ template<class Archive>
 void serialize(Archive & ar, ComponentID & g, const unsigned int version)
 {
 	ar & boost::serialization::make_nvp("pid", g.pid);
-	ar & boost::serialization::make_nvp("num", g.num);
+	ar & boost::serialization::make_nvp("id", g.id);
 }
 
 

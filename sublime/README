@@ -1,0 +1,10 @@
+To setup sublime to build with waf:
+
+cp waf-sublime ../
+
+open sublime, preferences, browse packages
+go to C++ folder
+
+copy C++.sublime-build into this folder replacing the old file.
+
+Now you can use F7 or CTRL-B to build the project and F4 to walk the errors.

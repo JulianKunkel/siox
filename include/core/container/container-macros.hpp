@@ -60,6 +60,13 @@
 
 
 #define MEMBER(x) ar & BOOST_SERIALIZATION_NVP(x);
+
+#ifndef NO_OBJECT_INJECTION 
+	#define MEMBER_INJECTION(x)
+#else
+	#define MEMBER_INJECTION(x)  ar & BOOST_SERIALIZATION_NVP(x); 
+#endif 
+
 #define PARENT_CLASS(x) ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(x);
 
 

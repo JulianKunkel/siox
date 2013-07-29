@@ -20,10 +20,10 @@ int main(){
 	MyParentModule * parent = new MyParentModule();
 
 	cout << "Parent Empty Configuration" << endl;
-	cout << a->DumpConfiguration(parent->get_options()) << endl;
+	cout << a->DumpConfiguration(& parent->getOptions()) << endl;
 
 	cout << "Child Empty Configuration" << endl;
-	cout << a->DumpConfiguration(child->get_options()) << endl;
+	cout << a->DumpConfiguration(& child->getOptions()) << endl;
 
 	cout << "Loading configuration from file" << endl;
 	vector<Component*> components = a->LoadConfiguration("daemon", "hostname=\"node1\" mode=\"debug\"");
@@ -33,15 +33,15 @@ int main(){
 	child = dynamic_cast<MyChildModule*>(components[0]);
 	assert(child);
 
-	assert(parent->options);
-	assert(child->options);
+	cout << parent->getOptions<MyParentModuleOptions>().pname << endl;
+	cout << child->getOptions<MyChildModuleOptions>().name << endl;
+	cout << parent->getOptions<MyParentModuleOptions>().childInterface.componentID << endl;
+	assert(parent->getOptions<MyParentModuleOptions>().childInterface.componentID);
 
-	cout << parent->options->pname << endl;
-	cout << child->options->name << endl;
-	cout << parent->options->childInterface.componentID << endl;
-	assert(parent->options->childInterface.componentID);
+ 	ComponentReference chi = parent->getOptions<MyParentModuleOptions>().childInterface;
+	void * instance = GET_INSTANCE(MyChildModule, chi);
 
-	assert(parent->options->childInterface.instance<MyChildModule>() == child);
+	assert(instance == child);
 
 	delete(registrar);
 

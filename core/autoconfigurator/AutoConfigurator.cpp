@@ -134,10 +134,9 @@ namespace core{
 			}catch(exception & e){
 				autoConfiguratorRegistrar = nullptr;
 				registrarMutex.unlock();
-				options = component->get_options();
-				string  str = cs.serialize(options);
+				ComponentOptions availableOptions = component->getOptions();
+				string  str = cs.serialize(& availableOptions);
 				cerr << endl << "Expected configuration: " << str << endl;
-				delete(options);
 
 				throw InvalidConfiguration("Error during parsing of options");
 			}

@@ -77,24 +77,25 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 		file.close();
 	}
 
-	void init(ComponentOptions * options){
-		FileBasedSystemInformationOptions * o = (FileBasedSystemInformationOptions*) options;
-		filename = o->filename;
+	void init(){
+		FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
+		string filename = o.filename;
 		if (filename.length() == 0){
 			filename = "system_info.dat";
 		}
 		cout << "Initializing ID-mapper from file using " << filename << endl;
 
 		load(filename);
-
-		delete(options);
 	}
 
-	ComponentOptions * get_options() {
+	ComponentOptions * AvailableOptions() {
 		return new FileBasedSystemInformationOptions();
 	}
 
 	void shutdown(){
+		FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
+		string filename = o.filename;
+
 		save(filename);
 
 		for(auto itr = valueStringMap.begin(); itr != valueStringMap.end(); itr++){
@@ -267,8 +268,6 @@ private:
 	map<UniqueComponentActivityID, UniqueInterfaceID> activityInterfaceIDMap;
 
 	map<pair<uint32_t, string>, uint32_t> activityMap;
-
-	string filename;
 };
 
 }
