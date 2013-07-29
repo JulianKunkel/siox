@@ -23,7 +23,11 @@ public:
 
 	uint32_t poll_interval_ms;
 
+<<<<<<< HEAD
 	SERIALIZE_CONTAINER(MEMBER(scope) MEMBER(entity) MEMBER(metrics) MEMBER(topology) MEMBER(topology_instance) MEMBER(poll_interval_ms))
+=======
+	SERIALIZE_CONTAINER(MEMBER(poll_interval_ms) )
+>>>>>>> 12a05c66d9e978bdd9018b63dd5d0c073fe9febb
 };
 
 

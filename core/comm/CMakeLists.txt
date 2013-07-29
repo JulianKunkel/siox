@@ -23,30 +23,30 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 add_library(sioxcomm
-	misc/URI.h
-	misc/URI.cc
-	ConnectionMessage.h
-	ConnectionMessage.cc
-	Service.h
-	Callback.h
-	Connection.h
-	Connection.cc
-	ConnectionFactory.h
-	ConnectionFactory.cc
-	ServerFactory.h
-	ServerFactory.cc
-	ServiceServer.h
-	ServiceServer.cc
-	ipc/IPCConnection.h
-	ipc/IPCConnection.cc
-	ipc/IPCServer.h
-	ipc/IPCServer.cc
-	tcp/TCPConnection.h
-	tcp/TCPConnection.cc
-	tcp/TCPServer.h
-	tcp/TCPServer.cc
-	ServiceClient.h
-	ServiceClient.cc
+	misc/URI.hpp
+	misc/URI.cpp
+	ConnectionMessage.hpp
+	ConnectionMessage.cpp
+	Service.hpp
+	Callback.hpp
+	Connection.hpp
+	Connection.cpp
+	ConnectionFactory.hpp
+	ConnectionFactory.cpp
+	ServerFactory.hpp
+	ServerFactory.cpp
+	ServiceServer.hpp
+	ServiceServer.cpp
+	ipc/IPCConnection.hpp
+	ipc/IPCConnection.cpp
+	ipc/IPCServer.hpp
+	ipc/IPCServer.cpp
+	tcp/TCPConnection.hpp
+	tcp/TCPConnection.cpp
+	tcp/TCPServer.hpp
+	tcp/TCPServer.cpp
+	ServiceClient.hpp
+	ServiceClient.cpp
 	${PROTO_SRCS}
 	${PROTO_HDRS}
 )

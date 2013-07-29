@@ -3,7 +3,7 @@
 
 #include <boost/ptr_container/ptr_list.hpp>
 
-#include "BasicLogger.h"
+#include "BasicLogger.hpp"
 
 class Logger
    : public BasicLogger {

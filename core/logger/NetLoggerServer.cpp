@@ -1,4 +1,4 @@
-#include "NetLoggerServer.h"
+#include "NetLoggerServer.hpp"
 
 NetLoggerServer::NetLoggerServer(const std::string &local_uri)
 {

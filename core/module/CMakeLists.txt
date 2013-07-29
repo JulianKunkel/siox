@@ -8,6 +8,7 @@ find_package(GLIB2 REQUIRED)
 include_directories(
 	"${CMAKE_BINARY_DIR}"
 	"${PROJECT_SOURCE_DIR}"
+	"${CMAKE_SOURCE_DIR}/include/"
 	"${CMAKE_SOURCE_DIR}/include/core/module/"
 	"${GLIB2_INCLUDE_DIRS}"
 )

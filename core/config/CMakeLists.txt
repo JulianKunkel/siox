@@ -14,7 +14,7 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
 
 add_library(sioxconf
-	Configuration.h
+	Configuration.hpp
 	Configuration.cpp
 )
 

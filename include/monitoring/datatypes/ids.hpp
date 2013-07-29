@@ -15,6 +15,8 @@
 
 using namespace std;
 
+namespace monitoring{
+
 // Every hardware component which is addressable by the network is expected to have a unique (host)name.
 // This name is translated to the NodeID.
 // 
@@ -96,32 +98,27 @@ typedef struct UniqueInterfaceID_{
 // Increase num...
 
 /* Identifying a SIOX component */
-typedef struct{
+struct ComponentID{
 	ProcessID pid;
 	//UniqueInterfaceID uiid;
-	uint16_t num;
-} ComponentID;
+	uint16_t id;
+} ;
 // TODO:
 // ComponentID(siox_component){}
 // ComponentID create_component_id(ProcessID 3*32 B, UIID + 16 bit);
 
-typedef struct {
+struct RemoteCallIdentifier{
 	// Several parameters assist matching of remote calls
 	NodeID hwid; // optional
 	UniqueInterfaceID uuid; // optional
 	AssociateID instance; // optional, remote call instance identifier
-} RemoteCallIdentifier;
-
-typedef struct {
-	RemoteCallIdentifier target;
-	vector<Attribute> attributeArray;
-} RemoteCallID;
+};
 
 /* Identifying an activity */
-typedef struct ActivityID{
-	uint32_t id;
+struct ActivityID{
 	ComponentID cid;
-} ActivityID;
+	uint32_t id;
+};
 
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);
 // See @TODO
@@ -152,6 +149,8 @@ inline bool is_valid_id(ComponentID & id){
 
 inline bool is_valid_id(ActivityID & id){
 	return is_valid_id(id.cid);
+}
+
 }
 
 #endif

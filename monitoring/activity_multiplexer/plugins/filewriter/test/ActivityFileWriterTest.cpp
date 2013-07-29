@@ -17,21 +17,20 @@ int main(int argc, char const *argv[]){
 
 	// init plugin
 	// not necessary, but for testing...
-	FileWriterPluginOptions * op = (FileWriterPluginOptions*) ap->AvailableOptions();
-	op->filename = "test.txt";
+	FileWriterPluginOptions & op = (FileWriterPluginOptions &) ap->getOptions();
+	op.filename = "test.txt";
 
-	ap->init(op, m1, nullptr);
+	ap->init(m1, nullptr);
 
-	ComponentID cid = {.pid = {2,3,4}, .num=1};
-
-	auto parentArray = vector<ActivityID>{{{.pid = {1,2,3}, .num=2}, .num = 1} };
+	auto parentArray = vector<ActivityID>{  {.cid = {.pid = {2,3,4}, .id=1}, .id = 1} };
 	auto attributeArray = vector<Attribute>{{.id=111, .value = "myData"}, {.id=3, . value = (uint64_t) 4711}};
 	auto remoteCallsArray = vector<RemoteCall>();
 
 
 	UniqueComponentActivityID aid = 4;
+	ActivityID aaid = {.cid = {.pid = {2,3,4}, .id=1}, .id = 2};
 	// Cast the real activity to the serializable object class wrapper
-	Activity * activity = new Activity(aid, 3, 5, cid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
+	Activity * activity = new Activity(aid, 3, 5, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
 
 	m1->Log(activity);
 

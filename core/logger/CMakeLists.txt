@@ -18,18 +18,18 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
 
 add_library(sioxlog
-	BasicLogger.h
+	BasicLogger.hpp
 	BasicLogger.cpp
-	Logger.h
+	Logger.hpp
 	Logger.cpp
-	FileLogger.h
+	FileLogger.hpp
 	FileLogger.cpp
-	SyslogLogger.h
+	SyslogLogger.hpp
 	SyslogLogger.cpp
-	SioxLogger.h
-	NetLogger.h
+	SioxLogger.hpp
+	NetLogger.hpp
 	NetLogger.cpp
-	NetLoggerServer.h
+	NetLoggerServer.hpp
 	NetLoggerServer.cpp
 	${PROTO_SRCS}
 	${PROTO_HDRS}

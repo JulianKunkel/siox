@@ -38,9 +38,7 @@ int main(int argc, char const *argv[]){
     	OntologyAttribute * o2 = o->register_attribute("test", "filename", SIOX_STORAGE_STRING);
     	OntologyAttribute * o3 = o->register_attribute("test", "filesystem", SIOX_STORAGE_32_BIT_UINTEGER);
 
-	ComponentID cid = {.pid = {2,3,4}, .num=1};
-
-	auto parentArray = vector<ActivityID>{{{.pid = {1,2,3}, .num=2}, .num = 1} };
+	auto parentArray = vector<ActivityID>{  {.cid = {.pid = {2,3,4}, .id=1}, .id = 1} };
 	auto attributeArray = vector<Attribute>();
 	attributeArray.push_back({.id= o2->aID, .value = "julian/data.nc4"});
 	attributeArray.push_back({.id= o1->aID, .value = (uint64_t) 4711});
@@ -50,8 +48,9 @@ int main(int argc, char const *argv[]){
 
 	cout << attributeArray.size() << endl;
 
+	ActivityID aaid = {.cid = {.pid = {2,3,4}, .id=1}, .id = 2};
 	// Cast the real activity to the serializable object class wrapper
-	Activity * activity = new Activity(aid, 3, 5, cid, parentArray, attributeArray, remoteCallsArray, nullptr, 0);
+	Activity * activity = new Activity(aid, 3, 5, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
 
 	m1->Log(activity);
 

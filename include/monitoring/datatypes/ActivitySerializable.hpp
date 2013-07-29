@@ -26,7 +26,7 @@ namespace serialization {
 template<class Archive>
 void serialize(Archive & ar,  monitoring::RemoteCall & id, const unsigned int file_version){
 	SER("t", id.target)
-	SER("a", id.attributeArray)
+	SER("a", id.attributes)
 }
 
 template<class Archive>
@@ -91,11 +91,11 @@ private:
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int file_version){
-		SER("aid", aid_)
+		SER("ucaid", ucaid_)
 		SER("ts", time_start_)
 		SER("te", time_stop_)
 		SER("err", errorValue_)
-		SER("cid", cid_)
+		SER("aid", aid_)
 		SER("a", 	attributeArray_)
 		SER("p", parentArray_)
 		SER("r", 	remoteCallsArray_)

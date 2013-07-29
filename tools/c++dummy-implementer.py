@@ -11,7 +11,7 @@ import re
 import sys
 import argparse
 
-componentFunctions = "\nvirtual void init(core::ComponentOptions * options) = 0;\nvirtual core::ComponentOptions * get_options() = 0;\nvirtual void shutdown() = 0;"
+componentFunctions = "\nvirtual void init() = 0;\nvirtual core::ComponentOptions * AvailableOptions() = 0;\nvirtual void shutdown() = 0;"
 
 
 #

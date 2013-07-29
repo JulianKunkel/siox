@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string>
 
-#include "Logger.h"
+#include "Logger.hpp"
 
 class FileLogger 
    : public Logger {

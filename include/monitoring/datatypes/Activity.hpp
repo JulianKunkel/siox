@@ -78,8 +78,16 @@
 
 using namespace std;
 
-
 namespace monitoring {
+
+// The instance identifier such as "Port 4711" is relevant for matching of remote calls
+// See @TODO
+typedef struct {
+	RemoteCallIdentifier target;
+	vector<Attribute> attributes;
+} RemoteCall;
+
+
 
 class ActivityBuilder;
 
@@ -96,7 +104,7 @@ protected:
 	ActivityID aid_;
 
 	vector<ActivityID> parentArray_; 
-	vector<RemoteCallID> remoteCallsArray_;
+	vector<RemoteCall> remoteCallsArray_;
 	vector<Attribute> attributeArray_; 	
 
 	// If we are caused by a remote, we have to identify it.
@@ -106,7 +114,7 @@ protected:
 	siox_activity_error errorValue_;
 
 public:
-	Activity(UniqueComponentActivityID ucaid, siox_timestamp start_t, siox_timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCallID> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, siox_activity_error errorValue)
+	Activity(UniqueComponentActivityID ucaid, siox_timestamp start_t, siox_timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, siox_activity_error errorValue)
 		: 
 		ucaid_ (ucaid), time_start_ (start_t), time_stop_ (end_t),
 		aid_ (aid), parentArray_ (std::move(parentArray)),
@@ -119,28 +127,21 @@ public:
 
 	void print() {
 		// @TODO: Really need reflection - have a look at Boost :-)
-		uint i;
+		unsigned i;
 		cout << "t_start = " << time_start_ << endl;
 		cout << "t_stop  = " << time_stop_ << endl;
 		cout << "ActivityID.id = " << aid_.id << endl;
-		cout << "ActivityID.ComponentID.num = " << aid_.cid.num << endl;
+		cout << "ActivityID.ComponentID.num = " << aid_.cid.id << endl;
 		cout << "ActivityID.ComponentID.ProcessID.NodeID = " << aid_.cid.pid.nid << endl;
 		cout << "ActivityID.ComponentID.ProcessID.pid    = " << aid_.cid.pid.pid << endl;
 		cout << "ActivityID.ComponentID.ProcessID.time   = " << aid_.cid.pid.time << endl;
 		cout << "Attributes (" << attributeArray_.size() << " items):" << endl;
-		for(i=0; i<attributeArray_.size(); i++) {
+		for(i=0; i< attributeArray_.size(); i++) {
 			cout << "(" << i << ")" << endl;
 			cout << "\tid    = " << attributeArray_[i].id << endl;
 			cout << "\tvalue = " << attributeArray_[i].value << endl;
 		}
 		cout << "RemoteCalls (" << remoteCallsArray_.size() << " items):" << endl;
-		for(i=0; i<remoteCallsArray_.size(); i++) {
-			cout << "(" << i << ")" << endl;
-			cout << "\ttarget_hwid      = " << remoteCallsArray_[i].target.hwid << endl;
-			cout << "\ttarget_uiid_if   = " << remoteCallsArray_[i].target.uuid.interface << endl;
-			cout << "\ttarget_uiid_impl = " << remoteCallsArray_[i].target.uuid.implementation << endl;
-			cout << "\ttarget_instance  = " << remoteCallsArray_[i].target.instance << endl;
-		}
 	}
 
 	inline siox_timestamp time_start() const{
@@ -164,7 +165,7 @@ public:
 		return parentArray_;
 	}
 
-	inline const vector<RemoteCallID>& remoteCallsArray() const{
+	inline const vector<RemoteCall>& remoteCallsArray() const{
 		return remoteCallsArray_;
 	}
 
@@ -184,16 +185,6 @@ public:
 
 }
 
-
-// The instance identifier such as "Port 4711" is relevant for matching of remote calls
-// See @TODO
-typedef struct {
-	monitoring::Activity *caller_activity;
-	NodeID *target_node_id;
-	UniqueInterfaceID *target_unique_interface_id;
-	AssociateID *target_associate_id;
-	vector<Attribute> attributes;
-} RemoteCall;
 
 
 #endif // SIOX_ACTIVITY_H

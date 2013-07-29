@@ -1,4 +1,4 @@
-#include "PostgreSQLBackend.h"
+#include "PostgreSQLBackend.hpp"
 
 
 PostgreSQLBackend::PostgreSQLBackend(const std::string &dbinfo)

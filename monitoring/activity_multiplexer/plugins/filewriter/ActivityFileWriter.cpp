@@ -29,9 +29,9 @@ public:
 		return new FileWriterPluginOptions();
 	}
 
-	void init(ActivityMultiplexerPluginOptions * options, ActivityMultiplexer & multiplexer){
-		FileWriterPluginOptions * o = (FileWriterPluginOptions*) options;
-		serializer = new FileSerializer<ActivitySerializable>(o->filename);
+	void init(ActivityMultiplexer & multiplexer){
+		FileWriterPluginOptions & o = getOptions<FileWriterPluginOptions>();
+		serializer = new FileSerializer<ActivitySerializable>(o.filename);
 		
 		multiplexer.registerListener(this);
 	}
