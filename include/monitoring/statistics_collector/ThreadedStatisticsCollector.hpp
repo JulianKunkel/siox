@@ -1,4 +1,4 @@
-#include <pthread.h>
+#include <thread>
 
 /*! We have at least three ways of using pthreads for the ThreadedStatisticsCollector:
  * 1. Pipeline 
