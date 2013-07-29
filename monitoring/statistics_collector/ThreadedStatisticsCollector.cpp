@@ -30,6 +30,14 @@ public:
 	 */
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){
 
+    //This function will be called from a thread
+
+    void call_from_thread() {
+        std::cout << "Hello, World" << std::endl;
+    }
+}
+
+
 	}
 
 	/**
