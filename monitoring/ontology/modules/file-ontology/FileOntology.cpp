@@ -142,7 +142,7 @@ class FileOntology: public Ontology{
 		return & domain_name_map[fqn]->attribute;
     }
 
-    bool attribute_set_meta_attribute(OntologyAttribute * att, OntologyAttribute * meta, const OntologyValue & value){ 
+    bool attribute_set_meta_attribute(OntologyAttribute * att, OntologyAttribute * meta, const OntologyValue & value){
     	assert( meta->storage_type == value.type() );
 
     	attributeMutex.lock();

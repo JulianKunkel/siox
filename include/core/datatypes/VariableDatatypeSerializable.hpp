@@ -47,6 +47,9 @@ void serialize(Archive & ar, VariableDatatype & a, const unsigned int version)
 			}
 			break;
 		}
+		case(VariableDatatype::INVALID):
+		ar & boost::serialization::make_nvp("v", g.data->ui64);
+		break;
 		case(VariableDatatype::DOUBLE):
 		ar & boost::serialization::make_nvp("v", g.data->d);
 		break;

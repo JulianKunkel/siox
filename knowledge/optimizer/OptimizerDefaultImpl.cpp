@@ -9,11 +9,25 @@ protected:
 		return new ComponentOptions();
 	}
 public:
-	void init(){
+	
+	virtual OntologyValue optimalParameter(const OntologyAttribute & attribute){
+		// return invalid type
+		return OntologyValue();
+	}
+
+	virtual bool isPluginRegistered(const OntologyAttribute & attribute){
+		return false;
+	}
+
+	virtual void unregisterPlugin(const OntologyAttribute & attribute){
 
 	}
 
-	void shutdown(){
+	virtual void init(){
+
+	}
+
+	virtual void shutdown(){
 
 	}
 };

@@ -12,7 +12,7 @@ class VariableDatatypeAssessor;
 class VariableDatatype{
 public:	
 	enum Type{
-	    INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE, STRING
+	    INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE, INVALID, STRING
 	}; 
 protected:
 
@@ -31,7 +31,7 @@ protected:
 
 	friend VariableDatatypeAssessor;
 public:	
-	VariableDatatype(){ data.i64 = 0; } 	// for serialization
+	VariableDatatype(){ data.i64 = 0; type_ = INVALID; } 
 
 	VariableDatatype(int64_t i){ data.i64 = i; type_ = INT64;}
 	VariableDatatype(uint64_t i){ data.ui64 = i; type_ = UINT64;}
@@ -40,6 +40,14 @@ public:
 	VariableDatatype(const std::string & s){ data.str = strdup(s.c_str()); type_ = STRING; }
 	VariableDatatype(float f){ data.i64 = 0; data.f = f; type_ = FLOAT;}
 	VariableDatatype(double d){ data.d = d; type_ = DOUBLE;}
+
+	VariableDatatype(const VariableDatatype & d){ 
+		data.i64 = d.data.i64;
+		type_ = d.type_;
+		if(type_ == STRING){
+			data.str = strdup(d.data.str);
+		}
+	}
 
 	~VariableDatatype(){
 		if (this->type_ == STRING){
