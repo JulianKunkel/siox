@@ -18,8 +18,9 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
-using std::string;
+using namespace std;
 
 namespace monitoring{
 
@@ -90,8 +91,7 @@ public:
 
 	string metrics;
 
-	string topology[];
-	string topology_instance[];	
+	vector<pair<string,string> > topology;
 
 	string unit;
 
