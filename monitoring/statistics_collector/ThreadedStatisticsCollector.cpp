@@ -15,11 +15,11 @@ using namespace core;
 using namespace monitoring;
 
 /*
- * ?Single threaded?, ?compute next waittime based on options.?
+ * ?Single threaded? Yes, ?compute next waittime based on options.?
  */
 
-static const int PartsAsThreads = 10;
-std::thread t[num_threads];
+//static const int PartsAsThreads = 10;
+//std::thread t[num_threads];
 
 //This function will be called from a thread
 void call_from_thread(in Tid) {
