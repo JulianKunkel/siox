@@ -34,9 +34,9 @@ int main(int argc, char const *argv[]){
 
 	UniqueInterfaceID uid = sys->interface_id("test", "impl1");
     	UniqueComponentActivityID aid = sys->activity_id(uid, "open");
-    	OntologyAttribute * o1 = o->register_attribute("test", "filesize", SIOX_STORAGE_64_BIT_UINTEGER);
-    	OntologyAttribute * o2 = o->register_attribute("test", "filename", SIOX_STORAGE_STRING);
-    	OntologyAttribute * o3 = o->register_attribute("test", "filesystem", SIOX_STORAGE_32_BIT_UINTEGER);
+    	OntologyAttribute * o1 = o->register_attribute("test", "filesize", VariableDatatype::UINT64);
+    	OntologyAttribute * o2 = o->register_attribute("test", "filename", VariableDatatype::STRING);
+    	OntologyAttribute * o3 = o->register_attribute("test", "filesystem", VariableDatatype::UINT32);
 
 	auto parentArray = vector<ActivityID>{  {.cid = {.pid = {2,3,4}, .id=1}, .id = 1} };
 	auto attributeArray = vector<Attribute>();

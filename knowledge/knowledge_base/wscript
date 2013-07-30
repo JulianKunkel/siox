@@ -2,8 +2,9 @@
 # encoding: utf-8
 
 def build(bld):
-	bld.shlib(includes="include",  use = "PQXX" ,  target = 'knowledge-systeminfo', source = 'systeminfo_containers.cpp systeminfo_persistency_interface.cpp' )
-	bld.recurse(['test'], mandatory=True)
+	pass
+	#bld.shlib(includes="include",  use = "PQXX" ,  target = 'knowledge-systeminfo', source = 'systeminfo_containers.cpp systeminfo_persistency_interface.cpp' )
+	#bld.recurse(['test'], mandatory=True)
 
 
 # -*- indent-tabs-mode: t -*-
