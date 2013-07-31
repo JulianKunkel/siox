@@ -100,7 +100,8 @@ public:
 		}
 
 // Derived Metrics = |{Metric}| + Renaming + Extra : Example quantity/block/dataRead -> throughput on node "" using device ""
-
+// Renaming includes computing the sectorvalues to bytevalues (*512). If we want millisecond to seconds(/1000) and want the precise value we need a datatype conversion from int to double For now it's optional.
+// The term "Extra" means bytes to MiB or GiB or E3 E6 E9 bytes as users wish.
 		return lst;
 	}
 
