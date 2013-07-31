@@ -91,7 +91,7 @@ using namespace monitoring;
 
 	Between [t0;t10] = [t10;t20] ... we may use one second as interval, whereas the smaller steps [t11;t12] are 0,1s(EU) = 0.1s(US)
 
-	When requirements rise wa can adjust the frequencies by small factors but we are limited by bandwith of the node's systembus as well as the microseconds of the /proc system in linux.
+	When requirements rise we can adjust the frequencies by small factors but we are limited by bandwith of the node's systembus as well as the microseconds of the /proc system in linux.
 
  3) Design and Text
 
@@ -101,7 +101,13 @@ using namespace monitoring;
 
 	We provide a map for each specific metric on a specific interval frequency using the StatisticPlugins as follows:
 
-	map < metric,<Interval,StatisticsPlugin> >
+	std::map < metric,<Interval,StatisticsPlugin> >
+
+	We have five levels of intervals the Plugins may use:
+
+	A double-linked list with no reallocation of memory but significant overhead compared to vector.
+
+	Code: std::list<StatisticsProviderPlugins>[5];
 
 	Succession of Timestages x: First the highest frequency than to longer time intervals
 	0,1,2,...,x
