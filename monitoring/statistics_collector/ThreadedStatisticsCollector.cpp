@@ -14,9 +14,80 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 
-/*
- * ?Single threaded? Yes, ?compute next waittime based on options.?
+
+/*! Software Structure
+ 
+ 1) Requirements
+	using standard threads (c++11)
+	Time and Programming Sequence
+	I.Measure time now t1
+	II. a) For each plugin (OSMem,cpustat,iostat) p which is called to run now
+		b) p = nexttimestep
+		c) Compute the derived metrics
+	III. For each metric
+		a) deltatime
+		b) ... SMUX notify
+		c) sleep (expected waittime) = time until next plugin - deltatime
+		d) compute next waittime based on options ?
+
+1.1) Design
+ 	Generalities can be extracted from ontology.
+ 	The local Computing guideline is located in a local config file as they are not standard generalities.
+	
+	Scheme:
+
+					Ontologie(Global standards)
+						|
+					Collector(node local with config)
+			/			|		\		...
+	Plugin OSMem	cpustat		iostat
+
+	- One single thread for statistics, multiple are optional 
+
+
+2) Use Cases
+	What plugins (OSMem,cpustat,iostat,netstat,energystat,vmstat,likwid) are called from the provided statistics?
+	What is their frequency?
+	How often are they called?
+ 	To reduce traffic we could split the plugin usage over time.
+	On a time sequence for example we could incorporate at 
+	t-4 plugin 3 and 2,
+	t-3 plugin 3 and 4,7
+	t-2 plugin 3 and 5
+	t-1 plugin 3 and 1,
+	t0 All plugins
+	t1 plugin 3 and 1,
+	t2 plugin 3 and 2,
+	t3  plugin 3 and 4,6
+	t4 plugin 3 and 5,
+	t5 plugin 3 and 1,
+	t6 plugin 3 and 2,
+	t7 plugin 3 and 4,7
+	t8 plugin 3 and 5
+	t9 plugin 3 and 1,
+	t10 All plugins
+	t11 plugin 3 and 1,
+	t12 plugin 3 and 2,
+	t13 plugin 3 and 4,6
+	t14 plugin 3 and 5,
+	t15 plugin 3 and 1,
+	t16 plugin 3 and 2,
+	t17 plugin 3 and 4,7
+	t18 plugin 3 and 5
+	t19 plugin 3 and 1,
+	t10 All plugins
+
+	Between [t0;t10] = [t10;t20] ... we may use one second as interval, whereas the smaller steps [t11;t12] are 0,1s(EU) = 0.1s(US)
+
+	When requirements rise wa can adjust the frequencies by small factors but we are limited by bandwith of the node's systembus as well as the microseconds of the /proc system in linux.
+
+ 3) Design and Text
+
+	Lock relations:
+	
  */
+
+
 
 //static const int PartsAsThreads = 10;
 //std::thread t[num_threads];
@@ -33,13 +104,13 @@ private:
 
 public:
 	/**
-	 *
+	 * Implementationsspezifisch
 	 */
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){
 
     	//Launch a group of threads
-        for (int i = 0; i < num_threads; ++i) {
-            t[i] = std::thread(call_from_thread, i);
+//        for (int i = 0; i < num_threads; ++i) {
+//            t[i] = std::thread(call_from_thread, i);
         }
 
     	
@@ -86,6 +157,9 @@ public:
 			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/dataRead", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[2], INCREMENTAL, "Byte", "Data read based on Field 3 -- # of sectors read", overflow_value, 0});
 			lst.push_back({INPUT_OUTPUT, NODE, "time/block/reads", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[3], INCREMENTAL, "ms", "Field 4 -- # of milliseconds spent reading", overflow_value, 0});
 
+// sectors are 512 bytes to see with  cat /sys/block/sda/queue/hw_sector_size
+// /proc/diskstats field seven [cur 6] has total sectors written for example 35356*512bytes= 18102272 = 18,1MiB
+
 			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/writes", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[4], INCREMENTAL, "", "Field 5 -- # of writes completed", overflow_value, 0});
 			lst.push_back({INPUT_OUTPUT, NODE, "quanity/block/writes/merged", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[5], INCREMENTAL, "", "Field 6 -- # of writes merged", overflow_value, 0});
 			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/dataWritten", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[6], INCREMENTAL, "Byte", "Data written based on Field 7 -- # of sectors written", overflow_value, 0});
@@ -96,64 +170,37 @@ public:
 			lst.push_back({INPUT_OUTPUT, NODE, "time/block/weighted", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[10], INCREMENTAL, "ms", "Field 11 -- weighted # of milliseconds spent doing I/Os", overflow_value, 0});
 		}
 
+// Derived Metrics = |{Metric}| + Renaming + Extra : Example quantity/block/dataRead -> throughput on node "" using device ""
+// Renaming includes computing the sectorvalues to bytevalues (*512). If we want millisecond to seconds(/1000) and want the precise value we need a datatype conversion from int to double For now it's optional.
+// The term "Extra" means bytes to MiB or GiB or E3 E6 E9 bytes as users wish.
 		return lst;
 	}
 
 	}
+
 
 	/* 
 	 * Doubling ?
 	 */
 	virtual void init(ActivityPluginDereferencing * facade){
 		this->facade = facade;
+
+// init facade etc.
+		ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
+		init(facade);
+
 	}
+
+
 
 
 	/**
 	 * this method initiates first the options for threaded statitistics and second the facade of the ActivityPlugin
 	 */
-	virtual void init(ThreadedStatisticsOptions * options){
+	virtual void getOptions(ThreadedStatisticsOptions * options){
 		ThreadedStatisticsOptions * o = (ThreadedStatisticsOptions*) options;
 
-		// init facade etc.
-		ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
-		init(facade);
-
-		// init workq
-		int workq_init (workq_t *wq, int threads, void (*engine)(void *arg))
-		{
-		int status;
-
-		status = pthread_attr_init (&wq->attr);
-		if (status != 0)
-		return status;
-		status = pthread_attr_setdetachstate (
-		&wq->attr, PTHREAD_CREATE_DETACHED);
-		if (status != 0) {
-		pthread_attr_destroy (&wq->attr);
-		return status;
-		}
-		status = pthread_mutex_init (&wq->mutex, NULL);
-		if (status != 0) {
-		pthread_attr_destroy (&wq->attr);
-		return status;
-		}
-		status = pthread_cond_init (&wq->cv, NULL);
-		if (status != 0) {
-		pthread_mutex_destroy (&wq->mutex);
-		pthread_attr_destroy (&wq->attr);
-		return status;
-		}
-		wq->quit = 0;                       /* not time to quit */
-		wq->first = wq->last = NULL;        /* no queue entries */
-		wq->parallelism = threads;          /* max servers */
-		wq->counter = 0;                    /* no server threads yet */
-		wq->idle = 0;                       /* no idle servers */
-		wq->engine = engine;
-		wq->valid = WORKQ_VALID;
-		return 0;
-		}
-
+		
 	virtual void init(){
 		ThreadedStatisticsOptions & o = getOptions<ThreadedStatisticsOptions>();
 

@@ -29,6 +29,18 @@ Metrics such as Throughput rely on the smallest units bytes, microseconds (small
 System Temperature in °C,  
 The StatisticsInterval can be 1 second and significantly longer (10s,100s,60s,600s). 
 Other values are computed if available at the response of the Statistics_Collecter and StatisticsCollectorThreaded
+
+We have the deltas as a first approach defined only in the interval from t1 to t2 not in between. The slopes are the average slope of all slopes of the value's curve between t1 and t2.
+SIZE "ds" = &a
+TIME "dt" = &b
+
+We compute mean values with the following:
+
+Reduce SUM(x)/COUNT(x) = (eth0+eth1+eth2+eth3)/4 is responsibility of statistics_collector
+
+MetricID comes from ontology
+
+Topology instance? See lshw or similar.
  */
 
 
@@ -62,7 +74,9 @@ enum StatisticsIntervall{
 enum StatisticsReduceOperator{
 	MIN,
 	MAX,
-	AVERAGE
+	COUNT,
+	AVERAGE,
+	SUM
 };
 
 class StatisticsCollector : public core::Component {
