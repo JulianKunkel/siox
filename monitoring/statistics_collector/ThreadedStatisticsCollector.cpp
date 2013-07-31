@@ -14,9 +14,47 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 
-/*
- * ?Single threaded? Yes, ?compute next waittime based on options.?
+
+/*! Software Structure
+ 
+ 1) Requirements
+	using standard threads (c++11)
+	Time and Programming Sequence
+	I.Measure time now t1
+	II. a) For each plugin (OSMem,cpustat,iostat) p which is called to run now
+		b) p = nexttimestep
+		c) Compute the derived metrics
+	III. For each metric
+		a) deltatime
+		b) ... SMUX notify
+		c) sleep (expected waittime) = time until next plugin - deltatime
+		d) compute next waittime based on options ?
+
+1.1) Design
+ 	Generalities can be extracted from ontology.
+ 	The local Computing guideline is located in a local config file as they are not standard generalities.
+	
+	Scheme:
+
+					Ontologie(Global standards)
+						|
+					Collector(node local with config)
+			/			|		\		...
+	Plugin OSMem	cpustat		iostat
+
+	- One single thread for statistics, multiple are optional 
+
+
+ 2) Use Cases
+	- 
+	
+ 3) Design and Text
+
+	Lock relations:
+	
  */
+
+
 
 //static const int PartsAsThreads = 10;
 //std::thread t[num_threads];
