@@ -1,6 +1,10 @@
 #ifndef STATISTICS_PROVIDER_PLUGIN_OPTIONS
 #define STATISTICS_PROVIDER_PLUGIN_OPTIONS
 
+/*!
+ * Here we also integrate Userderived statistics such as GBytes/s from the bytes/ms Throughput we already have.
+ */
+
 #include <list>
 
 #include <core/component/component-macros.hpp>
