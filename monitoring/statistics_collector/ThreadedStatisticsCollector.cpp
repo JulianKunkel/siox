@@ -1,3 +1,15 @@
+/**
+ * @file    ThreadedStatisticsCollector.cpp
+ *
+ * @description An implementation of the (software) component for collecting statistical values.
+ * @standard    Preferred standard is C++11
+ *
+ * @author Marc Wiedemann, Julian Kunkel
+ * @date   2013
+ *
+ */
+
+
 #include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
 
 #include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
