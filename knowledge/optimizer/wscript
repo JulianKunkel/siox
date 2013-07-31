@@ -1,0 +1,11 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+
+    bld.shlib(includes="include", use="AutoConfigurator AutoRegistrar", target='OptimizerDefaultImpl', source='OptimizerDefaultImpl.cpp' )
+
+    bld.recurse(['test'], mandatory=True)
+
+
+# -*- indent-tabs-mode: t -*-

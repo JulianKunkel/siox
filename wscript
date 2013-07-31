@@ -105,7 +105,7 @@ def build(bld):
 
 	bld.recurse(['core'], mandatory=True)
 	bld.recurse(['monitoring'], mandatory=True)
-#	bld.recurse(['knowledge'], mandatory=True)
+	bld.recurse(['knowledge'], mandatory=True)
 
 	# build test interfaces
 	# Manual usage would be:

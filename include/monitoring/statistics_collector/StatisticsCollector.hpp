@@ -4,7 +4,7 @@
  * @description A (software) component for collecting statistical values.
  * @standard    Preferred standard is C++11
  *
- * @author Marc Wiedemann
+ * @author Marc Wiedemann, Julian Kunkel
  * @date   2013
  *
  */
@@ -24,6 +24,11 @@ Note that a plugin could offer the node aggregated info by itself.
 Node statistics should always be collected as they are of general interest. 
 On certain occasions such as a deeper second search phase after the general information is gathered, 
 the specific device statistics can be optionally collected.
+
+Metrics such as Throughput rely on the smallest units bytes, microseconds (smallest unit when collecting /proc/lock_stat output as INT),
+System Temperature in °C,  
+The StatisticsInterval can be 1 second and significantly longer (10s,100s,60s,600s). 
+Other values are computed if available at the response of the Statistics_Collecter and StatisticsCollectorThreaded
  */
 
 
@@ -50,7 +55,8 @@ class StatisticsProviderPlugin;
 enum StatisticsIntervall{
 	SECOND,
 	TEN_SECONDS,
-	MINUTE
+	MINUTE,
+	TEN_MINUTES
 };
 
 enum StatisticsReduceOperator{

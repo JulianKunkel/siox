@@ -10,12 +10,13 @@
 #include <mutex>
 
 #include <monitoring/association_mapper/AssociationMapperImplementation.hpp>
+#include <core/datatypes/VariableDatatypeSerializable.hpp>
+
 
 #include <boost/archive/xml_oarchive.hpp> 
 #include <boost/archive/xml_iarchive.hpp> 
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
-#include <boost/serialization/variant.hpp>
 
 #include "FileAssociationMapperOptions.hpp"
 

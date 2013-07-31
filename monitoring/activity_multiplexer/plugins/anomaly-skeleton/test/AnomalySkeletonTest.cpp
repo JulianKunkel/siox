@@ -33,15 +33,20 @@ int main(int argc, char const *argv[]){
 	SystemInformationGlobalIDManager * sys = a->searchFor<SystemInformationGlobalIDManager>(components);	
 
 	UniqueInterfaceID uid = sys->interface_id("test", "impl1");
-    	UniqueComponentActivityID aid = sys->activity_id(uid, "open");
-    	OntologyAttribute * o1 = o->register_attribute("test", "filesize", SIOX_STORAGE_64_BIT_UINTEGER);
-    	OntologyAttribute * o2 = o->register_attribute("test", "filename", SIOX_STORAGE_STRING);
-    	OntologyAttribute * o3 = o->register_attribute("test", "filesystem", SIOX_STORAGE_32_BIT_UINTEGER);
+   	UniqueComponentActivityID aid = sys->activity_id(uid, "open");
+   	OntologyAttribute * o1 = o->register_attribute("test", "filesize", VariableDatatype::UINT64);
+   	OntologyAttribute * o2 = o->register_attribute("test", "filename", VariableDatatype::STRING);
+   	OntologyAttribute * o3 = o->register_attribute("test", "filesystem", VariableDatatype::UINT32);
+
+   	
+   	assert(o3 != nullptr);
+   	assert(o2 != nullptr);
+   	assert(o1 != nullptr);
 
 	auto parentArray = vector<ActivityID>{  {.cid = {.pid = {2,3,4}, .id=1}, .id = 1} };
-	auto attributeArray = vector<Attribute>();
-	attributeArray.push_back({.id= o2->aID, .value = "julian/data.nc4"});
+	auto attributeArray = vector<Attribute>();	
 	attributeArray.push_back({.id= o1->aID, .value = (uint64_t) 4711});
+	attributeArray.push_back({.id= o2->aID, .value = "julian/data.nc4"});
 	attributeArray.push_back({.id= o3->aID, .value = (uint32_t) 1});
 
 	auto remoteCallsArray = vector<RemoteCall>();

@@ -90,7 +90,7 @@ class Ontology : public core::Component {
 public: 
     /// Retrieve an attribute's data object from the ontology.
     /// If necessary, a new entry will be created.
-    virtual OntologyAttribute * register_attribute(const string & domain, const string & name, enum siox_ont_storage_type storage_type) = 0;
+    virtual OntologyAttribute * register_attribute(const string & domain, const string & name, VariableDatatype::Type storage_type) = 0;
 
     /// Set a (meta) attribute applying to another attribute.
     /// Examples are an attribute's status as descriptor or a unit for the value
