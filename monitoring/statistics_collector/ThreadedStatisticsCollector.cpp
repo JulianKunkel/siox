@@ -33,13 +33,13 @@ private:
 
 public:
 	/**
-	 *
+	 * Implementationsspezifisch
 	 */
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){
 
     	//Launch a group of threads
-        for (int i = 0; i < num_threads; ++i) {
-            t[i] = std::thread(call_from_thread, i);
+//        for (int i = 0; i < num_threads; ++i) {
+//            t[i] = std::thread(call_from_thread, i);
         }
 
     	
@@ -106,54 +106,23 @@ public:
 	 */
 	virtual void init(ActivityPluginDereferencing * facade){
 		this->facade = facade;
+
+// init facade etc.
+		ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
+		init(facade);
+
 	}
+
+
 
 
 	/**
 	 * this method initiates first the options for threaded statitistics and second the facade of the ActivityPlugin
 	 */
-	virtual void init(ThreadedStatisticsOptions * options){
+	virtual void getOptions(ThreadedStatisticsOptions * options){
 		ThreadedStatisticsOptions * o = (ThreadedStatisticsOptions*) options;
 
-		// init facade etc.
-		ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
-		init(facade);
-
-		// init workq
-		int workq_init (workq_t *wq, int threads, void (*engine)(void *arg))
-		{
-		int status;
-
-		status = pthread_attr_init (&wq->attr);
-		if (status != 0)
-		return status;
-		status = pthread_attr_setdetachstate (
-		&wq->attr, PTHREAD_CREATE_DETACHED);
-		if (status != 0) {
-		pthread_attr_destroy (&wq->attr);
-		return status;
-		}
-		status = pthread_mutex_init (&wq->mutex, NULL);
-		if (status != 0) {
-		pthread_attr_destroy (&wq->attr);
-		return status;
-		}
-		status = pthread_cond_init (&wq->cv, NULL);
-		if (status != 0) {
-		pthread_mutex_destroy (&wq->mutex);
-		pthread_attr_destroy (&wq->attr);
-		return status;
-		}
-		wq->quit = 0;                       /* not time to quit */
-		wq->first = wq->last = NULL;        /* no queue entries */
-		wq->parallelism = threads;          /* max servers */
-		wq->counter = 0;                    /* no server threads yet */
-		wq->idle = 0;                       /* no idle servers */
-		wq->engine = engine;
-		wq->valid = WORKQ_VALID;
-		return 0;
-		}
-
+		
 	virtual void init(){
 		ThreadedStatisticsOptions & o = getOptions<ThreadedStatisticsOptions>();
 
