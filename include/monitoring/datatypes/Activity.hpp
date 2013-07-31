@@ -1,4 +1,4 @@
-/** @file
+/** @file Activity.hpp
  *
  * This activity is the structure to be read and written to
  * txt using this header.
@@ -126,7 +126,7 @@ public:
 	}
 
 	void print() {
-		// @TODO: Really need reflection - have a look at Boost :-)
+		/// @todo: Really need reflection - have a look at Boost :-)
 		unsigned i;
 		cout << "t_start = " << time_start_ << endl;
 		cout << "t_stop  = " << time_stop_ << endl;
