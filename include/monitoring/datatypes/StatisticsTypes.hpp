@@ -53,7 +53,7 @@ Randbedingungen:
 1) Beim forwarding / verlorener Statistiken problematisch
 
 Es gibt keine Softwarestatistiken? Früher bei PVFS?
-Was machen wir mit GPFS-Statistiken?
+Was machen wir mit GPFS-Statistiken? Die sind erstmal nur globale Statistiken für die viele Writes und ähnliche. Einzelstatistiken sind schwer zu bekommen, evtl über DMAPI. Andriy fragen.
 z.B. Request Count...
 Es gibt eine Shared Memory Region in der die Werte abgelegt werden müssen.
 Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
@@ -92,10 +92,15 @@ public:
 	string metrics;
 
 	vector<pair<string,string> > topology;
+	//map<string,string> PAIR;
+	//map<string,PAIR> topology;
+	//topology MapofMapObject;
 
-	string unit;
+	string si_unit;
 
-	// TODO Marks Job: StatisticsDescription(XX){}
+	/* TODO StatisticsDescription(XX){} @Julian Marc: What is the aim here ???
+	 IS this the user readable description as in the StatisticPlugins?
+	 Side note: Found out that vector pair as two more unnecessary copies than MapofMap */
 };
 
 }
