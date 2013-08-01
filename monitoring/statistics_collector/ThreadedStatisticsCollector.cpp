@@ -57,7 +57,7 @@ using namespace monitoring;
 
 
 2) Use Cases
-	What plugins (OSMem,cpustat,iostat,netstat,energystat,vmstat,likwid) are called from the provided statistics?
+	What plugins (OSMem,cpustats,iostats,netstats,energystats,vmstat,likwid) are called from the provided statistics?
 	What is their frequency?
 	How often are they called?
  	To reduce traffic we could split the plugin usage over time.
@@ -106,7 +106,8 @@ using namespace monitoring;
 
 	A double-linked list with no reallocation of memory but significant overhead compared to vector.
 
-	Code: std::list<StatisticsProviderPlugins>[5];
+	Code: ?
+	std::list<StatisticsProviderPlugins>[5] SPP {"OSMemUsage", "cpustats", "iostats", "netstats" ...};
 
 	Succession of Timestages x: First the highest frequency than to longer time intervals
 	0,1,2,...,x
@@ -231,7 +232,7 @@ public:
 	 */
 	virtual void getOptions(ThreadedStatisticsOptions * options){
 		ThreadedStatisticsOptions * o = (ThreadedStatisticsOptions*) options;
-
+	}
 		
 	virtual void init(){
 		ThreadedStatisticsOptions & o = getOptions<ThreadedStatisticsOptions>();

@@ -64,7 +64,7 @@ namespace monitoring{
 class StatisticsProviderPlugin;
 
 enum StatisticsIntervall{
-	HUNDRED_MILLISECONDS
+	HUNDRED_MILLISECONDS,
 	SECOND,
 	TEN_SECONDS,
 	MINUTE,

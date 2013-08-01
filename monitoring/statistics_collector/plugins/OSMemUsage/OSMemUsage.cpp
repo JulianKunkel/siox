@@ -63,7 +63,7 @@ protected:
 			name[50] = 0;
 			snprintf(name, 50, "quantity/%s", itr->first.c_str());
 
-			string unit = itr->second.second == "kB" ?  "Byte" : itr->second.second;
+			string unit = itr->second.second == "kB" ?  "Bytes" : itr->second.second;
 			
 			lst.push_back({MEMORY, NODE, name, {{"node", LOCAL_HOSTNAME}}, itr->second.first, SAMPLED, unit, "", overflow_value, 0});
 		}
