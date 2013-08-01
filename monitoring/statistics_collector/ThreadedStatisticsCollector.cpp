@@ -233,7 +233,7 @@ public:
 	 */
 	virtual void getOptions(ThreadedStatisticsOptions * options){
 		ThreadedStatisticsOptions * o = (ThreadedStatisticsOptions*) options;
-
+	}
 		
 	virtual void init(){
 		ThreadedStatisticsOptions & o = getOptions<ThreadedStatisticsOptions>();
