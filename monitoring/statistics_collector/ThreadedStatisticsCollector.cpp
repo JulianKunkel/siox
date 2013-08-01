@@ -1,3 +1,15 @@
+/**
+ * @file    ThreadedStatisticsCollector.cpp
+ *
+ * @description An implementation of the (software) component for collecting statistical values.
+ * @standard    Preferred standard is C++11
+ *
+ * @author Marc Wiedemann, Julian Kunkel
+ * @date   2013
+ *
+ */
+
+
 #include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
 
 #include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
@@ -83,8 +95,23 @@ using namespace monitoring;
 
  3) Design and Text
 
-	Lock relations:
-	
+	What about multiqueuing? How is the interaction with the StatisticsPlugin?
+	First we can provide for the next timestep the plugins to execute.
+	They result from the required interval of each specific StatisticPlugin.
+
+	We provide a map for each specific metric on a specific interval frequency using the StatisticPlugins as follows:
+
+	map < metric,<Interval,StatisticsPlugin> >
+
+	Succession of Timestages x: First the highest frequency than to longer time intervals
+	0,1,2,...,x
+
+	Example: 100ms,1s,10s,1m,10m
+
+	We allow than these five intervals that are less error prone to implement than different frequencies that are not multiples of each other.
+
+	The Statisticsplugin(Intervall x) can then decide which interval it wants.
+
  */
 
 
