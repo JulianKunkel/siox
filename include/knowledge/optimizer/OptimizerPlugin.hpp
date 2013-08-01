@@ -30,9 +30,9 @@ namespace knowledge{
  * it can provide suggestions, and should unregister these as well when
  * shutting down: 
  *
-	@startuml{Sequence-OptimizerPlugin.png}
+	@startuml{Sequence-Optimizer.png}
 
-	participant "Optimizer-\nPlug-In" as sopi #Plum
+	participant "Self-Optimization-\nPlug-In" as sopi #Plum
 	participant "Optimizer" as opt #Plum
 	participant "siox-ll" as ll #SkyBlue
 
@@ -44,8 +44,8 @@ namespace knowledge{
 	end
 
 	loop while SOPI active
-		opt <- ll : suggest_optimization( Attribute )
-		sopi <- opt : current_best_value( Attribute )
+		opt <- ll : optimalParameter( Attribute )
+		sopi <- opt : optimalParameter( Attribute )
 		sopi --> opt : value
 		opt --> ll : value
 	end 

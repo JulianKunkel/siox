@@ -10,7 +10,7 @@
 
 #include <core/component/Component.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
-#include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
+#include <knowledge/optimizer/OptimizerPlugin.hpp>
 
 using namespace monitoring;
 
@@ -34,19 +34,19 @@ namespace knowledge{
 	[-> sopi : [<i>Address of Optimizer</i>]
 
 	loop for every Attribute handled
-		sopi -> opt : register( PlugIn,  Attribute )
+		sopi -> opt : registerPlugin( PlugIn,  Attribute )
 		sopi <-- opt
 	end
 
 	loop while SOPI active
-		opt <- ll : suggest_optimization( Attribute )
-		sopi <- opt : current_best_value( Attribute )
+		opt <- ll : optimalParameter( Attribute )
+		sopi <- opt : optimalParameter( Attribute )
 		sopi --> opt : value
 		opt --> ll : value
 	end 
 
 	loop for every Attribute handled
-		sopi -> opt : unregister( PLugIn )
+		sopi -> opt : unregisterPlugin( PLugIn )
 		sopi <-- opt
 	end
 	@enduml
@@ -55,21 +55,19 @@ class Optimizer : public core::Component{
 public:
 	
 	/**
-	 * Indicate that plugin is able to suggest parameter
-	 * values for attribute.
+	 * Inform the optimizer that @a plugin is able to suggest parameter
+	 * values for @a attribute.
 	 *
 	 * @param attribute [in]
 	 * 		The attribute in question
 	 * @param plugin [in]
 	 *		The plugin that will provide suggestions
-	 *
-	 * @todo Define type?
 	 */
-	virtual void registerPlugin(const OntologyAttribute & attribute, const ActivityMultiplexerPlugin & plugin) = 0;
+	virtual void registerPlugin(const OntologyAttribute & attribute, const OptimizerPlugin & plugin) = 0;
 
 	/**
-	 * Is there a plugin registered that can provide suggestions for 
-	 * attribute?
+	 * Is there a plug-in registered that can provide suggestions for 
+	 * @a attribute?
 	 *
 	 * @param attribute [in]
 	 * 		The attribute in question
@@ -81,18 +79,16 @@ public:
 	virtual bool isPluginRegistered(const OntologyAttribute & attribute) = 0;
 
 	/**
-	 * Remove attribute from optimizer's list of attributes for
-	 * which suggestions exist.
+	 * Remove @a attribute from the optimizer's list of attributes for
+	 * which suggestions can be provided.
 	 * 
 	 * @param attribute [in]
 	 * 		The attribute to remove from the list
-	 *
-	 * @todo Why not call with plugin as parameter?!
 	 */
 	virtual void unregisterPlugin(const OntologyAttribute & attribute) = 0;
 
 	/**
-	 * Ask optimizer to suggest a parameter for attribute.
+	 * Ask the optimizer to suggest a parameter for @a attribute.
 	 *
 	 * @param attribute [in]
 	 * 		The attribute in question
