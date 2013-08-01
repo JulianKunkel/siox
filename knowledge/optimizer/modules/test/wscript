@@ -1,0 +1,9 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+	pass
+   #bld.program(include="include",  use = "siox-ll optimizer",  features='test c cprogram', target = 'optimizer-test', source = 'optimizer-test.c', install_path = None,)
+
+
+# -*- indent-tabs-mode: t -*-
