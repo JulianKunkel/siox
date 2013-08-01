@@ -74,7 +74,7 @@ def doc(ctx):
 	# Files are placed in ./doc/images/plantuml
 	# Recusively search from current folder scanning files fittin the file patterns
 	# ctx.exec_command("java  -Djava.awt.headless=true -jar ${PLANTUML} -v -o ${PWD}/doc/images/plantuml  ./**.(c|cpp|doxygen|h|hpp|uml) >plantuml.log")
-	ctx.exec_command("plantuml -v -o ${PWD}/doc/images/plantuml  './**.(c|cpp|doxygen|h|hpp|uml)' >plantuml.log")
+	ctx.exec_command("plantuml -v -o ${PWD}/doc/images  './**.(c|cpp|doxygen|h|hpp|uml)' >plantuml.log")
 	ctx.exec_command("doxygen")
 
 

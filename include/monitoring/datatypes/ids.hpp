@@ -17,6 +17,49 @@ using namespace std;
 
 namespace monitoring{
 
+/**
+@page ids SIOX ID Overview
+SIOX uses a number of different IDs, which are structured as follows:
+@dot
+digraph IDs
+{
+    // Settings
+    //----------
+    // Arrange from bottom to top
+    rankdir="BT";
+    // Defaults for nodes and edges
+    node [shape=Mrecord];
+    edge [style=solid];
+
+    // The actual graph
+    //------------------
+    nid [label="NodeID\nuint32_t"]
+
+    pid [label="{ProcessID|{<nid>nid\nNodeID|pid\nuint32_t|<time>time\nuint32_t}}", URL="\ref ProcessID"]
+    nid:n -> pid:nid:s
+
+    cid [label="{ComponentID|{<pid>pid\nProcessID|id\nuint16_t}}", URL="\ref ComponentID"]
+    pid:n -> cid:pid:s
+
+    aid [label="{ActivityID|{<cid>cid\nComponentID|id\nuint32_t}}", URL="\ref ActivityID"]
+    cid:n -> aid:cid:s
+
+    uiid [label="{UniqueInterfaceID|{interface\nuint16_t|implementation\nuint16_t}}", URL="\ref UniqueInterfaceID"]
+
+    oaid [label="OntologyAttributeID\nuint32_t", URL="\ref OntologyAttributeID"]
+
+    ucaid [label="UniqueComponentActivityID\nuint32_t", URL="\ref UniqueComponentActivityID"]
+
+    assid [label="AssociatedID\nuint32_t", URL="\ref AssociateID"]
+
+    rcid [label="{RemoteCallID|{<nid>nid\nNodeID|<uiid>uiid\nUniqueInterfaceID|<assid>instance\nAssociatedID}}", URL="\ref RemoteCallIdentifier"]
+    nid:n -> rcid:nid:s
+    uiid:n -> rcid:uiid:s
+    assid:n -> rcid:assid:s
+}
+@enddot
+*/
+
 // Every hardware component which is addressable by the network is expected to have a unique (host)name.
 // This name is translated to the NodeID.
 // 

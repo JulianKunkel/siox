@@ -1,3 +1,8 @@
+/**
+ * @file c-types.h
+ * @date 2013-07
+ */
+ 
 #ifndef SIOX_C_TYPES_H
 #define SIOX_C_TYPES_H
 
@@ -10,7 +15,7 @@ typedef uint64_t siox_timestamp;
 
 /**
  * Result of a function.
- * @TODO: Design question - map to abstract values (enum) or use raw values?
+ * @todo: Design question - map to abstract values (enum) or use raw values?
  */
 typedef uint32_t siox_activity_error;
 /**

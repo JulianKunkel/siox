@@ -1,3 +1,7 @@
+/**
+ * @file ThreadedStatisticsCollector.hpp
+ * @date 2013-07
+ */
 #include <thread>
 #include <iostream>
 

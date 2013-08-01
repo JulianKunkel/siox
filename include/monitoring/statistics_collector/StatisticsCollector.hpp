@@ -1,8 +1,7 @@
 /**
  * @file    StatisticsCollector.hpp
  *
- * @description A (software) component for collecting statistical values.
- * @standard    Preferred standard is C++11
+ * A (software) component for collecting statistical values.
  *
  * @author Marc Wiedemann, Julian Kunkel
  * @date   2013

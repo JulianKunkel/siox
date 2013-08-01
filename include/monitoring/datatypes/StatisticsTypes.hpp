@@ -1,8 +1,7 @@
 /**
  * @file    StatisticsTypes.hpp
  *
- * @description A (software) component for datatypes used in statistics.
- * @standard    Preferred standard is C++11
+ * A (software) component for datatypes used in statistics.
  *
  * @author Julian Kunkel, Marc Wiedemann
  * @date   2013

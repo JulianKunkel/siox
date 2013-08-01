@@ -1,8 +1,7 @@
 /**
  * @file    ThreadedStatisticsCollector.cpp
  *
- * @description An implementation of the (software) component for collecting statistical values.
- * @standard    Preferred standard is C++11
+ * An implementation of the (software) component for collecting statistical values.
  *
  * @author Marc Wiedemann, Julian Kunkel
  * @date   2013

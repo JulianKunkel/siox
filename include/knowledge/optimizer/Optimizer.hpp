@@ -75,8 +75,8 @@ public:
 	 * 		The attribute in question
 	 *
 	 * @return
-	 *		@true if there is a plug-in regiestered for attribute;
-	 *		otherwise @false.
+	 *		@c true if there is a plug-in regiestered for attribute;
+	 *		otherwise @c false.
 	 */
 	virtual bool isPluginRegistered(const OntologyAttribute & attribute) = 0;
 
