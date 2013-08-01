@@ -94,7 +94,7 @@ public:
 	 * @return
 	 *		The best value for attribute, as judged by the plugin.
 	 */
-	virtual OntologyValue optimalParameter(const OntologyAttribute & attribute) = 0;
+	virtual OntologyValue optimalParameter(const OntologyAttribute * attribute) = 0;
 };
 
 }

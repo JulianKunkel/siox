@@ -19,15 +19,24 @@ class OntologyAttribute {
 public:
     OntologyAttributeID aID;
 
-	/*
+	/**
 	 * Reserved domains:
-	 * unit		for units of attribute values
-	 * 			(attach the unit as meta attribute of type SIOX_STORAGE_STRING to base attribute)
+	 * - unit
+	 *	for units of attribute values
+	 *	(attach the unit as meta attribute of type SIOX_STORAGE_STRING to base attribute)
 	 */
     string domain;
     string name;
     enum VariableDatatype::Type storage_type;
     //OntologyAttribute(OntologyAttributeID aid, string & name, enum siox_ont_storage_type storage_type) : aID(aid), name(name), storage_type(storage_type) {}
+
+    inline bool operator==(OntologyAttribute const & a) const{
+   		return ( a.aID == this->aID);
+   	}
+
+    inline bool operator!=(OntologyAttribute const & a) const{
+   		return ! ( a.aID == this->aID);
+   	}
 };
 }
 

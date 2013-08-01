@@ -2,8 +2,6 @@
 # encoding: utf-8
 
 def build(bld):
-	pass
-   #bld.program(include="include",  use = "siox-ll optimizer",  features='test c cprogram', target = 'optimizer-test', source = 'optimizer-test.c', install_path = None,)
-
+	bld.program(include="include",  use = "optimizer module-loader FileOntology FileOntologyOptions",  features='test cxx cxxprogram', target = 'optimizer-test', source = 'optimizer-test.cpp', install_path = None,)
 
 # -*- indent-tabs-mode: t -*-

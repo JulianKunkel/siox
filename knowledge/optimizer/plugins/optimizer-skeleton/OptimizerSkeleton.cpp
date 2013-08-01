@@ -5,7 +5,7 @@
 #include <monitoring/activity_multiplexer/OptimizerPluginImplementation.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 
-#include "OptimizerSkeletonOptions.hpp"
+#include "OptimizerPluginOptions.hpp"
 
 using namespace std;
 using namespace monitoring;
@@ -13,10 +13,10 @@ using namespace core;
 using namespace knowledge;
 
 // Create an implementation of the options.
-CREATE_SERIALIZEABLE_CLS(OptimizerSkeletonOptions)
+CREATE_SERIALIZEABLE_CLS(OptimizerPluginOptions)
 
 // It is important that the first parent class is of type OptimizerPlugin
-class OptimizerSkeleton: public OptimizerPlugin {
+class OptimizerPluginSkeleton: public OptimizerPlugin {
 private:
 /*	SystemInformationGlobalIDManager * sys;
 	OntologyAttribute * filesize;
@@ -57,7 +57,7 @@ public:
 */
 
 	virtual OntologyValue optimalParameter(const OntologyAttribute & attribute){
-		return nullptr;
+		return OntologyValue(42);
 	}
 
 

@@ -63,7 +63,7 @@ public:
 	 * @param plugin [in]
 	 *		The plugin that will provide suggestions
 	 */
-	virtual void registerPlugin(const OntologyAttribute & attribute, const OptimizerPlugin & plugin) = 0;
+	virtual void registerPlugin(const OntologyAttribute * attribute, const OptimizerPlugin * plugin) = 0;
 
 	/**
 	 * Is there a plug-in registered that can provide suggestions for 
@@ -76,7 +76,7 @@ public:
 	 *		@c true if there is a plug-in regiestered for attribute;
 	 *		otherwise @c false.
 	 */
-	virtual bool isPluginRegistered(const OntologyAttribute & attribute) = 0;
+	virtual bool isPluginRegistered(const OntologyAttribute * attribute) = 0;
 
 	/**
 	 * Remove @a attribute from the optimizer's list of attributes for
@@ -85,7 +85,7 @@ public:
 	 * @param attribute [in]
 	 * 		The attribute to remove from the list
 	 */
-	virtual void unregisterPlugin(const OntologyAttribute & attribute) = 0;
+	virtual void unregisterPlugin(const OntologyAttribute * attribute) = 0;
 
 	/**
 	 * Ask the optimizer to suggest a parameter for @a attribute.
@@ -98,7 +98,7 @@ public:
 	 *		registered for attribute with the optimizer, based
 	 *		upon current system statistics and activities.
 	 */
-	virtual OntologyValue optimalParameter(const OntologyAttribute & attribute) = 0;
+	virtual OntologyValue optimalParameter(const OntologyAttribute * attribute) = 0;
 };
 
 }
