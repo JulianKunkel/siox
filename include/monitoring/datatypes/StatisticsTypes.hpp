@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <map>
 
 using namespace std;
 
@@ -96,7 +97,7 @@ public:
 	//1)topology MapofMapObject;
 
 	// Less overhead than vector<pair<string,string>>:
-	map<string,map<string,string>> MapofMap;
+	typedef map<string,map<string,string>> MapofMap;
 	MapofMap MetricMapObject;
 
 
