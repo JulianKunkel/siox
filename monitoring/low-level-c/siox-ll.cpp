@@ -12,14 +12,15 @@
 #include <stdlib.h>
 
 #include <core/module/module-loader.hpp>
+#include <core/datatypes/VariableDatatype.hpp>
 #include <assert.h>
 
 #include "siox-ll-internal.hpp"
 
 using namespace std;
-
 using namespace core;
 using namespace monitoring;
+
 
 
 //############################################################################
@@ -195,7 +196,8 @@ __attribute__ ((destructor)) void siox_ll_dtor()
 //############################################################################
 
 /// Variant datatype to uniformly represent the multitude of different attibutes
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> AttributeValue;
+typedef VariableDatatype AttributeValue;
+
 
 //////////////////////////////////////////////////////////////////////////////
 /// Convert an attribute's value to the generic datatype used in the ontology.
@@ -236,6 +238,40 @@ static AttributeValue convert_attribute(siox_attribute * attribute, void * value
     return v;
 }
 
+
+/*static VariableDatatype::Type convert_attribute_type(siox_ont_storage_type type){
+    VariableDatatype::Type result;
+    switch(type){
+        case(SIOX_STORAGE_32_BIT_UINTEGER):
+        case(SIOX_STORAGE_32_BIT_INTEGER):{
+            result = VariableDatatype::Type::INT32;
+            break;
+        }
+        case(SIOX_STORAGE_64_BIT_UINTEGER):
+        case(SIOX_STORAGE_64_BIT_INTEGER):{
+            result = VariableDatatype::Type::INT64;
+            break;
+        }
+        case(SIOX_STORAGE_FLOAT):{
+            result = VariableDatatype::Type::FLOAT;
+            break;
+        }
+        case(SIOX_STORAGE_DOUBLE):{
+            result = VariableDatatype::Type::DOUBLE;
+            break;
+        }
+        case(SIOX_STORAGE_STRING):{
+            result = VariableDatatype::Type::STRING;
+            break;
+        }
+        case (SIOX_STORAGE_UNASSIGNED):{
+            result = VariableDatatype::Type::INVALID;
+            assert(0);
+        }
+    }
+    return result;
+}
+*/
 
 void siox_process_set_attribute(siox_attribute * attribute, void * value){
     assert(attribute != nullptr);
@@ -351,7 +387,7 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
 }
 
 
-void siox_activity_report_error(siox_activity * activity, int64_t error){
+void siox_activity_report_error(siox_activity * activity, siox_activity_error error){
     assert(activity != nullptr);
 
     // process_data.activity_builder->reportActivityError(activity, error);
@@ -412,9 +448,8 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
     assert(domain != nullptr);
     assert(name != nullptr);
 
-    string d(domain);
-    string n(name);
-    return process_data.ontology->register_attribute(d, n, storage_type);
+    // return process_data.ontology->register_attribute(domain, name, convert_attribute_type(storage_type));
+    return process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
 }
 
 
@@ -440,8 +475,9 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
     string u(unit);
 
     // MZ: Hier besser statt einer eigenen Domain für Units d verwenden?!
-    OntologyAttribute * meta = process_data.ontology->register_attribute(ud, u, SIOX_STORAGE_STRING);
-    OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, storage_type);
+    OntologyAttribute * meta = process_data.ontology->register_attribute(ud, u, VariableDatatype::Type::STRING);
+    // OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
+    OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, (VariableDatatype::Type) storage_type);
     process_data.ontology->attribute_set_meta_attribute(attribute, meta, u);
 
     return attribute;

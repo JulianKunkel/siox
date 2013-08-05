@@ -2,11 +2,11 @@
 #include <list>
 
 
+#include <monitoring/datatypes/ActivitySerializable.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
-#include <monitoring/datatypes/ActivitySerializable.hpp>
 #include <core/container/container-serializer-text.hpp>
 
 #include "ActivityFileWriterOptions.hpp"

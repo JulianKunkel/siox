@@ -8,10 +8,10 @@
 #define __SIOX_IDS_HPP
 
 #include "monitoring/datatypes/c-types.h"
+#include "core/datatypes/VariableDatatype.hpp"
 
 #include <cstdint>
 #include <vector>
-#include <boost/variant.hpp>
 
 using namespace std;
 
@@ -87,7 +87,7 @@ typedef uint32_t UniqueComponentActivityID;
 /* The associate ID is valid only within a particular process */
 typedef uint32_t AssociateID;
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, string, float, double> AttributeValue;
+typedef VariableDatatype AttributeValue;
 
 typedef struct {
 	OntologyAttributeID id;
@@ -152,7 +152,7 @@ struct ComponentID{
 
 struct RemoteCallIdentifier{
 	// Several parameters assist matching of remote calls
-	NodeID hwid; // optional
+	NodeID nid; // optional
 	UniqueInterfaceID uuid; // optional
 	AssociateID instance; // optional, remote call instance identifier
 };

@@ -3,6 +3,8 @@
 
 #include <string>
 #include <string.h>
+#include <assert.h>
+#include <iostream>
 
 
 using namespace std;
@@ -102,6 +104,38 @@ public:
 		return ! ( v == *this);
 	}
 };
+
+
+ostream& operator<<(ostream& os, const VariableDatatype & v)
+{
+    switch(v.type()){
+    	case VariableDatatype::Type::INT32:
+        	os << v.int32();
+            break;
+    	case VariableDatatype::Type::INT64:
+        	os << v.int64();
+            break;
+    	case VariableDatatype::Type::UINT32:
+        	os << v.uint32();
+            break;
+    	case VariableDatatype::Type::UINT64:
+        	os << v.uint64();
+            break;
+    	case VariableDatatype::Type::STRING:
+        	os << v.str();
+            break;
+    	case VariableDatatype::Type::FLOAT:
+        	os << v.flt();
+            break;
+    	case VariableDatatype::Type::DOUBLE:
+        	os << v.dbl();
+            break;
+    	case VariableDatatype::Type::INVALID:
+        	os << "(INVALID TYPE!)";
+            break;
+    }
+    return os;
+}
 
 
 #endif

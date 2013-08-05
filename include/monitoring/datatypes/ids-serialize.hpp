@@ -9,6 +9,8 @@
 
 #include <monitoring/datatypes/ids.hpp>
 
+using namespace monitoring;
+
 #define SER(x,y) ar & boost::serialization::make_nvp(x, y);
 namespace boost{
 namespace serialization {

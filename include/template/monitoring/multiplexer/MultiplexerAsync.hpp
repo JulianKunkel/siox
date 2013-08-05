@@ -105,7 +105,7 @@ class MultiplexerQueueTemplate : public MultiplexerQueue<TYPE>
 	//MultiplexerAsync<TYPE> * multiplexer;
 	
 	deque<TYPE *> queue; 
-	int capacity = 1000;
+	unsigned int capacity = 1000;
 
 	bool overloaded = false;
 	int lost = 0;

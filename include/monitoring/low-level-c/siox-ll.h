@@ -1,7 +1,7 @@
 /**
  * @file siox-ll.h SIOX low-level interface headers.
  *
- * @date 03/2013
+ * @date 2013-08-05
  * @copyright GNU Public License
  * @authors Michaela Zimmer, Julian Kunkel, Marc Wiedemann & Alvaro Aguilera
  */
@@ -96,57 +96,26 @@ component [SOPI] #Plum
 
 
 
-/*
- * If hostname is set to NULL, the implementation will use the local hostname.
- */
 //////////////////////////////////////////////////////////////////////////////
 /// Retrieve the node id object for a given hardware component.
 //////////////////////////////////////////////////////////////////////////////
 /// @param hostname [in] The hardware node's host name, which has to be
-/// system-wide unique
+/// system-wide unique. If set to NULL, SIOX will use the local hostname.
 //////////////////////////////////////////////////////////////////////////////
 /// @return A node id, which is system-wide unique
 //////////////////////////////////////////////////////////////////////////////
 siox_node * lookup_node_id(const char * hostname);
 
 
-/*
- * Register a process (program, could be a server as well)
- * This will be done automatically by register_component() if not provided. 
- * 
- * @param[in]   siox_node    identifies the hardware the process is running on. e.g. „Blizzard Node 5“ or the MacIDof an NAS hard drive.
- * 
- * If it is null it will be looked up automatically.
- * pid identifies the process.
- * If it is null it will be looked up automatically.
- * 
- * Subsequent calls to this function will ignore the pid and siox_node parameters but add new attributes.
- * Rationales:
- * 1) Multiple calls to this function must be possible to simplify usage in applications.
- * 2) Explicit setting of values is used for testing.
- * 
- * If siox_node or pid is NULL it is filled with the local hostname and the current process.
- */
-// void siox_process_register(siox_node * siox_node, ProcessID * pid);
-
-/*
- Adding of attributes allows different layers to add global valid runtime information (such as MPI rank).
- Although it is possible to realize this with attributes attached to individual components.
- */
 //////////////////////////////////////////////////////////////////////////////
 /// Set a global attribute and its value for a process.
+/// Adding an attribute to the process allows different layers to add globally
+/// valid runtime information (such as MPI rank).
 //////////////////////////////////////////////////////////////////////////////
 /// @param attribute [in] The attribute to set
 /// @param value [in] The attribute's new value
 //////////////////////////////////////////////////////////////////////////////
 void siox_process_set_attribute(siox_attribute * attribute, void * value);
-
-/*
- * This call indicates the completion of the application.
- * SIOX might cleanup internal datastructures and/or flush information along the monitoring and knowledge paths.
- * Subsequent calls to any SIOX interface should be avoided.
- */
-// void siox_process_finalize();
 
 
 /*

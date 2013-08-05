@@ -2,8 +2,8 @@
 # encoding: utf-8
 
 def build(bld):
-   pass
-   #bld.program(includes="include",  use = "siox-ll",  features='test c cprogram', target = 'siox-ll-c-test', source = 'siox-ll-c-test.c', install_path = None,)
+   #pass
+   bld.program(includes="include",  use = "siox-ll",  features='test c cprogram', target = 'siox-ll-c-test', source = 'siox-ll-c-test.c', install_path = None,)
 
 
 # -*- indent-tabs-mode: t -*-
