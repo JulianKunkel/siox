@@ -5,11 +5,6 @@
 
 
 int main(){
-	// make test runable using waf which is a different directory.
-	if (chdir ("../../../../monitoring") == 0){
-		chdir("../");
-	}
-
 	printf("Registering attributes...");
 	siox_attribute * a1 = siox_ontology_register_attribute("meta", "test int attribute", SIOX_STORAGE_64_BIT_UINTEGER);
 	siox_attribute * a2 = siox_ontology_register_attribute("local", "test str attribute", SIOX_STORAGE_STRING);
