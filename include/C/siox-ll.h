@@ -11,7 +11,7 @@
 #ifndef siox_LL_H
 #define siox_LL_H
 
-#include <monitoring/datatypes/c-types.h>
+#include <C/siox-types.h>
 
 #ifndef __cplusplus
  

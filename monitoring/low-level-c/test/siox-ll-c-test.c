@@ -1,4 +1,5 @@
-#include <monitoring/low-level-c/siox-ll.h>
+#include <C/siox.h>
+
 #include <assert.h>
 #include <stdio.h>
 

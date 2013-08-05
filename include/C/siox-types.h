@@ -18,16 +18,7 @@ typedef uint64_t siox_timestamp;
  * @todo: Design question - map to abstract values (enum) or use raw values?
  */
 typedef uint32_t siox_activity_error;
-/**
- * Example for abstract values
- */
-/*
-typedef enum siox_activity_error {
-	SIOX_ACTIVITY_SUCCESS,
-	SIOX_ACTIVITY_PARTIAL_SUCCESS,
-	SIOX_ACTIVITY_ERROR,
-} siox_activity_error;
-*/
+
 
 /**
  * Supported datatypes in SIOX

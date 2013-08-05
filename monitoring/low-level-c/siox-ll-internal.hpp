@@ -2,7 +2,7 @@
 #define SIOX_LL_INTERNAL_H_
 
 
-#include <monitoring/datatypes/c-types.h>
+#include <C/siox-types.h>
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
@@ -23,11 +23,6 @@ typedef UniqueInterfaceID siox_unique_interface;
 typedef ComponentID siox_component;
 typedef ActivityID siox_activity;
 typedef RemoteCallIdentifier siox_remote_call;
-
-
-extern "C"{
-#include <monitoring/low-level-c/siox-ll.h>
-}
 
 /**
  * Implementation of the low-level API
