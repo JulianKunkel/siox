@@ -91,9 +91,14 @@ public:
 	string metrics;
 
 	vector<pair<string,string> > topology;
-	//map<string,string> PAIR;
-	//map<string,PAIR> topology;
-	//topology MapofMapObject;
+	//1)map<string,string> PAIR;
+	//1)map<string,PAIR> topology;
+	//1)topology MapofMapObject;
+
+	// Less overhead than vector<pair<string,string>>:
+	map<string,map<string,string>> MapofMap;
+	MapofMap MetricMapObject;
+
 
 	string si_unit;
 
