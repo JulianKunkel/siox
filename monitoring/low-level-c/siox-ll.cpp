@@ -211,11 +211,15 @@ static AttributeValue convert_attribute(siox_attribute * attribute, void * value
     AttributeValue v;
     switch(attribute->storage_type){
     case(SIOX_STORAGE_32_BIT_UINTEGER):
+        v = *((uint32_t * ) value);
+        break;
     case(SIOX_STORAGE_32_BIT_INTEGER):{
         v = *((int32_t * ) value);
         break;
     }
     case(SIOX_STORAGE_64_BIT_UINTEGER):
+        v = *((uint64_t * ) value);      
+        break;
     case(SIOX_STORAGE_64_BIT_INTEGER):{
         v = *((int64_t * ) value);      
         break;
@@ -229,6 +233,7 @@ static AttributeValue convert_attribute(siox_attribute * attribute, void * value
         break;
     }
     case(SIOX_STORAGE_STRING):{
+        v = (char *) value;
         break;
     }
     case (SIOX_STORAGE_UNASSIGNED):{
@@ -469,16 +474,11 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
     assert(name != nullptr);
     assert(unit != nullptr);
 
-    string d(domain);
-    string n(name);
-    string ud("Units");
-    string u(unit);
-
     // MZ: Hier besser statt einer eigenen Domain für Units d verwenden?!
-    OntologyAttribute * meta = process_data.ontology->register_attribute(ud, u, VariableDatatype::Type::STRING);
+    OntologyAttribute * meta = process_data.ontology->register_attribute("Meta", "Unit", VariableDatatype::Type::STRING);
     // OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
-    OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, (VariableDatatype::Type) storage_type);
-    process_data.ontology->attribute_set_meta_attribute(attribute, meta, u);
+    OntologyAttribute * attribute = process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+    process_data.ontology->attribute_set_meta_attribute(attribute, meta, unit);
 
     return attribute;
 }

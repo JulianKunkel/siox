@@ -40,6 +40,7 @@ public:
 	VariableDatatype(int32_t i){ data.i64 = 0; data.i32 = i; type_ = INT32;}
 	VariableDatatype(uint32_t i){ data.i64 = 0; data.ui32 = i; type_ = UINT32;}
 	VariableDatatype(const std::string & s){ data.str = strdup(s.c_str()); type_ = STRING; }
+	VariableDatatype(const char * str){ data.str = strdup(str); type_ = STRING; }
 	VariableDatatype(float f){ data.i64 = 0; data.f = f; type_ = FLOAT;}
 	VariableDatatype(double d){ data.d = d; type_ = DOUBLE;}
 

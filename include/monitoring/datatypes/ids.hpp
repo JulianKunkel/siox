@@ -7,8 +7,7 @@
 #ifndef __SIOX_IDS_HPP
 #define __SIOX_IDS_HPP
 
-#include "monitoring/datatypes/c-types.h"
-#include "core/datatypes/VariableDatatype.hpp"
+#include <core/datatypes/VariableDatatype.hpp>
 
 #include <cstdint>
 #include <vector>
@@ -93,6 +92,11 @@ typedef struct {
 	OntologyAttributeID id;
 	AttributeValue value;
 } Attribute;
+
+typedef uint64_t Timestamp;
+
+typedef uint32_t ActivityError;
+
 
 // The daemon fetches the NodeID from the knowledge base (or initiates creation if necessary)
 // NodeID lookup_node_id(const char * hostname);

@@ -61,8 +61,10 @@ def configure(conf):
 
         if conf.options.debug:
 	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall']
+	        conf.env.CFLAGS = ['-std=c99', '-O3', '-Wall']
 	else:
 		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall']
+		conf.env.CFLAGS = ['-std=c99', '-g', '-Wall']
 
 
 	print ""
