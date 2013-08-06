@@ -10,6 +10,8 @@
 
 #include <core/component/Component.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
+#include <monitoring/datatypes/Exceptions.hpp>
+
 // #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
 
 using namespace core;
@@ -92,7 +94,7 @@ public:
 	 * @return
 	 *		The best value for attribute, as judged by the plugin.
 	 */
-	virtual OntologyValue optimalParameter(const OntologyAttribute * attribute) = 0;
+	virtual OntologyValue optimalParameter(const OntologyAttribute & attribute) const throw(NotFoundError) = 0;
 };
 
 }

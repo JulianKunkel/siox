@@ -7,6 +7,9 @@
 #include <exception>
 
 #include <vector>
+#include <string>
+
+using namespace std;
 
 /*
  * Since this class does provide/parse the configuration it does not need to be derived from Component.
@@ -15,20 +18,22 @@
 
 class InvalidConfiguration: public std::exception{
 private:
-   const char * cause;
+   string cause;
 
 public:
-  InvalidConfiguration(const char * cause){
-	this->cause = cause;
+  InvalidConfiguration(const string & cause, const string & module){
+  	if(module != ""){
+		this->cause = "Module \"" + module + "\": " + cause;
+	}else{
+		this->cause = cause;
+	}
   }
 
   virtual const char* what() const throw()
   {
-  	return cause;
+  	return cause.c_str();
   }
 };
-
-using namespace std;
 
 namespace core{
 

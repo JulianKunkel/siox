@@ -273,7 +273,7 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value){
     assert(value != nullptr);
 
     AttributeValue val = convert_attribute(attribute, value);
-    process_data.association_mapper->set_process_attribute( & process_data.pid, attribute, val);
+    process_data.association_mapper->set_process_attribute( process_data.pid, *attribute, val);
 }
 
 
@@ -339,10 +339,9 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
     assert(attribute != nullptr);
     assert(value != nullptr);
 
-    // MZ: TODO siox_component in ComponentID wandeln
-    ComponentID * cid = nullptr; // FIXME
+    ComponentID cid = component->cid;
     AttributeValue val = convert_attribute(attribute, value);
-    process_data.association_mapper->set_component_attribute(cid, attribute, val);
+    process_data.association_mapper->set_component_attribute(cid, *attribute, val);
 }
 
 
@@ -469,7 +468,11 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
     assert(name != nullptr);
 
     // return process_data.ontology->register_attribute(domain, name, convert_attribute_type(storage_type));
-    return process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+    try{
+        return & process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+    }catch(IllegalStateError & e){
+        return nullptr;
+    }
 }
 
 
@@ -480,7 +483,12 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_att
     assert(value != nullptr);
 
     AttributeValue val = convert_attribute(meta_attribute, value);
-    return process_data.ontology->attribute_set_meta_attribute(parent_attribute, meta_attribute, val);
+    try{
+        process_data.ontology->attribute_set_meta_attribute(*parent_attribute, *meta_attribute, val);
+    }catch(IllegalStateError & e){
+        return 0;
+    }
+    return 1;
 }
 
 
@@ -490,21 +498,25 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
     assert(unit != nullptr);
 
     // MZ: Hier besser statt einer eigenen Domain für Units d verwenden?!
-    OntologyAttribute * meta = process_data.ontology->register_attribute("Meta", "Unit", VariableDatatype::Type::STRING);
-    // OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
-    OntologyAttribute * attribute = process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
-    process_data.ontology->attribute_set_meta_attribute(attribute, meta, unit);
-
-    return attribute;
+    try{
+        const OntologyAttribute & meta = process_data.ontology->register_attribute("Meta", "Unit", VariableDatatype::Type::STRING);
+        // OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
+        const OntologyAttribute & attribute = process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+        process_data.ontology->attribute_set_meta_attribute(attribute, meta, unit);
+        return & attribute;
+    }catch(IllegalStateError & e){
+        return nullptr;
+    }    
 }
 
 
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name){
     assert(name != nullptr);
-
-    string d(domain);
-    string n(name);
-    return process_data.ontology->lookup_attribute_by_name(d, n);
+    try{
+        return & process_data.ontology->lookup_attribute_by_name(domain, name);
+    }catch(NotFoundError & e){
+        return nullptr;
+    }
 }
 
 
@@ -515,11 +527,15 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
     //uint64_t id = process_data.system_information_manager->interface_id(in, ii);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     // Workaround for stuffing
-    UniqueInterfaceID uid = process_data.system_information_manager->interface_id(interface_name, implementation_identifier);
-    assert(sizeof(uid) <= sizeof(uint64_t));
-    UniqueInterfaceID * id = 0;
-    memcpy(& id, &uid, sizeof(uid));
-    return id;
+    try{
+        UniqueInterfaceID uid = process_data.system_information_manager->interface_id(interface_name, implementation_identifier);
+        assert(sizeof(uid) <= sizeof(uint64_t));
+        UniqueInterfaceID * id = 0;
+        memcpy(& id, &uid, sizeof(uid));
+        return id;
+    }catch(IllegalStateError & e){
+        return nullptr;
+    }
 }
 
 } // extern "C"

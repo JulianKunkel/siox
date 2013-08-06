@@ -18,14 +18,21 @@ using namespace core;
 using namespace monitoring;
 
 // define all types for CPP
-typedef AssociateID siox_associate;
-typedef OntologyAttribute siox_attribute;
-typedef UniqueComponentActivityID siox_component_activity;
-typedef NodeID siox_node;
+typedef const AssociateID siox_associate;
+typedef const OntologyAttribute siox_attribute;
+typedef const UniqueComponentActivityID siox_component_activity;
+typedef const NodeID siox_node;
+typedef const UniqueInterfaceID siox_unique_interface; // will be stuffed.
 
-typedef UniqueInterfaceID siox_unique_interface; // will be stuffed.
-typedef ActivityID siox_activity;
-typedef RemoteCallIdentifier siox_remote_call;
+struct siox_activity{
+    ActivityID aid;
+    // TODO
+};
+
+struct siox_remote_call{
+    ActivityID aid;
+    // TODO
+};
 
 
 

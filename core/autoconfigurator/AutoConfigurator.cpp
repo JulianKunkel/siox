@@ -63,7 +63,7 @@ namespace core{
 	vector<Component*> AutoConfigurator::LoadConfiguration(string type, string matchingRules) throw (InvalidComponentException, InvalidConfiguration){		
 		string config = configurationProvider->getConfiguration(type, matchingRules);
 		if(config.length() < 10){
-			throw InvalidConfiguration("Configuration is unavailable or too short");
+			throw InvalidConfiguration("Configuration is unavailable or too short", "");
 		}
 
 		// replace <X> with  <object class_id="1" class_name="X"> 
@@ -125,7 +125,7 @@ namespace core{
 				autoConfiguratorRegistrar = nullptr;
 				registrarMutex.unlock();
 
-				throw InvalidConfiguration("Error while parsing module configuration");
+				throw InvalidConfiguration("Error while parsing module configuration", "");
 			}
 
 			//cout << "Parsed module description: "  << already_parsed_config.tellg() << endl;
@@ -141,7 +141,7 @@ namespace core{
 				string  str = cs.serialize(& availableOptions);
 				cerr << endl << "Expected configuration: " << str << endl;
 
-				throw InvalidConfiguration("Error during parsing of options");
+				throw InvalidConfiguration("Error during parsing of options", module->name);
 			}
 
 			try{
@@ -152,7 +152,7 @@ namespace core{
 
 				string  str = cs.serialize(options);
 				cerr << "Configuration values: " << str << endl;
-				throw InvalidConfiguration("Error during initialization of module");
+				throw InvalidConfiguration(string("Error during initialization: ") + e.what(), module->name);
 			}
 			registrar->register_component(module->componentID + autoConfiguratorOffset, component);
 

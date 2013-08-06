@@ -113,6 +113,8 @@ typedef struct{
 // See @TODO
 
 
+
+
 /* Identifies a specific software interface, e.g. OpenMPI V3 
  * Globally unique => lookup in knowledge base is mandatory for each layer.
  * The config file for the layer may hold this additional information, so lookup comes for free.
@@ -166,6 +168,8 @@ struct ActivityID{
 	ComponentID cid;
 	uint32_t id;
 };
+
+
 
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);
 // See @TODO

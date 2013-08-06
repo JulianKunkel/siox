@@ -31,12 +31,13 @@ using namespace boost;
 CREATE_SERIALIZEABLE_CLS(FileOntologyOptions)
 
 
+
 namespace monitoring{
 
 class AttributeWithValues{
 public:
 	OntologyAttribute attribute;
-	vector<OntologyAttribute*> meta_attributes;
+	vector<OntologyAttributeID> meta_attributes;
 	vector<OntologyValue> values;
 };
 
@@ -112,7 +113,7 @@ class FileOntology: public Ontology{
 	///////////////////////////////////////////////////
 
 
-    OntologyAttribute * register_attribute(const string & domain, const string & name, VariableDatatype::Type storage_type){
+    const OntologyAttribute & register_attribute(const string & domain, const string & name, VariableDatatype::Type storage_type) throw(IllegalStateError){
     	// lookup if the domain + name exists in the table.
 		stringstream unique(domain);
 		unique << "|" << name;
@@ -135,63 +136,73 @@ class FileOntology: public Ontology{
 
 		// check for consistency:
 		if(storage_type != domain_name_map[fqn]->attribute.storage_type ){
-			return nullptr;
+			throw IllegalStateError("Storage type does not match");
 		}
 
-		return & domain_name_map[fqn]->attribute;
+		return domain_name_map[fqn]->attribute;
     }
 
-    bool attribute_set_meta_attribute(OntologyAttribute * att, OntologyAttribute * meta, const OntologyValue & value){
-    	assert( meta->storage_type == value.type() );
+    void attribute_set_meta_attribute(const OntologyAttribute & att, const OntologyAttribute & meta, const OntologyValue & value) throw(IllegalStateError){
+    	assert( meta.storage_type == value.type() );
 
     	attributeMutex.lock();
-    	// check if the attribute has been set in the past:
-    	const OntologyValue * val = lookup_meta_attribute(att, meta);
-    	
-    	if( val != nullptr){
-    		attributeMutex.unlock();
-    		if( *val == value )
-    			return true;
-    		else
-    			return false;
-    	}
+    	// check if the attribute has been set in the past:    	
+    	int prevIndex = lookupAttributeIndex(att, meta);
 
-	   	auto stored = attribute_map[att->aID];
-	   	stored->meta_attributes.push_back(meta);
+	   	auto stored = attribute_map[att.aID];    	
+    	if( prevIndex >= 0){
+    		attributeMutex.unlock();
+    		if( stored->values[prevIndex] == value )
+    			return;
+    		else
+    			throw IllegalStateError("Value is different!");
+    	}
+	   	stored->meta_attributes.push_back(meta.aID);
 	   	stored->values.push_back(value);
 	   	attributeMutex.unlock();
-
-    	return true;
     }
 
-    OntologyAttribute * lookup_attribute_by_name(const string & domain, const string & name){
+    const OntologyAttribute & lookup_attribute_by_name(const string & domain, const string & name) const throw(NotFoundError){
 		stringstream unique(domain);
 		unique << "|" << name;
-		return & domain_name_map[unique.str()]->attribute;
-    }
 
-    OntologyAttribute * lookup_attribute_by_ID(OntologyAttributeID aID){
-		return & attribute_map[aID]->attribute;
-    }
+		auto res = domain_name_map.find(unique.str());
 
-    const vector<OntologyAttribute*> & enumerate_meta_attributes(OntologyAttribute * attribute){
-    	return attribute_map[attribute->aID]->meta_attributes;
-    }
-
-    const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta){
-    	// check for existing types:
-    	auto stored = attribute_map[attribute->aID];
-    	auto list = stored->meta_attributes;
-    	OntologyAttributeID searchFor = meta->aID;
-
-    	int which = 0;
-		for(auto it= list.begin(); it != list.end(); it++){
-			if( (*it)->aID == searchFor){
-				return & stored->values[which];
-			}
-			which++;
+		if (res != domain_name_map.end()){
+			return res->second->attribute;
+		}else{
+			throw NotFoundError();
 		}
-    	return nullptr;
+    }
+
+    const OntologyAttribute & lookup_attribute_by_ID(OntologyAttributeID aID) const throw(NotFoundError){
+
+		auto res = attribute_map.find(aID);
+
+		if (res != attribute_map.end()){
+			return res->second->attribute;
+		}else{
+			throw NotFoundError();
+		}
+    }
+
+    const vector<OntologyAttributeID> & enumerate_meta_attributes(const OntologyAttribute & attribute) const throw(NotFoundError){
+    	auto res = attribute_map.find(attribute.aID);
+
+		if (res != attribute_map.end()){
+			return res->second->meta_attributes;
+		}else{
+			throw NotFoundError();
+		}
+    }
+
+    const OntologyValue & lookup_meta_attribute(const OntologyAttribute & attribute, const OntologyAttribute & meta) const throw(NotFoundError){
+    	// check for existing types:
+    	int which = lookupAttributeIndex(attribute, meta);
+    	if (which >= 0){
+				return  attribute_map.find(attribute.aID)->second->values[which];
+		}
+    	throw NotFoundError("Datatype not found");
     }
 
 private:
@@ -204,6 +215,22 @@ private:
 	map<string, AttributeWithValues*> domain_name_map;
 
 	string filename;
+
+    int lookupAttributeIndex(const OntologyAttribute & attribute, const OntologyAttribute & meta) const {
+    	// check for existing types:
+    	auto list = attribute_map.find(attribute.aID)->second->meta_attributes;
+    	OntologyAttributeID searchFor = meta.aID;
+
+    	int which = 0;
+		for(auto it= list.begin(); it != list.end(); it++){
+			if( *it == searchFor){
+				return which;
+			}
+			which++;
+		}
+
+		return -1;
+	}
 };
 
 }

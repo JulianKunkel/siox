@@ -11,16 +11,15 @@
 using namespace std;
 using namespace knowledge;
 
-OntologyAttribute * att1;
-OntologyAttribute * att2;
+OntologyAttribute att1;
+OntologyAttribute att2;
 
 
 class OptimizerTestPlugin: public OptimizerPlugin {
 
 private:
-	uint64_t count = 0;
-	uint64_t fix = 42;
-
+	mutable uint64_t count = 0;
+	mutable uint64_t fix = 42;
 public:
 
 	void init() {
@@ -31,12 +30,12 @@ public:
 		return new ComponentOptions();
 	}
 
-	OntologyValue optimalParameter(const OntologyAttribute * attribute){
+	OntologyValue optimalParameter(const OntologyAttribute & attribute) const throw (NotFoundError){
 		if (attribute == att1)
 			return OntologyValue(fix);
 		if (attribute == att2)
 			return OntologyValue(count++);
-		return OntologyValue(); // Returns an explicitly invalid value!
+		throw NotFoundError("Illegal attribute!");
 	}
 
 };
@@ -58,10 +57,10 @@ int main(int argc, char const *argv[]){
 	string s_att1("Attribute 1");
 	string s_att2("Attribute 2");
 	att1 = ont->register_attribute(domain, s_att1, VariableDatatype::UINT32);
-	assert(att1->aID != 0);
+	assert(att1.aID != 0);
 	att2 = ont->register_attribute(domain, s_att2, VariableDatatype::UINT32);
-	assert(att2->aID != 0);
-	assert(att1->aID != att2->aID);
+	assert(att2.aID != 0);
+	assert(att1.aID != att2.aID);
 
 
 	// Obtain an Optimizer instance from module loader

@@ -39,6 +39,14 @@ struct ByteRangeComparator
 namespace monitoring{
 
 
+template <class TYPE>
+struct ByteComparator {
+    bool operator()(const TYPE & a, const TYPE & b) const {
+        return memcmp(&a, &b, sizeof(TYPE));
+    }
+};
+
+
 class AttributeIDsAndValues{
 public:
 	vector<OntologyAttributeID> ids;
@@ -97,42 +105,71 @@ public:
 		save(filename);
 	}
 
-	OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att){
-		AttributeIDsAndValues * av = map_processAttributes[pid];	
-		return lookup_attribute(av, att);
+	
+	virtual const OntologyValue & lookup_process_attribute(const ProcessID & pid, const OntologyAttribute & att) const throw(NotFoundError){
+		auto res = map_processAttributes.find(pid);
+		
+		if( res != map_processAttributes.end()){
+			const OntologyValue * val = lookup_attribute(res->second, att);
+			if( val != nullptr){
+				return *val;
+			}else{
+				throw NotFoundError();
+			}
+		}		
+		throw NotFoundError();		
 	}
 
-	bool set_process_attribute(ProcessID * pid, OntologyAttribute * att, const  OntologyValue & value){
-		globalMutex.lock();
-		AttributeIDsAndValues * av = map_processAttributes[pid];
-		if( av == nullptr){
-			av = new AttributeIDsAndValues();
-			map_processAttributes[pid] = av;
+
+	virtual void set_process_attribute(const ProcessID & pid, const OntologyAttribute & att, const OntologyValue & value) throw(IllegalStateError){
+		globalMutex.lock();		
+		auto res = map_processAttributes.find(pid);
+		AttributeIDsAndValues * av;
+		
+		if( res == map_processAttributes.end()){
+			map_processAttributes[pid] = AttributeIDsAndValues();
+			av = & map_processAttributes[pid];
 		}
-		bool ret = set_attribute(av, att, value);
-		globalMutex.unlock();
-		return ret;
-	}
-
-
-	bool set_component_attribute(ComponentID * cid, OntologyAttribute * att,const  OntologyValue & value){
-		globalMutex.lock();
-		AttributeIDsAndValues * av = map_componentAttributes[cid];	
-		if( av == nullptr){
-			av = new AttributeIDsAndValues();
-			map_componentAttributes[cid] = av;
-		}
-
-		bool ret = set_attribute(av, att, value);
-
+		int ret = set_attribute(av, & att, value);
 		globalMutex.unlock();
 
-		return ret ;
+		if( ret == false){
+			throw IllegalStateError("Value exists already!");
+		}		
 	}
 
-	OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att){
-		AttributeIDsAndValues * av = map_componentAttributes[cid];	
-		return lookup_attribute(av, att);
+
+	virtual void set_component_attribute(const ComponentID & cid, const OntologyAttribute & att, const  OntologyValue & value) throw(IllegalStateError){
+		globalMutex.lock();
+		auto res = map_componentAttributes.find(cid);
+		AttributeIDsAndValues * av;
+		
+		if( res == map_componentAttributes.end()){
+			map_componentAttributes[cid] = AttributeIDsAndValues();
+			av = & map_componentAttributes[cid];
+		}
+
+		bool ret = set_attribute(av, & att, value);
+
+		globalMutex.unlock();
+
+		if( ret == false){
+			throw IllegalStateError("Value exists already!");
+		}
+	}
+
+	virtual const OntologyValue & lookup_component_attribute(const ComponentID & cid, const OntologyAttribute & att) const throw(NotFoundError){
+		auto res = map_componentAttributes.find(cid);
+		
+		if( res != map_componentAttributes.end()){
+			const OntologyValue * val = lookup_attribute(res->second, att);
+			if( val != nullptr){
+				return *val;
+			}else{
+				throw NotFoundError();
+			}
+		}		
+		throw NotFoundError();
 	}
 
 
@@ -153,13 +190,12 @@ public:
 		return last;
 	}
 
-	const string * lookup_instance_mapping(AssociateID id){
-		return & map_aid_str[id - 1]; // !!!!!
+	virtual const string & lookup_instance_mapping(AssociateID id) const throw(NotFoundError){
+		return map_aid_str[id - 1]; // !!!!!
 	}
 
-
 private:
-	bool set_attribute(AttributeIDsAndValues * av, OntologyAttribute * att, const  OntologyValue & value){
+	bool set_attribute(AttributeIDsAndValues * av, const OntologyAttribute * att, const  OntologyValue & value){
 		OntologyAttributeID searchFor = att->aID;
 
     	int which = 0;
@@ -180,17 +216,14 @@ private:
 		return true;
 	}
 
-	OntologyValue * lookup_attribute(AttributeIDsAndValues * av, OntologyAttribute * att){
-		if(av == nullptr)
-			return nullptr;
-
-    	auto list = av->ids;
-    	OntologyAttributeID searchFor = att->aID;
+	const OntologyValue * lookup_attribute(const AttributeIDsAndValues & av, const OntologyAttribute & att) const{
+    	auto list = av.ids;
+    	OntologyAttributeID searchFor = att.aID;
 
     	int which = 0;
 		for(auto it= list.begin(); it != list.end(); it++){
 			if( *it == searchFor){
-				return & av->values[which];
+				return & av.values[which];
 			}
 			which++;
 		}
@@ -203,8 +236,8 @@ private:
 
 	AssociateID lastID = 1;
 	
-	map<ProcessID*, AttributeIDsAndValues*, ByteRangeComparator<sizeof(ProcessID)> > map_processAttributes;
-	map<ComponentID*, AttributeIDsAndValues*, ByteRangeComparator<sizeof(ComponentID)> > map_componentAttributes;
+	map<ProcessID, AttributeIDsAndValues, ByteComparator<ProcessID> > map_processAttributes;
+	map<ComponentID, AttributeIDsAndValues, ByteComparator<ComponentID> > map_componentAttributes;
 
 	map<string, AssociateID> map_str_aid;
 	vector<string> map_aid_str;

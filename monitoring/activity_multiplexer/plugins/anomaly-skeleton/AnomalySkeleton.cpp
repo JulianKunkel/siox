@@ -18,19 +18,17 @@ CREATE_SERIALIZEABLE_CLS(AnomalySkeletonOptions)
 class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerSync {
 private:
 	SystemInformationGlobalIDManager * sys;
-	OntologyAttribute * filesize;
+	OntologyAttribute filesize;
 public:
 	void Notify(Activity * activity)
-	{ 
-		if(filesize == nullptr) // initial state
-			return;
+	{
 		cout << "Notified: type: " ;// << sys->activity_name(activity->aid())	<< endl;
 		// check for a specific attribute.
 		vector<Attribute> attributes = activity->attributeArray();
 		for(auto itr = attributes.begin() ; itr != attributes.end(); itr++){
 			Attribute & att = *itr;
 			cout << "attribute: " << att.id << endl;
-			if( att.id == filesize->aID){
+			if( att.id == filesize.aID){
 					cout << "Filesize: " << att.value << endl;
 			}			
 		}
@@ -47,8 +45,12 @@ public:
 		assert(this->dereferenceFacade->get_system_information() != nullptr);
 		sys = this->dereferenceFacade->get_system_information();
 
-		filesize = dereferenceFacade->lookup_attribute_by_name("test", "filesize");
-		// assert(filesize != nullptr); generally true but not for the first run
+		try{
+			filesize = dereferenceFacade->lookup_attribute_by_name("test", "filesize");
+		}catch(NotFoundError & e){
+			// First run, we cannot register because the ontology does not hold filesize.
+			return;
+		}
 
 		multiplexer.registerListener(this);
 	}
