@@ -1,6 +1,6 @@
 /**
- * @file c-types.h
- * @date 2013-07
+ * @file siox-types.h
+ * @date 2013-08-06
  */
  
 #ifndef SIOX_C_TYPES_H
@@ -22,9 +22,10 @@ typedef uint32_t siox_activity_error;
 
 /**
  * Supported datatypes in SIOX
- * The transaction system needs fixed datatypes - Any changes here will have the effect of the transactionsystem to stop working
- * In that case the scripts for the transaction system have to be modified.
- * Postgres needs twice as large datatypes as these for storage due to its internal structure.
+ * The transaction system needs fixed datatypes - any changes here will cause the
+ * transaction system to stop working!
+ * In that case, the scripts for the transaction system have to be modified.
+ * Postgres needs datatypes twice as large as these for storage due to its internal structure.
  */
 enum siox_ont_storage_type{
     SIOX_STORAGE_64_BIT_INTEGER,
