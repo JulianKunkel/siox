@@ -41,7 +41,7 @@ public:
 	 */
 	virtual void connect(std::string & configuration_entry_point) = 0;
 
-	virtual std::string getConfiguration(std::string & type, std::string & matchingRules) = 0;
+	virtual const std::string & getConfiguration(std::string & type, std::string & matchingRules) = 0;
 
 	virtual ~ConfigurationProvider() {};
 };

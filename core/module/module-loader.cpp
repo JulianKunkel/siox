@@ -40,13 +40,11 @@ void *module_create_instance(string module_path, string module_name,
 	string fullQualifiedFileName = (module_path != "") ? module_path + 
 		"/lib" + module_name + ".so" : "lib" + module_name + ".so";
 		
-	GModule *module = g_module_open(fullQualifiedFileName.c_str(), 
-					G_MODULE_BIND_LAZY);
+	GModule *module = g_module_open(fullQualifiedFileName.c_str(), G_MODULE_BIND_LAZY);
 
 	if (module == nullptr) {
 		const char * errmsg = g_module_error();
-		throw ModuleError(module_path, module_name, interface_name, 
-				  errmsg);
+		throw ModuleError(module_path, module_name, interface_name, errmsg);
 	} 
 
 	// lookup symbol which will create the instance

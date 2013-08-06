@@ -30,5 +30,20 @@ int main(){
 	assert(m1 == m2);
 	printf("success!\n");
 
+	siox_unique_interface * i1 = siox_system_information_lookup_interface_id("test", "Impl1");
+	siox_unique_interface * i2 = siox_system_information_lookup_interface_id("test", "InvalidImpl");
+
+	assert(i1 != NULL);
+	assert(i2 != NULL);
+
+	siox_component * c1 = siox_component_register(i1, "localhost4711");
+	assert(c1 != NULL);
+
+	siox_component * c2 = siox_component_register(i2, NULL);
+	assert(c2 == NULL);
+
+
+	siox_component_unregister(c1);
+
 	return 0;
 }

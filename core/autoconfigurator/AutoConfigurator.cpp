@@ -50,6 +50,9 @@ namespace core{
 		registrar = r;
 	}
 
+	/*
+	 Ownership of the conf_provider is given to the AutoConfigurator
+	 */
 	AutoConfigurator::AutoConfigurator(ComponentRegistrar *r, ConfigurationProvider * conf_provider){
 		registrar = r;
 		string val = "";
@@ -151,7 +154,7 @@ namespace core{
 				cerr << "Configuration values: " << str << endl;
 				throw InvalidConfiguration("Error during initialization of module");
 			}
-			registrar->register_component(module->componentID, component);
+			registrar->register_component(module->componentID + autoConfiguratorOffset, component);
 
 			components.push_back(component);
 	
