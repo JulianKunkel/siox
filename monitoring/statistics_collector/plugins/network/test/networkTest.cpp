@@ -20,9 +20,10 @@ int main(int argc, char const *argv[]){
 
 	auto list = plugin->availableMetrics();
 
-	cout << "network plugin" << endl;
+	cout << "Network plugin" << endl;
 
 	plugin->nextTimestep();
+
 	for(auto it = list.begin() ; it != list.end(); it ++){
 		StatisticsProviderDatatypes & stat = *it;
 		cout << stat.topology[1].second << " " << stat.metrics << ": " << stat.value << " " << stat.si_unit << endl;				

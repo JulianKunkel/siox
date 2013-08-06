@@ -27,13 +27,16 @@ private:
 		}
 		int lineNr = 0;
 		while(! file.eof()){
+			// cout << "lineNr" << lineNr << endl;
 			string line;
 			getline (file, line);
-
-
-			if(line.size() < 8)
+			if(line.size()<1)
 				continue;
+			// cout << "getline" << line << "  LineSize :"<< line.size() << endl;
 
+			//if(line.size() < 8)
+			//	continue;
+			
 			regex_iterator<string::iterator> rit ( line.begin(), line.end(), re );
 			regex_iterator<string::iterator> rend;
 
@@ -54,6 +57,7 @@ private:
 			  	++rit;
 			}
 			lineNr++;
+			
 			if(INIT){
 				initLine(lineNr, splittedArray);
 			}else{
@@ -78,12 +82,16 @@ protected:
 public:
 
 	void init(){
+		cout << "initiating" << endl;
 		re = initRegex();		
 		parseProcLine<1>(filename());
+		cout << "initiated with filename" << endl;
 	}
 
 	virtual void nextTimestep(){
+		cout << "Start extracting info of source on next timestep" << endl;
 		parseProcLine<0>(filename());
+		cout << "Parsing with filename finished successfully" << endl;
 	}
 };
 
