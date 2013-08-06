@@ -1,9 +1,9 @@
-#include "../ProcSingeFilePlugin.hpp"
+#include "../ProcSingleFilePlugin.hpp"
 #include <stdint.h>
 
 #include <map>
 
-class IOstats: public ProcSingeFilePlugin<15>{
+class IOstats: public ProcSingleFilePlugin<15>{
 protected:
 
 	void timestepLine(int lineNr,  vector<string> & entries){

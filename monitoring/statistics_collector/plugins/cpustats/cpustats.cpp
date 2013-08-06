@@ -1,4 +1,4 @@
-#include "../ProcSingeFilePlugin.hpp"
+#include "../ProcSingleFilePlugin.hpp"
 
 #include <map>
 #include <stdint.h>
@@ -26,7 +26,7 @@ See http://www.linuxhowtos.org/System/procstat.htm for a description.
 
 */
 
-class CPUstats: public ProcSingeFilePlugin<12>{
+class CPUstats: public ProcSingleFilePlugin<12>{
 enum CPUfields{
 	USER, NICE, SYSTEM, IDLE, IOWAIT, IRQ, SOFTIRQ, VIRTUAL_SYSTEMS, VIRTUAL_OS
 };
