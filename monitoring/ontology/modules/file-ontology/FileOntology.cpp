@@ -100,7 +100,7 @@ class FileOntology: public Ontology{
 		return new FileOntologyOptions();
 	}
 
-	void shutdown(){
+	~FileOntology(){
 		save(filename);
 
 		for(auto itr = attribute_map.begin(); itr != attribute_map.end(); itr++){

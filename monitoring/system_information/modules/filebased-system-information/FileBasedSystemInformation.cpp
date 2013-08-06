@@ -91,7 +91,7 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 		return new FileBasedSystemInformationOptions();
 	}
 
-	void shutdown(){
+	~FileBasedSystemInformation(){
 		FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
 		string filename = o.filename;
 

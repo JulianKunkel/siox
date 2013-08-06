@@ -35,6 +35,9 @@ int main(int argc, char const *argv[]){
 	UniqueInterfaceID uid = sys->interface_id("test", "impl1");
    	UniqueComponentActivityID aid = sys->activity_id(uid, "open");
    	OntologyAttribute o1 = o->register_attribute("test", "filesize", VariableDatatype::UINT64);
+	OntologyAttribute unit = o->register_attribute("Meta", "Unit", VariableDatatype::STRING); 
+	o->attribute_set_meta_attribute(o1, unit, "Byte");
+	
    	OntologyAttribute o2 = o->register_attribute("test", "filename", VariableDatatype::STRING);
    	OntologyAttribute o3 = o->register_attribute("test", "filesystem", VariableDatatype::UINT32);
 

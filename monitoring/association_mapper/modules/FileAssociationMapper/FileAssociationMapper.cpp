@@ -101,7 +101,7 @@ public:
 		return new FileAssociationMapperOptions();
 	}
 
-	void shutdown(){
+	~FileAssociationMapper(){
 		save(filename);
 	}
 

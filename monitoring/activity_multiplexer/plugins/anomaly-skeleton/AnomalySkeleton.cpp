@@ -47,8 +47,12 @@ public:
 
 		try{
 			filesize = dereferenceFacade->lookup_attribute_by_name("test", "filesize");
+
+			const OntologyValue & val = dereferenceFacade->lookup_meta_attribute(filesize, "Meta", "Unit");
+			cout << "Unit of filesize: " << val << endl;
 		}catch(NotFoundError & e){
 			// First run, we cannot register because the ontology does not hold filesize.
+			cout << e.what() << endl;
 			return;
 		}
 

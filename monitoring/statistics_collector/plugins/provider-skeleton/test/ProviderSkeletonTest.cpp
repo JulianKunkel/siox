@@ -55,12 +55,6 @@ public:
 	virtual ComponentOptions * AvailableOptions(){
 		return new ComponentOptions();
 	}
-
-	virtual void shutdown(){
-
-	}
-
-
 };
 
 int main(int argc, char const *argv[]){

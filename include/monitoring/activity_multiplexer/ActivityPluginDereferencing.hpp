@@ -24,6 +24,11 @@ public:
 
     virtual const OntologyValue & lookup_meta_attribute(const OntologyAttribute & attribute, const OntologyAttribute & meta) const throw(NotFoundError) = 0;
 
+    virtual const OntologyValue & lookup_meta_attribute(const OntologyAttribute & attribute, const string & domain, const string & name) const throw(NotFoundError){
+    	const OntologyAttribute & unit = lookup_attribute_by_name(domain, name);
+    	return lookup_meta_attribute(attribute, unit);
+    }
+
 	virtual const OntologyValue & lookup_process_attribute(const  ProcessID & pid, const  OntologyAttribute & att) const throw(NotFoundError) = 0;
 
 	virtual const OntologyValue & lookup_component_attribute(const ComponentID & cid, const  OntologyAttribute & att) const throw(NotFoundError) = 0;
