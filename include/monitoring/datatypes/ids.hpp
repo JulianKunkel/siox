@@ -51,7 +51,7 @@ digraph IDs
 
     assid [label="AssociatedID\nuint32_t", URL="\ref AssociateID"]
 
-    rcid [label="{RemoteCallID|{<nid>nid\nNodeID|<uiid>uiid\nUniqueInterfaceID|<assid>instance\nAssociatedID}}", URL="\ref RemoteCallIdentifier"]
+    rcid [label="{RemoteCallIentifier|{<nid>nid\nNodeID|<uiid>uiid\nUniqueInterfaceID|<assid>instance\nAssociatedID}}", URL="\ref RemoteCallIdentifier"]
     nid:n -> rcid:nid:s
     uiid:n -> rcid:uiid:s
     assid:n -> rcid:assid:s
