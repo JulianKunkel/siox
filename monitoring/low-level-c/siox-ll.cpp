@@ -46,7 +46,7 @@ struct process_info process_data = {0};
 //////////////////////////////////////////////////////////
 
 NodeID lookup_node_id(string & hostname){
-    return process_data.system_information_manager->node_id(hostname);
+    return process_data.system_information_manager->register_nodeID(hostname);
 }
 
 
@@ -259,8 +259,8 @@ siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * 
     UniqueInterfaceID ** idTmp = & uiid;
     UniqueInterfaceID uid = *((UniqueInterfaceID*) idTmp);
 
-    const string & interface_implementation = process_data.system_information_manager->interface_implementation(uid);
-    const string & interface_name = process_data.system_information_manager->interface_name(uid);
+    const string & interface_implementation = process_data.system_information_manager->lookup_interface_implementation(uid);
+    const string & interface_name = process_data.system_information_manager->lookup_interface_name(uid);
 
 
     char configName[1001];
@@ -313,7 +313,7 @@ siox_component_activity * siox_component_register_activity(siox_unique_interface
     assert(uiid != nullptr);
     assert(activity_name != nullptr);
 
-    uint64_t id = process_data.system_information_manager->activity_id(*uiid, activity_name);
+    uint64_t id = process_data.system_information_manager->register_activityID(*uiid, activity_name);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     return (UniqueComponentActivityID*) id;
 }
@@ -491,7 +491,7 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     // Workaround for stuffing
     try{
-        UniqueInterfaceID uid = process_data.system_information_manager->interface_id(interface_name, implementation_identifier);
+        UniqueInterfaceID uid = process_data.system_information_manager->register_interfaceID(interface_name, implementation_identifier);
         assert(sizeof(uid) <= sizeof(uint64_t));
         UniqueInterfaceID * id = 0;
         memcpy(& id, &uid, sizeof(uid));

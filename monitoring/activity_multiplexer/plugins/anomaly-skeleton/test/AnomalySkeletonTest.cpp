@@ -32,8 +32,8 @@ int main(int argc, char const *argv[]){
 	Ontology * o = a->searchFor<Ontology>(components);
 	SystemInformationGlobalIDManager * sys = a->searchFor<SystemInformationGlobalIDManager>(components);	
 
-	UniqueInterfaceID uid = sys->interface_id("test", "impl1");
-   	UniqueComponentActivityID aid = sys->activity_id(uid, "open");
+	UniqueInterfaceID uid = sys->register_interfaceID("test", "impl1");
+   	UniqueComponentActivityID aid = sys->register_activityID(uid, "open");
    	OntologyAttribute o1 = o->register_attribute("test", "filesize", VariableDatatype::UINT64);
 	OntologyAttribute unit = o->register_attribute("Meta", "Unit", VariableDatatype::STRING); 
 	o->attribute_set_meta_attribute(o1, unit, "Byte");
