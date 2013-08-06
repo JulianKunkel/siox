@@ -13,7 +13,7 @@ using namespace boost;
 
 
 template<int MAX_NUM>
-class ProcSingeFilePlugin: public StatisticsProviderPlugin{
+class ProcSingleFilePlugin: public StatisticsProviderPlugin{
 protected: 
 	regex re;
 private:

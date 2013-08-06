@@ -1,0 +1,7 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+    bld.program(includes="include",  features='test cxx cxxprogram', use = "network AutoConfigurator", target = 'networkTest', source = 'networkTest.cpp', install_path = None,)
+
+# -*- indent-tabs-mode: t -*-

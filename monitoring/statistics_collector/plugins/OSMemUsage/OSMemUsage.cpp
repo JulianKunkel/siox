@@ -1,4 +1,4 @@
-#include "../ProcSingeFilePlugin.hpp"
+#include "../ProcSingleFilePlugin.hpp"
 
 #include <map>
 #include <utility>
@@ -12,7 +12,7 @@ MemTotal:        3908064 kB
 HugePages_Rsvd:        0
 */
 
-class OSMemUsage: public ProcSingeFilePlugin<3>{
+class OSMemUsage: public ProcSingleFilePlugin<3>{
 protected:
 	map<string, pair<StatisticsValue, string> > values;
 
