@@ -11,6 +11,8 @@ using namespace monitoring;
 using namespace core;
 using namespace boost;
 
+// ToDo: Allow multiple Filenames as required for network stats (Multiple files in multiple folders i.e. eth0,eth1)
+
 
 template<int MAX_NUM>
 class ProcSingleFilePlugin: public StatisticsProviderPlugin{
@@ -85,14 +87,14 @@ public:
 		cout << "initiating" << endl;
 		re = initRegex();		
 		parseProcLine<1>(filename());
+		// We need multiple filename possibility !
 		cout << "initiated with filename" << endl;
 	}
 
 	virtual void nextTimestep(){
 		cout << "Start extracting info of source on next timestep" << endl;
 		parseProcLine<0>(filename());
+		// We need multiple filename possibility !
 		cout << "Parsing with filename finished successfully" << endl;
 	}
 };
-
-
