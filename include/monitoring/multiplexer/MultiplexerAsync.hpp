@@ -52,6 +52,8 @@ template <class TYPE>
 class MultiplexerQueue 
 {
 public:
+	virtual ~MultiplexerQueue(){}
+
 	/**
 	 * Check whether or not the queue has still capacity
 	 *
@@ -96,9 +98,9 @@ template <class TYPE, class PARENT>
 class MultiplexerNotifier
 {
 	MultiplexerAsync<TYPE, PARENT> * multiplexer;
-
-
 public:
+	virtual ~MultiplexerNotifier(){}
+
 	// TODO: signal upstream to Deamons others
 	virtual void Reset(int lost) =0;
 

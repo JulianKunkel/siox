@@ -250,10 +250,12 @@ public:
 	// TODO: signal upstream to Deamons others
 	virtual void Reset(int lost) {}
 
+	virtual void shutdown(){}
+
 	/**
 	 * free ressources and finish immediately
 	 */
-	virtual void shutdown() {
+	virtual ~MultiplexerNotifierTemplate(){
 		// wait for threads to finish
 		for(auto it = t.begin(); it != t.end(); ++it ) {
 			(*it).join();
@@ -296,9 +298,9 @@ public:
 	}
 
 	
-	~MultiplexerAsyncTemplate() {
-		// TODO remove(queue);
-		// TODO remove(notifier);
+	virtual ~MultiplexerAsyncTemplate() {
+		delete(queue);
+		delete(notifier);
 	}
 	
 	
