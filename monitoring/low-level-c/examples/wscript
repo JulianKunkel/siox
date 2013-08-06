@@ -1,0 +1,11 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+
+def build(bld):
+    #bld.shlib(includes="include",  target = "siox-ll", use = "module-loader AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp' )
+    #bld.recurse(['hdf5'], mandatory=True)
+    bld.recurse(['mock-up-fs'], mandatory=True)
+    #pass
+
+# -*- indent-tabs-mode: t -*-
