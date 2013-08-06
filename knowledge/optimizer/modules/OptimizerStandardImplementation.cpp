@@ -35,35 +35,33 @@ protected:
 
 public:
 
-	virtual void registerPlugin(const OntologyAttribute * attribute, const OptimizerPlugin * plugin){
-		assert(attribute != nullptr);
+	virtual void registerPlugin(const OntologyAttribute & attribute, const OptimizerPlugin * plugin){
 		assert(plugin != nullptr);
+		assert(expert[attribute.aID] == nullptr);
 
-		expert[attribute->aID] = (OptimizerPlugin*) plugin;
+		expert[attribute.aID] = (OptimizerPlugin*) plugin;
 	}
 
 	
-	virtual bool isPluginRegistered(const OntologyAttribute * attribute){
-		assert(attribute != nullptr);
-
-		return (expert.find(attribute->aID) != expert.end());
+	virtual bool isPluginRegistered(const OntologyAttribute & attribute) const {
+		return (expert.find(attribute.aID) != expert.end());
 	}
 
 
-	virtual void unregisterPlugin(const OntologyAttribute * attribute){
-		assert(attribute != nullptr);
-
-		expert.erase(attribute->aID);
+	virtual void unregisterPlugin(const OntologyAttribute & attribute){
+		expert.erase(attribute.aID);
 	}
 
 
-	virtual OntologyValue optimalParameter(const OntologyAttribute * attribute){
-		assert(attribute != nullptr);
+	virtual OntologyValue optimalParameter(const OntologyAttribute & attribute) const throw(NotFoundError){
 		///@todo Check for registered plug-in?
-		if (isPluginRegistered(attribute))
-			return (expert[attribute->aID]->optimalParameter(attribute));
-		else
-			return (OntologyValue()); // Will create an explicitly invalid value!
+		auto res = expert.find(attribute.aID);
+
+		if (res != expert.end()){
+			return res->second->optimalParameter(attribute);
+		}else{
+			throw NotFoundError("Illegal attribute!");
+		}
 	}
 
 
@@ -71,9 +69,9 @@ public:
 
 	}
 };
-
-COMPONENT(OptimizerStandardImplementation)
-
 } // namespace knowledge
+
+
+COMPONENT(knowledge::OptimizerStandardImplementation)
 
 // BUILD_TEST_INTERFACE knowledge/optimizer/modules/

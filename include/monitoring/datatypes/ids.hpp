@@ -51,7 +51,7 @@ digraph IDs
 
     assid [label="AssociatedID\nuint32_t", URL="\ref AssociateID"]
 
-    rcid [label="{RemoteCallID|{<nid>nid\nNodeID|<uiid>uiid\nUniqueInterfaceID|<assid>instance\nAssociatedID}}", URL="\ref RemoteCallIdentifier"]
+    rcid [label="{RemoteCallIentifier|{<nid>nid\nNodeID|<uiid>uiid\nUniqueInterfaceID|<assid>instance\nAssociatedID}}", URL="\ref RemoteCallIdentifier"]
     nid:n -> rcid:nid:s
     uiid:n -> rcid:uiid:s
     assid:n -> rcid:assid:s
@@ -113,6 +113,8 @@ typedef struct{
 // See @TODO
 
 
+
+
 /* Identifies a specific software interface, e.g. OpenMPI V3 
  * Globally unique => lookup in knowledge base is mandatory for each layer.
  * The config file for the layer may hold this additional information, so lookup comes for free.
@@ -166,6 +168,8 @@ struct ActivityID{
 	ComponentID cid;
 	uint32_t id;
 };
+
+
 
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);
 // See @TODO

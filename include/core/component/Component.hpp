@@ -29,8 +29,8 @@ typedef Container ComponentOptions;
 	 */
 	class ComponentReference{
 	public:
-		ComponentReferenceID componentID;
-		bool global;
+		ComponentReferenceID componentID = 0;
+		bool global = false;
 
 		template<class TYPE>
 		TYPE* instance(){

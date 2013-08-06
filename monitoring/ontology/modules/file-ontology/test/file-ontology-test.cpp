@@ -26,27 +26,32 @@ int main(int argc, char const *argv[]){
 	string s_a2("a2");
 	string s_a3("stringAttr");
 
-	OntologyAttribute * a1 = o->register_attribute(domain, s_a1, VariableDatatype::UINT32);
-	assert(a1->aID != 0);
+	const OntologyAttribute & a1 = o->register_attribute(domain, s_a1, VariableDatatype::UINT32);
+	assert(a1.aID != 0);
 
-	OntologyAttribute * a2 = o->register_attribute(domain, s_a2, VariableDatatype::UINT32);
+	const OntologyAttribute & a2 = o->register_attribute(domain, s_a2, VariableDatatype::UINT32);
 
-	OntologyAttribute * a3 = o->register_attribute(domain, s_a1, VariableDatatype::UINT32);
+	const OntologyAttribute & a3 = o->register_attribute(domain, s_a1, VariableDatatype::UINT32);
 	assert(a3 == a1);
-	OntologyAttribute * a4 = o->register_attribute(domain, s_a1, VariableDatatype::UINT64);
-	assert(a4 == NULL);
-
-	OntologyAttribute * a5 = o->register_attribute(domain, s_a3, VariableDatatype::STRING);
-
-	cout << "ID1: " << a1->aID << endl;
-	cout << "ID2: " << a2->aID << endl;
+	try{
+		const OntologyAttribute & a4 = o->register_attribute(domain, s_a1, VariableDatatype::UINT64);
+		assert(false);
+	}catch(IllegalStateError & e){
+	}
 
 
-	a4 = o->lookup_attribute_by_name(domain, s_a1);
+	const OntologyAttribute & a5 = o->register_attribute(domain, s_a3, VariableDatatype::STRING);
+
+	cout << "ID1: " << a1.aID << endl;
+	cout << "ID2: " << a2.aID << endl;
+
+
+	OntologyAttribute a4 = o->lookup_attribute_by_name(domain, s_a1);
 	assert(a4 == a1);
 
+	OntologyAttributeID aid = a1.aID;
 
-	a4 = o->lookup_attribute_by_ID(a1->aID);
+	a4 = o->lookup_attribute_by_ID(aid);
 	assert(a4 == a1);
  
 	OntologyValue val((uint32_t) 35);
@@ -54,21 +59,23 @@ int main(int argc, char const *argv[]){
 	OntologyValue vText2("test&my");
 	assert(vText == vText2);
 
-	assert(a5 != nullptr);
-
-	assert(o->attribute_set_meta_attribute(a1, a2, val));
-	assert(o->attribute_set_meta_attribute(a1, a2, val));
-	assert(o->attribute_set_meta_attribute(a1, a5, vText));
+	o->attribute_set_meta_attribute(a1, a2, val);
+	o->attribute_set_meta_attribute(a1, a2, val);
+	o->attribute_set_meta_attribute(a1, a5, vText);
 
 
 	OntologyValue val2((uint32_t) 36);
-	assert(false == o->attribute_set_meta_attribute(a1, a2, val2));
+	try{
+		o->attribute_set_meta_attribute(a1, a2, val2);
+		assert(false);
+	}catch(IllegalStateError & e){
+	}
 
 	assert(o->enumerate_meta_attributes(a1).size() == 2);
 
-	const OntologyValue * ret = o->lookup_meta_attribute(a1, a2);
-	cout << "Type: " << ret->type() << " "<< endl;
-	cout << "Val: " << ret->uint32() << endl;
+	const OntologyValue & ret = o->lookup_meta_attribute(a1, a2);
+	cout << "Type: " << ret.type() << " "<< endl;
+	cout << "Val: " << ret.uint32() << endl;
 
 	delete(o);
 

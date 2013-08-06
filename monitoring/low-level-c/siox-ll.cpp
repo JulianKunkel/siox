@@ -197,7 +197,7 @@ typedef VariableDatatype AttributeValue;
 //////////////////////////////////////////////////////////////////////////////
 /// @return
 //////////////////////////////////////////////////////////////////////////////
-static AttributeValue convert_attribute(siox_attribute * attribute, void * value){
+static VariableDatatype convert_attribute(siox_attribute * attribute, void * value){
     AttributeValue v;
     switch(attribute->storage_type){
     case(SIOX_STORAGE_32_BIT_UINTEGER):
@@ -234,46 +234,12 @@ static AttributeValue convert_attribute(siox_attribute * attribute, void * value
 }
 
 
-/*static VariableDatatype::Type convert_attribute_type(siox_ont_storage_type type){
-    VariableDatatype::Type result;
-    switch(type){
-        case(SIOX_STORAGE_32_BIT_UINTEGER):
-        case(SIOX_STORAGE_32_BIT_INTEGER):{
-            result = VariableDatatype::Type::INT32;
-            break;
-        }
-        case(SIOX_STORAGE_64_BIT_UINTEGER):
-        case(SIOX_STORAGE_64_BIT_INTEGER):{
-            result = VariableDatatype::Type::INT64;
-            break;
-        }
-        case(SIOX_STORAGE_FLOAT):{
-            result = VariableDatatype::Type::FLOAT;
-            break;
-        }
-        case(SIOX_STORAGE_DOUBLE):{
-            result = VariableDatatype::Type::DOUBLE;
-            break;
-        }
-        case(SIOX_STORAGE_STRING):{
-            result = VariableDatatype::Type::STRING;
-            break;
-        }
-        case (SIOX_STORAGE_UNASSIGNED):{
-            result = VariableDatatype::Type::INVALID;
-            assert(0);
-        }
-    }
-    return result;
-}
-*/
-
 void siox_process_set_attribute(siox_attribute * attribute, void * value){
     assert(attribute != nullptr);
     assert(value != nullptr);
 
     AttributeValue val = convert_attribute(attribute, value);
-    process_data.association_mapper->set_process_attribute( & process_data.pid, attribute, val);
+    process_data.association_mapper->set_process_attribute( process_data.pid, *attribute, val);
 }
 
 
@@ -306,10 +272,9 @@ siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * 
     vector<Component*> loadedComponents;
     try{
         loadedComponents = process_data.configurator->LoadConfiguration("Interface", configName);
-        // if(loadedComponents == nullptr){ // MZ: Error, "==" not defined
         if(loadedComponents.empty()){
             cerr << "WARNING Invalid configuration set for component" << endl; 
-            // TODO use FATAL function somehow?
+            /// @todo Use FATAL function somehow?
             //exit(1);
         }
     }catch(InvalidConfiguration & e){
@@ -339,10 +304,8 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
     assert(attribute != nullptr);
     assert(value != nullptr);
 
-    // MZ: TODO siox_component in ComponentID wandeln
-    ComponentID * cid = nullptr; // FIXME
-    AttributeValue val = convert_attribute(attribute, value);
-    process_data.association_mapper->set_component_attribute(cid, attribute, val);
+    OntologyValue val = convert_attribute(attribute, value);
+    process_data.association_mapper->set_component_attribute((component->cid), *attribute, val);
 }
 
 
@@ -350,8 +313,7 @@ siox_component_activity * siox_component_register_activity(siox_unique_interface
     assert(uiid != nullptr);
     assert(activity_name != nullptr);
 
-    string n(activity_name);
-    uint64_t id = process_data.system_information_manager->activity_id(*uiid, n);
+    uint64_t id = process_data.system_information_manager->activity_id(*uiid, activity_name);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     return (UniqueComponentActivityID*) id;
 }
@@ -469,7 +431,11 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
     assert(name != nullptr);
 
     // return process_data.ontology->register_attribute(domain, name, convert_attribute_type(storage_type));
-    return process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+    try{
+        return & process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+    }catch(IllegalStateError & e){
+        return nullptr;
+    }
 }
 
 
@@ -480,7 +446,12 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_att
     assert(value != nullptr);
 
     AttributeValue val = convert_attribute(meta_attribute, value);
-    return process_data.ontology->attribute_set_meta_attribute(parent_attribute, meta_attribute, val);
+    try{
+        process_data.ontology->attribute_set_meta_attribute(*parent_attribute, *meta_attribute, val);
+    }catch(IllegalStateError & e){
+        return 0;
+    }
+    return 1;
 }
 
 
@@ -490,21 +461,25 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
     assert(unit != nullptr);
 
     // MZ: Hier besser statt einer eigenen Domain für Units d verwenden?!
-    OntologyAttribute * meta = process_data.ontology->register_attribute("Meta", "Unit", VariableDatatype::Type::STRING);
-    // OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
-    OntologyAttribute * attribute = process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
-    process_data.ontology->attribute_set_meta_attribute(attribute, meta, unit);
-
-    return attribute;
+    try{
+        const OntologyAttribute & meta = process_data.ontology->register_attribute("Meta", "Unit", VariableDatatype::Type::STRING);
+        // OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
+        const OntologyAttribute & attribute = process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+        process_data.ontology->attribute_set_meta_attribute(attribute, meta, unit);
+        return & attribute;
+    }catch(IllegalStateError & e){
+        return nullptr;
+    }    
 }
 
 
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name){
     assert(name != nullptr);
-
-    string d(domain);
-    string n(name);
-    return process_data.ontology->lookup_attribute_by_name(d, n);
+    try{
+        return & process_data.ontology->lookup_attribute_by_name(domain, name);
+    }catch(NotFoundError & e){
+        return nullptr;
+    }
 }
 
 
@@ -515,11 +490,15 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
     //uint64_t id = process_data.system_information_manager->interface_id(in, ii);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     // Workaround for stuffing
-    UniqueInterfaceID uid = process_data.system_information_manager->interface_id(interface_name, implementation_identifier);
-    assert(sizeof(uid) <= sizeof(uint64_t));
-    UniqueInterfaceID * id = 0;
-    memcpy(& id, &uid, sizeof(uid));
-    return id;
+    try{
+        UniqueInterfaceID uid = process_data.system_information_manager->interface_id(interface_name, implementation_identifier);
+        assert(sizeof(uid) <= sizeof(uint64_t));
+        UniqueInterfaceID * id = 0;
+        memcpy(& id, &uid, sizeof(uid));
+        return id;
+    }catch(IllegalStateError & e){
+        return nullptr;
+    }
 }
 
 } // extern "C"

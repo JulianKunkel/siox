@@ -3,8 +3,11 @@
 
 #include <core/component/Component.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
+#include <monitoring/datatypes/Exceptions.hpp>
 
 namespace monitoring{
+
+
 
 class AssociationMapper : public core::Component{
 public:
@@ -19,15 +22,15 @@ public:
 	Domain "component"
 	Key: cid + OntologyAttributeID, VALUE as value...
 	*/
-	virtual bool set_process_attribute(ProcessID * pid, OntologyAttribute * att, const OntologyValue & value) = 0;
-	virtual OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att) = 0;
+	virtual void set_process_attribute(const ProcessID & pid, const OntologyAttribute & att, const OntologyValue & value) throw(IllegalStateError) = 0;
+	virtual const OntologyValue & lookup_process_attribute(const ProcessID & pid, const OntologyAttribute & att) const throw(NotFoundError) = 0;
 
-	virtual bool set_component_attribute(ComponentID * cid, OntologyAttribute * att, const  OntologyValue & value) = 0;
-	virtual OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att) = 0;
+	virtual void set_component_attribute(const ComponentID & cid, const OntologyAttribute & att, const  OntologyValue & value) throw(IllegalStateError) = 0;
+	virtual const OntologyValue & lookup_component_attribute(const ComponentID & cid, const OntologyAttribute & att) const throw(NotFoundError) = 0;
 
 	/* These functions are used to create the RemoteInstanceID */
 	virtual AssociateID create_instance_mapping(const string & value) = 0;
-	virtual const string * lookup_instance_mapping(AssociateID id) = 0;
+	virtual const string & lookup_instance_mapping(AssociateID id) const throw(NotFoundError) = 0;
 };
 
 }
