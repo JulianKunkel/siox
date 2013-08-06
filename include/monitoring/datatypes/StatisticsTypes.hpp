@@ -1,8 +1,7 @@
 /**
  * @file    StatisticsTypes.hpp
  *
- * @description A (software) component for datatypes used in statistics.
- * @standard    Preferred standard is C++11
+ * A (software) component for datatypes used in statistics.
  *
  * @author Julian Kunkel, Marc Wiedemann
  * @date   2013
@@ -19,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <map>
 
 using namespace std;
 
@@ -53,7 +53,7 @@ Randbedingungen:
 1) Beim forwarding / verlorener Statistiken problematisch
 
 Es gibt keine Softwarestatistiken? Früher bei PVFS?
-Was machen wir mit GPFS-Statistiken?
+Was machen wir mit GPFS-Statistiken? Die sind erstmal nur globale Statistiken für die viele Writes und ähnliche. Einzelstatistiken sind schwer zu bekommen, evtl über DMAPI. Andriy fragen.
 z.B. Request Count...
 Es gibt eine Shared Memory Region in der die Werte abgelegt werden müssen.
 Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
@@ -92,10 +92,20 @@ public:
 	string metrics;
 
 	vector<pair<string,string> > topology;
+	//1)map<string,string> PAIR;
+	//1)map<string,PAIR> topology;
+	//1)topology MapofMapObject;
 
-	string unit;
+	// Less overhead than vector<pair<string,string>>:
+	typedef map<string,map<string,string>> MapofMap;
+	MapofMap MetricMapObject;
 
-	// TODO Marks Job: StatisticsDescription(XX){}
+
+	string si_unit;
+
+	/* TODO StatisticsDescription(XX){} @Julian Marc: What is the aim here ???
+	 IS this the user readable description as in the StatisticPlugins?
+	 Side note: Found out that vector pair as two more unnecessary copies than MapofMap */
 };
 
 }

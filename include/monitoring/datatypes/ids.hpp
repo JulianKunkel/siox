@@ -7,15 +7,57 @@
 #ifndef __SIOX_IDS_HPP
 #define __SIOX_IDS_HPP
 
-#include "monitoring/datatypes/c-types.h"
+#include <core/datatypes/VariableDatatype.hpp>
 
 #include <cstdint>
 #include <vector>
-#include <boost/variant.hpp>
 
 using namespace std;
 
 namespace monitoring{
+
+/**
+@page ids SIOX ID Overview
+SIOX uses a number of different IDs, which are structured as follows:
+@dot
+digraph IDs
+{
+    // Settings
+    //----------
+    // Arrange from bottom to top
+    rankdir="BT";
+    // Defaults for nodes and edges
+    node [shape=Mrecord];
+    edge [style=solid];
+
+    // The actual graph
+    //------------------
+    nid [label="NodeID\nuint32_t"]
+
+    pid [label="{ProcessID|{<nid>nid\nNodeID|pid\nuint32_t|<time>time\nuint32_t}}", URL="\ref ProcessID"]
+    nid:n -> pid:nid:s
+
+    cid [label="{ComponentID|{<pid>pid\nProcessID|id\nuint16_t}}", URL="\ref ComponentID"]
+    pid:n -> cid:pid:s
+
+    aid [label="{ActivityID|{<cid>cid\nComponentID|id\nuint32_t}}", URL="\ref ActivityID"]
+    cid:n -> aid:cid:s
+
+    uiid [label="{UniqueInterfaceID|{interface\nuint16_t|implementation\nuint16_t}}", URL="\ref UniqueInterfaceID"]
+
+    oaid [label="OntologyAttributeID\nuint32_t", URL="\ref OntologyAttributeID"]
+
+    ucaid [label="UniqueComponentActivityID\nuint32_t", URL="\ref UniqueComponentActivityID"]
+
+    assid [label="AssociatedID\nuint32_t", URL="\ref AssociateID"]
+
+    rcid [label="{RemoteCallID|{<nid>nid\nNodeID|<uiid>uiid\nUniqueInterfaceID|<assid>instance\nAssociatedID}}", URL="\ref RemoteCallIdentifier"]
+    nid:n -> rcid:nid:s
+    uiid:n -> rcid:uiid:s
+    assid:n -> rcid:assid:s
+}
+@enddot
+*/
 
 // Every hardware component which is addressable by the network is expected to have a unique (host)name.
 // This name is translated to the NodeID.
@@ -44,12 +86,17 @@ typedef uint32_t UniqueComponentActivityID;
 /* The associate ID is valid only within a particular process */
 typedef uint32_t AssociateID;
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, string, float, double> AttributeValue;
+typedef VariableDatatype AttributeValue;
 
 typedef struct {
 	OntologyAttributeID id;
 	AttributeValue value;
 } Attribute;
+
+typedef uint64_t Timestamp;
+
+typedef uint32_t ActivityError;
+
 
 // The daemon fetches the NodeID from the knowledge base (or initiates creation if necessary)
 // NodeID lookup_node_id(const char * hostname);
@@ -109,7 +156,7 @@ struct ComponentID{
 
 struct RemoteCallIdentifier{
 	// Several parameters assist matching of remote calls
-	NodeID hwid; // optional
+	NodeID nid; // optional
 	UniqueInterfaceID uuid; // optional
 	AssociateID instance; // optional, remote call instance identifier
 };

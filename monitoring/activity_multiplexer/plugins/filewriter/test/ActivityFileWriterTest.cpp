@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]){
 	ap->init(m1, nullptr);
 
 	auto parentArray = vector<ActivityID>{  {.cid = {.pid = {2,3,4}, .id=1}, .id = 1} };
-	auto attributeArray = vector<Attribute>{{.id=111, .value = "myData"}, {.id=3, . value = (uint64_t) 4711}};
+	auto attributeArray = vector<Attribute>{{.id=111, .value = VariableDatatype("myData")}, {.id=3, . value = (uint64_t) 4711}};
 	auto remoteCallsArray = vector<RemoteCall>();
 
 

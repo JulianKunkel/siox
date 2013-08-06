@@ -50,8 +50,8 @@ int main(int argc, char const *argv[]){
 	assert(a4 == a1);
  
 	OntologyValue val((uint32_t) 35);
-	OntologyValue vText("test");
-	OntologyValue vText2("test");
+	OntologyValue vText("test&my");
+	OntologyValue vText2("test&my");
 	assert(vText == vText2);
 
 	assert(a5 != nullptr);

@@ -1,4 +1,4 @@
-/** @file
+/** @file Activity.hpp
  *
  * This activity is the structure to be read and written to
  * txt using this header.
@@ -72,8 +72,6 @@
 #include <string>
 #include <vector>
 
-#include <monitoring/datatypes/c-types.h>
-
 #include <monitoring/datatypes/ids.hpp>
 
 using namespace std;
@@ -98,8 +96,8 @@ protected:
 	// The ontology provides a single ID for each ActivityType of a component, e.g. POSIX "open()"
 	UniqueComponentActivityID ucaid_;
 	
-	siox_timestamp time_start_;
-	siox_timestamp time_stop_;
+	Timestamp time_start_;
+	Timestamp time_stop_;
 
 	ActivityID aid_;
 
@@ -111,10 +109,10 @@ protected:
 	RemoteCallIdentifier * remoteInvoker_; // NULL if none
 
 	// interface specific error value.
-	siox_activity_error errorValue_;
+	ActivityError errorValue_;
 
 public:
-	Activity(UniqueComponentActivityID ucaid, siox_timestamp start_t, siox_timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, siox_activity_error errorValue)
+	Activity(UniqueComponentActivityID ucaid, Timestamp start_t, Timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, ActivityError errorValue)
 		: 
 		ucaid_ (ucaid), time_start_ (start_t), time_stop_ (end_t),
 		aid_ (aid), parentArray_ (std::move(parentArray)),
@@ -126,7 +124,7 @@ public:
 	}
 
 	void print() {
-		// @TODO: Really need reflection - have a look at Boost :-)
+		/// @todo: Really need reflection - have a look at Boost :-)
 		unsigned i;
 		cout << "t_start = " << time_start_ << endl;
 		cout << "t_stop  = " << time_stop_ << endl;
@@ -144,11 +142,11 @@ public:
 		cout << "RemoteCalls (" << remoteCallsArray_.size() << " items):" << endl;
 	}
 
-	inline siox_timestamp time_start() const{
+	inline Timestamp time_start() const{
 		return time_start_;
 	}
 
-	inline siox_timestamp time_stop() const{
+	inline Timestamp time_stop() const{
 		return time_stop_;
 	}
 
@@ -177,7 +175,7 @@ public:
 		return remoteInvoker_;
 	}
 
-	inline siox_activity_error errorValue() const{
+	inline ActivityError errorValue() const{
 		return errorValue_;
 	}
 

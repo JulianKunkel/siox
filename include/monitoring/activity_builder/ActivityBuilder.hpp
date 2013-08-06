@@ -1,10 +1,9 @@
 /**
  * @file    ActivityBuilder.hpp
  *
- * @description This class manages everything for building an Activity.
- * @standard    Preferred standard is C++11
+ * This class manages everything for building an Activity.
  *
- * @created: Jul 8, 2013
+ * @date: 2013-07-08
  * @author: mickler
  *
  */

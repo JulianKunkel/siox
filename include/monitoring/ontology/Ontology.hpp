@@ -9,7 +9,7 @@
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 
 /* CLASS DIAGRAM OBSOLETE!!!
-@startuml Ontology.png
+@ startuml Ontology.png
 
 'set namespaceSeparator ::
 
@@ -77,8 +77,7 @@ namespace monitoring #Orange
     Ontology <|-- FileOntology
 end namespace
 
- 
-@enduml
+@ enduml
 */
 
 using namespace std;

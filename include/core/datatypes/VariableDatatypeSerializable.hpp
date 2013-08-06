@@ -40,10 +40,13 @@ void serialize(Archive & ar, VariableDatatype & a, const unsigned int version)
 		ar & boost::serialization::make_nvp("v", g.data->ui32);
 		break;
 		case(VariableDatatype::STRING):{
-			string s(g.data->str);
-			ar & boost::serialization::make_nvp("v", s);
-			if( g.data->str == nullptr){
-				g.data->str = strdup(s.c_str());
+			if(g.data->str == nullptr){
+				string s;
+				ar & boost::serialization::make_nvp("v", s);
+				g.data->str = strdup(s.c_str());			
+			}else{
+				string s(g.data->str);
+				ar & boost::serialization::make_nvp("v", s);
 			}
 			break;
 		}

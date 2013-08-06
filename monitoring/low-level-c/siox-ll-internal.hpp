@@ -22,7 +22,7 @@ typedef NodeID siox_node;
 typedef UniqueInterfaceID siox_unique_interface;
 typedef ComponentID siox_component;
 typedef ActivityID siox_activity;
-typedef RemoteCallID siox_remote_call;
+typedef RemoteCallIdentifier siox_remote_call;
 
 
 extern "C"{

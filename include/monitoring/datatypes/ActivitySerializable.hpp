@@ -13,8 +13,8 @@
 #include <boost/serialization/nvp.hpp>
 
 #include <boost/serialization/vector.hpp>
-#include <boost/serialization/variant.hpp>
 
+#include <core/datatypes/VariableDatatypeSerializable.hpp>
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/datatypes/ids-serialize.hpp>
@@ -31,7 +31,7 @@ void serialize(Archive & ar,  monitoring::RemoteCall & id, const unsigned int fi
 
 template<class Archive>
 void serialize(Archive & ar, monitoring::RemoteCallIdentifier & id, const unsigned int file_version){
-	SER("h", id.hwid)
+	SER("h", id.nid)
 	SER("uuid", id.uuid)
 	SER("i", id.instance)
 }

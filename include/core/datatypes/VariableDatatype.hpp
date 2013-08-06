@@ -3,6 +3,8 @@
 
 #include <string>
 #include <string.h>
+#include <assert.h>
+#include <iostream>
 
 
 using namespace std;
@@ -38,6 +40,7 @@ public:
 	VariableDatatype(int32_t i){ data.i64 = 0; data.i32 = i; type_ = INT32;}
 	VariableDatatype(uint32_t i){ data.i64 = 0; data.ui32 = i; type_ = UINT32;}
 	VariableDatatype(const std::string & s){ data.str = strdup(s.c_str()); type_ = STRING; }
+	VariableDatatype(const char * str){ data.str = strdup(str); type_ = STRING; }
 	VariableDatatype(float f){ data.i64 = 0; data.f = f; type_ = FLOAT;}
 	VariableDatatype(double d){ data.d = d; type_ = DOUBLE;}
 
@@ -102,6 +105,38 @@ public:
 		return ! ( v == *this);
 	}
 };
+
+
+ostream& operator<<(ostream& os, const VariableDatatype & v)
+{
+    switch(v.type()){
+    	case VariableDatatype::Type::INT32:
+        	os << v.int32();
+            break;
+    	case VariableDatatype::Type::INT64:
+        	os << v.int64();
+            break;
+    	case VariableDatatype::Type::UINT32:
+        	os << v.uint32();
+            break;
+    	case VariableDatatype::Type::UINT64:
+        	os << v.uint64();
+            break;
+    	case VariableDatatype::Type::STRING:
+        	os << v.str();
+            break;
+    	case VariableDatatype::Type::FLOAT:
+        	os << v.flt();
+            break;
+    	case VariableDatatype::Type::DOUBLE:
+        	os << v.dbl();
+            break;
+    	case VariableDatatype::Type::INVALID:
+        	os << "(INVALID TYPE!)";
+            break;
+    }
+    return os;
+}
 
 
 #endif
