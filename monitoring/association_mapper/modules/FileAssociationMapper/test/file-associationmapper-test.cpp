@@ -44,7 +44,7 @@ int main(int argc, char const *argv[]){
 
 	// PROCESS TEST
 
-	ProcessID pid;
+	ProcessID pid = {.nid = 1, .pid = 2, .time = 3};
 	OntologyAttribute a1;
 	a1.aID = 1;
 
@@ -75,7 +75,7 @@ int main(int argc, char const *argv[]){
 
 	// COMPONENT TEST
 
-	ComponentID cid;
+	ComponentID cid = {.pid = pid, .id = 4};
 	
 	o->set_component_attribute(cid, a1, v1);
 	o->set_component_attribute(cid, a1, v1);

@@ -42,7 +42,7 @@ namespace monitoring{
 template <class TYPE>
 struct ByteComparator {
     bool operator()(const TYPE & a, const TYPE & b) const {
-        return memcmp(&a, &b, sizeof(TYPE));
+        return memcmp(& a, & b, sizeof(TYPE));
     }
 };
 
@@ -126,7 +126,9 @@ public:
 		auto res = map_processAttributes.find(pid);
 		AttributeIDsAndValues * av;
 		
-		if( res == map_processAttributes.end()){
+		if( res != map_processAttributes.end()){
+			av = & res->second;
+		}else{
 			map_processAttributes[pid] = AttributeIDsAndValues();
 			av = & map_processAttributes[pid];
 		}
@@ -144,7 +146,9 @@ public:
 		auto res = map_componentAttributes.find(cid);
 		AttributeIDsAndValues * av;
 		
-		if( res == map_componentAttributes.end()){
+		if( res != map_componentAttributes.end()){
+			av = & res->second;
+		}else{
 			map_componentAttributes[cid] = AttributeIDsAndValues();
 			av = & map_componentAttributes[cid];
 		}
