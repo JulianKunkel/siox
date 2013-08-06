@@ -107,7 +107,7 @@ public:
 };
 
 
-ostream& operator<<(ostream& os, const VariableDatatype & v)
+inline ostream& operator<<(ostream& os, const VariableDatatype & v)
 {
     switch(v.type()){
     	case VariableDatatype::Type::INT32:
