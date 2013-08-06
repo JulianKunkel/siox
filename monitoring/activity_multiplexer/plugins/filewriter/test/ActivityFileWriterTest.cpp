@@ -34,7 +34,8 @@ int main(int argc, char const *argv[]){
 
 	m1->Log(activity);
 
-	m1->shutdown();
+	delete(m1);
+	delete(ap);
 
 	cout << "OK" << endl;
 }

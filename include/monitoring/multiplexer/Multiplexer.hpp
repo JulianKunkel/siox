@@ -74,7 +74,6 @@ public:
 	void init(core::ComponentOptions * options) {}; 
 	// TODO clarify if return an empty ComponentOptions has no side effects
 	core::ComponentOptions * get_options() { return new core::ComponentOptions(); };
-	void shutdown() {};	
 */
 
 };

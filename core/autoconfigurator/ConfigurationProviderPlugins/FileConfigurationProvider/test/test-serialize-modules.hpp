@@ -28,14 +28,12 @@ public:
 class MyParentModule : public Component{
 public:
 	ComponentOptions * AvailableOptions();
-	void shutdown();
 	void init();
 };
 
 class MyChildModule : public Component{
 public:
 	ComponentOptions * AvailableOptions();
-	void shutdown();
 	void init();
 };
 

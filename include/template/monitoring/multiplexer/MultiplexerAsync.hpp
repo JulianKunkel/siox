@@ -250,8 +250,6 @@ public:
 	// TODO: signal upstream to Deamons others
 	virtual void Reset(int lost) {}
 
-	virtual void shutdown(){}
-
 	/**
 	 * free ressources and finish immediately
 	 */
@@ -363,12 +361,8 @@ public:
 	//
 	virtual void finalize() {};
 
-	// TODO propose possible option parameters
-	void init() {}; 
-	// TODO clarify if return an empty ComponentOptions has no side effects
-	core::ComponentOptions * AvailableOptions() { return new core::ComponentOptions(); };
-	void shutdown() {};	
-
+	virtual ComponentOptions* AvailableOptions(){return new ComponentOptions();}
+	virtual void init(){}
 };
 
 

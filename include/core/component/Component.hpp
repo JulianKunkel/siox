@@ -59,9 +59,9 @@ public:
 	// Call this function to initialize the object with given options
 	// Ownership of the options is given to the Component!
 	void init(ComponentOptions * options){
-		if(options == nullptr ){			
-			delete(options);
-		}
+		assert(this->options == nullptr ); // otherwise it has been initialized.
+		// if the options have been fetched using getOptions* then only init() must be used.
+
 		this->options = options;
 		init();
 	}
@@ -83,11 +83,11 @@ public:
 		return *dynamic_cast<TYPE*>(options);
 	}
 
-	virtual void shutdown() = 0;
+	//virtual void shutdown() = 0; // Shutdown is merged into the destructor.
 
 	virtual ~Component(){ 
-		assert(options != nullptr);
-		delete(options);
+		if(options != nullptr) 
+			delete(options);
 	}
 };
 

@@ -29,7 +29,6 @@ private:
 protected:
 
 	ComponentOptions * AvailableOptions(){
-
 		return new ComponentOptions();
 	}
 
@@ -69,11 +68,6 @@ public:
 
 
 	virtual void init(){
-
-	}
-
-
-	virtual void shutdown(){
 
 	}
 };

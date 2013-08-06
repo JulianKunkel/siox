@@ -35,9 +35,6 @@ public:
 
 		init(o, o->multiplexer.instance<StatisticsMultiplexer>(), o->dereferenceFacade.instance<StatisticsPluginDereferencing>());
 	}
-
-	void shutdown(){
-	}
 };
 
 }
