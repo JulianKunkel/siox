@@ -60,9 +60,6 @@ public:
 	ComponentOptions * AvailableOptions(){
 		return new ActivityPluginDereferencingFacadeOptions();
 	}
-
-	void shutdown(){}
-
 private:
 	// Loaded ontology implementation
 	Ontology * ontology = nullptr;

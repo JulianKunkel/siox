@@ -34,9 +34,6 @@ public:
 
 		init(o.multiplexer.instance<ActivityMultiplexer>(), o.dereferenceFacade.instance<ActivityPluginDereferencing>());
 	}
-
-	void shutdown(){
-	}
 };
 
 }

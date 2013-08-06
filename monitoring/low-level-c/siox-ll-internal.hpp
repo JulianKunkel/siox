@@ -10,6 +10,9 @@
 
 #include <core/autoconfigurator/AutoConfigurator.hpp>
 
+#include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
+#include <monitoring/activity_builder/ActivityBuilder.hpp>
+
 
 using namespace core;
 using namespace monitoring;
@@ -19,10 +22,21 @@ typedef AssociateID siox_associate;
 typedef OntologyAttribute siox_attribute;
 typedef UniqueComponentActivityID siox_component_activity;
 typedef NodeID siox_node;
-typedef UniqueInterfaceID siox_unique_interface;
-typedef ComponentID siox_component;
+
+typedef UniqueInterfaceID siox_unique_interface; // will be stuffed.
 typedef ActivityID siox_activity;
 typedef RemoteCallIdentifier siox_remote_call;
+
+
+
+struct siox_component{
+    ComponentID cid;
+    UniqueInterfaceID uid;
+    AssociateID instance_associate;
+
+    ActivityMultiplexer * amux;
+    // ActivityBuilder abuilder;
+};
 
 /**
  * Implementation of the low-level API
@@ -43,6 +57,7 @@ struct process_info{
     // MZ: TODO Add code to load this somewhere!
     // Loaded activity builder implementation
     // monitoring::ActivityBuilder * activity_builder;
+    ActivityMultiplexer * amux;
 
     // Contains all components
     core::ComponentRegistrar * registrar;

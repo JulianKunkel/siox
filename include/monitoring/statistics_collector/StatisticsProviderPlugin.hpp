@@ -52,7 +52,7 @@ public:
 				collector->registerPlugin(this);
 	}
 
-	virtual void shutdown(){
+	virtual ~StatisticsProviderPlugin(){
 		if(collector != nullptr)
 			collector->unregisterPlugin(this);
 	}

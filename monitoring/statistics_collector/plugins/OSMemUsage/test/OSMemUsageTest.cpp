@@ -31,7 +31,7 @@ int main(int argc, char const *argv[]){
 		cout << stat.metrics << ": " << stat.value << " " << stat.si_unit << endl;				
 	}
 	
-	plugin->shutdown();
+	delete(plugin);
 
 	cout << "OK" << endl;	
 	return 0;

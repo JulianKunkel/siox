@@ -104,7 +104,7 @@ class FileOntology: public Ontology{
 
 		for(auto itr = attribute_map.begin(); itr != attribute_map.end(); itr++){
 			auto pair = *itr;
-			AttributeWithValues * av = pair.second;
+			AttributeWithValues * av = pair.second;		
 			delete(av);
 		}
 	}

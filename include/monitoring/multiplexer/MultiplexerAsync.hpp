@@ -52,6 +52,8 @@ template <class TYPE>
 class MultiplexerQueue 
 {
 public:
+	virtual ~MultiplexerQueue(){}
+
 	/**
 	 * Check whether or not the queue has still capacity
 	 *
@@ -96,17 +98,16 @@ template <class TYPE, class PARENT>
 class MultiplexerNotifier
 {
 	MultiplexerAsync<TYPE, PARENT> * multiplexer;
-
-
 public:
-	// TODO: signal upstream to Deamons others
-	virtual void Reset(int lost) =0;
-
 	/**
 	 * cleanup data structures and finish immediately
 	 */
-	virtual void shutdown() =0;
-	
+
+	virtual ~MultiplexerNotifier(){}
+
+	// TODO: signal upstream to Deamons others
+	virtual void Reset(int lost) =0;
+
 	/**
 	 * set terminate flag for Notifier, terminates as soon queue is emptied 
 	 */
@@ -160,7 +161,6 @@ public:
 	void init(core::ComponentOptions * options) {}; 
 	// TODO clarify if return an empty ComponentOptions has no side effects
 	core::ComponentOptions * get_options() { return new core::ComponentOptions(); };
-	void shutdown() {};	
 	*/
 
 };

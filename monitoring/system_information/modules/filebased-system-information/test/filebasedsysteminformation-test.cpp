@@ -65,12 +65,9 @@ int main(int argc, char const *argv[]){
 	assert(s->interface_of_activity(aid) == uid);
 	assert(s->activity_name(aid) == "open");
 
-
-	s->shutdown();
+	delete(s);
 
 	cout << "OK" << endl;
-
-	delete(s);
 
 	return 0;
 }

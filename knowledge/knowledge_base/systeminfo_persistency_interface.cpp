@@ -54,7 +54,7 @@ ComponentOptions * DBLayer::get_options() {
 	return new ComponentOptions();
 }
 
-void DBLayer::shutdown() {
+void DBLayer::~DBLayer() {
     conn->disconnect();
 }
 

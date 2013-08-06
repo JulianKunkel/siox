@@ -10,10 +10,10 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include <core/module/module-loader.hpp>
 #include <core/datatypes/VariableDatatype.hpp>
-#include <assert.h>
 
 #include "siox-ll-internal.hpp"
 
@@ -154,6 +154,7 @@ __attribute__ ((constructor)) void siox_ll_ctor()
         process_data.ontology = process_data.configurator->searchFor<Ontology>(loadedComponents);
         process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>(loadedComponents);
         process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>(loadedComponents);
+        process_data.amux = process_data.configurator->searchFor<ActivityMultiplexer>(loadedComponents); 
         }
     // Retrieve NodeID and PID now that we have a valid SystemInformationManager
     process_data.nid = lookup_node_id(hostname);
@@ -170,23 +171,12 @@ __attribute__ ((destructor)) void siox_ll_dtor()
         return;
     }
 
-    // cleanup datastructures etc.
-    // TODO
+    // cleanup datastructures by using the component registrar:
+    process_data.registrar->shutdown();
 
-    // cleanup ontology
-    process_data.ontology->shutdown();
-    delete(process_data.ontology);
-    process_data.ontology = nullptr;
+    delete(process_data.registrar);
+    delete(process_data.configurator);
 
-    // cleanup system_information_manager
-    process_data.system_information_manager->shutdown();
-    delete(process_data.system_information_manager);
-    process_data.system_information_manager = nullptr;
-
-    // cleanup association_mapper
-    process_data.association_mapper->shutdown();
-    delete(process_data.association_mapper);
-    process_data.association_mapper = nullptr;
 
     finalized = true;
 }
@@ -288,8 +278,7 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value){
 
 
 siox_associate * siox_associate_instance(const char * instance_information){
-    string instance(instance_information);
-    uint64_t id = process_data.association_mapper->create_instance_mapping(instance);
+    uint64_t id = process_data.association_mapper->create_instance_mapping(instance_information);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     return (AssociateID*) id;
 }
@@ -301,16 +290,46 @@ siox_associate * siox_associate_instance(const char * instance_information){
 siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * instance_name){
     assert(uiid != nullptr);
     // instance_name could be nullptr
+    UniqueInterfaceID ** idTmp = & uiid;
+    UniqueInterfaceID uid = *((UniqueInterfaceID*) idTmp);
 
-    ComponentID * result = new ComponentID();
-    result->pid = process_data.pid;
+    const string & interface_implementation = process_data.system_information_manager->interface_implementation(uid);
+    const string & interface_name = process_data.system_information_manager->interface_name(uid);
 
-    // MZ: TODO Hier eigentlich:
-    // Autoconfigurator konfiguriert Schicht, (MZ: Wie ruft man das auf?!?)
-    // AMux wird erstellt und zugewiesen, (MZ: Wie ruft man das auf?!?)
-    // ABuilder wird erstellt und zugewiesen, (MZ: Wie ruft man das auf?!?)
-    // ...
-    // MZ: How about the SMux?!
+
+    char configName[1001];
+    snprintf(configName, 1000, "%s %s", interface_name.c_str(), interface_implementation.c_str());
+
+    cout << "siox_component_register: " << configName << endl;
+
+
+    vector<Component*> loadedComponents;
+    try{
+        loadedComponents = process_data.configurator->LoadConfiguration("Interface", configName);
+        // if(loadedComponents == nullptr){ // MZ: Error, "==" not defined
+        if(loadedComponents.empty()){
+            cerr << "WARNING Invalid configuration set for component" << endl; 
+            // TODO use FATAL function somehow?
+            //exit(1);
+        }
+    }catch(InvalidConfiguration & e){
+        cerr << "WARNING Invalid configuration: \"" << configName << "\"" << endl; 
+        cerr << e.what() << endl;
+        return nullptr;
+    }
+
+    // check loaded components and assign them to the right struct elements.
+    siox_component * result = new siox_component();
+    result->cid.pid = process_data.pid;
+    result->uid = uid;
+    result->instance_associate = process_data.association_mapper->create_instance_mapping(instance_name);
+
+    result->amux = process_data.configurator->searchFor<ActivityMultiplexer>(loadedComponents); 
+    if (result->amux == nullptr){
+        // link the global AMUX:
+        result->amux = process_data.amux;
+        assert(result->amux != nullptr);
+    }
 
     return result;
 }
@@ -339,13 +358,9 @@ siox_component_activity * siox_component_register_activity(siox_unique_interface
 
 
 void siox_component_unregister(siox_component * component){
-    // MZ: Hat noch keine Zielfunktion!
-    // TODO
-
-    // Plugins runterfahren,
-    // Speicher freigeben,
-    // ...
-    // IM MOMENT NICHT ZU IMPLEMENTIEREN!!!
+    assert(component != nullptr);
+    // Simple implementation: rely on ComponentRegistrar for shutdown.
+    delete(component);
 }
 
 
@@ -497,13 +512,14 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
     assert(interface_name != nullptr);
     assert(implementation_identifier != nullptr);
 
-    string in(interface_name);
-    string ii(implementation_identifier);
     //uint64_t id = process_data.system_information_manager->interface_id(in, ii);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
-    //return (UniqueInterfaceID_*) id;
-    UniqueInterfaceID * result = new UniqueInterfaceID(process_data.system_information_manager->interface_id(in, ii));
-    return result;
+    // Workaround for stuffing
+    UniqueInterfaceID uid = process_data.system_information_manager->interface_id(interface_name, implementation_identifier);
+    assert(sizeof(uid) <= sizeof(uint64_t));
+    UniqueInterfaceID * id = 0;
+    memcpy(& id, &uid, sizeof(uid));
+    return id;
 }
 
 } // extern "C"

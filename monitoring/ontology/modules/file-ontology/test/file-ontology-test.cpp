@@ -70,11 +70,9 @@ int main(int argc, char const *argv[]){
 	cout << "Type: " << ret->type() << " "<< endl;
 	cout << "Val: " << ret->uint32() << endl;
 
-	o->shutdown();
+	delete(o);
 
 	cout << "OK" << endl;
-
-	delete(o);
 
 	return 0;
 }

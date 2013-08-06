@@ -12,20 +12,12 @@ ComponentOptions * MyChildModule::AvailableOptions(){
 	return new MyChildModuleOptions();
 }
 
-void MyChildModule::shutdown(){
-	cout << "Shutting down MyChildModule" << endl;
-}
-
 void MyParentModule::init(){
 }
 
 ComponentOptions * MyParentModule::AvailableOptions(){
 	return new MyParentModuleOptions();
 }
-
-void MyParentModule::shutdown(){
-	cout << "Shutting down MyParentModule" << endl;
-} 
 
 CREATE_SERIALIZEABLE_CLS(MyChildModuleOptions)
 CREATE_SERIALIZEABLE_CLS(MyParentModuleOptions)

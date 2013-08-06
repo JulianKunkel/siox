@@ -253,7 +253,7 @@ public:
 	/**
 	 * free ressources and finish immediately
 	 */
-	virtual void shutdown() {
+	virtual ~MultiplexerNotifierTemplate(){
 		// wait for threads to finish
 		for(auto it = t.begin(); it != t.end(); ++it ) {
 			(*it).join();
@@ -296,9 +296,9 @@ public:
 	}
 
 	
-	~MultiplexerAsyncTemplate() {
-		// TODO remove(queue);
-		// TODO remove(notifier);
+	virtual ~MultiplexerAsyncTemplate() {
+		delete(queue);
+		delete(notifier);
 	}
 	
 	
@@ -361,12 +361,8 @@ public:
 	//
 	virtual void finalize() {};
 
-	// TODO propose possible option parameters
-	void init() {}; 
-	// TODO clarify if return an empty ComponentOptions has no side effects
-	core::ComponentOptions * AvailableOptions() { return new core::ComponentOptions(); };
-	void shutdown() {};	
-
+	virtual ComponentOptions* AvailableOptions(){return new ComponentOptions();}
+	virtual void init(){}
 };
 
 
