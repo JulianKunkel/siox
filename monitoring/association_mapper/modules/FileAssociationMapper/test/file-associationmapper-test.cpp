@@ -16,9 +16,9 @@ int main(int argc, char const *argv[]){
 	AssociationMapper * o = core::module_create_instance<AssociationMapper>("", "FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE);
 	assert(o != nullptr);
 
-	FileAssociationMapperOptions * op = new FileAssociationMapperOptions();
-	op->filename = "association-mapper.dat";
-	o->init(op);
+	FileAssociationMapperOptions & op = o->getOptions<FileAssociationMapperOptions>();
+	op.filename = "association-mapper.dat";
+	o->init();
 
 	string i1("test 1");
 	string i2("ich bin C++");
@@ -83,13 +83,9 @@ int main(int argc, char const *argv[]){
 	vp = o->lookup_component_attribute(&cid, &a1);
 	assert(*vp == v1 );
 
-
-
-	o->shutdown();
+	delete(o);
 
 	cout << "OK" << endl;
-
-	delete(o);
 
 	return 0;
 }

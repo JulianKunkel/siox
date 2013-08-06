@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]){
 
 	m->init();
 
-	m->shutdown();
+	delete(m);
 
 	return 0;
 }

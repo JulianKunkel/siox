@@ -70,7 +70,7 @@ int main(int argc, char const *argv[]){
 
 	ps->init();
 
-	ps->shutdown();
+	delete(ps);
 
 	cout << "OK" << endl;	
 	return 0;

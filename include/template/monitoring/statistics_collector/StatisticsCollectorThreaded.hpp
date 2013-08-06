@@ -102,7 +102,6 @@ using namespace std;
 	void init() {}; 
 
 	core::ComponentOptions * AvailableOptions() { return new core::ComponentOptions(); };
-	void shutdown() {};	
 
 };
 

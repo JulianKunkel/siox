@@ -81,8 +81,6 @@ public:
 		init(o, o->multiplexer.instance<Optimizer>(), o->dereferenceFacade.instance<StatisticsPluginDereferencing>());
 	}
 
-	void shutdown(){
-	}
 */
 
 	/**	

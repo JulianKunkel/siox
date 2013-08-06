@@ -135,17 +135,6 @@ public:
 	 * prepare for shutdown of component
 	 */
 	virtual void finalize() {};
-
-
-	//
-	// satisfy abstract parents
-	//
-	// TODO propose possible option parameters
-	void init(core::ComponentOptions * options) {};
-	// TODO clarify if return an empty ComponentOptions has no side effects
-	core::ComponentOptions * get_options() { return new core::ComponentOptions(); };
-	void shutdown() {};
-
 };
 
 

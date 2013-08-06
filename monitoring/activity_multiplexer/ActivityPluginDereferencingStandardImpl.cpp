@@ -61,8 +61,6 @@ public:
 		return new ActivityPluginDereferencingFacadeOptions();
 	}
 
-	void shutdown(){}
-
 private:
 	// Loaded ontology implementation
 	Ontology * ontology = nullptr;
