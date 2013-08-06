@@ -14,7 +14,7 @@
 typedef uint64_t siox_timestamp;
 
 /**
- * Result of a function.
+ * Result of a function indicating its error status.
  * @todo: Design question - map to abstract values (enum) or use raw values?
  */
 typedef uint32_t siox_activity_error;
