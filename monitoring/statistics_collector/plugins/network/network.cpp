@@ -7,10 +7,11 @@ using namespace std;
 
 class NetworkStats: public ProcSingleFilePlugin<18>{
 protected:
+	map<string, map<StatisticsValue, string> > values;
 
 	void timestepLine(int lineNr, vector<string> & entries){
-		string name = entries[1];
-
+		string name = "PacketsReceived";
+		
 		if (CurrentValues.find(name) == CurrentValues.end() ){
 		cerr << "File " << filename() << "changed while accessing. New field " << name << endl;
 		return;
@@ -18,16 +19,17 @@ protected:
 
 		std::array<StatisticsValue, 1> & Crrnt = CurrentValues[name];
 
-		for(int i=0; i < 1; i++){
-			Crrnt[i] = (uint64_t) atoll(entries[i+7].c_str());
-		}
+		//for(int i=0; i < 1; i++){
+			Crrnt[0] = (uint64_t) atoll(entries[0].c_str());
+		//}
+
 		// Nur für etwaige Umrechnung mit fixen Faktoren
 		// Crrnt[1] = ((uint64_t) atoll(entries[2+3].c_str())) * factor;
 	}
 
 
 	void initLine(int lineNr, vector<string> & entries) {
-		string name = entries[1];		
+		string name = "PacketsReceived";		
 		CurrentValues[name] = std::array<StatisticsValue, 1>();
 	}
 
@@ -50,7 +52,11 @@ public:
 			std::array<StatisticsValue, 1> & Crrnt = CurrentValues[name];
 
 			lst.push_back({INPUT_OUTPUT, NODE, "Quantity/PacketsReceived", {{"node", LOCAL_HOSTNAME}, {"device", name}}, Crrnt[0], INCREMENTAL, "", "Field 1 -- # of packets received", overflow_value, 0});
-		}
+			//lst.push_back({INPUT_OUTPUT, NODE, "Quantity/PacketsSent", {{"node", LOCAL_HOSTNAME}, {"device", name}}, Crrnt[0], INCREMENTAL, "", "Field 1 -- # of packets sent", overflow_value, 0});
+			//lst.push_back({INPUT_OUTPUT, NODE, "Quantity/BytesReceived", {{"node", LOCAL_HOSTNAME}, {"device", name}}, Crrnt[0], INCREMENTAL, "", "Field 1 -- # of bytes received", overflow_value, 0});
+			//lst.push_back({INPUT_OUTPUT, NODE, "Quantity/BytesSent", {{"node", LOCAL_HOSTNAME}, {"device", name}}, Crrnt[0], INCREMENTAL, "", "Field 1 -- # of bytes sent", overflow_value, 0});
+
+		}	
 		return lst;
 	}
 };
