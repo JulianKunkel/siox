@@ -4,6 +4,75 @@
  * @date 2013-08-05
  * @copyright GNU Public License
  * @authors Michaela Zimmer, Julian Kunkel, Marc Wiedemann & Alvaro Aguilera
+ *
+ *
+ * Bridging the gap between the instrumented components and SIOX proper, the SIOX low-level
+ * API is a centre piece of the system, as an overview of its interactions with other
+ * SIOX modules and interfaces shows:
+
+	@startuml{siox-ll-interactions.png}
+		title Interactions between the Low-Level-C-API, SIOX-Components and Modules
+
+		folder "Process" {
+
+		component [Thread] #Wheat
+
+		folder "Low-Level-C-API" {
+			component [SIOX-LL] #PowderBlue
+			interface "Monitoring" #Orange
+			component [Activity Builder] #Orange
+
+			note left of [SIOX-LL]
+			 Bridge between C
+			 and C++ datatypes
+			end note
+
+			[Thread] ..> [SIOX-LL] : use
+		}
+
+		interface "ConfigurationProvider"
+		interface "Ontology" #Yellow
+		'component [FileOntology] #Yellow
+		'component [DBOntology] #Orange
+		component [Optimizer] #Plum
+		component [AMux] #Orange
+		component [AForwarder] #Orange
+		component [ModuleLoader]
+		component [AutoConfigurator]
+
+		component [SOPI] #Plum
+		component [ADPI] #Plum
+
+		[AutoConfigurator] ..> [ConfigurationProvider] : use
+		[AutoConfigurator] ..> [ModuleLoader] : use
+		[SIOX-LL] ..> [Ontology] : use
+		'Ontology - [FileOntology]
+		'Ontology - [DBOntology]
+		[SIOX-LL] ..> [Optimizer] : use 
+		[SIOX-LL] ..> [AutoConfigurator] : use
+		[SIOX-LL] ..> [Monitoring] : use
+
+		[Monitoring] ..> [Activity Builder] : use
+		[Monitoring] --> [AMux] : Activity
+
+
+		[AMux] --> [SOPI] 
+		[AMux] --> [ADPI] 
+		[AMux] --> [AForwarder] 
+		[Optimizer] --> [SOPI] : chooses\nrelevant
+
+		}
+	@enduml
+
+ *
+ * A note on storage mangement:
+ * ----------------------------------
+ * Right now, our philosophy is that SIOX will take care of
+ * all objects created by calls to it.
+ * Thus, instrumenting a component for SIOX will not
+ * burden you with calls to malloc() and free(); the library
+ * will do it all for you.
+ *
  */
 
 
@@ -25,74 +94,6 @@ typedef void siox_node;
 typedef void siox_remote_call;
 typedef void siox_unique_interface;
 #endif
-
-
-/*
-@startuml siox-ll-interactions.png
-title Interactions between the Low-Level-C-API, SIOX-Components and Modules
-
-folder "Process" {
-
-component [Thread] #Wheat
-
-folder "Low-Level-C-API" {
-	component [SIOX-LL] #Wheat
-	interface "Monitoring" #Orange
-	component [Activity Builder] #Orange
-
-	note left of [SIOX-LL]
-	 Bridge between C
-	 and C++ datatypes
-	end note
-
-	[Thread] ..> [SIOX-LL] : use
-}
-
-interface "ConfigurationProvider"
-interface "Ontology" #Orange
-'component [FileOntology] #Orange
-'component [DBOntology] #Orange
-component [Optimizer] #Plum
-component [AMux] #Orange
-component [AForwarder] #Orange
-component [ModuleLoader]
-component [AutoConfigurator]
-
-component [SOPI] #Plum
-
-[AutoConfigurator] ..> [ConfigurationProvider] : use
-[AutoConfigurator] ..> [ModuleLoader] : use
-[SIOX-LL] ..> [Ontology] : use
-'Ontology - [FileOntology]
-'Ontology - [DBOntology]
-[SIOX-LL] ..> [Optimizer] : use 
-[SIOX-LL] ..> [AutoConfigurator] : use
-[SIOX-LL] ..> [Monitoring] : use
-
-[Monitoring] ..> [Activity Builder] : use
-[Monitoring] --> [AMux] : Activity
-
-
-[AMux] --> [SOPI] 
-[AMux] --> [AForwarder] 
-[Optimizer] --> [SOPI] : chooses \n relevant
-
-}
-@enduml
-*/
-
-
-/*
- * ==================================
- * A note on storage mangement:
- * ----------------------------------
- * Right now, our philosophy is that SIOX will take care of
- * all objects created by calls to it.
- * Thus, instrumenting a component for SIOX will not
- * burden you with calls to malloc() and free(); the library
- * will do it all for you.
- * ==================================
- */
 
 
 
