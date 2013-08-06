@@ -1,3 +1,11 @@
+/**
+ * @file siox-ll-internal.hpp
+ *
+ * Additional header file for the siox low-level API.
+ * For internal use only.
+ * @date 2013-08-06
+ */
+
 #ifndef SIOX_LL_INTERNAL_H_
 #define SIOX_LL_INTERNAL_H_
 
@@ -35,7 +43,9 @@ struct siox_component{
     AssociateID instance_associate;
 
     ActivityMultiplexer * amux;
-    // ActivityBuilder abuilder;
+    /// Loaded activity builder implementation
+    /// @todo Add code to load ActivityBuilder somewhere!
+    ActivityBuilder * abuilder;
 };
 
 /**
@@ -44,25 +54,23 @@ struct siox_component{
  */
 
 struct process_info{
-	NodeID nid;
-	ProcessID pid;
+    NodeID nid;
+    ProcessID pid;
 
-	// Loaded ontology implementation
-	monitoring::Ontology * ontology;
-    // Loaded system information manager implementation
+    /// Loaded ontology implementation
+    monitoring::Ontology * ontology;
+    /// Loaded system information manager implementation
     monitoring::SystemInformationGlobalIDManager * system_information_manager;
-    // Loaded association mapper implementation
+    /// Loaded association mapper implementation
     monitoring::AssociationMapper * association_mapper;
 
-    // MZ: TODO Add code to load this somewhere!
-    // Loaded activity builder implementation
-    // monitoring::ActivityBuilder * activity_builder;
+    /// Loaded activity multiplexer implementation
     ActivityMultiplexer * amux;
 
-    // Contains all components
+    /// Contains all components
     core::ComponentRegistrar * registrar;
 
-    // Loads all component modules
+    /// Loads all component modules
     core::AutoConfigurator * configurator;
 };
 

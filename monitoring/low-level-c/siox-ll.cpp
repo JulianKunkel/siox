@@ -197,7 +197,7 @@ typedef VariableDatatype AttributeValue;
 //////////////////////////////////////////////////////////////////////////////
 /// @return
 //////////////////////////////////////////////////////////////////////////////
-static AttributeValue convert_attribute(siox_attribute * attribute, void * value){
+static VariableDatatype convert_attribute(siox_attribute * attribute, void * value){
     AttributeValue v;
     switch(attribute->storage_type){
     case(SIOX_STORAGE_32_BIT_UINTEGER):
@@ -233,40 +233,6 @@ static AttributeValue convert_attribute(siox_attribute * attribute, void * value
     return v;
 }
 
-
-/*static VariableDatatype::Type convert_attribute_type(siox_ont_storage_type type){
-    VariableDatatype::Type result;
-    switch(type){
-        case(SIOX_STORAGE_32_BIT_UINTEGER):
-        case(SIOX_STORAGE_32_BIT_INTEGER):{
-            result = VariableDatatype::Type::INT32;
-            break;
-        }
-        case(SIOX_STORAGE_64_BIT_UINTEGER):
-        case(SIOX_STORAGE_64_BIT_INTEGER):{
-            result = VariableDatatype::Type::INT64;
-            break;
-        }
-        case(SIOX_STORAGE_FLOAT):{
-            result = VariableDatatype::Type::FLOAT;
-            break;
-        }
-        case(SIOX_STORAGE_DOUBLE):{
-            result = VariableDatatype::Type::DOUBLE;
-            break;
-        }
-        case(SIOX_STORAGE_STRING):{
-            result = VariableDatatype::Type::STRING;
-            break;
-        }
-        case (SIOX_STORAGE_UNASSIGNED):{
-            result = VariableDatatype::Type::INVALID;
-            assert(0);
-        }
-    }
-    return result;
-}
-*/
 
 void siox_process_set_attribute(siox_attribute * attribute, void * value){
     assert(attribute != nullptr);
@@ -306,10 +272,9 @@ siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * 
     vector<Component*> loadedComponents;
     try{
         loadedComponents = process_data.configurator->LoadConfiguration("Interface", configName);
-        // if(loadedComponents == nullptr){ // MZ: Error, "==" not defined
         if(loadedComponents.empty()){
             cerr << "WARNING Invalid configuration set for component" << endl; 
-            // TODO use FATAL function somehow?
+            /// @todo Use FATAL function somehow?
             //exit(1);
         }
     }catch(InvalidConfiguration & e){
@@ -339,10 +304,8 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
     assert(attribute != nullptr);
     assert(value != nullptr);
 
-    // MZ: TODO siox_component in ComponentID wandeln
-    ComponentID * cid = nullptr; // FIXME
-    AttributeValue val = convert_attribute(attribute, value);
-    process_data.association_mapper->set_component_attribute(cid, attribute, val);
+    OntologyValue val = convert_attribute(attribute, value);
+    process_data.association_mapper->set_component_attribute(& (component->cid), attribute, val);
 }
 
 
@@ -350,8 +313,7 @@ siox_component_activity * siox_component_register_activity(siox_unique_interface
     assert(uiid != nullptr);
     assert(activity_name != nullptr);
 
-    string n(activity_name);
-    uint64_t id = process_data.system_information_manager->activity_id(*uiid, n);
+    uint64_t id = process_data.system_information_manager->activity_id(*uiid, activity_name);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     return (UniqueComponentActivityID*) id;
 }
