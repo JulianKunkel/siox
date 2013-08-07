@@ -18,6 +18,11 @@
 
 using namespace std;
 
+// Code needed to serialize the basis-container
+BOOST_CLASS_IMPLEMENTATION(core::Container, boost::serialization::object_serializable) 
+BOOST_CLASS_TRACKING(core::Container, boost::serialization::track_never)
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(core::Container)
+BOOST_CLASS_EXPORT(core::Container)
 
 namespace core{
 

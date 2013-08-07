@@ -153,3 +153,4 @@ def tail(filename, n = 5):
             return fm[i + 1 if i else 0:]
         finally:
             fm.close()
+

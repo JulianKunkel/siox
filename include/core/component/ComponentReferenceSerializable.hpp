@@ -43,7 +43,6 @@ namespace serialization {
 
 }
 }
-CREATE_SERIALIZEABLE_CLS_EXTERNAL(core::ComponentReference)
 
 #endif
 

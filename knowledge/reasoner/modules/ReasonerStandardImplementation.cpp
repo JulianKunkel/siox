@@ -7,8 +7,9 @@ using namespace core;
 namespace knowledge{
 
 class ReasonerStandardImplementation : public Reasoner{
-
 private:
+
+	
 
 protected:
 

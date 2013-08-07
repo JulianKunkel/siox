@@ -35,6 +35,8 @@ public:
 };
 CREATE_SERIALIZEABLE_CLS(LoadModule)
 
+CREATE_SERIALIZEABLE_CLS_EXTERNAL(ComponentReference)
+
 namespace core{
 /**
  * Describes the module to load in the configuration.
