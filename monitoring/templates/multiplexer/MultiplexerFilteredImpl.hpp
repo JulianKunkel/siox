@@ -46,8 +46,6 @@
 #include <atomic>
 #include <mutex>
 
-#include <monitoring/multiplexer/Multiplexer.hpp>
-#include <monitoring/multiplexer/MultiplexerListener.hpp>
 #include <core/component/Component.hpp>
 
 namespace monitoring{
@@ -57,14 +55,14 @@ namespace monitoring{
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-template <class TYPE>
-class MultiplexerFilteredTemplate : public Multiplexer<TYPE>
+template <class TYPE, class PARENTLISTENER>
+class MultiplexerFilteredTemplate : TYPE
 {
 
 	// hashmap
 
 
-	list<MultiplexerListener<TYPE> *> listeners;
+	list<PARENTLISTENER *> listeners;
 
 	// thread safety, kept namespace verbose for clarity
 	std::mutex inc;
@@ -106,7 +104,7 @@ public:
 	 *
 	 * @param	listener	listener to notify in the future
 	 */
-	virtual void registerListener(MultiplexerListener<TYPE> * listener) {
+	virtual void registerListener(PARENTLISTENER * listener) {
 		// exclusive, adding multiple listerns might result in race condition
 		std::lock_guard<std::mutex> lock(inc);
 		while( not_invalidating != 0 ) {
@@ -121,7 +119,7 @@ public:
 	 *
 	 * @param	listener	listener to remove
 	 */
-	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) {
+	virtual void unregisterListener(PARENTLISTENER * listener) {
 		// exclusive, as removing may invalidate iterator
 		std::lock_guard<std::mutex> lock(inc);
 		while( not_invalidating != 0 ) {

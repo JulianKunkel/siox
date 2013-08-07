@@ -1,8 +1,9 @@
 #include <monitoring/datatypes/Activity.hpp>
-#include <monitoring/multiplexer/MultiplexerAsync.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerImplementation.hpp>
-#include <template/monitoring/multiplexer/MultiplexerAsync.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
+
+#include <templates/multiplexer/MultiplexerAsyncImpl.hpp>
+
 
 using namespace core;
 using namespace monitoring;
@@ -16,7 +17,7 @@ namespace monitoring{
  * in an syncronised or asyncronous manner.
  */
 //class ActivityMultiplexerAsyncThreaded : public MultiplexerAsync<Activity, ActivityMultiplexer>
-class ActivityMultiplexerAsyncThreaded : public MultiplexerAsyncTemplate<Activity, ActivityMultiplexer>
+class ActivityMultiplexerAsyncThreaded : public MultiplexerAsyncTemplate<Activity, ActivityMultiplexer, ActivityMultiplexerListener>
 {
 
 };

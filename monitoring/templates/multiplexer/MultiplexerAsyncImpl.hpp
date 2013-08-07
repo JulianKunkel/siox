@@ -78,8 +78,7 @@
 #include <atomic>
 #include <thread>
 
-#include <monitoring/multiplexer/MultiplexerAsync.hpp>
-#include <monitoring/multiplexer/MultiplexerListener.hpp>
+#include <templates/multiplexer/MultiplexerAsync.hpp>
 
 using namespace std;
 
@@ -92,8 +91,8 @@ namespace monitoring{
 
 // forward declaration for friendship 
 template <class TYPE>class MultiplexerQueueTemplate;
-template <class TYPE, class PARENT>class MultiplexerNotifierTemplate;
-template <class TYPE, class PARENT>class MultiplexerAsyncTemplate;
+template <class TYPE, class PARENT, class LISTENERPARENT>class MultiplexerNotifierTemplate;
+template <class TYPE, class PARENT, class LISTENERPARENT>class MultiplexerAsyncTemplate;
 
 /**
  * A bounded buffer, to store elements that need to be dispatched by the 
@@ -200,12 +199,12 @@ public:
  * ActivityMultiplexerNotifier
  * Used by the ActivityMultiplexer to dispatch to async listeners
  */
-template <class TYPE, class PARENT>
-class MultiplexerNotifierTemplate : public MultiplexerNotifier<TYPE, PARENT>
+template <class TYPE, class PARENT, class LISTENERPARENT>
+class MultiplexerNotifierTemplate : public MultiplexerNotifier<TYPE, PARENT, LISTENERPARENT>
 {
 	bool terminate = false;
 
-	MultiplexerAsync<TYPE, PARENT> * multiplexer;
+	MultiplexerAsync<TYPE, PARENT, LISTENERPARENT> * multiplexer;
 
 	
 	int dispatcher = 1;
@@ -273,12 +272,12 @@ public:
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-template <class TYPE, class PARENT>
-class MultiplexerAsyncTemplate : MultiplexerAsync<TYPE, PARENT>
+template <class TYPE, class PARENT, class LISTENERPARENT>
+class MultiplexerAsyncTemplate : MultiplexerAsync<TYPE, PARENT, LISTENERPARENT>
 {
-	list<MultiplexerListener<TYPE> *> listeners;
-	list<MultiplexerListener<TYPE> *> listeners_sync;
-	list<MultiplexerListener<TYPE> *> listeners_async;
+	list<LISTENERPARENT *> listeners;
+	list<LISTENERPARENT *> listeners_sync;
+	list<LISTENERPARENT *> listeners_async;
 
 	// thread safety, kept namespace verbose for clarity
 	std::mutex inc;
@@ -286,13 +285,13 @@ class MultiplexerAsyncTemplate : MultiplexerAsync<TYPE, PARENT>
 	int not_invalidating = 0;
 
 	MultiplexerQueue<TYPE> * queue;
-	MultiplexerNotifier<TYPE, PARENT> * notifier;
+	MultiplexerNotifier<TYPE, PARENT, LISTENERPARENT> * notifier;
 
 public:
 
 	MultiplexerAsyncTemplate () {
 		queue = new MultiplexerQueueTemplate<TYPE>;	
-		notifier = new MultiplexerNotifierTemplate<TYPE, PARENT>;		
+		notifier = new MultiplexerNotifierTemplate<TYPE, PARENT, LISTENERPARENT>;		
 	}
 
 	
@@ -331,7 +330,7 @@ public:
 	 *
 	 * @param	listener	listener to notify in the future
 	 */
-	virtual void registerListener(MultiplexerListener<TYPE> * listener) {
+	virtual void registerListener(LISTENERPARENT * listener) {
 		// exclusive, adding multiple listerns might result in race condition
 		std::lock_guard<std::mutex> lock(inc);
 		while( not_invalidating != 0 ) {
@@ -346,7 +345,7 @@ public:
 	 *
 	 * @param	listener	listener to remove
 	 */
-	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) {
+	virtual void unregisterListener(LISTENERPARENT * listener) {
 		// exclusive, as removing may invalidate iterator
 		std::lock_guard<std::mutex> lock(inc);
 		while( not_invalidating != 0 ) {

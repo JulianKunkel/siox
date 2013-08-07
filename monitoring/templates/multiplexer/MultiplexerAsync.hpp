@@ -22,11 +22,10 @@
 #ifndef MULTIPLEXERASYNC_H
 #define MULTIPLEXERASYNC_H 
 
-#include <monitoring/multiplexer/Multiplexer.hpp>
-#include <monitoring/multiplexer/MultiplexerAsyncOptions.hpp>
-	
-#include <monitoring/multiplexer/MultiplexerListener.hpp>
 #include <core/component/Component.hpp>
+
+#include <templates/multiplexer/MultiplexerAsyncOptions.hpp>
+
 
 using namespace std;
 
@@ -39,9 +38,9 @@ namespace monitoring{
 
 // forward declaration for friendship 
 template <class TYPE>class MultiplexerQueue;
-template <class TYPE, class PARENT>class MultiplexerNotifier;
+template <class TYPE, class PARENT, class LISTENERPARENT>class MultiplexerNotifier;
 //template <class TYPE, class PARENT>class MultiplexerAsync;
-template <class TYPE, class PARENT>class MultiplexerAsync;
+template <class TYPE, class PARENT, class LISTENERPARENT>class MultiplexerAsync;
 
 
 /**
@@ -94,10 +93,10 @@ public:
  * ActivityMultiplexerNotifier
  * Used by the ActivityMultiplexer to dispatch to async listeners
  */
-template <class TYPE, class PARENT>
+template <class TYPE, class PARENT, class LISTENERPARENT>
 class MultiplexerNotifier
 {
-	MultiplexerAsync<TYPE, PARENT> * multiplexer;
+	MultiplexerAsync<TYPE, PARENT, LISTENERPARENT> * multiplexer;
 public:
 	/**
 	 * cleanup data structures and finish immediately
@@ -123,8 +122,8 @@ public:
 //template <class TYPE, class PARENT>
 //class MultiplexerAsync  : public PARENT
 
-template <class TYPE, class PARENT>
-class MultiplexerAsync : Multiplexer<TYPE, PARENT>
+template <class TYPE, class PARENT, class LISTENERPARENT>
+class MultiplexerAsync : PARENT
 {
 public:
 
@@ -140,14 +139,14 @@ public:
 	 *
 	 * @param	listener	listener to notify in the future
 	 */
-	virtual void registerListener(MultiplexerListener<TYPE> * listener) =0; 
+	virtual void registerListener(LISTENERPARENT * listener) =0; 
 
 	/**
 	 * Unregister listener from multiplexer
 	 *
 	 * @param	listener	listener to remove
 	 */
-	virtual void unregisterListener(MultiplexerListener<TYPE> * listener) =0;
+	virtual void unregisterListener(LISTENERPARENT * listener) =0;
 
 
 

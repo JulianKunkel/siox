@@ -57,8 +57,7 @@ def configure(conf):
 
 
 	workDir = conf.path.abspath()
-	conf.env.INCLUDES = [workDir + '/include' ]
-
+	conf.env.append_value('INCLUDES', [workDir + '/include' ])
         if conf.options.debug:
 	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall']
 	        conf.env.CFLAGS = ['-std=c99', '-O3', '-Wall']
