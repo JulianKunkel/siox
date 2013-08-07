@@ -91,7 +91,6 @@ class ActivityBuilder;
 
 class Activity{
 	friend class ActivityBuilder;
-
 protected:
 	// The ontology provides a single ID for each ActivityType of a component, e.g. POSIX "open()"
 	UniqueComponentActivityID ucaid_;

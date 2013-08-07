@@ -40,6 +40,20 @@ Reduce SUM(x)/COUNT(x) = (eth0+eth1+eth2+eth3)/4 is responsibility of statistics
 MetricID comes from ontology
 
 Topology instance? See lshw or similar.
+
+Use cases:
+	U1	Capture node-global OS statistics and provide them to the statistics multiplexer/plugins.
+	U2	An anomaly detection plugin queries node statistics to judge if observed performance degradation is caused by a saturated network.
+
+Requirements:
+	R1 	Translate abstract descriptions of metrics into ontology.
+	R2 	Evaluate equations to derive new metrics from existing plugins.
+	R3	Conserve min/max/average values for each statistics for this specific node, allow reasoner to query utilization of statistics.
+
+Rationales & design decisions/Issues and questions:
+	D1	Should R3 be realized by a specific and generic statistics plugin instead of the collector?
+	D2	Should R2 be realized by a specific and generic statistics plugin which also registers as provider?
+
  */
 
 

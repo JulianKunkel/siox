@@ -4,7 +4,7 @@
 #include <core/component/Component.hpp>
 
 #include <knowledge/reasoner/ReasoningDatatypes.hpp>
-
+#include <monitoring/datatypes/ids.hpp>
 
 /**
   The reasoner gathers all the information about anomalies and judges the cause/reason of them. 
@@ -30,7 +30,7 @@
 	 	a) We may have a decision table which concludes the limitations based on logical expressions of the observations.
 	D2  How are decision tables constructed?
 		a) Machine learned
-		b) Manually set based on tokens <= This seems more realistic at the moment. 
+		b) Manual configuration, based on tokens <= This seems more realistic at the moment. 
 			b1) Could be stored in a file
 			b2) Could be hard-coded in the source-code
 			=> Different modules could handle it differently.
@@ -47,11 +47,28 @@
 		a) As an enum (more efficient, fixed at compile-time)
 		b) As a string (needs more parsing time, better extendable)		
  */
+
+using namespace knowledge::reasoning;
+
 namespace knowledge{
 
 class Reasoner : public core::Component{
 public:
+	// Report the observation of an activity
+	// For which component, which type of operations has the observation been made.
+	// What has been observed: (In)efficient operation on another hardware/software component.
+	//virtual void reportObservation(activity::Observation o, 
+	//	HardwareEntity he, SoftwareEntity se, Reason r, const string & reasonQualifier) = 0;
 
+	// Register the presence of a statistics which can be queried to ask the current utilization.
+	// Internally, the relative utilization of such a statistics helps finding the reasons.
+	//virtual void registerUtilizationStatistics() = 0;
+
+
+
+	// Query statistics about inefficiencies / efficiencies for the whole runtime of the application.
+	// Usually done at the end of the application to provide hints about application bottlenecks.
+	//virtual void queryUsageStatistics() = 0;
 };
 
 }
