@@ -7,12 +7,6 @@ from waflib import Logs
 
 import os
 
-
-def build(bld):
-	bld.shlib(includes="",  use = "module-loader BOOST core-container-serializer core-component-registrar" ,  target = 'AutoConfigurator', source = 'AutoConfigurator.cpp' )
-	bld.recurse(["ConfigurationProviderPlugins"]);
-
-
 def __recurse(ctx):
 	workDir = ctx.path.abspath()
 	dirs = [ name for name in os.listdir(workDir)    if   os.path.isdir(os.path.join(workDir, name)) and not name.startswith(".") ]
@@ -24,6 +18,9 @@ def options(opt):
 	
 def configure(conf):
 	__recurse(conf)
+	
+def build(bld):
+	__recurse(bld)
 
 def install(ctx):
 	__recurse(ctx)
