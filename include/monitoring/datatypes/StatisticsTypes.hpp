@@ -83,13 +83,13 @@ enum StatisticsScope{
 	COMPONENT
 };
 
-enum StatisticsIntervall{
+typedef enum StatisticsIntervall{
 	HUNDRED_MILLISECONDS,
 	SECOND,
 	TEN_SECONDS,
 	MINUTE,
 	TEN_MINUTES
-};
+} StatisticsIntervall;
 
 enum StatisticsReduceOperator{
 	MIN,

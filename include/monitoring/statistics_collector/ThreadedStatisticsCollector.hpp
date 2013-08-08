@@ -62,3 +62,6 @@ extern int workq_init (
     void        (*engine)(void *));     /* engine routine */
 extern int workq_destroy (workq_t *wq);
 extern int workq_add (workq_t *wq, void *data);
+
+
+StatisticsIntervall intval = StatisticsIntervall::SECOND ;
