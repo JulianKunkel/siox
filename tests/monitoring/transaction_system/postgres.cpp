@@ -110,11 +110,11 @@ BOOST_AUTO_TEST_CASE(activity_test)
 	
 	UniqueInterfaceID uuid = {10, 20};
 	AssociateID instance = 30;
-	RemoteCallIdentifier target = {1, uuid, instance};
+// 	RemoteCallIdentifier target = {1, uuid, instance};
 	
-	RemoteCall rc = {target, attributes};
+// 	RemoteCall rc = {target, attributes};
 	vector<RemoteCall> remote_calls;
-	remote_calls.push_back(rc);
+// 	remote_calls.push_back(rc);
 	
 	RemoteCallIdentifier *remote_invoker = NULL;
 	siox_activity_error error_value = 0;
