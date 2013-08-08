@@ -13,6 +13,9 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}/core/comm"
 	"${CMAKE_SOURCE_DIR}/core/logger"
 	"${CMAKE_SOURCE_DIR}/monitoring/transaction_system"
+	"${CMAKE_SOURCE_DIR}/include/C"
+	"${CMAKE_SOURCE_DIR}/include/misc"
+	"${CMAKE_SOURCE_DIR}/include/monitoring/datatypes"
 	"${PROTOBUF_INCLUDE_DIRS}"
 	"${Boost_INCLUDE_DIR}"
 )

@@ -16,6 +16,7 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}/core/comm"
 	"${CMAKE_SOURCE_DIR}/core/logger"
 	"${CMAKE_SOURCE_DIR}/include/"
+	"${CMAKE_SOURCE_DIR}/include/misc"
 	"${CMAKE_SOURCE_DIR}/include/monitoring/datatypes"
 	"${CMAKE_SOURCE_DIR}/monitoring/datatypes"
 	"${PROTOBUF_INCLUDE_DIRS}"
@@ -41,16 +42,18 @@ add_library(sioxts
 
 target_link_libraries(sioxts sioxcomm sioxlog ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${PostgreSQL_LIBRARIES} ${Boost_LIBRARIES})
 
-add_executable(tsd
-	sioxtsd.cpp
-)
+# add_executable(tsd
+# 	sioxtsd.cpp
+# )
 
-target_link_libraries(tsd sioxts ${Boost_LIBRARIES})
+# target_link_libraries(tsd sioxts ${Boost_LIBRARIES})
 
-add_executable(testclient
-	testclient.cpp
-	${PROTO_SRCS}
-	${PROTO_HDRS}
-)
-
-target_link_libraries(testclient sioxcomm sioxlog ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
+# add_executable(testclient
+# 	testclient.cpp
+# 	${PROTO_SRCS}
+# 	${PROTO_HDRS}
+# )
+# 
+# target_link_libraries(testclient sioxcomm sioxlog ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
+# 
+add_subdirectory(test)
