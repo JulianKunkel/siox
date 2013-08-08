@@ -13,13 +13,13 @@
 
 #include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
 
-#include <thread>
-#include <iostream>
-#include <mutex>
-#include <cstdlib> //(stdlib.h)
-#include <ctime> //(time.h)
-#include "monitoring/statistics_collector/ThreadedStatisticsCollector.hpp"
-#include "ThreadedStatisticsOptions.hpp"
+#include <thread> // header for threads
+#include <iostream> // header that defines I/O stream objects
+#include <mutex> // defines for mutex class
+#include <cstdlib> //(stdlib.h) get C header stdlib
+#include <ctime> //(time.h) get C header time
+#include "monitoring/statistics_collector/ThreadedStatisticsCollector.hpp" // own definitions of classes functions used in this implementation
+#include "ThreadedStatisticsOptions.hpp" // own options of this implementation
 
 using namespace std;
 using namespace core;
@@ -40,6 +40,12 @@ using namespace monitoring;
 		b) ... SMUX notify - gets the tact intervals 100ms,1s,10s,60s,600s
 		c) sleep (expected waittime) = time until next plugin - deltatime
 		d) compute next waittime based on options ?
+
+	Interaction with Statisticscollector SMux:
+	StatisticsCollector offers intervalvalues for metrics as follows: 100ms,1s,10s,60s,600s
+	StatisticsCollector calculates average values for 1s from 100ms values.
+	StatisticsMultiplexer requests: <SpecificPlugin>(1s) i.e. quantity/block/dataWritten(1s)
+	StatisticsCollector issus impulse "Do as requested" and allows the procedure.
 
 1.1) Design
  	Generalities can be extracted from ontology.
