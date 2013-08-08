@@ -15,8 +15,12 @@ namespace core{
 class MathematicalEquation{
 public:
     enum MathValueType{
-        INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE
+        INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE, LONG DOUBLE
     }; 
+
+// precision(double) 16 significant digits
+// for computation precision(long double) 19 significant digits
+// Value of type double to value of type double can be computed using long double
 
     /*
      Evaluate the equation
@@ -51,6 +55,9 @@ public:
     }
 
     friend double getValue(int which, MathematicalEquation & e);
+
+
+
 private:
     void init();
     string equation;
