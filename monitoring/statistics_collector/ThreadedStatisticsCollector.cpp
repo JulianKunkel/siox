@@ -259,7 +259,7 @@ public:
 	}
 };
 
-	void Intervallzuweisungen(){
+	void Intervallassignments(){
 
 	StatisticsIntervall ivms = StatisticsIntervall::HUNDRED_MILLISECONDS ;
 	StatisticsIntervall ivs = StatisticsIntervall::SECOND ;

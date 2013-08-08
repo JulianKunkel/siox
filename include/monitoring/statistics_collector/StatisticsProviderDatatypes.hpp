@@ -67,7 +67,18 @@ public:
 		uint64_t overflow_max_value,
 		uint64_t overflow_next_value
 		 ) 
-		: entity(entity), scope(scope), metrics(metrics), topology(std::move(topology)),value(value), intervalType(intervalType), si_unit(std::move(si_unit)), description(description), overflow_max_value(overflow_max_value), overflow_next_value(overflow_next_value) {}
+		:
+		entity(entity), 
+		scope(scope), 
+		metrics(metrics), 
+		topology(std::move(topology)),
+		value(value), 
+		intervalType(intervalType), 
+		si_unit(std::move(si_unit)), 
+		description(description), 
+		overflow_max_value(overflow_max_value), 
+		overflow_next_value(overflow_next_value) 
+		{}
 };
 
 
