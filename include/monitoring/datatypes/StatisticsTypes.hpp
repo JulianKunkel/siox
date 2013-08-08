@@ -12,13 +12,14 @@
 #ifndef DATATYPES_STATISTICS_H
 #define DATATYPES_STATISTICS_H
 
-#include <boost/variant.hpp>
 #include <iostream>
 
 #include <string>
 #include <vector>
 #include <utility>
 #include <map>
+
+#include <core/datatypes/VariableDatatype.hpp>
 
 using namespace std;
 
@@ -64,7 +65,7 @@ Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
 StatisticsSeries, for data effective storage
 */
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, float, double> StatisticsValue;
+typedef VariableDatatype StatisticsValue;
 
 enum StatisticsEntity{
 	NETWORK,
@@ -113,8 +114,7 @@ public:
 	//1)topology MapofMapObject;
 
 	// Less overhead than vector<pair<string,string>>:
-	typedef map<string,map<string,string>> MapofMap;
-	MapofMap MetricMapObject;
+	map<string,map<string,string>> MetricMapObject;
 
 
 	string si_unit;

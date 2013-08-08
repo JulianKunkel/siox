@@ -8,17 +8,15 @@
  *
  */
 
-
-#include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
-
-#include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
-
 #include <thread> // header for threads
 #include <iostream> // header that defines I/O stream objects
 #include <mutex> // defines for mutex class
 #include <cstdlib> //(stdlib.h) get C header stdlib
 #include <ctime> //(time.h) get C header time
-#include "monitoring/statistics_collector/ThreadedStatisticsCollector.hpp" // own definitions of classes functions used in this implementation
+
+#include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
+#include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
+#include <monitoring/statistics_collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
 
 #include "ThreadedStatisticsOptions.hpp" // own options of this implementation
 
@@ -149,8 +147,6 @@ public:
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){
 
     }
-
-
 
 	/**
 	 *

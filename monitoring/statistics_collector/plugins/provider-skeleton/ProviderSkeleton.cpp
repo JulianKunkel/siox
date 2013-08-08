@@ -21,10 +21,10 @@ class ProviderSkeleton: public StatisticsProviderPlugin{
 	}
 
 	virtual void nextTimestep(){
-		int32_t cur = boost::get<int32_t>(i);		
+		int32_t cur = i.int32();
 		i = cur + 1;
 
-		double f2 = boost::get<double>(f);
+		double f2 = f.dbl();
 		f = f2 * 2;
 	}
 
