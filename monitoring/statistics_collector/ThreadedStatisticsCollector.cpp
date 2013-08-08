@@ -37,7 +37,7 @@ using namespace monitoring;
 		c) Compute the derived metrics
 	III. For each metric
 		a) deltatime
-		b) ... SMUX notify
+		b) ... SMUX notify - gets the tact intervals 100ms,1s,10s,60s,600s
 		c) sleep (expected waittime) = time until next plugin - deltatime
 		d) compute next waittime based on options ?
 
