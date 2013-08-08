@@ -36,8 +36,8 @@ protected:
 	}	
 public:
 
-	virtual uint32_t minPollInterval_ms(){
-		return 1;
+	virtual StatisticsIntervall minPollInterval(){
+		return HUNDRED_MILLISECONDS;
 	}
 
 	virtual void init(){

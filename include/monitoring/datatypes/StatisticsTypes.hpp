@@ -89,7 +89,8 @@ typedef enum StatisticsIntervall{
 	SECOND,
 	TEN_SECONDS,
 	MINUTE,
-	TEN_MINUTES
+	TEN_MINUTES,
+	INTERVALLS_NUMBER
 } StatisticsIntervall;
 
 enum StatisticsReduceOperator{

@@ -123,106 +123,73 @@ using namespace monitoring;
 
 	The Statisticsplugin(Intervall x) can then decide which interval it wants.
 
+Implementation details for the requirements of a StatisticsCollector:
+	R4	A single thread will query the providers periodically and compute derived metrics at these timestamps.
+		The thread will be started @ init() and stoped in the destructor.
+		The thread function which is executed is called periodicBackgroundThreadLoop.
+	R5	The options of the ThreadCollector contain the list of statistics to query, so the user can set it as options.
+		The de/serialization is done using Boost.
+	R9 	Use a list to keep for each intervall all plugins which should be executed for these intervalls.
  */
 
-
-
-//static const int PartsAsThreads = 10;
-//std::thread t[num_threads];
-
-//This function will be called from a thread
-void call_from_thread(in Tid) {
-    	     std::cout << "Launched by thread " << tid << std::endl;
-    	}
 
 class ThreadedStatisticsCollector: StatisticsCollector{
 private:
 	 ActivityPluginDereferencing * facade;
 	// Statistics Multiplexer
 
-public:
-	/**
-	 * Implementationsspezifisch
-	 */
-	virtual void registerPlugin(StatisticsProviderPlugin * plugin){
+	 list<StatisticsProviderPlugin*> plugins[INTERVALLS_NUMBER];
 
+	 void periodicBackgroundThreadLoop(){
+
+	 }
+
+public:
+	virtual void registerPlugin(StatisticsProviderPlugin * plugin){		
+		StatisticsIntervall minIntervall = plugin->minPollInterval();
+		// the configInterval must be at least minIntervall.
+
+		// TODO use the options as set by the user.
+		StatisticsIntervall configInterval = minIntervall;
+
+		// make sure that the plugin is only registered once, by iterating through the list.
+
+		// if (myset.find(item) != myset.end()) {
+		//	assert(false);
+		//}
+
+		// Add the plugin
+		plugins[configInterval].push_back(plugin);
     }
 
-	/**
-	 *
-	 */
 	virtual void unregisterPlugin(StatisticsProviderPlugin * plugin){
 
 	}
 
-	/**
-	 *
-	 */
 	virtual array<StatisticsValue,10> getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
 
 	}
 
-	/**
-	 *
-	 */
-	virtual StatisticsValue getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op){
+	virtual StatisticsValue getRollingStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
 
 	}
 
-	/**
-	 * Available metrics
-	 */
+
+	virtual StatisticsValue getReducedStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op){
+
+	}
+
+
+
 	virtual list<StatisticsProviderDatatypes> availableMetrics(){
 		auto lst = list<StatisticsProviderDatatypes>();
 
-
-
-		for(auto itr = currentValues.begin(); itr != currentValues.end(); itr++){
-			string name = itr->first;
-			//cout << name << endl;
-			//Add the 11 metrics
-			uint64_t overflow_value =  (uint64_t) 1<<63;//TODO CHECK ME, we expect 64 Bit...
-
-			std::array<StatisticsValue, 11> & cur = currentValues[name];
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/reads", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "", "Field 1 -- # of reads issued", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/reads/merged", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[1], INCREMENTAL, "", "Field 2 -- # of reads merged", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/dataRead", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[2], INCREMENTAL, "Byte", "Data read based on Field 3 -- # of sectors read", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "time/block/reads", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[3], INCREMENTAL, "ms", "Field 4 -- # of milliseconds spent reading", overflow_value, 0});
-
-// sectors are 512 bytes to see with  cat /sys/block/sda/queue/hw_sector_size
-// /proc/diskstats field seven [cur 6] has total sectors written for example 35356*512bytes= 18102272 = 18,1MiB
-
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/writes", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[4], INCREMENTAL, "", "Field 5 -- # of writes completed", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "quanity/block/writes/merged", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[5], INCREMENTAL, "", "Field 6 -- # of writes merged", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/dataWritten", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[6], INCREMENTAL, "Byte", "Data written based on Field 7 -- # of sectors written", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "time/block/writes", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[7], INCREMENTAL, "ms", "Field 8 -- # of milliseconds spent writing", overflow_value, 0});
-						
-			lst.push_back({INPUT_OUTPUT, NODE, "quantity/block/pendingIOs", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[8], SAMPLED, "", "Field 9 -- # of I/Os currently in progress", 0, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "time/block/access", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[9], INCREMENTAL, "ms", "Field 10 -- # of milliseconds spent doing I/Os", overflow_value, 0});
-			lst.push_back({INPUT_OUTPUT, NODE, "time/block/weighted", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[10], INCREMENTAL, "ms", "Field 11 -- weighted # of milliseconds spent doing I/Os", overflow_value, 0});
-		}
-
-// Derived Metrics = |{Metric}| + Renaming + Extra : Example quantity/block/dataRead -> throughput on node "" using device ""
-// Renaming includes computing the sectorvalues to bytevalues (*512). If we want millisecond to seconds(/1000) and want the precise value we need a datatype conversion from int to double For now it's optional.
-// The term "Extra" means bytes to MiB or GiB or E3 E6 E9 bytes as users wish.
 		return lst;
 	}
 
-
-	/* 
-	 * Doubling ?
-	 */
-	virtual void init(ActivityPluginDereferencing * facade){
-		this->facade = facade;
-
-// init facade etc.
-		ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
-		init(facade);
+	virtual ~ThreadedStatisticsCollector(){
 
 	}
-
-
-
 
 	/**
 	 * this method initiates first the options for threaded statitistics and second the facade of the ActivityPlugin
@@ -237,34 +204,13 @@ public:
 		//ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
 	}
 
-
-
-
 	/**
 	 * get Available ThreadedStatisticsOptions
 	 */
 	virtual ComponentOptions * AvailableOptions(){
 		return new ThreadedStatisticsOptions();
 	}
-
-	/**
-	 * Shutdown functions such as save
-	 */
-	virtual void shutdown(){
-		save();
-	}
 };
-
-	void Intervallassignments(){
-
-	StatisticsIntervall ivms = StatisticsIntervall::HUNDRED_MILLISECONDS ;
-	StatisticsIntervall ivs = StatisticsIntervall::SECOND ;
-	StatisticsIntervall ivts = StatisticsIntervall::TEN_SECONDS ;
-	StatisticsIntervall ivm = StatisticsIntervall::MINUTE ;
-	StatisticsIntervall ivtm = StatisticsIntervall::TEN_MINUTES ;
-	};
-
-
 
 
 CREATE_SERIALIZEABLE_CLS(ThreadedStatisticsOptions)

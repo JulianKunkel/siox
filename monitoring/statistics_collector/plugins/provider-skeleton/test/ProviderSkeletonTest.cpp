@@ -38,6 +38,14 @@ public:
 		return array<StatisticsValue,10>();
 	}
 
+	virtual StatisticsValue getRollingStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
+
+	}
+
+	virtual StatisticsValue getReducedStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op){
+		
+	}
+
 	virtual StatisticsValue getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op){
 		return 0;
 	}

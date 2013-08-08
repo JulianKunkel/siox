@@ -46,14 +46,23 @@ Use cases:
 	U2	An anomaly detection plugin queries node statistics to judge if observed performance degradation is caused by a saturated network.
 
 Requirements:
-	R1 	Translate abstract descriptions of metrics into ontology.
-	R2 	Evaluate equations to derive new metrics from existing plugins.
-	R3	Conserve min/max/average values for each statistics for this specific node, allow reasoner to query utilization of statistics.
+	R1 	Translate abstract descriptions of statistics into ontology.
+	R2*	Evaluate equations to derive new statistics from existing plugins => Done by a plugin, see D2.
+	R3*	Conserve min/max/average values for each statistics for this specific node, allow reasoner to query utilization of statistics. => Done by a plguin, see D1
+	R4	Query statistics provider periodically.
+	R5	Allow the user to specify the statistics to keep and the frequency at which plugins shall be queried.
+	R6	Calculate average values for several periods consisting of 10 intervals, between 100ms and 60s.
+	R7	Allow to reduce intervals by querying min, max, average, sum (these can be kept internally as statistics anyway).
+	R8	Provide a rolling value for the last average value. This differs from R6 because the intervals in R6 are queried at fixed timestamps (every 10s for example), so when we ask for the last 10s at timestamp 19s we will get the value for the interval 0-10.
+	R9 	Allows statistics provider to (un)register -- these will be queried.
+	R10	Provide a method to query ALL available statistics which are actually queried (by the user configuration in R5).
 
 Rationales & design decisions/Issues and questions:
 	D1	Should R3 be realized by a specific and generic statistics plugin instead of the collector?
+		It seems to a good idea to outsource it to a plugin, because it reduces the complexity of any StatisticsCollector.
+		Drawback: complex system interplay.
 	D2	Should R2 be realized by a specific and generic statistics plugin which also registers as provider?
-
+		It seems to be a good idea, because it reduces the complexity of any StatisticsCollector.
  */
 
 
@@ -98,9 +107,11 @@ public:
 	 */
 	virtual array<StatisticsValue,10> getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat) = 0;
 
-	virtual StatisticsValue getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op) = 0;
+	/*
+	 */
+	virtual StatisticsValue getRollingStatistics(StatisticsIntervall intervall, StatisticsDescription & stat) = 0;
 
-	// virtual StatisticsDescription & queryStatistics(StatisticsToQuery & stat) = 0;
+	virtual StatisticsValue getReducedStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op) = 0;
 
 	/*
  	 * What are the available source metrics and available sources for metrics if they are combined ones?
