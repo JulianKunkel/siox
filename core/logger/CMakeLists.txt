@@ -21,7 +21,7 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
 
-add_library(sioxlog
+add_library(core-logger
 	BasicLogger.cpp
 	Logger.cpp
 	FileLogger.cpp
@@ -32,4 +32,4 @@ add_library(sioxlog
 	${PROTO_HDRS}
 )
 
-target_link_libraries(sioxlog sioxcomm ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(core-logger core-communication ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})

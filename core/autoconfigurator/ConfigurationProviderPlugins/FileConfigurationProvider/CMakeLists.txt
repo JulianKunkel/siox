@@ -11,8 +11,8 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 
-add_library(FileConfigurationProvider
+add_library(core-autoconfigurator-fileconfigurationprovider
 	FileConfigurationProvider.cpp
 )
 
-target_link_libraries(FileConfigurationProvider ${LINK_LIBRARIES})
+target_link_libraries(core-autoconfigurator-fileconfigurationprovider ${LINK_LIBRARIES})

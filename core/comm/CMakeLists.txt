@@ -24,7 +24,7 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 
-add_library(sioxcomm
+add_library(core-communication
 	ConnectionMessage.cpp
 	Connection.cpp
 	ConnectionFactory.cpp
@@ -39,5 +39,5 @@ add_library(sioxcomm
 	${PROTO_HDRS}
 )
 
-target_link_libraries(sioxcomm sioxlog ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(core-communication core-logger ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
 

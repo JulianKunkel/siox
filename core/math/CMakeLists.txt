@@ -11,8 +11,8 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 
-add_library(MathematicalEquation
+add_library(core-math
 	MathematicalEquation.cpp
 )
 
-target_link_libraries(MathematicalEquation ${LINK_LIBRARIES})
+target_link_libraries(core-math ${LINK_LIBRARIES})
