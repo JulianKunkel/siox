@@ -36,8 +36,11 @@ main(){
     // Variables for SIOX
     // ------------------
 
-    // This component's unique interface
-    siox_unique_interface *     siox_our_ui;
+    // Unique interface identifiers
+    siox_unique_interface *     siox_our_ui;    // This component
+    siox_unique_interface *     siox_mufs_ui;   // The MUFS layer we will use
+
+
 
     // This component's identifier
     siox_component *            siox_our_component;
@@ -52,6 +55,9 @@ main(){
 
     // An identifier for the actual activity
     siox_activity *             siox_act_write; 
+
+    // An identifier for the remote call we will issue to MUFS
+    siox_remote_call *          siox_rc_write;
 
 
     // Other variables
@@ -116,9 +122,12 @@ main(){
     // Look up our interface and implementation info
     siox_our_ui = siox_system_information_lookup_interface_id( swid_s, impl_s );
 
+    // Look up the MUFS layer's interface ("MUFS") and implementation ("OpenMUFS") info
+    siox_mufs_ui = siox_system_information_lookup_interface_id( "MUFS", "OpenMUFS" );
+
     // Register node itself
     // In place of the NULL, a string may be given as an instance identifier,
-    // uch as a network port or an MPI rank.
+    // such as a network port or an MPI rank.
     siox_our_component = siox_component_register( siox_our_ui, NULL );
 
     // Register the activity types we will use
@@ -152,12 +161,25 @@ main(){
     // the interface name "MUFS".
     // Here, we use the attributes filename and data volume to characterise the call.
 
-/*    siox_rcid rcid = siox_describe_remote_call_start( aid, NULL, "MUFS", NULL );
-    siox_remote_call_attribute( rcid, dtid_fn, &mufs_file_name);
+    // First, start a remote call for the activity we just started.
+    // Of the parameters indicating the call's target, we use
+    //  - the node we will call (our own, found via another siox function),
+    //  - the interface ("MUFS"),
+    //  - NULL for the associate info, as we have none.
+    siox_rc_write = siox_remote_call_start( siox_act_write,
+                                            siox_lookup_node_id( NULL ),
+                                            siox_mufs_ui,
+                                            NULL );
+    // Report the call's attributes: The file name we write to.
+    siox_remote_call_set_attribute( siox_rc_write, siox_att_filename, mufs_file_name );
+    // Report the call's attributes: The amount of data we want to write.
+    // Note that here, we use a derived attribute instead of the call's parameters.
     bytes_to_write = strlen( data );
-    siox_remote_call_attribute( rcid, dtid_b2w, &bytes_to_write );
-    siox_describe_remote_call_end( rcid );
-*/
+    siox_remote_call_set_attribute( siox_rc_write, siox_att_bytes2write, &bytes_to_write );
+    // Inform SIOX that the data for the remote call is complete
+    // and the call is about to be submitted.
+    siox_remote_call_submitted( siox_rc_write );
+
     // The actual call to MUFS to create a file with the given name
     // and write the character data to it.
     bytes_written = mufs_putfile( mufs_file_name, data );
@@ -185,9 +207,10 @@ main(){
      * =========================================
      */
 
-    /* Report the data we collected. This could take place anytime between siox_start_activity()
-       and siox_end_activity() and happen more than once per activity.  */
-    //siox_report_activity( siox_act_write, mid, &bytes_written );
+    // Report the activity's performance data we collected.
+    // This could take place anytime between siox_start_activity()
+    // and siox_end_activity() and for more than one kind of data per activity.
+    siox_activity_set_attribute(siox_act_write, siox_att_byteswritten, &bytes_written);
 
 
     /*

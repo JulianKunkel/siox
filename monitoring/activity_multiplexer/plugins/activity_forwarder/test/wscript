@@ -1,0 +1,6 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+    #bld.program(includes="include",  features='test cxx cxxprogram', use = "ActivityForwarder", target = 'ActivityForwarderTest', source = 'ActivityForwarderTest.cpp', install_path = 'None')
+    pass

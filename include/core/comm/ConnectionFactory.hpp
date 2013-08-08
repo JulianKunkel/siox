@@ -6,7 +6,7 @@
 
 #include "ipc/IPCConnection.hpp"
 #include "tcp/TCPConnection.hpp"
-#include "misc/URI.hpp"
+#include "URI.hpp"
 
 namespace asio = boost::asio;
 

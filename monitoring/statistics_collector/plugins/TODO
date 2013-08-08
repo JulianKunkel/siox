@@ -2,6 +2,6 @@ TODO
 
 Provide modules for:
 * /proc/vmstat
-* Network: /sys/class/net/*/statistics
+finished for one file * Network: /sys/class/net/*/statistics
 * Energy: /sys/devices/system/cpu/cpu*/cpufreq/stats/time_in_state (min freq is: /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate_min)
 * CPUCounters (using Likwid), only one group can be activated per CPU. => Do not like PAPI as much as Likwid :-)

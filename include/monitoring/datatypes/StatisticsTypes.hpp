@@ -83,6 +83,22 @@ enum StatisticsScope{
 	COMPONENT
 };
 
+typedef enum StatisticsIntervall{
+	HUNDRED_MILLISECONDS,
+	SECOND,
+	TEN_SECONDS,
+	MINUTE,
+	TEN_MINUTES
+} StatisticsIntervall;
+
+enum StatisticsReduceOperator{
+	MIN,
+	MAX,
+	COUNT,
+	AVERAGE,
+	SUM
+};
+
 
 class StatisticsDescription{
 public:

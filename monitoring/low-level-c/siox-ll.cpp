@@ -253,6 +253,14 @@ siox_associate * siox_associate_instance(const char * instance_information){
 /////////////// MONITORING /////////////////////////////
 //############################################################################
 
+siox_node * siox_lookup_node_id( const char * host_name ){
+    string hostname(host_name);
+    NodeID * result = new NodeID(lookup_node_id(hostname));
+
+    return result;
+}
+
+
 siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * instance_name){
     assert(uiid != nullptr);
     // instance_name could be nullptr

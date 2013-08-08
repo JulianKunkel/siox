@@ -1,24 +1,25 @@
-#ifndef ACTIVITYFORWARDER_H
-#define ACTIVITYFORWARDER_H
+#ifndef ACTIVITYFORWARDERTHREADED_H
+#define ACTIVITYFORWARDERTHREADED_H
 
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
 
-
 /**
- * Forward an activity from one ActivityMultiplexer to another.
- *
+ * Forward an Activity from one Multiplexer to another one but in a threadsafe
+ * manner, so the receiving multiplexer does not need to be thread safe.
  */
-class ActivityForwarder: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener
+class ActivityForwarderThreaded : ActivityMultiplexerListener
 {
 public:
 	ActivityForwarder(const ActivityMultiplexer & in, const ActivityMultiplexer & out) =0;
+
+
 	void Notify(Activity * element) =0;
 
 private:
 	/* data */
 };
 
-#endif /* ACTIVITYFORWARDER_H */
+#endif /* ACTIVITYFORWARDERTHREADED_H */

@@ -2,10 +2,11 @@
 #define UTIL_HPP
 
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 namespace util {
 
-inline uint64_t htonull(const uint64_t n)
+inline uint64_t htonll(const uint64_t n)
 {
 	uint64_t retval;
 	
@@ -19,17 +20,19 @@ inline uint64_t htonull(const uint64_t n)
 };
 
 
-inline uint32_t htonul(const uint32_t n)
+inline uint64_t time64() 
 {
-	uint32_t retval;
-	
-	retval = n;
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return 1000000 * tv.tv_sec + tv.tv_usec;
+}
 
-	retval = ((uint32_t) htonl(n & 0xFFFF)) << 16;
-	retval |= htonl((n & 0xFFFF0000) >> 16);
 
-	return retval;
-
+inline uint32_t time32() 
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec;
 }
 
 };
