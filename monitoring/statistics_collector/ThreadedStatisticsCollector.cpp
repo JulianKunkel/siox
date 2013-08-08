@@ -19,6 +19,7 @@
 #include <cstdlib> //(stdlib.h) get C header stdlib
 #include <ctime> //(time.h) get C header time
 #include "monitoring/statistics_collector/ThreadedStatisticsCollector.hpp" // own definitions of classes functions used in this implementation
+
 #include "ThreadedStatisticsOptions.hpp" // own options of this implementation
 
 using namespace std;
@@ -147,13 +148,9 @@ public:
 	 */
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){
 
-    	//Launch a group of threads
-//        for (int i = 0; i < num_threads; ++i) {
-//            t[i] = std::thread(call_from_thread, i);
-        }
+    }
 
-    	
-	}
+
 
 	/**
 	 *
@@ -215,8 +212,6 @@ public:
 		return lst;
 	}
 
-	}
-
 
 	/* 
 	 * Doubling ?
@@ -263,6 +258,18 @@ public:
 		save();
 	}
 };
+
+	void Intervallassignments(){
+
+	StatisticsIntervall ivms = StatisticsIntervall::HUNDRED_MILLISECONDS ;
+	StatisticsIntervall ivs = StatisticsIntervall::SECOND ;
+	StatisticsIntervall ivts = StatisticsIntervall::TEN_SECONDS ;
+	StatisticsIntervall ivm = StatisticsIntervall::MINUTE ;
+	StatisticsIntervall ivtm = StatisticsIntervall::TEN_MINUTES ;
+	};
+
+
+
 
 CREATE_SERIALIZEABLE_CLS(ThreadedStatisticsOptions)
 //CREATE_SERIALIZEABLE_CLS(ThreadedCollectorStatistics)

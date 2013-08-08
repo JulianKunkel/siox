@@ -1,7 +1,7 @@
 #ifndef STATISTICS_MULTIPLEXER_H
-#define STATISTICS_MULTIPLEXER_H 
+#define STATISTICS_MULTIPLEXER_H
 
-#include <monitoring/datatypes/Statistics.hpp>
+#include <monitoring/datatypes/StatisticsTypes.hpp>
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexerListener.hpp>
 #include <core/component/Component.hpp>
 
@@ -18,7 +18,7 @@ namespace monitoring{
 class StatisticsMultiplexer : public core::Component{
 public:
 
-	virtual void Log(Statistics * element) = 0;
+	virtual void Log(StatisticsValue * element) = 0;
 
 	/**
 	 * Register listener to multiplexer
@@ -33,7 +33,7 @@ public:
 	 * @param	listener [in]	listener to remove
 	 */
 	virtual void unregisterListener(StatisticsMultiplexerListener * listener) = 0;
-	
+
 };
 
 

@@ -1,7 +1,9 @@
-#include <monitoring/datatypes/Statistics.hpp>
-#include <monitoring/activity_multiplexer/StatisticsMultiplexerImplementation.hpp>
-#include <template/monitoring/multiplexer/MultiplexerFiltered.hpp>
-#include <monitoring/activity_multiplexer/StatisticsMultiplexerListener.hpp>
+
+
+#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics_multiplexer/StatisticsMultiplexerImplementation.hpp>
+#include <templates/multiplexer/MultiplexerFilteredImpl.hpp>
+#include <monitoring/statistics_multiplexer/StatisticsMultiplexerListener.hpp>
 
 using namespace core;
 using namespace monitoring;
@@ -13,7 +15,8 @@ namespace monitoring{
  * Forwards logged activities to registered listeners (e.g. Plugins) either
  * in an syncronised or asyncronous manner.
  */
-class StatisticsMultiplexerSync : public MultiplexerFilteredTemplate<Statistics>
+//class StatisticsMultiplexerSync : public MultiplexerFilteredTemplate<Statistics>
+class StatisticsMultiplexerSync : public MultiplexerFilteredTemplate<StatisticsValue, StatisticsMultiplexerListener>
 {
 
 };
@@ -21,6 +24,6 @@ class StatisticsMultiplexerSync : public MultiplexerFilteredTemplate<Statistics>
 }
 
 
-CREATE_SERIALIZEABLE_CLS(StatisticsAsyncOptions)
+//CREATE_SERIALIZEABLE_CLS(StatisticsSyncOptions)
 
-PLUGIN(StatisticsMultiplexerAsyncThreaded)
+//PLUGIN(StatisticsMultiplexerSync)

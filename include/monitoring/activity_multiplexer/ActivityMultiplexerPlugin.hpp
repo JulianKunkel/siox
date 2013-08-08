@@ -12,9 +12,16 @@ using namespace core;
 
 namespace monitoring{
 
+
+/**
+ * Proxy for Multiplexer?
+ *
+ */
 class ActivityMultiplexerPlugin: public Component{
 protected:
 	ActivityMultiplexer * parent_multiplexer;
+
+	// needed for some boost magic?
 	ActivityPluginDereferencing * dereferenceFacade;
 
 	virtual void init(ActivityMultiplexer & multiplexer) = 0;
@@ -25,7 +32,7 @@ public:
 		// may be 0.
 		this->dereferenceFacade = dereferenceFacade;
 
-		init(*parent_multiplexer );		
+		init(*parent_multiplexer );
 	}
 
 	void init(){
