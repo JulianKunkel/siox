@@ -15,7 +15,7 @@ namespace core{
 class MathematicalEquation{
 public:
     enum MathValueType{
-        INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE, LONG DOUBLE
+        INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE, LONG_DOUBLE
     }; 
 
 // precision(double) 16 significant digits
