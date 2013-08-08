@@ -14,18 +14,13 @@ namespace monitoring{
 
 class StatisticsMultiplexerPlugin: public Component{
 protected:
-	StatisticsMultiplexer * parent_multiplexer;
-	StatisticsPluginDereferencing * dereferenceFacade;
 
 	virtual void init(StatisticsMultiplexerPluginOptions * options, StatisticsMultiplexer & multiplexer) = 0;
 
 public:
-	void init(StatisticsMultiplexerPluginOptions * options, StatisticsMultiplexer * statistics_multiplexer, StatisticsPluginDereferencing * dereferenceFacade){
-		parent_multiplexer = statistics_multiplexer;
-		// may be 0.
-		this->dereferenceFacade = dereferenceFacade;
+	void init(StatisticsMultiplexerPluginOptions * options, StatisticsMultiplexer * statistics_multiplexer){
 
-		init(options, *parent_multiplexer );		
+		init(options);
 	}
 
 	void init(ComponentOptions * options){

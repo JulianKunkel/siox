@@ -1,20 +1,18 @@
 #ifndef STATISTICSMULTIPLEXERLISTENER_H
-#define STATISTICSMULTIPLEXERLISTENER_H 
+#define STATISTICSMULTIPLEXERLISTENER_H
 
-#include <monitoring/multiplexer/MultiplexerListener.hpp>
+#include <monitoring/datatypes/StatisticsTypes.hpp>
 #include <string>
 
 namespace monitoring{
 
-typedef MultiplexerListener<Statistics> StatisticsMultiplexerListener;
 
-class StatisticsMultiplexerListener : MultiplexerListener<Statistics> {
+class StatisticsMultiplexerListener {
 public:
-	virtual string [] requiredMetrics() =0;  // TODO return std::list of ontologies instead of string names of attributes
-	virtual void Notify(Statistics statistics, Attribute & attribute) =0;
+	//virtual string [] requiredMetrics() =0;  // TODO return std::list of ontologies instead of string names of attributes
+	//virtual void Notify(Statistics statistics, Attribute & attribute /* TODO:, interval_enum */) =0;
 };
 
-}
 
 /*
 class StatisticsMultiplexerListenerSync : public StatisticsMultiplexerListener

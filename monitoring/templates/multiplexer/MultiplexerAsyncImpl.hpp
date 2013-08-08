@@ -14,34 +14,34 @@
 
  2 Use Cases
 	- pass a message/element to multiple registered listeners
-	
+
  3 Design and Text
 	Removing a listener might invalidate iterator
 	Inserting is usually fine (for lists uneffected, vectors until resize)
 
 	Possible solutions:
-		1.	snapshot list	
+		1.	snapshot list
 			-> memory + time panelty
 
-		2.	change remove to null, check when iterating, 
+		2.	change remove to null, check when iterating,
 			clean up in additional loop, might skip if time is precious
 			-> management overhead (additional loops somewhere)
 
 		3.	boost::shared_lock (was actually proposend and rejected for C++11)
-			would implement readers/writers 
+			would implement readers/writers
 			-> greater dependency on BOOST
 
 		4.	readers count + mutexes
 			-> quite fair, but in current implemantion busy wait when registering
 
 	C++11 does not provide a shared lock by it self (as needed for a RW-Scheme)
-	reasoning: 
+	reasoning:
 	http://permalink.gmane.org/gmane.comp.lib.boost.devel/211180
 
 
 
 	Lock relations:
-	
+
 	unregister
 		sync		blocks sync dispatch, blocks register of sync
 		async		blocks async dispatch, blocks register of async
@@ -55,7 +55,7 @@
 	dispatch
 		sync		blocks unregister
 		async		blocks unregister
-	
+
 	queue
 		pop	<-------> push
 			  block
@@ -66,7 +66,7 @@
 
  */
 #ifndef MULTIPLEXERASYNC_TEMPLATE_H
-#define MULTIPLEXERASYNC_TEMPLATE_H 
+#define MULTIPLEXERASYNC_TEMPLATE_H
 
 #include <iostream>
 
@@ -89,21 +89,21 @@ namespace monitoring{
  *
  */
 
-// forward declaration for friendship 
+// forward declaration for friendship
 template <class TYPE>class MultiplexerQueueTemplate;
 template <class TYPE, class PARENT, class LISTENERPARENT>class MultiplexerNotifierTemplate;
 template <class TYPE, class PARENT, class LISTENERPARENT>class MultiplexerAsyncTemplate;
 
 /**
- * A bounded buffer, to store elements that need to be dispatched by the 
+ * A bounded buffer, to store elements that need to be dispatched by the
  * Notifier
  */
 template <class TYPE>
 class MultiplexerQueueTemplate : public MultiplexerQueue<TYPE>
 {
 	//MultiplexerAsync<TYPE> * multiplexer;
-	
-	deque<TYPE *> queue; 
+
+	deque<TYPE *> queue;
 	unsigned int capacity = 1000;
 
 	bool overloaded = false;
@@ -125,10 +125,10 @@ public:
 		bool result = ( queue.size() > capacity );
 		return result;
 	};
-	
+
 
 	/* Check whether of not the queue is empty
-	 * 
+	 *
 	 * @return bool		true = queue is empty, false = not empty
 	 */
 	virtual bool Empty() {
@@ -156,7 +156,7 @@ public:
 
 		// maybe this should happen in notifier run()
 		/*
-		if (Overloaded() && Empty()) {	
+		if (Overloaded() && Empty()) {
 			// TODO notifier.Reset(lost);
 			lost = 0;
 			overloaded = false;
@@ -175,19 +175,19 @@ public:
 			}
 		}
 	};
-	
+
 	/**
 	 * Get an activity from queue, returned element is popped!
 	 *
 	 * @return	TYPE	an activity that needs to be dispatched to async listeners
 	 */
 	virtual TYPE * Pop() {
-		// TODO actually it should be absolutely ok to have the condition in 
-		//		here, as the thread should still be put to sleep 
+		// TODO actually it should be absolutely ok to have the condition in
+		//		here, as the thread should still be put to sleep
 		std::lock_guard<std::mutex> lock(mut);
 
 		TYPE * element;
-		
+
 		element = queue.front();
 		queue.pop_front();
 
@@ -206,7 +206,7 @@ class MultiplexerNotifierTemplate : public MultiplexerNotifier<TYPE, PARENT, LIS
 
 	MultiplexerAsync<TYPE, PARENT, LISTENERPARENT> * multiplexer;
 
-	
+
 	int dispatcher = 1;
 	list<std::thread> t;
 
@@ -214,15 +214,14 @@ public:
 	MultiplexerNotifierTemplate() {
 	//MultiplexerNotifierTemplate(MultiplexerAsync<TYPE> * multiplexer) {
 		//this->multiplexer = multiplexer;
-		
+
 		for (int i = 0; i < dispatcher; ++i) {
 			t.push_back(std::thread(&MultiplexerNotifierTemplate::Run, this));
-			
 		}
 	}
 
 	/**
-	 * dispatch protocol with overload handling 
+	 * dispatch protocol with overload handling
 	 */
 	virtual void Run() {
 
@@ -242,7 +241,7 @@ public:
 	 * dispatch an Activity to async listeners
 	 */
 	virtual void Dispatch() {
-		
+
 	}
 
 
@@ -256,11 +255,11 @@ public:
 		// wait for threads to finish
 		for(auto it = t.begin(); it != t.end(); ++it ) {
 			(*it).join();
-		}	
+		}
 	};
-	
+
 	/**
-	 * set terminate flag for Notifier, terminates as soon queue is emptied 
+	 * set terminate flag for Notifier, terminates as soon queue is emptied
 	 */
 	virtual	void finalize() {
 		terminate = true;
@@ -290,17 +289,17 @@ class MultiplexerAsyncTemplate : MultiplexerAsync<TYPE, PARENT, LISTENERPARENT>
 public:
 
 	MultiplexerAsyncTemplate () {
-		queue = new MultiplexerQueueTemplate<TYPE>;	
-		notifier = new MultiplexerNotifierTemplate<TYPE, PARENT, LISTENERPARENT>;		
+		queue = new MultiplexerQueueTemplate<TYPE>;
+		notifier = new MultiplexerNotifierTemplate<TYPE, PARENT, LISTENERPARENT>;
 	}
 
-	
+
 	virtual ~MultiplexerAsyncTemplate() {
 		delete(queue);
 		delete(notifier);
 	}
-	
-	
+
+
 
 	/**
 	 * Called by layer to report about activity, passes activities to sync listeners
@@ -320,8 +319,10 @@ public:
 		{
 			std::lock_guard<std::mutex> lock(dec);
 			not_invalidating--;
-		}	
-		
+		}
+
+		queue->Push(element);
+
 		// TODO cond.notify_one();
 	}
 

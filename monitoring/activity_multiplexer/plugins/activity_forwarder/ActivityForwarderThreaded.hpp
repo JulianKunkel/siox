@@ -1,11 +1,11 @@
-#ifndef ACTIVITYFORWARDER_H
-#define ACTIVITYFORWARDER_H
+#ifndef ACTIVITYFORWARDERTHREADED_H
+#define ACTIVITYFORWARDERTHREADED_H
 
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
-class ActivityForwarder : ActivityMultiplexerListener
+class ActivityForwarderThreaded : ActivityMultiplexerListener
 {
 public:
 	ActivityForwarder(const ActivityMultiplexer & in, const ActivityMultiplexer & out) =0;
@@ -17,4 +17,4 @@ private:
 	/* data */
 };
 
-#endif /* ACTIVITYFORWARDER_H */
+#endif /* ACTIVITYFORWARDERTHREADED_H */
