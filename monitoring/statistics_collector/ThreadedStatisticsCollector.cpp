@@ -147,9 +147,6 @@ public:
 	 */
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){
 
-    	//Launch a group of threads
-//        for (int i = 0; i < num_threads; ++i) {
-//            t[i] = std::thread(call_from_thread, i);
         }
 
     	

@@ -1,11 +1,26 @@
 /**
- * @file ThreadedStatisticsCollector.hpp
- * @date 2013-07
+ * @file    ThreadedStatisticsCollector.hpp
+ *
+ * A (software) component for collecting statistical values.
+ *
+ * @author Marc Wiedemann, Julian Kunkel
+ * @date   2013
+ *
  */
+
 #include <thread>
 #include <iostream>
+#include <array>
+#include <list>
+#include <string>
 
-/*! We have at least three ways of using pthreads for the ThreadedStatisticsCollector:
+
+#include <core/component/Component.hpp>
+
+#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
+
+/*! We have at least three ways of using threads for the ThreadedStatisticsCollector:
  * 1. Pipeline 
  * 2. Work crew
  * 3. Client/Server
