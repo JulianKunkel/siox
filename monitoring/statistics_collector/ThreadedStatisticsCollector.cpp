@@ -43,7 +43,7 @@ using namespace monitoring;
 	Interaction with Statisticscollector SMux:
 	StatisticsCollector offers intervalvalues for metrics as follows: 100ms,1s,10s,60s,600s
 	StatisticsCollector calculates average values for 1s from 100ms values.
-	StatisticsMultiplexer requests: <SpecificPlugin>(1s) i.e. quantity/block/dataWritten(1s)
+	StatisticsMultiplexer requests: \<SpecificPlugin\>(1s) i.e. quantity/block/dataWritten(1s)
 	StatisticsCollector issus impulse "Do as requested" and allows the procedure.
 
 1.1) Design
