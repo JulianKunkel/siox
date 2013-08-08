@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-# add_subdirectory(activity_builder)
+add_subdirectory(activity_builder)
 add_subdirectory(activity_multiplexer)
 add_subdirectory(association_mapper)
 add_subdirectory(low-level-c)
