@@ -14,7 +14,6 @@ namespace monitoring{
 
 
 /**
- * Proxy for Multiplexer?
  *
  */
 class ActivityMultiplexerPlugin: public Component{

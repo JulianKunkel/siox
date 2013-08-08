@@ -5,12 +5,16 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
-class ActivityForwarder : ActivityMultiplexerListener
+
+
+/**
+ * Forward an activity from one ActivityMultiplexer to another.
+ *
+ */
+class ActivityForwarder: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener
 {
 public:
 	ActivityForwarder(const ActivityMultiplexer & in, const ActivityMultiplexer & out) =0;
-
-
 	void Notify(Activity * element) =0;
 
 private:
