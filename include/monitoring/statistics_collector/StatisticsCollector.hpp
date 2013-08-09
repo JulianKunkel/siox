@@ -63,6 +63,10 @@ Rationales & design decisions/Issues and questions:
 		Drawback: complex system interplay.
 	D2	Should R2 be realized by a specific and generic statistics plugin which also registers as provider?
 		It seems to be a good idea, because it reduces the complexity of any StatisticsCollector.
+	D6	As we have a fixed time base on every ten seconds we deliver for example four periods of average values: 4x 10*100ms StatisticIntervals.
+		Every minute we deliver (four) periods of average values:  4x 10*1s
+		Every ten minutes we deliver : 4x 10*10s
+		Se we need a vector of size number of periods with the data of average values.
  */
 
 

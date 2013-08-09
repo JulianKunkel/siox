@@ -14,7 +14,7 @@ class VariableDatatypeAssessor;
 class VariableDatatype{
 public:	
 	enum Type{
-	    INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE, INVALID, STRING
+	    INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE, LONG_DOUBLE, INVALID, STRING
 	}; 
 protected:
 
@@ -25,6 +25,7 @@ protected:
 		uint64_t ui64;		
 		float f;
 		double d;
+		long double dd;
 		char * str;
 	};
 
@@ -43,13 +44,14 @@ public:
 	VariableDatatype(const char * str){ data.str = strdup(str); type_ = STRING; }
 	VariableDatatype(float f){ data.i64 = 0; data.f = f; type_ = FLOAT;}
 	VariableDatatype(double d){ data.d = d; type_ = DOUBLE;}
+	VariableDatatype(long double ld){ data.ld = ld; type_ = LONG_DOUBLE;}
 
 	VariableDatatype(const VariableDatatype & d){ 
 		data.i64 = d.data.i64;
 		type_ = d.type_;
 		if(type_ == STRING){
 			data.str = strdup(d.data.str);
-		}
+		}		
 	}
 
 	~VariableDatatype(){
@@ -93,6 +95,11 @@ public:
 		return data.d;
 	}
 
+	inline long double dbl() const {
+		assert(type_ == LONG_DOUBLE);
+		return data.dd;
+	}
+
 	inline Type type() const {
 		return type_;
 	}
@@ -130,6 +137,9 @@ inline ostream& operator<<(ostream& os, const VariableDatatype & v)
             break;
     	case VariableDatatype::Type::DOUBLE:
         	os << v.dbl();
+            break;
+    	case VariableDatatype::Type::LONG_DOUBLE:
+        	os << v.ldbl();
             break;
     	case VariableDatatype::Type::INVALID:
         	os << "(INVALID TYPE!)";

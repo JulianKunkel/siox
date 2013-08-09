@@ -129,9 +129,16 @@ Implementation details for the requirements of a StatisticsCollector:
 		The thread function which is executed is called periodicBackgroundThreadLoop.
 	R5	The options of the ThreadCollector contain the list of statistics to query, so the user can set it as options.
 		The de/serialization is done using Boost.
+	R6	Calculate average values for several periods consisting of 10 intervals, between 100ms and 60s.
 	R9|	Use a list to keep for each intervall all plugins which should be executed for these intervalls.
+
+	D6	As we have a fixed time base on every ten seconds we deliver for example four periods of average values: 4x 10*100ms StatisticIntervals.
+		Every minute we deliver (four) periods of average values:  4x 10*1s
+		Every ten minutes we deliver : 4x 10*10s
+		Se we need a vector of size number of periods with the data of average values.
  */
 
+public class 
 
 class ThreadedStatisticsCollector: StatisticsCollector{
 private:
@@ -140,8 +147,20 @@ private:
 
 	 list<StatisticsProviderPlugin*> plugins[INTERVALLS_NUMBER];
 
-	 void periodicBackgroundThreadLoop(){
+	 // One thread for periodic issuing
+	 void PeriodicBackgroundThreadLoop(){
+	 	//repeat_forever{loop for thread}
+	 		//Create permanent thread
+	 		std::thread PeriodicThread1();
+	 		PeriodicThread1.join();
+	 		return 0;
 
+
+	 }
+
+	 void CalculateAverageValues(){
+
+	 	std::vector<VariableDatatype> AverageValues; // Size = number of periods //first try 4
 	 }
 
 public:
