@@ -129,7 +129,7 @@ Implementation details for the requirements of a StatisticsCollector:
 		The thread function which is executed is called periodicBackgroundThreadLoop.
 	R5	The options of the ThreadCollector contain the list of statistics to query, so the user can set it as options.
 		The de/serialization is done using Boost.
-	R9 	Use a list to keep for each intervall all plugins which should be executed for these intervalls.
+	R9|	Use a list to keep for each intervall all plugins which should be executed for these intervalls.
  */
 
 
@@ -153,10 +153,9 @@ public:
 		StatisticsIntervall configInterval = minIntervall;
 
 		// make sure that the plugin is only registered once, by iterating through the list.
-
-		// if (myset.find(item) != myset.end()) {
-		//	assert(false);
-		//}
+		if (plugins.find(plugin) != plugins.end()) {
+			assert(false);
+		}
 
 		// Add the plugin
 		plugins[configInterval].push_back(plugin);
