@@ -24,7 +24,7 @@ enum Observation{
 	LOW,
 	AVERAGE,
 	HIGH,
-	// If we can judge
+	// If we can judge it to be an anomaly
 	UNEXPECTED_LOW_VALUE,
 	UNEXPECTED_HIGH_VALUE,
 	IRREGULAR_PATTERN
@@ -89,7 +89,9 @@ enum Reason{
 	CACHE_HIT, // Data has been cached, therefore the access is faster than usual
 	CACHE_MISS, // Data has not been cached, therefore the access is slower than usual
 
-	SUBOPTIMAL_PATTERN // Suboptimal access pattern and/or interface usage.
+	LOAD_IMBALANCE,
+	SUBOPTIMAL_PATTERN, // Suboptimal access pattern and/or interface usage. Example, small access-granularity, random-I/O
+	UNKNOWN	// We really have to investigate further
 };
 
 // May be a good idea to provide an overloaded outputstream for the enums to make them "human" readable.

@@ -11,12 +11,15 @@
   It knows the system utilization and tries to resolve 1) process-local, 2) node-global and 3) system-global anomalies.
   If the source of performance degradation is not known, logging will be enabled by the reasoner.
   Each node hosts exactly one reasoner which decides the system status.
+
+  There are two sources of anomalies: activities and statistics. Latter is more difficult to judge without knowing activities going on.
   
   Use cases:
 	U1 	Anomaly detection plugin reports an anomaly (observation, potential limitations and causes).
 	U2 	Node-local statistics or anomaly detection plugin reports an anomaly (observation, potential limitations and causes).
 	U3 	Based on input, reasoner decides to wait 100ms for more anomalies to come, then may/may not trigger log flush.
 	U4 	Reasoner communicates current decision (node status) with global reasoner and receives global information, e.g., "File System Occupied"
+	U5	At termination of the application, a list of reasons for performance degration is output to the user.
   
   Requirements:
 	R1 	Node-global reasoner communicates with the global reasoner.
@@ -44,9 +47,14 @@
 		While this reasoner can not do much it may refine the local information.
 	D5 	Do we use the same interface for communicating process-local and node-global information? Are this different interfaces?	
 	D6	How are the state-tokens described?
-		a) As an enum (more efficient, fixed at compile-time)
-		b) As a string (needs more parsing time, better extendable)		
- */
+		a) As an enum (more efficient, fixed at compile-time, though)
+		b) As a string (needs more parsing time, better extendable)
+	D7	Could we allow compile-time resolving of ontology/values and/or hostnames/filenames?
+		This would reduce the runtime overhead and provide a safe correctness-checking.
+		Would be useful for many forwarder plugins and reduces the dependency to a facade.
+		Drawback: Some components such as the node-local reasoner would know all relevant ontology-IDs at compile-time which is hard to achieve since we hope for extensions.
+*/
+
 
 using namespace knowledge::reasoning;
 
@@ -64,8 +72,6 @@ public:
 	// Internally, the relative utilization of such a statistics helps finding the reasons.
 	//virtual void registerUtilizationStatistics() = 0;
 
-
-
 	// Query statistics about inefficiencies / efficiencies for the whole runtime of the application.
 	// Usually done at the end of the application to provide hints about application bottlenecks.
 	//virtual void queryUsageStatistics() = 0;
@@ -76,3 +82,95 @@ public:
 #define KNOWLEDGE_REASONER_INTERFACE "knowledge_reasoner"
 
 #endif
+
+/* UML Stuff:
+@startuml reasoner-interactions.png
+title Interactions of the Reasoner
+
+'left to right direction
+
+frame "Node" {
+
+frame "Process" {
+    interface Ontology #Yellow
+    interface "System Information" #Gold
+
+    frame "ComponentX" as Component {
+
+        frame "AMux Plug-Ins" {
+            component "ADPI1" #Orchid
+            component "ADPI2" #Orchid
+        }	
+    }
+
+    component "<b><font size=20>Reasoner" as PReasoner #HotPink
+    ADPI1 -> PReasoner
+    ADPI2 -> PReasoner
+
+    folder [User output] #LightGrey
+    PReasoner -> [User output] : Create on process-termination
+
+
+    PReasoner -.-> [System Information]
+    PReasoner -.-> Ontology
+
+    note bottom of [User output]
+	The system information and ontology
+	are only needed to create human-
+	readable user output.
+    end note
+}
+
+
+frame "SIOX Daemon" {
+    component "<b><font size=20>Reasoner" as NReasoner #HotPink
+
+    PReasoner -> NReasoner : Process state
+    PReasoner <- NReasoner : Node/global state
+
+    frame "SPlugins" {
+	    component RelativeUtilization #White
+    }
+
+    component [StatisticsCollector] #Orange    
+    [StatisticsCollector] -> RelativeUtilization : poll
+
+    component [SMux] #Orange
+    [StatisticsCollector] -> SMux : Notify
+
+    frame "SMuxPlugins" {
+	    component SForwarder #Orange
+    }
+    SMux -> SForwarder
+
+    component AForwarder #Orange
+
+	NReasoner -> AForwarder : Trigger
+	NReasoner -> SForwarder : Trigger
+	NReasoner -> RelativeUtilization : Query
+}
+
+}
+
+component "<b><font size=20>Reasoner" as GReasoner #HotPink
+GReasoner -> NReasoner : Global state
+NReasoner -> GReasoner : Node state
+
+
+database "SIOX Transaction System\n" {
+	component Activities #Orange
+	component Statistics #Orange
+}
+
+AForwarder -> Activities : History / [Triggered]
+SForwarder -> Statistics : History / [Triggered]
+
+database "SIOX Knowledge Base\n" {
+	component Systeminformation #Orchid
+}
+
+
+RelativeUtilization -> Systeminformation : Query/update stats
+
+@enduml
+ */
