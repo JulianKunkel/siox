@@ -24,7 +24,9 @@ int main(){
 	
 	printf("Registering attributes...");
 	siox_attribute * a1 = siox_ontology_register_attribute("meta", "test int attribute", SIOX_STORAGE_64_BIT_UINTEGER);
+	assert(a1 != NULL);
 	siox_attribute * a2 = siox_ontology_register_attribute("local", "test str attribute", SIOX_STORAGE_STRING);
+	assert(a2 != NULL);
 	printf("success!\n");
 
 	printf("Registering metrics...");
