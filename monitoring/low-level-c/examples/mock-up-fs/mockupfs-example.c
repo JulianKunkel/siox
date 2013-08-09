@@ -37,8 +37,8 @@ main(){
     // ------------------
 
     // Unique interface identifiers
-    siox_unique_interface *     siox_our_ui;    // This component
-    siox_unique_interface *     siox_mufs_ui;   // The MUFS layer we will use
+    siox_unique_interface      siox_our_ui;    // This component
+    siox_unique_interface      siox_mufs_ui;   // The MUFS layer we will use
 
 
 
@@ -129,7 +129,7 @@ main(){
     // Register node itself
     // In place of the NULL, a string may be given as an instance identifier,
     // such as a network port or an MPI rank.
-    siox_our_component = siox_component_register( siox_our_ui, NULL );
+    siox_our_component = siox_component_register( siox_our_ui, "" );
 
     // Register the activity types we will use
     siox_act_type_write = siox_component_register_activity( siox_our_ui, "write" );
@@ -170,7 +170,7 @@ main(){
     siox_rc_write = siox_remote_call_start( siox_act_write,
                                             siox_lookup_node_id( NULL ),
                                             siox_mufs_ui,
-                                            NULL );
+                                            0 );
     // Report the call's attributes: The file name we write to.
     siox_remote_call_set_attribute( siox_rc_write, siox_att_filename, mufs_file_name );
     // Report the call's attributes: The amount of data we want to write.

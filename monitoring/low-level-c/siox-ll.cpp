@@ -17,6 +17,11 @@
 
 #include "siox-ll-internal.hpp"
 
+extern "C"{
+#define SIOX_INTERNAL_USAGE
+#include <C/siox.h>
+}
+
 using namespace std;
 using namespace core;
 using namespace monitoring;
@@ -45,7 +50,7 @@ struct process_info process_data = {0};
 
 //////////////////////////////////////////////////////////
 
-NodeID lookup_node_id(string & hostname){
+NodeID lookup_node_id(const string & hostname){
     return process_data.system_information_manager->register_nodeID(hostname);
 }
 
@@ -155,6 +160,11 @@ __attribute__ ((constructor)) void siox_ll_ctor()
         process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>(loadedComponents);
         process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>(loadedComponents);
         process_data.amux = process_data.configurator->searchFor<ActivityMultiplexer>(loadedComponents); 
+
+        assert(process_data.ontology);
+        assert(process_data.system_information_manager);
+        assert(process_data.association_mapper);
+        assert(process_data.amux);        
         }
     // Retrieve NodeID and PID now that we have a valid SystemInformationManager
     process_data.nid = lookup_node_id(hostname);
@@ -243,30 +253,28 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value){
 }
 
 
-siox_associate * siox_associate_instance(const char * instance_information){
-    uint64_t id = process_data.association_mapper->create_instance_mapping(instance_information);
-    // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
-    return (AssociateID*) id;
+siox_associate siox_associate_instance(const char * instance_information){
+    return process_data.association_mapper->create_instance_mapping(instance_information);
 }
 
 //############################################################################
 /////////////// MONITORING /////////////////////////////
 //############################################################################
 
-siox_node * siox_lookup_node_id( const char * host_name ){
-    string hostname(host_name);
-    NodeID * result = new NodeID(lookup_node_id(hostname));
-
-    return result;
+siox_node siox_lookup_node_id( const char * hostname ){
+    if(hostname == NULL){
+        // we take the localhost's ID.
+         return process_data.nid;
+    }
+    
+    return lookup_node_id(hostname);
 }
 
 
-siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * instance_name){
-    assert(uiid != nullptr);
-    // instance_name could be nullptr
-    UniqueInterfaceID ** idTmp = & uiid;
-    UniqueInterfaceID uid = *((UniqueInterfaceID*) idTmp);
-
+siox_component * siox_component_register(siox_unique_interface uiid, const char * instance_name){
+    assert(uiid != SIOX_INVALID_ID );
+    assert(instance_name != nullptr);
+    UniqueInterfaceID uid = uiid;
     const string & interface_implementation = process_data.system_information_manager->lookup_interface_implementation(uid);
     const string & interface_name = process_data.system_information_manager->lookup_interface_name(uid);
 
@@ -317,11 +325,11 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
 }
 
 
-siox_component_activity * siox_component_register_activity(siox_unique_interface * uiid, const char * activity_name){
-    assert(uiid != nullptr);
+siox_component_activity * siox_component_register_activity(siox_unique_interface uiid, const char * activity_name){
+    assert(uiid != SIOX_INVALID_ID);
     assert(activity_name != nullptr);
 
-    uint64_t id = process_data.system_information_manager->register_activityID(*uiid, activity_name);
+    uint64_t id = process_data.system_information_manager->register_activityID( uiid, activity_name);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     return (UniqueComponentActivityID*) id;
 }
@@ -404,9 +412,9 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
 
 
 siox_remote_call * siox_remote_call_start(siox_activity         * activity,
-                                          siox_node             * target_nid,
-                                          siox_unique_interface * target_uid,
-                                          siox_associate        * target_iid){
+                                          siox_node              target_nid,
+                                          siox_unique_interface  target_uid,
+                                          siox_associate         target_iid){
     // TODO
     return nullptr;
 }
@@ -424,7 +432,7 @@ void siox_remote_call_submitted(siox_remote_call * remote_call){
 }
 
 
-void siox_activity_started_by_remote_call(siox_activity * activity, NodeID * caller_NodeID_if_known, UniqueInterfaceID * caller_uid_if_known, AssociateID * caller_instance_if_known){
+void siox_activity_started_by_remote_call(siox_activity * activity, NodeID  caller_NodeID_if_known, UniqueInterfaceID  caller_uid_if_known, AssociateID  caller_instance_if_known){
 
     // TODO
 }
@@ -491,21 +499,14 @@ siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, co
 }
 
 
-siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier){
+siox_unique_interface siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier){
     assert(interface_name != nullptr);
     assert(implementation_identifier != nullptr);
 
-    //uint64_t id = process_data.system_information_manager->interface_id(in, ii);
-    // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
-    // Workaround for stuffing
     try{
-        UniqueInterfaceID uid = process_data.system_information_manager->register_interfaceID(interface_name, implementation_identifier);
-        assert(sizeof(uid) <= sizeof(uint64_t));
-        UniqueInterfaceID * id = 0;
-        memcpy(& id, &uid, sizeof(uid));
-        return id;
+        return process_data.system_information_manager->register_interfaceID(interface_name, implementation_identifier);
     }catch(IllegalStateError & e){
-        return nullptr;
+        return 0;
     }
 }
 

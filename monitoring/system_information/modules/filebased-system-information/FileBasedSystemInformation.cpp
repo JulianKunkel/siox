@@ -184,9 +184,7 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 
 
     UniqueComponentActivityID   register_activityID(UniqueInterfaceID id, const string & name) {
-    	int32_t idNum =  (((uint32_t) id.interface) << 16) + id.implementation;
-
-    	auto pair_str = pair<uint32_t, string>(idNum, name);
+    	auto pair_str = pair<uint32_t, string>(id, name);
 
     	UniqueComponentActivityID aid = activityMap[pair_str];
 
@@ -204,9 +202,7 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
     }
 
     UniqueComponentActivityID   lookup_activityID(UniqueInterfaceID id, const string & name) const throw(NotFoundError)  {
-    	int32_t idNum =  (((uint32_t) id.interface) << 16) + id.implementation;
-
-    	auto pair_str = pair<uint32_t, string>(idNum, name);
+    	auto pair_str = pair<uint32_t, string>(id, name);
 
     	CHECK(activityMap, pair_str)
     }
@@ -241,26 +237,19 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 
 		if( cur != 0){
 			// interface and impl exists
-			return {(uint16_t) (cur >> 16), (uint16_t) cur};
+			return cur;
 		}
 
 		// check if interface exists
 		m.lock();
 
-		uint16_t i = interfaceMapStr[interface];
-		if (i == 0){
-			// create interface
-			i = (uint16_t) nextID++;
-			interfaceMap[i] = interface;
-		}
 		cur = nextID++;
 
-		uint32_t final_int = ((((uint32_t) i)<<16) + cur);
-		valueStringMap[final_int] = implementation;
-		interfaceImplMap[pair_str] = final_int;
+		interfaceImplMap[pair_str] = cur;
+		interfaceImplStrMap[cur] = pair_str;
 
 		m.unlock();
-		return {i, (uint16_t)  cur};
+		return cur;
 	}
 
 
@@ -271,20 +260,28 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 		auto res = interfaceImplMap.find(pair_str); 
 		if (res != interfaceImplMap.end()){ 
 			uint32_t cur = res->second;
-			return {(uint16_t) (cur >> 16), (uint16_t) cur};
+			return cur;
 		}else{
 			throw NotFoundError();
 		}
 	}
 
     const string & 				lookup_interface_name(UniqueInterfaceID id) const throw(NotFoundError)  {
-    	CHECK(interfaceMap, id.interface)
+    	auto res = interfaceImplStrMap.find(id); 
+		if (res != interfaceImplStrMap.end()){ 
+			return res->second.first;
+		}else{
+			throw NotFoundError();
+		}
     }
 
     const string & 				lookup_interface_implementation(UniqueInterfaceID id) const throw(NotFoundError) {
-    	uint32_t val = (((uint32_t) id.interface) << 16) + id.implementation;
-    	CHECK(valueStringMap, val)
-    }
+    	auto res = interfaceImplStrMap.find(id); 
+		if (res != interfaceImplStrMap.end()){ 
+			return res->second.second;
+		}else{
+			throw NotFoundError();
+		}    }
 
 
 private:
@@ -296,8 +293,7 @@ private:
 
 	map<DeviceID, NodeID> deviceNodeMap;
 
-	map<uint16_t, string> interfaceMap;
-	map<string, uint16_t> interfaceMapStr;
+	map<uint32_t, pair<string,string>> interfaceImplStrMap;
 	map<pair<string,string>, uint32_t> interfaceImplMap;
 
 	map<pair<NodeID,string>, uint32_t> deviceMap;

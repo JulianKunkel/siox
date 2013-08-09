@@ -7,13 +7,13 @@
 int main(){
 
 	printf("Registering unique interface...");
-	siox_unique_interface * i1 = siox_system_information_lookup_interface_id("test", "Impl1");
-	assert(i1 != NULL);
+	siox_unique_interface i1 = siox_system_information_lookup_interface_id("test", "Impl1");
+	assert(i1 != 0);
 	printf("success!\n");
 
 	printf("Registering same interface again...");
-	siox_unique_interface * i1a = siox_system_information_lookup_interface_id("test", "Impl1");
-	assert(i1 != NULL);
+	siox_unique_interface i1a = siox_system_information_lookup_interface_id("test", "Impl1");
+	assert(i1 != 0);
 	assert(i1 == i1a);
 	printf("success!\n");
 
@@ -61,19 +61,19 @@ int main(){
 	printf("success!\n");
 	
 	printf("Unregistering component...");
-	siox_component_unregister(c1);
+	siox_component_unregister(c1a);
 	// assert(c1a == NULL);
 	printf("success!\n");
 
 
 	printf("Registering another unique interface...");
-	siox_unique_interface * i2 = siox_system_information_lookup_interface_id("test", "InvalidImpl");
-	assert(i2 != NULL);
+	siox_unique_interface i2 = siox_system_information_lookup_interface_id("test", "InvalidImpl");
+	assert(i2 != 0);
 	assert(i2 != i1);
 	printf("success!\n");
 
 	printf("Provoking error registering invalid component...");
-	siox_component * c2 = siox_component_register(i2, NULL);
+	siox_component * c2 = siox_component_register(i2, "");
 	assert(c2 == NULL);
 	printf("success!\n");
 	

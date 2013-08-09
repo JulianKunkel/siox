@@ -86,6 +86,13 @@ typedef uint32_t UniqueComponentActivityID;
 /* The associate ID is valid only within a particular process */
 typedef uint32_t AssociateID;
 
+
+/* Identifies a specific software interface, e.g. OpenMPI V3 
+ * Globally unique => lookup in knowledge base is mandatory for each layer.
+ * The config file for the layer may hold this additional information, so lookup comes for free.
+ */
+typedef uint32_t UniqueInterfaceID;
+
 typedef VariableDatatype AttributeValue;
 
 typedef struct {
@@ -115,29 +122,6 @@ typedef struct{
 
 
 
-/* Identifies a specific software interface, e.g. OpenMPI V3 
- * Globally unique => lookup in knowledge base is mandatory for each layer.
- * The config file for the layer may hold this additional information, so lookup comes for free.
- */
-struct UniqueInterfaceID{ 
-	uint16_t interface; /*  It is invalid if interface == 0 */
-	uint16_t implementation;
-
-	bool operator==(UniqueInterfaceID const& r){
-		return this->interface == r.interface && r.implementation == this->implementation;
-	}
-
-	bool operator != (UniqueInterfaceID const& r)
-	{
-  		return !(this->interface == r.interface && r.implementation == this->implementation);
-	}
-
-	/// Copy-Constructor
-/*	UniqueInterfaceID_(const UniqueInterfaceID_& original){
-		interface = original.interface;
-		implementation = original.implementation;
-	}
-*/};
 // The first 16 bit identify the interface, e.g. MPI2 or POSIX, the latter 16 the implementation version, e.g. MPICH2 vs. OpenMPI
 // UniqueInterfaceID lookup_unique_interface_id(<InterfaceName>, <Version/implementation Name>);
 // See @TODO
@@ -184,10 +168,6 @@ struct ActivityID{
 
 inline bool is_valid_id(uint32_t id){
 	return id != 0;
-}
-
-inline bool is_valid_id(UniqueInterfaceID & id){
-	return id.interface != 0;
 }
 
 inline bool is_valid_id(ProcessID & id){
