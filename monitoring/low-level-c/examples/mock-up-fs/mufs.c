@@ -13,6 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+#include <assert.h>
 
 #include <C/siox-ll.h>
 
@@ -50,7 +51,7 @@ static siox_attribute *             att_byteswritten = NULL;   // Bytes written
  * Initialize the library.
  * Right now, only used to check in with SIOX.
  */
-static void mufs_initialize();
+void mufs_initialize();
 
 
 unsigned long
@@ -71,11 +72,8 @@ mufs_putfile( const char * filename, const char * contents )
     siox_activity *     act_write; 
 
 
-    /*
-     * If not done yet, initialize MUFS
-     */
-    if( !initialized )
-        mufs_initialize();
+    assert( initialized );
+        
 
 
     /*
@@ -169,8 +167,7 @@ mufs_putfile( const char * filename, const char * contents )
 
 
 
-static void
-mufs_initialize()
+void mufs_initialize()
 {
 
     /* Flag status as initialized */
@@ -197,7 +194,7 @@ mufs_initialize()
     uiid = siox_system_information_lookup_interface_id( "MUFS", "OpenMUFS" );
     // Register our component as provider of this interface.
     // The empty parameter could carry a string describing the instance.
-    cid = siox_component_register( uiid, "" );
+    cid = siox_component_register( uiid, ""  );
 
     // Register the activity types we will use
     act_type_write = siox_component_register_activity( uiid, "write" );

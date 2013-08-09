@@ -24,5 +24,6 @@
  */
 unsigned long mufs_putfile( const char * filename, const char * contents );
 
+void mufs_initialize();
 
 #endif
