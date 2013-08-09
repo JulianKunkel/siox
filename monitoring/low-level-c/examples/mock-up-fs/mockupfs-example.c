@@ -123,6 +123,7 @@ main(){
     siox_our_ui = siox_system_information_lookup_interface_id( swid_s, impl_s );
 
     // Look up the MUFS layer's interface ("MUFS") and implementation ("OpenMUFS") info
+    // This has to be identical to the names the MUFS layer's instrumentation provides!
     siox_mufs_ui = siox_system_information_lookup_interface_id( "MUFS", "OpenMUFS" );
 
     // Register node itself

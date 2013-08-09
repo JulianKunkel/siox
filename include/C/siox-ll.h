@@ -83,8 +83,12 @@
 #include <C/siox-types.h>
 
 #ifndef __cplusplus
- 
- // We hide all types from the implementation
+
+/// @name Typedefs to Hide Implementation from C Interface
+/// <i>*Jedi Hand Wave*</i>
+/// "These aren't the typedefs you're looking for..."
+/** @{ */
+// We hide all types from the implementation
 typedef void siox_activity;
 typedef void siox_associate;
 typedef void siox_attribute;
@@ -93,6 +97,7 @@ typedef void siox_component_activity;
 typedef void siox_node;
 typedef void siox_remote_call;
 typedef void siox_unique_interface;
+/** @} */
 #endif
 
 
@@ -101,7 +106,7 @@ typedef void siox_unique_interface;
 /// Retrieve the node id object for a given hardware component.
 //////////////////////////////////////////////////////////////////////////////
 /// @param hostname [in] The hardware node's host name, which has to be
-/// system-wide unique. If set to NULL, SIOX will use the local hostname.
+/// 	system-wide unique. If set to NULL, SIOX will use the local hostname.
 //////////////////////////////////////////////////////////////////////////////
 /// @return A node id, which is system-wide unique
 //////////////////////////////////////////////////////////////////////////////
@@ -119,26 +124,24 @@ siox_node * siox_lookup_node_id(const char * hostname);
 void siox_process_set_attribute(siox_attribute * attribute, void * value);
 
 
-/*
- * Register an attribute type within the ontology.
- *
- * domain defines where this attribute belongs to, e.g. "Node", "Process", "POSIX", "MPI" AND sth. like "OpenMPIV1"
- * 
- * The key (domain, name) must be unique, so it is not allowed to use different storage types and/or attributes on one attribute.
- */
 //@test ''%s,%s,%d'' domain,name,storage_type
 //////////////////////////////////////////////////////////////////////////////
 /// Look up an attribute in the SIOX ontology, creating a new entry if not
 /// found.
 //////////////////////////////////////////////////////////////////////////////
-/// @param domain
-/// @param name
-/// @param storage_type
+/// @param domain [in] The contextual domain this attribute belongs to,
+///		e.g. "Node", "Process", "POSIX", "MPI" AND sth. like "OpenMPIV1"
+/// @param name [in] The attribute's name
+/// @param storage_type [in] The minimum storage type required to represent
+///		data of this attribute
 //////////////////////////////////////////////////////////////////////////////
 /// @return A pointer to a globally unique representation in a siox_attribute,
 /// unless there already exists an attribute with identical domain and name
 /// but different storage_type.
-/// In the latter case, a nullptr is returned.
+/// In the latter case, a @c nullptr is returned.
+//////////////////////////////////////////////////////////////////////////////
+/// @note The key (domain, name) must be unique; it is not allowed to use
+///		different storage types and/or attributes with the same attribute.
 //////////////////////////////////////////////////////////////////////////////
 siox_attribute * siox_ontology_register_attribute(const char * domain, const char * name, enum siox_ont_storage_type storage_type);
 
@@ -199,7 +202,7 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * m
 
 /*
  * Retrieve an attribute by its name.
- * \todo Use its attributes to retrieve it.
+ * @todo Use its attributes to retrieve it.
  *
  * @param[in]   domain    	The domain the attribute belongs to.
  * @param[in]   name        The metric's full qualified name.
@@ -422,8 +425,8 @@ void siox_activity_stop(siox_activity * activity);
 /**
  * Report an attribute of an activity.
  *
- * Attributes for activities are either its parameters or other values computed from them.
- * Metrics or statistics resulting from the call use siox_activity_report() instead.
+ * Attributes for activities can be either its parameters and other values computed from them,
+ * or metrics and statistics resulting from the call.
  *
  * @param[in]   activity    The activity.
  * @param[in]   attribute   The attribute.
@@ -541,15 +544,21 @@ void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribu
 //@test ''%p'' remote_call
 void siox_remote_call_submitted(siox_remote_call * remote_call);
 
-/**
- * Report the reception of an attribute via a remote call.
- * While during a single activity, many remote calls may be sent, only one (the one initiating
- * the current function invocation) may be received. Hence, on the callee's side, the delimiting
- * functions siox_remote_call_start() and siox_remote_call_execute() are not needed.
- *
- * Optional parameters identify the callee if possible.
- */ 
 //@test ''%p,%p,%p'' component,attribute,value
+//////////////////////////////////////////////////////////////////////////////
+/// Report that a local activity was initiated via a remote call.
+/// While during a single activity, many remote calls may be sent, only one
+/// (the one initiating the current function invocation) may be received.
+/// Hence, on the callee's side, the delimiting functions
+/// siox_remote_call_start() and siox_remote_call_submitted() are not needed.
+/// Also, its defining attributes are set for the activity, so no 
+/// siox_remote_call is involved on the callee's side at all!
+//////////////////////////////////////////////////////////////////////////////
+/// @param [in] activity The activity started by remote call
+/// @param [in] caller_siox_node_if_known May be @c NULL otherwise
+/// @param [in] caller_uid_if_known May be @c NULL otherwise
+/// @param [in] caller_instance_if_known May be @c NULL otherwise
+//////////////////////////////////////////////////////////////////////////////
 void siox_activity_started_by_remote_call(siox_activity * activity, siox_node * caller_siox_node_if_known, siox_unique_interface * caller_uid_if_known, siox_associate * caller_instance_if_known);
 
 

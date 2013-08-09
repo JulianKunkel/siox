@@ -3,7 +3,7 @@
  *          Implementation of the Mock-Up File System.
  *
  * @authors Julian Kunkel & Michaela Zimmer
- * @date    2013-08-06
+ * @date    2013-08-08
  *          GNU Public License.
  */
 
@@ -23,27 +23,34 @@
 #define BLOCK_SIZE 400
 
 
-/** Flag indicating whether we have called mufs_initialise() yet. */
-static int initialised = 0;
+// Flag indicating whether we have called mufs_initialize() yet.
+static int initialized = 0;
 
 /*
  * Variables for SIOX
  */
-/** The library's @em UNID */
-//static siox_unid    unid;
-/* The @em DTIDs of the data types known to MUFS */
-//static siox_dtid    dtid_fn;   /**< The @em DTID for file names */
-//static siox_dtid    dtid_fp;   /**< The @em DTID for file pointers */
-//static siox_dtid    dtid_b2w;  /**< The @em DTID for the amount of bytes to write */
-/** The @em MID for our performance metric */
-// static siox_mid     mid;
+
+// The unique interface identifier for the API we provide (MUFS, implementation OpenMUFS)
+static siox_unique_interface *      uiid = NULL;
+// The MUFS library's component identifier
+static siox_component *             cid = NULL;
+
+// An identifier for the component-specific activity type 'write'
+static siox_component_activity *    act_type_write = NULL;
+
+// Identifiers for the attributes of our activities
+static siox_attribute *             att_blocksize = NULL;      // Block size
+static siox_attribute *             att_filename = NULL;       // File name
+static siox_attribute *             att_bytes2write = NULL;    // Bytes to write
+static siox_attribute *             att_byteswritten = NULL;   // Bytes written
+
 
 
 /**
- * Initialise the library.
+ * Initialize the library.
  * Right now, only used to check in with SIOX.
  */
-static void mufs_initialise();
+static void mufs_initialize();
 
 
 unsigned long
@@ -56,36 +63,41 @@ mufs_putfile( const char * filename, const char * contents )
     int             block;
     const char *    pData;
     const char *    pEnd;
+    int             status;
     
     char            sBuffer[200];
 
-    /* Variables for SIOX */
-    //siox_aid    aid;        /** @em AID for an activity describing this whole function */
-
-
+    // An identifier for the activity describing this whole function
+    siox_activity *     act_write; 
 
 
     /*
-     * If not done yet, initialise MUFS
+     * If not done yet, initialize MUFS
      */
-    if( !initialised )
-        mufs_initialise();
+    if( !initialized )
+        mufs_initialize();
 
 
     /*
      * SIOX - preliminary negotiations
      */
     sprintf( sBuffer, "Write data to file %s via MUFS.", filename );
-    //aid = siox_start_activity( unid, NULL, sBuffer );
+    // Start an activity
+    act_write = siox_activity_start( act_type_write );
 
-    /* Report the identifying attributes of the call received */
-    //siox_remote_call_receive( aid, dtid_fn, &filename);
-    /* Another characteristic of the call, though not explicitly given as a parameter:
-       The amount of data to write. */
+    // Report the remote origin of the activity and its identifying attributes
+    // Sadly, we don't know anything about the caller
+    siox_activity_started_by_remote_call( act_write, NULL, NULL, NULL );
+
+    // The file name we are passed to write to
+    siox_activity_set_attribute( act_write, att_filename, &filename );
+
+    // Another characteristic of the call, though not explicitly given as a parameter:
+    // The amount of data to write
     total_bytes_to_write = 0;
     for( pEnd = contents; *pEnd != 0; pEnd++)
         total_bytes_to_write++;
-    //siox_remote_call_receive( aid, dtid_b2w, &total_bytes_to_write );
+    siox_activity_set_attribute( act_write, att_bytes2write, &total_bytes_to_write );
 
 
     /*
@@ -110,9 +122,12 @@ mufs_putfile( const char * filename, const char * contents )
         if( bytes_to_write > BLOCK_SIZE )
             bytes_to_write = BLOCK_SIZE;
 
-        if( fwrite( pData, bytes_to_write, 1, fp ) != 1 )
+        status = fwrite( pData, bytes_to_write, 1, fp );
+        if( status != 1 )
             {
-                //siox_end_activity( aid, NULL );
+                // Inform SIOX of the activity's status and end it
+                siox_activity_report_error( act_write, status );
+                siox_activity_end( act_write );
 
                 fprintf( stderr, "!!! Error writing block %d of file >%s<! !!!\n",
                          block, filename );
@@ -124,24 +139,27 @@ mufs_putfile( const char * filename, const char * contents )
     /*
      * Close file via POSIX
      */
-    if( fclose( fp ) == EOF )
+    status = fclose( fp );
+    if( status == EOF )
     {
-        //siox_end_activity( aid, NULL );
+        // Inform SIOX of the activity's status and end it
+        siox_activity_report_error( act_write, status );
+        siox_activity_end( act_write );
 
         fprintf( stderr, "!!! Error closing file >%s<! !!!\n", filename );
         return( 0 );
     }
 
-    /* Now all the work is done, stop the activity's clock and move on to the reporting phase. */
-    //siox_stop_activity( aid, NULL );
+    // Now all the work is done, stop the activity's clock and move on to the reporting phase.
+    siox_activity_stop( act_write );
 
 
     /*
      * SIOX - final negotiations
      */
-    /* Report our performance metrics for this activity. */
-    //siox_report_activity( aid, mid, &total_bytes_written );
-    //siox_end_activity( aid, NULL );
+    // Report our performance metrics for this activity.
+    siox_activity_set_attribute( act_write, att_byteswritten, &total_bytes_written );
+    siox_activity_end( act_write );
 
 
     /* Return number of bytes successfully written */
@@ -152,14 +170,11 @@ mufs_putfile( const char * filename, const char * contents )
 
 
 static void
-mufs_initialise()
+mufs_initialize()
 {
-    /* Variables for handling our HWID, SWID and IID and their string representations */
-    char*   swid_s = "MUFS";
 
-
-    /* Flag status as initialised */
-    initialised++;
+    /* Flag status as initialized */
+    initialized++;
 
     /*
      * Info Message
@@ -178,17 +193,35 @@ mufs_initialise()
      * =====================
      */
 
-    //unid = siox_register_node( hwid_s, swid_s, iid_s );
+    // Register the interface we provide and our implementation of it.
+    uiid = siox_system_information_lookup_interface_id( "MUFS", "OpenMUFS" );
+    // Register our component as provider of this interface.
+    // The empty parameter could carry a string describing the instance.
+    cid = siox_component_register( uiid, NULL );
 
-    /* Register descriptor types we know */
-    //dtid_fn = siox_register_datatype( "FileName", SIOX_STORAGE_STRING );
-    //dtid_fp = siox_register_datatype( "MUFS-FilePointer", SIOX_STORAGE_64_BIT_INTEGER );
-    //dtid_b2w = siox_register_datatype( "Bytes to write", SIOX_STORAGE_64_BIT_INTEGER );
+    // Register the activity types we will use
+    act_type_write = siox_component_register_activity( uiid, "write" );
 
-    /* Register our performance metric with the ontology */
-/*    mid = siox_register_metric( "Bytes Written",
-                                SIOX_UNIT_BYTES,
-                                SIOX_STORAGE_64_BIT_INTEGER,
-                                SIOX_SCOPE_ACTUAL);
-*/}
+    // Register the attributes we will need:
+    att_blocksize = siox_ontology_register_attribute_with_unit( "io",
+                                                                "data volume/block size",
+                                                                "Bytes",
+                                                                SIOX_STORAGE_64_BIT_INTEGER );
+    att_filename = siox_ontology_register_attribute( "filesystem",
+                                                     "filename",
+                                                     SIOX_STORAGE_STRING );
+    att_bytes2write = siox_ontology_register_attribute_with_unit( "io",
+                                                                  "data volume/to write",
+                                                                  "Bytes",
+                                                                  SIOX_STORAGE_64_BIT_INTEGER );
+    att_byteswritten = siox_ontology_register_attribute_with_unit( "io",
+                                                                   "data volume/written",
+                                                                   "Bytes",
+                                                                   SIOX_STORAGE_64_BIT_INTEGER );
+    /// @todo Mark filename (and b2w?) as descriptors
+    /// @todo Register filename twice (POSIX and MUFS)?
 
+    // Set the block size our library uses as a component attribute
+    uint64_t block_size = BLOCK_SIZE; // Can't pass a precompiler constant as a void* 
+    siox_component_set_attribute( cid, att_blocksize, &block_size );
+}
