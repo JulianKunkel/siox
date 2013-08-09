@@ -38,9 +38,7 @@ int main(int argc, char const *argv[]){
 
 	uid2 = s->lookup_interfaceID("MPI", "MPICH2");
 
-	assert(uid2.interface == uid.interface);
-	assert(uid2.implementation == uid.implementation);
-
+	assert(uid2 == uid);
 
 
 	NodeID nid = s->register_nodeID("testhost");

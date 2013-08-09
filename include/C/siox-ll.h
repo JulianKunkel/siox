@@ -82,25 +82,25 @@
 
 #include <C/siox-types.h>
 
-#ifndef __cplusplus
-
+#ifndef SIOX_INTERNAL_USAGE
 /// @name Typedefs to Hide Implementation from C Interface
 /// <i>*Jedi Hand Wave*</i>
 /// "These aren't the typedefs you're looking for..."
 /** @{ */
 // We hide all types from the implementation
 typedef void siox_activity;
-typedef void siox_associate;
 typedef void siox_attribute;
 typedef void siox_component;
 typedef void siox_component_activity;
-typedef void siox_node;
 typedef void siox_remote_call;
-typedef void siox_unique_interface;
 /** @} */
 #endif
 
+typedef uint32_t siox_node;
+typedef uint32_t siox_associate;
+typedef uint32_t siox_unique_interface;
 
+#define SIOX_INVALID_ID 0
 
 //////////////////////////////////////////////////////////////////////////////
 /// Retrieve the node id object for a given hardware component.
@@ -110,7 +110,7 @@ typedef void siox_unique_interface;
 //////////////////////////////////////////////////////////////////////////////
 /// @return A node id, which is system-wide unique
 //////////////////////////////////////////////////////////////////////////////
-siox_node * siox_lookup_node_id(const char * hostname);
+siox_node siox_lookup_node_id(const char * hostname);
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -238,7 +238,7 @@ siox_attribute * siox_ontology_lookup_attribute_by_name(const char * domain, con
 //////////////////////////////////////////////////////////////////////////////
 /// @return An ID that will be unique system-wide.
 //////////////////////////////////////////////////////////////////////////////
-siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier);
+siox_unique_interface siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier);
 
 /**
  * Report performance data @em not associated with a single activity.
@@ -286,7 +286,7 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
 //////////////////////////////////////////////////////////////////////////////
 /// @return 
 //////////////////////////////////////////////////////////////////////////////
-siox_associate * siox_associate_instance(const char * instance_information);
+siox_associate siox_associate_instance(const char * instance_information);
 
 /*
  * Register this component with SIOX.
@@ -319,7 +319,7 @@ siox_associate * siox_associate_instance(const char * instance_information);
  //////////////////////////////////////////////////////////////////////////////
 
 //@test ''%s-%s-%s'' siox_node,swid,iid
-siox_component * siox_component_register(siox_unique_interface * uiid, const char * instance_name);
+siox_component * siox_component_register(siox_unique_interface uiid, const char * instance_name);
 
 /**
  * Report an attribute of this component to SIOX.
@@ -344,7 +344,7 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
  //////////////////////////////////////////////////////////////////////////////
  /// @return
  //////////////////////////////////////////////////////////////////////////////
-siox_component_activity * siox_component_register_activity(siox_unique_interface * uiid, const char * activity_name);
+siox_component_activity * siox_component_register_activity(siox_unique_interface uiid, const char * activity_name);
 
 /*
  * Register an attribute as a descriptor for activities (!) of this component.
@@ -521,9 +521,9 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
  */
 //@test ''%p,%s-%s-%s'' component,target_siox_node,target_swid,target_iid
 siox_remote_call * siox_remote_call_start(siox_activity 	* activity,
-                                          siox_node 			* target_siox_node,
-                                          siox_unique_interface * target_uid,
-                                          siox_associate 		* target_iid);
+                                          siox_node 			  target_siox_node,
+                                          siox_unique_interface   target_uid,
+                                          siox_associate 		  target_iid);
 
 /**
  * Report an attribute to be sent via a remote call.
@@ -559,7 +559,7 @@ void siox_remote_call_submitted(siox_remote_call * remote_call);
 /// @param [in] caller_uid_if_known May be @c NULL otherwise
 /// @param [in] caller_instance_if_known May be @c NULL otherwise
 //////////////////////////////////////////////////////////////////////////////
-void siox_activity_started_by_remote_call(siox_activity * activity, siox_node * caller_siox_node_if_known, siox_unique_interface * caller_uid_if_known, siox_associate * caller_instance_if_known);
+void siox_activity_started_by_remote_call(siox_activity * activity, siox_node caller_siox_node_if_known, siox_unique_interface caller_uid_if_known, siox_associate caller_instance_if_known);
 
 
 #endif

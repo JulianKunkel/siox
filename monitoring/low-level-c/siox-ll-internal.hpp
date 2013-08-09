@@ -11,6 +11,7 @@
 
 
 #include <C/siox-types.h>
+
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
@@ -26,11 +27,10 @@ using namespace core;
 using namespace monitoring;
 
 // define all types for CPP
-typedef const AssociateID siox_associate;
 typedef const OntologyAttribute siox_attribute;
 typedef const UniqueComponentActivityID siox_component_activity;
-typedef const NodeID siox_node;
-typedef const UniqueInterfaceID siox_unique_interface; // will be stuffed.
+
+
 
 struct siox_activity{
     ActivityID aid;

@@ -20,12 +20,6 @@ namespace serialization {
 		SER("id", id.id)
 	}
 
-	template<class Archive>
-	void serialize(Archive & ar, UniqueInterfaceID & id, const unsigned int file_version){
-		SER("i", id.interface)
-		SER("v", id.implementation)
-	}
-
 
 	template<class Archive>
 	void serialize(Archive & ar, ProcessID & id, const unsigned int file_version){

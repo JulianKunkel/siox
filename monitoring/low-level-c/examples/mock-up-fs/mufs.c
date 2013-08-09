@@ -13,6 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+#include <assert.h>
 
 #include <C/siox-ll.h>
 
@@ -31,7 +32,7 @@ static int initialized = 0;
  */
 
 // The unique interface identifier for the API we provide (MUFS, implementation OpenMUFS)
-static siox_unique_interface *      uiid = NULL;
+static siox_unique_interface       uiid = 0;
 // The MUFS library's component identifier
 static siox_component *             cid = NULL;
 
@@ -50,7 +51,7 @@ static siox_attribute *             att_byteswritten = NULL;   // Bytes written
  * Initialize the library.
  * Right now, only used to check in with SIOX.
  */
-static void mufs_initialize();
+void mufs_initialize();
 
 
 unsigned long
@@ -71,11 +72,8 @@ mufs_putfile( const char * filename, const char * contents )
     siox_activity *     act_write; 
 
 
-    /*
-     * If not done yet, initialize MUFS
-     */
-    if( !initialized )
-        mufs_initialize();
+    assert( initialized );
+        
 
 
     /*
@@ -87,7 +85,7 @@ mufs_putfile( const char * filename, const char * contents )
 
     // Report the remote origin of the activity and its identifying attributes
     // Sadly, we don't know anything about the caller
-    siox_activity_started_by_remote_call( act_write, NULL, NULL, NULL );
+    siox_activity_started_by_remote_call( act_write, 0, 0, 0 );
 
     // The file name we are passed to write to
     siox_activity_set_attribute( act_write, att_filename, &filename );
@@ -169,8 +167,7 @@ mufs_putfile( const char * filename, const char * contents )
 
 
 
-static void
-mufs_initialize()
+void mufs_initialize()
 {
 
     /* Flag status as initialized */
@@ -197,7 +194,7 @@ mufs_initialize()
     uiid = siox_system_information_lookup_interface_id( "MUFS", "OpenMUFS" );
     // Register our component as provider of this interface.
     // The empty parameter could carry a string describing the instance.
-    cid = siox_component_register( uiid, NULL );
+    cid = siox_component_register( uiid, ""  );
 
     // Register the activity types we will use
     act_type_write = siox_component_register_activity( uiid, "write" );
@@ -223,5 +220,5 @@ mufs_initialize()
 
     // Set the block size our library uses as a component attribute
     uint64_t block_size = BLOCK_SIZE; // Can't pass a precompiler constant as a void* 
-    siox_component_set_attribute( cid, att_blocksize, &block_size );
+    siox_component_set_attribute( cid, att_blocksize, & block_size );
 }
