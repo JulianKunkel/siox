@@ -7,9 +7,20 @@
 
 
 
+void init(){
+
+};
+
+void destroy(){
+
+};
+
 
 int main(int argc, char const *argv[]){
-		
+	StatisticsCollector * tsc = core::module_create_instance<StatisticsCollector>("", "ThreadedStatisticsCollector", THREADED_STATISTICS_COLLECTOR_INTERFACE);
+	assert(o != nullptr);
+	ThreadedStatisticsCollectorOptions & op = tsc->getOptions<ThreadedStatisticsCollectorOptions>();
+
 	}
 
 	cout << "OK" << endl;	
