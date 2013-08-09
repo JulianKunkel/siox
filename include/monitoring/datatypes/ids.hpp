@@ -145,6 +145,35 @@ struct RemoteCallIdentifier{
 	NodeID nid; // optional
 	UniqueInterfaceID uuid; // optional
 	AssociateID instance; // optional, remote call instance identifier
+
+	RemoteCallIdentifier() {};
+	RemoteCallIdentifier(NodeID* nid, UniqueInterfaceID* uiid, AssociateID* assid)
+	{
+		// NodeID
+		if(nid != NULL) {
+			this->nid = *nid;
+		}
+		else {
+			this->nid = 0;
+		}
+
+		// UniqueInterfaceID
+		if(uiid != NULL) {
+			this->uuid = *uiid;
+		}
+		else {
+			this->uuid.implementation = 0;
+			this->uuid.interface = 0;
+		}
+
+		// AssociateID
+		if(assid != NULL) {
+			this->instance = *assid;
+		}
+		else {
+			this->instance = 0;
+		}
+	}
 };
 
 /* Identifying an activity */

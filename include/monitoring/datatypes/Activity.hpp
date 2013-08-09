@@ -78,16 +78,18 @@ using namespace std;
 
 namespace monitoring {
 
+// Forward declarations
+class Activity;
+class ActivityBuilder;
+
 // The instance identifier such as "Port 4711" is relevant for matching of remote calls
 // See @TODO
 typedef struct {
 	RemoteCallIdentifier target;
 	vector<Attribute> attributes;
+	Activity* activity;
 } RemoteCall;
 
-
-
-class ActivityBuilder;
 
 class Activity{
 	friend class ActivityBuilder;
