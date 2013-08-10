@@ -110,11 +110,19 @@ typedef uint32_t ActivityError;
 // See @TODO 
 
 /* Software ID, identifying the application programm, may be a server as well */
-typedef struct{
+struct ProcessID{
 	NodeID nid;
 	uint32_t pid;
 	uint32_t time;
-} ProcessID;
+
+    inline bool operator==(ProcessID const & b) const{
+        return memcmp(this, &b, sizeof(nid) + sizeof(pid) + sizeof(time));
+    }   
+
+    inline bool operator!=(ProcessID const & b) const{
+        return ! (*this == b);
+    }
+};
 // Each process can create a runtime ID locally KNOWING the NodeID from the daemon
 // RuntimeID create_runtime_id(NodeID 32 B,  getpid() 32B, gettimeofday(seconds) 32B );
 // See @TODO
@@ -135,6 +143,14 @@ struct ComponentID{
 	ProcessID pid;
 	//UniqueInterfaceID uiid;
 	uint16_t id;
+
+    inline bool operator==(ComponentID const & b) const{
+        return memcmp(this, &b, sizeof(pid) + sizeof(id));
+    }  
+
+    inline bool operator!=(ComponentID const & b) const{
+        return ! (*this == b);
+    }
 } ;
 // TODO:
 // ComponentID(siox_component){}
@@ -155,6 +171,14 @@ struct RemoteCallIdentifier{
 struct ActivityID{
 	ComponentID cid;
 	uint32_t id;
+
+   inline bool operator==(ActivityID const & b) const{
+        return memcmp(this, &b, sizeof(cid) + sizeof(id));
+    }   
+
+    inline bool operator!=(ActivityID const & b) const{
+        return ! (*this == b);
+    }    
 };
 
 
