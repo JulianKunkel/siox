@@ -1,10 +1,15 @@
 #ifndef KNOWLEDGE_REASONER_HPP
 #define KNOWLEDGE_REASONER_HPP
 
+#include <list>
+
 #include <core/component/Component.hpp>
 
-#include <knowledge/reasoner/ReasoningDatatypes.hpp>
 #include <monitoring/datatypes/ids.hpp>
+
+#include <knowledge/reasoner/AnomalyTrigger.hpp>
+#include <knowledge/reasoner/QualitativeUtilization.hpp>
+#include <knowledge/reasoner/ReasoningDatatypes.hpp>
 
 /**
   The reasoner gathers all the information about anomalies and judges the cause/reason of them. 
@@ -55,8 +60,7 @@
 		Drawback: Some components such as the node-local reasoner would know all relevant ontology-IDs at compile-time which is hard to achieve since we hope for extensions.
 */
 
-
-using namespace knowledge::reasoning;
+using namespace std;
 
 namespace knowledge{
 
@@ -65,16 +69,45 @@ public:
 	// Report the observation of an activity
 	// For which component, which type of operations has the observation been made.
 	// What has been observed: (In)efficient operation on another hardware/software component.
-	//virtual void reportObservation(activity::Observation o, 
-	//	HardwareEntity he, SoftwareEntity se, Reason r, const string & reasonQualifier) = 0;
+	virtual void reportObservation(AnomalyObservation o, const IssueLocation & issueLocation, int32_t	delta_time_ms) = 0;
 
-	// Register the presence of a statistics which can be queried to ask the current utilization.
-	// Internally, the relative utilization of such a statistics helps finding the reasons.
-	//virtual void registerUtilizationStatistics() = 0;
+	// If we know the reason or the location
+	virtual void reportObservation(AnomalyObservation o, 
+		const IssueLocation & issueLocation,
+		const IssueCause & claimedCause,
+		const IssueLocation & causeLocation, int32_t delta_time_ms) = 0;
+
+	// If a statistics anomaly plugin intents to report an anomaly by itself:
+	virtual void reportObservation(StatisticObservation o, OntologyAttributeID statistics_aid, const IssueLocation & issueLocation) = 0;
+
+
+	// Query a list of current performance causing reasons.
+	virtual list<PerformanceIssue> queryRecentPerformanceIssues() = 0;
 
 	// Query statistics about inefficiencies / efficiencies for the whole runtime of the application.
 	// Usually done at the end of the application to provide hints about application bottlenecks.
-	//virtual void queryUsageStatistics() = 0;
+
+	/*
+	 Based on the hierachy-level the reasoner keeps different stats for their run-time:
+	 A process reasoner has statistics for the process life-time.
+	 A daemon maintains stats for its life-time (until daemon is stopped).
+	 */
+	virtual list<PerformanceIssue> queryRuntimePerformanceIssues() = 0;
+
+	// Register the presence of a statistics which can be queried to ask the current utilization.
+	// Internally, the relative utilization of such a statistics helps finding the reasons.
+	// There can be only one such plugin.
+	virtual void connectUtilization(QualitativeUtilization * plugin) = 0;
+
+	// Register an anomaly trigger, all anomaly triggers are notified when an anomaly occurs.
+	virtual void connectTrigger(AnomalyTrigger * trigger) = 0;
+
+	// A reasoner is connected either upstream / more global reasoner or downstream.
+	// Connection to a remote reasoner is realized using RPC (behind a reasoner facade).
+	// Either way the reasoner will forward only refined information
+	//virtual void connect(Reasoner * reasoner) = 0;
+
+	// TODO Exchange of refined info between reasoners ?
 };
 
 }
@@ -107,18 +140,21 @@ frame "Process" {
     ADPI1 -> PReasoner
     ADPI2 -> PReasoner
 
-    folder [User output] #LightGrey
-    PReasoner -> [User output] : Create on process-termination
+    component [siox-ll] #LightGrey
+    PReasoner <- [siox-ll]: Query usage upon termination
 
 
     PReasoner -.-> [System Information]
     PReasoner -.-> Ontology
 
-    note bottom of [User output]
+	folder UserOutput
+    note bottom of UserOutput
 	The system information and ontology
 	are only needed to create human-
 	readable user output.
     end note
+
+    [siox-ll] -> UserOutput : create
 }
 
 
@@ -129,11 +165,11 @@ frame "SIOX Daemon" {
     PReasoner <- NReasoner : Node/global state
 
     frame "SPlugins" {
-	    component RelativeUtilization #White
+	    component QualitativeUtilization #White
     }
 
     component [StatisticsCollector] #Orange    
-    [StatisticsCollector] -> RelativeUtilization : poll
+    [StatisticsCollector] -> QualitativeUtilization : poll
 
     component [SMux] #Orange
     [StatisticsCollector] -> SMux : Notify
@@ -147,7 +183,7 @@ frame "SIOX Daemon" {
 
 	NReasoner -> AForwarder : Trigger
 	NReasoner -> SForwarder : Trigger
-	NReasoner -> RelativeUtilization : Query
+	NReasoner -> QualitativeUtilization : Query
 }
 
 }
@@ -170,7 +206,7 @@ database "SIOX Knowledge Base\n" {
 }
 
 
-RelativeUtilization -> Systeminformation : Query/update stats
+QualitativeUtilization -> Systeminformation : Query/update stats
 
 @enduml
  */
