@@ -56,9 +56,9 @@ int main(int argc, char const *argv[]){
 	string domain("test");
 	string s_att1("Attribute 1");
 	string s_att2("Attribute 2");
-	att1 = ont->register_attribute(domain, s_att1, VariableDatatype::UINT32);
+	att1 = ont->register_attribute(domain, s_att1, VariableDatatype::Type::UINT32);
 	assert(att1.aID != 0);
-	att2 = ont->register_attribute(domain, s_att2, VariableDatatype::UINT32);
+	att2 = ont->register_attribute(domain, s_att2, VariableDatatype::Type::UINT32);
 	assert(att2.aID != 0);
 	assert(att1.aID != att2.aID);
 

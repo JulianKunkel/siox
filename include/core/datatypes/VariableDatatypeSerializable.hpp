@@ -27,19 +27,19 @@ void serialize(Archive & ar, VariableDatatype & a, const unsigned int version)
 	ar & boost::serialization::make_nvp("type", *g.typeP);
 
 	switch(*g.typeP){
-		case(VariableDatatype::INT64):
+		case(VariableDatatype::Type::INT64):
 		ar & boost::serialization::make_nvp("v", g.data->i64);
 		break;
-		case(VariableDatatype::INT32):
+		case(VariableDatatype::Type::INT32):
 		ar & boost::serialization::make_nvp("v", g.data->i32);
 		break;
-		case(VariableDatatype::UINT64):
+		case(VariableDatatype::Type::UINT64):
 		ar & boost::serialization::make_nvp("v", g.data->ui64);
 		break;
-		case(VariableDatatype::UINT32):
+		case(VariableDatatype::Type::UINT32):
 		ar & boost::serialization::make_nvp("v", g.data->ui32);
 		break;
-		case(VariableDatatype::STRING):{
+		case(VariableDatatype::Type::STRING):{
 			if(g.data->str == nullptr){
 				string s;
 				ar & boost::serialization::make_nvp("v", s);
@@ -50,13 +50,13 @@ void serialize(Archive & ar, VariableDatatype & a, const unsigned int version)
 			}
 			break;
 		}
-		case(VariableDatatype::INVALID):
+		case(VariableDatatype::Type::INVALID):
 		ar & boost::serialization::make_nvp("v", g.data->ui64);
 		break;
-		case(VariableDatatype::DOUBLE):
+		case(VariableDatatype::Type::DOUBLE):
 		ar & boost::serialization::make_nvp("v", g.data->d);
 		break;
-		case(VariableDatatype::FLOAT):
+		case(VariableDatatype::Type::FLOAT):
 		ar & boost::serialization::make_nvp("v", g.data->f);
 		break;
 	}

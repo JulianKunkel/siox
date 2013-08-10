@@ -26,21 +26,21 @@ int main(int argc, char const *argv[]){
 	string s_a2("a2");
 	string s_a3("stringAttr");
 
-	const OntologyAttribute & a1 = o->register_attribute(domain, s_a1, VariableDatatype::UINT32);
+	const OntologyAttribute & a1 = o->register_attribute(domain, s_a1, VariableDatatype::Type::UINT32);
 	assert(a1.aID != 0);
 
-	const OntologyAttribute & a2 = o->register_attribute(domain, s_a2, VariableDatatype::UINT32);
+	const OntologyAttribute & a2 = o->register_attribute(domain, s_a2, VariableDatatype::Type::UINT32);
 
-	const OntologyAttribute & a3 = o->register_attribute(domain, s_a1, VariableDatatype::UINT32);
+	const OntologyAttribute & a3 = o->register_attribute(domain, s_a1, VariableDatatype::Type::UINT32);
 	assert(a3 == a1);
 	try{
-		const OntologyAttribute & a4 = o->register_attribute(domain, s_a1, VariableDatatype::UINT64);
+		const OntologyAttribute & a4 = o->register_attribute(domain, s_a1, VariableDatatype::Type::UINT64);
 		assert(false);
 	}catch(IllegalStateError & e){
 	}
 
 
-	const OntologyAttribute & a5 = o->register_attribute(domain, s_a3, VariableDatatype::STRING);
+	const OntologyAttribute & a5 = o->register_attribute(domain, s_a3, VariableDatatype::Type::STRING);
 
 	cout << "ID1: " << a1.aID << endl;
 	cout << "ID2: " << a2.aID << endl;
@@ -74,7 +74,7 @@ int main(int argc, char const *argv[]){
 	assert(o->enumerate_meta_attributes(a1).size() == 2);
 
 	const OntologyValue & ret = o->lookup_meta_attribute(a1, a2);
-	cout << "Type: " << ret.type() << " "<< endl;
+	cout << "Type: " << (int) ret.type() << " "<< endl;
 	cout << "Val: " << ret.uint32() << endl;
 
 	delete(o);

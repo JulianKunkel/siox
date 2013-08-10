@@ -39,15 +39,15 @@ public:
 	}
 
 	virtual StatisticsValue getRollingStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
-
+		return StatisticsValue(1);
 	}
 
 	virtual StatisticsValue getReducedStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op){
-		
+		return StatisticsValue(1);	
 	}
 
 	virtual StatisticsValue getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op){
-		return 0;
+		return StatisticsValue(1);
 	}
 
 	virtual list<StatisticsDescription> availableMetrics(){

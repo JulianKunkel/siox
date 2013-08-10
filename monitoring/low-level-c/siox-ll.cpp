@@ -210,33 +210,33 @@ typedef VariableDatatype AttributeValue;
 static VariableDatatype convert_attribute(siox_attribute * attribute, void * value){
     AttributeValue v;
     switch(attribute->storage_type){
-    case(SIOX_STORAGE_32_BIT_UINTEGER):
+    case(VariableDatatype::Type::UINT32):
         v = *((uint32_t * ) value);
         break;
-    case(SIOX_STORAGE_32_BIT_INTEGER):{
+    case(VariableDatatype::Type::INT32):{
         v = *((int32_t * ) value);
         break;
     }
-    case(SIOX_STORAGE_64_BIT_UINTEGER):
+    case(VariableDatatype::Type::UINT64):
         v = *((uint64_t * ) value);      
         break;
-    case(SIOX_STORAGE_64_BIT_INTEGER):{
+    case(VariableDatatype::Type::INT64):{
         v = *((int64_t * ) value);      
         break;
     }
-    case(SIOX_STORAGE_FLOAT):{
+    case(VariableDatatype::Type::FLOAT):{
         v = *((float * ) value);
         break;
     }
-    case(SIOX_STORAGE_DOUBLE):{
+    case(VariableDatatype::Type::DOUBLE):{
         v = *((double * ) value);
         break;
     }
-    case(SIOX_STORAGE_STRING):{
+    case(VariableDatatype::Type::STRING):{
         v = (char *) value;
         break;
     }
-    case (SIOX_STORAGE_UNASSIGNED):{
+    case (VariableDatatype::Type::INVALID):{
         assert(0);
     }
     }

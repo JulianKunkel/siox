@@ -34,12 +34,12 @@ int main(int argc, char const *argv[]){
 
 	UniqueInterfaceID uid = sys->register_interfaceID("test", "impl1");
    	UniqueComponentActivityID aid = sys->register_activityID(uid, "open");
-   	OntologyAttribute o1 = o->register_attribute("test", "filesize", VariableDatatype::UINT64);
-	OntologyAttribute unit = o->register_attribute("Meta", "Unit", VariableDatatype::STRING); 
+   	OntologyAttribute o1 = o->register_attribute("test", "filesize", VariableDatatype::Type::UINT64);
+	OntologyAttribute unit = o->register_attribute("Meta", "Unit", VariableDatatype::Type::STRING); 
 	o->attribute_set_meta_attribute(o1, unit, "Byte");
 	
-   	OntologyAttribute o2 = o->register_attribute("test", "filename", VariableDatatype::STRING);
-   	OntologyAttribute o3 = o->register_attribute("test", "filesystem", VariableDatatype::UINT32);
+   	OntologyAttribute o2 = o->register_attribute("test", "filename", VariableDatatype::Type::STRING);
+   	OntologyAttribute o3 = o->register_attribute("test", "filesystem", VariableDatatype::Type::UINT32);
 
 	auto parentArray = vector<ActivityID>{  {.cid = {.pid = {2,3,4}, .id=1}, .id = 1} };
 	auto attributeArray = vector<Attribute>();	
