@@ -10,16 +10,22 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include <core/module/module-loader.hpp>
-#include <assert.h>
+#include <core/datatypes/VariableDatatype.hpp>
 
 #include "siox-ll-internal.hpp"
 
-using namespace std;
+extern "C"{
+#define SIOX_INTERNAL_USAGE
+#include <C/siox.h>
+}
 
+using namespace std;
 using namespace core;
 using namespace monitoring;
+
 
 
 //############################################################################
@@ -44,8 +50,8 @@ struct process_info process_data = {0};
 
 //////////////////////////////////////////////////////////
 
-NodeID lookup_node_id(string & hostname){
-    return process_data.system_information_manager->node_id(hostname);
+NodeID lookup_node_id(const string & hostname){
+    return process_data.system_information_manager->register_nodeID(hostname);
 }
 
 
@@ -153,6 +159,12 @@ __attribute__ ((constructor)) void siox_ll_ctor()
         process_data.ontology = process_data.configurator->searchFor<Ontology>(loadedComponents);
         process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>(loadedComponents);
         process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>(loadedComponents);
+        process_data.amux = process_data.configurator->searchFor<ActivityMultiplexer>(loadedComponents); 
+
+        assert(process_data.ontology);
+        assert(process_data.system_information_manager);
+        assert(process_data.association_mapper);
+        assert(process_data.amux);        
         }
     // Retrieve NodeID and PID now that we have a valid SystemInformationManager
     process_data.nid = lookup_node_id(hostname);
@@ -169,23 +181,12 @@ __attribute__ ((destructor)) void siox_ll_dtor()
         return;
     }
 
-    // cleanup datastructures etc.
-    // TODO
+    // cleanup datastructures by using the component registrar:
+    process_data.registrar->shutdown();
 
-    // cleanup ontology
-    process_data.ontology->shutdown();
-    delete(process_data.ontology);
-    process_data.ontology = nullptr;
+    delete(process_data.registrar);
+    delete(process_data.configurator);
 
-    // cleanup system_information_manager
-    process_data.system_information_manager->shutdown();
-    delete(process_data.system_information_manager);
-    process_data.system_information_manager = nullptr;
-
-    // cleanup association_mapper
-    process_data.association_mapper->shutdown();
-    delete(process_data.association_mapper);
-    process_data.association_mapper = nullptr;
 
     finalized = true;
 }
@@ -195,7 +196,8 @@ __attribute__ ((destructor)) void siox_ll_dtor()
 //############################################################################
 
 /// Variant datatype to uniformly represent the multitude of different attibutes
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double> AttributeValue;
+typedef VariableDatatype AttributeValue;
+
 
 //////////////////////////////////////////////////////////////////////////////
 /// Convert an attribute's value to the generic datatype used in the ontology.
@@ -205,31 +207,36 @@ typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float,
 //////////////////////////////////////////////////////////////////////////////
 /// @return
 //////////////////////////////////////////////////////////////////////////////
-static AttributeValue convert_attribute(siox_attribute * attribute, void * value){
+static VariableDatatype convert_attribute(siox_attribute * attribute, void * value){
     AttributeValue v;
     switch(attribute->storage_type){
-    case(SIOX_STORAGE_32_BIT_UINTEGER):
-    case(SIOX_STORAGE_32_BIT_INTEGER):{
+    case(VariableDatatype::Type::UINT32):
+        v = *((uint32_t * ) value);
+        break;
+    case(VariableDatatype::Type::INT32):{
         v = *((int32_t * ) value);
         break;
     }
-    case(SIOX_STORAGE_64_BIT_UINTEGER):
-    case(SIOX_STORAGE_64_BIT_INTEGER):{
+    case(VariableDatatype::Type::UINT64):
+        v = *((uint64_t * ) value);      
+        break;
+    case(VariableDatatype::Type::INT64):{
         v = *((int64_t * ) value);      
         break;
     }
-    case(SIOX_STORAGE_FLOAT):{
+    case(VariableDatatype::Type::FLOAT):{
         v = *((float * ) value);
         break;
     }
-    case(SIOX_STORAGE_DOUBLE):{
+    case(VariableDatatype::Type::DOUBLE):{
         v = *((double * ) value);
         break;
     }
-    case(SIOX_STORAGE_STRING):{
+    case(VariableDatatype::Type::STRING):{
+        v = (char *) value;
         break;
     }
-    case (SIOX_STORAGE_UNASSIGNED):{
+    case (VariableDatatype::Type::INVALID):{
         assert(0);
     }
     }
@@ -242,34 +249,68 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value){
     assert(value != nullptr);
 
     AttributeValue val = convert_attribute(attribute, value);
-    process_data.association_mapper->set_process_attribute( & process_data.pid, attribute, val);
+    process_data.association_mapper->set_process_attribute( process_data.pid, *attribute, val);
 }
 
 
-siox_associate * siox_associate_instance(const char * instance_information){
-    string instance(instance_information);
-    uint64_t id = process_data.association_mapper->create_instance_mapping(instance);
-    // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
-    return (AssociateID*) id;
+siox_associate siox_associate_instance(const char * instance_information){
+    return process_data.association_mapper->create_instance_mapping(instance_information);
 }
 
 //############################################################################
 /////////////// MONITORING /////////////////////////////
 //############################################################################
 
-siox_component * siox_component_register(UniqueInterfaceID * uiid, const char * instance_name){
-    assert(uiid != nullptr);
-    // instance_name could be nullptr
+siox_node siox_lookup_node_id( const char * hostname ){
+    if(hostname == NULL){
+        // we take the localhost's ID.
+         return process_data.nid;
+    }
+    
+    return lookup_node_id(hostname);
+}
 
-    ComponentID * result = new ComponentID();
-    result->pid = process_data.pid;
 
-    // MZ: TODO Hier eigentlich:
-    // Autoconfigurator konfiguriert Schicht, (MZ: Wie ruft man das auf?!?)
-    // AMux wird erstellt und zugewiesen, (MZ: Wie ruft man das auf?!?)
-    // ABuilder wird erstellt und zugewiesen, (MZ: Wie ruft man das auf?!?)
-    // ...
-    // MZ: How about the SMux?!
+siox_component * siox_component_register(siox_unique_interface uiid, const char * instance_name){
+    assert(uiid != SIOX_INVALID_ID );
+    assert(instance_name != nullptr);
+    UniqueInterfaceID uid = uiid;
+    const string & interface_implementation = process_data.system_information_manager->lookup_interface_implementation(uid);
+    const string & interface_name = process_data.system_information_manager->lookup_interface_name(uid);
+
+
+    char configName[1001];
+    snprintf(configName, 1000, "%s %s", interface_name.c_str(), interface_implementation.c_str());
+
+    cout << "siox_component_register: " << configName << endl;
+
+
+    vector<Component*> loadedComponents;
+    try{
+        loadedComponents = process_data.configurator->LoadConfiguration("Interface", configName);
+        if(loadedComponents.empty()){
+            cerr << "WARNING Invalid configuration set for component" << endl; 
+            /// @todo Use FATAL function somehow?
+            //exit(1);
+        }
+    }catch(InvalidConfiguration & e){
+        cerr << "WARNING Invalid configuration: \"" << configName << "\"" << endl; 
+        cerr << e.what() << endl;
+        return nullptr;
+    }
+
+    // check loaded components and assign them to the right struct elements.
+    siox_component * result = new siox_component();
+    result->cid.pid = process_data.pid;
+    result->uid = uid;
+    result->instance_associate = process_data.association_mapper->create_instance_mapping(instance_name);
+
+    result->amux = process_data.configurator->searchFor<ActivityMultiplexer>(loadedComponents); 
+    if (result->amux == nullptr){
+        // link the global AMUX:
+        result->amux = process_data.amux;
+        assert(result->amux != nullptr);
+    }
 
     return result;
 }
@@ -279,32 +320,25 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
     assert(attribute != nullptr);
     assert(value != nullptr);
 
-    // MZ: TODO siox_component in ComponentID wandeln
-    ComponentID * cid = nullptr; // FIXME
-    AttributeValue val = convert_attribute(attribute, value);
-    process_data.association_mapper->set_component_attribute(cid, attribute, val);
+    OntologyValue val = convert_attribute(attribute, value);
+    process_data.association_mapper->set_component_attribute((component->cid), *attribute, val);
 }
 
 
-siox_component_activity * siox_component_register_activity(siox_unique_interface * uiid, const char * activity_name){
-    assert(uiid != nullptr);
+siox_component_activity * siox_component_register_activity(siox_unique_interface uiid, const char * activity_name){
+    assert(uiid != SIOX_INVALID_ID);
     assert(activity_name != nullptr);
 
-    string n(activity_name);
-    uint64_t id = process_data.system_information_manager->activity_id(*uiid, n);
+    uint64_t id = process_data.system_information_manager->register_activityID( uiid, activity_name);
     // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
     return (UniqueComponentActivityID*) id;
 }
 
 
 void siox_component_unregister(siox_component * component){
-    // MZ: Hat noch keine Zielfunktion!
-    // TODO
-
-    // Plugins runterfahren,
-    // Speicher freigeben,
-    // ...
-    // IM MOMENT NICHT ZU IMPLEMENTIEREN!!!
+    assert(component != nullptr);
+    // Simple implementation: rely on ComponentRegistrar for shutdown.
+    delete(component);
 }
 
 
@@ -351,7 +385,7 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
 }
 
 
-void siox_activity_report_error(siox_activity * activity, int64_t error){
+void siox_activity_report_error(siox_activity * activity, siox_activity_error error){
     assert(activity != nullptr);
 
     // process_data.activity_builder->reportActivityError(activity, error);
@@ -378,9 +412,9 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
 
 
 siox_remote_call * siox_remote_call_start(siox_activity         * activity,
-                                          siox_node             * target_nid,
-                                          siox_unique_interface * target_uid,
-                                          siox_associate        * target_iid){
+                                          siox_node              target_nid,
+                                          siox_unique_interface  target_uid,
+                                          siox_associate         target_iid){
     // TODO
     return nullptr;
 }
@@ -398,7 +432,7 @@ void siox_remote_call_submitted(siox_remote_call * remote_call){
 }
 
 
-void siox_activity_started_by_remote_call(siox_activity * activity, NodeID * caller_NodeID_if_known, UniqueInterfaceID * caller_uid_if_known, AssociateID * caller_instance_if_known){
+void siox_activity_started_by_remote_call(siox_activity * activity, NodeID  caller_NodeID_if_known, UniqueInterfaceID  caller_uid_if_known, AssociateID  caller_instance_if_known){
 
     // TODO
 }
@@ -412,9 +446,12 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
     assert(domain != nullptr);
     assert(name != nullptr);
 
-    string d(domain);
-    string n(name);
-    return process_data.ontology->register_attribute(d, n, storage_type);
+    // return process_data.ontology->register_attribute(domain, name, convert_attribute_type(storage_type));
+    try{
+        return & process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+    }catch(IllegalStateError & e){
+        return nullptr;
+    }
 }
 
 
@@ -425,7 +462,12 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_att
     assert(value != nullptr);
 
     AttributeValue val = convert_attribute(meta_attribute, value);
-    return process_data.ontology->attribute_set_meta_attribute(parent_attribute, meta_attribute, val);
+    try{
+        process_data.ontology->attribute_set_meta_attribute(*parent_attribute, *meta_attribute, val);
+    }catch(IllegalStateError & e){
+        return 0;
+    }
+    return 1;
 }
 
 
@@ -434,40 +476,38 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
     assert(name != nullptr);
     assert(unit != nullptr);
 
-    string d(domain);
-    string n(name);
-    string ud("Units");
-    string u(unit);
-
     // MZ: Hier besser statt einer eigenen Domain für Units d verwenden?!
-    OntologyAttribute * meta = process_data.ontology->register_attribute(ud, u, SIOX_STORAGE_STRING);
-    OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, storage_type);
-    process_data.ontology->attribute_set_meta_attribute(attribute, meta, u);
-
-    return attribute;
+    try{
+        const OntologyAttribute & meta = process_data.ontology->register_attribute("Meta", "Unit", VariableDatatype::Type::STRING);
+        // OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
+        const OntologyAttribute & attribute = process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+        process_data.ontology->attribute_set_meta_attribute(attribute, meta, unit);
+        return & attribute;
+    }catch(IllegalStateError & e){
+        return nullptr;
+    }    
 }
 
 
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name){
     assert(name != nullptr);
-
-    string d(domain);
-    string n(name);
-    return process_data.ontology->lookup_attribute_by_name(d, n);
+    try{
+        return & process_data.ontology->lookup_attribute_by_name(domain, name);
+    }catch(NotFoundError & e){
+        return nullptr;
+    }
 }
 
 
-siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier){
+siox_unique_interface siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier){
     assert(interface_name != nullptr);
     assert(implementation_identifier != nullptr);
 
-    string in(interface_name);
-    string ii(implementation_identifier);
-    //uint64_t id = process_data.system_information_manager->interface_id(in, ii);
-    // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
-    //return (UniqueInterfaceID_*) id;
-    UniqueInterfaceID * result = new UniqueInterfaceID(process_data.system_information_manager->interface_id(in, ii));
-    return result;
+    try{
+        return process_data.system_information_manager->register_interfaceID(interface_name, implementation_identifier);
+    }catch(IllegalStateError & e){
+        return 0;
+    }
 }
 
 } // extern "C"

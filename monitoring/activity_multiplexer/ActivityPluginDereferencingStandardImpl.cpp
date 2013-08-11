@@ -15,27 +15,28 @@ CREATE_SERIALIZEABLE_CLS(ActivityPluginDereferencingFacadeOptions)
 
 class ActivityPluginDereferencingImplementation : public ActivityPluginDereferencing{
 public:
-    OntologyAttribute * lookup_attribute_by_name(const string & domain,const  string & name){
-    	return ontology->lookup_attribute_by_name(domain, name);
-    }
+	
+	virtual const OntologyAttribute & lookup_attribute_by_name(const string & domain, const string & name) const throw(NotFoundError){
+		return ontology->lookup_attribute_by_name(domain, name);
+	}
 
-    OntologyAttribute * lookup_attribute_by_ID(OntologyAttributeID aID){
+    virtual const OntologyAttribute & lookup_attribute_by_ID(const OntologyAttributeID aID) const throw(NotFoundError){
     	return ontology->lookup_attribute_by_ID(aID);
-    } 
-
-    const OntologyValue * lookup_meta_attribute(OntologyAttribute * attribute, OntologyAttribute * meta){
-    	return ontology->lookup_meta_attribute(attribute, meta);
     }
 
-	OntologyValue * lookup_process_attribute(ProcessID * pid, OntologyAttribute * att){
+    virtual const OntologyValue & lookup_meta_attribute(const OntologyAttribute & attribute, const OntologyAttribute & meta) const throw(NotFoundError){
+    	return ontology->lookup_meta_attribute(attribute, meta);
+    }  	
+
+	const OntologyValue & lookup_process_attribute(const  ProcessID & pid, const  OntologyAttribute & att) const throw(NotFoundError){
 		return association_mapper->lookup_process_attribute(pid, att);
 	}
 
-	OntologyValue * lookup_component_attribute(ComponentID * cid, OntologyAttribute * att){
+	const OntologyValue & lookup_component_attribute(const ComponentID & cid, const  OntologyAttribute & att) const throw(NotFoundError){
 		return association_mapper->lookup_component_attribute(cid, att);
 	}
 
-	const string * lookup_instance_mapping(AssociateID id){
+	const string & lookup_instance_mapping(AssociateID id) const throw(NotFoundError){
 		return association_mapper->lookup_instance_mapping(id);
 	}
 
@@ -50,19 +51,16 @@ public:
 		association_mapper = as;
 	}
 
-	void init(ComponentOptions * options){
-		ActivityPluginDereferencingFacadeOptions * o = dynamic_cast<ActivityPluginDereferencingFacadeOptions*>(options);
-		ontology = 	o->ontology.instance<Ontology>();
-		system_information_manager = o->system_information_manager.instance<SystemInformationGlobalIDManager>();
-		association_mapper = o->association_mapper.instance<AssociationMapper>();
-		delete(options);
+	void init(){
+		ActivityPluginDereferencingFacadeOptions & o = getOptions<ActivityPluginDereferencingFacadeOptions>();
+		ontology = 	o.ontology.instance<Ontology>();
+		system_information_manager = o.system_information_manager.instance<SystemInformationGlobalIDManager>();
+		association_mapper = o.association_mapper.instance<AssociationMapper>();
 	}
 
-	ComponentOptions * get_options(){
+	ComponentOptions * AvailableOptions(){
 		return new ActivityPluginDereferencingFacadeOptions();
 	}
-
-	void shutdown(){}
 
 private:
 	// Loaded ontology implementation

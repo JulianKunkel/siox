@@ -12,31 +12,33 @@ using namespace core;
 
 namespace monitoring{
 
+
+/**
+ *
+ */
 class ActivityMultiplexerPlugin: public Component{
 protected:
 	ActivityMultiplexer * parent_multiplexer;
+
+	// needed for some boost magic?
 	ActivityPluginDereferencing * dereferenceFacade;
 
-	virtual void init(ActivityMultiplexerPluginOptions * options, ActivityMultiplexer & multiplexer) = 0;
+	virtual void init(ActivityMultiplexer & multiplexer) = 0;
 
 public:
-	void init(ActivityMultiplexerPluginOptions * options, ActivityMultiplexer * activity_multiplexer, ActivityPluginDereferencing * dereferenceFacade){
+	void init(ActivityMultiplexer * activity_multiplexer, ActivityPluginDereferencing * dereferenceFacade){
 		parent_multiplexer = activity_multiplexer;
 		// may be 0.
 		this->dereferenceFacade = dereferenceFacade;
 
-		init(options, *parent_multiplexer );		
+		init(*parent_multiplexer );
 	}
 
-	void init(ComponentOptions * options){
-		ActivityMultiplexerPluginOptions * o = (ActivityMultiplexerPluginOptions *) options;
-		assert(options != nullptr);
-		assert(o->multiplexer.componentID != 0);
+	void init(){
+		ActivityMultiplexerPluginOptions & o = getOptions<ActivityMultiplexerPluginOptions>();
+		assert(o.multiplexer.componentID != 0);
 
-		init(o, o->multiplexer.instance<ActivityMultiplexer>(), o->dereferenceFacade.instance<ActivityPluginDereferencing>());
-	}
-
-	void shutdown(){
+		init(o.multiplexer.instance<ActivityMultiplexer>(), o.dereferenceFacade.instance<ActivityPluginDereferencing>());
 	}
 };
 

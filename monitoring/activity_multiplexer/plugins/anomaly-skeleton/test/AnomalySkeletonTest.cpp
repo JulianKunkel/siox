@@ -32,26 +32,28 @@ int main(int argc, char const *argv[]){
 	Ontology * o = a->searchFor<Ontology>(components);
 	SystemInformationGlobalIDManager * sys = a->searchFor<SystemInformationGlobalIDManager>(components);	
 
-	UniqueInterfaceID uid = sys->interface_id("test", "impl1");
-    	UniqueComponentActivityID aid = sys->activity_id(uid, "open");
-    	OntologyAttribute * o1 = o->register_attribute("test", "filesize", SIOX_STORAGE_64_BIT_UINTEGER);
-    	OntologyAttribute * o2 = o->register_attribute("test", "filename", SIOX_STORAGE_STRING);
-    	OntologyAttribute * o3 = o->register_attribute("test", "filesystem", SIOX_STORAGE_32_BIT_UINTEGER);
+	UniqueInterfaceID uid = sys->register_interfaceID("test", "impl1");
+   	UniqueComponentActivityID aid = sys->register_activityID(uid, "open");
+   	OntologyAttribute o1 = o->register_attribute("test", "filesize", VariableDatatype::Type::UINT64);
+	OntologyAttribute unit = o->register_attribute("Meta", "Unit", VariableDatatype::Type::STRING); 
+	o->attribute_set_meta_attribute(o1, unit, "Byte");
+	
+   	OntologyAttribute o2 = o->register_attribute("test", "filename", VariableDatatype::Type::STRING);
+   	OntologyAttribute o3 = o->register_attribute("test", "filesystem", VariableDatatype::Type::UINT32);
 
-	ComponentID cid = {.pid = {2,3,4}, .num=1};
-
-	auto parentArray = vector<ActivityID>{{{.pid = {1,2,3}, .num=2}, .num = 1} };
-	auto attributeArray = vector<Attribute>();
-	attributeArray.push_back({.id= o2->aID, .value = "julian/data.nc4"});
-	attributeArray.push_back({.id= o1->aID, .value = (uint64_t) 4711});
-	attributeArray.push_back({.id= o3->aID, .value = (uint32_t) 1});
+	auto parentArray = vector<ActivityID>{  {.cid = {.pid = {2,3,4}, .id=1}, .id = 1} };
+	auto attributeArray = vector<Attribute>();	
+	attributeArray.push_back({.id= o1.aID, .value = (uint64_t) 4711});
+	attributeArray.push_back({.id= o2.aID, .value = VariableDatatype("julian/data.nc4")});
+	attributeArray.push_back({.id= o3.aID, .value = (uint32_t) 1});
 
 	auto remoteCallsArray = vector<RemoteCall>();
 
 	cout << attributeArray.size() << endl;
 
+	ActivityID aaid = {.cid = {.pid = {2,3,4}, .id=1}, .id = 2};
 	// Cast the real activity to the serializable object class wrapper
-	Activity * activity = new Activity(aid, 3, 5, cid, parentArray, attributeArray, remoteCallsArray, nullptr, 0);
+	Activity * activity = new Activity(aid, 3, 5, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0);
 
 	m1->Log(activity);
 

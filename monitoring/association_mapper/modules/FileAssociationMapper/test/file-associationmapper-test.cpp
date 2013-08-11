@@ -16,9 +16,9 @@ int main(int argc, char const *argv[]){
 	AssociationMapper * o = core::module_create_instance<AssociationMapper>("", "FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE);
 	assert(o != nullptr);
 
-	FileAssociationMapperOptions op;
+	FileAssociationMapperOptions & op = o->getOptions<FileAssociationMapperOptions>();
 	op.filename = "association-mapper.dat";
-	o->init(& op);
+	o->init();
 
 	string i1("test 1");
 	string i2("ich bin C++");
@@ -37,16 +37,14 @@ int main(int argc, char const *argv[]){
 	
 	assert(aid1 == aid3);
 
-	const string * ref = o->lookup_instance_mapping(aid1);
-	assert(ref != nullptr);
+	const string & ref = o->lookup_instance_mapping(aid1);
+	cout << ref << endl;
 
-	cout << (*ref) << endl;
-
-	assert( (*o->lookup_instance_mapping(aid1)) == i1 );
+	assert( o->lookup_instance_mapping(aid1) == i1 );
 
 	// PROCESS TEST
 
-	ProcessID pid;
+	ProcessID pid = {.nid = 1, .pid = 2, .time = 3};
 	OntologyAttribute a1;
 	a1.aID = 1;
 
@@ -55,41 +53,50 @@ int main(int argc, char const *argv[]){
 
 	OntologyValue v1(34);
 	OntologyValue v2(35);
-	assert(o->set_process_attribute(& pid, & a1, v1));
-	assert(o->set_process_attribute(& pid, & a1, v1));
+	o->set_process_attribute(pid, a1, v1);
+	o->set_process_attribute(pid, a1, v1);
 
-	assert(false == o->set_process_attribute(& pid, & a1, v2));
+	try{
+		 o->set_process_attribute(pid, a1, v2);
+		 assert(false);
+	}catch(IllegalStateError & e){}
 
-	OntologyValue * vp = o->lookup_process_attribute(&pid, &a2);
-	assert(vp == nullptr);
+	try{
+		const OntologyValue & vp = o->lookup_process_attribute(pid, a2);
+		assert(false);
+	}catch(NotFoundError & e){
 
-	vp = o->lookup_process_attribute(&pid, &a1);
+	}
+	
+	OntologyValue vp = o->lookup_process_attribute(pid, a1);
 
-	assert(*vp == v1 );
+	assert(vp == v1 );
 
 
 	// COMPONENT TEST
 
-	ComponentID cid;
+	ComponentID cid = {.pid = pid, .id = 4};
 	
-	assert(o->set_component_attribute(& cid, & a1, v1));
-	assert(o->set_component_attribute(& cid, & a1, v1));
+	o->set_component_attribute(cid, a1, v1);
+	o->set_component_attribute(cid, a1, v1);
 
-	assert(false == o->set_component_attribute(& cid, & a1, v2));
+	try{
+		o->set_component_attribute(cid, a1, v2);
+		assert(false);
+	}catch(IllegalStateError & e){}
 
-	vp = o->lookup_component_attribute(&cid, &a2);
-	assert(vp == nullptr);
+	try{
+		vp = o->lookup_component_attribute(cid, a2);
+		assert(false);
+	}catch(NotFoundError & e){}
+	
 
-	vp = o->lookup_component_attribute(&cid, &a1);
-	assert(*vp == v1 );
-
-
-
-	o->shutdown();
-
-	cout << "OK" << endl;
+	vp = o->lookup_component_attribute(cid, a1);
+	assert(vp == v1 );
 
 	delete(o);
+
+	cout << "OK" << endl;
 
 	return 0;
 }

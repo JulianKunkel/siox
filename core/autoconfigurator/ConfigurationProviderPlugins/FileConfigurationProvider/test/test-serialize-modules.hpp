@@ -25,22 +25,15 @@ public:
 	SERIALIZE_CONTAINER(MEMBER(pname) MEMBER(pvalue) MEMBER(childInterface))
 };
 
-
-class MyChildModule : public Component{
-public:	
-	MyChildModuleOptions * options = NULL;
-
-	void init(ComponentOptions * options);
-	ComponentOptions * get_options();
-	void shutdown();
-};
-
 class MyParentModule : public Component{
 public:
-	MyParentModuleOptions * options  = NULL;
+	ComponentOptions * AvailableOptions();
+	void init();
+};
 
-	void init(ComponentOptions * options);
-	ComponentOptions * get_options();
-	void shutdown();
+class MyChildModule : public Component{
+public:
+	ComponentOptions * AvailableOptions();
+	void init();
 };
 

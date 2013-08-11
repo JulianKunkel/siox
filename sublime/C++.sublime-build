@@ -1,0 +1,38 @@
+{
+"working_dir": "/home/mzimmer/projects/sioxhh/Implementation",
+"path": ["include", "core", "knowledge", "monitoring"],
+"cmd": ["${working_dir}/waf-sublime", "step"],
+"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+"selector": "source.c, source.c++, source.cpp, source.hpp",
+"variants":
+[
+{
+"cmd": ["${working_dir}/waf", "configure"],
+"name": "Configure"
+},
+{
+"cmd": ["${working_dir}/waf", "clean"],
+"name": "Clean"
+},
+{
+"cmd": ["${working_dir}/waf", "style"],
+"name": "style"
+},
+{
+"cmd": ["${working_dir}/waf", "lint"],
+"name": "Lint"
+},
+{
+"cmd": ["${working_dir}/waf", "test"],
+"name": "Run"
+},
+{
+"cmd": ["${working_dir}/waf", "install"],
+"name": "Install"
+},
+{
+"cmd": ["${working_dir}/waf", "nunit"],
+"name": "nunit"
+}
+]
+}

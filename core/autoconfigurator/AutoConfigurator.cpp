@@ -35,6 +35,8 @@ public:
 };
 CREATE_SERIALIZEABLE_CLS(LoadModule)
 
+CREATE_SERIALIZEABLE_CLS_EXTERNAL(ComponentReference)
+
 namespace core{
 /**
  * Describes the module to load in the configuration.
@@ -50,6 +52,9 @@ namespace core{
 		registrar = r;
 	}
 
+	/*
+	 Ownership of the conf_provider is given to the AutoConfigurator
+	 */
 	AutoConfigurator::AutoConfigurator(ComponentRegistrar *r, ConfigurationProvider * conf_provider){
 		registrar = r;
 		string val = "";
@@ -60,7 +65,7 @@ namespace core{
 	vector<Component*> AutoConfigurator::LoadConfiguration(string type, string matchingRules) throw (InvalidComponentException, InvalidConfiguration){		
 		string config = configurationProvider->getConfiguration(type, matchingRules);
 		if(config.length() < 10){
-			throw InvalidConfiguration("Configuration is unavailable or too short");
+			throw InvalidConfiguration("Configuration is unavailable or too short", "");
 		}
 
 		// replace <X> with  <object class_id="1" class_name="X"> 
@@ -122,7 +127,7 @@ namespace core{
 				autoConfiguratorRegistrar = nullptr;
 				registrarMutex.unlock();
 
-				throw InvalidConfiguration("Error while parsing module configuration");
+				throw InvalidConfiguration("Error while parsing module configuration", "");
 			}
 
 			//cout << "Parsed module description: "  << already_parsed_config.tellg() << endl;
@@ -134,12 +139,11 @@ namespace core{
 			}catch(exception & e){
 				autoConfiguratorRegistrar = nullptr;
 				registrarMutex.unlock();
-				options = component->get_options();
-				string  str = cs.serialize(options);
+				ComponentOptions availableOptions = component->getOptions();
+				string  str = cs.serialize(& availableOptions);
 				cerr << endl << "Expected configuration: " << str << endl;
-				delete(options);
 
-				throw InvalidConfiguration("Error during parsing of options");
+				throw InvalidConfiguration("Error during parsing of options", module->name);
 			}
 
 			try{
@@ -150,9 +154,9 @@ namespace core{
 
 				string  str = cs.serialize(options);
 				cerr << "Configuration values: " << str << endl;
-				throw InvalidConfiguration("Error during initialization of module");
+				throw InvalidConfiguration(string("Error during initialization: ") + e.what(), module->name);
 			}
-			registrar->register_component(module->componentID, component);
+			registrar->register_component(module->componentID + autoConfiguratorOffset, component);
 
 			components.push_back(component);
 	

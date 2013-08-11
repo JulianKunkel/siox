@@ -143,7 +143,7 @@ int main(int argc, char const *argv[]){
 	}
 
 	// shutdown multiplexer
-	m1->shutdown();
+	delete(m1);
 
 	return 0;
 }

@@ -53,16 +53,17 @@ def configure(conf):
 	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
 
 
-        conf.check_boost(lib='system thread serialization')
+        conf.check_boost(lib='system thread serialization regex')
 
 
 	workDir = conf.path.abspath()
-	conf.env.INCLUDES = [workDir + '/include' ]
-
+	conf.env.append_value('INCLUDES', [workDir + '/include' ])
         if conf.options.debug:
 	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall']
+	        conf.env.CFLAGS = ['-std=c99', '-O3', '-Wall']
 	else:
 		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall']
+		conf.env.CFLAGS = ['-std=c99', '-g', '-Wall']
 
 
 	print ""
@@ -73,8 +74,8 @@ def doc(ctx):
 	# Run plantuml to create *.png files from embedded code.
 	# Files are placed in ./doc/images/plantuml
 	# Recusively search from current folder scanning files fittin the file patterns
-	# ctx.exec_command("java  -Djava.awt.headless=true -jar ${PLANTUML} -v -o ${PWD}/doc/images/plantuml  ./**.(c|cpp|doxygen|h|hpp|uml) >plantuml.log")
-	ctx.exec_command("plantuml -v -o ${PWD}/doc/images/plantuml  './**.(c|cpp|doxygen|h|hpp|uml)' >plantuml.log")
+	# ctx.exec_command("java  -Djava.awt.headless=true -jar ${PLANTUML} -v -o ${PWD}/doc/images  ./**.(c|cpp|doxygen|h|hpp|uml) >plantuml.log")
+	ctx.exec_command("plantuml -v -o ${PWD}/doc/images  './**.(doxygen|h|hpp|uml)' >plantuml.log")
 	ctx.exec_command("doxygen")
 
 
@@ -96,16 +97,16 @@ def build(bld):
 	def dummyCPP(self, source, target):
 		Logs.debug(source)
 		bld(rule=dummyPlugin, source=source, target=target + "DummyCout.cpp")
-		bld.shlib(include="include", source = target+ "DummyCout.cpp", target = target + "DummyPrintf")
+		bld.shlib(includes="include", source = target+ "DummyCout.cpp", target = target + "DummyPrintf")
 		bld(rule=dummyListPlugin, source=source, target=target + "DummyList.cpp")
-		bld.shlib(include="include", source = target + "DummyList.cpp", target = target + "DummyList")
+		bld.shlib(includes="include", source = target + "DummyList.cpp", target = target + "DummyList")
 
 	bld.dummyCPP = dummyCPP
 
 
 	bld.recurse(['core'], mandatory=True)
 	bld.recurse(['monitoring'], mandatory=True)
-#	bld.recurse(['knowledge'], mandatory=True)
+	bld.recurse(['knowledge'], mandatory=True)
 
 	# build test interfaces
 	# Manual usage would be:
@@ -152,3 +153,4 @@ def tail(filename, n = 5):
             return fm[i + 1 if i else 0:]
         finally:
             fm.close()
+

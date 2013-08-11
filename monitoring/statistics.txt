@@ -1,0 +1,168 @@
+Which components does the metric describe:
+	Which hardware?
+	Which software?
+Which semantics has the metric?
+
+Requirements:
+* Accessibility of the metrics in statistics plugins and during analysis
+* Minimize the number of metrics to store in ontology
+* Minimize the complexity of the usage (descriptions etc.) / understanding
+
+
+Hardware/Software entity:
+
+Network 	(Throughput, packet loss, energy consumption ...)
+Input/Output 	(Throughput, ms-waittime)
+CPU 		(Avg. Freq, Cache misses, ...)
+Memory 		(Throughput, Available size of Free Memory)
+OS		(Context switches, Processcount, Interrupts)
+HardwareSpecific (z.b. EnergyConsumption of a <depending on scope>)
+SoftwareSpecific
+
+
+Scope
+
+Global 		(Systemglobal counter, may be filesystem global etc. - Global means several sources in the system over many nodes are combined to one metric covering alltogether)
+Node   		(Nodelocal counter - could be also several sources within one node)
+Device 		(Blockdevice, Networkdevice, => we only have IDs for blockdevices right now, CPU0)
+Component 	(in SIOX).
+
+
+Metrics
+
+Throughput
+Time/Duration/ServiceTime
+Time/Duration/Latency // time until service starts
+Time/Duration/ContextSwitches
+Quantity/ContextSwitches
+Quantity/QueueDepth
+Quantity/PacketsReceived
+Quantity/PacketsReceived/Errors[/Corrupted|/CRC]
+Capacity/CacheFree
+Capacity/RamFree
+Utilization/Cache/HitRate/L1
+Utilization/Cache/HitRate/L2
+Utilization/System
+Utilization/Userspace
+Utilization/IO
+
+
+Identifier 	(Is not stored in ontology!)
+
+eth0 		(requires hostname?)
+sda		(requires node)
+ib1		(requires node, component, device)
+pvfs://XY	(if not global requires hostname?)
+luster://Z
+
+One can specify filesystem://X, network://Y, energy://Z (Info might be parsed and translated to an ID, e.g. FilesystemID)
+
+
+
+Examples:
+Entity		SystemScope	Semantics of the Metric		Abstract Context Topology & Instance
+CPU		Device		Rate/Cache/L1Misses		(node, device) = ("west1", "0")
+CPU		Device		Rate/Cache/L1Misses		(node, device, socket) = ("west1", "0", "1")
+CPU		Device		Rate/Cache/L1Misses		(node, device, core) = ("west1", "0", "2")
+CPU		Global		Rate/Cache/L1Misses		(cpu, core) = ("0", "2")
+CPU		Node		Rate/Cache/L1Misses		(node) = ("west1")
+CPU		Device		Rate/Cache/L1Hits		(node, device) = ("west1", "0")
+CPU		Device		RelativeRate/Cache/L1Hits	(node, device) = ("west1", "0")
+CPU		Device		Utilization/Cache/L1		(node, device) = ("west1", "0")
+CPU 		Node 		Utilization/System		(node) = ("west1")
+I/O		Global		Throughput			--- NOT FILLED => Across all filesystems
+I/O		Global		Throughput			(Filesystem) = ("lustre@10.0.0.80")
+I/O		Device		Throughput			(node, device) = ("west1","systembus")
+I/O		Device		IOOPS				(node, device) = ("west1","sda")
+Network		Global		Throughput			(Network, Aggregate) = ("Ethernet", "AdminNet")
+Network		Global		Throughput			(Network, Aggregate) = ("Infiniband", "AdminNet")
+Network		Device		Throughput			(Node, Device) = ("west1", "eth0")
+Network		Device		Throughput			(Node, Device, Port) = ("west1", "eth0", "8080")
+Network		Component	Throughput			(Node, Component, Device) = ("west1", "274", "eth0")
+Network		Node		Throughput			(Node, Aggregate) = ("west1", "Ethernet")
+Network		Node		Throughput			(Node, Aggregate) = ("west1", "Infiniband")
+Network		Node		Throughput			(Node, Filesystem) = ("west1", "lustre@10.0.0.80")
+
+
+Notwendige Angabe / Verfeinerung der Datenquelle (not stored in ontology):
+Falls (Mittelwert über alle involvierten Hardware, Mittelwert über Zeit sowiso):
+Global 		Not mandatory, but one can use the identifier to add sth.
+Node   		Nodename
+Device 		Nodename, localDeviceSpecifier
+Component 	UniqueComponentIdentifier (MPI, MVAPICH2), dann wäre es nicht runtime-speziell! => ComponentID (evtl. speichern wir zusätzlich UniqueComponentIdentifier)
+
+
+Abstract Context Topology
+* Node, Device [, <Aggregate> ]
+* Node [, Aggregate ]
+* Node, Filesystem [, <Aggregate> ]
+* [ <Aggregate> ]
+* Filesystem [, <Aggregate> ]
+* [Network]
+Some of these topology words are reserved and automatically converted to the respective IDs!
+
+Impl. Alternativen
+1) Evtl. durch Joker an Context TOpology realisieren.
+2) Based on SystemScope the first parts of context topology is fixed AND this determines most of the auto-convertibles (filesystem is an exceptional token).
+
+
+SProvider:
+	AvailableMetric: Entity (Enum)		SystemScope (Enum)	Semantics of the Metric		Abstract Context Topology (Array as strings)   Instance(Values as strings) 	PointerToValue !!!
+
+
+Questions and answers:
+
+1) How do we map this information into Ontology Attributes?
+We map Systemscope to Domain, Semantics of the Metric to the name, additional attributes are mapped as follows:
+
+*********TODO*********
+	Entity,	Abstract Context Topology, & Instance
+
+2) How can someone ask for a given Attribute, e.g. in a statistics plugin or in a amux plugin?
+The easy answer: Specify the 5-Tuple:
+Entity, SystemScope, Semantics of the Metric, Abstract Context Topology, & Instance
+
+Like this:
+	StatisticsEntity entity;
+	StatisticsScope  scope;
+
+	string metrics;
+	
+	string topology;
+	string topology_instance;
+
+
+3) How do we get statistics maxima / minima ?
+	virtual const StatisticsValue getStatistics(StatisticsIntervall intervall, StatisticDescription & stat, StatisticsReduceOperator op) = 0;
+	Global Min/Max has to be stored in the knowledge base and must be accessed by the respective AMUX/SMUX plugin by itself.
+
+ 
+B. Collector
+
+Example Abstract Context Topologies plus Instance done by the collector and defined in the configuration:
+I/O		Device		Throughput/network		(Node, Device) = ("<LOCAL_NODE>", "eth*")
+Into:
+I/O		Node		Throughput/network		(Node, Aggregate) = ("<LOCAL_NODE>", "Ethernet")
+
+Note that a plugin could offer the node aggregated info by itself.
+
+
+
+C. OTHER STUFF:
+
+Existing IDs:
+hostname ID
+Filesystem ID
+Device ID (for block devices)
+
+
+
+
+
+Examples from activity:
+MPI namespace/filename
+MPI capacity/filesize
+MPICH2 hints/cachestrategy
+POSIX namespace/filename
+POSIX capacity/filesize
+Global namespace/filesystemID

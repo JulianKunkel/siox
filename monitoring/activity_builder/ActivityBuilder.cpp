@@ -3,6 +3,7 @@
 
 using namespace std;
 
+
 namespace monitoring {
 
 ActivityBuilder::ActivityBuilder()
@@ -16,7 +17,20 @@ ActivityBuilder::~ActivityBuilder()
 	printf( "ActivityBuilder %p has been shut down.\n", this );
 }
 
-ActivityBuilder* ActivityBuilder::getInstance()
+/**
+ * getNewInstance(): Create a new ActivityBuilder.
+ * @return
+ */
+ActivityBuilder* ActivityBuilder::getNewInstance()
+{
+	return new ActivityBuilder;
+}
+
+/**
+ * getThreadInstance(): Possibly create and return a thread-local ActivityBuilder instance.
+ * @return
+ */
+ActivityBuilder* ActivityBuilder::getThreadInstance()
 {
 	static __thread ActivityBuilder* myAB = NULL;
 	if(myAB == NULL) {
@@ -25,7 +39,7 @@ ActivityBuilder* ActivityBuilder::getInstance()
 	return myAB;
 }
 
-Activity* ActivityBuilder::startActivity(ComponentID* cid, UniqueComponentActivityID* ucaid, siox_timestamp* t)
+Activity* ActivityBuilder::startActivity(ComponentID* cid, UniqueComponentActivityID* ucaid, Timestamp* t)
 {
 	uint32_t aid;
 	Activity* a;
@@ -61,7 +75,19 @@ Activity* ActivityBuilder::startActivity(ComponentID* cid, UniqueComponentActivi
 	return a;
 }
 
-void ActivityBuilder::stopActivity(Activity* a, siox_timestamp* t)
+Activity* ActivityBuilder::startActivity(ComponentID* cid, UniqueComponentActivityID* ucaid, NodeID* caller_node_id, UniqueInterfaceID* caller_unique_interface_id, AssociateID* caller_associate_id, Timestamp* t)
+{
+	// REMARK: If t == NULL, then startActivity will draw the current timestamp and all code in this function will count towards the time of the activity. As of now, it will be left this way for the sake of simplicity.
+
+	Activity* a;
+
+	a = startActivity(cid, ucaid, t);
+	a->remoteInvoker_ = new RemoteCallIdentifier(caller_node_id, caller_unique_interface_id, caller_associate_id);
+
+	return a;
+}
+
+void ActivityBuilder::stopActivity(Activity* a, Timestamp* t)
 {
 	assert(a != NULL);
 
@@ -78,7 +104,7 @@ void ActivityBuilder::stopActivity(Activity* a, siox_timestamp* t)
 
 /* endActivity: All data for this activity has been collected. The Activity can be constructed now and then be sent to the Muxer.
  */
-void ActivityBuilder::endActivity(Activity* a)
+void ActivityBuilder::endActivity(Activity* &a)
 {
 	assert(a != NULL);
 
@@ -87,6 +113,8 @@ void ActivityBuilder::endActivity(Activity* a)
 
 	// Remove Activity from in-flight list
 	activities_in_flight.erase(a->aid_.id);
+
+	a = NULL;
 }
 
 void ActivityBuilder::addActivityAttribute(Activity* a, Attribute *attribute)
@@ -97,7 +125,7 @@ void ActivityBuilder::addActivityAttribute(Activity* a, Attribute *attribute)
 	a->attributeArray_.push_back(*attribute);
 }
 
-void ActivityBuilder::reportActivityError(Activity* a, siox_activity_error error)
+void ActivityBuilder::reportActivityError(Activity* a, ActivityError error)
 {
 	assert(a != NULL);
 	assert(a->errorValue_ == 0);
@@ -113,29 +141,46 @@ void ActivityBuilder::linkActivities(Activity* child, ActivityID* parent)
 	child->parentArray_.push_back(*parent);
 }
 
-RemoteCallID* ActivityBuilder::setupRemoteCall(Activity* a, NodeID* target_node_id, UniqueInterfaceID* target_unique_interface_id, AssociateID* target_associate_id)
+RemoteCall* ActivityBuilder::setupRemoteCall(Activity* a, NodeID* target_node_id, UniqueInterfaceID* target_unique_interface_id, AssociateID* target_associate_id)
 {
 	assert(a != NULL);
 
-	return NULL;
+	RemoteCall* rc = new RemoteCall;
+	rc->target = RemoteCallIdentifier(target_node_id, target_unique_interface_id, target_associate_id);
+	rc->activity = a;
+
+	return rc;
 }
 
-void ActivityBuilder::addRemoteCallAttribute(RemoteCallID* remote_call, Attribute* attribute)
+void ActivityBuilder::addRemoteCallAttribute(RemoteCall* rc, Attribute* attribute)
 {
-	assert(remote_call != NULL);
+	assert(rc != NULL);
 	assert(attribute != NULL);
 
+	rc->attributes.push_back(*attribute);
 }
 
-void ActivityBuilder::startRemoteCall(RemoteCallID* remote_call, siox_timestamp* t)
+/**
+ * startRemoteCall: Indicate that the remote call will be executed.
+ * The reference to this RemoteCall must not be used afterwards.
+ * @param rc: RemoteCall reference obtained from setupRemoteCall().
+ * @param t:
+ */
+void ActivityBuilder::startRemoteCall(RemoteCall* &rc, Timestamp* t)
 {
-	assert(remote_call != NULL);
+	assert(rc != NULL);
 
-}
+	// The Activity to which this RemoteCall belongs
+	Activity* a = rc->activity;
 
-void ActivityBuilder::startActivityFromRemoteCall(ActivityID* aid, NodeID* caller_node_id, UniqueInterfaceID* caller_unique_interface_id, AssociateID* caller_associate_id, siox_timestamp* t)
-{
+	// Set the Activity reference to NULL - it is only for internal use
+	rc->activity = NULL;
 
+	a->remoteCallsArray_.push_back(*rc);
+
+	// Free the object and set the pointer to NULL
+	delete rc;
+	rc = NULL;
 }
 
 

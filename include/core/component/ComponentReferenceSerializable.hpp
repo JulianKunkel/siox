@@ -1,18 +1,18 @@
 #ifndef SIOX_COMPONENT_SERIALIZABLE_S_H
 #define SIOX_COMPONENT_SERIALIZABLE_S_H
 
+#define SERIALIZE_CONTAINER(VAR_) SERIALIZE(VAR_ PARENT_CLASS(Container))
+
+#ifndef NO_OBJECT_INJECTION
+
 #include <core/component/Component.hpp>
 #include <core/container/container-macros.hpp>
 #include <boost/serialization/split_free.hpp>
 
 #include <core/component/ComponentRegistrar.hpp>
 
-
-#define SERIALIZE_CONTAINER(VAR_) SERIALIZE(VAR_ PARENT_CLASS(Container))
-
 extern core::ComponentRegistrar * autoConfiguratorRegistrar;
 extern int autoConfiguratorOffset;
-
 
 namespace boost{
 namespace serialization {
@@ -43,6 +43,7 @@ namespace serialization {
 
 }
 }
-CREATE_SERIALIZEABLE_CLS_EXTERNAL(core::ComponentReference)
+
+#endif
 
 #endif

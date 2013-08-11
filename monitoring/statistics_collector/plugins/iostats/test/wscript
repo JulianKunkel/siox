@@ -1,0 +1,7 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+    bld.program(includes="include",  features='test cxx cxxprogram', use = "iostats AutoConfigurator", target = 'iostatsTest', source = 'iostatsTest.cpp', install_path = None,)
+
+# -*- indent-tabs-mode: t -*-

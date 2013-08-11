@@ -14,7 +14,6 @@
 #include <boost/archive/xml_iarchive.hpp> 
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
-#include <boost/serialization/variant.hpp>
 
 
 
@@ -77,24 +76,25 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 		file.close();
 	}
 
-	void init(ComponentOptions * options){
-		FileBasedSystemInformationOptions * o = (FileBasedSystemInformationOptions*) options;
-		filename = o->filename;
+	void init(){
+		FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
+		string filename = o.filename;
 		if (filename.length() == 0){
 			filename = "system_info.dat";
 		}
 		cout << "Initializing ID-mapper from file using " << filename << endl;
 
 		load(filename);
-
-		delete(options);
 	}
 
-	ComponentOptions * get_options() {
+	ComponentOptions * AvailableOptions() {
 		return new FileBasedSystemInformationOptions();
 	}
 
-	void shutdown(){
+	~FileBasedSystemInformation(){
+		FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
+		string filename = o.filename;
+
 		save(filename);
 
 		for(auto itr = valueStringMap.begin(); itr != valueStringMap.end(); itr++){
@@ -105,9 +105,15 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 	}
 
 	///////////////////////////////////////////////////
+#define CHECK(map, srch) \
+		auto res = map.find(srch); \
+		if (res != map.end()){ \
+			return res->second;\
+		}else{\
+			throw NotFoundError();\
+		}
 
-
-	NodeID						node_id(const string & hostname){
+	NodeID						register_nodeID(const string & hostname){
 		NodeID id  = nodeMap[hostname];
 		if(id != 0){
 			return id;
@@ -122,12 +128,16 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 		return id;
 	}
 
-    const string &              node_hostname(NodeID id){
-  		return valueStringMap[id];
+	NodeID						lookup_nodeID(const string & hostname) const throw(NotFoundError) {
+		CHECK(nodeMap, hostname)
+	}
+
+    const string &              lookup_node_hostname(NodeID id) const throw(NotFoundError) {
+  		CHECK(valueStringMap, id)
     }
 
 
-	DeviceID					device_id(NodeID id, const  string & local_unique_identifier){
+	DeviceID					register_deviceID(NodeID id, const  string & local_unique_identifier){
 		// check if device exists already.		
 		auto pair_str = pair<uint32_t,string>(id, local_unique_identifier);
 		uint32_t device_id = deviceMap[pair_str];
@@ -146,7 +156,14 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 		return device_id;
 	}
 
-	FilesystemID				filesystem_id(const string & global_unique_identifier){
+	DeviceID					lookup_deviceID(NodeID id, const  string & local_unique_identifier) const throw(NotFoundError) {
+		// check if device exists already.		
+		auto pair_str = pair<uint32_t,string>(id, local_unique_identifier);
+		CHECK(deviceMap, pair_str)
+	}
+
+
+	FilesystemID				register_filesystemID(const string & global_unique_identifier) {
 		uint32_t fs_id = filesystemMap[global_unique_identifier];
 		if (fs_id != 0){
 			return fs_id;
@@ -161,10 +178,13 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 		return fs_id;
 	}
 
-    UniqueComponentActivityID   activity_id(UniqueInterfaceID id, const string & name) {
-    	int32_t idNum =  (((uint32_t) id.interface) << 16) + id.implementation;
+	FilesystemID				lookup_filesystemID(const string & global_unique_identifier) const throw(NotFoundError) {
+		CHECK(filesystemMap, global_unique_identifier)
+	}
 
-    	auto pair_str = pair<uint32_t, string>(idNum, name);
+
+    UniqueComponentActivityID   register_activityID(UniqueInterfaceID id, const string & name) {
+    	auto pair_str = pair<uint32_t, string>(id, name);
 
     	UniqueComponentActivityID aid = activityMap[pair_str];
 
@@ -181,68 +201,87 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
     	return aid;
     }
 
-    UniqueInterfaceID           interface_of_activity(UniqueComponentActivityID id){
-    	return activityInterfaceIDMap[id];
+    UniqueComponentActivityID   lookup_activityID(UniqueInterfaceID id, const string & name) const throw(NotFoundError)  {
+    	auto pair_str = pair<uint32_t, string>(id, name);
+
+    	CHECK(activityMap, pair_str)
+    }
+
+    UniqueInterfaceID           lookup_interface_of_activity(UniqueComponentActivityID id) const throw(NotFoundError) {
+    	CHECK(activityInterfaceIDMap, id)
     }
 
 
-    NodeID                      node_of_device(DeviceID id){
-    	return deviceNodeMap[id];
+    NodeID                      lookup_node_of_device(DeviceID id) const throw(NotFoundError) {
+    	CHECK(deviceNodeMap, id)
     }
 
 
-    const string &              device_local_name(DeviceID id){
-    	return valueStringMap[id];
+    const string &              lookup_device_local_name(DeviceID id) const throw(NotFoundError) {
+    	CHECK(valueStringMap, id)
     }
 
-    const string &              filesystem_name(FilesystemID id){
-    	return valueStringMap[id];
+    const string &              lookup_filesystem_name(FilesystemID id) const throw(NotFoundError) {
+    	CHECK(valueStringMap, id)
     }
 
-    const string & 				activity_name(UniqueComponentActivityID id){
-    	return valueStringMap[id];
+    const string & 				lookup_activity_name(UniqueComponentActivityID id) const throw(NotFoundError) {
+    	CHECK(valueStringMap, id)
     }
 
 
-
-	UniqueInterfaceID           interface_id(const string & interface, const string & implementation) {
+	UniqueInterfaceID           register_interfaceID(const string & interface, const string & implementation) {
 		// check if the interface and implementation combination exists
 		auto pair_str = pair<string,string>(interface, implementation);
 		uint32_t cur = interfaceImplMap[pair_str];
 
 		if( cur != 0){
 			// interface and impl exists
-			m.unlock();
-			return {(uint16_t) (cur >> 16), (uint16_t) cur};
+			return cur;
 		}
 
 		// check if interface exists
 		m.lock();
 
-		uint16_t i = interfaceMapStr[interface];
-		if (i == 0){
-			// create interface
-			i = (uint16_t) nextID++;
-			interfaceMap[i] = interface;
-		}
 		cur = nextID++;
 
-		uint32_t final_int = ((((uint32_t) i)<<16) + cur);
-		valueStringMap[final_int] = implementation;
-		interfaceImplMap[pair_str] = final_int;
+		interfaceImplMap[pair_str] = cur;
+		interfaceImplStrMap[cur] = pair_str;
 
 		m.unlock();
-		return {i, (uint16_t)  cur};
+		return cur;
 	}
 
-    const string & 				interface_name(UniqueInterfaceID id) {
-    	return interfaceMap[id.interface];
+
+	UniqueInterfaceID           lookup_interfaceID(const string & interface, const string & implementation)  const throw(NotFoundError) {
+		// check if the interface and implementation combination exists
+		auto pair_str = pair<string,string>(interface, implementation);
+		
+		auto res = interfaceImplMap.find(pair_str); 
+		if (res != interfaceImplMap.end()){ 
+			uint32_t cur = res->second;
+			return cur;
+		}else{
+			throw NotFoundError();
+		}
+	}
+
+    const string & 				lookup_interface_name(UniqueInterfaceID id) const throw(NotFoundError)  {
+    	auto res = interfaceImplStrMap.find(id); 
+		if (res != interfaceImplStrMap.end()){ 
+			return res->second.first;
+		}else{
+			throw NotFoundError();
+		}
     }
 
-    const string & 				interface_implementation(UniqueInterfaceID id){
-    	uint32_t val = (((uint32_t) id.interface) << 16) + id.implementation;
-    	return valueStringMap[val];
-    }
+    const string & 				lookup_interface_implementation(UniqueInterfaceID id) const throw(NotFoundError) {
+    	auto res = interfaceImplStrMap.find(id); 
+		if (res != interfaceImplStrMap.end()){ 
+			return res->second.second;
+		}else{
+			throw NotFoundError();
+		}    }
 
 
 private:
@@ -254,8 +293,7 @@ private:
 
 	map<DeviceID, NodeID> deviceNodeMap;
 
-	map<uint16_t, string> interfaceMap;
-	map<string, uint16_t> interfaceMapStr;
+	map<uint32_t, pair<string,string>> interfaceImplStrMap;
 	map<pair<string,string>, uint32_t> interfaceImplMap;
 
 	map<pair<NodeID,string>, uint32_t> deviceMap;
@@ -267,8 +305,6 @@ private:
 	map<UniqueComponentActivityID, UniqueInterfaceID> activityInterfaceIDMap;
 
 	map<pair<uint32_t, string>, uint32_t> activityMap;
-
-	string filename;
 };
 
 }

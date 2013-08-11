@@ -55,7 +55,7 @@ public:
 		fin.close();
 	}
 
-	string getConfiguration(string & type, string & matchingRules){
+	const string & getConfiguration(string & type, string & matchingRules){
 		string what = type + (matchingRules.length() > 0 ? " " + matchingRules : "");
 		return configurationSections[what];
 	}
@@ -72,44 +72,6 @@ private:
 		configurationSections[configSection] = data;
 	}
 };
-
-		// auto itr = configSection.begin();
-		
-		// string key_str;
-		// stringstream current;
-
-		// bool masked = false;
-		// bool key = true;
-		// string
-		// while(itr != configSection.end()){
-		// 	char c = *itr;
-		// 	if (key){
-		// 		if( c == ' '){
-
-		// 		}else if( c == '=' ){
-		// 			key_str = current.str();
-		// 			current.str("");
-		// 			itr++; // should be a "
-		// 			key = false;
-		// 		}else{
-		// 			current << c;
-		// 		}
-		// 	}else{
-		// 		if( c == '"'  && ! masked){
-		// 			string value = current.str();
-		// 			// cout << key_str << ":" << value << endl;
-
-		// 			current.str("");
-		// 			key = true;
-		// 		}else if(c == '\\' && ! masked){
-		// 			masked = true;
-		// 		}else{
-		// 			masked = false;
-		// 			current << c;
-		// 		}
-		// 	}
-		// 	itr++;
-		// }
 
 COMPONENT(FileConfigurationProvider)
 

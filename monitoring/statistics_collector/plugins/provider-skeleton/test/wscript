@@ -1,0 +1,7 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+    bld.program(includes="include",  features='test cxx cxxprogram', use = "AnomalySkeleton AutoConfigurator", target = 'ProviderSkeletonTest', source = 'ProviderSkeletonTest.cpp', install_path = None,)
+
+# -*- indent-tabs-mode: t -*-

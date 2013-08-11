@@ -3,8 +3,9 @@
 
 
 def build(bld):
-    bld.shlib(include="include",  target = "siox-ll", use = "module-loader AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp' )
+    bld.shlib(includes="include",  target = "siox-ll", use = "module-loader AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp' )
     bld.recurse(['test'], mandatory=True)
+    bld.recurse(['examples'], mandatory=True)
 
 
 # -*- indent-tabs-mode: t -*-

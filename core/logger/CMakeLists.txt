@@ -1,38 +1,35 @@
 cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
+set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../include")
+
 include(FindProtobuf)
 
 find_package(Protobuf REQUIRED)
 find_package(Boost 1.53.0 REQUIRED)
 
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS "${CMAKE_SOURCE_DIR}/core/comm/buffers/siox.proto")
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS "${SIOX_INCLUDE_DIR}/core/buffers/siox.proto")
 
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
-	"${CMAKE_SOURCE_DIR}/core/comm"
+	"${SIOX_INCLUDE_DIR}/core/comm"
+	"${SIOX_INCLUDE_DIR}/core/logger"
+	"${SIOX_INCLUDE_DIR}/misc/"
 	"${PROTOBUF_INCLUDE_DIRS}"
 	"${Boost_INCLUDE_DIR}"
 )
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
 
-add_library(sioxlog
-	BasicLogger.h
+add_library(core-logger
 	BasicLogger.cpp
-	Logger.h
 	Logger.cpp
-	FileLogger.h
 	FileLogger.cpp
-	SyslogLogger.h
 	SyslogLogger.cpp
-	SioxLogger.h
-	NetLogger.h
 	NetLogger.cpp
-	NetLoggerServer.h
 	NetLoggerServer.cpp
 	${PROTO_SRCS}
 	${PROTO_HDRS}
 )
 
-target_link_libraries(sioxlog sioxcomm ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(core-logger core-communication ${LINK_LIBRARIES} ${PROTOBUF_LIBRARIES} ${Boost_LIBRARIES})

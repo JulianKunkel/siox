@@ -1,4 +1,4 @@
-#include "BasicLogger.h"
+#include "BasicLogger.hpp"
 
 BasicLogger::BasicLogger() {}
 BasicLogger::~BasicLogger() {}

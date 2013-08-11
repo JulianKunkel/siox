@@ -1,10 +1,9 @@
 /**
  * @file    StatisticsTypes.hpp
  *
- * @description A (software) component for datatypes used in statistics.
- * @standard    Preferred standard is C++11
+ * A (software) component for datatypes used in statistics.
  *
- * @author Marc Wiedemann
+ * @author Julian Kunkel, Marc Wiedemann
  * @date   2013
  *
  */
@@ -13,16 +12,16 @@
 #ifndef DATATYPES_STATISTICS_H
 #define DATATYPES_STATISTICS_H
 
-#include "boost/variant.hpp"
 #include <iostream>
 
 #include <string>
 #include <vector>
+#include <utility>
+#include <map>
 
-#include <monitoring/datatypes/ids.hpp>
-#include <monitoring/datatypes/c-types.h>
+#include <core/datatypes/VariableDatatype.hpp>
 
-using std::string;
+using namespace std;
 
 namespace monitoring{
 
@@ -55,7 +54,7 @@ Randbedingungen:
 1) Beim forwarding / verlorener Statistiken problematisch
 
 Es gibt keine Softwarestatistiken? Früher bei PVFS?
-Was machen wir mit GPFS-Statistiken?
+Was machen wir mit GPFS-Statistiken? Die sind erstmal nur globale Statistiken für die viele Writes und ähnliche. Einzelstatistiken sind schwer zu bekommen, evtl über DMAPI. Andriy fragen.
 z.B. Request Count...
 Es gibt eine Shared Memory Region in der die Werte abgelegt werden müssen.
 Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
@@ -66,100 +65,67 @@ Registrierung beim Daemon für eine bestimmte Metrik (Gauge / Incremental).
 StatisticsSeries, for data effective storage
 */
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, std::string, float, double, double double> StatisticsValue;
+typedef VariableDatatype StatisticsValue;
 
-/**
+enum StatisticsEntity{
+	NETWORK,
+	INPUT_OUTPUT,
+	CPU,
+	MEMORY,
+	OS,
+	HARDWARE_SPECIFIC,
+	SOFTWARE_SPECIFIC
+};
 
-*/
+enum StatisticsScope{
+	GLOBAL,
+	NODE,
+	DEVICE,
+	COMPONENT
+};
 
-class StatisticsValue {
-public:
-    
-	/*
-	 * Reserved domains:
-	 * unit		for units of attribute values
-	 * 			(attach the unit as meta attribute of type SIOX_STORAGE_STRING to base attribute)
-	 */
-	int64_t counts;
-	uint64_t measured time;
-	double measured value;
-	double double mean value;
-	string name;
+typedef enum StatisticsIntervall{
+	HUNDRED_MILLISECONDS,
+	SECOND,
+	TEN_SECONDS,
+	MINUTE,
+	TEN_MINUTES,
+	INTERVALLS_NUMBER
+} StatisticsIntervall;
 
+enum StatisticsReduceOperator{
+	MIN,
+	MAX,
+	COUNT,
+	AVERAGE,
+	SUM
 };
 
 
-class MetricAttribute {
-private:
+class StatisticsDescription{
+public:
+	StatisticsEntity entity;
+	StatisticsScope  scope;
 
-/**
-Semantic name
-*/
+	string metrics;
 
-	string metricname;
-/**
+	vector<pair<string,string> > topology;
+	//1)map<string,string> PAIR;
+	//1)map<string,PAIR> topology;
+	//1)topology MapofMapObject;
 
-Types
-
-*/
-	enum siox_ont_storage_type;
-/**
-
-Gauge interval - incremental will be converted
-
-*/
-
-	enum intervaltype;
+	// Less overhead than vector<pair<string,string>>:
+	map<string,map<string,string>> MetricMapObject;
 
 
-	string domain;
-/**
-The storage node identifier
-*/
-	string hostname; 
-
-/**
-The international system unit
-*/
 	string si_unit;
 
-/**
-
-*/
-	string description;
-
-/**
-Minimal Measurement interval in ms - Delta sample value / Delta time is good for the moment.
-*/
-	uint32_t min_poll_interval_ms
-
-/**
-Build Constructor for Call of the class
-*/
-public:
-MetricAttribute(void)
-{
-
-}
-
-MetricAttribute(string metricname,enum siox_ont_storage_type,enum intervaltype,string domain,string hostname,string si_unit,string description,uint32_t min_poll_interval_ms)
-{
-
-}
-
-
-~MetricAttribute(void);
-
+	/* TODO StatisticsDescription(XX){} @Julian Marc: What is the aim here ???
+	 IS this the user readable description as in the StatisticPlugins?
+	 Side note: Found out that vector pair as two more unnecessary copies than MapofMap */
 };
 
-
-
 }
-
-
-
-
-
 
 #endif
 

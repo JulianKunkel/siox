@@ -361,6 +361,15 @@ template = {
 	'after': '',
 	'cleanup': '',
 	'final': ''
+},
+'print_fname': {
+        'variables': '',
+        'global': '',
+        'init': '',
+        'before': '',
+        'after': 'printf("In: "); printf(__FUNCTION__); printf("\\n");\n',
+        'cleanup': '',
+        'final': ''
 }
 }
 

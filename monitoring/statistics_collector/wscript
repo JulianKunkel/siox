@@ -1,0 +1,9 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+   #bld.shlib(includes="include", use="BOOST core-container-serializer AutoConfigurator AutoRegistrar", target='ThreadedStatisticsCollector', source='ThreadedStatisticsCollector.cpp')
+   bld.recurse(['plugins'], mandatory=True)
+
+
+# -*- indent-tabs-mode: t -*-

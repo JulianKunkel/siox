@@ -1,0 +1,14 @@
+{
+	"folders":
+	[
+		{
+			"path": "include"
+		},
+		{
+			"path": "core"
+		},
+		{
+			"path": "monitoring"
+		}
+	]
+}

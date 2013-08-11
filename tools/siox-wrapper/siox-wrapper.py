@@ -399,7 +399,11 @@ class FunctionParser():
 
         functionList = []
 
-        # Match all function definitions
+        string = re.sub('/\*.*?\*/', '', string, flags=re.M | re.S)
+	string = re.sub('//.*', '', string)
+	string = re.sub('#.*', '', string)
+        
+	# Match all function definitions
         iterateFunctionDefinition = self.regexFunctionDefinition.finditer(
             string)
 
@@ -540,7 +544,8 @@ class CommandParser():
 
         # Strip comments
         inputString = re.sub('/\*.*?\*/', '', inputString, flags=re.M | re.S)
-
+	inputString = re.sub('#.*', '', inputString)
+	
         inputLineList = inputString.split('\n')
         # Iterate over every line and search for instrumentation instructions.
         i = 0

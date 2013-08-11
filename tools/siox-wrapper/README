@@ -1,3 +1,17 @@
+This directory contains:
+	* siox-skeleton-builder.py - to build for an arbitrary C-interface a wrapper using dlsym or ld's wrap
+	* stubs which implement siox-ll for testing purpose
+	* layers - contains header files of relevant interfaces which use the skeleton-builder to provide an instremented version.
+	* test - contains tests for the siox-skeleton-builder.py (for specific tests of layers etc. see subdirectories in the respective folder)
+
+Creation of siox-ll implementation for testing in the folder stubs
+	It will read the globally installed siox-ll.h and use the provided annotations to create a printf and list 
+	implementation which will print the invoked function names and parameters.
+	A testcase is provided.
+
+	Run ./waf configure install
+
+
 siox-wrapper
 
 Prerequisites for tests

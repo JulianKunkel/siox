@@ -7,13 +7,57 @@
 #ifndef __SIOX_IDS_HPP
 #define __SIOX_IDS_HPP
 
-#include "monitoring/datatypes/c-types.h"
+#include <core/datatypes/VariableDatatype.hpp>
 
 #include <cstdint>
 #include <vector>
-#include <boost/variant.hpp>
 
 using namespace std;
+
+namespace monitoring{
+
+/**
+@page ids SIOX ID Overview
+SIOX uses a number of different IDs, which are structured as follows:
+@dot
+digraph IDs
+{
+    // Settings
+    //----------
+    // Arrange from bottom to top
+    rankdir="BT";
+    // Defaults for nodes and edges
+    node [shape=Mrecord];
+    edge [style=solid];
+
+    // The actual graph
+    //------------------
+    nid [label="NodeID\nuint32_t"]
+
+    pid [label="{ProcessID|{<nid>nid\nNodeID|pid\nuint32_t|<time>time\nuint32_t}}", URL="\ref ProcessID"]
+    nid:n -> pid:nid:s
+
+    cid [label="{ComponentID|{<pid>pid\nProcessID|id\nuint16_t}}", URL="\ref ComponentID"]
+    pid:n -> cid:pid:s
+
+    aid [label="{ActivityID|{<cid>cid\nComponentID|id\nuint32_t}}", URL="\ref ActivityID"]
+    cid:n -> aid:cid:s
+
+    uiid [label="{UniqueInterfaceID|{interface\nuint16_t|implementation\nuint16_t}}", URL="\ref UniqueInterfaceID"]
+
+    oaid [label="OntologyAttributeID\nuint32_t", URL="\ref OntologyAttributeID"]
+
+    ucaid [label="UniqueComponentActivityID\nuint32_t", URL="\ref UniqueComponentActivityID"]
+
+    assid [label="AssociatedID\nuint32_t", URL="\ref AssociateID"]
+
+    rcid [label="{RemoteCallIentifier|{<nid>nid\nNodeID|<uiid>uiid\nUniqueInterfaceID|<assid>instance\nAssociatedID}}", URL="\ref RemoteCallIdentifier"]
+    nid:n -> rcid:nid:s
+    uiid:n -> rcid:uiid:s
+    assid:n -> rcid:assid:s
+}
+@enddot
+*/
 
 // Every hardware component which is addressable by the network is expected to have a unique (host)name.
 // This name is translated to the NodeID.
@@ -42,54 +86,50 @@ typedef uint32_t UniqueComponentActivityID;
 /* The associate ID is valid only within a particular process */
 typedef uint32_t AssociateID;
 
-typedef boost::variant<int64_t, uint64_t, int32_t, uint32_t, string, float, double> AttributeValue;
+
+/* Identifies a specific software interface, e.g. OpenMPI V3 
+ * Globally unique => lookup in knowledge base is mandatory for each layer.
+ * The config file for the layer may hold this additional information, so lookup comes for free.
+ */
+typedef uint32_t UniqueInterfaceID;
+
+typedef VariableDatatype AttributeValue;
 
 typedef struct {
 	OntologyAttributeID id;
 	AttributeValue value;
 } Attribute;
 
-/* Forward declaration */
-struct ActivityID;
+typedef uint64_t Timestamp;
+
+typedef uint32_t ActivityError;
+
 
 // The daemon fetches the NodeID from the knowledge base (or initiates creation if necessary)
 // NodeID lookup_node_id(const char * hostname);
 // See @TODO 
 
 /* Software ID, identifying the application programm, may be a server as well */
-typedef struct{
+struct ProcessID{
 	NodeID nid;
 	uint32_t pid;
 	uint32_t time;
-} ProcessID;
+
+    inline bool operator==(ProcessID const & b) const{
+        return memcmp(this, &b, sizeof(nid) + sizeof(pid) + sizeof(time));
+    }   
+
+    inline bool operator!=(ProcessID const & b) const{
+        return ! (*this == b);
+    }
+};
 // Each process can create a runtime ID locally KNOWING the NodeID from the daemon
 // RuntimeID create_runtime_id(NodeID 32 B,  getpid() 32B, gettimeofday(seconds) 32B );
 // See @TODO
 
 
-/* Identifies a specific software interface, e.g. OpenMPI V3 
- * Globally unique => lookup in knowledge base is mandatory for each layer.
- * The config file for the layer may hold this additional information, so lookup comes for free.
- */
-typedef struct UniqueInterfaceID_{ 
-	uint16_t interface; /*  It is invalid if interface == 0 */
-	uint16_t implementation;
 
-	bool operator==(UniqueInterfaceID_ const& r){
-		return this->interface == r.interface && r.implementation == this->implementation;
-	}
 
-	bool operator != (UniqueInterfaceID_ const& r)
-	{
-  		return !(this->interface == r.interface && r.implementation == this->implementation);
-	}
-
-	/// Copy-Constructor
-/*	UniqueInterfaceID_(const UniqueInterfaceID_& original){
-		interface = original.interface;
-		implementation = original.implementation;
-	}
-*/} UniqueInterfaceID;
 // The first 16 bit identify the interface, e.g. MPI2 or POSIX, the latter 16 the implementation version, e.g. MPICH2 vs. OpenMPI
 // UniqueInterfaceID lookup_unique_interface_id(<InterfaceName>, <Version/implementation Name>);
 // See @TODO
@@ -99,41 +139,49 @@ typedef struct UniqueInterfaceID_{
 // Increase num...
 
 /* Identifying a SIOX component */
-typedef struct{
+struct ComponentID{
 	ProcessID pid;
 	//UniqueInterfaceID uiid;
-	uint16_t num;
-} ComponentID;
+	uint16_t id;
+
+    inline bool operator==(ComponentID const & b) const{
+        return memcmp(this, &b, sizeof(pid) + sizeof(id));
+    }  
+
+    inline bool operator!=(ComponentID const & b) const{
+        return ! (*this == b);
+    }
+} ;
 // TODO:
 // ComponentID(siox_component){}
 // ComponentID create_component_id(ProcessID 3*32 B, UIID + 16 bit);
-// The instance identifier such as "Port 4711" is relevant for matching of remote calls
-// See @TODO
 
-typedef struct {
-	ActivityID *caller_aid;
-	NodeID *target_node_id;
-	UniqueInterfaceID *target_unique_interface_id;
-	AssociateID *target_associate_id;
-} RemoteCallID;
-
-typedef struct {
+struct RemoteCallIdentifier{
 	// Several parameters assist matching of remote calls
-	NodeID hwid; // optional
+	NodeID nid; // optional
 	UniqueInterfaceID uuid; // optional
 	AssociateID instance; // optional, remote call instance identifier
-} RemoteCallIdentifier;
 
-typedef struct {
-	RemoteCallIdentifier target;
-	vector<Attribute> attributeArray;
-} RemoteCall;
+	RemoteCallIdentifier() {};
+	RemoteCallIdentifier(NodeID nid, UniqueInterfaceID uiid, AssociateID assid) : nid(nid), uuid(uuid), instance(instance)
+	{}
+};
 
 /* Identifying an activity */
-typedef struct ActivityID{
-	uint32_t id;
+struct ActivityID{
 	ComponentID cid;
-} ActivityID;
+	uint32_t id;
+
+   inline bool operator==(ActivityID const & b) const{
+        return memcmp(this, &b, sizeof(cid) + sizeof(id));
+    }   
+
+    inline bool operator!=(ActivityID const & b) const{
+        return ! (*this == b);
+    }    
+};
+
+
 
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);
 // See @TODO
@@ -150,10 +198,6 @@ inline bool is_valid_id(uint32_t id){
 	return id != 0;
 }
 
-inline bool is_valid_id(UniqueInterfaceID & id){
-	return id.interface != 0;
-}
-
 inline bool is_valid_id(ProcessID & id){
 	return is_valid_id(id.nid);
 }
@@ -164,6 +208,8 @@ inline bool is_valid_id(ComponentID & id){
 
 inline bool is_valid_id(ActivityID & id){
 	return is_valid_id(id.cid);
+}
+
 }
 
 #endif
