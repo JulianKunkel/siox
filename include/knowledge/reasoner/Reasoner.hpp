@@ -2,11 +2,13 @@
 #define KNOWLEDGE_REASONER_HPP
 
 #include <list>
+#include <memory>
 
 #include <core/component/Component.hpp>
 
 #include <monitoring/datatypes/ids.hpp>
 
+#include <knowledge/reasoner/AnomalyPlugin.hpp>
 #include <knowledge/reasoner/AnomalyTrigger.hpp>
 #include <knowledge/reasoner/QualitativeUtilization.hpp>
 #include <knowledge/reasoner/ReasoningDatatypes.hpp>
@@ -32,6 +34,7 @@
 	R3	Sink for decisions of node-global anomaly detection plugins.
 	R4	Triggers logging on node-global Activity- and StatisticsForwarder. 
 		Does this only apply to the node-global reasoner, or should the process-local reasoner also filter activities?
+	R5	Allow access to recent performance issues. These are exchanged with other reasoners.
  
   Rationales & design decisions/Issues and questions:
 	D1 	How do we decide in which system state a node is?
@@ -58,6 +61,9 @@
 		This would reduce the runtime overhead and provide a safe correctness-checking.
 		Would be useful for many forwarder plugins and reduces the dependency to a facade.
 		Drawback: Some components such as the node-local reasoner would know all relevant ontology-IDs at compile-time which is hard to achieve since we hope for extensions.
+	D8	What are recent performance issues and observations?
+		As long as an anomaly is reported we
+		a) Problem: long-running activities are only flagged as anomaly after they terminated.
 */
 
 using namespace std;
@@ -69,20 +75,19 @@ public:
 	// Report the observation of an activity
 	// For which component, which type of operations has the observation been made.
 	// What has been observed: (In)efficient operation on another hardware/software component.
-	virtual void reportObservation(AnomalyObservation o, const IssueLocation & issueLocation, int32_t	delta_time_ms) = 0;
+	// virtual void reportObservation(AnomalyObservation o, const IssueLocation & issueLocation, int32_t	delta_time_ms) = 0;
 
-	// If we know the reason or the location
-	virtual void reportObservation(AnomalyObservation o, 
-		const IssueLocation & issueLocation,
-		const IssueCause & claimedCause,
-		const IssueLocation & causeLocation, int32_t delta_time_ms) = 0;
+	// // If we know the reason or the location
+	// virtual void reportObservation(AnomalyObservation o, 
+	// 	const IssueLocation & issueLocation,
+	// 	const IssueCause & claimedCause,
+	// 	const IssueLocation & causeLocation, int32_t delta_time_ms) = 0;
 
-	// If a statistics anomaly plugin intents to report an anomaly by itself:
-	virtual void reportObservation(StatisticObservation o, OntologyAttributeID statistics_aid, const IssueLocation & issueLocation) = 0;
-
+	// // If a statistics anomaly plugin intents to report an anomaly by itself:
+	// virtual void reportObservation(StatisticObservation o, OntologyAttributeID statistics_aid, const IssueLocation & issueLocation) = 0;
 
 	// Query a list of current performance causing reasons.
-	virtual list<PerformanceIssue> queryRecentPerformanceIssues() = 0;
+	virtual unique_ptr<list<PerformanceIssue>> queryRecentPerformanceIssues() = 0;
 
 	// Query statistics about inefficiencies / efficiencies for the whole runtime of the application.
 	// Usually done at the end of the application to provide hints about application bottlenecks.
@@ -92,7 +97,7 @@ public:
 	 A process reasoner has statistics for the process life-time.
 	 A daemon maintains stats for its life-time (until daemon is stopped).
 	 */
-	virtual list<PerformanceIssue> queryRuntimePerformanceIssues() = 0;
+	virtual unique_ptr<list<PerformanceIssue>> queryRuntimePerformanceIssues() = 0;
 
 	// Register the presence of a statistics which can be queried to ask the current utilization.
 	// Internally, the relative utilization of such a statistics helps finding the reasons.
@@ -102,12 +107,15 @@ public:
 	// Register an anomaly trigger, all anomaly triggers are notified when an anomaly occurs.
 	virtual void connectTrigger(AnomalyTrigger * trigger) = 0;
 
+	virtual void connectAnomalyPlugin(AnomalyPlugin * plugin) = 0;
+
 	// A reasoner is connected either upstream / more global reasoner or downstream.
 	// Connection to a remote reasoner is realized using RPC (behind a reasoner facade).
 	// Either way the reasoner will forward only refined information
-	//virtual void connect(Reasoner * reasoner) = 0;
+	virtual void connectReasoner(Reasoner * reasoner) = 0;
 
-	// TODO Exchange of refined info between reasoners ?
+	// A remote reasoner will report its issues using this call.
+	virtual void reportRecentIssues(const Reasoner * reasoner, const set<PerformanceIssue> & issues) = 0;
 };
 
 }
@@ -117,7 +125,7 @@ public:
 #endif
 
 /* UML Stuff:
-@startuml reasoner-interactions.png
+@startuml reasoner-components.png
 title Interactions of the Reasoner
 
 'left to right direction
@@ -131,30 +139,34 @@ frame "Process" {
     frame "ComponentX" as Component {
 
         frame "AMux Plug-Ins" {
-            component "ADPI1" #Orchid
-            component "ADPI2" #Orchid
+            component "AnomalyPlugin1" #Orchid
+            component "AnomalyPlugin2" #Orchid
         }	
     }
 
+    interface "AnomalyPlugin" #Orchid
+
     component "<b><font size=20>Reasoner" as PReasoner #HotPink
-    ADPI1 -> PReasoner
-    ADPI2 -> PReasoner
+    AnomalyPlugin1 <- PReasoner : query
+    AnomalyPlugin2 <- PReasoner : query
+    AnomalyPlugin <- PReasoner : query
 
     component [siox-ll] #LightGrey
-    PReasoner <- [siox-ll]: Query usage upon termination
-
-
-    PReasoner -.-> [System Information]
-    PReasoner -.-> Ontology
 
 	folder UserOutput
     note bottom of UserOutput
 	The system information and ontology
 	are only needed to create human-
 	readable user output.
-    end note
-
+    end note    
     [siox-ll] -> UserOutput : create
+
+    PReasoner <- [siox-ll]: Query usage upon termination
+
+
+    PReasoner -.-> [System Information]
+    PReasoner -.-> Ontology
+
 }
 
 
@@ -181,6 +193,9 @@ frame "SIOX Daemon" {
 
     component AForwarder #Orange
 
+    interface "AnomalyPlugin" as NAnomalyPlugin #Orchid
+    NReasoner -> NAnomalyPlugin : query
+
 	NReasoner -> AForwarder : Trigger
 	NReasoner -> SForwarder : Trigger
 	NReasoner -> QualitativeUtilization : Query
@@ -205,8 +220,64 @@ database "SIOX Knowledge Base\n" {
 	component Systeminformation #Orchid
 }
 
-
 QualitativeUtilization -> Systeminformation : Query/update stats
+@enduml
+
+################################################################
+
+@startuml reasoner-anomaly-plugin-interaction.png
+AnomalyPlugin1 -> "AP1 set<Observation>" : Observation
+AnomalyPlugin2 -> "AP2 set<Observation>" : Observation
+AnomalyPlugin1 -> "AP1 set<Observation>" : Observation
+
+activate ReasonerThread
+ReasonerThread -> AnomalyPlugin1 : queryRecentObservations 
+ReasonerThread -> AnomalyPlugin2 : queryRecentObservations
+ReasonerThread -> Reasoner : Update recent PerformanceIssues
+
+ReasonerThread -> ReasonerThread : Sleep (No anomaly)
+deactivate ReasonerThread
+
+AnomalyPlugin2 -> "AP2 set<Observation>" : Observation
+AnomalyPlugin2 -> "AP2 set<Observation>" : Observation
+
+activate ReasonerThread
+ReasonerThread -> AnomalyPlugin1 : queryRecentObservations 
+ReasonerThread -> AnomalyPlugin2 : queryRecentObservations
+
+ReasonerThread -> AnomalyTrigger : Invoke (Anomaly)
+ReasonerThread -> Reasoner : Update recent PerformanceIssues
+ReasonerThread -> ReasonerThread : Sleep
+deactivate ReasonerThread
+
+@enduml
+
+################################################################
+
+@startuml reasoner-reasoner-interaction.png
+
+activate ReasonerThread
+ReasonerThread -> AnomalyPluginX : queryRecentObservations
+ReasonerThread -> Reasoner : Update PerformanceIssues
+
+ReasonerThread -> Reasoner2 : Push recent PerformanceIssues
+ReasonerThread -> ReasonerThread : Sleep (No anomaly)
+deactivate ReasonerThread
+
+activate 	Reasoner2Thread
+Reasoner2Thread -> Reasoner : Push recent PerformanceIssues
+Reasoner2Thread -> Reasoner2Thread : Sleep
+deactivate 	Reasoner2Thread
+
+
+activate ReasonerThread
+ReasonerThread -> AnomalyPluginX : queryRecentObservations 
+
+ReasonerThread -> AnomalyTrigger : Invoke (Anomaly)
+ReasonerThread -> Reasoner : Update PerformanceIssues
+ReasonerThread -> Reasoner2 : Push recent PerformanceIssues
+ReasonerThread -> ReasonerThread : Sleep
+deactivate ReasonerThread
 
 @enduml
  */

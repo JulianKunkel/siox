@@ -96,6 +96,11 @@ public:
 	inline bool operator!=(IssueLocation const & b) const{
 		return ! (*this == b);
 	}
+
+	inline bool operator<(IssueLocation const & b) const{
+		return entity < b.entity || pid < b.pid || cid < b.cid || fid < b.fid;
+	}
+
 };
 
 
@@ -128,13 +133,17 @@ public:
 
 	inline bool operator==(IssueCause const & b) const{
 		return type == b.type && statistics_aid == b.statistics_aid && 
-			((str_qualifier == nullptr && b.str_qualifier == nullptr) 
-				||  (strcmp(str_qualifier, b.str_qualifier)) );
+			strcmp(str_qualifier, b.str_qualifier);
 	}	
 
 	inline bool operator!=(IssueCause const & b) const{
 		return ! (*this == b);
 	}	
+
+	inline bool operator<(IssueCause const & b) const{
+		return type < b.type || statistics_aid < b.statistics_aid || strcmp(str_qualifier, b.str_qualifier) < 0;
+	}
+
 };
 
 class PerformanceIssue{
@@ -172,10 +181,14 @@ public:
 
 	inline bool operator==(PerformanceIssue const & b) const{
 		return quality == b.quality && issueLocated == b.issueLocated && causeLocation == b.causeLocation && cause == b.cause;
-	}	
+	}
 
 	inline bool operator!=(PerformanceIssue const & b) const{
 		return ! (*this == b);
+	}
+
+	inline bool operator<(PerformanceIssue const & b) const{
+		return quality < b.quality || issueLocated < b.issueLocated || causeLocation < b.causeLocation || cause < b.cause;
 	}
 };
 

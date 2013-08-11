@@ -122,6 +122,10 @@ struct ProcessID{
     inline bool operator!=(ProcessID const & b) const{
         return ! (*this == b);
     }
+
+    inline bool operator<(ProcessID const & b) const{
+        return nid < b.nid || pid < b.pid || time < b.time;
+    }
 };
 // Each process can create a runtime ID locally KNOWING the NodeID from the daemon
 // RuntimeID create_runtime_id(NodeID 32 B,  getpid() 32B, gettimeofday(seconds) 32B );
