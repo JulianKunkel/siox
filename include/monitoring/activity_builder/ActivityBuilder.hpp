@@ -35,18 +35,18 @@ public:
 	~ActivityBuilder();
 
 	// Local activities
-	Activity* startActivity(ComponentID* cid, UniqueComponentActivityID* ucaid, Timestamp* t);
-	Activity* startActivity(ComponentID* cid, UniqueComponentActivityID* ucaid, NodeID* caller_node_id, UniqueInterfaceID* caller_unique_interface_id, AssociateID* caller_associate_id, Timestamp* t);
-	void stopActivity(Activity* a, Timestamp* t);
-	void endActivity(Activity* &a);
-	void addActivityAttribute(Activity* a, Attribute* attribute);
-	void reportActivityError(Activity* a, ActivityError error);
+	Activity* startActivity(const ComponentID* cid, const UniqueComponentActivityID* ucaid, const Timestamp* t);
+	Activity* startActivity(const ComponentID* cid, const UniqueComponentActivityID* ucaid, const NodeID* caller_node_id, const UniqueInterfaceID* caller_unique_interface_id, const AssociateID* caller_associate_id, const Timestamp* t);
+	void stopActivity(Activity* a, const Timestamp* t);
+	void endActivity(Activity* a);
+	void setActivityAttribute(Activity* a, const Attribute* attribute);
+	void reportActivityError(Activity* a, const ActivityError error);
 	void linkActivities(Activity* child, ActivityID* parent);
 
 	// Remote activities
-	RemoteCall* setupRemoteCall(Activity* a, NodeID* target_node_id, UniqueInterfaceID* target_unique_interface_id, AssociateID* target_associate_id);
-	void addRemoteCallAttribute(RemoteCall* remote_call, Attribute* attribute);
-	void startRemoteCall(RemoteCall* &remote_call, Timestamp* t);
+	RemoteCall* setupRemoteCall(Activity* a, const NodeID* target_node_id, const UniqueInterfaceID* target_unique_interface_id, const AssociateID* target_associate_id);
+	void setRemoteCallAttribute(RemoteCall* remote_call, const Attribute* attribute);
+	void startRemoteCall(RemoteCall* &remote_call, const Timestamp* t);
 
 protected:
 	map<uint32_t, Activity *> activities_in_flight;

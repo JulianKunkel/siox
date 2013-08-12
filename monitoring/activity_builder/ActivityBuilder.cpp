@@ -32,27 +32,27 @@ ActivityBuilder* ActivityBuilder::getNewInstance()
  */
 ActivityBuilder* ActivityBuilder::getThreadInstance()
 {
-	static __thread ActivityBuilder* myAB = NULL;
-	if(myAB == NULL) {
+	static __thread ActivityBuilder* myAB = nullptr;
+	if(myAB == nullptr) {
 		myAB = new ActivityBuilder;
 	}
 	return myAB;
 }
 
-Activity* ActivityBuilder::startActivity(ComponentID* cid, UniqueComponentActivityID* ucaid, Timestamp* t)
+Activity* ActivityBuilder::startActivity(const ComponentID* cid, const UniqueComponentActivityID* ucaid, const Timestamp* t)
 {
 	uint32_t aid;
 	Activity* a;
 
-	assert(cid != NULL);
-	assert(ucaid != NULL);
+	assert(cid != nullptr);
+	assert(ucaid != nullptr);
 
 	aid = next_activity_id++;
 	a = new Activity;
 	a->aid_.id = aid;
 	a->aid_.cid = *cid;
 	a->ucaid_ = *ucaid;
-	a->remoteInvoker_ = NULL;
+	a->remoteInvoker_ = nullptr;
 	a->time_stop_ = 0;
 	// Initially, we assume successful outcome of an actvity
 	// a->errorValue_ = SIOX_ACTIVITY_SUCCESS;
@@ -66,7 +66,7 @@ Activity* ActivityBuilder::startActivity(ComponentID* cid, UniqueComponentActivi
 	}
 	activity_stack.push_back(a);
 
-	if(t != NULL) {
+	if(t != nullptr) {
 		a->time_start_ = *t;
 	}
 	else {
@@ -75,9 +75,9 @@ Activity* ActivityBuilder::startActivity(ComponentID* cid, UniqueComponentActivi
 	return a;
 }
 
-Activity* ActivityBuilder::startActivity(ComponentID* cid, UniqueComponentActivityID* ucaid, NodeID* caller_node_id, UniqueInterfaceID* caller_unique_interface_id, AssociateID* caller_associate_id, Timestamp* t)
+Activity* ActivityBuilder::startActivity(const ComponentID* cid, const UniqueComponentActivityID* ucaid, const NodeID* caller_node_id, const UniqueInterfaceID* caller_unique_interface_id, const AssociateID* caller_associate_id, const Timestamp* t)
 {
-	// REMARK: If t == NULL, then startActivity will draw the current timestamp and all code in this function will count towards the time of the activity. As of now, it will be left this way for the sake of simplicity.
+	// REMARK: If t == nullptr, then startActivity will draw the current timestamp and all code in this function will count towards the time of the activity. As of now, it will be left this way for the sake of simplicity.
 
 	Activity* a;
 
@@ -87,11 +87,11 @@ Activity* ActivityBuilder::startActivity(ComponentID* cid, UniqueComponentActivi
 	return a;
 }
 
-void ActivityBuilder::stopActivity(Activity* a, Timestamp* t)
+void ActivityBuilder::stopActivity(Activity* a, const Timestamp* t)
 {
-	assert(a != NULL);
+	assert(a != nullptr);
 
-	if(t != NULL) {
+	if(t != nullptr) {
 		a->time_stop_ = *t;
 	}
 	else {
@@ -102,32 +102,27 @@ void ActivityBuilder::stopActivity(Activity* a, Timestamp* t)
 	activity_stack.pop_back();
 }
 
-/* endActivity: All data for this activity has been collected. The Activity can be constructed now and then be sent to the Muxer.
+/* endActivity: All data for this activity has been collected.
  */
-void ActivityBuilder::endActivity(Activity* &a)
+void ActivityBuilder::endActivity(Activity* a)
 {
-	assert(a != NULL);
-
-	// @TODO: Send "a" to Muxer
-	// Remark: Muxer has to deallocate the instance
+	assert(a != nullptr);
 
 	// Remove Activity from in-flight list
 	activities_in_flight.erase(a->aid_.id);
-
-	a = NULL;
 }
 
-void ActivityBuilder::addActivityAttribute(Activity* a, Attribute *attribute)
+void ActivityBuilder::setActivityAttribute(Activity* a, const Attribute *attribute)
 {
-	assert(a != NULL);
-	assert(attribute != NULL);
+	assert(a != nullptr);
+	assert(attribute != nullptr);
 
 	a->attributeArray_.push_back(*attribute);
 }
 
-void ActivityBuilder::reportActivityError(Activity* a, ActivityError error)
+void ActivityBuilder::reportActivityError(Activity* a, const ActivityError error)
 {
-	assert(a != NULL);
+	assert(a != nullptr);
 	assert(a->errorValue_ == 0);
 
 	a->errorValue_ = error;
@@ -135,15 +130,15 @@ void ActivityBuilder::reportActivityError(Activity* a, ActivityError error)
 
 void ActivityBuilder::linkActivities(Activity* child, ActivityID* parent)
 {
-	assert(child != NULL);
-	assert(parent != NULL);
+	assert(child != nullptr);
+	assert(parent != nullptr);
 
 	child->parentArray_.push_back(*parent);
 }
 
-RemoteCall* ActivityBuilder::setupRemoteCall(Activity* a, NodeID* target_node_id, UniqueInterfaceID* target_unique_interface_id, AssociateID* target_associate_id)
+RemoteCall* ActivityBuilder::setupRemoteCall(Activity* a, const NodeID* target_node_id, const UniqueInterfaceID* target_unique_interface_id, const AssociateID* target_associate_id)
 {
-	assert(a != NULL);
+	assert(a != nullptr);
 
 	RemoteCall* rc = new RemoteCall;
 	rc->target = RemoteCallIdentifier(target_node_id, target_unique_interface_id, target_associate_id);
@@ -152,10 +147,10 @@ RemoteCall* ActivityBuilder::setupRemoteCall(Activity* a, NodeID* target_node_id
 	return rc;
 }
 
-void ActivityBuilder::addRemoteCallAttribute(RemoteCall* rc, Attribute* attribute)
+void ActivityBuilder::setRemoteCallAttribute(RemoteCall* rc, const Attribute* attribute)
 {
-	assert(rc != NULL);
-	assert(attribute != NULL);
+	assert(rc != nullptr);
+	assert(attribute != nullptr);
 
 	rc->attributes.push_back(*attribute);
 }
@@ -166,21 +161,21 @@ void ActivityBuilder::addRemoteCallAttribute(RemoteCall* rc, Attribute* attribut
  * @param rc: RemoteCall reference obtained from setupRemoteCall().
  * @param t:
  */
-void ActivityBuilder::startRemoteCall(RemoteCall* &rc, Timestamp* t)
+void ActivityBuilder::startRemoteCall(RemoteCall* &rc, const Timestamp* t)
 {
-	assert(rc != NULL);
+	assert(rc != nullptr);
 
 	// The Activity to which this RemoteCall belongs
 	Activity* a = rc->activity;
 
-	// Set the Activity reference to NULL - it is only for internal use
-	rc->activity = NULL;
+	// Set the Activity reference to nullptr - it is only for internal use
+	rc->activity = nullptr;
 
 	a->remoteCallsArray_.push_back(*rc);
 
-	// Free the object and set the pointer to NULL
+	// Free the object and set the pointer to nullptr
 	delete rc;
-	rc = NULL;
+	rc = nullptr;
 }
 
 
