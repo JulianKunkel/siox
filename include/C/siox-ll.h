@@ -404,12 +404,13 @@ void siox_component_unregister(siox_component * component);
  * @em siox_activity do not use a @em siox_component.
  *
  *
+ * @param[in]   component  The component carrying out the activity.
  * @param[in]   activity   The activity's component-activity-type.
  * @return                  A fresh @em siox_activity, to be used in all the activity's
  *                          further dealings with SIOX.
  */
-//@test ''%p'' component
-siox_activity * siox_activity_start(siox_component_activity * activity);
+//@test ''%p,%p'' component,activity
+siox_activity * siox_activity_start(siox_component * component, siox_component_activity * activity);
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.
@@ -419,7 +420,7 @@ siox_activity * siox_activity_start(siox_component_activity * activity);
  *
  * @param[in]   activity    The activity.
  */
-//@test ''%p,%p'' activity,timestamp
+//@test ''%p'' activity
 void siox_activity_stop(siox_activity * activity);
 
 /**
@@ -490,15 +491,18 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
  * <ul>
  * <li>On caller's side:</li>
  * <ol>
- * <li>Open attribute list and indicate target via siox_remote_call_start().</li>
- * <li>Report attributes to be passed via siox_remote_call_attribute().</li>
- * <li>Close attribute list via siox_remote_call_execute().</li>
+ * <li>Open attribute list and indicate target via siox_remote_call_setup().</li>
+ * <li>Report attributes to be passed via siox_remote_call_set_attribute().</li>
+ * <li>Indicate start of remote call via siox_remote_call_start().</li>
  * <li>Call callee.</li>
  * </ol>
  * <li>On callee's side:</li>
  * <ol>
- * <li>Report attributes received via siox_remote_call_receive().</li>
+ * <li>Indicate activity triggered by a remote call via siox_activity_start_from_remote_call().</li>
  * <li>Execute usual code.</li>
+ * <li>siox_activity_stop().</li>
+ * <li>siox_activity_set_attribute().</li>
+ * <li>siox_activity_end().</li>
  * </ol>
  * </ul>
  */
@@ -519,11 +523,8 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
  * @return                    A fresh @em RCID to be used in all the remote call's
  *                            future communications with SIOX.
  */
-//@test ''%p,%s-%s-%s'' component,target_siox_node,target_swid,target_iid
-siox_remote_call * siox_remote_call_start(siox_activity 	* activity,
-                                          siox_node 			  target_siox_node,
-                                          siox_unique_interface   target_uid,
-                                          siox_associate 		  target_iid);
+//@test ''%p,%p,%s-%s-%s'' activity,component,target_node,target_unique_interface,target_associate
+siox_remote_call * siox_remote_call_setup(siox_activity *activity, siox_node * target_node, siox_unique_interface * target_unique_interface, siox_associate * target_associate);
 
 /**
  * Report an attribute to be sent via a remote call.
@@ -542,9 +543,8 @@ void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribu
  * @param[in]   remote_call    The remote call.
  */
 //@test ''%p'' remote_call
-void siox_remote_call_submitted(siox_remote_call * remote_call);
+void siox_remote_call_start(siox_remote_call * remote_call);
 
-//@test ''%p,%p,%p'' component,attribute,value
 //////////////////////////////////////////////////////////////////////////////
 /// Report that a local activity was initiated via a remote call.
 /// While during a single activity, many remote calls may be sent, only one
@@ -554,12 +554,14 @@ void siox_remote_call_submitted(siox_remote_call * remote_call);
 /// Also, its defining attributes are set for the activity, so no 
 /// siox_remote_call is involved on the callee's side at all!
 //////////////////////////////////////////////////////////////////////////////
+/// @param [in] component The component on which the activity is carried out
 /// @param [in] activity The activity started by remote call
-/// @param [in] caller_siox_node_if_known May be @c NULL otherwise
-/// @param [in] caller_uid_if_known May be @c NULL otherwise
-/// @param [in] caller_instance_if_known May be @c NULL otherwise
+/// @param [in] caller_node May be @c NULL
+/// @param [in] caller_unique_interface May be @c NULL
+/// @param [in] caller_associate May be @c NULL
 //////////////////////////////////////////////////////////////////////////////
-void siox_activity_started_by_remote_call(siox_activity * activity, siox_node caller_siox_node_if_known, siox_unique_interface caller_uid_if_known, siox_associate caller_instance_if_known);
+//@test ''%p,%p,%p,%p,%p'' component,activity,caller_node,caller_unique_interface,caller_associate
+siox_activity * siox_activity_start_from_remote_call(siox_component * component, siox_component_activity * activity, siox_node * caller_node, siox_unique_interface * caller_unique_interface, siox_associate * caller_associate);
 
 
 #endif
