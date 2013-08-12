@@ -20,7 +20,7 @@ namespace core {
 	}
 
 	void ComponentRegistrar::shutdown(){
-		  for (auto it = list.begin(); it != list.end(); it++){
+		  for (auto it = list.rend(); it != list.rbegin(); it++){
 		  	  	delete(*it);
 		  }
 	}

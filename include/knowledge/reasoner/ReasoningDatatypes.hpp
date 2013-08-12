@@ -35,7 +35,8 @@ enum class StatisticObservation: int8_t  {
 	// If we can judge it to be an anomaly
 	UNEXPECTED_LOW_VALUE,
 	UNEXPECTED_HIGH_VALUE,
-	IRREGULAR_PATTERN
+	IRREGULAR_PATTERN,
+	LEARNED_ENFORCE_ANOMALY
 };
 
 
@@ -50,7 +51,8 @@ enum class ActivityObservation : int8_t {
 	// These are anomalies, if we can judge them
 	UNEXPECTED_FAST, 
 	UNEXPECTED_SLOW, 
-	UNEXPECTED_BETWEEN
+	UNEXPECTED_BETWEEN,
+	LEARNED_ENFORCE_ANOMALY
 };
 
 
