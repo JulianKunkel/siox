@@ -9,10 +9,12 @@
  */
 
 #include <thread> // header for threads
+#include <chrono> // header for periodic timing
 #include <iostream> // header that defines I/O stream objects
 #include <mutex> // defines for mutex class
 #include <cstdlib> //(stdlib.h) get C header stdlib
 #include <ctime> //(time.h) get C header time
+
 
 #include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
 #include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
@@ -136,6 +138,11 @@ Implementation details for the requirements of a StatisticsCollector:
 		Every minute we deliver (four) periods of average values:  4x 10*1s
 		Every ten minutes we deliver : 4x 10*10s
 		Se we need a vector of size number of periods with the data of average values.
+		Periodic Handling:
+		1. Provide enough threads that can invoke a method
+		2. Handle timer in dedicated thread
+		Timer is in time.h or thread that sleeps for certain in a loop as workaround
+		Sleep has drawback: I.e. precision is 10ms Accuracy can be 200ms actual sleep.
  */
 
 public class 
@@ -147,15 +154,30 @@ private:
 
 	 list<StatisticsProviderPlugin*> plugins[INTERVALLS_NUMBER];
 
+	void sleep_ms(unsigned int ms)
+	{
+	using std::chrono::high_resolution_clock;
+	using std::chrono::milliseconds;
+	auto t0 = high_resolution_clock::now();
+	std::this_thread::sleep_for(milliseconds(ms));
+	auto t1 = high_resolution_clock::now();
+	milliseconds total_ms = std::chrono::duration_cast<milliseconds>(t1 - t0);
+ 
+	std::cout << "This_thread_sleep (" << ms << ") milliseconds: " << total_ms.count() << "ms\n";
+	}
+
 	 // One thread for periodic issuing
 	 void PeriodicBackgroundThreadLoop(){
-	 	//repeat_forever{loop for thread}
+
 	 		//Create permanent thread
 	 		std::thread PeriodicThread1();
 	 		PeriodicThread1.join();
+	 		//repeat_forever{loop for thread}
+	 		for(;;){
+	 			//Do something
+	 			sleep_ms(98);
+	 		}
 	 		return 0;
-
-
 	 }
 
 	 void CalculateAverageValues(){
