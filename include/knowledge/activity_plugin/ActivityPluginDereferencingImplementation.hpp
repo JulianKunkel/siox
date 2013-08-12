@@ -2,7 +2,7 @@
 #define ACTIVITY_PLUGIN_DEREFERENCING_FACADE_IMPL_H_
 
 
-#include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
+#include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
 
 #define PLUGIN(x) \
 extern "C"{\

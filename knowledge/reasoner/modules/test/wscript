@@ -2,6 +2,6 @@
 # encoding: utf-8
 
 def build(bld):
-	bld.program(include="include",  use = "module-loader ReasonerStandardImplementation",  features='test cxx cxxprogram', target = 'reasoner-test', source = 'reasoner-test.cpp', install_path = None,)
+	bld.program(include="include",  use = "module-loader ReasonerStandardImplementation",  features='test cxx cxxprogram', target = 'reasoner-test', source = 'reasoner-test.cpp', install_path = None )
 
 # -*- indent-tabs-mode: t -*-

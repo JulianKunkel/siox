@@ -1,4 +1,4 @@
-#include <monitoring/activity_multiplexer/ActivityPluginDereferencingImplementation.hpp>
+#include <knowledge/activity_plugin/ActivityPluginDereferencingImplementation.hpp>
 
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/association_mapper/AssociationMapper.hpp>
