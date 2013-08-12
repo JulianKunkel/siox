@@ -8,7 +8,7 @@ template = {
     'variables': '''Text="" Text2=""''',
     'global': '''''',
     'init': '''''',
-    'before': '''printf("%%s (%(Text)s);\\n", __FUNCTION__, %(Text2)s);''',
+    'before': '''fprintf(stderr, "%%s (%(Text)s);\\n", __FUNCTION__, %(Text2)s);''',
     'after': '',
     'cleanup': '',
     'final': ''
