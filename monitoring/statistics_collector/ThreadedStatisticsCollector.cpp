@@ -8,6 +8,12 @@
  *
  */
 
+
+#include <core/component/Component.hpp>
+#include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
+#include <monitoring/statistics_collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
+#include "ThreadedStatisticsOptions.hpp" // own options of this implementation
+
 #include <thread> // header for threads
 #include <chrono> // header for periodic timing
 #include <iostream> // header that defines I/O stream objects
@@ -17,10 +23,7 @@
 
 
 #include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
-#include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
-#include <monitoring/statistics_collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
 
-#include "ThreadedStatisticsOptions.hpp" // own options of this implementation
 
 using namespace std;
 using namespace core;
@@ -152,7 +155,17 @@ private:
 	 ActivityPluginDereferencing * facade;
 	// Statistics Multiplexer
 
-	 list<StatisticsProviderPlugin*> plugins[INTERVALLS_NUMBER];
+	thread 					PeriodicThread1;
+	mutex					RecentEvents_lock;
+	condition_variable 		ConditiontoRun;
+
+	bool terminated = false;
+
+	ComponentOptions * AvailableOptions(){
+		return new ComponentOptions();
+	}
+
+	list<StatisticsProviderPlugin*> plugins[INTERVALLS_NUMBER];
 
 	void sleep_ms(unsigned int ms)
 	{
@@ -167,10 +180,9 @@ private:
 	}
 
 	 // One thread for periodic issuing
-	 void PeriodicBackgroundThreadLoop(){
-
+	 void PeriodicThreadLoop(){
+	 	while(! terminated){
 	 		//Create permanent thread
-	 		std::thread PeriodicThread1();
 	 		PeriodicThread1.join();
 	 		//repeat_forever{loop for thread}
 	 		for(;;){
@@ -178,6 +190,13 @@ private:
 	 			sleep_ms(98);
 	 		}
 	 		return 0;
+	 	
+	 	unique_lock<mutex> lock(RecentEvents_lock);
+		if(terminated){
+				break;
+			}
+	 	ConditiontoRun.wait_until(lock, timeout);
+	 	}
 	 }
 
 	 void CalculateAverageValues(){
