@@ -1,0 +1,8 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+    bld.shlib(target='siox_time', source='siox_time.c', cflags='-std=gnu99')
+
+
+# -*- indent-tabs-mode: t -*-
