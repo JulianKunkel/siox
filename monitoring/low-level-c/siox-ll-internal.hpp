@@ -32,17 +32,8 @@ typedef const UniqueComponentActivityID siox_component_activity;
 
 
 
-struct siox_activity{
-    ActivityID aid;
-    // TODO
-};
-
-struct siox_remote_call{
-    ActivityID aid;
-    // TODO
-};
-
-
+typedef Activity siox_activity;
+typedef RemoteCall siox_remote_call;
 
 struct siox_component{
     ComponentID cid;
@@ -50,9 +41,7 @@ struct siox_component{
     AssociateID instance_associate;
 
     ActivityMultiplexer * amux;
-    /// Loaded activity builder implementation
-    /// @todo Add code to load ActivityBuilder somewhere!
-    ActivityBuilder * abuilder;
+    // We need one ActivityBuilder per thread, independent of component
 };
 
 /**
