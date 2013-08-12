@@ -35,10 +35,10 @@ void siox_activity_end(siox_activity * activity);
 //@print_fname 
 void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent);
 //@print_fname 
-siox_remote_call * siox_remote_call_start(siox_activity * activity, siox_node * target_siox_node, siox_unique_interface * target_uid, siox_associate * target_iid);
+siox_remote_call * siox_remote_call_setup(siox_activity * activity, siox_node * target_siox_node, siox_unique_interface * target_uid, siox_associate * target_iid);
 //@print_fname 
 void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, void * value);
 //@print_fname 
-void siox_remote_call_submitted(siox_remote_call * remote_call);
+void siox_remote_call_start(siox_remote_call * remote_call);
 //@print_fname 
-void siox_activity_started_by_remote_call(siox_activity * activity, siox_node * caller_siox_node_if_known, siox_unique_interface * caller_uid_if_known, siox_associate * caller_instance_if_known);
+siox_activity * activity siox_activity_start_from_remote_call(siox_component * component, siox_node * caller_siox_node_if_known, siox_unique_interface * caller_uid_if_known, siox_associate * caller_instance_if_known);
