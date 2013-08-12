@@ -9,10 +9,12 @@
  */
 
 #include <thread> // header for threads
+#include <chrono> // header for periodic timing
 #include <iostream> // header that defines I/O stream objects
 #include <mutex> // defines for mutex class
 #include <cstdlib> //(stdlib.h) get C header stdlib
 #include <ctime> //(time.h) get C header time
+
 
 #include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
 #include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
@@ -136,6 +138,11 @@ Implementation details for the requirements of a StatisticsCollector:
 		Every minute we deliver (four) periods of average values:  4x 10*1s
 		Every ten minutes we deliver : 4x 10*10s
 		Se we need a vector of size number of periods with the data of average values.
+		Periodic Handling:
+		1. Provide enough threads that can invoke a method
+		2. Handle timer in dedicated thread
+		Timer is in time.h or thread that sleeps for certain in a loop as workaround
+		Sleep has drawback: I.e. precision is 10ms Accuracy can be 200ms actual sleep.
  */
 
 public class 
@@ -149,13 +156,16 @@ private:
 
 	 // One thread for periodic issuing
 	 void PeriodicBackgroundThreadLoop(){
-	 	//repeat_forever{loop for thread}
+
 	 		//Create permanent thread
 	 		std::thread PeriodicThread1();
 	 		PeriodicThread1.join();
+	 		//repeat_forever{loop for thread}
+	 		for(;;){
+	 			//Do something
+	 			std::this_thread::sleep_for(std::chrono::milliseconds(90));
+	 		}
 	 		return 0;
-
-
 	 }
 
 	 void CalculateAverageValues(){
