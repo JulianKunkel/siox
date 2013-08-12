@@ -132,7 +132,7 @@ Implementation details for the requirements of a StatisticsCollector:
 	R4	A single thread will query the providers periodically and compute derived metrics at these timestamps.
 		The thread will be started @ init() and stoped in the destructor.
 		The thread function which is executed is called periodicBackgroundThreadLoop.
-	R5	The options of the ThreadCollector contain the list of statistics to query, so the user can set it as options.
+	R5|	The options of the ThreadCollector contain the list of statistics to query, so the user can set it as options.
 		The de/serialization is done using Boost.
 	R6	Calculate average values for several periods consisting of 10 intervals, between 100ms and 60s.
 	R9|	Use a list to keep for each intervall all plugins which should be executed for these intervalls.
@@ -146,7 +146,8 @@ Implementation details for the requirements of a StatisticsCollector:
 		2. Handle timer in dedicated thread
 		Timer is in time.h or thread that sleeps for certain in a loop as workaround
 		Sleep has drawback: I.e. precision is 10ms Accuracy can be 200ms actual sleep.
- */
+
+*/
 
 public class 
 
@@ -180,15 +181,16 @@ private:
 	}
 
 	 // One thread for periodic issuing
-	 void PeriodicThreadLoop(){
+	 virtual void PeriodicThreadLoop(){
 	 	while(! terminated){
 	 		//Create permanent thread
 	 		PeriodicThread1.join();
 	 		//repeat_forever{loop for thread}
-	 		for(;;){
+
 	 			//Do something
 	 			sleep_ms(98);
-	 		}
+	 		//for(;;){
+	 		//}
 	 		return 0;
 	 	
 	 	unique_lock<mutex> lock(RecentEvents_lock);
@@ -205,6 +207,7 @@ private:
 	 }
 
 public:
+
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){		
 		StatisticsIntervall minIntervall = plugin->minPollInterval();
 		// the configInterval must be at least minIntervall.
@@ -250,18 +253,32 @@ public:
 
 	}
 
+	~Thread1StandardImplementation(){
+		RecentEvents_lock.lock();
+			terminated = true;
+			ConditiontoRun.notify_one();
+		RecentEvents_lock.unlock();
+
+		PeriodicThread1.join();
+	}
+
+	virtual void init(){
+		ThreadedStatisticsOptions & options = getOptions<ThreadedStatisticsOptions>();
+		poll_interval_ms = options.poll_interval_ms;
+
+		//ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
+
+		periodicThread = thread(& Thread1StandardImplementation::PeriodicThreadLoop, this);
+	}
+
 	/**
 	 * this method initiates first the options for threaded statitistics and second the facade of the ActivityPlugin
 	 */
 	virtual void getOptions(ThreadedStatisticsOptions * options){
 		ThreadedStatisticsOptions * o = (ThreadedStatisticsOptions*) options;
 	}
-		
-	virtual void init(){
-		ThreadedStatisticsOptions & o = getOptions<ThreadedStatisticsOptions>();
 
-		//ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
-	}
+
 
 	/**
 	 * get Available ThreadedStatisticsOptions
