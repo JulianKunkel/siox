@@ -5,17 +5,23 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
+#include <knowledge/reasoner/AnomalyPlugin.hpp>
+
+
 #include "AnomalySkeletonOptions.hpp"
 
 using namespace std;
-using namespace monitoring;
+
 using namespace core;
+using namespace monitoring;
+using namespace knowledge;
+
 
 // Create an implementation of the options.
 CREATE_SERIALIZEABLE_CLS(AnomalySkeletonOptions)
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
-class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerSync {
+class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerSync, public AnomalyPlugin {
 private:
 	SystemInformationGlobalIDManager * sys;
 	OntologyAttribute filesize;
@@ -34,6 +40,11 @@ public:
 		}
 	}
 
+	unique_ptr<set<AnomalyPluginObservation>> queryRecentObservations(){
+		return unique_ptr<set<AnomalyPluginObservation>>(new set<AnomalyPluginObservation>());
+	}
+
+
 	ComponentOptions * AvailableOptions(){
 		return new AnomalySkeletonOptions();
 	}
@@ -41,9 +52,10 @@ public:
 	void init(ActivityMultiplexer & multiplexer){
 		AnomalySkeletonOptions & options = getOptions<AnomalySkeletonOptions>();
 
-		assert(this->dereferenceFacade != nullptr);
-		assert(this->dereferenceFacade->get_system_information() != nullptr);
-		sys = this->dereferenceFacade->get_system_information();
+		assert(dereferenceFacade != nullptr);
+		assert(dereferenceFacade->get_system_information() != nullptr);
+		sys = dereferenceFacade->get_system_information();
+		dereferenceFacade->registerAnomalyPlugin(this);
 
 		try{
 			filesize = dereferenceFacade->lookup_attribute_by_name("test", "filesize");

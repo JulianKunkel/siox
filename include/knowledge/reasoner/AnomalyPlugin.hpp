@@ -13,18 +13,19 @@ using namespace std;
  */
 namespace knowledge{
 
-struct AnomalyPluginObservation{	
-	const AnomalyObservation observation;
+struct AnomalyPluginObservation{
+	const ActivityObservation observation;
 	const char * issue_cause; // optional: if known. May not be null.
 
-	const UniqueInterfaceID 	cid;
+	const UniqueInterfaceID cid;
 	const FilesystemID		fid; // optional: if known...
 	const ProcessID			pid; // contains the NodeID as well.
 
 	uint32_t occurences;
 	int32_t delta_time_ms;
+	// maybe we'll add relative delta.
 
-	AnomalyPluginObservation(const AnomalyObservation observation, const char * issue_cause, const UniqueInterfaceID cid, const FilesystemID fid, const ProcessID pid, uint32_t occurences, int32_t delta_time_ms) : observation(observation), issue_cause(issue_cause), cid(cid), fid(fid), pid(pid), occurences(occurences), delta_time_ms(delta_time_ms){}
+	AnomalyPluginObservation(const ActivityObservation observation, const char * issue_cause, const UniqueInterfaceID cid, const FilesystemID fid, const ProcessID pid, uint32_t occurences, int32_t delta_time_ms) : observation(observation), issue_cause(issue_cause), cid(cid), fid(fid), pid(pid), occurences(occurences), delta_time_ms(delta_time_ms){}
 
 
 	inline bool operator==(AnomalyPluginObservation const & b) const{

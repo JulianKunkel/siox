@@ -75,10 +75,10 @@ public:
 	// Report the observation of an activity
 	// For which component, which type of operations has the observation been made.
 	// What has been observed: (In)efficient operation on another hardware/software component.
-	// virtual void reportObservation(AnomalyObservation o, const IssueLocation & issueLocation, int32_t	delta_time_ms) = 0;
+	// virtual void reportObservation(ActivityObservation o, const IssueLocation & issueLocation, int32_t	delta_time_ms) = 0;
 
 	// // If we know the reason or the location
-	// virtual void reportObservation(AnomalyObservation o, 
+	// virtual void reportObservation(ActivityObservation o, 
 	// 	const IssueLocation & issueLocation,
 	// 	const IssueCause & claimedCause,
 	// 	const IssueLocation & causeLocation, int32_t delta_time_ms) = 0;
@@ -124,8 +124,9 @@ public:
 
 #endif
 
-/* UML Stuff:
-@startuml reasoner-components.png
+/**
+UML Stuff:
+@startuml[reasoner-components.png]
 title Interactions of the Reasoner
 
 'left to right direction
@@ -225,7 +226,7 @@ QualitativeUtilization -> Systeminformation : Query/update stats
 
 ################################################################
 
-@startuml reasoner-anomaly-plugin-interaction.png
+@startuml[reasoner-anomaly-plugin-interaction.png]
 AnomalyPlugin1 -> "AP1 set<Observation>" : Observation
 AnomalyPlugin2 -> "AP2 set<Observation>" : Observation
 AnomalyPlugin1 -> "AP1 set<Observation>" : Observation
@@ -245,7 +246,8 @@ activate ReasonerThread
 ReasonerThread -> AnomalyPlugin1 : queryRecentObservations 
 ReasonerThread -> AnomalyPlugin2 : queryRecentObservations
 
-ReasonerThread -> AnomalyTrigger : Invoke (Anomaly)
+ReasonerThread -> AnomalyTrigger1 : Invoke (Anomaly)
+ReasonerThread -> AnomalyTrigger2 : Invoke (Anomaly)
 ReasonerThread -> Reasoner : Update recent PerformanceIssues
 ReasonerThread -> ReasonerThread : Sleep
 deactivate ReasonerThread
@@ -254,7 +256,7 @@ deactivate ReasonerThread
 
 ################################################################
 
-@startuml reasoner-reasoner-interaction.png
+@startuml[reasoner-reasoner-interaction.png]
 
 activate ReasonerThread
 ReasonerThread -> AnomalyPluginX : queryRecentObservations
@@ -280,4 +282,4 @@ ReasonerThread -> ReasonerThread : Sleep
 deactivate ReasonerThread
 
 @enduml
- */
+*/

@@ -6,7 +6,7 @@
 #include <core/component/Component.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginOptions.hpp>
-#include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
+#include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
 
 using namespace core;
 

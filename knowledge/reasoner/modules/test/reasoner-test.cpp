@@ -33,7 +33,7 @@ public:
 
 	bool waitForAnomalyCount(int i){
 		while(1){
-			auto timeout = chrono::system_clock::now() + chrono::milliseconds(303);
+			auto timeout = chrono::system_clock::now() + chrono::milliseconds(30);
 
 			unique_lock<mutex> lock(clock);
 			//cout << "A" <<anomaliesTriggered << endl;
@@ -98,7 +98,7 @@ int main(int argc, char const *argv[]){
 	assert(at2.waitForAnomalyCount(0));
 
 	// Now we inject an observation which will trigger an reaction:
-	adpi1.injectObservation(AnomalyPluginObservation(AnomalyObservation::UNEXPECTED_FAST, "", 1, 2, {2,3,4}, 5, 30 ));
+	adpi1.injectObservation(AnomalyPluginObservation(ActivityObservation::UNEXPECTED_FAST, "", 1, 2, {2,3,4}, 5, 30 ));
 
 	assert(at1.waitForAnomalyCount(1));
 	assert(at2.waitForAnomalyCount(1));

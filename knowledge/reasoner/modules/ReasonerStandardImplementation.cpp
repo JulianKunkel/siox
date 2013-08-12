@@ -10,6 +10,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#include "ReasonerStandardImplementationOptions.hpp"
+
 using namespace std;
 using namespace core;
 
@@ -42,15 +44,17 @@ private:
 	condition_variable 		running_condition;
 
 	bool terminated = false;
+
+	uint32_t update_intervall_ms = -1;
 protected:
 	ComponentOptions * AvailableOptions(){
-		return new ComponentOptions();
+		return new ReasonerStandardImplementationOptions();
 	}
 
 	virtual void PeriodicRun() {	
 		while(! terminated){
 			//cout << "PeriodicRun" << terminated << endl;
-			auto timeout = chrono::system_clock::now() + chrono::milliseconds(100);
+			auto timeout = chrono::system_clock::now() + chrono::milliseconds(update_intervall_ms);
 
 			set<AnomalyPluginObservation> adpiObservations;
 			// query recent observations of all connected plugins and integrate them into the local performance issues.
@@ -82,7 +86,9 @@ protected:
 			if(adpiObservations.size() > 0){
 				anomalyDetected = true;
 			}
-			StatisticObservation so = utilization->lastObservation(4711);
+			if(utilization != nullptr){
+				StatisticObservation so = utilization->lastObservation(4711);
+			}
 
 			// Save recentIssues
 			// TODO
@@ -155,6 +161,8 @@ public:
 	}
 
 	virtual void init(){
+		ReasonerStandardImplementationOptions & options = getOptions<ReasonerStandardImplementationOptions>();
+		update_intervall_ms = options.update_intervall_ms;
 		periodicThread = thread(& ReasonerStandardImplementation::PeriodicRun, this);
 	}
 
@@ -206,6 +214,6 @@ public:
 };
 
 } // namespace knowledge
-
+CREATE_SERIALIZEABLE_CLS(ReasonerStandardImplementationOptions)
 
 COMPONENT(knowledge::ReasonerStandardImplementation)
