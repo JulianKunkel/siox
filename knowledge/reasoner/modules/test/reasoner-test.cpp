@@ -33,7 +33,7 @@ public:
 
 	bool waitForAnomalyCount(int i){
 		while(1){
-			auto timeout = chrono::system_clock::now() + chrono::milliseconds(303);
+			auto timeout = chrono::system_clock::now() + chrono::milliseconds(30);
 
 			unique_lock<mutex> lock(clock);
 			//cout << "A" <<anomaliesTriggered << endl;

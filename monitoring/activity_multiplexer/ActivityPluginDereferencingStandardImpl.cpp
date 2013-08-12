@@ -5,11 +5,14 @@
 
 #include <core/component/ComponentReferenceSerializable.hpp>
 
+#include <knowledge/reasoner/Reasoner.hpp>
+
 #include "ActivityPluginDereferencingOptions.hpp"
 
 using namespace std;
 using namespace core;
 using namespace monitoring;
+using namespace knowledge;
 
 CREATE_SERIALIZEABLE_CLS(ActivityPluginDereferencingFacadeOptions)
 
@@ -40,6 +43,12 @@ public:
 		return association_mapper->lookup_instance_mapping(id);
 	}
 
+ 	void registerAnomalyPlugin(knowledge::AnomalyPlugin * plugin){
+ 		assert(reasoner != nullptr);
+ 		reasoner->connectAnomalyPlugin(plugin);
+ 	}
+
+
 	SystemInformationGlobalIDManager * get_system_information(){
 		assert(system_information_manager != nullptr);
 		return system_information_manager;
@@ -56,6 +65,7 @@ public:
 		ontology = 	o.ontology.instance<Ontology>();
 		system_information_manager = o.system_information_manager.instance<SystemInformationGlobalIDManager>();
 		association_mapper = o.association_mapper.instance<AssociationMapper>();
+		reasoner = 	o.reasoner.instance<Reasoner>();
 	}
 
 	ComponentOptions * AvailableOptions(){
@@ -69,6 +79,8 @@ private:
     SystemInformationGlobalIDManager * system_information_manager = nullptr;
     // Loaded association mapper implementation
     AssociationMapper * association_mapper = nullptr;
+
+    Reasoner * reasoner = nullptr;
 }; 
 
 PLUGIN(ActivityPluginDereferencingImplementation)

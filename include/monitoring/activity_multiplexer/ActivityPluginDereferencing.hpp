@@ -7,6 +7,9 @@
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/datatypes/Exceptions.hpp>
 
+#include <knowledge/reasoner/AnomalyPlugin.hpp>
+
+
 using namespace std;
 using namespace core;
 using namespace monitoring;
@@ -34,6 +37,9 @@ public:
 	virtual const OntologyValue & lookup_component_attribute(const ComponentID & cid, const  OntologyAttribute & att) const throw(NotFoundError) = 0;
 
 	virtual const string & lookup_instance_mapping(AssociateID id) const throw(NotFoundError) = 0;
+
+    // Register a plugin to behave as an anomaly plugin.
+    virtual void registerAnomalyPlugin(knowledge::AnomalyPlugin * plugin) = 0;
 
 	virtual SystemInformationGlobalIDManager * get_system_information() = 0;
 }; 

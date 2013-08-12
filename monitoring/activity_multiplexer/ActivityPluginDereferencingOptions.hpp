@@ -13,8 +13,9 @@ public:
 	ComponentReference ontology;
 	ComponentReference system_information_manager;
 	ComponentReference association_mapper;
+	ComponentReference reasoner;
 
-	SERIALIZE_CONTAINER(MEMBER(ontology) MEMBER(system_information_manager) MEMBER(association_mapper))
+	SERIALIZE_CONTAINER(MEMBER(ontology) MEMBER(system_information_manager) MEMBER(association_mapper) MEMBER(reasoner))
 };
 
 
