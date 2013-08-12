@@ -25,7 +25,7 @@ protected:
 		uint64_t ui64;		
 		float f;
 		double d;
-		long double dd;
+		long double ld;
 		char * str;
 	};
 
@@ -95,9 +95,9 @@ public:
 		return data.d;
 	}
 
-	inline long double dbl() const {
+	inline long double ldbl() const {
 		assert(type_ == LONG_DOUBLE);
-		return data.dd;
+		return data.ld;
 	}
 
 	inline Type type() const {
