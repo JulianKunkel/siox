@@ -154,6 +154,18 @@ private:
 
 	 list<StatisticsProviderPlugin*> plugins[INTERVALLS_NUMBER];
 
+	void sleep_ms(unsigned int ms)
+	{
+	using std::chrono::high_resolution_clock;
+	using std::chrono::milliseconds;
+	auto t0 = high_resolution_clock::now();
+	std::this_thread::sleep_for(milliseconds(ms));
+	auto t1 = high_resolution_clock::now();
+	milliseconds total_ms = std::chrono::duration_cast<milliseconds>(t1 - t0);
+ 
+	std::cout << "This_thread_sleep (" << ms << ") milliseconds: " << total_ms.count() << "ms\n";
+	}
+
 	 // One thread for periodic issuing
 	 void PeriodicBackgroundThreadLoop(){
 
@@ -163,7 +175,7 @@ private:
 	 		//repeat_forever{loop for thread}
 	 		for(;;){
 	 			//Do something
-	 			std::this_thread::sleep_for(std::chrono::milliseconds(90));
+	 			sleep_ms(98);
 	 		}
 	 		return 0;
 	 }
