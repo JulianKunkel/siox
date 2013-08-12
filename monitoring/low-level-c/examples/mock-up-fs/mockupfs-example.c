@@ -184,9 +184,6 @@ main(){
     // The actual call to MUFS to create a file with the given name
     // and write the character data to it.
     mufs_initialize();
-    // TODO fix test once the activities are working!
-    exit(0);
-
     bytes_written = mufs_putfile( mufs_file_name, data );
     if ( bytes_written != (unsigned long) strlen( data ) )
     {
