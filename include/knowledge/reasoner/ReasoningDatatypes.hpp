@@ -40,7 +40,7 @@ enum class StatisticObservation: int8_t  {
 
 
 // How do we judge the observed behavior for anomalies?
-enum class AnomalyObservation : int8_t {
+enum class ActivityObservation : int8_t {
 	// regular behavior
 	VERY_FAST,
 	FAST,
