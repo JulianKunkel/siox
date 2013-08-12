@@ -253,13 +253,22 @@ public:
 
 	}
 
-	~ReasonerStandardImplementation(){
-		RecentIssues_lock.lock();
+	~Thread1StandardImplementation(){
+		RecentEvents_lock.lock();
 			terminated = true;
-			running_condition.notify_one();
-		recentIssues_lock.unlock();
+			ConditiontoRun.notify_one();
+		RecentEvents_lock.unlock();
 
-		periodicThread.join();
+		PeriodicThread1.join();
+	}
+
+	virtual void init(){
+		ThreadedStatisticsOptions & options = getOptions<ThreadedStatisticsOptions>();
+		poll_interval_ms = options.poll_interval_ms;
+
+		//ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
+
+		periodicThread = thread(& Thread1StandardImplementation::PeriodicThreadLoop, this);
 	}
 
 	/**
@@ -268,12 +277,8 @@ public:
 	virtual void getOptions(ThreadedStatisticsOptions * options){
 		ThreadedStatisticsOptions * o = (ThreadedStatisticsOptions*) options;
 	}
-		
-	virtual void init(){
-		ThreadedStatisticsOptions & o = getOptions<ThreadedStatisticsOptions>();
 
-		//ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
-	}
+
 
 	/**
 	 * get Available ThreadedStatisticsOptions
