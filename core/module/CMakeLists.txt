@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../include")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-glib2/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${SIOX_INCLUDE_DIR}/cmake/cmake-glib2")
 
 find_package(GLIB2 REQUIRED)
 
@@ -20,3 +20,5 @@ add_library(core-module
 )
 
 target_link_libraries(core-module ${LINK_LIBRARIES} ${GLIB2_LIBRARIES})
+
+add_subdirectory(test)
