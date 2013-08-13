@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.program(includes="include",  features='test cxx cxxprogram', use = "MathematicalEquation" ,	target = "MathematicalEquationTest", source = 'MathematicalEquationTest.cpp', install_path = None,)
+    bld.program(includes="",  features='test cxx cxxprogram', use = "MathematicalEquation" ,	target = "MathematicalEquationTest", source = 'MathematicalEquationTest.cpp', install_path = None,)
 
 
 # -*- indent-tabs-mode: t -*-

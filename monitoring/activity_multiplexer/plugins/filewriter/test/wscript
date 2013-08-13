@@ -3,6 +3,6 @@
 
 def build(bld):
     pass
-    bld.program(includes="include",  features='test cxx cxxprogram', use = "ActivityMultiplexerAsyncThreaded module-loader ActivityFileWriter AutoRegistrar", target = 'ActivityFileWriterTest', source = 'ActivityFileWriterTest.cpp', install_path = None,)
+    bld.program(includes="",  features='test cxx cxxprogram', use = "ActivityMultiplexerAsyncThreaded module-loader ActivityFileWriter AutoRegistrar", target = 'ActivityFileWriterTest', source = 'ActivityFileWriterTest.cpp', install_path = None,)
 
 # -*- indent-tabs-mode: t -*-

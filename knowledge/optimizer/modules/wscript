@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(includes="include", use="AutoConfigurator AutoRegistrar", target='OptimizerStandardImplementation', source='OptimizerStandardImplementation.cpp' )
+    bld.shlib(includes="", use="AutoConfigurator AutoRegistrar", target='OptimizerStandardImplementation', source='OptimizerStandardImplementation.cpp' )
 
     bld.recurse(['test'], mandatory=True)
 

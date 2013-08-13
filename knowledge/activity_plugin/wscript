@@ -3,5 +3,5 @@
 
 def build(bld):
 
-    bld.shlib(includes="include", use="BOOST core-container-serializer AutoConfigurator AutoRegistrar", target='ActivityPluginDereferencingStandardImpl', source='ActivityPluginDereferencingStandardImpl.cpp' )
+    bld.shlib(includes="", use="BOOST core-container-serializer AutoConfigurator AutoRegistrar", target='ActivityPluginDereferencingStandardImpl', source='ActivityPluginDereferencingStandardImpl.cpp' )
 

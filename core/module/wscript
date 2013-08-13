@@ -3,7 +3,7 @@
 
 
 def build(bld):
-	bld.shlib(includes="include",  use = "GMODULES", target = 'module-loader', source = 'module-loader.cpp' )
+	bld.shlib(includes="",  use = "GMODULES", target = 'module-loader', source = 'module-loader.cpp' )
 	bld.recurse(['test'], mandatory=True)
 
 

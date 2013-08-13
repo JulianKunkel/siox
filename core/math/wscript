@@ -3,7 +3,7 @@
 
 
 def build(bld):
-	bld.shlib(includes="include", use = 'BOOST', target = 'MathematicalEquation', source = 'MathematicalEquation.cpp' )
+	bld.shlib(includes="", use = 'BOOST', target = 'MathematicalEquation', source = 'MathematicalEquation.cpp' )
 	bld.recurse(['test'], mandatory=True)
 
 

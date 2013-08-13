@@ -48,8 +48,8 @@ def build(bld):
 	bld(rule=dlsym, source=HEADER, target='siox-' + LAYER + '-dlsym.c')
 	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = LAYER + ".wrap", install_path = "${LIBDIR}")
 
-	bld.shlib(includes="include",  use = "GLIB" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c' )
-	bld.shlib(includes="include",  use = "GLIB DL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c' )
+	bld.shlib(includes="",  use = "GLIB" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c' )
+	bld.shlib(includes="",  use = "GLIB DL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c' )
 	
 	# build tests if a dummy implementation has been selected
 	if bld.env.LIBPATH_SIOXLLIMPL:
@@ -58,12 +58,12 @@ def build(bld):
 		wrap_file="build/" + LAYER + ".wrap"
 		if os.path.isfile(wrap_file):
 			wrap_linkerflags = open(wrap_file, 'r').read()
-			bld.program(includes="include",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOXLLIMPL", LAYER + ".wrap"] ,  install_path = None,
+			bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOXLLIMPL", LAYER + ".wrap"] ,  install_path = None,
 				linkflags=wrap_linkerflags)
 		else:
 			print "Please rerun ./waf build to build wrapped examples"
 
-		bld.program(includes="include",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOXLLIMPL"] ,  install_path = None)
+		bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOXLLIMPL"] ,  install_path = None)
 	
 		from waflib.Tools import waf_unit_test
 		bld.add_post_fun(waf_unit_test.summary)
