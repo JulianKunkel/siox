@@ -21,7 +21,8 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
 
-add_library(core-logger
+add_library(
+	core-logger SHARED
 	BasicLogger.cpp
 	Logger.cpp
 	FileLogger.cpp
