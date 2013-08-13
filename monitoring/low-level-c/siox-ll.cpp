@@ -319,6 +319,7 @@ siox_component * siox_component_register(siox_unique_interface uiid, const char 
 void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, void * value){
     assert(attribute != nullptr);
     assert(value != nullptr);
+    assert(component != nullptr);
 
     OntologyValue val = convert_attribute(attribute, value);
     process_data.association_mapper->set_component_attribute((component->cid), *attribute, val);
