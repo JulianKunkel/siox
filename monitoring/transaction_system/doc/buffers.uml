@@ -1,0 +1,100 @@
+@startuml
+
+object Node {
+	id : uint32
+	time_register : uint64
+	time_unregister : uint64
+	hwdesc : string
+	swdesc : string
+	indesc : string
+}
+
+object ProcessID {
+	nid  : uint32
+	pid  : uint32
+	time : uint32
+}
+
+ProcessID *-- Node
+
+object ComponentID {
+	pid : ProcessID
+	id  : uint32
+}
+
+ComponentID *-- ProcessID
+
+object ActivityID {
+	cid : ComponentID
+	id  : uint32
+}
+
+ActivityID *-- ComponentID
+
+object Attribute {
+	id : uint32
+	value : string
+}
+
+object UniqueInterfaceID {
+	interface : uint32
+	implementation : uint32
+}
+
+object RemoteCallIdentifier {
+	nid : uint32
+	instance : uint32
+	uuid : UniqueInterfaceID
+}
+
+RemoteCallIdentifier *-- UniqueInterfaceID
+
+object RemoteCall {
+	target : RemoteCallIdentifier
+	attributes : Attribute[]
+}
+
+RemoteCall *-- RemoteCallIdentifier
+RemoteCall *-- Attribute 
+
+object Activity {
+	aid         : ActivityID
+	ucaid       : uint32
+	time_start  : uint64
+	time_stop   : uint64
+	error_value : uint32
+	remote_invoker : uint64
+	parents : ActivityID[]
+	attributes : Attribute[]
+	remote_calls : RemoteCall[]
+}
+
+Activity *-- ActivityID
+Activity *-- Attribute
+Activity *-- RemoteCall
+
+object Action {
+	Advertise
+	Component
+	Subscribe
+	Activity
+	RegisterNode
+	UnregisterNode
+	Log
+}
+note right : enum
+
+object MessageBuffer {
+	action : Action
+	type : uint32
+	priority : uint32
+	node : Node
+	activity : Activity
+	logmsg : string
+}
+
+MessageBuffer *-- Node
+MessageBuffer *-- Activity
+MessageBuffer *-- Action
+
+@enduml

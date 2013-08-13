@@ -16,23 +16,63 @@ using namespace monitoring;
 static void test_single_activity(ActivityBuilder* ab, ComponentID& cid, UniqueComponentActivityID& ucaid)
 {
 	Activity* a;
-	Activity* a_;
 	Attribute attr, attr2;
 
-	a = ab->startActivity( &cid, &ucaid, NULL);
-	ab->stopActivity(a, NULL);
+	a = ab->startActivity( &cid, &ucaid, nullptr);
+	ab->stopActivity(a, nullptr);
 
 	attr.id = 1;
 	attr.value = 3.2;
-	ab->addActivityAttribute(a, &attr);
+	ab->setActivityAttribute(a, &attr);
 	attr2.id = 3;
 	attr2.value = 0.1;
-	ab->addActivityAttribute(a, &attr2);
+	ab->setActivityAttribute(a, &attr2);
 
-	a_ = a;
 	ab->endActivity(a);
-	a_->print();
+	a->print();
 }
+
+static void test_remote_call(ActivityBuilder* ab, ComponentID& cid, UniqueComponentActivityID& ucaid)
+{
+	Activity* a;
+	RemoteCall* rc;
+	Attribute attr, attr2;
+
+	a = ab->startActivity( &cid, &ucaid, nullptr);
+	rc = ab->setupRemoteCall(a, nullptr, nullptr, nullptr);
+
+	attr.id = 13;
+	attr.value = 1.1;
+	ab->setRemoteCallAttribute(rc, &attr);
+	attr2.id = 14;
+	attr2.value = -1.1;
+	ab->setRemoteCallAttribute(rc, &attr2);
+	ab->startRemoteCall(rc, nullptr);
+
+	ab->stopActivity(a, nullptr);
+	ab->endActivity(a);
+	a->print();
+}
+
+static void test_remote_activity(ActivityBuilder* ab, ComponentID& cid, UniqueComponentActivityID& ucaid)
+{
+	Activity* a;
+	Attribute attr, attr2;
+
+	a = ab->startActivity( &cid, &ucaid, nullptr, nullptr, nullptr, nullptr);
+
+	attr.id = 30;
+	attr.value = 31.1;
+	ab->setActivityAttribute(a, &attr);
+	attr2.id = 31;
+	attr2.value = -31.1;
+	ab->setActivityAttribute(a, &attr2);
+
+	ab->stopActivity(a, nullptr);
+	ab->endActivity(a);
+	a->print();
+}
+
 /*
  * 
  */
@@ -51,6 +91,8 @@ int main(int argc, char** argv)
 	ab = ActivityBuilder::getThreadInstance();
 
 	test_single_activity(ab, cid, ucaid);
+	test_remote_activity(ab, cid, ucaid);
+	test_remote_call(ab, cid, ucaid);
 
 	delete ab;
 

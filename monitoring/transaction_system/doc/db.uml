@@ -1,0 +1,70 @@
+@startuml
+
+object activity {
+	unique_id : int8 primary key
+	aid_id : int8 not null
+	aid_cid_nid : int8 not null
+	aid_cid_pid : int8 not null
+	aid_cid_time : int8 not null
+	aid_cid_num : int4 not null
+	ucaid : int8 not null
+	time_start : int8 not null
+	time_stop : int8
+	error_value : int8
+	attributes : attribute[]
+}
+
+object node {
+	unique_id : int8 primary key
+	hwid : int8 not null
+	swid : int8 not null
+	iid : int8 not null
+}
+
+
+object hardware {
+	unique_id : int8 primary key
+	description : varchar(255) not null
+}
+
+object software {
+	unique_id : int8 primary key
+	description : varchar(255) not null
+}
+
+object instance {
+	unique_id : int8 primary key
+	description : varchar(255) not null
+}
+
+object parent {
+	parent_aid_id : int8 not null
+	parent_cid_nid : int8 not null
+	parent_cid_pid : int8 not null
+	parent_cid_time : int8 not null
+	parent_cid_num : int4 not null
+	child_unique_id : int8 not null
+}
+
+node -- hardware : "hwid = unique_id"
+node -- software : "swid = unique_id"
+node -- instance : "iid = unique_id"
+
+parent -- activity : "child_unique_id = unique_id"
+
+object attribute {
+	key : int8
+	value : varchar(255)
+}
+note left: Not a table, but PostgreSQL type.
+
+object ontology {
+	id : int8 
+	domain : varchar(255)
+	name : varchar(255)
+	type : int2
+}
+
+activity -- ontology : "attribute.key = ontology.id"
+
+@enduml

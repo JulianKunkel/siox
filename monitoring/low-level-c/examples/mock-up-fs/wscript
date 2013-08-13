@@ -13,7 +13,7 @@ def build(bld):
    bld.shlib(includes="include",  target = "mufs", use = "siox-ll", source = 'mufs.c' )
    #bld.shlib(includes="include",  target = "mufs", use = "module-loader AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp' )
 
-   bld.program(includes="include",  use = "siox-ll mufs",  features='test c cprogram', target = 'mockupfs-example', source = 'mockupfs-example.c', install_path = None,)
+   bld.program(includes="include",  use = "siox-ll mufs ActivityBuilder",  features='test c cprogram', target = 'mockupfs-example', source = 'mockupfs-example.c', install_path = None,)
 
 
 # -*- indent-tabs-mode: t -*-

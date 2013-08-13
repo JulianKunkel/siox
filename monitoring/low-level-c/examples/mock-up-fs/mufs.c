@@ -80,12 +80,9 @@ mufs_putfile( const char * filename, const char * contents )
      * SIOX - preliminary negotiations
      */
     sprintf( sBuffer, "Write data to file %s via MUFS.", filename );
-    // Start an activity
-    act_write = siox_activity_start( act_type_write );
-
-    // Report the remote origin of the activity and its identifying attributes
+    // Start a remotely triggered activity
     // Sadly, we don't know anything about the caller
-    siox_activity_started_by_remote_call( act_write, 0, 0, 0 );
+    act_write = siox_activity_start_from_remote_call( cid, act_type_write, 0, 0, 0 );
 
     // The file name we are passed to write to
     siox_activity_set_attribute( act_write, att_filename, &filename );

@@ -358,20 +358,28 @@ void siox_report_node_statistics(siox_node node, siox_attribute * statistic, sio
 
 // MZ: How do we get our finished activity object back?!
 //     In ..._activity_stop()?
+// HM: After calling siox_activity_end(), the Activity object (siox_activity * == Activity *) is complete and may be handed over elsewhere.
 
 
-siox_activity * siox_activity_start(siox_component_activity * activity){
+siox_activity * siox_activity_start(siox_component * component, siox_component_activity * activity){
+    assert(component != nullptr);
     assert(activity != nullptr);
 
-    // MZ: return process_data.activity_builder->...;
-    return nullptr;
+    siox_activity* a;
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+
+    a = ab->startActivity(&component->cid, activity, nullptr);
+
+    return a;
 }
 
 
 void siox_activity_stop(siox_activity * activity){
     assert(activity != nullptr);
 
-    // process_data.activity_builder->stopActivity(activity);
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+
+    ab->stopActivity(activity, nullptr);
 }
 
 
@@ -380,31 +388,45 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
     assert(attribute != nullptr);
     assert(value != nullptr);
 
-    AttributeValue val = convert_attribute(attribute, value);
-    // MZ: TODO Signatur anpassen!
-    // process_data.activity_builder->addActivityAttribute(activity, attribute, val);
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+    Attribute attr;
+
+    attr.value = convert_attribute(attribute, value);
+    attr.id = attribute->aID;
+    ab->setActivityAttribute(activity, &attr);
 }
 
 
 void siox_activity_report_error(siox_activity * activity, siox_activity_error error){
     assert(activity != nullptr);
 
-    // process_data.activity_builder->reportActivityError(activity, error);
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+
+    ab->reportActivityError(activity, error);
 }
 
 
 void siox_activity_end(siox_activity * activity){
     assert(activity != nullptr);
 
-    // process_data.activity_builder->endActivity(activity);
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
-    // TODO Fertige Activity von activity_builder abfordern und an AMux (objekt?!?)
-    //     weiterreichen?
+    ab->endActivity(activity);
+
+    // Send to AMux
+    process_data.amux->Log(activity);
 }
 
 
 void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent){
-    // TODO
+    assert(activity_child != nullptr);
+    assert(activity_parent != nullptr);
+
+    ActivityID aid;
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+
+    aid = activity_parent->aid();
+    ab->linkActivities(activity_child, &aid);
 }
 
 //############################################################################
@@ -412,30 +434,51 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
 //############################################################################
 
 
-siox_remote_call * siox_remote_call_start(siox_activity         * activity,
-                                          siox_node              target_nid,
-                                          siox_unique_interface  target_uid,
-                                          siox_associate         target_iid){
-    // TODO
-    return nullptr;
+siox_remote_call * siox_remote_call_setup(siox_activity * activity, siox_node * target_node, siox_unique_interface * target_unique_interface, siox_associate * target_associate){
+    assert(activity != nullptr);
+
+    siox_remote_call* rc;
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+
+    rc = ab->setupRemoteCall(activity, target_node, target_unique_interface, target_associate);
+
+    return rc;
 }
 
 
 void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, void * value){
+    assert(remote_call != nullptr);
+    assert(attribute != nullptr);
+    assert(value != nullptr);
 
-    // TODO
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+    Attribute attr;
+
+    attr.value = convert_attribute(attribute, value);
+    attr.id = attribute->aID;
+    ab->setRemoteCallAttribute(remote_call, &attr);
 }
 
 
-void siox_remote_call_submitted(siox_remote_call * remote_call){
+void siox_remote_call_start(siox_remote_call * remote_call){
+    assert(remote_call != nullptr);
 
-    // TODO
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+
+    ab->startRemoteCall(remote_call, nullptr);
 }
 
 
-void siox_activity_started_by_remote_call(siox_activity * activity, NodeID  caller_NodeID_if_known, UniqueInterfaceID  caller_uid_if_known, AssociateID  caller_instance_if_known){
+siox_activity * siox_activity_start_from_remote_call(siox_component * component, siox_component_activity * activity, siox_node * caller_node, siox_unique_interface * caller_unique_interface, siox_associate * caller_associate){
+    assert(component != nullptr);
+    assert(activity != nullptr);
 
-    // TODO
+    Activity* a;
+    ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+
+    a = ab->startActivity(&component->cid, activity, caller_node, caller_unique_interface, caller_associate, nullptr);
+
+    return a;
 }
 
 
