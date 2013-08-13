@@ -3,7 +3,7 @@
 
 def build(bld):
 	pass
-	#bld.shlib(includes="include",  use = "PQXX" ,  target = 'knowledge-systeminfo', source = 'systeminfo_containers.cpp systeminfo_persistency_interface.cpp' )
+	#bld.shlib(includes="",  use = "PQXX" ,  target = 'knowledge-systeminfo', source = 'systeminfo_containers.cpp systeminfo_persistency_interface.cpp' )
 	#bld.recurse(['test'], mandatory=True)
 
 

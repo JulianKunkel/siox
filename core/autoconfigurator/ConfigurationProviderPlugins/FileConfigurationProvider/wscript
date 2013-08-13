@@ -5,7 +5,7 @@
 
 def build(bld):
         # ZTU1
-	bld.shlib(includes="include",  use = "AutoConfigurator core-container-serializer AutoRegistrar" ,  target = 'FileConfigurationProvider', source = 'FileConfigurationProvider.cpp' )
+	bld.shlib(includes="",  use = "AutoConfigurator core-container-serializer AutoRegistrar" ,  target = 'FileConfigurationProvider', source = 'FileConfigurationProvider.cpp' )
 	bld.recurse(['test'], mandatory=True)
 
 

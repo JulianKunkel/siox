@@ -1,5 +1,6 @@
 #include <monitoring/activity_builder/ActivityBuilder.hpp>
-#include <monitoring/helpers/siox_time.h>
+
+#include <helpers/siox_time.h>
 
 using namespace std;
 

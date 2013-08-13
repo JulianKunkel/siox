@@ -1,6 +1,6 @@
 #include <time.h>
 
-#include <monitoring/helpers/siox_time.h>
+#include "siox_time.h"
 
 siox_timestamp siox_gettime(void)
 {
