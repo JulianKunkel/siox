@@ -17,6 +17,6 @@ add_executable(test-math
 
 target_link_libraries(
 	test-math
-	core-math
+	MathematicalEquation
 )
 

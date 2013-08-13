@@ -15,10 +15,15 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
 
-add_library(core-module
+add_library(
+	module-loader SHARED
 	module-loader.cpp
 )
 
-target_link_libraries(core-module ${LINK_LIBRARIES} ${GLIB2_LIBRARIES})
+target_link_libraries(
+	module-loader 
+	${LINK_LIBRARIES} 
+	${GLIB2_LIBRARIES}
+)
 
 add_subdirectory(test)

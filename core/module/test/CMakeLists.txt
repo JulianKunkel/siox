@@ -32,7 +32,7 @@ add_library(test-module SHARED
 
 target_link_libraries(
 	test-module
-	core-module
+	module-loader
 	${LINK_LIBRARIES}
 	${GLIB2_LIBRARIES}
 )
