@@ -1,0 +1,10 @@
+#!/bin/bash
+exit 0
+
+echo to build waf from its source
+git clone https://code.google.com/p/waf/
+./waf-light --tools="boost,doxygen,why,proc,misc"
+
+echo Edit these files to add linkerflags at the end of the command line
+waflib/Tools/cxx.py
+waflib/Tools/c.py

@@ -288,7 +288,7 @@ template = {
 	'variables': 'RemoteCallVariable activity TargetNode TargetUID TargetIID',
 	'global': '''''',
 	'init': '''siox_remote_call * %(RemoteCallVariable)s;\n''',
-    'before': '''%(RemoteCallVariable)s = siox_remote_call_start( %(activity)s, %(targetNode)s, %(targetUID)s, %(TargetIID)s );''',
+    'before': '''%(RemoteCallVariable)s = siox_remote_call_setup( %(activity)s, %(targetNode)s, %(targetUID)s, %(TargetIID)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''
@@ -320,7 +320,7 @@ template = {
 	'variables': 'RemoteCall',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_remote_call_submitted( %(RemoteCall)s );''',
+    'before': '''siox_remote_call_start( %(RemoteCall)s );''',
 	'after': '',
 	'cleanup': '',
 	'final': ''

@@ -25,7 +25,7 @@ protected:
 		uint64_t ui64;		
 		float f;
 		double d;
-		long double dd;
+		//long double ld;
 		char * str;
 	};
 

@@ -40,7 +40,7 @@ main(){
     siox_unique_interface      siox_our_ui;    // This component
     siox_unique_interface      siox_mufs_ui;   // The MUFS layer we will use
 
-
+    siox_node some_node;
 
     // This component's identifier
     siox_component *            siox_our_component;
@@ -156,7 +156,7 @@ main(){
      */
 
     // Notify SIOX that we are starting an activity of the type we previously declared.
-    siox_act_write = siox_activity_start( siox_act_type_write );
+    siox_act_write = siox_activity_start( siox_our_component, siox_act_type_write );
 
     // Report the imminent (possibly remote) call (and its attributes) of a component with
     // the interface name "MUFS".
@@ -167,10 +167,11 @@ main(){
     //  - the node we will call (our own, found via another siox function),
     //  - the interface ("MUFS"),
     //  - NULL for the associate info, as we have none.
-    siox_rc_write = siox_remote_call_start( siox_act_write,
-                                            siox_lookup_node_id( NULL ),
-                                            siox_mufs_ui,
-                                            0 );
+    some_node = siox_lookup_node_id( NULL );
+    siox_rc_write = siox_remote_call_setup( siox_act_write,
+                                            &some_node,
+                                            &siox_mufs_ui,
+                                            NULL );
     // Report the call's attributes: The file name we write to.
     siox_remote_call_set_attribute( siox_rc_write, siox_att_filename, mufs_file_name );
     // Report the call's attributes: The amount of data we want to write.
@@ -179,7 +180,7 @@ main(){
     siox_remote_call_set_attribute( siox_rc_write, siox_att_bytes2write, &bytes_to_write );
     // Inform SIOX that the data for the remote call is complete
     // and the call is about to be submitted.
-    siox_remote_call_submitted( siox_rc_write );
+    siox_remote_call_start( siox_rc_write );
 
     // The actual call to MUFS to create a file with the given name
     // and write the character data to it.

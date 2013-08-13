@@ -127,6 +127,7 @@ public:
 	void print() {
 		/// @todo: Really need reflection - have a look at Boost :-)
 		unsigned i;
+		cout << endl << "Activity = " << this << endl;
 		cout << "t_start = " << time_start_ << endl;
 		cout << "t_stop  = " << time_stop_ << endl;
 		cout << "ActivityID.id = " << aid_.id << endl;

@@ -1,0 +1,55 @@
+@startuml
+
+class TransactionService {
+	+TransactionService(string &uri)
+	+run()
+	+stop()
+	+register_transaction_backend(TransactionBackend *)
+	+clear_transaction_backends()
+	-network_service_ : ServiceServer *
+	-backends_ : TransactionBackend[]
+	-register_callback(Callback &)
+	-clear_callbacks()
+}
+
+class TransactionBackend {
+	+{abstract} create_callback() : Callback *
+}
+
+class PostgreSQLBackend {
+	+PostgreSQLBackend(string &dbinfo)
+	+create_callback() : Callback *
+	-dbconn_ : PGconn *
+}
+
+TransactionBackend <|-- PostgreSQLBackend
+
+class PostgreSQLPumpCallback {
+	+PostgreSQLPumpCallback(PGconn &dbconn)
+	#handle_message(ConnectionMessage &msg)
+	-dbconn_ : PGconn *
+	-store_node(ConnectionMessage &msg)
+	-insert_node(uint64 hwid, uint64, swid, uint64 iid)
+	-insert_hwdesc(string &desc)
+	-insert_swdesc(string &desc)
+	-insert_indesc(string &desc)
+	-store_activity(ConnectionMessage)
+	-store_activity(Activity &act)
+	-insert_activity(Activity &act)
+	-serialize_attributes(Activity &act) : string
+	-insert_parent(ActivityID &parent, uint64 child_id)
+}
+
+class Callback {
+	+Callback(int type)
+	+execute(ConnectionMessage &msg)
+	#handle_message(ConnectionMessage &msg)
+	-msg_type_ : uint32
+}
+note top: Callbacks are defined in communication code.
+Callback <|-- PostgreSQLPumpCallback
+
+TransactionService *-- TransactionBackend
+PostgreSQLBackend .. Callback
+
+@enduml
