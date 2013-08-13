@@ -67,6 +67,7 @@ Rationales & design decisions/Issues and questions:
 		Every minute we deliver (four) periods of average values:  4x 10*1s
 		Every ten minutes we deliver : 4x 10*10s
 		Se we need a vector of size number of periods with the data of average values.
+	D10| To query ALL AVAILABLE STATS we keep a list of StatisticsDescription
  */
 
 
@@ -117,7 +118,7 @@ public:
 
 	virtual StatisticsValue getReducedStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op) = 0;
 
-	/*
+	/* D10
  	 * What are the available source metrics and available sources for metrics if they are combined ones?
  	 */
 	virtual list<StatisticsDescription> availableMetrics() = 0;

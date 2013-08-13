@@ -169,9 +169,8 @@ mufs_putfile( const char * filename, const char * contents )
 
 void mufs_initialize()
 {
-
-    /* Flag status as initialized */
-    initialized++;
+    /* Test status and flag as initialized */
+    assert(!(initialized++));
 
     /*
      * Info Message

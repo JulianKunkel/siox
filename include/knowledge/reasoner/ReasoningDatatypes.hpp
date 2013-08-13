@@ -35,12 +35,13 @@ enum class StatisticObservation: int8_t  {
 	// If we can judge it to be an anomaly
 	UNEXPECTED_LOW_VALUE,
 	UNEXPECTED_HIGH_VALUE,
-	IRREGULAR_PATTERN
+	IRREGULAR_PATTERN,
+	LEARNED_ENFORCE_ANOMALY
 };
 
 
 // How do we judge the observed behavior for anomalies?
-enum class AnomalyObservation : int8_t {
+enum class ActivityObservation : int8_t {
 	// regular behavior
 	VERY_FAST,
 	FAST,
@@ -50,7 +51,8 @@ enum class AnomalyObservation : int8_t {
 	// These are anomalies, if we can judge them
 	UNEXPECTED_FAST, 
 	UNEXPECTED_SLOW, 
-	UNEXPECTED_BETWEEN
+	UNEXPECTED_BETWEEN,
+	LEARNED_ENFORCE_ANOMALY
 };
 
 
@@ -96,6 +98,11 @@ public:
 	inline bool operator!=(IssueLocation const & b) const{
 		return ! (*this == b);
 	}
+
+	inline bool operator<(IssueLocation const & b) const{
+		return entity < b.entity || pid < b.pid || cid < b.cid || fid < b.fid;
+	}
+
 };
 
 
@@ -128,13 +135,17 @@ public:
 
 	inline bool operator==(IssueCause const & b) const{
 		return type == b.type && statistics_aid == b.statistics_aid && 
-			((str_qualifier == nullptr && b.str_qualifier == nullptr) 
-				||  (strcmp(str_qualifier, b.str_qualifier)) );
+			strcmp(str_qualifier, b.str_qualifier);
 	}	
 
 	inline bool operator!=(IssueCause const & b) const{
 		return ! (*this == b);
 	}	
+
+	inline bool operator<(IssueCause const & b) const{
+		return type < b.type || statistics_aid < b.statistics_aid || strcmp(str_qualifier, b.str_qualifier) < 0;
+	}
+
 };
 
 class PerformanceIssue{
@@ -172,10 +183,14 @@ public:
 
 	inline bool operator==(PerformanceIssue const & b) const{
 		return quality == b.quality && issueLocated == b.issueLocated && causeLocation == b.causeLocation && cause == b.cause;
-	}	
+	}
 
 	inline bool operator!=(PerformanceIssue const & b) const{
 		return ! (*this == b);
+	}
+
+	inline bool operator<(PerformanceIssue const & b) const{
+		return quality < b.quality || issueLocated < b.issueLocated || causeLocation < b.causeLocation || cause < b.cause;
 	}
 };
 

@@ -14,7 +14,7 @@ namespace knowledge{
 class QualitativeUtilization{
 public:
 	// Return the current observation for the selected datatype
-	StatisticObservation lastObservation(monitoring::OntologyAttributeID id) const throw(NotFoundError);
+	virtual StatisticObservation lastObservation(monitoring::OntologyAttributeID id) const throw(NotFoundError) = 0;
 };
 
 }

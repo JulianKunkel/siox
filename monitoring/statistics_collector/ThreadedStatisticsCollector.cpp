@@ -8,17 +8,22 @@
  *
  */
 
+
+#include <core/component/Component.hpp>
+#include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
+#include <monitoring/statistics_collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
+#include "ThreadedStatisticsOptions.hpp" // own options of this implementation
+
 #include <thread> // header for threads
+#include <chrono> // header for periodic timing
 #include <iostream> // header that defines I/O stream objects
 #include <mutex> // defines for mutex class
 #include <cstdlib> //(stdlib.h) get C header stdlib
 #include <ctime> //(time.h) get C header time
 
-#include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
-#include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
-#include <monitoring/statistics_collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
 
-#include "ThreadedStatisticsOptions.hpp" // own options of this implementation
+#include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
+
 
 using namespace std;
 using namespace core;
@@ -127,7 +132,7 @@ Implementation details for the requirements of a StatisticsCollector:
 	R4	A single thread will query the providers periodically and compute derived metrics at these timestamps.
 		The thread will be started @ init() and stoped in the destructor.
 		The thread function which is executed is called periodicBackgroundThreadLoop.
-	R5	The options of the ThreadCollector contain the list of statistics to query, so the user can set it as options.
+	R5|	The options of the ThreadCollector contain the list of statistics to query, so the user can set it as options.
 		The de/serialization is done using Boost.
 	R6	Calculate average values for several periods consisting of 10 intervals, between 100ms and 60s.
 	R9|	Use a list to keep for each intervall all plugins which should be executed for these intervalls.
@@ -136,7 +141,13 @@ Implementation details for the requirements of a StatisticsCollector:
 		Every minute we deliver (four) periods of average values:  4x 10*1s
 		Every ten minutes we deliver : 4x 10*10s
 		Se we need a vector of size number of periods with the data of average values.
- */
+		Periodic Handling:
+		1. Provide enough threads that can invoke a method
+		2. Handle timer in dedicated thread
+		Timer is in time.h or thread that sleeps for certain in a loop as workaround
+		Sleep has drawback: I.e. precision is 10ms Accuracy can be 200ms actual sleep.
+
+*/
 
 public class 
 
@@ -145,17 +156,49 @@ private:
 	 ActivityPluginDereferencing * facade;
 	// Statistics Multiplexer
 
-	 list<StatisticsProviderPlugin*> plugins[INTERVALLS_NUMBER];
+	thread 					PeriodicThread1;
+	mutex					RecentEvents_lock;
+	condition_variable 		ConditiontoRun;
+
+	bool terminated = false;
+
+	ComponentOptions * AvailableOptions(){
+		return new ComponentOptions();
+	}
+
+	list<StatisticsProviderPlugin*> plugins[INTERVALLS_NUMBER];
+
+	void sleep_ms(unsigned int ms)
+	{
+	using std::chrono::high_resolution_clock;
+	using std::chrono::milliseconds;
+	auto t0 = high_resolution_clock::now();
+	std::this_thread::sleep_for(milliseconds(ms));
+	auto t1 = high_resolution_clock::now();
+	milliseconds total_ms = std::chrono::duration_cast<milliseconds>(t1 - t0);
+ 
+	std::cout << "This_thread_sleep (" << ms << ") milliseconds: " << total_ms.count() << "ms\n";
+	}
 
 	 // One thread for periodic issuing
-	 void PeriodicBackgroundThreadLoop(){
-	 	//repeat_forever{loop for thread}
+	 virtual void PeriodicThreadLoop(){
+	 	while(! terminated){
 	 		//Create permanent thread
-	 		std::thread PeriodicThread1();
 	 		PeriodicThread1.join();
+	 		//repeat_forever{loop for thread}
+
+	 			//Do something
+	 			sleep_ms(98);
+	 		//for(;;){
+	 		//}
 	 		return 0;
-
-
+	 	
+	 	unique_lock<mutex> lock(RecentEvents_lock);
+		if(terminated){
+				break;
+			}
+	 	ConditiontoRun.wait_until(lock, timeout);
+	 	}
 	 }
 
 	 void CalculateAverageValues(){
@@ -164,6 +207,7 @@ private:
 	 }
 
 public:
+
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){		
 		StatisticsIntervall minIntervall = plugin->minPollInterval();
 		// the configInterval must be at least minIntervall.
@@ -209,18 +253,32 @@ public:
 
 	}
 
+	~Thread1StandardImplementation(){
+		RecentEvents_lock.lock();
+			terminated = true;
+			ConditiontoRun.notify_one();
+		RecentEvents_lock.unlock();
+
+		PeriodicThread1.join();
+	}
+
+	virtual void init(){
+		ThreadedStatisticsOptions & options = getOptions<ThreadedStatisticsOptions>();
+		poll_interval_ms = options.poll_interval_ms;
+
+		//ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
+
+		periodicThread = thread(& Thread1StandardImplementation::PeriodicThreadLoop, this);
+	}
+
 	/**
 	 * this method initiates first the options for threaded statitistics and second the facade of the ActivityPlugin
 	 */
 	virtual void getOptions(ThreadedStatisticsOptions * options){
 		ThreadedStatisticsOptions * o = (ThreadedStatisticsOptions*) options;
 	}
-		
-	virtual void init(){
-		ThreadedStatisticsOptions & o = getOptions<ThreadedStatisticsOptions>();
 
-		//ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
-	}
+
 
 	/**
 	 * get Available ThreadedStatisticsOptions

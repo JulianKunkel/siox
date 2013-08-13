@@ -4,13 +4,16 @@
 #include <core/autoconfigurator/AutoConfigurator.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/ontology/Ontology.hpp>
+#include <knowledge/reasoner/Reasoner.hpp>
+
 
 #include "../AnomalySkeletonOptions.hpp"
 
 using namespace std;
 
-using namespace monitoring;
 using namespace core;
+using namespace monitoring;
+using namespace knowledge;
 
 int main(int argc, char const *argv[]){
 	ComponentRegistrar registrar = ComponentRegistrar();
@@ -27,10 +30,18 @@ int main(int argc, char const *argv[]){
 		cout << *itr << endl;
 	}
 
+	Reasoner * r1 = a->searchFor<Reasoner>(components);
+	assert(r1 != nullptr);
+
 	// the activity multiplexer is expected to be first:
 	ActivityMultiplexer * m1 = a->searchFor<ActivityMultiplexer>(components);
+	assert(m1 != nullptr);
+
 	Ontology * o = a->searchFor<Ontology>(components);
+	assert(o != nullptr);
+	
 	SystemInformationGlobalIDManager * sys = a->searchFor<SystemInformationGlobalIDManager>(components);	
+	assert(sys != nullptr);
 
 	UniqueInterfaceID uid = sys->register_interfaceID("test", "impl1");
    	UniqueComponentActivityID aid = sys->register_activityID(uid, "open");

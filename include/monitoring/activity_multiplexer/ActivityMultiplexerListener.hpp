@@ -20,6 +20,7 @@ public:
 	 */
 	virtual void Notify(Activity * element) {};
 
+	virtual ~ActivityMultiplexerListener(){}
 };
 
 

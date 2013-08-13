@@ -8,7 +8,7 @@ namespace knowledge{
 
 class AnomalyTrigger{
 public:
-	void triggerResponseForAnomaly();
+	virtual void triggerResponseForAnomaly() = 0;
 };
 
 }
