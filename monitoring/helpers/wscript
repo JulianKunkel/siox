@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(features="c", target='siox_time', source='siox_time.c', cflags='-std=gnu99', linkflags='-lrt')
+    bld.shlib(features="c", target='siox_time', source='siox_time.c', cflags='-std=gnu99', lib='rt')
 
 
 # -*- indent-tabs-mode: t -*-
