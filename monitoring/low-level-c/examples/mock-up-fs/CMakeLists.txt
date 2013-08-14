@@ -1,29 +1,37 @@
 cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-find_package(Boost 1.53.0 COMPONENTS regex serialization)
-
 set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../include")
 
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
 	"${SIOX_INCLUDE_DIR}"
-	"${Boost_INCLUDE_DIR}"
 )
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 add_library(
-	iostats SHARED
-	iostats.cpp
+	mufs SHARED
+	mufs.c
 )
 
 target_link_libraries(
-	iostats
-	AutoConfigurator
-	module-loader
-	"${Boost_LIBRARIES}"
+	mufs
+	siox-ll
+	FileConfigurationProvider
 	"${LINK_LIBRARIES}"
 )
 
-add_subdirectory(test)
+add_executable(
+	mockupfs-example
+	mockupfs-example.c
+)
+
+target_link_libraries(
+	mockupfs-example
+	mufs
+	siox-ll
+	ActivityBuilder
+	"${LINK_LIBRARIES}"
+)
+

@@ -11,8 +11,14 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 
-add_library(monitoring-statisticscollector-providermin
+add_library(
+	iostatsSkel SHARED
 	iostats.cpp
 )
 
-target_link_libraries(monitoring-statisticscollector-providermin ${LINK_LIBRARIES})
+target_link_libraries(
+	iostatsSkel 
+	"${LINK_LIBRARIES}"
+)
+
+add_subdirectory(test)

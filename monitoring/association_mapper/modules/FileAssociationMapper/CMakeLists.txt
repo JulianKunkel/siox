@@ -11,11 +11,16 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 
-add_library(monitoring-associationmapper-fileassociation
+add_library(
+	FileAssociationMapper SHARED
 	FileAssociationMapper.cpp
 )
 
-target_link_libraries(monitoring-associationmapper-fileassociation ${LINK_LIBRARIES})
+target_link_libraries(
+	FileAssociationMapper
+	${LINK_LIBRARIES}
+)
 
+add_subdirectory(test)
 
 

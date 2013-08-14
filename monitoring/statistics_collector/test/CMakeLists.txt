@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../include")
+set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../include")
 
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
@@ -10,15 +10,14 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
-# add_library(
-# 	knowledge-systeminfo SHARED
-# 	systeminfo_containers.cpp
-# 	systeminfo_persistency_interface.cpp
+# add_executable(
+# 	ThreadedStatisticsCollectorTest
+# 	ThreadedStatisticsCollectorTest.cpp
 # )
 # 
 # target_link_libraries(
-# 	knowledge-systeminfo 
+# 	ThreadedStatisticsCollectorTest
 # 	"${LINK_LIBRARIES}"
 # )
 # 
-# add_subdirectory(test)
+

@@ -7,17 +7,23 @@ include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
 	"${SIOX_INCLUDE_DIR}"
 	"${SIOX_INCLUDE_DIR}/../monitoring"
+	"${SIOX_INCLUDE_DIR}/../knowledge/activity_plugin/"
 )
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
-
-add_library(monitoring-activitymultiplexer
+add_library(
+	ActivityMultiplexerAsyncThreaded SHARED
 	ActivityMultiplexerAsyncThreaded.cpp
 	ActivityPluginDereferencingStandardImpl.cpp
 )
 
-target_link_libraries(monitoring-activitymultiplexer ${LINK_LIBRARIES})
+target_link_libraries(
+	ActivityMultiplexerAsyncThreaded
+	"${LINK_LIBRARIES}"
+)
 
 add_subdirectory(plugins)
+
+#add_subdirectory(test)
 

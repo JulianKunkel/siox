@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../include")
+set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../include")
 
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
@@ -10,16 +10,15 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
-add_library(
-	AnomalySkeleton SHARED
-	AnomalySkeleton.cpp
+add_executable(
+	file-ontology-test
+	file-ontology-test.cpp
 )
 
 target_link_libraries(
-	AnomalySkeleton 
-	AutoConfigurator
-	${LINK_LIBRARIES}
+	file-ontology-test
+	FileOntology 
+	module-loader
+	"${LINK_LIBRARIES}"
 )
-
-add_subdirectory(test)
 

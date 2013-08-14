@@ -10,11 +10,16 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
-
-add_library(monitoring-statisticscollector
-	ThreadedStatisticsCollector.cpp
-)
-
-target_link_libraries(monitoring-statisticscollector ${LINK_LIBRARIES})
+# add_library(
+# 	ThreadedStatisticsCollector SHARED
+# 	ThreadedStatisticsCollector.cpp
+# )
+# 
+# target_link_libraries(
+# 	ThreadedStatisticsCollector
+# 	"${LINK_LIBRARIES}"
+# )
 
 add_subdirectory(plugins)
+add_subdirectory(test)
+

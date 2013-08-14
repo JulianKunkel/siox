@@ -10,9 +10,18 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
-
-add_library(monitoring-lowlevelc
+add_library(
+	siox-ll SHARED
 	siox-ll.cpp
 )
 
-target_link_libraries(monitoring-lowlevelc ${LINK_LIBRARIES})
+target_link_libraries(
+	siox-ll
+	AutoConfigurator
+	module-loader
+	"${LINK_LIBRARIES}"
+)
+
+add_subdirectory(examples)
+add_subdirectory(test)
+

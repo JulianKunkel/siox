@@ -13,7 +13,7 @@ include_directories(
 	"${GLIB2_INCLUDE_DIRS}"
 )
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11")
+set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -lgmodule-2.0")
 
 add_library(
 	module-loader SHARED
@@ -22,8 +22,8 @@ add_library(
 
 target_link_libraries(
 	module-loader 
-	${LINK_LIBRARIES} 
-	${GLIB2_LIBRARIES}
+	"${GLIB2_LIBRARIES}"
+	"${LINK_LIBRARIES}"
 )
 
 add_subdirectory(test)

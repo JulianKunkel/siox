@@ -3,27 +3,21 @@ project(SIOX)
 
 set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../include")
 
-find_package(Boost 1.53.0 COMPONENTS serialization)
-
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
 	"${SIOX_INCLUDE_DIR}"
-	"${Boost_INCLUDE_DIR}"
+	"${SIOX_INCLUDE_DIR}/../"
 )
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 add_library(
-	AutoConfigurator SHARED
-	AutoConfigurator.cpp
+	ActivityPluginDereferencingStandardImpl SHARED
+	ActivityPluginDereferencingStandardImpl.cpp
+	"${SIOX_INCLUDE_DIR}/../monitoring/helpers/siox_time.c"
 )
 
 target_link_libraries(
-	AutoConfigurator 
-	core-component-registrar
-	core-container-serializer
-	"${Boost_LIBRARIES}"
+	ActivityPluginDereferencingStandardImpl
 	"${LINK_LIBRARIES}"
 )
-
-add_subdirectory(ConfigurationProviderPlugins)

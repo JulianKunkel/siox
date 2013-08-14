@@ -11,10 +11,17 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 
-add_library(monitoring-activitymultiplexer-filewriter
+add_library(
+	ActivityFileWriter SHARED
 	ActivityFileWriter.cpp
 )
 
-target_link_libraries(monitoring-activitymultiplexer-filewriter ${LINK_LIBRARIES})
+target_link_libraries(
+	ActivityFileWriter
+	core-container-serializer 
+	AutoConfigurator 
+	"${LINK_LIBRARIES}"
+)
 
+add_subdirectory(test)
 
