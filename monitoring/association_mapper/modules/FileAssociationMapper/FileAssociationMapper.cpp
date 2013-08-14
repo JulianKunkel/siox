@@ -25,6 +25,7 @@ using namespace std;
 
 CREATE_SERIALIZEABLE_CLS(FileAssociationMapperOptions)
 
+namespace monitoring{
 
 template<int LENGTH>
 struct ByteRangeComparator
@@ -34,9 +35,6 @@ struct ByteRangeComparator
         return memcmp(a,b, LENGTH) < 0;  
     }
 };
-
-
-namespace monitoring{
 
 
 template <class TYPE>
@@ -61,7 +59,7 @@ public:
 		boost::archive::xml_oarchive archive(file, boost::archive::no_header | boost::archive::no_codecvt);
 /*! This xml_archive needs for the XML tags these string parameters in " " othewise it would be good enough to use ' archive & lastID; ' */
 		archive << boost::serialization::make_nvp("LastAssociateID", lastID);
-		archive << boost::serialization::make_nvp("AssociateMap", map_str_aid);
+		archive << boost::serialization::make_nvp("AssociateVector", vector_aid_str);
 		archive << boost::serialization::make_nvp("ProcessMap", map_processAttributes);
 		archive << boost::serialization::make_nvp("ComponentMap", map_componentAttributes);
 	
@@ -74,18 +72,15 @@ public:
 			return;
 		boost::archive::xml_iarchive archive(file, boost::archive::no_header | boost::archive::no_codecvt);
 		archive >> boost::serialization::make_nvp("LastAssociateID", lastID);
-		archive >> boost::serialization::make_nvp("AssociateMap", map_str_aid);
+		archive >> boost::serialization::make_nvp("AssociateVector", vector_aid_str);
 		archive >> boost::serialization::make_nvp("ProcessMap", map_processAttributes);
 		archive >> boost::serialization::make_nvp("ComponentMap", map_componentAttributes);
 
 		file.close();
 
-		map_aid_str.resize(map_str_aid.size());
-
-		// recreate  map_aid_str
-		for(auto itr = map_str_aid.begin(); itr != map_str_aid.end(); itr++){			
-			cout << itr->second << " " << itr->first << endl;
-			map_aid_str[itr->second - 1] = itr->first;
+		// recreate  vector_aid_str
+		for(uint i=0; i < vector_aid_str.size(); i++){
+			map_str_aid[vector_aid_str[i]] = i + 1;
 		}
 	}
 
@@ -94,7 +89,11 @@ public:
 		filename = o.filename;
 		assert(filename != "");
 		cout << "file " << filename << endl;
-		load(filename);
+		try{
+			load(filename);
+		}catch(exception & e){
+			cerr << "Error while loading association information from file: " << filename << endl;
+		}
 	}
 
 	ComponentOptions * AvailableOptions() {
@@ -179,6 +178,7 @@ public:
 
 	/* These functions are used to create the RemoteInstanceID */
 	AssociateID create_instance_mapping(const string & value){
+		assert(value.size() > 0);
 
 		globalMutex.lock();
 		AssociateID last = map_str_aid[value];
@@ -188,14 +188,14 @@ public:
 		}	
 		last=lastID++; // TODO make thread-safe
 		map_str_aid[value] = last;
-		map_aid_str.push_back(value);		
+		vector_aid_str.push_back(value);		
 		globalMutex.unlock();
 
 		return last;
 	}
 
 	virtual const string & lookup_instance_mapping(AssociateID id) const throw(NotFoundError){
-		return map_aid_str[id - 1]; // !!!!!
+		return vector_aid_str[id - 1]; // !!!!!
 	}
 
 private:
@@ -240,11 +240,11 @@ private:
 
 	AssociateID lastID = 1;
 	
-	map<ProcessID, AttributeIDsAndValues, ByteComparator<ProcessID> > map_processAttributes;
-	map<ComponentID, AttributeIDsAndValues, ByteComparator<ComponentID> > map_componentAttributes;
+	map<ProcessID, AttributeIDsAndValues> map_processAttributes;
+	map<ComponentID, AttributeIDsAndValues> map_componentAttributes;
 
 	map<string, AssociateID> map_str_aid;
-	vector<string> map_aid_str;
+	vector<string> vector_aid_str;
 };
 
 }
@@ -256,6 +256,8 @@ namespace serialization {
 template<class Archive>
 void serialize(Archive & ar, AttributeIDsAndValues & g, const unsigned int version)
 {
+	assert(g.ids.size() == g.values.size() );
+
 	ar & boost::serialization::make_nvp("attids", g.ids);
 	ar & boost::serialization::make_nvp("values", g.values);
 }

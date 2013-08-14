@@ -6,13 +6,13 @@
 #include <core/datatypes/VariableDatatype.hpp>
 #include <core/container/container-macros.hpp>
 
-class VariableDatatypeAssessor 
+class VariableDatatypeAccessor 
 {
 public:
 	union VariableDatatype::Data * data;
     enum VariableDatatype::Type * typeP;
 
-    explicit VariableDatatypeAssessor(VariableDatatype &e) { 
+    VariableDatatypeAccessor(VariableDatatype & e) { 
     	typeP = & e.type_;
     	data = & e.data;
     }	
@@ -23,7 +23,7 @@ namespace serialization {
 template<class Archive>
 void serialize(Archive & ar, VariableDatatype & a, const unsigned int version)
 {	
-	VariableDatatypeAssessor g(a);
+	VariableDatatypeAccessor g(a);
 	ar & boost::serialization::make_nvp("type", *g.typeP);
 
 	switch(*g.typeP){
@@ -33,10 +33,10 @@ void serialize(Archive & ar, VariableDatatype & a, const unsigned int version)
 		case(VariableDatatype::Type::INT32):
 		ar & boost::serialization::make_nvp("v", g.data->i32);
 		break;
-		case(VariableDatatype::Type::UINT64):
-		ar & boost::serialization::make_nvp("v", g.data->ui64);
-		break;
-		case(VariableDatatype::Type::UINT32):
+		case(VariableDatatype::Type::UINT64):{
+			ar & boost::serialization::make_nvp("v", g.data->ui64);
+			break;
+		}case(VariableDatatype::Type::UINT32):
 		ar & boost::serialization::make_nvp("v", g.data->ui32);
 		break;
 		case(VariableDatatype::Type::STRING):{
@@ -51,7 +51,6 @@ void serialize(Archive & ar, VariableDatatype & a, const unsigned int version)
 			break;
 		}
 		case(VariableDatatype::Type::INVALID):
-		ar & boost::serialization::make_nvp("v", g.data->ui64);
 		break;
 		case(VariableDatatype::Type::DOUBLE):
 		ar & boost::serialization::make_nvp("v", g.data->d);

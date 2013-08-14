@@ -76,6 +76,7 @@ int main(int argc, char const *argv[]){
 	// COMPONENT TEST
 
 	ComponentID cid = {.pid = pid, .id = 4};
+	cout << "Datatype: " << sizeof(cid) << endl;
 	
 	o->set_component_attribute(cid, a1, v1);
 	o->set_component_attribute(cid, a1, v1);

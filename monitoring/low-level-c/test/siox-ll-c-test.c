@@ -7,12 +7,12 @@
 int main(){
 
 	printf("Registering unique interface...");
-	siox_unique_interface i1 = siox_system_information_lookup_interface_id("test", "Impl1");
+	siox_unique_interface * i1 = siox_system_information_lookup_interface_id("test", "Impl1");
 	assert(i1 != 0);
 	printf("success!\n");
 
 	printf("Registering same interface again...");
-	siox_unique_interface i1a = siox_system_information_lookup_interface_id("test", "Impl1");
+	siox_unique_interface * i1a = siox_system_information_lookup_interface_id("test", "Impl1");
 	assert(i1 != 0);
 	assert(i1 == i1a);
 	printf("success!\n");
@@ -67,7 +67,7 @@ int main(){
 
 
 	printf("Registering another unique interface...");
-	siox_unique_interface i2 = siox_system_information_lookup_interface_id("test", "InvalidImpl");
+	siox_unique_interface * i2 = siox_system_information_lookup_interface_id("test", "InvalidImpl");
 	assert(i2 != 0);
 	assert(i2 != i1);
 	printf("success!\n");

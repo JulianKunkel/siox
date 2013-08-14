@@ -26,6 +26,8 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 
+#define U32_TO_P(i) ((void*)((size_t)(i)))
+#define P_TO_U32(p) ((uint32_t)((size_t)(p)))
 
 
 //############################################################################
@@ -187,7 +189,6 @@ __attribute__ ((destructor)) void siox_ll_dtor()
     delete(process_data.registrar);
     delete(process_data.configurator);
 
-
     finalized = true;
 }
 
@@ -211,36 +212,28 @@ static VariableDatatype convert_attribute(siox_attribute * attribute, void * val
     AttributeValue v;
     switch(attribute->storage_type){
     case(VariableDatatype::Type::UINT32):
-        v = *((uint32_t * ) value);
-        break;
+        return *((uint32_t * ) value);
     case(VariableDatatype::Type::INT32):{
-        v = *((int32_t * ) value);
-        break;
+        return *((int32_t * ) value);
     }
     case(VariableDatatype::Type::UINT64):
-        v = *((uint64_t * ) value);      
-        break;
+        return *((uint64_t * ) value);      
     case(VariableDatatype::Type::INT64):{
-        v = *((int64_t * ) value);      
-        break;
+        return *((int64_t * ) value);      
     }
     case(VariableDatatype::Type::FLOAT):{
-        v = *((float * ) value);
-        break;
+       return  *((float * ) value);
     }
     case(VariableDatatype::Type::DOUBLE):{
-        v = *((double * ) value);
-        break;
+       return  *((double * ) value);
     }
     case(VariableDatatype::Type::STRING):{
-        v = (char *) value;
-        break;
+       return  (char *) value;
     }
     case (VariableDatatype::Type::INVALID):{
         assert(0);
     }
     }
-    return v;
 }
 
 
@@ -253,28 +246,29 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value){
 }
 
 
-siox_associate siox_associate_instance(const char * instance_information){
-    return process_data.association_mapper->create_instance_mapping(instance_information);
+siox_associate * siox_associate_instance(const char * instance_information){
+    return U32_TO_P(process_data.association_mapper->create_instance_mapping(instance_information));
 }
 
 //############################################################################
 /////////////// MONITORING /////////////////////////////
 //############################################################################
 
-siox_node siox_lookup_node_id( const char * hostname ){
+siox_node * siox_lookup_node_id( const char * hostname ){
     if(hostname == NULL){
         // we take the localhost's ID.
-         return process_data.nid;
+       return U32_TO_P(process_data.nid);
     }
     
-    return lookup_node_id(hostname);
+    return U32_TO_P(lookup_node_id(hostname));
 }
 
 
-siox_component * siox_component_register(siox_unique_interface uiid, const char * instance_name){
+siox_component * siox_component_register(siox_unique_interface * uiid, const char * instance_name){
     assert(uiid != SIOX_INVALID_ID );
     assert(instance_name != nullptr);
-    UniqueInterfaceID uid = uiid;
+
+    UniqueInterfaceID uid = P_TO_U32(uiid);
     const string & interface_implementation = process_data.system_information_manager->lookup_interface_implementation(uid);
     const string & interface_name = process_data.system_information_manager->lookup_interface_name(uid);
 
@@ -303,7 +297,14 @@ siox_component * siox_component_register(siox_unique_interface uiid, const char 
     siox_component * result = new siox_component();
     result->cid.pid = process_data.pid;
     result->uid = uid;
-    result->instance_associate = process_data.association_mapper->create_instance_mapping(instance_name);
+
+    string instance_str(instance_name);
+
+    if (instance_str.size() > 0){
+        result->instance_associate = process_data.association_mapper->create_instance_mapping(instance_str);
+    }else{
+        result->instance_associate = SIOX_INVALID_ID;
+    }
 
     result->amux = process_data.configurator->searchFor<ActivityMultiplexer>(loadedComponents); 
     if (result->amux == nullptr){
@@ -326,13 +327,11 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
 }
 
 
-siox_component_activity * siox_component_register_activity(siox_unique_interface uiid, const char * activity_name){
+siox_component_activity * siox_component_register_activity(siox_unique_interface * uiid, const char * activity_name){
     assert(uiid != SIOX_INVALID_ID);
     assert(activity_name != nullptr);
 
-    uint64_t id = process_data.system_information_manager->register_activityID( uiid, activity_name);
-    // Be aware that this cast is dangerous. For future extensionability this can be replaced with a struct etc.
-    return (UniqueComponentActivityID*) id;
+    return U32_TO_P(process_data.system_information_manager->register_activityID( P_TO_U32(uiid), activity_name));
 }
 
 
@@ -343,7 +342,7 @@ void siox_component_unregister(siox_component * component){
 }
 
 
-void siox_report_node_statistics(siox_node node, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value){
+void siox_report_node_statistics(siox_node * node, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value){
 
     // MZ: Das reicht eigentlich bloß an den SMux weiter, oder?
     // Vorher: Statistik zusammenbauen!
@@ -368,7 +367,7 @@ siox_activity * siox_activity_start(siox_component * component, siox_component_a
     siox_activity* a;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
-    a = ab->startActivity(&component->cid, activity, nullptr);
+    a = ab->startActivity(component->cid, P_TO_U32(activity), nullptr);
 
     return a;
 }
@@ -389,11 +388,9 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
     assert(value != nullptr);
 
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
-    Attribute attr;
+    Attribute attr(attribute->aID, convert_attribute(attribute, value));
 
-    attr.value = convert_attribute(attribute, value);
-    attr.id = attribute->aID;
-    ab->setActivityAttribute(activity, &attr);
+    ab->setActivityAttribute(activity, attr);
 }
 
 
@@ -426,7 +423,7 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     aid = activity_parent->aid();
-    ab->linkActivities(activity_child, &aid);
+    ab->linkActivities(activity_child, aid);
 }
 
 //############################################################################
@@ -440,7 +437,7 @@ siox_remote_call * siox_remote_call_setup(siox_activity * activity, siox_node * 
     siox_remote_call* rc;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
-    rc = ab->setupRemoteCall(activity, target_node, target_unique_interface, target_associate);
+    rc = ab->setupRemoteCall(activity, P_TO_U32(target_node), P_TO_U32(target_unique_interface), P_TO_U32(target_associate));
 
     return rc;
 }
@@ -452,11 +449,9 @@ void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribu
     assert(value != nullptr);
 
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
-    Attribute attr;
+    Attribute attr(attribute->aID, convert_attribute(attribute, value));
 
-    attr.value = convert_attribute(attribute, value);
-    attr.id = attribute->aID;
-    ab->setRemoteCallAttribute(remote_call, &attr);
+    ab->setRemoteCallAttribute(remote_call, attr);
 }
 
 
@@ -476,7 +471,7 @@ siox_activity * siox_activity_start_from_remote_call(siox_component * component,
     Activity* a;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
-    a = ab->startActivity(&component->cid, activity, caller_node, caller_unique_interface, caller_associate, nullptr);
+    a = ab->startActivity(component->cid, P_TO_U32(activity), P_TO_U32(caller_node), P_TO_U32(caller_unique_interface), P_TO_U32(caller_associate), nullptr);
 
     return a;
 }
@@ -543,12 +538,12 @@ siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, co
 }
 
 
-siox_unique_interface siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier){
+siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier){
     assert(interface_name != nullptr);
     assert(implementation_identifier != nullptr);
 
     try{
-        return process_data.system_information_manager->register_interfaceID(interface_name, implementation_identifier);
+        return U32_TO_P(process_data.system_information_manager->register_interfaceID(interface_name, implementation_identifier));
     }catch(IllegalStateError & e){
         return 0;
     }

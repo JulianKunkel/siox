@@ -91,14 +91,14 @@
 typedef void siox_activity;
 typedef void siox_attribute;
 typedef void siox_component;
-typedef void siox_component_activity;
 typedef void siox_remote_call;
 /** @} */
 #endif
 
-typedef uint32_t siox_node;
-typedef uint32_t siox_associate;
-typedef uint32_t siox_unique_interface;
+typedef void siox_component_activity;
+typedef void siox_node;
+typedef void siox_associate;
+typedef void siox_unique_interface;
 
 #define SIOX_INVALID_ID 0
 
@@ -110,7 +110,7 @@ typedef uint32_t siox_unique_interface;
 //////////////////////////////////////////////////////////////////////////////
 /// @return A node id, which is system-wide unique
 //////////////////////////////////////////////////////////////////////////////
-siox_node siox_lookup_node_id(const char * hostname);
+siox_node * siox_lookup_node_id(const char * hostname);
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -238,7 +238,7 @@ siox_attribute * siox_ontology_lookup_attribute_by_name(const char * domain, con
 //////////////////////////////////////////////////////////////////////////////
 /// @return An ID that will be unique system-wide.
 //////////////////////////////////////////////////////////////////////////////
-siox_unique_interface siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier);
+siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier);
 
 /**
  * Report performance data @em not associated with a single activity.
@@ -286,7 +286,7 @@ siox_unique_interface siox_system_information_lookup_interface_id(const char * i
 //////////////////////////////////////////////////////////////////////////////
 /// @return 
 //////////////////////////////////////////////////////////////////////////////
-siox_associate siox_associate_instance(const char * instance_information);
+siox_associate * siox_associate_instance(const char * instance_information);
 
 /*
  * Register this component with SIOX.
@@ -319,7 +319,7 @@ siox_associate siox_associate_instance(const char * instance_information);
  //////////////////////////////////////////////////////////////////////////////
 
 //@test ''%s-%s-%s'' siox_node,swid,iid
-siox_component * siox_component_register(siox_unique_interface uiid, const char * instance_name);
+siox_component * siox_component_register(siox_unique_interface * uiid, const char * instance_name);
 
 /**
  * Report an attribute of this component to SIOX.
@@ -344,7 +344,7 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
  //////////////////////////////////////////////////////////////////////////////
  /// @return
  //////////////////////////////////////////////////////////////////////////////
-siox_component_activity * siox_component_register_activity(siox_unique_interface uiid, const char * activity_name);
+siox_component_activity * siox_component_register_activity(siox_unique_interface * uiid, const char * activity_name);
 
 /*
  * Register an attribute as a descriptor for activities (!) of this component.

@@ -34,12 +34,12 @@ enum CPUfields{
 long tickLen;
 protected:
 	vector<vector<StatisticsValue> > CPUValues;
-	StatisticsValue interrupts = 0;
-	StatisticsValue sw_interrupts = 0;
-	StatisticsValue contextSwitches = 0;
-	StatisticsValue threadsCreated = 0;
-	StatisticsValue curProcsRunning = 0;
-	StatisticsValue curProcsBlocked = 0;
+	StatisticsValue interrupts;
+	StatisticsValue sw_interrupts;
+	StatisticsValue contextSwitches;
+	StatisticsValue threadsCreated;
+	StatisticsValue curProcsRunning;
+	StatisticsValue curProcsBlocked;
 
 	void timestepLine(int lineNr, vector<string> & entries){
 		string name = entries[0];

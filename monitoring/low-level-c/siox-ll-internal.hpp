@@ -28,8 +28,6 @@ using namespace monitoring;
 
 // define all types for CPP
 typedef const OntologyAttribute siox_attribute;
-typedef const UniqueComponentActivityID siox_component_activity;
-
 
 
 typedef Activity siox_activity;

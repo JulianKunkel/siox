@@ -32,7 +32,7 @@ static int initialized = 0;
  */
 
 // The unique interface identifier for the API we provide (MUFS, implementation OpenMUFS)
-static siox_unique_interface       uiid = 0;
+static siox_unique_interface    *   uiid = SIOX_INVALID_ID;
 // The MUFS library's component identifier
 static siox_component *             cid = NULL;
 
@@ -196,21 +196,26 @@ void mufs_initialize()
     act_type_write = siox_component_register_activity( uiid, "write" );
 
     // Register the attributes we will need:
-    att_blocksize = siox_ontology_register_attribute_with_unit( "io",
-                                                                "data volume/block size",
-                                                                "Bytes",
-                                                                SIOX_STORAGE_64_BIT_INTEGER );
-    att_filename = siox_ontology_register_attribute( "filesystem",
-                                                     "filename",
-                                                     SIOX_STORAGE_STRING );
     att_bytes2write = siox_ontology_register_attribute_with_unit( "io",
                                                                   "data volume/to write",
                                                                   "Bytes",
-                                                                  SIOX_STORAGE_64_BIT_INTEGER );
+                                                                  SIOX_STORAGE_64_BIT_UINTEGER );
+    assert(att_bytes2write != NULL);
+
+    att_blocksize = siox_ontology_register_attribute_with_unit( "io",
+                                                                "data volume/block size",
+                                                                "Bytes",
+                                                                SIOX_STORAGE_64_BIT_UINTEGER );
+    att_filename = siox_ontology_register_attribute( "filesystem", "filename", SIOX_STORAGE_STRING );
     att_byteswritten = siox_ontology_register_attribute_with_unit( "io",
                                                                    "data volume/written",
                                                                    "Bytes",
-                                                                   SIOX_STORAGE_64_BIT_INTEGER );
+                                                                   SIOX_STORAGE_64_BIT_UINTEGER );
+
+    assert(att_blocksize != NULL);
+    assert(att_filename != NULL);    
+    assert(att_byteswritten != NULL);
+
     /// @todo Mark filename (and b2w?) as descriptors
     /// @todo Register filename twice (POSIX and MUFS)?
 

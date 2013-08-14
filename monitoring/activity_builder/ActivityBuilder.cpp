@@ -40,19 +40,18 @@ ActivityBuilder* ActivityBuilder::getThreadInstance()
 	return myAB;
 }
 
-Activity* ActivityBuilder::startActivity(const ComponentID* cid, const UniqueComponentActivityID* ucaid, const Timestamp* t)
+Activity* ActivityBuilder::startActivity(const ComponentID & cid, UniqueComponentActivityID ucaid, const Timestamp * t)
 {
 	uint32_t aid;
 	Activity* a;
 
-	assert(cid != nullptr);
-	assert(ucaid != nullptr);
+	assert(ucaid != 0);
 
 	aid = next_activity_id++;
 	a = new Activity;
 	a->aid_.id = aid;
-	a->aid_.cid = *cid;
-	a->ucaid_ = *ucaid;
+	a->aid_.cid = cid;
+	a->ucaid_ = ucaid;
 	a->remoteInvoker_ = nullptr;
 	a->time_stop_ = 0;
 	// Initially, we assume successful outcome of an actvity
@@ -76,7 +75,7 @@ Activity* ActivityBuilder::startActivity(const ComponentID* cid, const UniqueCom
 	return a;
 }
 
-Activity* ActivityBuilder::startActivity(const ComponentID* cid, const UniqueComponentActivityID* ucaid, const NodeID* caller_node_id, const UniqueInterfaceID* caller_unique_interface_id, const AssociateID* caller_associate_id, const Timestamp* t)
+Activity* ActivityBuilder::startActivity(const ComponentID & cid, UniqueComponentActivityID ucaid, NodeID caller_node_id, UniqueInterfaceID caller_unique_interface_id, AssociateID caller_associate_id, const Timestamp* t)
 {
 	// REMARK: If t == nullptr, then startActivity will draw the current timestamp and all code in this function will count towards the time of the activity. As of now, it will be left this way for the sake of simplicity.
 
@@ -113,15 +112,14 @@ void ActivityBuilder::endActivity(Activity* a)
 	activities_in_flight.erase(a->aid_.id);
 }
 
-void ActivityBuilder::setActivityAttribute(Activity* a, const Attribute *attribute)
+void ActivityBuilder::setActivityAttribute(Activity* a, const Attribute & attribute)
 {
 	assert(a != nullptr);
-	assert(attribute != nullptr);
 
-	a->attributeArray_.push_back(*attribute);
+	a->attributeArray_.push_back(attribute);
 }
 
-void ActivityBuilder::reportActivityError(Activity* a, const ActivityError error)
+void ActivityBuilder::reportActivityError(Activity* a, ActivityError error)
 {
 	assert(a != nullptr);
 	assert(a->errorValue_ == 0);
@@ -129,15 +127,14 @@ void ActivityBuilder::reportActivityError(Activity* a, const ActivityError error
 	a->errorValue_ = error;
 }
 
-void ActivityBuilder::linkActivities(Activity* child, ActivityID* parent)
+void ActivityBuilder::linkActivities(Activity* child, const ActivityID & parent)
 {
 	assert(child != nullptr);
-	assert(parent != nullptr);
 
-	child->parentArray_.push_back(*parent);
+	child->parentArray_.push_back(parent);
 }
 
-RemoteCall* ActivityBuilder::setupRemoteCall(Activity* a, const NodeID* target_node_id, const UniqueInterfaceID* target_unique_interface_id, const AssociateID* target_associate_id)
+RemoteCall* ActivityBuilder::setupRemoteCall(Activity* a, NodeID target_node_id, UniqueInterfaceID target_unique_interface_id, AssociateID target_associate_id)
 {
 	assert(a != nullptr);
 
@@ -148,12 +145,11 @@ RemoteCall* ActivityBuilder::setupRemoteCall(Activity* a, const NodeID* target_n
 	return rc;
 }
 
-void ActivityBuilder::setRemoteCallAttribute(RemoteCall* rc, const Attribute* attribute)
+void ActivityBuilder::setRemoteCallAttribute(RemoteCall* rc, const Attribute & attribute)
 {
 	assert(rc != nullptr);
-	assert(attribute != nullptr);
 
-	rc->attributes.push_back(*attribute);
+	rc->attributes.push_back(attribute);
 }
 
 /**

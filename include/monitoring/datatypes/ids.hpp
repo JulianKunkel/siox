@@ -95,10 +95,13 @@ typedef uint32_t UniqueInterfaceID;
 
 typedef VariableDatatype AttributeValue;
 
-typedef struct {
+struct Attribute{
 	OntologyAttributeID id;
 	AttributeValue value;
-} Attribute;
+
+    Attribute(){}
+    Attribute(OntologyAttributeID id, const AttributeValue & value) : id(id), value(value){}
+};
 
 typedef uint64_t Timestamp;
 
@@ -155,6 +158,10 @@ struct ComponentID{
     inline bool operator!=(ComponentID const & b) const{
         return ! (*this == b);
     }
+
+    inline bool operator<(ComponentID const & b) const{
+        return id < b.id || pid < b.pid;
+    }
 } ;
 // TODO:
 // ComponentID(siox_component){}
@@ -168,32 +175,6 @@ struct RemoteCallIdentifier{
 
 	RemoteCallIdentifier() {};
 	RemoteCallIdentifier(NodeID nid, UniqueInterfaceID uiid, AssociateID assid) : nid(nid), uuid(uuid), instance(instance) {};
-	RemoteCallIdentifier(const NodeID* nid, const UniqueInterfaceID* uiid, const AssociateID* assid)
-	{
-		// NodeID
-		if(nid != nullptr) {
-			this->nid = *nid;
-		}
-		else {
-			this->nid = 0;
-		}
-
-		// UniqueInterfaceID
-		if(uiid != nullptr) {
-			this->uuid = *uiid;
-		}
-		else {
-			this->uuid = 0;
-		}
-
-		// AssociateID
-		if(assid != nullptr) {
-			this->instance = *assid;
-		}
-		else {
-			this->instance = 0;
-		}
-	}
 };
 
 /* Identifying an activity */
