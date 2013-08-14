@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../include")
+set(SIOX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../include")
 
 include_directories(
 	"${CMAKE_CURRENT_BINARY_DIR}"
@@ -10,9 +10,13 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
-add_library(
-	MathematicalEquation SHARED
-	MathematicalEquation.cpp
+
+add_executable(test-math
+	MathematicalEquationTest.cpp
 )
 
-add_subdirectory(test)
+target_link_libraries(
+	test-math
+	MathematicalEquation
+)
+

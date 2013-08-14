@@ -10,9 +10,15 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
-
-add_library(core-container-serializer
+add_library(
+	core-container-serializer SHARED
 	container-serializer.cpp
 )
 
-target_link_libraries(core-container-serializer ${LINK_LIBRARIES})
+target_link_libraries(
+	core-container-serializer
+	${LINK_LIBRARIES}
+)
+
+add_subdirectory(test)
+

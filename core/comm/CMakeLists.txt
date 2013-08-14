@@ -23,8 +23,8 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
-
-add_library(core-communication
+add_library(
+	core-communication
 	ConnectionMessage.cpp
 	Connection.cpp
 	ConnectionFactory.cpp
