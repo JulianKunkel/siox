@@ -4,8 +4,8 @@
 #include <boost/asio.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
 
-#include "ServiceServer.hpp"
-#include "IPCConnection.hpp"
+#include <core/comm/ServiceServer.hpp>
+#include <core/comm/ipc/IPCConnection.hpp>
 
 namespace asio = boost::asio;
 

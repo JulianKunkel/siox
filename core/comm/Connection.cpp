@@ -1,4 +1,4 @@
-#include "Connection.hpp"
+#include <core/comm/Connection.hpp>
 
 Connection::Connection(asio::io_service &io_service)
    : io_service_(&io_service),

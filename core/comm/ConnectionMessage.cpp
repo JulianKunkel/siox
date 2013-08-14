@@ -1,4 +1,4 @@
-#include "ConnectionMessage.hpp"
+#include <core/comm/ConnectionMessage.hpp>
 
 ConnectionMessage::ConnectionMessage(MessagePointer msg)
   : msg_(msg)

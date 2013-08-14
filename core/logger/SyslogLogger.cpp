@@ -1,4 +1,4 @@
-#include "SyslogLogger.hpp"
+#include <core/logger/SyslogLogger.hpp>
 
 SyslogLogger::SyslogLogger(const std::string &logname) 
 {

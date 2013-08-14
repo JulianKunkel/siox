@@ -14,9 +14,9 @@
 #include <sstream>
 #include <string>
 
-#include "Activity.hpp"
-#include "Callback.hpp"
-#include "SioxLogger.hpp"
+#include <monitoring/datatypes/Activity.hpp>
+#include <core/comm/Callback.hpp>
+#include <core/logger/SioxLogger.hpp>
 
 /*
  * PostgreSQL OID's:

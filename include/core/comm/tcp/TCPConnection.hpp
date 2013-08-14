@@ -8,8 +8,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
-#include "Connection.hpp"
-#include "ServiceServer.hpp"
+#include <core/comm/Connection.hpp>
+#include <core/comm/ServiceServer.hpp>
 
 namespace asio = boost::asio;
 

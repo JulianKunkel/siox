@@ -5,8 +5,8 @@
 
 #include <string>
 
-#include "Logger.hpp"
-#include "ServiceClient.hpp"
+#include <core/logger/Logger.hpp>
+#include <core/comm/ServiceClient.hpp>
 
 class NetLogger 
    : public Logger {

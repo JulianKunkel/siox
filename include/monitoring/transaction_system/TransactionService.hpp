@@ -5,12 +5,12 @@
 #include <boost/shared_ptr.hpp>
 #include <string>
 
-#include "Connection.hpp"
-#include "ConnectionMessage.hpp"
-#include "ServerFactory.hpp"
-#include "ServiceServer.hpp"
-#include "SioxLogger.hpp"
-#include "TransactionBackend.hpp"
+#include <core/comm/Connection.hpp>
+#include <core/comm/ConnectionMessage.hpp>
+#include <core/comm/ServerFactory.hpp>
+#include <core/comm/ServiceServer.hpp>
+#include <core/logger/SioxLogger.hpp>
+#include <monitoring/transaction_system/TransactionBackend.hpp>
 
 class TransactionService {
 	   

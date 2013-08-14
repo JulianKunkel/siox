@@ -1,4 +1,4 @@
-#include "ConnectionFactory.hpp"
+#include <core/comm/ConnectionFactory.hpp>
 
 namespace ConnectionFactory {
 
