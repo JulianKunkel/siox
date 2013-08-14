@@ -106,7 +106,7 @@ namespace core{
 
 		ContainerSerializer cs = ContainerSerializer();
 		stringstream already_parsed_config(transformed_config.str());
-		// cout << transformed_config.str() << endl;		
+		//cout << transformed_config.str() << endl;		
 		while(! already_parsed_config.eof()) {
 			// check if the stream is empty
 			char c; 

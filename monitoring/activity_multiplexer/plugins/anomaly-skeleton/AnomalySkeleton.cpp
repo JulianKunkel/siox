@@ -101,8 +101,10 @@ public:
 	}
 
 	~AnomalySkeleton(){
-		multiplexer->unregisterListener(this);
-		multiplexer->unregisterListener(ala);		
+		if(multiplexer != nullptr){
+			multiplexer->unregisterListener(this);
+			multiplexer->unregisterListener(ala);		
+		}
 
 		delete(ala);
 	}
@@ -130,6 +132,7 @@ public:
 		ala = new ActivityListenerAsync(this);
 
 		this->multiplexer = & multiplexer;
+		assert(this->multiplexer != nullptr);
 
 		multiplexer.registerListener(this);
 		multiplexer.registerListener(ala);

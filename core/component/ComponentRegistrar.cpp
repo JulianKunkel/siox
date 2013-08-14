@@ -1,5 +1,7 @@
 #include <assert.h>
 
+#include <iostream>
+
 #include <core/component/ComponentRegistrar.hpp>
 
 using namespace std;
@@ -20,7 +22,7 @@ namespace core {
 	}
 
 	void ComponentRegistrar::shutdown(){
-		  for (auto it = list.rend(); it != list.rbegin(); it++){
+		  for (auto it = list.rbegin(); it != list.rend(); it++){
 		  	  	delete(*it);
 		  }
 	}

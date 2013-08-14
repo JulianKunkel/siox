@@ -37,10 +37,10 @@ main(){
     // ------------------
 
     // Unique interface identifiers
-    siox_unique_interface      siox_our_ui;    // This component
-    siox_unique_interface      siox_mufs_ui;   // The MUFS layer we will use
+    siox_unique_interface      * siox_our_ui;    // This component
+    siox_unique_interface      * siox_mufs_ui;   // The MUFS layer we will use
 
-    siox_node some_node;
+    siox_node * some_node;
 
     // This component's identifier
     siox_component *            siox_our_component;
@@ -135,17 +135,15 @@ main(){
     siox_act_type_write = siox_component_register_activity( siox_our_ui, "write" );
 
     // Register the attributes we will need
-    siox_att_filename = siox_ontology_register_attribute( "filesystem",
-                                                          "filename",
-                                                          SIOX_STORAGE_STRING );
+    siox_att_filename = siox_ontology_register_attribute( "filesystem", "filename", SIOX_STORAGE_STRING );
     siox_att_bytes2write = siox_ontology_register_attribute_with_unit( "io",
                                                                        "data volume/to write",
                                                                        "Bytes",
-                                                                       SIOX_STORAGE_64_BIT_INTEGER );
+                                                                       SIOX_STORAGE_64_BIT_UINTEGER );
     siox_att_byteswritten = siox_ontology_register_attribute_with_unit( "io",
                                                                         "data volume/written",
                                                                         "Bytes",
-                                                                        SIOX_STORAGE_64_BIT_INTEGER );
+                                                                        SIOX_STORAGE_64_BIT_UINTEGER );
     /// @todo Mark filename (and b2w?) as descriptors
 
 

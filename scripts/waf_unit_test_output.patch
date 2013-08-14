@@ -1,0 +1,12 @@
+--- .waf-1.7.11-2cc477dce789fbb3bd8074cb47b92c83/waflib/Tools/waf_unit_test.py	2013-02-14 12:22:54.619853486 +0100
+@@ -54,6 +54,10 @@
+ 		proc=Utils.subprocess.Popen(self.ut_exec,cwd=cwd,env=fu,stderr=Utils.subprocess.PIPE,stdout=Utils.subprocess.PIPE)
+ 		(stdout,stderr)=proc.communicate()
+ 		tup=(filename,proc.returncode,stdout,stderr)
++		if(proc.returncode != 0):
++			print("Error in " + filename);
++			print(stdout);
++			print(stderr);
+ 		self.generator.utest_result=tup
+ 		testlock.acquire()
+ 		try:

@@ -9,7 +9,7 @@
 
 using namespace std;
 
-class VariableDatatypeAssessor;
+class VariableDatatypeAccessor;
 
 class VariableDatatype{
 public:	
@@ -32,7 +32,7 @@ protected:
 	union Data data;
 	enum Type type_;
 
-	friend VariableDatatypeAssessor;
+	friend VariableDatatypeAccessor;
 public:	
 	VariableDatatype(){ data.i64 = 0; type_ = Type::INVALID; } 
 
@@ -53,6 +53,40 @@ public:
 			data.str = strdup(d.data.str);
 		}		
 	}
+
+	VariableDatatype(VariableDatatype && d){ // move constructor
+		data.i64 = d.data.i64;
+		type_ = d.type_;
+		if(type_ == Type::STRING){
+			data.str = d.data.str;
+			d.data.str = nullptr;
+			d.type_ = Type::INVALID;
+		}
+	}
+
+	VariableDatatype & operator=(const VariableDatatype & d){
+		//cout << (int) type_ << " " << (int) d.type_ << endl; 
+		//At the moment we do not allow to change the datatype during assignments because this is errorprone.
+		assert(type_ == d.type_ || type_ == Type::INVALID);
+		if(type_ != Type::INVALID){
+			if(type_ != Type::STRING){
+				data.i64 = d.data.i64;
+			}else{
+				free(d.data.str);
+				data.str = strdup(d.data.str);
+			}
+		}else{
+			type_ = d.type_;
+			if(type_ != Type::STRING){
+				data.i64 = d.data.i64;
+			}else{
+				data.str = strdup(d.data.str);
+			}
+		}
+
+		return *this;
+	}
+
 
 	~VariableDatatype(){
 		if (this->type_ == Type::STRING){
