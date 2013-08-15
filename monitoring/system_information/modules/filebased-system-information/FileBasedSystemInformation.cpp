@@ -43,22 +43,19 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 			return;
 		try{
 			boost::archive::xml_iarchive archive(file, boost::archive::no_header | boost::archive::no_codecvt);
-			//archive >> boost::serialization::make_nvp("MAX_VALUE", nextID);
-			//archive >> boost::serialization::make_nvp("map", attribute_map);
+			archive >> boost::serialization::make_nvp("nextID", nextID);
+			archive >> boost::serialization::make_nvp("valueStringMap", valueStringMap);
+			archive >> boost::serialization::make_nvp("deviceNodeMap", deviceNodeMap);
+			archive >> boost::serialization::make_nvp("interfaceImplStrMap", interfaceImplStrMap);
+			archive >> boost::serialization::make_nvp("interfaceImplMap", interfaceImplMap);
+			archive >> boost::serialization::make_nvp("deviceMap", deviceMap);
+			archive >> boost::serialization::make_nvp("filesystemMap", filesystemMap);
+			archive >> boost::serialization::make_nvp("nodeMap", nodeMap);
+			archive >> boost::serialization::make_nvp("activityInterfaceIDMap", activityInterfaceIDMap);
+			archive >> boost::serialization::make_nvp("activityMap", activityMap);
 
-			// recreate domain_name_map
-			// for(auto itr = attribute_map.begin(); itr != attribute_map.end(); itr++){
-			// 	auto pair = *itr;
-			// 	AttributeWithValues * av = pair.second;
-
-			// 	stringstream unique(av->attribute.domain);
-			// 	unique << "|" << av->attribute.name;
-			// 	string fqn(unique.str());
-
-			// 	domain_name_map[fqn] = av; 
-			// }
 		}catch(boost::archive::archive_exception e){
-			cerr << "Input file " << filename << " is damaged, recreating ontology!" << endl;
+			cerr << "Input file " << filename << " is damaged, recreating system info!" << endl;
 			//domain_name_map.clear();
 			//attribute_map.clear();
 			nextID = 1;
@@ -70,8 +67,16 @@ class FileBasedSystemInformation: public SystemInformationGlobalIDManager{
 	void save(string filename){
 		ofstream file(filename);
 		boost::archive::xml_oarchive archive(file, boost::archive::no_header | boost::archive::no_codecvt);
-		//archive << boost::serialization::make_nvp("MAX_VALUE", nextID);
-		//archive << boost::serialization::make_nvp("map", attribute_map);
+		archive << boost::serialization::make_nvp("nextID", nextID);
+		archive << boost::serialization::make_nvp("valueStringMap", valueStringMap);
+		archive << boost::serialization::make_nvp("deviceNodeMap", deviceNodeMap);
+		archive << boost::serialization::make_nvp("interfaceImplStrMap", interfaceImplStrMap);
+		archive << boost::serialization::make_nvp("interfaceImplMap", interfaceImplMap);
+		archive << boost::serialization::make_nvp("deviceMap", deviceMap);
+		archive << boost::serialization::make_nvp("filesystemMap", filesystemMap);
+		archive << boost::serialization::make_nvp("nodeMap", nodeMap);
+		archive << boost::serialization::make_nvp("activityInterfaceIDMap", activityInterfaceIDMap);
+		archive << boost::serialization::make_nvp("activityMap", activityMap);
 
 		file.close();
 	}
@@ -294,6 +299,7 @@ private:
 	map<DeviceID, NodeID> deviceNodeMap;
 
 	map<uint32_t, pair<string,string>> interfaceImplStrMap;
+
 	map<pair<string,string>, uint32_t> interfaceImplMap;
 
 	map<pair<NodeID,string>, uint32_t> deviceMap;
