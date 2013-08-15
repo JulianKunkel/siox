@@ -249,13 +249,14 @@ template = {
 # Key: A descriptor linking both activities together (such as a file name),
 #	   in int or long int form
 # Activity: Activity to be linked; defaults to sioxActivity
+# The parent may be NULL in some cases
 'activity_link_int': {
 	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
 	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
-    			siox_activity_link_to_parent( %(Activity)s, Parent );
+            if(Parent != NULL) siox_activity_link_to_parent( %(Activity)s, Parent ); 
 			  ''',
 	'cleanup': '',
 	'final': ''
