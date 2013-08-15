@@ -16,7 +16,7 @@ template = {
 }
 
 # Insert global once
-globalOnce = "static GMutex TestMapMutex; \n GSList *testlist = NULL;"
+globalOnce = ""
 
 # Regexes for functions to throw away
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
