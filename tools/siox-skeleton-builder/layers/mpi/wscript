@@ -18,7 +18,7 @@ def configure(conf):
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
 	conf.check_cc(lib='dl', uselib_store='DL', mandatory = True)
 
-        conf.check(header_name='monitoring/low-level-c/siox-ll.h', features='c cprogram')
+        conf.check(header_name='C/siox.h', features='c cprogram')
 
         # locate mpi.h and mpicc
 	if conf.options.MPI:
