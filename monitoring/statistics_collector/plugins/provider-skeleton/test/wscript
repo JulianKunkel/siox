@@ -2,6 +2,6 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-activityPlugin-AnomalySkeleton siox-core-AutoConfigurator", target = 'ProviderSkeletonTest', source = 'ProviderSkeletonTest.cpp', )
+    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-activityPlugin-AnomalySkeleton siox-core-AutoConfigurator", target = 'ProviderSkeletonTest', source = 'ProviderSkeletonTest.cpp', install_path = None)
 
 # -*- indent-tabs-mode: t -*-

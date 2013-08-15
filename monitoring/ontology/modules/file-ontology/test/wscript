@@ -2,6 +2,6 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-core-ModuleLoader siox-monitoring-FileOntology", target = 'file-ontology-test', source = 'file-ontology-test.cpp', )
+    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-core-ModuleLoader siox-monitoring-FileOntology", target = 'file-ontology-test', source = 'file-ontology-test.cpp', install_path = None)
 
 # -*- indent-tabs-mode: t -*-

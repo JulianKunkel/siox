@@ -3,6 +3,6 @@
 
 def build(bld):
 	bld.shlib(includes="",  use = "siox-core-ModuleLoader" ,  target = 'test-module', source = 'test-module.cpp', install_path = None)
-	bld.program(includes="",  features='test cxx cxxprogram', use = "siox-core-ModuleLoader" ,  target = 'test-ModuleLoaderTest',	source = 'main.cpp', install_path = None)
+	bld.program(includes="",  features='test cxx cxxprogram', use = "siox-core-ModuleLoader" ,  target = 'test-ModuleLoaderTest',	source = 'main.cpp', install_path = None, )
 
 # -*- indent-tabs-mode: t -*-
