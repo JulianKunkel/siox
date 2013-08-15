@@ -6,9 +6,9 @@
 
 #include "libpq-fe.h"
 
-#include "PostgreSQLPumpCallback.hpp"
-#include "SioxLogger.hpp"
-#include "TransactionBackend.hpp"
+#include <core/logger/SioxLogger.hpp>
+#include <monitoring/transaction_system/PostgreSQLPumpCallback.hpp>
+#include <monitoring/transaction_system/TransactionBackend.hpp>
 
 class PostgreSQLBackendException 
    : public std::exception {

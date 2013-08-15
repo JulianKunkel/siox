@@ -1,0 +1,144 @@
+This text aims to show you how to use cmake in SIOX.
+
+1. Creating the list files 
+==========================
+
+A "CMakeLists.txt" file should be created inside each directory containing .c or 
+.cpp files. This file should contain the following header (without the "-----"):
+
+-------------
+cmake_minimum_required(VERSION 2.8)
+project(SIOX)
+
+include_directories(
+	"${SIOX_INCLUDE}"
+	"${SIOX_SOURCES}"
+)
+-------------
+
+The global settings are specified in "Komponenten/CMakeLists.txt", open it and 
+take a look at CMAKE_CXX_FLAGS, SIOX_SOURCES and SIOX_INCLUDE. These three 
+variables will always be available CMakeLists.txt files you create.
+
+2. Setting paths to your header files
+=====================================
+
+You can add paths to your .h(pp) files using include_directories(). 
+It's encouraged to leave the include_directories as it's shown above and type in
+the paths directly in your source code instead, for example, instead of doing:
+
+#include "Callback.h"
+
+use something like:
+
+#include <core/comm/Callback.h>
+
+3. Creating shared libraries
+=============================
+
+To create a shared library you append the following to your CMakeLists.txt file:
+
+----------------------------------------
+add_library(
+	library_name SHARED
+	all-the-cpp-files-you-need
+)
+
+target_link_libraries(
+	library_name
+	all-the-dependencies
+)
+----------------------------------------
+
+Inside add_library() you put all the .c(pp) files needed to compile the library.
+Inside the target_link_libraries() you don't put any source files, but other
+already compiled libraries that your library might depend on, for example the
+module-loader. 
+
+3. Creating an executable
+=========================
+
+For the tests etc. you want an executable instead of a library and what you 
+basically do is to replace add_library() with add_executable()
+
+----------------------------------------
+add_executable(
+	executable_name 
+	all-the-cpp-files-you-need
+)
+
+target_link_libraries(
+	executable_name
+	all-the-dependencies
+)
+----------------------------------------
+
+4. Setting compilation flags
+============================
+
+You can expand the basic flags set in Komponenten/CMakeLists.txt by doing 
+something like:
+
+----------------------------------------
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -lpq -lrt -lgmodule-2.0")
+----------------------------------------
+
+there for example you have the extra flags for pthreads, postgres, realtime and 
+GLIB's gmodule.
+
+Every variable you set with set() is inherited by the subdirectories you include
+(see 5).
+
+5. Adding subdirectories
+=========================
+
+You can chain the compile process by including the CMakeLists.txt files of 
+subdirectories. To do this use:
+
+----------------------------------------
+add_subdirectory(subdirectory-with-own-cmakelist-file)
+----------------------------------------
+
+6. Including 3rd party libraries
+================================
+
+To use 3rd party libraries like boost, glib, postgres, etc. you have to use
+find_package(). This command creates a set of variables with the paths to these
+libraries (if their are installed, of course)
+
+----------------------------------------
+find_package(GLIB2 REQUIRED)
+find_package(Boost 1.53.0)
+
+include_directories(
+	"${SIOX_INCLUDE}"
+	"${SIOX_SOURCES}"
+	"${Boost_INCLUDE_DIR}"
+	"${GLIB2_INCLUDE_DIRS}"
+)
+
+add_library(
+	library-name-here SHARED
+	cpp-files-here
+)
+
+target_link_libraries(
+	library-name-here
+	"${Boost_LIBRARIES}"
+	"${GLIB2_LIBRARIES}"
+)
+----------------------------------------
+
+If the libraries you are trying to use are outside of the normal library path,
+you have to export the paths to this library before running cmake, like this:
+
+
+export CMAKE_LIBRARY_PATH="/stuff/mylibrary/lib:$CMAKE_LIBRARY_PATH" 
+export CMAKE_INCLUDE_PATH="/stuff/mylibrary/include:$CMAKE_INCLUDE_PATH"
+
+7. Compiling
+=============
+
+Create the directory "Komponenten/build" and run "cmake .." inside it, follwed 
+by "make".
+

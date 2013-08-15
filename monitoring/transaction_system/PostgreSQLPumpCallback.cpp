@@ -9,8 +9,8 @@
  * 
  */
 
-#include "PostgreSQLPumpCallback.hpp"
-#include "Util.hpp"
+#include <monitoring/transaction_system/PostgreSQLPumpCallback.hpp>
+#include <misc/Util.hpp>
 
 PostgreSQLPumpCallback::PostgreSQLPumpCallback(PGconn &dbconn)
    : dbconn_(&dbconn)

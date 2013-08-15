@@ -9,10 +9,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "PostgreSQLBackend.hpp"
-#include "SyslogLogger.hpp"
-#include "TransactionBackend.hpp"
-#include "TransactionService.hpp"
+#include <core/logger/SyslogLogger.hpp>
+#include <monitoring/transaction_system/PostgreSQLBackend.hpp>
+#include <monitoring/transaction_system/TransactionBackend.hpp>
+#include <monitoring/transaction_system/TransactionService.hpp>
 
 #define SIOX_TS_LISTENER  "tcp://localhost:7000"
 #define SIOX_DB_INFO "host = '127.0.0.1' port = '5432' user = 'postgres' password = 'siox.db.X916' dbname = 'siox-ts'"

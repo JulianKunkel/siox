@@ -3,9 +3,9 @@
 
 #include <string>
 
-#include "Logger.hpp"
-#include "ServerFactory.hpp"
-#include "SioxLogger.hpp"
+#include <core/logger/Logger.hpp>
+#include <core/logger/SioxLogger.hpp>
+#include <core/comm/ServerFactory.hpp>
 
 Logger *logger;
 

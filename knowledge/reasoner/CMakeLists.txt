@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-add_subdirectory(transaction_system)
-
+add_subdirectory(modules)

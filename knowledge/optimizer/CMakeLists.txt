@@ -3,4 +3,5 @@ project(SIOX)
 
 add_subdirectory(modules)
 add_subdirectory(plugins)
+add_subdirectory(test)
 

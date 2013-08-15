@@ -1,4 +1,4 @@
-#include "IPCConnection.hpp"
+#include <core/comm/ipc/IPCConnection.hpp>
 
 IPCConnection::IPCConnection(Service &service, 
 			     asio::io_service &io_service)

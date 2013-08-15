@@ -1,7 +1,7 @@
 #ifndef CALLBACK_H
 #define CALLBACK_H
 
-#include "ConnectionMessage.hpp"
+#include <core/comm/ConnectionMessage.hpp>
 
 class Callback {
 	
