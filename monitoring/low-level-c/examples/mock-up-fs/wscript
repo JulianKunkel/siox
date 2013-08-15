@@ -10,10 +10,10 @@ def build(bld):
    except OSError, e:
    	 	pass
    
-   bld.shlib(includes="",  target = "test-mufs", use = "siox-monitoring-siox-monitoring-siox-ll", source = 'mufs.c' )
+   bld.shlib(includes="",  target = "test-mufs", use = "siox-monitoring-siox-monitoring-siox-ll", source = 'mufs.c', install_path = None )
    #bld.shlib(includes="",  target = "test-test-test-mufs", use = "siox-core-ModuleLoader siox-core-AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp' )
 
-   bld.program(includes="",  use = "siox-monitoring-siox-ll test-mufs siox-monitoring-ActivityBuilder",  features='test c cprogram', target = 'mockupfs-example', source = 'mockupfs-example.c', install_path = None,)
+   bld.program(includes="",  use = "siox-monitoring-siox-ll test-mufs siox-monitoring-ActivityBuilder",  features='test c cprogram', target = 'mockupfs-example', source = 'mockupfs-example.c', install_path = None)
 
 
 # -*- indent-tabs-mode: t -*-

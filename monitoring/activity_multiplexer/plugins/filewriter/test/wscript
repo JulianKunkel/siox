@@ -3,6 +3,6 @@
 
 def build(bld):
     pass
-    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-ActivityMultiplexerAsyncThreaded siox-core-ModuleLoader siox-monitoring-activityPlugin-ActivityFileWriter siox-core-AutoRegistrar", target = 'ActivityFileWriterTest', source = 'ActivityFileWriterTest.cpp', install_path = None,)
+    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-ActivityMultiplexerAsyncThreaded siox-core-ModuleLoader siox-monitoring-activityPlugin-ActivityFileWriter siox-core-AutoRegistrar", target = 'ActivityFileWriterTest', source = 'ActivityFileWriterTest.cpp', )
 
 # -*- indent-tabs-mode: t -*-

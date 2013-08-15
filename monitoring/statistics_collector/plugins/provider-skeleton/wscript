@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(includes="",  use = "siox-core-AutoConfigurator", target = 'siox-monitoring-statisticsPlugin-providerskel', source = 'ProviderSkeleton.cpp' )
+    bld.shlib(includes="",  use = "siox-core-AutoConfigurator", target = 'siox-monitoring-statisticsPlugin-providerskel', source = 'ProviderSkeleton.cpp',install_path = None)
 
     bld.recurse(['test'], mandatory=True)
 

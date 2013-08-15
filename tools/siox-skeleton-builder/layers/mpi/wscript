@@ -75,7 +75,7 @@ def build(bld):
 		wrap_file="build/" + LAYER + ".wrap"
 		if os.path.isfile(wrap_file):
 			wrap_linkerflags = open(wrap_file, 'r').read()
-			bld.program(includes="",  source = 'test/test.c', target = 'test-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOXLLIMPL", LAYER + ".wrap"] ,  install_path = None,
+			bld.program(includes="",  source = 'test/test.c', target = 'test-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOXLLIMPL", LAYER + ".wrap"] ,  
 				linkflags=wrap_linkerflags)
 		else:
 			print "Please rerun ./waf build to build wrapped examples"

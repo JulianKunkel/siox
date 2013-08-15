@@ -2,6 +2,6 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-statisticsPlugin-IOstats siox-core-AutoConfigurator", target = 'iostatsTestSkel', source = 'iostatsTest.cpp', install_path = None,)
+    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-statisticsPlugin-IOstats siox-core-AutoConfigurator", target = 'iostatsTestSkel', source = 'iostatsTest.cpp', )
 
 # -*- indent-tabs-mode: t -*-
