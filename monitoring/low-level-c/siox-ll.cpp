@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include <sstream>
+#include <fstream>
+#include <pwd.h>
+
 #include <core/module/module-loader.hpp>
 #include <core/datatypes/VariableDatatype.hpp>
 
@@ -32,8 +36,8 @@ extern "C" {
 __thread int siox_namespace = 0;
 }
 
-#define FUNCTION_BEGIN siox_namespace = 1;
-#define FUNCTION_END siox_namespace = 0;
+#define FUNCTION_BEGIN siox_namespace++;
+#define FUNCTION_END siox_namespace--;
 
 #define U32_TO_P(i) ((void*)((size_t)(i)))
 #define P_TO_U32(p) ((uint32_t)((size_t)(p)))
@@ -94,7 +98,73 @@ ProcessID create_process_id(NodeID nid){
 //    return {.nid = nid, .pid = (uint32_t) pid , .time = (uint32_t) tv.tv_sec};
 }
 
+static string readfile(const string & filename){
+    ifstream file(filename, ios_base::in | ios_base::ate);
+    if(! file.good()){
+        // TODO add error value.
+        return string("(error in ") + filename + ")";
+    }
 
+    //return string((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+
+    // Some files from /proc contain 0.
+    stringstream s;
+    while(! file.eof()){
+        char c;
+        file >> c;
+        if(c == 0){
+            c = ' ';
+        }
+        s << c;
+    }
+
+    return s.str();
+}
+
+static void add_program_information(){
+    uint64_t pid = getpid();
+    uint64_t u64;
+    string read;
+
+    OntologyAttribute description;
+    description = process_data.ontology->register_attribute("program", "description/commandLine", VariableDatatype::Type::STRING );
+
+    {
+    stringstream s;
+    s << "/proc/" << pid << "/cmdline";
+    read = readfile(s.str());
+    }
+    process_data.association_mapper->set_process_attribute(process_data.pid, description, read);
+
+
+    description = process_data.ontology->register_attribute("program", "description/user-id", VariableDatatype::Type::UINT64 );
+    u64 = (uint64_t) getuid();
+    process_data.association_mapper->set_process_attribute(process_data.pid, description, u64);
+
+
+    description = process_data.ontology->register_attribute("program", "description/group-id", VariableDatatype::Type::UINT64 );
+    u64 = (uint64_t) getgid();
+    process_data.association_mapper->set_process_attribute(process_data.pid, description, u64);
+
+    struct passwd * pwd = getpwuid(getuid());
+
+    if (pwd != nullptr){
+        description = process_data.ontology->register_attribute("program", "description/user-name", VariableDatatype::Type::STRING );
+       process_data.association_mapper->set_process_attribute(process_data.pid, description, pwd->pw_name );
+    }
+
+
+    description = process_data.ontology->register_attribute("program", "description/environment", VariableDatatype::Type::STRING );
+    {
+    stringstream s;
+    s << "/proc/" << pid << "/environ";
+    read = readfile(s.str());
+    }
+    process_data.association_mapper->set_process_attribute(process_data.pid, description, read);
+}
+
+static void add_program_statistics(){
+}
 
 extern "C"{
 
@@ -186,6 +256,8 @@ __attribute__ ((constructor)) void siox_ll_ctor()
     process_data.pid = create_process_id(process_data.nid);
     }
 
+    add_program_information();
+
     finalized = false;
     FUNCTION_END
 }
@@ -198,6 +270,8 @@ __attribute__ ((destructor)) void siox_ll_dtor()
     }
     // Never enter any siox function after it has been stopped.
     FUNCTION_BEGIN
+
+    add_program_statistics();
 
     // cleanup datastructures by using the component registrar:
     process_data.registrar->shutdown();
