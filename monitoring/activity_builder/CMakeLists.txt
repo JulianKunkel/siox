@@ -10,7 +10,7 @@ include_directories(
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -pthread -lrt")
 
 add_library(
-	ActivityBuilder SHARED
+	ActivityBuilder
 	ActivityBuilder.cpp
 	"${SIOX_SOURCES}/monitoring/helpers/siox_time.c"
 )

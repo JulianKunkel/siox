@@ -10,7 +10,7 @@ include_directories(
 )
 
 add_library(
-	FileOntology SHARED
+	FileOntology
 	FileOntology.cpp
 )
 

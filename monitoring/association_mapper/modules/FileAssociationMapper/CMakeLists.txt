@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	FileAssociationMapper SHARED
+	FileAssociationMapper
 	FileAssociationMapper.cpp
 )
 

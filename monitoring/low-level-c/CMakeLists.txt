@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	siox-ll SHARED
+	siox-ll
 	siox-ll.cpp
 )
 

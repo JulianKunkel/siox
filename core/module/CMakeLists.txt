@@ -12,7 +12,7 @@ include_directories(
 )
 
 add_library(
-	module-loader SHARED
+	module-loader
 	module-loader.cpp
 )
 

@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	OptimizerStandardImplementation SHARED
+	OptimizerStandardImplementation
 	OptimizerStandardImplementation.cpp
 )
 

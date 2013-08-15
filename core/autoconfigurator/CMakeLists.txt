@@ -10,12 +10,12 @@ include_directories(
 )
 
 add_library(
-	AutoConfigurator SHARED
+	AutoConfigurator
 	AutoConfigurator.cpp
 )
 
 target_link_libraries(
-	AutoConfigurator 
+	AutoConfigurator
 	core-component-registrar
 	core-container-serializer
 	"${Boost_LIBRARIES}"

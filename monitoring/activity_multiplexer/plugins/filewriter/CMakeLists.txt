@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	ActivityFileWriter SHARED
+	ActivityFileWriter
 	ActivityFileWriter.cpp
 )
 

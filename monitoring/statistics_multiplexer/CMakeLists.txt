@@ -8,7 +8,7 @@ include_directories(
 )
 
 add_library(
-	StatisticsMultiplexerSync SHARED
+	StatisticsMultiplexerSync
 	StatisticsMultiplexerSync.cpp
 )
 

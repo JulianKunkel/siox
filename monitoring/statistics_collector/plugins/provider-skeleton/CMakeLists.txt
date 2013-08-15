@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	StatisticsProviderSkeleton SHARED
+	StatisticsProviderSkeleton
 	ProviderSkeleton.cpp
 )
 

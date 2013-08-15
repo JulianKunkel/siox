@@ -10,7 +10,7 @@ include_directories(
 )
 
 add_library(
-	FileBasedSystemInformation SHARED
+	FileBasedSystemInformation
 	FileBasedSystemInformation.cpp
 )
 

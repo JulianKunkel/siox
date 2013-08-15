@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	ActivityForwarder SHARED
+	ActivityForwarder
 	ActivityForwarder.cpp
 )
 

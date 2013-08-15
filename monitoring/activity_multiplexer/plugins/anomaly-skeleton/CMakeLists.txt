@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	AnomalySkeleton SHARED
+	AnomalySkeleton
 	AnomalySkeleton.cpp
 )
 

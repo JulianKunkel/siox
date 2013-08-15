@@ -10,7 +10,7 @@ include_directories(
 )
 
 add_library(
-	network SHARED
+	network
 	network.cpp
 )
 

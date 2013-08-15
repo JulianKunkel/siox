@@ -10,7 +10,7 @@ include_directories(
 )
 
 add_library(
-	OSMemUsage SHARED
+	OSMemUsage
 	OSMemUsage.cpp
 )
 

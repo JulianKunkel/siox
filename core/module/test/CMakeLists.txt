@@ -20,7 +20,7 @@ target_link_libraries(
 	"${GLIB2_LIBRARIES}"
 )
 
-add_library(test-module SHARED
+add_library(test-module
 	test-module.cpp
 )
 

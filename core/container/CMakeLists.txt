@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	core-container-serializer SHARED
+	core-container-serializer
 	container-serializer.cpp
 )
 

@@ -10,7 +10,7 @@ include_directories(
 )
 
 add_library(
-	iostats SHARED
+	iostats
 	iostats.cpp
 )
 

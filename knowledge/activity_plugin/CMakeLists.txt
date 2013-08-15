@@ -7,6 +7,6 @@ include_directories(
 )
 
 add_library(
-	ActivityPluginDereferencingStandardImpl SHARED
+	ActivityPluginDereferencingStandardImpl
 	ActivityPluginDereferencingStandardImpl.cpp
 )

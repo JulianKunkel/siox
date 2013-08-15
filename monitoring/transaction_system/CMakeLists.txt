@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include(FindProtobuf)
-
 find_package(Protobuf REQUIRED)
+
+list(REMOVE_ITEM PROTOBUF_LIBRARIES "debug" "optimized")
+
 find_package(PostgreSQL REQUIRED)
 find_package(Boost 1.53.0 COMPONENTS system thread REQUIRED)
 
@@ -21,18 +23,34 @@ include_directories(
 )
 
 add_library(
-	monitoring-transactionsystem SHARED
+	monitoring-transactionsystem
 	PostgreSQLBackend.cpp
 	PostgreSQLPumpCallback.cpp
 	TransactionService.cpp
-	${PROTO_SRCS}
-	${PROTO_HDRS}
+	"${PROTO_SRCS}"
+	"${PROTO_HDRS}"
 )
 
 target_link_libraries(
 	monitoring-transactionsystem 
-	${PROTOBUF_LIBRARIES} 
-	${PostgreSQL_LIBRARIES} 
-	${Boost_LIBRARIES}
+	core-communication
+	core-logger
+	"${PROTOBUF_LIBRARIES}" 
+	"${PostgreSQL_LIBRARIES}"
+	"${Boost_LIBRARIES}"
+)
+
+add_executable(
+	transaction_server
+	transaction_server.cpp
+)
+
+target_link_libraries(
+	transaction_server
+	monitoring-transactionsystem
+	core-communication 
+	core-logger
+	"${PROTOBUF_LIBRARIES}"
+	"${Boost_LIBRARIES}"
 )
 

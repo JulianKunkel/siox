@@ -10,7 +10,7 @@ include_directories(
 )
 
 add_library(
-	CPUstats SHARED
+	CPUstats
 	cpustats.cpp
 )
 

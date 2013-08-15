@@ -9,7 +9,7 @@ include_directories(
 )
 
 add_library(
-	ReasonerStandardImplementation SHARED
+	ReasonerStandardImplementation
 	ReasonerStandardImplementation.cpp
 	"${Boost_INCLUDE_DIR}"
 )

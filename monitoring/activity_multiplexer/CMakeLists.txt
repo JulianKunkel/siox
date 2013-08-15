@@ -9,7 +9,7 @@ include_directories(
 )
 
 add_library(
-	ActivityMultiplexerAsyncThreaded SHARED
+	ActivityMultiplexerAsyncThreaded
 	ActivityMultiplexerAsyncThreaded.cpp
 	ActivityPluginDereferencingStandardImpl.cpp
 )

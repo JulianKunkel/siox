@@ -7,7 +7,7 @@ include_directories(
 )
 
 # add_library(
-# 	ThreadedStatisticsCollector SHARED
+# 	ThreadedStatisticsCollector
 # 	ThreadedStatisticsCollector.cpp
 # )
 # 

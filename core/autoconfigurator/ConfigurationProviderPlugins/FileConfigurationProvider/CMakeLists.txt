@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	FileConfigurationProvider SHARED
+	FileConfigurationProvider
 	FileConfigurationProvider.cpp
 )
 

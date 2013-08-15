@@ -7,7 +7,7 @@ include_directories(
 )
 
 add_library(
-	core-component-registrar SHARED
+	core-component-registrar
 	ComponentRegistrar.cpp
 )
 

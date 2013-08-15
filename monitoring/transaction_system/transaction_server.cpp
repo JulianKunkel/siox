@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <core/logger/SyslogLogger.hpp>
+#include <core/logger/SioxLogger.hpp>
 #include <monitoring/transaction_system/PostgreSQLBackend.hpp>
 #include <monitoring/transaction_system/TransactionBackend.hpp>
 #include <monitoring/transaction_system/TransactionService.hpp>
