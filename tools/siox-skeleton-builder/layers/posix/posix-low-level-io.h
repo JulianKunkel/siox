@@ -3,6 +3,7 @@
  * Kurzbeschreibungen hier hineinkopieren!
  */
 
+
 #include <unistd.h>
 #include <sys/uio.h>
 #include <sys/types.h>
@@ -13,17 +14,16 @@
 #include <errno.h>
 
 /* Set the interface name for the library*/
-//@component "POSIX"
+//@component "POSIX" ""
 
 /* Register the data types for the descriptors */
-//@register_attribute bytesToRead "Bytes to read" SIOX_STORAGE_64_BIT_INTEGER
-//@register_attribute bytesToWrite "Bytes to write" SIOX_STORAGE_64_BIT_INTEGER
-//@register_descriptor fileName "File Name" SIOX_STORAGE_STRING
-//@register_descriptor fileHandle "POSIX File Handle" SIOX_STORAGE_64_BIT_INTEGER
-
-/* Register the metrics to grab the performance data */
-//@register_metric bytesWritten "/Throughput/Write" "/Data/Volume/Bytes" SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
-//@register_metric bytesRead "/Troughput/Read" "/Data/Volume/Bytes" SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
+//@register_attribute bytesToRead "POSIX" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute bytesToWrite "POSIX" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute fileName "POSIX" "filename" SIOX_STORAGE_STRING
+//@register_attribute fileName "Global" "filesystem" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute fileHandle "POSIX" "filehandle" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute bytesWritten "POSIX" "quantity/BytesWritten" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute bytesRead "POSIX" "quantity/BytesRead" SIOX_STORAGE_64_BIT_UINTEGER
 
 /* Prepare a (hash) map to link descriptors (in this case, of type int) to their activities.
    This is necessary for the horizontal linking of activities.
@@ -35,41 +35,50 @@
 End of global part
 ------------------------------------------------------------------------------*/
 
-
+//@guard
 //@activity
 //@activity_attribute fileName pathname
 //@horizontal_map_put_int ret
-//@error ''ret < 0'' errno
-int open(const char *pathname, int flags, ...);
+//@error ''ret<0'' errno
+//@guardEnd
+int open(const char *pathname, int flags, mode_t mode);
 
+//@guard
 //@activity
 //@horizontal_map_put_int ret
-//@error ''ret < 0'' errno
+//@error ''ret<0'' errno
+//@guardEnd
 int creat(const char *pathname, mode_t mode);
 
+//@guard
 //@activity
 //@horizontal_map_remove_int fd
 /*@error 'ret < 0' ret*/
+//@guardEnd
 int close(int fd);
 
+//@guard
 //@activity
 //@activity_attribute bytesToWrite count
-//@activity_report bytesWritten ret
+//@activity_attribute bytesWritten ret
 //@activity_link_int fd
-//@error ''ret < 0'' errno
+//@error ''ret<0'' errno
+//@guardEnd
 ssize_t write(int fd, const void *buf, size_t count);
 
+//@guard
 //@activity
 //@activity_attribute bytesToRead count
-//@activity_report bytesRead ret
-//@error ''ret < 0'' errno
+//@activity_attribute bytesRead ret
+//@error ''ret<0'' errno
+//@guardEnd
 ssize_t read(int fd, void *buf, size_t count);
 
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
-ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
-ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
+//ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
+//ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
 
 /* Asynchrone IO lassen wir hier mal weg */
 /* Falls doch, siehe: http://www.ibm.com/developerworks/linux/library/l-async/index.html */

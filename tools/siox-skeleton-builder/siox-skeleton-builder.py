@@ -779,9 +779,10 @@ class Template():
 
 
 
-def prepareGenericVariablesForTemplates(function):
+def prepareGenericVariablesForTemplates(function, call=""):
   global genericVariablesForTemplates
-  genericVariablesForTemplates = {"FUNCTION_NAME" : function.name}
+  genericVariablesForTemplates = {"FUNCTION_NAME" : function.name,
+				  "FUNCTION_CALL" : call}
 
 #
 # @brief The output class (write a file to disk)
@@ -878,7 +879,16 @@ class Writer():
 
         # write all functions-bodies
         for function in functionList:
-            prepareGenericVariablesForTemplates(function)
+            # a variable to save the return-value
+            returnType = function.type
+
+            # write the function call
+            if returnType != "void":
+                functionCall = '\tret = ' + function.getCallReal() + ';\n'
+            else:
+                functionCall = '\t' + function.getCallReal() + ';\n'
+
+            prepareGenericVariablesForTemplates(function, functionCall)
             # write function signature
 
             print(function.getDefinitionWrap(),
@@ -897,8 +907,6 @@ class Writer():
                 # set the name to args
                 function.parameterList[-1].name = "val"
 
-            # a variable to save the return-value
-            returnType = function.type
 
             if returnType != "void":
                 print('\t', returnType, ' ret;', end='\n', sep='',
@@ -911,12 +919,7 @@ class Writer():
                     print('\t', outputString, end='\n', sep='', file=output)
 
             # write the function call
-            if returnType != "void":
-                print('\tret = ', function.getCallReal(), end=';\n', sep='',
-                      file=output)
-            else:
-                print('\t', function.getCallReal(), end=';\n', sep='',
-                      file=output)
+            print(functionCall, file=output)
 
             # write all after-templates for this function
             for templ in function.usedTemplateList:
@@ -1090,7 +1093,15 @@ class Writer():
 
         for function in functionList:
 
-            prepareGenericVariablesForTemplates(function)
+            # a variable to save the return-value
+            returnType = function.type
+
+            if returnType != "void":
+                functionCall = '\tret = ' + function.getCallPointer() + ';\n'
+            else:
+                functionCall = '\t' + function.getCallPointer() + '\n'
+
+            prepareGenericVariablesForTemplates(function, functionCall)
 	
             # write function signature
             print(function.getDefinition(), end='\n{\n', sep=' ',
@@ -1108,9 +1119,6 @@ class Writer():
                 # set the name to args
                 function.parameterList[-1].name = "val"
 
-            # a variable to save the return-value
-            returnType = function.type
-
             if returnType != "void":
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
@@ -1122,12 +1130,7 @@ class Writer():
                     print('\t', outputString, end='\n', sep='', file=output)
 
             # write the function call
-            if returnType != "void":
-                print('\tret = ', function.getCallPointer(), end=';\n',
-                      sep='', file=output)
-            else:
-                print('\t', function.getCallPointer(), end=';\n', sep='',
-                      file=output)
+            print(functionCall, file=output)
 
             # write all after-templates for this function
             for templ in function.usedTemplateList:
