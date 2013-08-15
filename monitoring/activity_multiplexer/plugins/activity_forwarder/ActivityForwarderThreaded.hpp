@@ -1,25 +1,51 @@
-#ifndef ACTIVITYFORWARDERTHREADED_H
-#define ACTIVITYFORWARDERTHREADED_H
 
-#include <monitoring/datatypes/Activity.hpp>
+#ifndef ACTIVITYFORWARDER_HPP_Z1AEO5ER
+#define ACTIVITYFORWARDER_HPP_Z1AEO5ER
+
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
+using namespace monitoring;
+
+//TODO queue for buffer
+//TODO notifier for dispatch
+//
+//TODO it seems to make more sense to have this inherit the multiplexer and the listener
+//		maybe, do not allow self direct reference
+
 
 /**
- * Forward an Activity from one Multiplexer to another one but in a threadsafe
- * manner, so the receiving multiplexer does not need to be thread safe.
+ * Forward an activity from one ActivityMultiplexer to another.
+ *
  */
-class ActivityForwarderThreaded : ActivityMultiplexerListener
+class ActivityForwarder: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener
 {
 public:
-	ActivityForwarder(const ActivityMultiplexer & in, const ActivityMultiplexer & out) =0;
+	/**
+	 * Minimal constructor as in and out is necessary
+	 *
+	 */
+	ActivityForwarder (ActivityMultiplexer * in, ActivityMultiplexer * out) {
+		this->in = in;
+		this->out = out;
 
+		in->registerListener(dynamic_cast<ActivityMultiplexerListener*>(this));
+	};
 
-	void Notify(Activity * element) =0;
+	/**
+	 * Implements ActivityMultiplexerListener Notify, passes activity to out.
+	 */
+	virtual void Notify(Activity * element) {
+		if ( out ) {
+			out->Log(element);
+		}
+	}
+
 
 private:
+	ActivityMultiplexer * in = NULL;
+	ActivityMultiplexer * out = NULL;
 	/* data */
 };
 
-#endif /* ACTIVITYFORWARDERTHREADED_H */
+#endif /* end of include guard: ACTIVITYFORWARDER_HPP_Z1AEO5ER */
