@@ -22,6 +22,8 @@ def configure(conf):
 		conf.env.LIBPATH_SIOX_LL = conf.options.SIOX_LL_IMPLEMENTATION
 		conf.check_cc(lib='siox-monitoring-siox-ll',  uselib_store='SIOX_LL', mandatory = True)
 
+	conf.env.LIB_SIOX_LL = ["siox-monitoring-siox-ll"]
+
 	if conf.options.SIOX:
 		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
 		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
@@ -29,6 +31,9 @@ def configure(conf):
         conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
 
 	conf.check_cc(lib='siox-monitoring-siox-ll', mandatory = True)
+
+	if not conf.options.SIOX_LL_IMPLEMENTATION:
+		conf.env.LIBPATH_SIOX_LL = os.path.dirname(conf.find_file('libsiox-monitoring-siox-ll.so', conf.env.LIBPATH))
 
 	# conf.env.append_value('LIBDIR', [conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"])
 
@@ -71,18 +76,16 @@ def build(bld):
 
 	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = LAYER + ".wrap", install_path = "${LIBDIR}")
 
-	bld.shlib(includes="",  use = "GLIB" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
-	bld.shlib(includes="",  use = "GLIB DL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
+	bld.shlib(includes="",  use = "GLIB SIOX_LL" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
+	bld.shlib(includes="",  use = "GLIB DL SIOX_LL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
 	
 	# build tests if a dummy implementation has been selected
-	if bld.env.LIBPATH_SIOX_LL:
-		bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,  
-				linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
+	bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,  
+			linkflags=wrap_linkerflags)
+	bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
 
-		bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None, rpath=bld.env.LIBPATH_SIOX_LL)
-	
-		from waflib.Tools import waf_unit_test
-		bld.add_post_fun(waf_unit_test.summary)
+	from waflib.Tools import waf_unit_test
+	bld.add_post_fun(waf_unit_test.summary)
 
 	
 

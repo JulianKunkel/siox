@@ -1067,17 +1067,23 @@ class Writer():
 
         for function in functionList:
             print(function.getDefinitionPointer(), file=output)
+        print("\tstatic int initialized_dlsym = 0;\n", file=output)
+
+        print("\nstatic void sioxSymbolInit() {\ninitialized_dlsym = 1;", file=output)	
+        for function in functionList:
+            print(function.getDlsym(), file=output)
+	print("}", file=output)
 
         print("\nstatic void sioxInit() {\n", file=output)
+	print("\tif(initialized_dlsym == 0) sioxSymbolInit();", file=output)
         # write all init-templates
         for function in functionList:
             prepareGenericVariablesForTemplates(function)
+
             for templ in function.usedTemplateList:
                 outputString = templ.output('init').strip()
                 if outputString.strip() != '':
                     print('\t', outputString, end='\n', sep='', file=output)
-
-            print(function.getDlsym(), file=output)
         print("}", file=output)
 
         print("\nstatic void sioxFinal() {", file=output)
@@ -1101,7 +1107,7 @@ class Writer():
             else:
                 functionCall = '\t' + function.getCallPointer() + '\n'
 
-            prepareGenericVariablesForTemplates(function, functionCall)
+            prepareGenericVariablesForTemplates(function, "if(initialized_dlsym == 0) sioxSymbolInit();\n" + functionCall + "\n")
 	
             # write function signature
             print(function.getDefinition(), end='\n{\n', sep=' ',

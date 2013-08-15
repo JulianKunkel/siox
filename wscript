@@ -55,6 +55,7 @@ def configure(conf):
 
         conf.check_boost(lib='system thread serialization regex')
 
+	conf.env.append_value("RPATH", conf.env.PREFIX + "/lib")
 
 	workDir = conf.path.abspath()
 	conf.env.append_value('INCLUDES', [workDir + '/include' ])

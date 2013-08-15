@@ -109,7 +109,7 @@ template = {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': ''' if(guard == 0){ guard = 1;''',
+	'before': ''' if(siox_namespace == 0){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''
@@ -120,7 +120,7 @@ template = {
 	'init': '''''',
 	'before': '''''',
 	'after': '''''',
-	'cleanup': '}else{ %(FC)s } guard=0;',
+	'cleanup': '}else{ %(FC)s }',
 	'final': ''
 },
 
@@ -397,7 +397,7 @@ template = {
 }
 
 # Insert global once
-globalOnce = "static __thread int guard = 0;"
+globalOnce = "extern __thread int siox_namespace;"
 
 # Regexes for functions to throw away
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
