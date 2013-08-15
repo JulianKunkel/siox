@@ -5,8 +5,9 @@ import os.path
 def options(opt):
 	opt.load('compiler_c')
         gr = opt.get_option_group('configure options')
-	gr.add_option('--siox', action='store', dest="SIOX_DIR", default=False, help='Directory to the SIOX installation')
-	gr.add_option('--siox-monitoring-siox-monitoring-siox-ll-api', action='store', dest="SIOX_LL_API", default=False, help='Directory to the SIOX low-level API to use')
+	gr.add_option('--siox', action='store', dest="SIOX", help='Directory to the SIOX installation')
+	gr.add_option('--siox-test-implementation', action='store', dest="SIOX_LL_IMPLEMENTATION", help='Directory to a testing SIOX low-level API to use')
+	gr.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
 
 def configure(conf):
 	conf.load('compiler_c waf_unit_test')
@@ -16,13 +17,25 @@ def configure(conf):
 
 	conf.check_cc(lib='dl', uselib_store='DL', mandatory = True)
 
-        conf.check(header_name='C/siox.h', features='c cprogram')
+	if conf.options.SIOX_LL_IMPLEMENTATION:
+		conf.env.append_value('LIBPATH', [conf.options.SIOX_LL_IMPLEMENTATION])
+		conf.env.LIBPATH_SIOX_LL = conf.options.SIOX_LL_IMPLEMENTATION
+		conf.check_cc(lib='siox-monitoring-siox-ll',  uselib_store='SIOX_LL', mandatory = True)
 
-	conf.env.LIBPATH_SIOXLLIMPL = conf.options.SIOX_LL_API
-	if conf.env.LIBPATH_SIOXLLIMPL:
-		conf.check_cc(lib='siox-monitoring-siox-monitoring-siox-ll-api', use="SIOXLLIMPL",  uselib_store='SIOXLLIMPL', mandatory = True)
+	if conf.options.SIOX:
+		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
+		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
 
-	conf.env.LIBDIR = conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"
+        conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
+
+	conf.check_cc(lib='siox-monitoring-siox-ll', mandatory = True)
+
+	conf.env.append_value('LIBDIR', [conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"])
+
+        if conf.options.debug:
+	        conf.env.append_value("CFLAGS", ['-std=c99', '-O3', '-Wall'])
+	else:
+		conf.env.append_value("CFLAGS", ['-std=c99', '-g', '-Wall'])
 
 def build(bld):
 	LAYER="posix"
@@ -52,7 +65,7 @@ def build(bld):
 	bld.shlib(includes="",  use = "GLIB DL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c' )
 	
 	# build tests if a dummy implementation has been selected
-	if bld.env.LIBPATH_SIOXLLIMPL:
+	if bld.env.LIBPATH_SIOX_LL_IMPLEMENTATION:
 		# Non-existing wrap file leads to race conditions when the file is not created, yet.
 		# Therefore, added a second pass.
 		wrap_file="build/" + LAYER + ".wrap"
