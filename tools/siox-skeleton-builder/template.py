@@ -96,7 +96,7 @@ template = {
 # TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
 # TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
 'activity': {
-	'variables': 'Name=G_STRFUNC ComponentVariable ActivityVariable',
+	'variables': 'Name=%(FUNCTION_NAME)s ComponentVariable=cv%(FUNCTION_NAME)s ActivityVariable=av%(FUNCTION_NAME)s',
 	'global': '''siox_component_activity * %(ComponentVariable)s;''',
 	'init': '''%(ComponentVariable)s = siox_component_register_activity( global_uid, %(Name)s );''',
     'before': '''siox_activity * %(ActivityVariable)s = siox_activity_start( %(ComponentVariable)s );''',
