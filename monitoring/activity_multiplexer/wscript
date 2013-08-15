@@ -3,7 +3,7 @@
 
 def build(bld):
 
-    bld.shlib(includes=["#/monitoring"], use="BOOST core-ContainerSerializer siox-core-AutoConfigurator siox-core-AutoRegistrar", target='siox-monitoring-ActivityMultiplexerAsyncThreaded', source='ActivityMultiplexerAsyncThreaded.cpp' )
+    bld.shlib(includes=["#/monitoring"], use="BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator siox-core-AutoRegistrar", target='siox-monitoring-ActivityMultiplexerAsyncThreaded', source='ActivityMultiplexerAsyncThreaded.cpp' )
 
     bld.recurse(['plugins'], mandatory=True)
 
