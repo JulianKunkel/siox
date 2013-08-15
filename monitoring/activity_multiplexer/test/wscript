@@ -2,12 +2,12 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(includes="",  use = "GMODULES" ,  target = 'ActivityMultiplexerListener_Impl1', source = 'ActivityMultiplexerListener_Impl1.cpp' )
+    bld.shlib(includes="",  use = "GMODULES" ,  target = 'test-ActivityMultiplexerListener_Impl1', source = 'ActivityMultiplexerListener_Impl1.cpp' )
 
     # TODO: build tests
-    bld.program(includes="",  features='test cxx cxxprogram', use = "ActivityMultiplexerAsyncThreaded module-loader", target = 'anomaly-plugin', source = "AnomalyPlugin.cpp", install_path = None)
+    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-siox-monitoring-ActivityMultiplexerAsyncThreaded siox-core-ModuleLoader", target = 'anomaly-plugin', source = "AnomalyPlugin.cpp", install_path = None)
     
-    bld.program(includes="",  features='test cxx cxxprogram', use = "ActivityMultiplexerAsyncThreaded module-loader", target = 'anomaly-plugin-threaded', source = "AnomalyPluginThreaded.cpp", install_path = None)
+    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-siox-monitoring-ActivityMultiplexerAsyncThreaded siox-core-ModuleLoader", target = 'anomaly-plugin-threaded', source = "AnomalyPluginThreaded.cpp", install_path = None)
 
 
 

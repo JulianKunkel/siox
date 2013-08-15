@@ -14,7 +14,7 @@ int main(){
 		chdir("../");
 	}
 
-	AutoConfigurator * a = new AutoConfigurator(registrar, "FileConfigurationProvider", "", "core/autoconfigurator/ConfigurationProviderPlugins/FileConfigurationProvider/test/test.config");
+	AutoConfigurator * a = new AutoConfigurator(registrar, "siox-core-autoconfigurator-FileConfigurationProvider", "", "core/autoconfigurator/ConfigurationProviderPlugins/FileConfigurationProvider/test/test.config");
 
 	MyChildModule * child = new MyChildModule();
 	MyParentModule * parent = new MyParentModule();

@@ -9,7 +9,7 @@ def build(bld):
    		os.symlink(bld.path.abspath() + "/siox.conf", "build/monitoring/low-level-c/test/siox.conf")
    except OSError, e:
    	 	pass
-   bld.program(includes="",  use = "siox-ll ActivityBuilder",  features='test c cprogram', target = 'siox-ll-c-test', source = 'siox-ll-c-test.c', install_path = None,)
+   bld.program(includes="",  use = "siox-monitoring-siox-ll siox-monitoring-ActivityBuilder",  features='test c cprogram', target = 'siox-ll-c-test', source = 'siox-ll-c-test.c', install_path = None,)
 
 
 # -*- indent-tabs-mode: t -*-

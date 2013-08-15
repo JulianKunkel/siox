@@ -14,7 +14,7 @@ using namespace core;
 
 int main(int argc, char const *argv[]){
 	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>("", 
-		"network" , MONITORING_STATISTICS_PLUGIN_INTERFACE);
+		"siox-monitoring-statisticsPlugin-network" , MONITORING_STATISTICS_PLUGIN_INTERFACE);
 
 	plugin->init();
 

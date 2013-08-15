@@ -3,7 +3,7 @@
 
 
 def build(bld):
-    bld.shlib(includes="", use="BOOST AutoRegistrar", target = "FileOntology", source = 'FileOntology.cpp' )
+    bld.shlib(includes="", use="BOOST siox-core-AutoRegistrar", target = "siox-monitoring-FileOntology", source = 'FileOntology.cpp' )
     bld.recurse(['test'], mandatory=True)
 
 

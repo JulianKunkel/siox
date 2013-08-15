@@ -77,7 +77,7 @@ public:
 int main(int argc, char const *argv[]){
 
 	// Obtain a FileOntology instance from module loader
-	Reasoner * r = core::module_create_instance<Reasoner>("", "ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE);
+	Reasoner * r = core::module_create_instance<Reasoner>("", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE);
 	assert( r != nullptr);
 
 	TestAnomalyTrigger at1;

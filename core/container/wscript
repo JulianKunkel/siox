@@ -3,7 +3,7 @@
 
 
 def build(bld):
-	bld.shlib(includes="",  use ="BOOST AutoRegistrar", target = 'core-container-serializer', source = 'container-serializer.cpp' )
+	bld.shlib(includes="",  use ="BOOST siox-core-AutoRegistrar", target = 'core-ContainerSerializer', source = 'container-serializer.cpp' )
 	bld.recurse(['test'], mandatory=True)
 
 

@@ -10,10 +10,10 @@ using namespace monitoring;
 using namespace core;
 
 int main(int argc, char const *argv[]){
-	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "ActivityMultiplexerAsyncThreaded", "monitoring_activitymultiplexer");
+	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>("", "siox-monitoring-ActivityMultiplexerAsyncThreaded", "monitoring_activitymultiplexer");
 
 	// wir registrieren das Plugin (normal geschieht dies automatisch)
-	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>("", "ActivityFileWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE);
+	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>("", "siox-monitoring-activityPlugin-ActivityFileWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE);
 
 	// init plugin
 	// not necessary, but for testing...

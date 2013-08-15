@@ -13,7 +13,7 @@ using namespace monitoring;
 using namespace core;
 
 int main(int argc, char const *argv[]){
-	Ontology * o = core::module_create_instance<Ontology>("", "FileOntology", ONTOLOGY_INTERFACE);
+	Ontology * o = core::module_create_instance<Ontology>("", "siox-monitoring-FileOntology", ONTOLOGY_INTERFACE);
 
 	// init plugin
 	// not necessary, but for testing...

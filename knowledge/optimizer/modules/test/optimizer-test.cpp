@@ -44,7 +44,7 @@ public:
 int main(int argc, char const *argv[]){
 
 	// Obtain a FileOntology instance from module loader
-	Ontology * ont = core::module_create_instance<Ontology>("", "FileOntology", ONTOLOGY_INTERFACE);
+	Ontology * ont = core::module_create_instance<Ontology>("", "siox-monitoring-FileOntology", ONTOLOGY_INTERFACE);
 	assert( ont != nullptr);
 
 	// Create and set its options object
@@ -64,7 +64,7 @@ int main(int argc, char const *argv[]){
 
 
 	// Obtain an Optimizer instance from module loader
-	Optimizer * opt = core::module_create_instance<Optimizer>("", "OptimizerStandardImplementation", KNOWLEDGE_OPTIMIZER_INTERFACE);
+	Optimizer * opt = core::module_create_instance<Optimizer>("", "siox-knowledge-OptimizerStandardImplementation", KNOWLEDGE_OPTIMIZER_INTERFACE);
 	assert( opt != nullptr);
 
 	opt->init();

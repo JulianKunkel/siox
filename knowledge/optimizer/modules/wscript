@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(includes="", use="AutoConfigurator AutoRegistrar", target='OptimizerStandardImplementation', source='OptimizerStandardImplementation.cpp' )
+    bld.shlib(includes="", use="siox-core-AutoConfigurator siox-core-AutoRegistrar", target='siox-knowledge-OptimizerStandardImplementation', source='OptimizerStandardImplementation.cpp' )
 
     bld.recurse(['test'], mandatory=True)
 

@@ -13,7 +13,7 @@ using namespace monitoring;
 using namespace core;
 
 int main(int argc, char const *argv[]){
-	AssociationMapper * o = core::module_create_instance<AssociationMapper>("", "FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE);
+	AssociationMapper * o = core::module_create_instance<AssociationMapper>("", "siox-monitoring-FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE);
 	assert(o != nullptr);
 
 	FileAssociationMapperOptions & op = o->getOptions<FileAssociationMapperOptions>();

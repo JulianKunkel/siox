@@ -3,7 +3,7 @@
 
 def build(bld):
     # TODO: build tests
-    #bld.program(includes="",  features='test cxx cxxprogram', use = "StatisticsMultiplexerSync module-loader", target = 'StatisticsMultiplexerTest', source = "StatisticsMultiplexerTest.cpp", install_path = None)
+    #bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-StatisticsMultiplexerSync siox-core-ModuleLoader", target = 'StatisticsMultiplexerTest', source = "StatisticsMultiplexerTest.cpp", install_path = None)
 
     pass
 

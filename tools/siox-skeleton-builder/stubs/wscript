@@ -31,11 +31,11 @@ def build(bld):
                 cmd =bld.path.abspath() + '/../siox-skeleton-builder.py -o %s -t %s -s %s %s' % (tgt, src, "plain", bld.env.SIOX_LL_HEADER)
                 return task.exec_command(cmd)
 
-	bld(rule=wrapPlain, source="printf/template-printf.py", target='printf/siox-ll-api.c')
-	bld(rule=wrapPlain, source="testlist/template-list.py", target='testlist/siox-ll-api.c')
+	bld(rule=wrapPlain, source="printf/template-printf.py", target='printf/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api.c')
+	bld(rule=wrapPlain, source="testlist/template-list.py", target='testlist/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api.c')
 
-	bld.shlib(includes="",  use = "GLIB" ,  target = 'printf/siox-ll-api', source = 'printf/siox-ll-api.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/printf/" )
-	bld.shlib(includes="",  use = "GLIB" ,  target = 'testlist/siox-ll-api', source = 'testlist/siox-ll-api.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/testlist/" )
+	bld.shlib(includes="",  use = "GLIB" ,  target = 'printf/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api', source = 'printf/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/printf/" )
+	bld.shlib(includes="",  use = "GLIB" ,  target = 'testlist/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api', source = 'testlist/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/testlist/" )
 	
 	
 

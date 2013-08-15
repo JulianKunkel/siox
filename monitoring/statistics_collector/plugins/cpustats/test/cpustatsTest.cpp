@@ -13,7 +13,7 @@ using namespace core;
 
 
 int main(int argc, char const *argv[]){
-	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>("", "CPUstats" , MONITORING_STATISTICS_PLUGIN_INTERFACE);
+	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>("", "siox-monitoring-statisticsPlugin-CPUstats" , MONITORING_STATISTICS_PLUGIN_INTERFACE);
 
 	plugin->init();
 

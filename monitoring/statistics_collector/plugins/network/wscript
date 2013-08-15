@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(includes="",  use = "AutoConfigurator BOOST", target = 'network', source = 'network.cpp' )
+    bld.shlib(includes="",  use = "siox-core-AutoConfigurator BOOST", target = 'siox-monitoring-statisticsPlugin-network', source = 'network.cpp' )
 
     bld.recurse(['test'], mandatory=True)
 

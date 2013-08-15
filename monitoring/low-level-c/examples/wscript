@@ -3,7 +3,7 @@
 
 
 def build(bld):
-    #bld.shlib(includes="",  target = "siox-ll", use = "module-loader AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp' )
+    #bld.shlib(includes="",  target = "siox-monitoring-siox-ll", use = "siox-core-ModuleLoader siox-core-AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp' )
     #bld.recurse(['hdf5'], mandatory=True)
     bld.recurse(['mock-up-fs'], mandatory=True)
     #pass

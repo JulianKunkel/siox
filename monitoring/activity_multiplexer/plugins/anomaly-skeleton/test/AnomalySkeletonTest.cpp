@@ -22,7 +22,7 @@ int main(int argc, char const *argv[]){
 		chdir("../");
 	}
 
-	AutoConfigurator * a = new AutoConfigurator(& registrar, "FileConfigurationProvider", "", "monitoring/activity_multiplexer/plugins/anomaly-skeleton/test/siox.conf");
+	AutoConfigurator * a = new AutoConfigurator(& registrar, "siox-core-autoconfigurator-FileConfigurationProvider", "", "monitoring/activity_multiplexer/plugins/anomaly-skeleton/test/siox.conf");
 
 	vector<Component*> components = a->LoadConfiguration("skeletonTest", "");
 	cout << "Loaded: " << components.size() << " Components/Plugins" << endl;

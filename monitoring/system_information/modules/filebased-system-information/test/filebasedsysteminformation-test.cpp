@@ -13,7 +13,7 @@ using namespace monitoring;
 using namespace core;
 
 int main(int argc, char const *argv[]){
-	SystemInformationGlobalIDManager * s = core::module_create_instance<SystemInformationGlobalIDManager>("", "FileBasedSystemInformation", SYSTEMINFORMATION_GLOBALID_MANAGER_INTERFACE);
+	SystemInformationGlobalIDManager * s = core::module_create_instance<SystemInformationGlobalIDManager>("", "siox-monitoring-FileBasedSystemInformation", SYSTEMINFORMATION_GLOBALID_MANAGER_INTERFACE);
 
 	// init plugin
 	// not necessary, but for testing...

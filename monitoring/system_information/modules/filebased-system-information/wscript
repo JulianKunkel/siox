@@ -3,7 +3,7 @@
 
 
 def build(bld):
-    bld.shlib(includes="", use="BOOST AutoRegistrar", target = "FileBasedSystemInformation", source = 'FileBasedSystemInformation.cpp' )
+    bld.shlib(includes="", use="BOOST siox-core-AutoRegistrar", target = "siox-monitoring-FileBasedSystemInformation", source = 'FileBasedSystemInformation.cpp' )
     bld.recurse(['test'], mandatory=True)
 
 

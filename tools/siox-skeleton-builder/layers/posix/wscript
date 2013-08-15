@@ -6,7 +6,7 @@ def options(opt):
 	opt.load('compiler_c')
         gr = opt.get_option_group('configure options')
 	gr.add_option('--siox', action='store', dest="SIOX_DIR", default=False, help='Directory to the SIOX installation')
-	gr.add_option('--siox-ll-api', action='store', dest="SIOX_LL_API", default=False, help='Directory to the SIOX low-level API to use')
+	gr.add_option('--siox-monitoring-siox-monitoring-siox-ll-api', action='store', dest="SIOX_LL_API", default=False, help='Directory to the SIOX low-level API to use')
 
 def configure(conf):
 	conf.load('compiler_c waf_unit_test')
@@ -20,7 +20,7 @@ def configure(conf):
 
 	conf.env.LIBPATH_SIOXLLIMPL = conf.options.SIOX_LL_API
 	if conf.env.LIBPATH_SIOXLLIMPL:
-		conf.check_cc(lib='siox-ll-api', use="SIOXLLIMPL",  uselib_store='SIOXLLIMPL', mandatory = True)
+		conf.check_cc(lib='siox-monitoring-siox-monitoring-siox-ll-api', use="SIOXLLIMPL",  uselib_store='SIOXLLIMPL', mandatory = True)
 
 	conf.env.LIBDIR = conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"
 

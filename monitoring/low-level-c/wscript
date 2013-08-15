@@ -3,7 +3,7 @@
 
 
 def build(bld):
-    bld.shlib(includes="",  target = "siox-ll", use = "module-loader AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp', cxxflags="" )
+    bld.shlib(includes="",  target = "siox-monitoring-siox-ll", use = "siox-core-ModuleLoader siox-core-AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp', cxxflags="" )
     bld.recurse(['test'], mandatory=True)
     bld.recurse(['examples'], mandatory=True)
 

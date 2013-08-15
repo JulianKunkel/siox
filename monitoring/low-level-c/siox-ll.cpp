@@ -110,7 +110,7 @@ __attribute__ ((constructor)) void siox_ll_ctor()
         const char * path = getenv("SIOX_CONFIGURATION_PROVIDER_PATH");
         const char * configuration = getenv("SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT");
 
-        provider = (provider != nullptr) ? provider : "FileConfigurationProvider" ;
+        provider = (provider != nullptr) ? provider : "siox-core-autoconfigurator-FileConfigurationProvider" ;
         path = (path != nullptr) ? path : "";        
         configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf" ;
 
