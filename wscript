@@ -55,15 +55,16 @@ def configure(conf):
 
         conf.check_boost(lib='system thread serialization regex')
 
+	conf.env.append_value("RPATH", conf.env.PREFIX + "/lib")
 
 	workDir = conf.path.abspath()
 	conf.env.append_value('INCLUDES', [workDir + '/include' ])
         if conf.options.debug:
 	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall']
-	        conf.env.CFLAGS = ['-std=c99', '-O3', '-Wall']
+		conf.env.append_value("CFLAGS", ['-std=c99', '-O3', '-Wall'])
 	else:
 		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall']
-		conf.env.CFLAGS = ['-std=c99', '-g', '-Wall']
+		conf.env.append_value("CFLAGS", ['-std=c99', '-g', '-Wall'])
 
 
 	print ""

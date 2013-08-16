@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include <sstream>
+#include <fstream>
+#include <pwd.h>
+
 #include <core/module/module-loader.hpp>
 #include <core/datatypes/VariableDatatype.hpp>
 
@@ -25,6 +29,15 @@ extern "C"{
 using namespace std;
 using namespace core;
 using namespace monitoring;
+
+// Are we currently working in the siox namespace?
+// Needed for the instrumentation with DL_SYM to avoid circular dependencies.
+extern "C" {
+__thread int siox_namespace = 0;
+}
+
+#define FUNCTION_BEGIN siox_namespace++;
+#define FUNCTION_END siox_namespace--;
 
 #define U32_TO_P(i) ((void*)((size_t)(i)))
 #define P_TO_U32(p) ((uint32_t)((size_t)(p)))
@@ -53,7 +66,10 @@ struct process_info process_data = {0};
 //////////////////////////////////////////////////////////
 
 NodeID lookup_node_id(const string & hostname){
-    return process_data.system_information_manager->register_nodeID(hostname);
+    FUNCTION_BEGIN
+    auto ret = process_data.system_information_manager->register_nodeID(hostname);
+    FUNCTION_END
+    return ret;
 }
 
 
@@ -77,18 +93,85 @@ ProcessID create_process_id(NodeID nid){
     ProcessID result = ProcessID();
     result.nid = nid;
     result.pid = (uint32_t) pid;
-    result.time = (uint32_t) tv.tv_sec;
+    result.time = (uint32_t) tv.tv_sec;    
     return result;
 //    return {.nid = nid, .pid = (uint32_t) pid , .time = (uint32_t) tv.tv_sec};
 }
 
+static string readfile(const string & filename){
+    ifstream file(filename, ios_base::in | ios_base::ate);
+    if(! file.good()){
+        // TODO add error value.
+        return string("(error in ") + filename + ")";
+    }
 
+    //return string((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+
+    // Some files from /proc contain 0.
+    stringstream s;
+    while(! file.eof()){
+        char c;
+        file >> c;
+        if(c == 0){
+            c = ' ';
+        }
+        s << c;
+    }
+
+    return s.str();
+}
+
+static void add_program_information(){
+    uint64_t pid = getpid();
+    uint64_t u64;
+    string read;
+
+    OntologyAttribute description;
+    description = process_data.ontology->register_attribute("program", "description/commandLine", VariableDatatype::Type::STRING );
+
+    {
+    stringstream s;
+    s << "/proc/" << pid << "/cmdline";
+    read = readfile(s.str());
+    }
+    process_data.association_mapper->set_process_attribute(process_data.pid, description, read);
+
+
+    description = process_data.ontology->register_attribute("program", "description/user-id", VariableDatatype::Type::UINT64 );
+    u64 = (uint64_t) getuid();
+    process_data.association_mapper->set_process_attribute(process_data.pid, description, u64);
+
+
+    description = process_data.ontology->register_attribute("program", "description/group-id", VariableDatatype::Type::UINT64 );
+    u64 = (uint64_t) getgid();
+    process_data.association_mapper->set_process_attribute(process_data.pid, description, u64);
+
+    struct passwd * pwd = getpwuid(getuid());
+
+    if (pwd != nullptr){
+        description = process_data.ontology->register_attribute("program", "description/user-name", VariableDatatype::Type::STRING );
+       process_data.association_mapper->set_process_attribute(process_data.pid, description, pwd->pw_name );
+    }
+
+
+    description = process_data.ontology->register_attribute("program", "description/environment", VariableDatatype::Type::STRING );
+    {
+    stringstream s;
+    s << "/proc/" << pid << "/environ";
+    read = readfile(s.str());
+    }
+    process_data.association_mapper->set_process_attribute(process_data.pid, description, read);
+}
+
+static void add_program_statistics(){
+}
 
 extern "C"{
 
 // Constructor for the shared library
 __attribute__ ((constructor)) void siox_ll_ctor()
 {
+    FUNCTION_BEGIN
     // Retrieve hostname; NodeID and PID will follow once process_data is set up
     // TODO: Adapt this to C++?
     char local_hostname[1024];
@@ -173,7 +256,10 @@ __attribute__ ((constructor)) void siox_ll_ctor()
     process_data.pid = create_process_id(process_data.nid);
     }
 
+    add_program_information();
+
     finalized = false;
+    FUNCTION_END
 }
 
 // Destructor for the shared library
@@ -182,6 +268,10 @@ __attribute__ ((destructor)) void siox_ll_dtor()
     if (finalized){
         return;
     }
+    // Never enter any siox function after it has been stopped.
+    FUNCTION_BEGIN
+
+    add_program_statistics();
 
     // cleanup datastructures by using the component registrar:
     process_data.registrar->shutdown();
@@ -234,20 +324,25 @@ static VariableDatatype convert_attribute(siox_attribute * attribute, void * val
         assert(0);
     }
     }
+    return "";
 }
 
 
 void siox_process_set_attribute(siox_attribute * attribute, void * value){
     assert(attribute != nullptr);
     assert(value != nullptr);
-
+    FUNCTION_BEGIN
     AttributeValue val = convert_attribute(attribute, value);
     process_data.association_mapper->set_process_attribute( process_data.pid, *attribute, val);
+    FUNCTION_END
 }
 
 
 siox_associate * siox_associate_instance(const char * instance_information){
-    return U32_TO_P(process_data.association_mapper->create_instance_mapping(instance_information));
+    FUNCTION_BEGIN
+    auto ret = U32_TO_P(process_data.association_mapper->create_instance_mapping(instance_information));
+    FUNCTION_END
+    return ret;
 }
 
 //############################################################################
@@ -255,18 +350,22 @@ siox_associate * siox_associate_instance(const char * instance_information){
 //############################################################################
 
 siox_node * siox_lookup_node_id( const char * hostname ){
+    FUNCTION_BEGIN
     if(hostname == NULL){
         // we take the localhost's ID.
        return U32_TO_P(process_data.nid);
     }
     
-    return U32_TO_P(lookup_node_id(hostname));
+    auto ret = U32_TO_P(lookup_node_id(hostname));
+    FUNCTION_END
+    return ret;
 }
 
 
 siox_component * siox_component_register(siox_unique_interface * uiid, const char * instance_name){
     assert(uiid != SIOX_INVALID_ID );
     assert(instance_name != nullptr);
+    FUNCTION_BEGIN
 
     UniqueInterfaceID uid = P_TO_U32(uiid);
     const string & interface_implementation = process_data.system_information_manager->lookup_interface_implementation(uid);
@@ -274,7 +373,11 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
 
 
     char configName[1001];
-    snprintf(configName, 1000, "%s %s", interface_name.c_str(), interface_implementation.c_str());
+    if(interface_implementation != ""){
+        snprintf(configName, 1000, "%s %s", interface_name.c_str(), interface_implementation.c_str());
+    }else{
+        snprintf(configName, 1000, "%s", interface_name.c_str());
+    }
 
     cout << "siox_component_register: " << configName << endl;
 
@@ -312,18 +415,21 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
         result->amux = process_data.amux;
         assert(result->amux != nullptr);
     }
+    FUNCTION_END
 
     return result;
 }
 
 
 void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, void * value){
+    FUNCTION_BEGIN
     assert(attribute != nullptr);
     assert(value != nullptr);
     assert(component != nullptr);
 
     OntologyValue val = convert_attribute(attribute, value);
     process_data.association_mapper->set_component_attribute((component->cid), *attribute, val);
+    FUNCTION_END
 }
 
 
@@ -331,22 +437,29 @@ siox_component_activity * siox_component_register_activity(siox_unique_interface
     assert(uiid != SIOX_INVALID_ID);
     assert(activity_name != nullptr);
 
-    return U32_TO_P(process_data.system_information_manager->register_activityID( P_TO_U32(uiid), activity_name));
+    FUNCTION_BEGIN
+    auto ret = U32_TO_P(process_data.system_information_manager->register_activityID( P_TO_U32(uiid), activity_name));
+    FUNCTION_END
+    return ret;
 }
 
 
 void siox_component_unregister(siox_component * component){
+    FUNCTION_BEGIN
     assert(component != nullptr);
     // Simple implementation: rely on ComponentRegistrar for shutdown.
     delete(component);
+    FUNCTION_END
 }
 
 
 void siox_report_node_statistics(siox_node * node, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value){
+    FUNCTION_BEGIN
 
     // MZ: Das reicht eigentlich bloß an den SMux weiter, oder?
     // Vorher: Statistik zusammenbauen!
     // TODO
+    FUNCTION_END
 }
 
 //############################################################################
@@ -364,10 +477,12 @@ siox_activity * siox_activity_start(siox_component * component, siox_component_a
     assert(component != nullptr);
     assert(activity != nullptr);
 
+    FUNCTION_BEGIN
     siox_activity* a;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     a = ab->startActivity(component->cid, P_TO_U32(activity), nullptr);
+    FUNCTION_END
 
     return a;
 }
@@ -376,9 +491,11 @@ siox_activity * siox_activity_start(siox_component * component, siox_component_a
 void siox_activity_stop(siox_activity * activity){
     assert(activity != nullptr);
 
+    FUNCTION_BEGIN
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     ab->stopActivity(activity, nullptr);
+    FUNCTION_END
 }
 
 
@@ -387,31 +504,41 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
     assert(attribute != nullptr);
     assert(value != nullptr);
 
+    FUNCTION_BEGIN
+
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
     Attribute attr(attribute->aID, convert_attribute(attribute, value));
 
     ab->setActivityAttribute(activity, attr);
+
+    FUNCTION_END
 }
 
 
 void siox_activity_report_error(siox_activity * activity, siox_activity_error error){
     assert(activity != nullptr);
 
+    FUNCTION_BEGIN
+
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     ab->reportActivityError(activity, error);
+
+    FUNCTION_END
 }
 
 
 void siox_activity_end(siox_activity * activity){
     assert(activity != nullptr);
 
+    FUNCTION_BEGIN
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     ab->endActivity(activity);
 
-    // Send to AMux
+    // Send to AMux, TODO use layer multiplexer
     process_data.amux->Log(activity);
+    FUNCTION_END
 }
 
 
@@ -419,11 +546,14 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
     assert(activity_child != nullptr);
     assert(activity_parent != nullptr);
 
+    FUNCTION_BEGIN
     ActivityID aid;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     aid = activity_parent->aid();
     ab->linkActivities(activity_child, aid);
+
+    FUNCTION_END
 }
 
 //############################################################################
@@ -432,12 +562,14 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
 
 
 siox_remote_call * siox_remote_call_setup(siox_activity * activity, siox_node * target_node, siox_unique_interface * target_unique_interface, siox_associate * target_associate){
+    FUNCTION_BEGIN
     assert(activity != nullptr);
 
     siox_remote_call* rc;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     rc = ab->setupRemoteCall(activity, P_TO_U32(target_node), P_TO_U32(target_unique_interface), P_TO_U32(target_associate));
+    FUNCTION_END
 
     return rc;
 }
@@ -447,32 +579,37 @@ void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribu
     assert(remote_call != nullptr);
     assert(attribute != nullptr);
     assert(value != nullptr);
-
+    FUNCTION_BEGIN
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
     Attribute attr(attribute->aID, convert_attribute(attribute, value));
 
     ab->setRemoteCallAttribute(remote_call, attr);
+
+    FUNCTION_END
 }
 
 
 void siox_remote_call_start(siox_remote_call * remote_call){
     assert(remote_call != nullptr);
-
+    FUNCTION_BEGIN
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     ab->startRemoteCall(remote_call, nullptr);
+    FUNCTION_END
 }
 
 
 siox_activity * siox_activity_start_from_remote_call(siox_component * component, siox_component_activity * activity, siox_node * caller_node, siox_unique_interface * caller_unique_interface, siox_associate * caller_associate){
     assert(component != nullptr);
     assert(activity != nullptr);
-
+    
+    FUNCTION_BEGIN
     Activity* a;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     a = ab->startActivity(component->cid, P_TO_U32(activity), P_TO_U32(caller_node), P_TO_U32(caller_unique_interface), P_TO_U32(caller_associate), nullptr);
 
+    FUNCTION_END
     return a;
 }
 
@@ -484,11 +621,15 @@ siox_activity * siox_activity_start_from_remote_call(siox_component * component,
 siox_attribute * siox_ontology_register_attribute(const char * domain, const char * name, enum siox_ont_storage_type storage_type){
     assert(domain != nullptr);
     assert(name != nullptr);
-
+    
     // return process_data.ontology->register_attribute(domain, name, convert_attribute_type(storage_type));
     try{
-        return & process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+        FUNCTION_BEGIN
+        auto ret = & process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
+        FUNCTION_END
+        return ret;
     }catch(IllegalStateError & e){
+        FUNCTION_END
         return nullptr;
     }
 }
@@ -502,8 +643,11 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_att
 
     AttributeValue val = convert_attribute(meta_attribute, value);
     try{
+        FUNCTION_BEGIN
         process_data.ontology->attribute_set_meta_attribute(*parent_attribute, *meta_attribute, val);
+        FUNCTION_END
     }catch(IllegalStateError & e){
+        FUNCTION_END
         return 0;
     }
     return 1;
@@ -517,12 +661,15 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
 
     // MZ: Hier besser statt einer eigenen Domain für Units d verwenden?!
     try{
+        FUNCTION_BEGIN
         const OntologyAttribute & meta = process_data.ontology->register_attribute("Meta", "Unit", VariableDatatype::Type::STRING);
         // OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
         const OntologyAttribute & attribute = process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
         process_data.ontology->attribute_set_meta_attribute(attribute, meta, unit);
+        FUNCTION_END
         return & attribute;
     }catch(IllegalStateError & e){
+        FUNCTION_END
         return nullptr;
     }    
 }
@@ -531,8 +678,12 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name){
     assert(name != nullptr);
     try{
-        return & process_data.ontology->lookup_attribute_by_name(domain, name);
+        FUNCTION_BEGIN
+        auto ret = & process_data.ontology->lookup_attribute_by_name(domain, name);
+        FUNCTION_END
+        return ret;
     }catch(NotFoundError & e){
+        FUNCTION_END
         return nullptr;
     }
 }
@@ -543,8 +694,12 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
     assert(implementation_identifier != nullptr);
 
     try{
-        return U32_TO_P(process_data.system_information_manager->register_interfaceID(interface_name, implementation_identifier));
+        FUNCTION_BEGIN
+        auto ret = U32_TO_P(process_data.system_information_manager->register_interfaceID(interface_name, implementation_identifier));
+        FUNCTION_END
+        return ret;
     }catch(IllegalStateError & e){
+        FUNCTION_END
         return 0;
     }
 }

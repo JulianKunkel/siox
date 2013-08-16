@@ -9,6 +9,8 @@ import re
 import sys
 import argparse
 
+genericVariablesForTemplates = {}
+
 
 #
 # @brief Generate and handle the command line parsing.
@@ -393,7 +395,7 @@ class FunctionParser():
     #
     # @return A list of function definitions.
     #
-    # This function dose the actually searching for functions inside a string.
+    # This function does the actually searching for functions inside a string.
     # The string can contain multiple function in one string.
     def parse(self, string):
 
@@ -541,10 +543,9 @@ class CommandParser():
         functionString = ""
         templateList = []
         functionList = []
-
         # Strip comments
         inputString = re.sub('/\*.*?\*/', '', inputString, flags=re.M | re.S)
-	inputString = re.sub('#.*', '', inputString)
+	inputString = re.sub('#(?!include ).*', '', inputString)
 	
         inputLineList = inputString.split('\n')
         # Iterate over every line and search for instrumentation instructions.
@@ -749,7 +750,7 @@ class Template():
                 self.insideString = False
 
             if not self.insideString:
-                self.currentParameterIndex += 1
+                self.currentParameterIndex += 1            
 
 
     #
@@ -758,24 +759,30 @@ class Template():
     # @param type What part of the template should be given
     #
     # @return The requested string from the template
-    def output(self, type):
+    def output(self, type):	
         if (type == 'global'):
-            return self.world % self.parameterList
+            return self.world % self.parameterList % genericVariablesForTemplates
         elif (type == 'init'):
-            return self.init % self.parameterList
+            return self.init % self.parameterList % genericVariablesForTemplates
         elif (type == 'before'):
-            return self.before % self.parameterList
+            return self.before % self.parameterList % genericVariablesForTemplates
         elif (type == 'after'):
-            return self.after % self.parameterList
+            return self.after % self.parameterList % genericVariablesForTemplates
         elif (type == 'final'):
-            return self.final % self.parameterList
+            return self.final % self.parameterList % genericVariablesForTemplates
         elif (type == 'cleanup'):
-            return self.cleanup % self.parameterList
+            return self.cleanup % self.parameterList % genericVariablesForTemplates
         else:
             # Error
             print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
             sys.exit(1)
 
+
+
+def prepareGenericVariablesForTemplates(function, call=""):
+  global genericVariablesForTemplates
+  genericVariablesForTemplates = {"FUNCTION_NAME" : function.name,
+				  "FUNCTION_CALL" : call}
 
 #
 # @brief The output class (write a file to disk)
@@ -832,6 +839,7 @@ class Writer():
 
         # write all global-Templates
         for function in functionList:
+            prepareGenericVariablesForTemplates(function)
             for templ in function.usedTemplateList:
                 if templ.output('global') != '':
                     print(templ.output('global'), file=output)
@@ -852,6 +860,7 @@ class Writer():
         print("static void sioxInit() {", file=output)
         # write all init-templates
         for function in functionList:
+            prepareGenericVariablesForTemplates(function)
             for templ in function.usedTemplateList:
                 outputString = templ.output('init').strip()
                 if outputString.strip() != '':
@@ -861,6 +870,7 @@ class Writer():
         print("static void sioxFinal() {", file=output)
         # write all final-functions
         for function in functionList:
+            prepareGenericVariablesForTemplates(function)
             for templ in function.usedTemplateList:
                 outputString = templ.output('final').strip()
                 if outputString.strip() != '':
@@ -869,6 +879,16 @@ class Writer():
 
         # write all functions-bodies
         for function in functionList:
+            # a variable to save the return-value
+            returnType = function.type
+
+            # write the function call
+            if returnType != "void":
+                functionCall = '\tret = ' + function.getCallReal() + ';\n'
+            else:
+                functionCall = '\t' + function.getCallReal() + ';\n'
+
+            prepareGenericVariablesForTemplates(function, functionCall)
             # write function signature
 
             print(function.getDefinitionWrap(),
@@ -887,8 +907,6 @@ class Writer():
                 # set the name to args
                 function.parameterList[-1].name = "val"
 
-            # a variable to save the return-value
-            returnType = function.type
 
             if returnType != "void":
                 print('\t', returnType, ' ret;', end='\n', sep='',
@@ -901,12 +919,7 @@ class Writer():
                     print('\t', outputString, end='\n', sep='', file=output)
 
             # write the function call
-            if returnType != "void":
-                print('\tret = ', function.getCallReal(), end=';\n', sep='',
-                      file=output)
-            else:
-                print('\t', function.getCallReal(), end=';\n', sep='',
-                      file=output)
+            print(functionCall, file=output)
 
             # write all after-templates for this function
             for templ in function.usedTemplateList:
@@ -959,6 +972,7 @@ class Writer():
 
         # write all global-Templates
         for function in functionList:
+            prepareGenericVariablesForTemplates(function)
             for templ in function.usedTemplateList:
                 if templ.output('global') != '':
                     print(templ.output('global'), file=output)
@@ -969,6 +983,7 @@ class Writer():
 
         # write all functions-bodies
         for function in functionList:
+            prepareGenericVariablesForTemplates(function)
             # write function signature
 
             print(function.getDefinition(),
@@ -1017,7 +1032,6 @@ class Writer():
                 print('\n}', end='\n\n', file=output)
         # close the file
         output.close()
-
     #
     # @brief Write a source file
     #
@@ -1040,6 +1054,7 @@ class Writer():
 
         # write all global-Templates
         for function in functionList:
+            prepareGenericVariablesForTemplates(function)
             for templ in function.usedTemplateList:
                 if templ.output('global') != '':
                     print(templ.output('global'), file=output)
@@ -1052,21 +1067,29 @@ class Writer():
 
         for function in functionList:
             print(function.getDefinitionPointer(), file=output)
+        print("\tstatic int initialized_dlsym = 0;\n", file=output)
+
+        print("\nstatic void sioxSymbolInit() {\ninitialized_dlsym = 1;", file=output)	
+        for function in functionList:
+            print(function.getDlsym(), file=output)
+	print("}", file=output)
 
         print("\nstatic void sioxInit() {\n", file=output)
+	print("\tif(initialized_dlsym == 0) sioxSymbolInit();", file=output)
         # write all init-templates
         for function in functionList:
+            prepareGenericVariablesForTemplates(function)
+
             for templ in function.usedTemplateList:
                 outputString = templ.output('init').strip()
                 if outputString.strip() != '':
                     print('\t', outputString, end='\n', sep='', file=output)
-
-            print(function.getDlsym(), file=output)
         print("}", file=output)
 
         print("\nstatic void sioxFinal() {", file=output)
         # write all final-functions
         for function in functionList:
+            prepareGenericVariablesForTemplates(function)
             for templ in function.usedTemplateList:
                 outputString = templ.output('final').strip()
                 if outputString.strip() != '':
@@ -1076,6 +1099,16 @@ class Writer():
 
         for function in functionList:
 
+            # a variable to save the return-value
+            returnType = function.type
+
+            if returnType != "void":
+                functionCall = '\tret = ' + function.getCallPointer() + ';\n'
+            else:
+                functionCall = '\t' + function.getCallPointer() + '\n'
+
+            prepareGenericVariablesForTemplates(function, "if(initialized_dlsym == 0) sioxSymbolInit();\n" + functionCall + "\n")
+	
             # write function signature
             print(function.getDefinition(), end='\n{\n', sep=' ',
                   file=output)
@@ -1092,9 +1125,6 @@ class Writer():
                 # set the name to args
                 function.parameterList[-1].name = "val"
 
-            # a variable to save the return-value
-            returnType = function.type
-
             if returnType != "void":
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
@@ -1106,12 +1136,7 @@ class Writer():
                     print('\t', outputString, end='\n', sep='', file=output)
 
             # write the function call
-            if returnType != "void":
-                print('\tret = ', function.getCallPointer(), end=';\n',
-                      sep='', file=output)
-            else:
-                print('\t', function.getCallPointer(), end=';\n', sep='',
-                      file=output)
+            print(functionCall, file=output)
 
             # write all after-templates for this function
             for templ in function.usedTemplateList:

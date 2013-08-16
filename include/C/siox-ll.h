@@ -110,6 +110,7 @@ typedef void siox_unique_interface;
 //////////////////////////////////////////////////////////////////////////////
 /// @return A node id, which is system-wide unique
 //////////////////////////////////////////////////////////////////////////////
+//@test ''%s'' hostname
 siox_node * siox_lookup_node_id(const char * hostname);
 
 
@@ -121,10 +122,11 @@ siox_node * siox_lookup_node_id(const char * hostname);
 /// @param attribute [in] The attribute to set
 /// @param value [in] The attribute's new value
 //////////////////////////////////////////////////////////////////////////////
+//@test ''%p,%p'' attribute,value
 void siox_process_set_attribute(siox_attribute * attribute, void * value);
 
 
-//@test ''%s,%s,%d'' domain,name,storage_type
+
 //////////////////////////////////////////////////////////////////////////////
 /// Look up an attribute in the SIOX ontology, creating a new entry if not
 /// found.
@@ -143,6 +145,7 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value);
 /// @note The key (domain, name) must be unique; it is not allowed to use
 ///		different storage types and/or attributes with the same attribute.
 //////////////////////////////////////////////////////////////////////////////
+//@test ''%s,%s,%d'' domain,name,storage_type
 siox_attribute * siox_ontology_register_attribute(const char * domain, const char * name, enum siox_ont_storage_type storage_type);
 
 /**@}*/
@@ -163,7 +166,6 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
 
  * Uses siox_attribute_set_meta_attribute to attach the UNIT meta-attribute to the attribute.
  */
-//@test ''%p,%s,%s,%d,%d'' domain,name,unit,storage,scope
 //////////////////////////////////////////////////////////////////////////////
 ///
 //////////////////////////////////////////////////////////////////////////////
@@ -177,6 +179,7 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
 /// @note Units themselves are implemented as meta attributes with storage
 /// type SIOX_STORAGE_STRING.
 //////////////////////////////////////////////////////////////////////////////
+//@test ''%s,%s,%s,%d'' domain,name,unit,storage_type
 siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain, const char * name,
                                             const char *                unit,
                                             enum siox_ont_storage_type  storage_type);
@@ -188,7 +191,6 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
  * @param [in] meta_attribute
  * @param [in] value
  */ 
- //@test ''%p,%p'' parent,meta_attribute
  //////////////////////////////////////////////////////////////////////////////
  /// Attach a meta attribute and its value to a given attribute.
  //////////////////////////////////////////////////////////////////////////////
@@ -198,6 +200,7 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
  //////////////////////////////////////////////////////////////////////////////
  /// @return @c true if everything went well; otherwise, @c false.
  //////////////////////////////////////////////////////////////////////////////
+//@test ''%p,%p,%p'' parent,meta_attribute,value
 int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * meta_attribute, void * value);
 
 /*
@@ -210,7 +213,6 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * m
  * @returns                 The @em siox_metric with the name given or NULL, if no such metric
  *                          could be found.
  */
-//@test ''%p,%s'' domain,name
 //////////////////////////////////////////////////////////////////////////////
 /// MZ: Nonsense right now; identical to ..._register_... w/o the check
 /// for existence! Should maybe look up the att's *value* or return the whole
@@ -221,6 +223,7 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * m
 //////////////////////////////////////////////////////////////////////////////
 /// @return
 //////////////////////////////////////////////////////////////////////////////
+//@test ''%s,%s'' domain,name
 siox_attribute * siox_ontology_lookup_attribute_by_name(const char * domain, const char * name);
 
 /*
@@ -238,6 +241,7 @@ siox_attribute * siox_ontology_lookup_attribute_by_name(const char * domain, con
 //////////////////////////////////////////////////////////////////////////////
 /// @return An ID that will be unique system-wide.
 //////////////////////////////////////////////////////////////////////////////
+//@test ''%s,%s'' interface_name,implementation_identifier
 siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier);
 
 /**
@@ -253,7 +257,7 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
  * The value describes the difference / delta of the statistic metric between start and end, e.g. 54 MiB has been read between start and end.
  * 
  */
-//@test ''%p,%p,%p'' component,metric,value
+//#test ''%p,%p,%p'' component,metric,value
 //void siox_report_node_statistics(siox_node hw, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value);
 
 
@@ -286,6 +290,7 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
 //////////////////////////////////////////////////////////////////////////////
 /// @return 
 //////////////////////////////////////////////////////////////////////////////
+//@test ''%s'' instance_information
 siox_associate * siox_associate_instance(const char * instance_information);
 
 /*
@@ -318,7 +323,7 @@ siox_associate * siox_associate_instance(const char * instance_information);
  /// may be @c NULL.
  //////////////////////////////////////////////////////////////////////////////
 
-//@test ''%s-%s-%s'' siox_node,swid,iid
+//@test ''%p,%s'' uiid,instance_name
 siox_component * siox_component_register(siox_unique_interface * uiid, const char * instance_name);
 
 /**
@@ -344,18 +349,8 @@ void siox_component_set_attribute(siox_component * component, siox_attribute * a
  //////////////////////////////////////////////////////////////////////////////
  /// @return
  //////////////////////////////////////////////////////////////////////////////
+//@test ''%p,%s'' uiid,activity_name
 siox_component_activity * siox_component_register_activity(siox_unique_interface * uiid, const char * activity_name);
-
-/*
- * Register an attribute as a descriptor for activities (!) of this component.
- *
- * @em Example:    POSIX registering the attribute type "file handle" to serve as descriptor.
- *
- * @param[in]   component   The component.
- * @param[in]   attribute   The attribute.
- */
-//test ''%p,%p'' component,attribute
-//void siox_register_descriptor(siox_attribute * attribute);
 
 /**
  * Unregister a component with SIOX.
@@ -523,7 +518,7 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
  * @return                    A fresh @em RCID to be used in all the remote call's
  *                            future communications with SIOX.
  */
-//@test ''%p,%p,%s-%s-%s'' activity,component,target_node,target_unique_interface,target_associate
+//@test ''%p,%p-%p-%p'' activity,target_node,target_unique_interface,target_associate
 siox_remote_call * siox_remote_call_setup(siox_activity *activity, siox_node * target_node, siox_unique_interface * target_unique_interface, siox_associate * target_associate);
 
 /**

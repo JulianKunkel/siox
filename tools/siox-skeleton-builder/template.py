@@ -6,9 +6,9 @@ template = {
 #
 # SWID: The name (software id) for this component
 'component': {
-	'variables': 'InterfaceName ImplementationIdentifier InstanceName',
-	'global': '''siox_component * global_component;
-				 siox_unique_interface * global_uid;
+	'variables': 'InterfaceName ImplementationIdentifier InstanceName=""',
+	'global': '''static siox_component * global_component;
+		     static siox_unique_interface * global_uid;
 				''',
     'init': '''global_uid = siox_system_information_lookup_interface_id(%(InterfaceName)s, %(ImplementationIdentifier)s);
               global_component = siox_component_register(global_uid, %(InstanceName)s);''',
@@ -29,7 +29,7 @@ template = {
 #			  attribute
 'register_attribute': {
 	'variables': 'AttributeVariable Domain Name StorageType',
-	'global': '''siox_attribute * %(AttributeVariable)s;''',
+	'global': '''static siox_attribute * %(AttributeVariable)s;''',
 	'init': '''%(AttributeVariable)s = siox_ontology_register_attribute( %(Domain)s, %(Name)s, %(StorageType)s );''',
     'before': '''''',
 	'after': '',
@@ -61,7 +61,7 @@ template = {
 # MapName: The name for this map; defaults to activityHashTable_str
 'horizontal_map_create_str': {
 	'variables': 'MapName=activityHashTable_str',
-	'global': '''GHashTable * %(MapName)s;''',
+	'global': '''static GHashTable * %(MapName)s;''',
     'init': '''%(MapName)s = g_hash_table_new(g_str_hash, g_str_equal);''',
 	'before': '',
 	'after': '',
@@ -78,7 +78,7 @@ template = {
 # MapName: The name for this map; defaults to activityHashTable_int
 'horizontal_map_create_int': {
 	'variables': 'MapName=activityHashTable_int',
-	'global': '''GHashTable * %(MapName)s;''',
+	'global': '''static GHashTable * %(MapName)s;''',
     'init': '''%(MapName)s = g_hash_table_new(g_direct_hash, g_direct_equal);''',
 	'before': '',
 	'after': '',
@@ -96,14 +96,36 @@ template = {
 # TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
 # TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
 'activity': {
-	'variables': 'Name=G_STRFUNC ComponentVariable ActivityVariable',
-	'global': '''siox_component_activity * %(ComponentVariable)s;''',
-	'init': '''%(ComponentVariable)s = siox_component_register_activity( global_uid, %(Name)s );''',
-    'before': '''siox_activity * %(ActivityVariable)s = siox_activity_start( %(ComponentVariable)s );''',
+	'variables': 'Name=%(FUNCTION_NAME)s ComponentVariable=cv%(FUNCTION_NAME)s ActivityVariable=sioxActivity',
+	'global': '''static siox_component_activity * %(ComponentVariable)s;''',
+	'init': '''%(ComponentVariable)s = siox_component_register_activity( global_uid, "%(Name)s" );''',
+    'before': '''siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
 	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
 },
+
+'guard': {
+	'variables': 'Name=guard',
+	'global': '''''',
+	'init': '''''',
+	'before': ''' if(siox_namespace == 0){ ''',
+	'after': '''''',
+	'cleanup': '',
+	'final': ''
+},
+'guardEnd': {
+	'variables': 'Name=guard FC=%(FUNCTION_CALL)s',
+	'global': '''''',
+	'init': '''''',
+	'before': '''''',
+	'after': '''''',
+	'cleanup': '}else{ %(FC)s }',
+	'final': ''
+},
+
+
+
 # activity with hints
 #
 # Starts (at the beginning) and stops (at the end) a new
@@ -227,13 +249,14 @@ template = {
 # Key: A descriptor linking both activities together (such as a file name),
 #	   in int or long int form
 # Activity: Activity to be linked; defaults to sioxActivity
+# The parent may be NULL in some cases
 'activity_link_int': {
 	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
 	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
-    			siox_activity_link_to_parent( %(Activity)s, Parent );
+            if(Parent != NULL) siox_activity_link_to_parent( %(Activity)s, Parent ); 
 			  ''',
 	'cleanup': '',
 	'final': ''
@@ -267,12 +290,13 @@ template = {
 # Error: The error code to be reported; must be of type int
 # Activity: The Activity to be reported; defaults to sioxActivity
 'error': {
-	'variables': 'Condition Error Activity=sioxActivity',
+	'variables': 'Condition="ret<0" Error=ret Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-    'before': '''''',
-	'after': '''if ( %(Condition)s )
-					siox_activity_report_error( %(Activity)s, %(Error)s );''',
+    	'before': '''''',
+	'after': '''if ( %(Condition)s ){
+                      siox_activity_report_error( %(Activity)s, %(Error)s );
+		    }''',
 	'cleanup': '',
 	'final': ''
 },
@@ -374,7 +398,7 @@ template = {
 }
 
 # Insert global once
-globalOnce = "static GMutex TestMapMutex; \n GSList *testlist = NULL;"
+globalOnce = "extern __thread int siox_namespace;"
 
 # Regexes for functions to throw away
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]

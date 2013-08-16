@@ -9,7 +9,7 @@ import os
 
 
 def build(bld):
-	bld.shlib(includes="",  use = "siox-core-ModuleLoader BOOST core-ContainerSerializer siox-core-ComponentRegistrar" ,  target = 'siox-core-AutoConfigurator', source = 'AutoConfigurator.cpp' )
+	bld.shlib(includes="",  use = "siox-core-ModuleLoader BOOST siox-core-ContainerSerializer siox-core-ComponentRegistrar" ,  target = 'siox-core-AutoConfigurator', source = 'AutoConfigurator.cpp' )
 	bld.recurse(["ConfigurationProviderPlugins"]);
 
 

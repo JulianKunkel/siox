@@ -10,7 +10,7 @@ class FileWriterPluginOptions: public ActivityMultiplexerPluginOptions{
 public:
 	string filename;
 
-	SERIALIZE_CONTAINER(MEMBER(filename))
+	SERIALIZE_OPTIONS(MEMBER(filename))
 };
 
 

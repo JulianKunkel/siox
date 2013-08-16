@@ -10,16 +10,17 @@
 def options(opt):
 	opt.load('compiler_c')
         gr = opt.get_option_group('configure options')
-	gr.add_option('--siox', action='store', dest="SIOX_DIR", default=False, help='Directory to the SIOX installation')
+	gr.add_option('--siox', action='store', dest="SIOX", help='Directory to the SIOX installation')
 
 def configure(conf):
 	conf.load('compiler_c')
 
-        if conf.options.SIOX_DIR:
-		conf.env.INCLUDES = [ conf.options.SIOX_DIR + "/include" ]
+	if conf.options.SIOX:
+		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
 
-        conf.check(header_name='C/siox.h', features='c cprogram')	
-        conf.env.SIOX_LL_HEADER = conf.find_file('C/siox.h', conf.env.INCLUDES)
+        conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)
+
+        conf.env.SIOX_LL_HEADER = conf.find_file('C/siox-ll.h', conf.env.INCLUDES)
 
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
 	conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall'] 
@@ -28,14 +29,14 @@ def build(bld):
         def wrapPlain(task): 
                 src = task.inputs[0].abspath()
                 tgt = task.outputs[0].abspath()
-                cmd =bld.path.abspath() + '/../siox-skeleton-builder.py -o %s -t %s -s %s %s' % (tgt, src, "plain", bld.env.SIOX_LL_HEADER)
+                cmd = bld.path.abspath() + '/../siox-skeleton-builder.py -o %s -t %s -s %s %s' % (tgt, src, "plain", bld.env.SIOX_LL_HEADER)
                 return task.exec_command(cmd)
 
-	bld(rule=wrapPlain, source="printf/template-printf.py", target='printf/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api.c')
-	bld(rule=wrapPlain, source="testlist/template-list.py", target='testlist/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api.c')
+	bld(rule=wrapPlain, source="printf/template-printf.py", target='printf/siox-monitoring-siox-ll.c')
+	bld(rule=wrapPlain, source="testlist/template-list.py", target='testlist/siox-monitoring-siox-ll.c')
 
-	bld.shlib(includes="",  use = "GLIB" ,  target = 'printf/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api', source = 'printf/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/printf/" )
-	bld.shlib(includes="",  use = "GLIB" ,  target = 'testlist/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api', source = 'testlist/siox-monitoring-siox-monitoring-siox-monitoring-siox-monitoring-siox-ll-api.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/testlist/" )
+	bld.shlib(includes="",  use = "GLIB" ,  target = 'printf/siox-monitoring-siox-ll', source = 'printf/siox-monitoring-siox-ll.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/printf/" )
+	bld.shlib(includes="",  use = "GLIB" ,  target = 'testlist/siox-monitoring-siox-ll', source = 'testlist/siox-monitoring-siox-ll.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/testlist/" )
 	
 	
 
