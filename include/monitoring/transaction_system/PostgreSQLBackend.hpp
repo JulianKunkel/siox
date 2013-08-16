@@ -24,8 +24,9 @@ class PostgreSQLBackend
    : public TransactionBackend {
 	   
 public:   
-	PostgreSQLBackend(const std::string &dbinfo);
+	PostgreSQLBackend();
 	~PostgreSQLBackend();
+	void init(const std::string &dbinfo);
 	
 	Callback *create_callback();
 	

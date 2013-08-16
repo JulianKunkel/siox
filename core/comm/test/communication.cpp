@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(ipc_communication)
 	TestCallback test_cb;
 	server->register_message_callback(test_cb);
 	
-	boost::shared_ptr<siox::MessageBuffer> mp(new siox::MessageBuffer());
-	mp->set_action(siox::MessageBuffer::Activity);
+	boost::shared_ptr<buffers::MessageBuffer> mp(new buffers::MessageBuffer());
+	mp->set_action(buffers::MessageBuffer::Activity);
 	mp->set_type(2);
 	mp->set_unid(10);
 

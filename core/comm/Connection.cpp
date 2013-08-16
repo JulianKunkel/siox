@@ -2,7 +2,7 @@
 
 Connection::Connection(asio::io_service &io_service)
    : io_service_(&io_service),
-     msg_(boost::shared_ptr<siox::MessageBuffer>(new siox::MessageBuffer()))
+     msg_(boost::shared_ptr<buffers::MessageBuffer>(new buffers::MessageBuffer()))
 {
 }
 

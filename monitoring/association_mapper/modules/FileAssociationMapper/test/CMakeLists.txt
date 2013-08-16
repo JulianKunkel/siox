@@ -5,10 +5,10 @@ find_package(GLIB2 REQUIRED)
 find_package(Boost 1.53.0 COMPONENTS serialization REQUIRED)
 
 include_directories(
-	"${SIOX_INCLUDE}"
-	"${SIOX_SOURCES}"
-	"${Boost_INCLUDE_DIR}"
-	"${GLIB2_INCLUDE_DIRS}"
+	${SIOX_INCLUDE}
+	${SIOX_SOURCES}
+	${Boost_INCLUDE_DIR}
+	${GLIB2_INCLUDE_DIRS}
 
 )
 
@@ -21,8 +21,8 @@ target_link_libraries(
 	file-associationmapper-test
 	FileAssociationMapper
 	module-loader
-	"${Boost_LIBRARIES}"
-	"${GLIB2_LIBRARIES}"
+	${Boost_LIBRARIES}
+	${GLIB2_LIBRARIES}
 )
 
 

@@ -1,4 +1,4 @@
-package siox;
+package buffers;
 
 message Node {
 	optional              uint32 id = 1;

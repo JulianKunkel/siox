@@ -4,9 +4,9 @@ project(SIOX)
 find_package(Boost 1.53.0 COMPONENTS serialization REQUIRED)
 
 include_directories(
-	"${SIOX_INCLUDE}"
-	"${SIOX_SOURCES}"
-	"${Boost_INCLUDE_DIR}"
+	${SIOX_INCLUDE}
+	${SIOX_SOURCES}
+	${Boost_INCLUDE_DIR}
 )
 
 add_library(
@@ -17,7 +17,7 @@ add_library(
 target_link_libraries(
 	FileBasedSystemInformation
 	module-loader
-	"${Boost_LIBRARIES}"
+	${Boost_LIBRARIES}
 )
 
 add_subdirectory(test)

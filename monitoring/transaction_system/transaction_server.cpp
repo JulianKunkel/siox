@@ -10,12 +10,14 @@
 #include <unistd.h>
 
 #include <core/logger/SioxLogger.hpp>
+#include <core/module/module-loader.hpp>
 #include <monitoring/transaction_system/PostgreSQLBackend.hpp>
 #include <monitoring/transaction_system/TransactionBackend.hpp>
 #include <monitoring/transaction_system/TransactionService.hpp>
 
 #define SIOX_TS_LISTENER  "tcp://localhost:7000"
 #define SIOX_DB_INFO "host = '127.0.0.1' port = '5432' user = 'postgres' password = 'siox.db.X916' dbname = 'siox-ts'"
+#define SIOX_DB_BACKEND "psql_backend"
 
 TransactionService *ts;
 Logger *logger;
@@ -34,7 +36,14 @@ int transaction_daemon()
 {
 	ts = new TransactionService(SIOX_TS_LISTENER);
 	
-	TransactionBackend *be = new PostgreSQLBackend(SIOX_DB_INFO);
+// 	TransactionBackend *be = 
+// 		core::module_create_instance<TransactionBackend>("", 
+// 			SIOX_DB_BACKEND, SIOX_DB_BACKEND
+// 		);
+		
+	TransactionBackend *be = new PostgreSQLBackend();
+	be->init(SIOX_DB_INFO);
+	
 	ts->register_transaction_backend(be);
 	
 	ts->run();

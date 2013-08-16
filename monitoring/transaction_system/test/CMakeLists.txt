@@ -6,16 +6,14 @@ include(FindProtobuf)
 find_package(Protobuf REQUIRED)
 find_package(Boost 1.53.0 COMPONENTS system thread unit_test_framework REQUIRED)
 
-list(REMOVE_ITEM PROTOBUF_LIBRARIES "debug" "optimized")
-
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS "${SIOX_INCLUDE}/core/buffers/siox.proto")
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS "${SIOX_INCLUDE}/core/comm/messages/siox.proto")
 
 include_directories(
-	"${SIOX_INCLUDE}"
-	"${SIOX_SOURCES}"
-	"${CMAKE_CURRENT_BINARY_DIR}"
-	"${PROTOBUF_INCLUDE_DIRS}"
-	"${Boost_INCLUDE_DIR}"
+	${SIOX_INCLUDE}
+	${SIOX_SOURCES}
+	${CMAKE_CURRENT_BINARY_DIR}
+	${PROTOBUF_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIR}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -lrt")
