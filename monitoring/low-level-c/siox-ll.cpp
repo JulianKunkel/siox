@@ -298,7 +298,7 @@ typedef VariableDatatype AttributeValue;
 //////////////////////////////////////////////////////////////////////////////
 /// @return
 //////////////////////////////////////////////////////////////////////////////
-static VariableDatatype convert_attribute(siox_attribute * attribute, void * value){
+static VariableDatatype convert_attribute(siox_attribute * attribute, const void * value){
     AttributeValue v;
     switch(attribute->storage_type){
     case(VariableDatatype::Type::UINT32):
@@ -328,7 +328,7 @@ static VariableDatatype convert_attribute(siox_attribute * attribute, void * val
 }
 
 
-void siox_process_set_attribute(siox_attribute * attribute, void * value){
+void siox_process_set_attribute(siox_attribute * attribute, const void * value){
     assert(attribute != nullptr);
     assert(value != nullptr);
     FUNCTION_BEGIN
@@ -421,7 +421,7 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
 }
 
 
-void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, void * value){
+void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, const void * value){
     FUNCTION_BEGIN
     assert(attribute != nullptr);
     assert(value != nullptr);
@@ -453,7 +453,7 @@ void siox_component_unregister(siox_component * component){
 }
 
 
-void siox_report_node_statistics(siox_node * node, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value){
+void siox_report_node_statistics(siox_node * node, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, const void * value){
     FUNCTION_BEGIN
 
     // MZ: Das reicht eigentlich bloß an den SMux weiter, oder?
@@ -499,7 +499,7 @@ void siox_activity_stop(siox_activity * activity){
 }
 
 
-void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, void * value){
+void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, const void * value){
     assert(activity != nullptr);
     assert(attribute != nullptr);
     assert(value != nullptr);
@@ -575,7 +575,7 @@ siox_remote_call * siox_remote_call_setup(siox_activity * activity, siox_node * 
 }
 
 
-void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, void * value){
+void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, const void * value){
     assert(remote_call != nullptr);
     assert(attribute != nullptr);
     assert(value != nullptr);
@@ -636,7 +636,7 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
 
 
 // MZ: TODO change return value to bool, unless this proves C++-incompatible
-int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_attribute * meta_attribute, void * value){
+int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_attribute * meta_attribute, const void * value){
     assert(parent_attribute != nullptr);
     assert(meta_attribute != nullptr);
     assert(value != nullptr);
