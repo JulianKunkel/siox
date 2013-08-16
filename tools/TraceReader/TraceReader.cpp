@@ -61,6 +61,7 @@ void TraceReader::printActivity(Activity * a){
 
 	stringstream str;
 	try{
+		str << a->aid() << " ";
 		strtime(a->time_start(), str);
 		str << "-" ;
 		strtime(a->time_stop(), str);
@@ -75,12 +76,24 @@ void TraceReader::printActivity(Activity * a){
 
 		str << s->lookup_activity_name(a->ucaid()) << "(";
 		for(auto itr = a->attributeArray().begin() ; itr != a->attributeArray().end(); itr++){
+			if(itr != a->attributeArray().begin()){
+			 	str << ", ";
+			}				
 			strattribute(*itr, str);
-
-			str << ", ";
 		}
 		str << ")";
 		str << " = " << a->errorValue();
+
+		if(a->parentArray().begin() != a->parentArray().end()){
+			str << " ";
+			for(auto itr = a->parentArray().begin(); itr != a->parentArray().end(); itr++){
+				if(itr != a->parentArray().begin()){
+				 	str << ", ";
+				}			
+				str << *itr;
+			}
+		}
+
 		cout << str.str() << endl;
 
 	}catch (NotFoundError & e){

@@ -1,6 +1,6 @@
-<MAX_VALUE>13</MAX_VALUE>
+<MAX_VALUE>14</MAX_VALUE>
 <map class_id="0" tracking_level="0" version="0">
-	<count>12</count>
+	<count>13</count>
 	<item_version>0</item_version>
 	<item class_id="1" tracking_level="0" version="0">
 		<first>1</first>
@@ -140,9 +140,9 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>8</id>
-				<name>filename</name>
+				<name>file-position</name>
 				<domain>POSIX</domain>
-				<storageType>7</storageType>
+				<storageType>1</storageType>
 			</attribute>
 			<metas>
 				<count>0</count>
@@ -159,9 +159,9 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>9</id>
-				<name>filesystem</name>
-				<domain>Global</domain>
-				<storageType>3</storageType>
+				<name>filename</name>
+				<domain>POSIX</domain>
+				<storageType>7</storageType>
 			</attribute>
 			<metas>
 				<count>0</count>
@@ -178,9 +178,9 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>10</id>
-				<name>filehandle</name>
-				<domain>POSIX</domain>
-				<storageType>1</storageType>
+				<name>filesystem</name>
+				<domain>Global</domain>
+				<storageType>3</storageType>
 			</attribute>
 			<metas>
 				<count>0</count>
@@ -197,9 +197,9 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>11</id>
-				<name>quantity/BytesWritten</name>
+				<name>filehandle</name>
 				<domain>POSIX</domain>
-				<storageType>1</storageType>
+				<storageType>3</storageType>
 			</attribute>
 			<metas>
 				<count>0</count>
@@ -216,6 +216,25 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>12</id>
+				<name>quantity/BytesWritten</name>
+				<domain>POSIX</domain>
+				<storageType>1</storageType>
+			</attribute>
+			<metas>
+				<count>0</count>
+				<item_version>0</item_version>
+			</metas>
+			<values>
+				<count>0</count>
+				<item_version>0</item_version>
+			</values>
+		</second>
+	</item>
+	<item>
+		<first>13</first>
+		<second class_id_reference="2">
+			<attribute>
+				<id>13</id>
 				<name>quantity/BytesRead</name>
 				<domain>POSIX</domain>
 				<storageType>1</storageType>

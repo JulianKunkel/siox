@@ -169,6 +169,26 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+
+'activity_attribute_pointer': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
+	'cleanup': '',
+	'final': ''
+},
+
+'activity_attribute_u32': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': '{uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
+	'cleanup': '',
+	'final': ''
+},
 # horizontal_map_put_int
 #
 # Tie an attibute serving as a descriptor to an activity.
@@ -261,6 +281,18 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+
+'activity_lookup_int': {
+	'variables': 'Key Activity=Parent MapName=activityHashTable_int',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': '''siox_activity * %(Activity)s = (siox_activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );''',
+	'cleanup': '',
+	'final': ''
+},
+
+
 # activity_link_str
 #
 # Horizontally links the current activity (started with activity) to another one via

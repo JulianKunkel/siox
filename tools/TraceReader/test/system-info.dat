@@ -1,6 +1,6 @@
-<nextID>8</nextID>
+<nextID>13</nextID>
 <valueStringMap class_id="0" tracking_level="0" version="0">
-	<count>6</count>
+	<count>11</count>
 	<item_version>0</item_version>
 	<item class_id="1" tracking_level="0" version="0">
 		<first>1</first>
@@ -20,11 +20,31 @@
 	</item>
 	<item>
 		<first>6</first>
-		<second>write</second>
+		<second>dup</second>
 	</item>
 	<item>
 		<first>7</first>
+		<second>dup2</second>
+	</item>
+	<item>
+		<first>8</first>
+		<second>dup3</second>
+	</item>
+	<item>
+		<first>9</first>
+		<second>write</second>
+	</item>
+	<item>
+		<first>10</first>
 		<second>read</second>
+	</item>
+	<item>
+		<first>11</first>
+		<second>pwrite</second>
+	</item>
+	<item>
+		<first>12</first>
+		<second>pread</second>
 	</item>
 </valueStringMap>
 <deviceNodeMap class_id="2" tracking_level="0" version="0">
@@ -70,7 +90,7 @@
 	</item>
 </nodeMap>
 <activityInterfaceIDMap>
-	<count>5</count>
+	<count>10</count>
 	<item_version>0</item_version>
 	<item class_id="11" tracking_level="0" version="0">
 		<first>3</first>
@@ -92,9 +112,29 @@
 		<first>7</first>
 		<second>2</second>
 	</item>
+	<item>
+		<first>8</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>9</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>10</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>11</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>12</first>
+		<second>2</second>
+	</item>
 </activityInterfaceIDMap>
 <activityMap>
-	<count>5</count>
+	<count>10</count>
 	<item_version>0</item_version>
 	<item class_id="12" tracking_level="0" version="0">
 		<first class_id="13" tracking_level="0" version="0">
@@ -113,6 +153,27 @@
 	<item>
 		<first>
 			<first>2</first>
+			<second>dup</second>
+		</first>
+		<second>6</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>dup2</second>
+		</first>
+		<second>7</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>dup3</second>
+		</first>
+		<second>8</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
 			<second>open</second>
 		</first>
 		<second>3</second>
@@ -120,15 +181,29 @@
 	<item>
 		<first>
 			<first>2</first>
+			<second>pread</second>
+		</first>
+		<second>12</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>pwrite</second>
+		</first>
+		<second>11</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
 			<second>read</second>
 		</first>
-		<second>7</second>
+		<second>10</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>write</second>
 		</first>
-		<second>6</second>
+		<second>9</second>
 	</item>
 </activityMap>
