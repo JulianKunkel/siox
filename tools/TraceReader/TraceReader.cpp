@@ -63,7 +63,7 @@ void TraceReader::printActivity(Activity * a){
 	try{
 		str << a->aid() << " ";
 		strtime(a->time_start(), str);
-		str << "-" ;
+		str << " " ;
 		strtime(a->time_stop(), str);
 		str << " ";
 
