@@ -74,7 +74,7 @@ NodeID lookup_node_id(const string & hostname){
 
 
 //////////////////////////////////////////////////////////////////////////////
-/// Create a proces id object .
+/// Create a process id object .
 //////////////////////////////////////////////////////////////////////////////
 /// @param nid [in] The node id of the hardware node the process runs on
 //////////////////////////////////////////////////////////////////////////////
@@ -95,13 +95,19 @@ ProcessID create_process_id(NodeID nid){
     result.pid = (uint32_t) pid;
     result.time = (uint32_t) tv.tv_sec;    
     return result;
-//    return {.nid = nid, .pid = (uint32_t) pid , .time = (uint32_t) tv.tv_sec};
 }
 
+//////////////////////////////////////////////////////////////////////////////
+/// Read a character from a file.
+//////////////////////////////////////////////////////////////////////////////
+/// @param filename [in]
+//////////////////////////////////////////////////////////////////////////////
+/// @todo Document this function!
+//////////////////////////////////////////////////////////////////////////////
 static string readfile(const string & filename){
     ifstream file(filename, ios_base::in | ios_base::ate);
     if(! file.good()){
-        // TODO add error value.
+        // @todo add error value.
         return string("(error in ") + filename + ")";
     }
 
@@ -121,6 +127,10 @@ static string readfile(const string & filename){
     return s.str();
 }
 
+//////////////////////////////////////////////////////////////////////////////
+/// Gather relevant process information and attach it as attributes to the
+/// current process.
+//////////////////////////////////////////////////////////////////////////////
 static void add_program_information(){
     uint64_t pid = getpid();
     uint64_t u64;
@@ -415,6 +425,10 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
         result->amux = process_data.amux;
         assert(result->amux != nullptr);
     }
+
+    // Map cid to component's address for later reference by activities
+    process_data.cid_to_component_map[result->cid] = result;
+
     FUNCTION_END
 
     return result;
@@ -447,6 +461,10 @@ siox_component_activity * siox_component_register_activity(siox_unique_interface
 void siox_component_unregister(siox_component * component){
     FUNCTION_BEGIN
     assert(component != nullptr);
+
+    // Remove component from cid map while key is still accessible
+    process_data.cid_to_component_map.erase(component->cid);
+
     // Simple implementation: rely on ComponentRegistrar for shutdown.
     delete(component);
     FUNCTION_END
@@ -465,8 +483,6 @@ void siox_report_node_statistics(siox_node * node, siox_attribute * statistic, s
 //############################################################################
 /////////////// ACTIVITIES /////////////////////////////
 //############################################################################
-
-// MZ: Alle an ActivityBuilder (to be acquired!!!) weiterreichen
 
 // MZ: How do we get our finished activity object back?!
 //     In ..._activity_stop()?
@@ -536,8 +552,13 @@ void siox_activity_end(siox_activity * activity){
 
     ab->endActivity(activity);
 
-    // Send to AMux, TODO use layer multiplexer
-    process_data.amux->Log(activity);
+    // Find component's amux
+    ComponentID cid = activity->aid().cid;
+    siox_component * component = process_data.cid_to_component_map[cid];
+    assert(component != nullptr);
+    // Send activity to it
+    component-> amux->Log(activity);
+
     FUNCTION_END
 }
 
@@ -622,7 +643,6 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
     assert(domain != nullptr);
     assert(name != nullptr);
     
-    // return process_data.ontology->register_attribute(domain, name, convert_attribute_type(storage_type));
     try{
         FUNCTION_BEGIN
         auto ret = & process_data.ontology->register_attribute(domain, name, (VariableDatatype::Type) storage_type);
@@ -635,7 +655,7 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
 }
 
 
-// MZ: TODO change return value to bool, unless this proves C++-incompatible
+/// @todo change return value to bool, unless this proves C++-incompatible
 int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_attribute * meta_attribute, const void * value){
     assert(parent_attribute != nullptr);
     assert(meta_attribute != nullptr);

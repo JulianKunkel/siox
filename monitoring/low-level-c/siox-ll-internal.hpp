@@ -33,6 +33,7 @@ typedef const OntologyAttribute siox_attribute;
 typedef Activity siox_activity;
 typedef RemoteCall siox_remote_call;
 
+
 struct siox_component{
     ComponentID cid;
     UniqueInterfaceID uid;
@@ -42,10 +43,6 @@ struct siox_component{
     // We need one ActivityBuilder per thread, independent of component
 };
 
-/**
- * Implementation of the low-level API
- * The C-implementation serves as lightweight wrapper for C++ classes.
- */
 
 struct process_info{
     NodeID nid;
@@ -66,6 +63,9 @@ struct process_info{
 
     /// Loads all component modules
     core::AutoConfigurator * configurator;
+
+    /// Maps ComponentID to pointer to siox_component
+    map<ComponentID,siox_component*> cid_to_component_map;
 };
 
 
