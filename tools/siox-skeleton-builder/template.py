@@ -164,8 +164,8 @@ template = {
 	'variables': 'Attribute Value Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );''',
-	'after': '',
+    'before': '''''',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
