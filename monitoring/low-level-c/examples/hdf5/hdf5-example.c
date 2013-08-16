@@ -1,11 +1,13 @@
 /**
  * @file hdf5-example.c
  *
- * Beispiel für die Nutzung des SIOX-Low-Level-Interfaces mit HDF5.
- * Es demonstriert, wie ein Client für SIOX instrumentiert wird.
+ * Example for using the SIOX low-level interface with HDF5,
+ * demonstrating how to instrument a client for SIOX.
+ * This client will demonstrate the use of several activities,
+ * each encapsulating different actions causally linked to one another.
  *
  * @authors Julian Kunkel & Michaela Zimmer
- * @date    2012
+ * @date    2013-08-16
  *          GNU Public License.
  */
 
@@ -18,7 +20,18 @@
 #include <hdf5.h>
 #include <hdf5_hl.h>
 
-#include "siox-ll.h"
+#include <C/siox-ll.h>
+
+
+
+/**
+ * Report error to SIOX, close current activity and shut down component.
+ * @param [in] error_code   The error code to return to SIOX;
+ *       usually, you'd pass on whatever the lower layer reported.
+ * @param [in] activity     A pointer to the current activity's identifier
+ * @param [in] component    A pointer to the current component's identifier
+ */
+void report_and_abort( siox_activity_error error_code, siox_activity * activity, siox_component * component );
 
 
 /**
@@ -26,24 +39,46 @@
  *
  * An example of a client utilising SIOX with the HDF5 High Level Interface.
  *
- * @return  EXIT_FAILURE, falls ein Fehler auftrat, sonst EXIT_SUCCESS.
+ * @return  EXIT_SUCCESS if all went well, otherwise EXIT_FAILURE.
  */
 int
 main(){
 
     /* Vars for SIOX */
-    siox_unid   unid;           /* This node's UNID */
-    siox_dtid   dtid_h5fn;      /* A DTID for HDF5 file names */
-    siox_dtid   dtid_h5id;      /* A DTID for HDF5 file ids */
-    siox_dtid   dtid_b2write;   /* A DTID for the number of bytes to write in a call */
-    siox_aid    aid_open;       /* An AID for the open activity */
-    siox_aid    aid_write;      /* An AID for the write activity */
-    siox_aid    aid_close;      /* An AID for the close activity */
-    siox_mid    mid;            /* An MID for the performance metric we want to measure */
-    long int    bytes_written;  /* A collector for performance data */
+
+    // Unique interface identifiers
+    siox_unique_interface *     siox_our_ui;    // This component
+
+    // This component's identifier
+    siox_component *            siox_our_component;
+    
+    // Identifier for our component-specific activity types
+    siox_component_activity *   siox_act_type_open;
+    siox_component_activity *   siox_act_type_write;
+    siox_component_activity *   siox_act_type_close;
+
+    // Identifiers for the attributes of our activities
+    siox_attribute *            siox_att_filename;      // HDF5 file name
+    siox_attribute *            siox_att_fileid;        // HDF5 file id
+    siox_attribute *            siox_att_bytes2write;   // Bytes to write
+    siox_attribute *            siox_att_byteswritten;  // Bytes written
+
+    // Identifiers for our actual activities
+    siox_activity *             siox_act_open;         // The open activity
+    siox_activity *             siox_act_write;         // The write activity
+    siox_activity *             siox_act_close;         // The close activity
+
+    // A collector for performance data
+    long int                    bytes_written;
+
+    // Variables holding our interface and implementation strings
+    char*   swid_s = "SIOX-HDF5-Example";
+    char*   impl_s = "V2";
+
+
 
     /* Vars for accessing HDF5 */
-    char*       hdf5_file_name = "Datei.h5";
+    char*       hdf5_file_name = "File.h5";
     hid_t       hdf5_file_id;
     hsize_t     dims[2]={2,3};
     int         data[6]={1,2,3,4,5,6};
@@ -62,43 +97,35 @@ main(){
 
 
     /*
-     * Preparations
-     * ============
-     */
-
-    /* Find own HWID, SWID and IID and turn them into strings */
-    char  hwid[HOST_NAME_MAX];
-    char* swid = "SIOX-HDF5-Example";
-    char  iid[20];
-
-    pid_t   pid = getpid();
-    pid_t   tid = syscall(SYS_gettid);
-    gethostname((char *) &hwid, (size_t) HOST_NAME_MAX);
-    sprintf((char*) &iid, "%d-%d", (int) pid, (int) tid);
-
-
-    /*
      * Checking in with SIOX
      * =====================
      */
 
-    /* Register node itself */
-    unid = siox_register_node(hwid, swid, iid);
+    // Look up our interface and implementation info
+    siox_our_ui = siox_system_information_lookup_interface_id( swid_s, impl_s );
 
-    /* Register data types we will use */
-    dtid_h5fn = siox_register_datatype( "HDF5-FileName", SIOX_STORAGE_STRING );
-    dtid_h5id = siox_register_datatype( "HDF5-FileId", SIOX_STORAGE_64_BIT_INTEGER );
-    dtid_b2write = siox_register_datatype( "Bytes to write", SIOX_STORAGE_64_BIT_INTEGER );
+    // Register node itself
+    // In place of the NULL, a string may be given as an instance identifier,
+    // such as a network port or an MPI rank.
+    siox_our_component = siox_component_register( siox_our_ui, "" );
 
-    /* Indicate which data types serve as descriptors */
-    siox_register_datatype_as_descriptor( dtid_h5fn );
-    siox_register_datatype_as_descriptor( dtid_h5id );
+    // Register the activity types (as seen from our layer, not the underlying HDF5!)
+    // we will use. Here, our work consists only of a single activity, writing to a file.
+    // In contrast, HDF5 will have to serve calls to open(), write() and close() for us.
+    siox_act_type_write = siox_component_register_activity( siox_our_ui, "write" );
 
-    /* Register our performance metric with the ontology */
-    mid = siox_register_metric( "Bytes Written",
-                                SIOX_UNIT_BYTES,
-                                SIOX_STORAGE_64_BIT_INTEGER,
-                                SIOX_SCOPE_ACTUAL );
+    // Register the attributes we will need
+    siox_att_filename = siox_ontology_register_attribute( "filesystem", "filename", SIOX_STORAGE_STRING );
+    siox_att_filename = siox_ontology_register_attribute( "filesystem", "fileid", SIOX_STORAGE_64_BIT_INTEGER );
+    siox_att_bytes2write = siox_ontology_register_attribute_with_unit( "io",
+                                                                       "data volume/to write",
+                                                                       "Bytes",
+                                                                       SIOX_STORAGE_64_BIT_UINTEGER );
+    siox_att_byteswritten = siox_ontology_register_attribute_with_unit( "io",
+                                                                        "data volume/written",
+                                                                        "Bytes",
+                                                                        SIOX_STORAGE_64_BIT_UINTEGER );
+    /// @todo Mark filename and fileid (and b2w?) as descriptors
 
 
 
@@ -106,35 +133,30 @@ main(){
      * Opening a File for Writing
      * ==========================
      */
+     
 
-    /* Notify SIOX that we are starting an activity for which we may later collect performance data.
-       For this example, we start one activity each for the open(), write() and close() calls.
-       In place of the NULL argument, for all the activity functions, an artificial time stamp could
-       be supplied to facilitate simulation runs; NULL will draw a current time stamp. */
-    aid_open = siox_start_activity( unid, NULL, "Open HDF5 file" );
+    // Notify SIOX that we are starting an activity of one of the types we previously declared.
+    // For this example, we start one activity each for the open(), write() and close() calls.
+    siox_act_open = siox_activity_start( siox_our_component, siox_act_type_open );
 
-    /*
-     * Prepare remote call parameters for SIOX
-     * This serves to reconstruct the call raph and is only necessary for calls that may traverse
-     * system boundaries, as local call hierarchies can easily be reconstructed using the system stack.
-     */
+    // Report the call's attributes: The file name we write to.
+    siox_activity_set_attribute( siox_act_open, siox_att_filename, hdf5_file_name );
 
-    /* First, open a parameter block, supplying target HWID, SWID and IID (if known; otherwise NULL). */
-    siox_rcid rcid_open = siox_describe_remote_call_start( aid_open, NULL, "HDF5", NULL );
-
-    /* Next,  indicta ethe call's attributes that may serve to identify it on the callee's side
-       (in this case: only the file name). */
-    siox_remote_call_attribute( rcid_open, dtid_h5fn, &hdf5_file_name );
-
-    /* Finally, close the block. */
-    siox_describe_remote_call_end( rcid_open );
-
-    /* The actual call to HDF5 to create a file with the name "Datei.h5", returning an HDF5 file id */
+    // The actual call to HDF5 to create a file with the name "File.h5", returning an
+    // HDF5 file id
     hdf5_file_id = H5Fcreate ( hdf5_file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
+    if (hdf5_file_id < 0)
+        report_and_abort(hdf5_file_id, siox_act_write, siox_our_component);
 
-    /* Tell SIOX the activity has enden. As there are no performance metrics to report here, we
-       can do without a call to siox_stop_activity() to separate active and reporting phases. */
-    siox_end_activity( aid_open, NULL );
+    // The HDF5 create() call maps the file name provided to a file id that is used
+    // in all future actions on the file. We inform SIOX of this fact by adding the
+    // new file id as an additional attribute to the open() activity.
+    siox_activity_set_attribute( siox_act_write, siox_att_fileid, &hdf5_file_id );
+
+    // Tell SIOX the activity has ended.
+    // As there are no performance metrics to report here, we can do without a call
+    // to siox_stop_activity() to separate active and reporting phases.
+    siox_activity_end( siox_act_open );
 
 
 
@@ -143,42 +165,45 @@ main(){
      * =====================
      */
 
-    /* Start another activity which will cover the writing part */
-    aid_write = siox_start_activity( unid, NULL, "Write HDF5 file" );
 
-    /* This time, we also inform SIOX that our current acivity is causally related to the one of
-       the open() call, as we reuse the same file then prepared for us. */
-    siox_link_activity( aid_write, aid_open );
+    // Start another activity which will cover the writing part
+    siox_act_write = siox_activity_start( siox_our_component, siox_act_type_write );
 
-    /* Once again, prepare the call's attributes for SIOX.
-       This time, we also compute the total number of bytes to write, an identifying attribute of the
-       call that is not directly passed as a parameter. */
-    siox_rcid rcid_write = siox_describe_remote_call_start( aid_open, NULL, "HDF5", NULL );
-    siox_remote_call_attribute( rcid_write, dtid_h5fn, &hdf5_file_name );
+    // This time, we also inform SIOX that our current acivity is causally related
+    // to the one of the open() call, as we reuse the same file then prepared for us.
+    siox_activity_link_to_parent( siox_act_write, siox_act_open );
+
+    // Once again, prepare the call's attributes for SIOX.
+    // This call is identified by the HDF5 file id, not the HDF5 file name.
+    // By the association we reported to SIOX during the open() activity, we might be able
+    // to link these actions together, even if the link to parent call above was missing.
+    siox_activity_set_attribute( siox_act_write, siox_att_fileid, &hdf5_file_id );
+    // This time, we also compute the total number of bytes to write,
+    // an identifying attribute of the call that is not directly passed as a parameter.
     long int b2write = sizeof( data );
-    siox_remote_call_attribute( rcid_write, dtid_b2write, &b2write );
-    siox_describe_remote_call_end( rcid_write );
+    siox_activity_set_attribute( siox_act_write, siox_att_bytes2write, &b2write );
 
-    /* The actual call to create the file and write the dataset to it */
+    // The actual call to create the file and write the dataset to it
     hdf5_status = H5LTmake_dataset( hdf5_file_id, "/dset", 2, dims, H5T_NATIVE_INT, data );
+    if (hdf5_status < 0)
+        report_and_abort(hdf5_status, siox_act_write, siox_our_component);
 
-    /* Stop the writing activity; this will mark the end of the active phase and begin reporting */
-    siox_stop_activity( aid_write, NULL );
+    // Stop the writing activity; this will mark the end of the active phase and begin reporting
+    siox_activity_stop( siox_act_write );
 
     /*
      * Collecting and Reporting Performance Data
      */
 
-    /* Collect data */
+    // Collect data
     bytes_written = sizeof( data );
 
-    /* Report the data we collected. This could take place anytime between siox_start_activity()
-       and siox_end_activity() and happen more than once per activity. */
-    siox_report_activity( aid_write,
-                          mid, &bytes_written );
+    // Report the data we collected. This could take place anytime between siox_start_activity()
+    // and siox_activity_end() and happen more than once per activity.
+    siox_activity_set_attribute( siox_act_write, siox_att_byteswritten, &bytes_written );
 
     /* Notify SIOX that all pertinent data has been sent and the write activity can be closed */
-    siox_end_activity( aid_write, NULL );
+    siox_activity_end( siox_act_write );
 
 
 
@@ -187,17 +212,23 @@ main(){
      * ================
      */
 
+
     /* One more activity, this time for the close() call. Instead of being placed in one activity
        each, any or all calls could also be grouped together in activities, as program logic dictates.  */
-    aid_close = siox_start_activity( unid, NULL, "Close HDF5 file" );
+    siox_act_close = siox_activity_start( siox_our_component, siox_act_type_close );
 
-    /* The actual call to close the file */
+    /* This time, we also inform SIOX that our current acivity is causally related to the one of
+       the open() call, as we reuse the same file then prepared for us. */
+    siox_activity_link_to_parent( siox_act_close, siox_act_open );
+
+    // The actual call to close the file
     hdf5_status = H5Fclose( hdf5_file_id );
     if( hdf5_status < 0 )
-        fprintf(stderr, "!!! Error writing via HDF5! !!!\n");
+        report_and_abort(hdf5_status, siox_act_close, siox_our_component);
 
-    /* Now close the activity covering the close(), too */
-    siox_end_activity( aid_close, NULL );
+    // Now close the activity covering the close(), too
+    siox_activity_end( siox_act_close );
+
 
 
     /*
@@ -205,10 +236,23 @@ main(){
      * ===========
      */
 
-    /* Unregister node from SIOX */
-    siox_unregister_node( unid );
+
+    /* Unregister component from SIOX */
+    siox_component_unregister( siox_our_component );
 
 
     exit( EXIT_SUCCESS );
 }
 
+
+
+void report_and_abort( siox_activity_error error_code, siox_activity * activity, siox_component * component )
+{
+    fprintf( stderr, "!!! Error accessing file via HDF5! !!!" );
+    
+    // Report to SIOX that the activity ended in an error and disconnect from SIOX.
+    siox_activity_report_error( activity, error_code );
+    siox_activity_end( activity );
+    siox_component_unregister( component );
+    exit( EXIT_FAILURE );
+}

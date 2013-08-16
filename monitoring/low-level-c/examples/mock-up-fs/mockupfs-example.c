@@ -4,10 +4,12 @@
  * Example for an application using a mock-up file system layer,
  * both of them instrumented for SIOX.
  * This example is slightly more complex, using SIOX's mechanism
- * for remote calls when passing parameters to underlying layers.
+ * for remote calls when passing parameters to underlying layers,
+ * showing them from both client (mockupfs-example.c) and server
+ * (mufs.c) side.
  *
  * @authors Julian Kunkel & Michaela Zimmer
- * @date    2013-08-06
+ * @date    2013-08-16
  *          GNU Public License.
  */
 
@@ -40,7 +42,8 @@ main(){
     siox_unique_interface      * siox_our_ui;    // This component
     siox_unique_interface      * siox_mufs_ui;   // The MUFS layer we will use
 
-    siox_node * some_node;
+    // The target node that will execute our MUFS calls (in this case, our own)
+    siox_node * target_node;
 
     // This component's identifier
     siox_component *            siox_our_component;
@@ -165,9 +168,9 @@ main(){
     //  - the node we will call (our own, found via another siox function),
     //  - the interface ("MUFS"),
     //  - NULL for the associate info, as we have none.
-    some_node = siox_lookup_node_id( NULL );
+    target_node = siox_lookup_node_id( NULL );
     siox_rc_write = siox_remote_call_setup( siox_act_write,
-                                            &some_node,
+                                            &target_node,
                                             &siox_mufs_ui,
                                             NULL );
     // Report the call's attributes: The file name we write to.

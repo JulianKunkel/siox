@@ -4,12 +4,12 @@
 import os
 
 def build(bld):
-   #pass
+   pass
    try:
-   		os.symlink(bld.path.abspath() + "/siox.conf", "build/monitoring/low-level-c/test/siox.conf")
+   		os.symlink(bld.path.abspath() + "/siox.conf", "build/monitoring/low-level-c/examples/hdf5/siox.conf")
    except OSError, e:
    	 	pass
-   bld.program(includes="",  use = "siox-monitoring-siox-ll",  features='test c cprogram', target = 'siox-monitoring-siox-ll-c-test', source = 'siox-monitoring-siox-ll-c-test.c', install_path = None)
+   #bld.program(includes="",  use = "siox-monitoring-siox-ll hdf5 hdf5_hl",  features='test c cprogram', target = 'hdf5-example', source = 'hdf5-example.c', install_path = None)
 
 
 # -*- indent-tabs-mode: t -*-
