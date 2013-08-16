@@ -1,7 +1,7 @@
 /**
  * @file siox-ll.h SIOX low-level interface headers.
  *
- * @date 2013-08-05
+ * @date 2013-08-16
  * @copyright GNU Public License
  * @authors Michaela Zimmer, Julian Kunkel, Marc Wiedemann & Alvaro Aguilera
  *
@@ -82,30 +82,30 @@
 
 #include <C/siox-types.h>
 
-#ifndef SIOX_INTERNAL_USAGE
 /// @name Typedefs to Hide Implementation from C Interface
 /// <i>*Jedi Hand Wave*</i>
 /// "These aren't the typedefs you're looking for..."
 /** @{ */
 // We hide all types from the implementation
+#ifndef SIOX_INTERNAL_USAGE
 typedef void siox_activity;
 typedef void siox_attribute;
 typedef void siox_component;
 typedef void siox_remote_call;
-/** @} */
 #endif
 
 typedef void siox_component_activity;
 typedef void siox_node;
 typedef void siox_associate;
 typedef void siox_unique_interface;
+/** @} */
 
 #define SIOX_INVALID_ID 0
 
 //////////////////////////////////////////////////////////////////////////////
 /// Retrieve the node id object for a given hardware component.
 //////////////////////////////////////////////////////////////////////////////
-/// @param hostname [in] The hardware node's host name, which has to be
+/// @param [in] hostname The hardware node's host name, which has to be
 /// 	system-wide unique. If set to NULL, SIOX will use the local hostname.
 //////////////////////////////////////////////////////////////////////////////
 /// @return A node id, which is system-wide unique
@@ -119,8 +119,8 @@ siox_node * siox_lookup_node_id(const char * hostname);
 /// Adding an attribute to the process allows different layers to add globally
 /// valid runtime information (such as MPI rank).
 //////////////////////////////////////////////////////////////////////////////
-/// @param attribute [in] The attribute to set
-/// @param value [in] The attribute's new value
+/// @param [in] attribute The attribute to set
+/// @param [in] value The attribute's new value
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p'' attribute,value
 void siox_process_set_attribute(siox_attribute * attribute, void * value);
@@ -131,16 +131,16 @@ void siox_process_set_attribute(siox_attribute * attribute, void * value);
 /// Look up an attribute in the SIOX ontology, creating a new entry if not
 /// found.
 //////////////////////////////////////////////////////////////////////////////
-/// @param domain [in] The contextual domain this attribute belongs to,
+/// @param [in] domain The contextual domain this attribute belongs to,
 ///		e.g. "Node", "Process", "POSIX", "MPI" AND sth. like "OpenMPIV1"
-/// @param name [in] The attribute's name
+/// @param [in] name The attribute's name
 /// @param storage_type [in] The minimum storage type required to represent
 ///		data of this attribute
 //////////////////////////////////////////////////////////////////////////////
 /// @return A pointer to a globally unique representation in a siox_attribute,
-/// unless there already exists an attribute with identical domain and name
-/// but different storage_type.
-/// In the latter case, a @c nullptr is returned.
+/// 	unless there already exists an attribute with identical domain and
+///		name but different storage_type.
+/// 	In the latter case, a @c nullptr is returned.
 //////////////////////////////////////////////////////////////////////////////
 /// @note The key (domain, name) must be unique; it is not allowed to use
 ///		different storage types and/or attributes with the same attribute.
@@ -150,56 +150,40 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
 
 /**@}*/
 
-/*
- * Register a metric with SIOX.
- *
- * If no metric with the name given is found in the ontology, a new entry will be created.
- * If a metric with the same name but inconsistent data is found, @c NULL will be returned.
- *
- * @param[in]   domain    	The domain the attribute belongs to.
- * @param[in]   name        The metric's full qualified name.
- * @param[in]   unit        The unit used to measure values in the metric.
- * @param[in]   storage     The minimum storage type required to store data of the metric.
- *                          This type will also be assumed for type casts!
- * @returns                 The @em siox_metric for the metric or NULL, if the data given
- *                          is inconsistent with an existing metric of the same name..
-
- * Uses siox_attribute_set_meta_attribute to attach the UNIT meta-attribute to the attribute.
- */
 //////////////////////////////////////////////////////////////////////////////
-///
+/// Look up an attribute with a unit in the SIOX ontology, creating a new
+/// entry if not found.
+/// This is merely a convenience funtion for the very common case of an
+/// attribute that is measures in a unit.
 //////////////////////////////////////////////////////////////////////////////
-/// @param domain
-/// @param name
-/// @param unit
-/// @param storage_type
+/// @param [in] domain The domain the attribute belongs to.
+/// @param [in] name The attribute's full qualified name.
+/// @param [in] unit The unit used to measure values in the attribute.
+/// @param storage_type [in] The minimum storage type required to store values
+/// 	of the attribute. This type will also be assumed for type casts!
 //////////////////////////////////////////////////////////////////////////////
-/// @return 
+/// @return A pointer to the @em siox_attribute for the attribute or NULL,
+/// 	if the data given is inconsistent with an existing attribute of the
+///		same name.
 //////////////////////////////////////////////////////////////////////////////
 /// @note Units themselves are implemented as meta attributes with storage
-/// type SIOX_STORAGE_STRING.
+/// 	type SIOX_STORAGE_STRING, domain "Meta" and name "Unit".
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s,%s,%s,%d'' domain,name,unit,storage_type
-siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain, const char * name,
-                                            const char *                unit,
-                                            enum siox_ont_storage_type  storage_type);
+siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain, const char * name, const char * unit, enum siox_ont_storage_type storage_type);
 
-/*
- * Set a meta-attribute on an attribute, e.g. "UNIT"
- * Return false if an conflict with the current set attribute exists.
- * @param [in] parent
- * @param [in] meta_attribute
- * @param [in] value
- */ 
- //////////////////////////////////////////////////////////////////////////////
- /// Attach a meta attribute and its value to a given attribute.
- //////////////////////////////////////////////////////////////////////////////
- /// @param parent
- /// @param meta_attribute
- /// @param value
- //////////////////////////////////////////////////////////////////////////////
- /// @return @c true if everything went well; otherwise, @c false.
- //////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+/// Attach a meta attribute and its value to a given attribute, e.g. "Unit".
+/// Return @c false if a conflict with a currently set attribute occurs, as
+/// there currently is no way to change, unset or overwrite a set attribute.
+//////////////////////////////////////////////////////////////////////////////
+/// @param [in] parent
+/// @param [in] meta_attribute
+/// @param [in] value
+//////////////////////////////////////////////////////////////////////////////
+/// @return @c true if everything went well; otherwise, @c false.
+//////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p,%p'' parent,meta_attribute,value
 int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * meta_attribute, void * value);
 
@@ -207,8 +191,8 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * m
  * Retrieve an attribute by its name.
  * @todo Use its attributes to retrieve it.
  *
- * @param[in]   domain    	The domain the attribute belongs to.
- * @param[in]   name        The metric's full qualified name.
+ * @param [in]   domain    	The domain the attribute belongs to.
+ * @param [in]   name       The metric's full qualified name.
  *
  * @returns                 The @em siox_metric with the name given or NULL, if no such metric
  *                          could be found.
@@ -507,11 +491,11 @@ void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity 
  * Open attribute list for a remote call, indicate its target and receive @em RCID.
  *
  * @param[in]   activity
- * @param[in]   target_siox_node   The target component's @em HardwareID (e.g. „Blizzard Node 5“ or the MacID
+ * @param[in]   target_node   The target component's @em NodeID (e.g. „Blizzard Node 5“ or the MacID
  *                            of an NAS hard drive), if known; otherwise, @c NULL.
- * @param[in]   target_uid   The target component's @em Software interface (e.g. „MPI“ oder „POSIX“),
+ * @param[in]   target_unique_interface   The target component's @em Software interface (e.g. „MPI“ oder „POSIX“),
  *                            if known; otherwise, @c NULL.
- * @param[in]   target_iid    The target component's @em InstanceID (according to component type,
+ * @param[in]   target_associate    The target component's @em InstanceID (according to component type,
  *                            e.g. the ProcessID of a Thread or the IP address and Port
  *                            of a server cache), if known; otherwise, @c NULL.
  *
