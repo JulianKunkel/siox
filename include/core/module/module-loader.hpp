@@ -13,6 +13,73 @@ namespace core{
 /** 
 * The module loader interface provides a simple abstraction to "plugin"  component modules at runtime.
 * Load a single module and extracts any numbers of components with different interfaces from it.
+* 
+
+Definitions:
+A COMPONENT is a module which usually is loaded just once per SIOX process.
+A PLUGIN is a module of which multiple instances of different plugins are loaded, and controlled by another COMPONENT.
+
+To write your own module, the following steps are needed.
+A) If you create a new public interface (in the example the interface will be called [INTERFACE]) which is implementable by modules you have to do:
+
+0) Define the appropriate namespace of your component (core, monitoring, knowledge).
+1) Create [INTERFACE].hpp in include
+	Create an abstract class which is derived from Component (core/component/Component.hpp)
+
+	Also define the name of the interface:
+	#define [INTERFACE][_PLUGIN]_INTERFACE "[INTERFACE][_plugin]"
+	_plugin is used to suffix Plugin interfaces.
+
+2) Create [INTERFACE]Implementation.hpp in include, this file is intented for developers implementing your interface.
+	#include <[INTERFACE].hpp>
+	This file should contain a macro called COMPONENT (or PLUGIN) which creates the interface, e.g.
+	#define COMPONENT(x) \
+	extern "C"{\
+	void * get_instance_[INTERFACE][_plugin]() { return new x(); }\
+	}
+
+
+B) To implement a module (do not put any implementation file under include):
+1) Create valid options for your module, for example, a filename your module works on.
+
+	#include <core/component/component-macros.hpp>
+
+	using namespace std;
+	using namespace monitoring;
+
+	class FileOntologyOptions: public core::ComponentOptions{
+	public:
+		string filename; // You can add any options, containers etc. here.
+
+		SERIALIZE_CONTAINER(MEMBER(filename)) // add the name of the variable here as well.
+	};
+
+12 Create some CPP files, in one add "#include [INTERFACE]Implementation.hpp"
+	and implement your interface according to the specification by deriving from your abstract class.
+3) Add CREATE_SERIALIZEABLE_CLS(FileOntologyOptions) in one of your implementation CPP files to make sure the serialization code for your options is created.
+4) Use the macro from A.2) to create the module interface in one of your implementation CPP files, e.g.: COMPONENT(FileOntology)
+5) To create a valid module you have to implement the interfaces from a Component:
+
+protected:
+	// This function returns the available options of this component.
+	virtual ComponentOptions * AvailableOptions() = 0;
+public:
+	// This function is invoked after the module has been loaded.
+	// Options are then available using getOptions<[OPTIONSNAME]>()
+	virtual void init() = 0;
+
+For example, one could implement it using:
+	ComponentOptions * AvailableOptions(){
+		return new FileOntologyOptions();
+	}
+
+	void init(){
+		FileOntologyOptions & o = getOptions<FileOntologyOptions>();
+		cout << o.filename << endl;
+	}
+
+You may also use a destructor to cleanup your module.
+
 */ 
  
 /**
