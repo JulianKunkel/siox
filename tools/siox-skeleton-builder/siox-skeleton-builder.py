@@ -616,6 +616,7 @@ at the end of """)
             commandName = match.group(1)
             commandArgs = match.group(2) + " "
 
+
             # Search for init or final sections to define init or final
             # functions
             if commandName == 'init':
@@ -629,8 +630,7 @@ at the end of """)
             elif commandName in availableCommands:
                 commandName = match.group(1)
                 commandArgs = match.group(2) + " "
-                newTemplate = Template(
-                    template[commandName], commandName, commandArgs)
+                newTemplate = Template( template[commandName], commandName, commandArgs )
                 templateList.append(newTemplate)
 
             # If the command name is not in the template the parsed line
@@ -685,6 +685,7 @@ class Template():
         self.containsNamedParameters = False
         self.insideString = False
         # Generate strings for output from given input
+        
 
         self.default_value_dictionary = {}
         nameList = self.templateDict['variables']
@@ -712,45 +713,30 @@ class Template():
             self.parameterList[key] = self.default_value_dictionary[key]
 
         nameList = self.templateDict['variables']
-        valueList = values.split()
 
-        for value in valueList:
-            valueString = ""
-            valueParts = value.split("=", 1)
-            name = ""
+        for name in nameList:
+            # Match the next value and only one value out of the string
+            value = self.valueRegex.match(values)
+            if value:
+               if(value.group(1)):
+                       name = value.group(1).strip("=")
+                       # the variable with the given name is set
+                       if not name in nameList:
+                               print("Error name " + name + " is not part of the defined function " + self.name)
+                               exit(1)
+               # Set the matched value
+               valueString = value.group(2).strip()
+               if(valueString.startswith("''")):
+                      valueString = valueString.strip("'")
+               self.parameterList[name] = valueString
 
-            if len(valueParts) == 2:
-                nameTmp = valueParts[0].strip()
-                if nameTmp in nameList:
-                    name = nameTmp
-                    self.namedVar = True
-                    valueParts[0] = valueParts[1]
-                else:
-                    valueParts[0] += "=" + valueParts[1]
+               # Truncate the found value from the value string
+               values = self.valueRegex.sub('', values, 1)
 
-            if name == "" and not self.namedVar:
-                if self.currentParameterIndex < len(nameList):
-                    name = nameList[self.currentParameterIndex]
-                else:
-                    name = nameList[-1]
+        # All further text belongs to the last parameter.
+        lastName = nameList[-1]
+        self.parameterList[lastName] += " " + values.strip()
 
-            # Set the matched value
-            valueString += valueParts[0]
-            if(valueString.startswith("''")):
-                valueString = valueString.strip("'")
-
-            if self.insideString:
-                self.parameterList[name] += " " + valueString
-            else:
-                self.parameterList[name] = valueString
-
-            if valueString.startswith('"'):
-                self.insideString = True
-            if valueString.endswith('"'):
-                self.insideString = False
-
-            if not self.insideString:
-                self.currentParameterIndex += 1            
 
 
     #
@@ -1072,10 +1058,10 @@ class Writer():
         print("\nstatic void sioxSymbolInit() {\ninitialized_dlsym = 1;", file=output)	
         for function in functionList:
             print(function.getDlsym(), file=output)
-	print("}", file=output)
+        print("}", file=output)
 
         print("\nstatic void sioxInit() {\n", file=output)
-	print("\tif(initialized_dlsym == 0) sioxSymbolInit();", file=output)
+        print("\tif(initialized_dlsym == 0) sioxSymbolInit();", file=output)
         # write all init-templates
         for function in functionList:
             prepareGenericVariablesForTemplates(function)

@@ -109,7 +109,7 @@ template = {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': ''' if(siox_namespace == 0){ ''',
+	'before': '''\tif(siox_namespace == 0){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''
@@ -120,7 +120,7 @@ template = {
 	'init': '''''',
 	'before': '''''',
 	'after': '''''',
-	'cleanup': '}else{ %(FC)s }',
+	'cleanup': '\t}else{\n\t\t%(FC)s \t}',
 	'final': ''
 },
 
