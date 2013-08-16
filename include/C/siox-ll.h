@@ -123,7 +123,7 @@ siox_node * siox_lookup_node_id(const char * hostname);
 /// @param [in] value The attribute's new value
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p'' attribute,value
-void siox_process_set_attribute(siox_attribute * attribute, void * value);
+void siox_process_set_attribute(siox_attribute * attribute, const void * value);
 
 
 
@@ -185,7 +185,7 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
 /// @return @c true if everything went well; otherwise, @c false.
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p,%p'' parent,meta_attribute,value
-int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * meta_attribute, void * value);
+int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * meta_attribute, const void * value);
 
 /*
  * Retrieve an attribute by its name.
@@ -320,7 +320,7 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
  * @param[in]   value       A pointer to the attribute's value.
  */
 //@test ''%p,%p,%p'' component,attribute,value
-void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, void * value);
+void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, const void * value);
 
 /**
  * Register a potential activity on a component.
@@ -413,7 +413,7 @@ void siox_activity_stop(siox_activity * activity);
  * @param[in]   value       A pointer to the attribute's value.
  */
 //@test ''%p,%p,%p'' activity,attribute,value
-void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, void * value);
+void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, const void * value);
 
 /**
  * Report that the current call resulted in the error code @em error so that SIOX can mark any
@@ -513,7 +513,7 @@ siox_remote_call * siox_remote_call_setup(siox_activity *activity, siox_node * t
  * @param[in]   value       A pointer to the attribute's value.
  */
 //@test ''%p,%p,%p'' remote_call,attribute,value
-void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, void * value);
+void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, const void * value);
 
 /**
  * Close attribute list for a remote call.

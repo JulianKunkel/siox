@@ -19,9 +19,11 @@
 /* Register the data types for the descriptors */
 //@register_attribute bytesToRead "POSIX" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesToWrite "POSIX" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute filePosition "POSIX" "file-position" SIOX_STORAGE_64_BIT_UINTEGER
+
 //@register_attribute fileName "POSIX" "filename" SIOX_STORAGE_STRING
-//@register_attribute fileName "Global" "filesystem" SIOX_STORAGE_32_BIT_UINTEGER
-//@register_attribute fileHandle "POSIX" "filehandle" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute fileSystem "Global" "filesystem" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute fileHandle "POSIX" "filehandle" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute bytesWritten "POSIX" "quantity/BytesWritten" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesRead "POSIX" "quantity/BytesRead" SIOX_STORAGE_64_BIT_UINTEGER
 
@@ -37,7 +39,8 @@ End of global part
 
 //@guard
 //@activity
-//@activity_attribute fileName pathname
+//@activity_attribute_pointer fileName pathname
+//@activity_attribute_u32 fileHandle ret 
 //@horizontal_map_put_int ret
 //@error ''ret<0'' errno
 //@guardEnd
@@ -46,6 +49,8 @@ int open(const char *pathname, int flags, mode_t mode);
 //@guard
 //@activity
 //@horizontal_map_put_int ret
+//@activity_attribute_pointer fileName pathname
+//@activity_attribute_u32 fileHandle ret 
 //@error ''ret<0'' errno
 //@guardEnd
 int creat(const char *pathname, mode_t mode);
@@ -53,14 +58,48 @@ int creat(const char *pathname, mode_t mode);
 //@guard
 //@activity
 //@horizontal_map_remove_int fd
+//@activity_attribute_u32 fileHandle fd
 /*@error 'ret < 0' ret*/
 //@guardEnd
 int close(int fd);
 
 //@guard
 //@activity
+//@activity_attribute_u32 fileHandle fd 
+//@activity_lookup_int fd Activity=Parent
+//@horizontal_map_put_int ret Activity=Parent
+//@error ''ret<0'' errno
+//@guardEnd
+int dup(int fd);
+
+//This code is actually not completely correct, dup2 may close newfd:
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle oldfd 
+//@activity_lookup_int oldfd Activity=Parent
+//@horizontal_map_put_int newfd Activity=Parent
+//@error ''ret<0'' errno
+//@guardEnd
+int dup2(int oldfd, int newfd); 
+
+
+//This code is actually not completely correct, dup3 may close newfd:
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle oldfd 
+//@activity_lookup_int oldfd Activity=Parent
+//@horizontal_map_put_int newfd Activity=Parent
+//@error ''ret<0'' errno
+//@guardEnd
+int dup3(int oldfd, int newfd, int flags); 
+
+//@guard
+//@activity
 //@activity_attribute bytesToWrite count
 //@activity_attribute bytesWritten ret
+//@activity_attribute_u32 fileHandle fd
+//@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
+//@activity_attribute filePosition offset
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
@@ -70,12 +109,35 @@ ssize_t write(int fd, const void *buf, size_t count);
 //@activity
 //@activity_attribute bytesToRead count
 //@activity_attribute bytesRead ret
+//@activity_attribute_u32 fileHandle fd
+//@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
+//@activity_attribute filePosition offset
+//@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
 ssize_t read(int fd, void *buf, size_t count);
 
-ssize_t pread(int fd, void *buf, size_t count, off_t offset);
+//@guard
+//@activity
+//@activity_attribute bytesToWrite count
+//@activity_attribute bytesWritten ret
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
+
+//@guard
+//@activity
+//@activity_attribute bytesToRead count
+//@activity_attribute bytesRead ret
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 
 //ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
 //ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
@@ -117,5 +179,3 @@ int munmap (void *addr, size_t length);
 int madvise (void *addr, size_t length, int advice);
 int posix_fadvise (int fd, __off_t offset, __off_t len, int advise);
 
-/* Map-Kette um ein Glied (fd->ret) verlängern? Oder alles, was (->fd) mapt, ebenfalls (->ret) mappen? */
-/* int dup_fd (int fd); */

@@ -11,6 +11,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <iostream>
+
 
 using namespace std;
 
@@ -130,6 +132,13 @@ struct ProcessID{
         return nid < b.nid || pid < b.pid || time < b.time;
     }
 };
+
+
+inline ostream& operator<<(ostream& os, const ProcessID & v){
+    os << "(" << v.nid << "," << v.pid << "," << v.time << ")";
+    return os;
+}
+
 // Each process can create a runtime ID locally KNOWING the NodeID from the daemon
 // RuntimeID create_runtime_id(NodeID 32 B,  getpid() 32B, gettimeofday(seconds) 32B );
 // See @TODO
@@ -162,7 +171,13 @@ struct ComponentID{
     inline bool operator<(ComponentID const & b) const{
         return id < b.id || pid < b.pid;
     }
-} ;
+};
+
+inline ostream& operator<<(ostream& os, const ComponentID & v){
+    os << "(" << v.pid << "," << v.id << ")";
+    return os;
+}
+
 // TODO:
 // ComponentID(siox_component){}
 // ComponentID create_component_id(ProcessID 3*32 B, UIID + 16 bit);
@@ -188,9 +203,13 @@ struct ActivityID{
 
     inline bool operator!=(ActivityID const & b) const{
         return ! (*this == b);
-    }    
+    }
 };
 
+inline ostream& operator<<(ostream& os, const ActivityID & v){
+    os << "(" << v.cid << "," << v.id << ")";
+    return os;
+}
 
 
 // ActivityID create_activity_id(ComponentID 4*32 B, <Incrementing Counter>);

@@ -1,0 +1,11 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+import os
+
+def build(bld):
+   bld.shlib(includes="#", use="siox-core-ModuleLoader BOOST", features='cxx', target = 'siox-tools-TraceReader', source = 'TraceReader.cpp');
+   bld.program(includes="#", use="siox-tools-TraceReader", features='cxx cprogram', target = 'siox-trace-reader', source = 'TraceReaderMain.cpp')
+   bld.recurse(['test'], mandatory=True)
+
+# -*- indent-tabs-mode: t -*-

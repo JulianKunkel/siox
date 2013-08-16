@@ -5,6 +5,6 @@
 def build(bld):
     bld.shlib(includes="", use="BOOST siox-core-AutoRegistrar", target = "siox-monitoring-FileOntology", source = 'FileOntology.cpp' )
     bld.recurse(['test'], mandatory=True)
-
+    bld.install_files('${PREFIX}/include/' + bld.path.relpath(), 'FileOntologyOptions.hpp') 
 
 # -*- indent-tabs-mode: t -*-

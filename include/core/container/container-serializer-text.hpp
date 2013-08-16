@@ -22,7 +22,7 @@ public:
 	inline void append(CONTAINER * obj){
 		archive << obj;
 		// add end of line to force floshing
-		file << endl;
+		//file << endl;
 	}
 
 	void close(){
@@ -47,8 +47,8 @@ public:
 		CONTAINER * obj;
 		archive >> obj;
 		// fetch end of line...
-		char c;
-		archive >> c;
+		//char c;
+		//archive >> c;
 		return obj;
 	}
 

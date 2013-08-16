@@ -5,6 +5,6 @@
 def build(bld):
     bld.shlib(includes="", use="BOOST siox-core-AutoRegistrar", target = "siox-monitoring-FileBasedSystemInformation", source = 'FileBasedSystemInformation.cpp' )
     bld.recurse(['test'], mandatory=True)
-
+    bld.install_files('${PREFIX}/include/' + bld.path.relpath(), 'FileBasedSystemInformationOptions.hpp') 
 
 # -*- indent-tabs-mode: t -*-

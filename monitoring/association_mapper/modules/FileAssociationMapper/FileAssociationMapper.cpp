@@ -20,8 +20,10 @@
 
 #include "FileAssociationMapperOptions.hpp"
 
-using namespace core;
 using namespace std;
+
+using namespace core;
+using namespace monitoring;
 
 CREATE_SERIALIZEABLE_CLS(FileAssociationMapperOptions)
 
