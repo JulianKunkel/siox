@@ -3,13 +3,12 @@
  * Kurzbeschreibungen hier hineinkopieren!
  */
 
-
 #include <unistd.h>
 #include <sys/uio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dlfcn.h>
-#include <fcntl.h>
+//#include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -19,13 +18,18 @@
 /* Register the data types for the descriptors */
 //@register_attribute bytesToRead "POSIX" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesToWrite "POSIX" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
-//@register_attribute filePosition "POSIX" "file-position" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute filePosition "POSIX" "file/position" SIOX_STORAGE_64_BIT_UINTEGER
+
+//@register_attribute fileMemoryRegions "POSIX" "quantity/memoryRegions" SIOX_STORAGE_32_BIT_INTEGER
 
 //@register_attribute fileName "POSIX" "filename" SIOX_STORAGE_STRING
 //@register_attribute fileSystem "Global" "filesystem" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute fileHandle "POSIX" "filehandle" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute bytesWritten "POSIX" "quantity/BytesWritten" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesRead "POSIX" "quantity/BytesRead" SIOX_STORAGE_64_BIT_UINTEGER
+
+ //@register_attribute fileAdviseExtent "POSIX" "hint/advise-extent" SIOX_STORAGE_64_BIT_UINTEGER
+ //@register_attribute fileAdvise "POSIX" "hints/advise" SIOX_STORAGE_32_BIT_INTEGER
 
 /* Prepare a (hash) map to link descriptors (in this case, of type int) to their activities.
    This is necessary for the horizontal linking of activities.
@@ -107,7 +111,6 @@ ssize_t write(int fd, const void *buf, size_t count);
 
 //@guard
 //@activity
-//@activity_attribute bytesToRead count
 //@activity_attribute bytesRead ret
 //@activity_attribute_u32 fileHandle fd
 //@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
@@ -116,6 +119,31 @@ ssize_t write(int fd, const void *buf, size_t count);
 //@error ''ret<0'' errno
 //@guardEnd
 ssize_t read(int fd, void *buf, size_t count);
+
+//@guard
+//@activity
+//@activity_attribute bytesWritten ret
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute_u32 fileMemoryRegions iovcnt
+//@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
+
+//@guard
+//@activity
+//@activity_attribute bytesRead ret
+//@activity_attribute_u32 fileMemoryRegions iovcnt
+//@activity_attribute_u32 fileHandle fd
+//@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
+
 
 //@guard
 //@activity
@@ -139,8 +167,68 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 //@guardEnd
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 
-//ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
-//ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
+
+
+//@guard
+//@activity
+//@activity_attribute bytesWritten ret
+//@activity_attribute_u32 fileMemoryRegions iovcnt
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset);
+
+//@guard
+//@activity
+//@activity_attribute bytesRead ret
+//@activity_attribute_u32 fileMemoryRegions iovcnt
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset);
+
+
+
+//@guard
+//@activity
+//@guardEnd
+void sync (void);
+
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+int fsync (int fd);
+
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+int fdatasync (int fd);
+
+
+/* Hints to the system, this might be used for optimizations by SIOX in the future */
+/* See also: http://insights.oetiker.ch/linux/fadvise.html */
+
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_attribute fileAdviseExtent len
+//@activity_attribute fileAdvise advise
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+int posix_fadvise (int fd, off_t offset, off_t len, int advise);
+
 
 /* Asynchrone IO lassen wir hier mal weg */
 /* Falls doch, siehe: http://www.ibm.com/developerworks/linux/library/l-async/index.html */
@@ -154,13 +242,6 @@ aio_cancel	Cancel an asynchronous I/O request
 lio_listio	Initiate a list of I/O operations
  */
 
-/* See: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Synchronizing-I_002fO */
-/* Problem: Woher sollen wir wissen, welche Dateien betroffen sind? => Tot? */
-/* Stellenweise optional, ggf. von SIOX zu Optimierung nutzbar? */
-void sync (void);
-int fsync (int fildes);
-int fdatasync (int fildes);
-
 /* See: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Memory_002dmapped-I_002fO */
 /* Probably we should record this type of usage with SIOX, but how... */
 /* Zumindest müssen wir uns merken, daß hier ein Mapping stattfand, damit wir ggf. auf unteren Schichten
@@ -170,12 +251,7 @@ void * mmap (void *address, size_t length, int protect, int flags, int filedes, 
 void * mremap (void *address, size_t length, size_t new_length, int flag);
 
 int munmap (void *addr, size_t length);
-
-/* Hints to the system, this might be used for optimizations by SIOX in the future */
-/* See also: http://insights.oetiker.ch/linux/fadvise.html */
-/* Wie ein Attribut als "tunebarer Parameter" kennzeichnen?! */
-/* Wie als "Parameter, dessen Tuningeffekte wir ggf. beobachten wollen"? */
-/* Wie den Scope des Tunings beschreiben? */
 int madvise (void *addr, size_t length, int advice);
-int posix_fadvise (int fd, __off_t offset, __off_t len, int advise);
 
+// TODO File stuff
+// int fileno(File * stream);
