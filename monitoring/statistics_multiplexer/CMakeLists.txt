@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	"${SIOX_INCLUDE}"
-	"${SIOX_SOURCES}"
-	"${SIOX_SOURCES}/monitoring"
+	${SIOX_INCLUDE}
+	${SIOX_SOURCES}
+	${SIOX_SOURCES}/monitoring
 )
 
 add_library(
-	StatisticsMultiplexerSync SHARED
+	StatisticsMultiplexerSync
 	StatisticsMultiplexerSync.cpp
 )
 

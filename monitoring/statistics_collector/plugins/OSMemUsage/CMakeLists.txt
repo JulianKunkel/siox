@@ -4,19 +4,19 @@ project(SIOX)
 find_package(Boost 1.53.0 COMPONENTS regex serialization REQUIRED)
 
 include_directories(
-	"${SIOX_INCLUDE}"
-	"${SIOX_SOURCES}"
-	"${Boost_INCLUDE_DIR}"
+	${SIOX_INCLUDE}
+	${SIOX_SOURCES}
+	${Boost_INCLUDE_DIR}
 )
 
 add_library(
-	OSMemUsage SHARED
+	OSMemUsage
 	OSMemUsage.cpp
 )
 
 target_link_libraries(
 	OSMemUsage
-	"${Boost_LIBRARIES}"
+	${Boost_LIBRARIES}
 )
 
 add_subdirectory(test)

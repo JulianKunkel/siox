@@ -20,13 +20,13 @@ PostgreSQLPumpCallback::PostgreSQLPumpCallback(PGconn &dbconn)
 
 void PostgreSQLPumpCallback::handle_message(ConnectionMessage &msg) const
 {
-	if (msg.get_msg()->action() == siox::MessageBuffer::Activity) {
+	if (msg.get_msg()->action() == buffers::MessageBuffer::Activity) {
 		
-// 		store_activity(msg);
+		store_activity(msg);
 		
-	} else if (msg.get_msg()->action() == siox::MessageBuffer::Component) {
+	} else if (msg.get_msg()->action() == buffers::MessageBuffer::RegisterNode) {
 		
-// 		store_component(msg);
+		store_node(msg);
 		
 	}
 }
@@ -42,7 +42,7 @@ void PostgreSQLPumpCallback::store_node(ConnectionMessage &msg) const
 #ifndef NDEBUG
 	logger->log(Logger::NOTICE, "Prepared to insert node.");
 #endif
-	const siox::Node &node = msg.get_msg()->node();
+	const buffers::Node &node = msg.get_msg()->node();
 	
 	store_node(node.hwdesc(), node.swdesc(), node.indesc());
 	
@@ -262,7 +262,7 @@ uint64_t PostgreSQLPumpCallback::insert_node(uint64_t hwid, uint64_t swid,
 
 void PostgreSQLPumpCallback::store_activity(ConnectionMessage &msg) const
 {
-	const siox::Activity &act = msg.get_msg()->activity();
+	const buffers::Activity &act = msg.get_msg()->activity();
 
 }
 

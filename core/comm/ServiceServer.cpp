@@ -39,8 +39,8 @@ void ServiceServer::handle_stop()
 
 void ServiceServer::advertise(boost::uint64_t mtype)
 {
-	boost::shared_ptr<siox::MessageBuffer> mbuf(new siox::MessageBuffer());
-	mbuf->set_action(siox::MessageBuffer::Advertise);
+	boost::shared_ptr<buffers::MessageBuffer> mbuf(new buffers::MessageBuffer());
+	mbuf->set_action(buffers::MessageBuffer::Advertise);
 	mbuf->set_type(mtype);
 	
 	boost::shared_ptr<ConnectionMessage> msg(new ConnectionMessage(mbuf));
@@ -107,7 +107,7 @@ void ServiceServer::handle_message(ConnectionMessage &msg, Connection &connectio
 #ifndef NDEBUG
 	logger->log(Logger::DEBUG, "Handling message...");
 #endif
-	if (msg.get_msg()->action() == siox::MessageBuffer::Subscribe) {
+	if (msg.get_msg()->action() == buffers::MessageBuffer::Subscribe) {
 		subscribe(msg.get_msg()->type(), connection);
 	}
 
@@ -127,7 +127,7 @@ void ServiceServer::handle_message(boost::shared_ptr<ConnectionMessage> msg,
 #ifndef NDEBUG
 	logger->log(Logger::DEBUG, "Handling message...");
 #endif
-	if (msg->get_msg()->action() == siox::MessageBuffer::Subscribe) {
+	if (msg->get_msg()->action() == buffers::MessageBuffer::Subscribe) {
 		subscribe(msg->get_msg()->type(), connection);
 	}
 	

@@ -18,7 +18,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 
-#include "siox.pb.h"
+#include <siox.pb.h>
 
 typedef std::vector<boost::uint8_t> data_buffer;
 
@@ -53,7 +53,7 @@ const unsigned HEADER_SIZE = 4;
 class ConnectionMessage {
 	
 public:
-	typedef boost::shared_ptr<siox::MessageBuffer> MessagePointer;
+	typedef boost::shared_ptr<buffers::MessageBuffer> MessagePointer;
 	
 	ConnectionMessage(MessagePointer msg  = MessagePointer());
 	

@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	"${SIOX_INCLUDE}"
-	"${SIOX_SOURCES}"
-	"${SIOX_INCLUDE}/monitoring/helpers"
+	${SIOX_INCLUDE}
+	${SIOX_SOURCES}
+	${SIOX_INCLUDE}/monitoring/helpers
 )
 
 add_executable(

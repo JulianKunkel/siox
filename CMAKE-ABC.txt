@@ -18,7 +18,9 @@ include_directories(
 
 The global settings are specified in "Komponenten/CMakeLists.txt", open it and 
 take a look at CMAKE_CXX_FLAGS, SIOX_SOURCES and SIOX_INCLUDE. These three 
-variables will always be available CMakeLists.txt files you create.
+variables will always be available in the CMakeLists.txt files you create.
+SIOX_SOURCES points to the Komponenten directory, SIOX_INCLUDE to 
+Komponenten/include.
 
 2. Setting paths to your header files
 =====================================
@@ -40,7 +42,7 @@ To create a shared library you append the following to your CMakeLists.txt file:
 
 ----------------------------------------
 add_library(
-	library_name SHARED
+	library_name 
 	all-the-cpp-files-you-need
 )
 
@@ -49,6 +51,24 @@ target_link_libraries(
 	all-the-dependencies
 )
 ----------------------------------------
+
+By default, all libraries are shared libraries. If you want to create an static
+library use the following:
+
+----------------------------------------
+add_library(
+	library_name STATIC
+	all-the-cpp-files-you-need
+)
+
+target_link_libraries(
+	library_name
+	all-the-dependencies
+)
+----------------------------------------
+
+You can also use MODULE instead of STATIC to create libraries that are only to 
+be used with SIOX' module-loader.
 
 Inside add_library() you put all the .c(pp) files needed to compile the library.
 Inside the target_link_libraries() you don't put any source files, but other
@@ -104,7 +124,7 @@ add_subdirectory(subdirectory-with-own-cmakelist-file)
 
 To use 3rd party libraries like boost, glib, postgres, etc. you have to use
 find_package(). This command creates a set of variables with the paths to these
-libraries (if their are installed, of course)
+libraries (if their are installed, of course).
 
 ----------------------------------------
 find_package(GLIB2 REQUIRED)

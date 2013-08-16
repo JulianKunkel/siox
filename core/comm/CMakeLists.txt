@@ -3,16 +3,16 @@ project(SIOX)
 
 include(FindProtobuf)
 find_package(Protobuf REQUIRED)
-find_package(Boost 1.53.0 COMPONENTS system thread unit_test_framework REQUIRED)
+find_package(Boost 1.53.0 REQUIRED)
 
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS "${SIOX_INCLUDE}/core/buffers/siox.proto")
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${SIOX_INCLUDE}/core/comm/messages/siox.proto)
 
 include_directories(
-	"${CMAKE_CURRENT_BINARY_DIR}"
-	"${SIOX_INCLUDE}"
-	"${SIOX_SOURCES}"
-	"${PROTOBUF_INCLUDE_DIRS}"
-	"${Boost_INCLUDE_DIR}"
+	${SIOX_INCLUDE}
+	${SIOX_SOURCES}
+	${CMAKE_CURRENT_BINARY_DIR}
+	${PROTOBUF_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIR}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -lrt")
@@ -29,13 +29,15 @@ add_library(
 	tcp/TCPConnection.cpp
 	tcp/TCPServer.cpp
 	ServiceClient.cpp
-	"${PROTO_SRCS}"
-	"${PROTO_HDRS}"
+	${PROTO_SRCS}
+	${PROTO_HDRS}
 )
 
 target_link_libraries(
-	core-communication 
-	core-logger 
-	"${PROTOBUF_LIBRARIES}"
-	"${Boost_LIBRARIES}"
+	core-communication
+	core-logger
+	${PROTOBUF_LIBRARIES}
+	${Boost_LIBRARIES}
 )
+
+add_subdirectory(messages)

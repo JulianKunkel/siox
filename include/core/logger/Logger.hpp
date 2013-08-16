@@ -1,9 +1,9 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <boost/ptr_container/ptr_list.hpp>
-
 #include <core/logger/BasicLogger.hpp>
+
+#include <boost/ptr_container/ptr_list.hpp>
 
 class Logger
    : public BasicLogger {

@@ -1,7 +1,11 @@
 #include <monitoring/transaction_system/PostgreSQLBackend.hpp>
 
 
-PostgreSQLBackend::PostgreSQLBackend(const std::string &dbinfo)
+PostgreSQLBackend::PostgreSQLBackend()
+{
+}
+
+void PostgreSQLBackend::init(const std::string &dbinfo)
 {
 	dbconn_ = PQconnectdb(dbinfo.c_str());
 	
@@ -37,3 +41,9 @@ Callback *PostgreSQLBackend::create_callback()
 	return new PostgreSQLPumpCallback(*dbconn_);
 }
 
+
+extern "C" {
+	void *get_instance_psql_backend() { 
+		return new PostgreSQLBackend(); 
+	}
+}

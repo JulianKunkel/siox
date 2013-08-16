@@ -5,10 +5,10 @@ find_package(GLIB2 REQUIRED)
 find_package(Boost 1.53.0 COMPONENTS serialization)
 
 include_directories(
-	"${SIOX_INCLUDE}"
-	"${SIOX_SOURCES}"
-	"${Boost_INCLUDE_DIR}"
-	"${GLIB2_INCLUDE_DIRS}"
+	${SIOX_INCLUDE}
+	${SIOX_SOURCES}
+	${Boost_INCLUDE_DIR}
+	${GLIB2_INCLUDE_DIRS}
 )
 
 # add_executable(
@@ -24,7 +24,8 @@ include_directories(
 # 	core-component-registrar
 # 	core-container-serializer
 # 	module-loader
-# 	"${Boost_LIBRARIES}"
+# 	${Boost_LIBRARIES}
 # 	${GLIB2_LIBRARIES}
 # )
+
 
