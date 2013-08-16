@@ -122,6 +122,7 @@ public:
 		remoteInvoker_ (remoteInvoker),errorValue_(errorValue){}
 
 	Activity(){
+		memset(this, 0, sizeof(Activity));
 	}
 
 	void print() {

@@ -1,0 +1,134 @@
+<nextID>8</nextID>
+<valueStringMap class_id="0" tracking_level="0" version="0">
+	<count>6</count>
+	<item_version>0</item_version>
+	<item class_id="1" tracking_level="0" version="0">
+		<first>1</first>
+		<second>thunder</second>
+	</item>
+	<item>
+		<first>3</first>
+		<second>open</second>
+	</item>
+	<item>
+		<first>4</first>
+		<second>creat</second>
+	</item>
+	<item>
+		<first>5</first>
+		<second>close</second>
+	</item>
+	<item>
+		<first>6</first>
+		<second>write</second>
+	</item>
+	<item>
+		<first>7</first>
+		<second>read</second>
+	</item>
+</valueStringMap>
+<deviceNodeMap class_id="2" tracking_level="0" version="0">
+	<count>0</count>
+	<item_version>0</item_version>
+</deviceNodeMap>
+<interfaceImplStrMap class_id="3" tracking_level="0" version="0">
+	<count>1</count>
+	<item_version>0</item_version>
+	<item class_id="4" tracking_level="0" version="0">
+		<first>2</first>
+		<second class_id="5" tracking_level="0" version="0">
+			<first>POSIX</first>
+			<second></second>
+		</second>
+	</item>
+</interfaceImplStrMap>
+<interfaceImplMap class_id="6" tracking_level="0" version="0">
+	<count>1</count>
+	<item_version>0</item_version>
+	<item class_id="7" tracking_level="0" version="0">
+		<first>
+			<first>POSIX</first>
+			<second></second>
+		</first>
+		<second>2</second>
+	</item>
+</interfaceImplMap>
+<deviceMap class_id="8" tracking_level="0" version="0">
+	<count>0</count>
+	<item_version>0</item_version>
+</deviceMap>
+<filesystemMap class_id="9" tracking_level="0" version="0">
+	<count>0</count>
+	<item_version>0</item_version>
+</filesystemMap>
+<nodeMap>
+	<count>1</count>
+	<item_version>0</item_version>
+	<item class_id="10" tracking_level="0" version="0">
+		<first>thunder</first>
+		<second>1</second>
+	</item>
+</nodeMap>
+<activityInterfaceIDMap>
+	<count>5</count>
+	<item_version>0</item_version>
+	<item class_id="11" tracking_level="0" version="0">
+		<first>3</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>4</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>5</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>6</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>7</first>
+		<second>2</second>
+	</item>
+</activityInterfaceIDMap>
+<activityMap>
+	<count>5</count>
+	<item_version>0</item_version>
+	<item class_id="12" tracking_level="0" version="0">
+		<first class_id="13" tracking_level="0" version="0">
+			<first>2</first>
+			<second>close</second>
+		</first>
+		<second>5</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>creat</second>
+		</first>
+		<second>4</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>open</second>
+		</first>
+		<second>3</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>read</second>
+		</first>
+		<second>7</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>write</second>
+		</first>
+		<second>6</second>
+	</item>
+</activityMap>
