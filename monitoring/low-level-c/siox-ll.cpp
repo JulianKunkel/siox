@@ -15,6 +15,7 @@
 #include <sstream>
 #include <fstream>
 #include <pwd.h>
+#include <typeinfo>
 
 #include <core/module/module-loader.hpp>
 #include <core/datatypes/VariableDatatype.hpp>
@@ -191,79 +192,84 @@ __attribute__ ((constructor)) void siox_ll_ctor()
 
     // If necessary, do actual initialisation
     if(finalized){
-        printf("Initializing SIOX library\n");
+       try{
+       printf("Initializing SIOX library\n");
 
-        // Load required modules and pull the interfaces into global datastructures
-        // Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
-        process_data.registrar = new ComponentRegistrar();
+       // Load required modules and pull the interfaces into global datastructures
+       // Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
+       process_data.registrar = new ComponentRegistrar();
 
-        // Check relevant environment modules:
-        {
-        const char * provider = getenv("SIOX_CONFIGURATION_PROVIDER_MODULE");
-        const char * path = getenv("SIOX_CONFIGURATION_PROVIDER_PATH");
-        const char * configuration = getenv("SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT");
+       // Check relevant environment modules:
+       {
+           const char * provider = getenv("SIOX_CONFIGURATION_PROVIDER_MODULE");
+           const char * path = getenv("SIOX_CONFIGURATION_PROVIDER_PATH");
+           const char * configuration = getenv("SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT");
 
-        provider = (provider != nullptr) ? provider : "siox-core-autoconfigurator-FileConfigurationProvider" ;
-        path = (path != nullptr) ? path : "";        
-        configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf" ;
+           provider = (provider != nullptr) ? provider : "siox-core-autoconfigurator-FileConfigurationProvider" ;
+           path = (path != nullptr) ? path : "";        
+           configuration = (configuration != nullptr) ? configuration :  "siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf" ;
 
-        process_data.configurator = new AutoConfigurator(process_data.registrar, provider, path, configuration);
+           process_data.configurator = new AutoConfigurator(process_data.registrar, provider, path, configuration);
 
-        const char * configurationMode = getenv("SIOX_CONFIGURATION_PROVIDER_MODE");
-        const char * configurationOverride = getenv("SIOX_CONFIGURATION_SECTION_TO_USE");
+           const char * configurationMode = getenv("SIOX_CONFIGURATION_PROVIDER_MODE");
+           const char * configurationOverride = getenv("SIOX_CONFIGURATION_SECTION_TO_USE");
 
-        string configName;
-        if (configurationOverride != nullptr){
-            configName = configurationOverride;
-        }else{
-            // hostname configurationMode (is optional)        
+           string configName;
+           if (configurationOverride != nullptr){
+               configName = configurationOverride;
+           }else{
+               // hostname configurationMode (is optional)        
 
-        {
-            stringstream configName_s;
-            configName_s << hostname;
-            if(configurationMode != nullptr){
-                configName_s << " " << configurationMode;
-            }
-        configName = configName_s.str();
+               {
+               stringstream configName_s;
+               configName_s << hostname;
+               if(configurationMode != nullptr){
+                 configName_s << " " << configurationMode;
+               }
+               configName = configName_s.str();
+               }
+           }
+
+           cout << provider << " path " << path << " " << configuration << " ConfigName: \"" << configName << "\"" << endl;
+
+           vector<Component*> loadedComponents;
+           try{
+               loadedComponents = process_data.configurator->LoadConfiguration("Process", configName);
+           }catch(InvalidConfiguration& e){
+               // fallback to global configuration
+               loadedComponents = process_data.configurator->LoadConfiguration("Process", "");
+           }
+       
+
+           // if(loadedComponents == nullptr){ // MZ: Error, "==" not defined
+           if(loadedComponents.empty()){
+               cerr << "FATAL Invalid configuration set: " << endl; 
+               cerr << "SIOX_CONFIGURATION_PROVIDER_MODULE=" << provider << endl;
+               cerr << "SIOX_CONFIGURATION_PROVIDER_PATH=" << path << endl;
+               cerr << "SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT=" << configuration << endl;
+               cerr << "SIOX_CONFIGURATION_PROVIDER_MODE=" << configurationMode << endl;
+               // TODO use FATAL function somehow?
+               exit(1);
+           }
+
+           // check loaded components and assign them to the right struct elements.
+           process_data.ontology = process_data.configurator->searchFor<Ontology>(loadedComponents);
+           process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>(loadedComponents);
+           process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>(loadedComponents);
+           process_data.amux = process_data.configurator->searchFor<ActivityMultiplexer>(loadedComponents); 
+
+           assert(process_data.ontology);
+           assert(process_data.system_information_manager);
+           assert(process_data.association_mapper);
+           assert(process_data.amux);        
         }
-    }
-
-    cout << provider << " path " << path << " " << configuration << " ConfigName: \"" << configName << "\"" << endl;
-
-    vector<Component*> loadedComponents;
-    try{
-        loadedComponents = process_data.configurator->LoadConfiguration("Process", configName);
-    }catch(InvalidConfiguration& e){
-        // fallback to global configuration
-        loadedComponents = process_data.configurator->LoadConfiguration("Process", "");
-    }
-    
-
-        // if(loadedComponents == nullptr){ // MZ: Error, "==" not defined
-        if(loadedComponents.empty()){
-            cerr << "FATAL Invalid configuration set: " << endl; 
-            cerr << "SIOX_CONFIGURATION_PROVIDER_MODULE=" << provider << endl;
-            cerr << "SIOX_CONFIGURATION_PROVIDER_PATH=" << path << endl;
-            cerr << "SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT=" << configuration << endl;
-            cerr << "SIOX_CONFIGURATION_PROVIDER_MODE=" << configurationMode << endl;
-            // TODO use FATAL function somehow?
+        // Retrieve NodeID and PID now that we have a valid SystemInformationManager
+        process_data.nid = lookup_node_id(hostname);
+        process_data.pid = create_process_id(process_data.nid);
+        }catch(exception & e){
+            cerr << "Received exception of type " << typeid(e).name() << " message: " << e.what() << endl;
             exit(1);
         }
-
-        // check loaded components and assign them to the right struct elements.
-        process_data.ontology = process_data.configurator->searchFor<Ontology>(loadedComponents);
-        process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>(loadedComponents);
-        process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>(loadedComponents);
-        process_data.amux = process_data.configurator->searchFor<ActivityMultiplexer>(loadedComponents); 
-
-        assert(process_data.ontology);
-        assert(process_data.system_information_manager);
-        assert(process_data.association_mapper);
-        assert(process_data.amux);        
-        }
-    // Retrieve NodeID and PID now that we have a valid SystemInformationManager
-    process_data.nid = lookup_node_id(hostname);
-    process_data.pid = create_process_id(process_data.nid);
     }
 
     add_program_information();

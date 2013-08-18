@@ -7,6 +7,7 @@
 #include <map>
 #include <vector>
 #include <boost/algorithm/string.hpp>
+#include <exception>
 
 #include <assert.h>
 
@@ -17,7 +18,7 @@ using namespace std;
 class FileConfigurationProvider : public ConfigurationProvider{
 public:
 
-	void connect(string & configuration_filename){
+	void connect(string & configuration_filename) throw(ConfigurationProviderError){
 		// try for existance of potentially multiple files multiple configuration_filename are separated by ":" or tab.
 
 		vector<string> filelist;
@@ -26,13 +27,14 @@ public:
 		ifstream fin;
 		for(auto it = filelist.begin(); it != filelist.end(); ++it) {
 			fin.open(*it);
-			cout << "> Checking config " << *it << endl;
+			//cout << "> Checking config " << *it << endl;
 			if(fin.good()){
+				cout << "> config file: " << *it << endl;
 				break;
 			}
 		}
 		if(! fin.good()){
-			throw "Error configuration in files is not readable";
+			throw ConfigurationProviderError("Error configuration file(s) (" + configuration_filename + ") are not existing/readable");
 		}
 
 		string line;
@@ -55,7 +57,7 @@ public:
 		fin.close();
 	}
 
-	const string & getConfiguration(string & type, string & matchingRules){
+	const string & getConfiguration(string & type, string & matchingRules) throw(ConfigurationProviderError){
 		string what = type + (matchingRules.length() > 0 ? " " + matchingRules : "");
 		return configurationSections[what];
 	}

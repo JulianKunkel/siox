@@ -35,6 +35,7 @@ public:
   }
 };
 
+
 namespace core{
 
 class AutoConfigurator{

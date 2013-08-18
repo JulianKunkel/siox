@@ -4,6 +4,8 @@
 #include <string>
 #include <map>
 
+using namespace std;
+
 namespace core{
 
 /*
@@ -33,15 +35,31 @@ namespace core{
  * Instead its elementary settings (e.g. where to fetch the config) must be read from either a well-defined configuration file, or from environment variables.
  * For testing purpose and manual override a constructur in child classes permits to set the elementary setting, but this is module-specific.
  */
+
+class ConfigurationProviderError: public std::exception{
+private:
+   string cause;
+
+public:
+  ConfigurationProviderError(const string & cause){
+	this->cause = cause;
+  }
+
+  virtual const char* what() const throw()
+  {
+  	return cause.c_str();
+  }
+};
+
 class ConfigurationProvider{
 public:
 	/*
 	 * The configuration entry_point describes where to get the basic information, e.g. file or DB / demon connection to use for fetching the info.
 	 * An implementation may use the hwid to request only relevant configuration pieces.
 	 */
-	virtual void connect(std::string & configuration_entry_point) = 0;
+	virtual void connect(std::string & configuration_entry_point) throw(ConfigurationProviderError) = 0;
 
-	virtual const std::string & getConfiguration(std::string & type, std::string & matchingRules) = 0;
+	virtual const std::string & getConfiguration(std::string & type, std::string & matchingRules) throw(ConfigurationProviderError) = 0;
 
 	virtual ~ConfigurationProvider() {};
 };
