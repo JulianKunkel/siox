@@ -174,7 +174,7 @@ struct RemoteCallIdentifier{
 	AssociateID instance; // optional, remote call instance identifier
 
 	RemoteCallIdentifier() {};
-	RemoteCallIdentifier(NodeID nid, UniqueInterfaceID uiid, AssociateID assid) : nid(nid), uuid(uuid), instance(instance) {};
+	RemoteCallIdentifier(NodeID n, UniqueInterfaceID u, AssociateID a) : nid(n), uuid(u), instance(a) {};
 };
 
 /* Identifying an activity */
