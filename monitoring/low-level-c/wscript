@@ -1,7 +1,13 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+from waflib import Logs
 
+import os
+
+def configure(conf):
+    conf.recurse(['examples'], mandatory=True)
+	
 def build(bld):
     bld.shlib(includes="",  target = "siox-monitoring-siox-ll", use = "siox-core-ModuleLoader siox-core-AutoConfigurator siox-monitoring-ActivityBuilder", lib=['pthread', 'rt'], source = 'siox-ll.cpp', cxxflags="" )
     bld.recurse(['test'], mandatory=True)
