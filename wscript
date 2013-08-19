@@ -57,7 +57,7 @@ def configure(conf):
 	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
 
 	# Check Boost library for correct installation and linkage
-	conf.check_boost(lib='system thread serialization regex program_options')
+	conf.check_boost(lib='system thread thread-mt serialization regex program_options')
 
 	conf.env.append_value("RPATH", conf.env.PREFIX + "/lib")
 

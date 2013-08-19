@@ -3,7 +3,7 @@
  * Kurzbeschreibungen hier hineinkopieren!
  */
 
-#define _GNU_SOURCE 1 
+#define _GNU_SOURCE
 
 #include <unistd.h>
 #include <sys/uio.h>
@@ -16,10 +16,13 @@
 
 #include <limits.h> // for canonicalize_file_name and realpath
 
-//char *realpath(const char *path, char *resolved_path); => Buffer für resolved path
+#define HAVE_AIO
 
+#ifdef HAVE_AIO
+#include <aio.h>
+#endif
 
-// TODO: To ensure thread safety, calls which query the current position should be protected using a mutex.
+// TODO: To ensure thread safety, calls which query the current position should be protected? We may also accept inaccuracy when multiple threads concurrently access a file...
 // TODO: Generall aproach to handle errors: How do we convert them to the platform dependent error message.
 
 /* Set the interface name for the library*/
@@ -55,18 +58,25 @@
 //@horizontal_map_create_int
 //@horizontal_map_create_size
 
+
+//TODO we have to determine the filesystem based on the mountpoint, this is a SIOX helper function.
+//@splice_once ''#define SET_FILENAME(ARG) char fileNamebuffer[1024]; realpath(ARG, fileNamebuffer); siox_activity_set_attribute( sioxActivity, fileName, fileNamebuffer );''
+
 /*------------------------------------------------------------------------------
 End of global part
 ------------------------------------------------------------------------------*/
 
+
+//@splice_before mode_t mode = va_arg(valist,mode_t);
 //@guard
 //@activity
-//@activity_attribute_pointer fileName pathname
+//@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret 
 //@horizontal_map_put_int ret
 //@error ''ret<0'' errno
 //@guardEnd
-int open(const char *pathname, int flags, mode_t mode);
+//@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
+int open(const char *pathname, int flags, ...);
 
 //@guard
 //@activity
@@ -258,7 +268,7 @@ On most library implementations, the errno variable is also set to a system-spec
  */
 //@guard
 //@activity
-//@activity_attribute_pointer fileName filename
+//@splice_before SET_FILENAME(filename)
 //@error ''ret<0'' errno
 //@guardEnd
 int remove ( const char * filename );
@@ -270,7 +280,7 @@ On most library implementations, the errno variable is also set to a system-spec
  */
 //@guard
 //@activity
-//@activity_attribute_pointer fileName oldname
+//@splice_before SET_FILENAME(oldname)
 //@error ''ret<0'' errno
 //@guardEnd
 int rename ( const char * oldname, const char * newname );
@@ -281,7 +291,7 @@ int rename ( const char * oldname, const char * newname );
 //@splice_once ''int stat(const char *path, struct stat *buf){ return __xstat64(1, path, buf); }''
 //@guard
 //@activity Name=stat
-//@activity_attribute_pointer fileName path
+//@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
 int __xstat64(int __ver, const char *path, struct stat64 *buf);
@@ -289,7 +299,7 @@ int __xstat64(int __ver, const char *path, struct stat64 *buf);
 //@splice_once ''int lstat(const char *path, struct stat *buf){ return __lxstat64(1, path, buf); }''
 //@guard
 //@activity Name=lstat
-//@activity_attribute_pointer fileName path
+//@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
 int __lxstat64(int __ver, const char *path, struct stat64 *buf);
@@ -305,14 +315,14 @@ int __fxstat64(int __ver, int fd, struct stat64 *buf);
 
 //@guard
 //@activity Name=stat
-//@activity_attribute_pointer fileName path
+//@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
 int __xstat(int __ver, const char *path, struct stat *buf);
 
 //@guard
 //@activity Name=lstat
-//@activity_attribute_pointer fileName path
+//@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
 int __lxstat(int __ver, const char *path, struct stat *buf);
@@ -345,28 +355,8 @@ void * mmap (void *address, size_t length, int protect, int flags, int fd, off_t
 //int madvise (void *addr, size_t length, int advice);
 
 
-
-/* Asynchronous I/O */
-/* see http://www.ibm.com/developerworks/linux/library/l-async/index.html */
-/*
-aio_read	Request an asynchronous read operation
-aio_error	Check the status of an asynchronous request
-aio_return	Get the return status of a completed asynchronous request
-aio_write	Request an asynchronous operation
-aio_suspend	Suspend the calling process until one or more asynchronous requests have completed (or failed)
-aio_cancel	Cancel an asynchronous I/O request
-lio_listio	Initiate a list of I/O operations
- */
-
-
-
 //On success, the function returns zero.
-//In case of error, errno is set to a platform-specific positive value and the function returns a non-zero value.
-//The function fills the fpos_t object ...
-//int fgetpos ( FILE * stream, fpos_t * pos );
-// long int ftell ( FILE * stream );
-// perror();
-
+//Errno is set to a platform-specific positive value.
 
 /*
 Opens the file whose name is specified in the parameter filename and associates it with a stream that can be identified in future operations by the FILE pointer returned.
@@ -377,7 +367,7 @@ On most library implementations, the errno variable is also set to a system-spec
  */
 //@guard
 //@activity
-//@activity_attribute_pointer fileName filename
+//@splice_before SET_FILENAME(filename)
 //@activity_attribute_pointer fileFopenFlags mode
 //@horizontal_map_put_size ret
 //@error ''ret<0'' errno
@@ -423,7 +413,7 @@ On most library implementations, the errno variable is also set to a system-spec
  */
 //@guard
 //@activity
-//@activity_attribute_pointer fileName filename
+//@splice_before SET_FILENAME(filename)
 //@activity_attribute_pointer fileFopenFlags mode
 //@horizontal_map_remove_size stream
 //@horizontal_map_put_size ret
@@ -596,14 +586,6 @@ Otherwise, a non-zero value is returned; This may be due to an invalid mode para
 //@guardEnd
 int setvbuf ( FILE * stream, char * buffer, int mode, size_t size );
 
-
-/*
-On success, the total number of characters written is returned.
-If a writing error occurs, the error indicator (ferror) is set and a negative number is returned.
-*/
-// int fprintf ( FILE * stream, const char * format, ... );
-// call vprintf afterwards
-
 /*
 On success, the total number of characters written is returned.
 If a writing error occurs, the error indicator (ferror) is set and a negative number is returned.
@@ -671,4 +653,48 @@ int fprintf(FILE *stream, const char *format, ...);
 
 
 // Redirection of stdout to a file? No, we do not handle this at the moment. 
+#ifdef HAVE_AIO
+/* Asynchronous I/O */
+/* see http://www.ibm.com/developerworks/linux/library/l-async/index.html */
+/*
+aio_read	Request an asynchronous read operation
+aio_error	Check the status of an asynchronous request
+aio_return	Get the return status of a completed asynchronous request
+aio_write	Request an asynchronous operation
+aio_suspend	Suspend the calling process until one or more asynchronous requests have completed (or failed)
+aio_cancel	Cancel an asynchronous I/O request
+lio_listio	Initiate a list of I/O operations
+ */
 
+
+//@guard
+//@activity
+//@error ''ret < 0'' errno
+//@guardEnd
+int aio_read(struct aiocb * cb);
+
+//@guard
+//@activity
+//@error ''ret < 0'' errno
+//@guardEnd
+int aio_write(struct aiocb * cb);
+
+//@guard
+//@activity
+//@error ''ret < 0'' errno
+//@guardEnd
+int lio_listio(int mode, struct aiocb *const aiocb_list[], int nitems, struct sigevent *sevp);
+
+//@guard
+//@activity
+//@error ''ret < 0'' errno
+//@guardEnd
+int aio_suspend(const struct aiocb * const aiocb_list[], int nitems, const struct timespec *timeout);
+
+//@guard
+//@activity
+//@error ''ret < 0'' errno
+//@guardEnd
+int aio_cancel(int fd, struct aiocb *aiocbp);
+
+#endif 
