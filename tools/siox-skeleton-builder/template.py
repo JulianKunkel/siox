@@ -409,6 +409,18 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+
+'splice_once': {
+	'variables': 'PROGRAMCODE',
+	'global': '%(PROGRAMCODE)s',
+	'init': '',
+	'before': '',
+	'after': '',
+	'cleanup': '',
+	'final': ''
+},
+
+
 'include': {
 	'variables': 'what',
 	'global': '#include %(what)s',
@@ -436,4 +448,4 @@ globalOnce = "extern __thread int siox_namespace;"
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>']
+includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>']

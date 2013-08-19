@@ -25,12 +25,8 @@ public:
 		//file << endl;
 	}
 
-	void close(){
-		file.close();
-	}
-
 	~FileSerializer(){
-		close();
+		file.close();
 	}
 };
 
