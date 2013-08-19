@@ -102,7 +102,7 @@ struct Attribute{
 	AttributeValue value;
 
     Attribute(){}
-    Attribute(OntologyAttributeID id, const AttributeValue & value) : id(id), value(value){}
+    Attribute(OntologyAttributeID i, const AttributeValue & v) : id(i), value(v){}
 };
 
 typedef uint64_t Timestamp;
@@ -189,7 +189,7 @@ struct RemoteCallIdentifier{
 	AssociateID instance; // optional, remote call instance identifier
 
 	RemoteCallIdentifier() {};
-	RemoteCallIdentifier(NodeID nid, UniqueInterfaceID uiid, AssociateID assid) : nid(nid), uuid(uuid), instance(instance) {};
+	RemoteCallIdentifier(NodeID n, UniqueInterfaceID u, AssociateID a) : nid(n), uuid(u), instance(a) {};
 };
 
 /* Identifying an activity */
