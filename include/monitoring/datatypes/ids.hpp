@@ -102,7 +102,7 @@ struct Attribute{
 	AttributeValue value;
 
     Attribute(){}
-    Attribute(OntologyAttributeID id, const AttributeValue & value) : id(id), value(value){}
+    Attribute(OntologyAttributeID i, const AttributeValue & v) : id(i), value(v){}
 };
 
 typedef uint64_t Timestamp;
