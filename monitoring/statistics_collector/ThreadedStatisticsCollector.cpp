@@ -18,11 +18,11 @@
 #include <chrono> // header for periodic timing
 #include <iostream> // header that defines I/O stream objects
 #include <mutex> // defines for mutex class
+#include <condition_variable> // for conditions
 #include <cstdlib> //(stdlib.h) get C header stdlib
 #include <ctime> //(time.h) get C header time
 
-
-#include <monitoring/activity_multiplexer/ActivityPluginDereferencing.hpp>
+#include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
 
 
 using namespace std;
@@ -157,7 +157,6 @@ Implementation details for the requirements of a StatisticsCollector:
 		So keep a small vector with six entries.
 */
 
-public class 
 
 class ThreadedStatisticsCollector: StatisticsCollector{
 private:
