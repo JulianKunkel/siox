@@ -27,21 +27,27 @@ A) If you create a new public interface (in the example the interface will be ca
 	Create an abstract class which is derived from Component (core/component/Component.hpp)
 
 	Also define the name of the interface:
+	@code
 	#define [INTERFACE][_PLUGIN]_INTERFACE "[INTERFACE][_plugin]"
+	@endcode
 	_plugin is used to suffix Plugin interfaces.
 
 2) Create [INTERFACE]Implementation.hpp in include, this file is intented for developers implementing your interface.
+	@code
 	#include <[INTERFACE].hpp>
+	@endcode
 	This file should contain a macro called COMPONENT (or PLUGIN) which creates the interface, e.g.
+	@code
 	#define COMPONENT(x) \
 	extern "C"{\
 	void * get_instance_[INTERFACE][_plugin]() { return new x(); }\
 	}
+	@endcode
 
 
 B) To implement a module (do not put any implementation file under include):
 1) Create valid options for your module, for example, a filename your module works on.
-
+	@code
 	#include <core/component/component-macros.hpp>
 
 	using namespace std;
@@ -53,22 +59,27 @@ B) To implement a module (do not put any implementation file under include):
 
 		SERIALIZE_CONTAINER(MEMBER(filename)) // add the name of the variable here as well.
 	};
+	@endcode
 
 12 Create some CPP files, in one add "#include [INTERFACE]Implementation.hpp"
 	and implement your interface according to the specification by deriving from your abstract class.
 3) Add CREATE_SERIALIZEABLE_CLS(FileOntologyOptions) in one of your implementation CPP files to make sure the serialization code for your options is created.
-4) Use the macro from A.2) to create the module interface in one of your implementation CPP files, e.g.: COMPONENT(FileOntology)
+4) Use the macro from A.2) to create the module interface in one of your implementation CPP files, e.g.:
+	@code
+	COMPONENT(FileOntology)
+	@endcode
 5) To create a valid module you have to implement the interfaces from a Component:
-
-protected:
-	// This function returns the available options of this component.
-	virtual ComponentOptions * AvailableOptions() = 0;
-public:
-	// This function is invoked after the module has been loaded.
-	// Options are then available using getOptions<[OPTIONSNAME]>()
-	virtual void init() = 0;
-
+	@code
+	protected:
+		// This function returns the available options of this component.
+		virtual ComponentOptions * AvailableOptions() = 0;
+	public:
+		// This function is invoked after the module has been loaded.
+		// Options are then available using getOptions<[OPTIONSNAME]>()
+		virtual void init() = 0;
+	@endcode
 For example, one could implement it using:
+	@code
 	ComponentOptions * AvailableOptions(){
 		return new FileOntologyOptions();
 	}
@@ -77,7 +88,7 @@ For example, one could implement it using:
 		FileOntologyOptions & o = getOptions<FileOntologyOptions>();
 		cout << o.filename << endl;
 	}
-
+	@endcode
 You may also use a destructor to cleanup your module.
 
 */ 

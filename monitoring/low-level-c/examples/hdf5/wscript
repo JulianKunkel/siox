@@ -4,7 +4,6 @@
 import os
 
 def configure(conf):
-   print "\t--> Configuring the HDF5 Example!\n"
    conf.check(features='c cprogram', lib=['hdf5','hdf5_hl'], cflags=['-I/usr/local/hdf5/include -L/usr/local/hdf5/lib'], uselib_store='HDF5')
    #conf.check(features='c cprogram', lib=['hdf5_hl'], cflags=['-I/usr/local/hdf5/include -L/usr/local/hdf5/lib'], uselib_store='HDF5HL')
    # cnf.check(features='cxx cxxprogram', lib=['m'], cflags=['-Wall'], defines=['var=foo'], uselib_store='M')
