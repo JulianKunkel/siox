@@ -109,7 +109,7 @@ template = {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': ''' if(siox_namespace == 0){ ''',
+	'before': '''\tif(siox_namespace == 0){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''
@@ -120,7 +120,7 @@ template = {
 	'init': '''''',
 	'before': '''''',
 	'after': '''''',
-	'cleanup': '}else{ %(FC)s }',
+	'cleanup': '\t}else{\n\t\t%(FC)s \t}',
 	'final': ''
 },
 
@@ -164,8 +164,28 @@ template = {
 	'variables': 'Attribute Value Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-    'before': '''siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );''',
-	'after': '',
+    'before': '''''',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
+	'cleanup': '',
+	'final': ''
+},
+
+'activity_attribute_pointer': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
+	'cleanup': '',
+	'final': ''
+},
+
+'activity_attribute_u32': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': '{uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
 	'cleanup': '',
 	'final': ''
 },
@@ -261,6 +281,18 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+
+'activity_lookup_int': {
+	'variables': 'Key Activity=Parent MapName=activityHashTable_int',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': '''siox_activity * %(Activity)s = (siox_activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );''',
+	'cleanup': '',
+	'final': ''
+},
+
+
 # activity_link_str
 #
 # Horizontally links the current activity (started with activity) to another one via

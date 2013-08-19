@@ -53,7 +53,7 @@ def configure(conf):
 	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
 
 
-        conf.check_boost(lib='system thread serialization regex')
+        conf.check_boost(lib='system thread serialization regex program_options')
 
 	conf.env.append_value("RPATH", conf.env.PREFIX + "/lib")
 
@@ -108,6 +108,7 @@ def build(bld):
 	bld.recurse(['core'], mandatory=True)
 	bld.recurse(['monitoring'], mandatory=True)
 	bld.recurse(['knowledge'], mandatory=True)
+	bld.recurse(['tools'])
 
 	# build test interfaces
 	# Manual usage would be:

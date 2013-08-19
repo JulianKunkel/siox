@@ -307,6 +307,8 @@ public:
 	 */
 	// TODO sadly for the mutexes it is always needed
 	virtual void Log(TYPE * element) {
+		assert(element != nullptr);
+		
 		{
 			std::lock_guard<std::mutex> lock(inc);
 			not_invalidating++;

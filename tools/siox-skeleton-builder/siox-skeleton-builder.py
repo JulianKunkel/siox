@@ -11,6 +11,8 @@ import argparse
 
 genericVariablesForTemplates = {}
 
+global defines
+defines = []
 
 #
 # @brief Generate and handle the command line parsing.
@@ -517,6 +519,8 @@ class CommandParser():
         # This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*@\s*(\w+)\s*(.*)')
         self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\'/]+)\s*')
+        self.defineRegex = re.compile('^\s*#define\s*(.*)\s*')
+        
         self.options = options
 
     #
@@ -543,9 +547,10 @@ class CommandParser():
         functionString = ""
         templateList = []
         functionList = []
-        # Strip comments
+        # Strip commentsq
         inputString = re.sub('/\*.*?\*/', '', inputString, flags=re.M | re.S)
-	inputString = re.sub('#(?!include ).*', '', inputString)
+
+	    #inputString = re.sub('#(?!include ).*', '', inputString)
 	
         inputLineList = inputString.split('\n')
         # Iterate over every line and search for instrumentation instructions.
@@ -557,13 +562,20 @@ class CommandParser():
 
             # match the line against the include regex
             include = self.matchInclude(inputLineList[i])
-            if include and include not in includes:
-                if self.options.debug:
-                    print("New include '%s' at line %i" % (include, i))
-                includes.append(include)
-                functionString = ""
-                if i < len(inputLineList) - 1:
-                    i += 1
+            if include:
+                if include not in includes:
+                    if self.options.debug:
+                        print("New include '%s' at line %i" % (include, i))
+                    includes.append(include)
+                    functionString = ""
+                i += 1
+                continue
+
+            define = self.matchDefine(inputLineList[i])
+            if define:
+                defines.append(define)
+                i += 1
+                continue
 
             # Because a instrumentation command can be longer than one line we
             # we have to insure to read the whole command.
@@ -599,8 +611,14 @@ at the end of """)
 
         match = self.includeRegex.match(inputLine)
         if match:
-            include = match.group(1).strip()
-            return include
+            return match.group(1).strip()
+        else:
+            return False
+
+    def matchDefine(self, inputLine):
+        match = self.defineRegex.match(inputLine)
+        if match:            
+            return match.group(1).strip()
         else:
             return False
 
@@ -616,6 +634,7 @@ at the end of """)
             commandName = match.group(1)
             commandArgs = match.group(2) + " "
 
+
             # Search for init or final sections to define init or final
             # functions
             if commandName == 'init':
@@ -629,8 +648,7 @@ at the end of """)
             elif commandName in availableCommands:
                 commandName = match.group(1)
                 commandArgs = match.group(2) + " "
-                newTemplate = Template(
-                    template[commandName], commandName, commandArgs)
+                newTemplate = Template( template[commandName], commandName, commandArgs )
                 templateList.append(newTemplate)
 
             # If the command name is not in the template the parsed line
@@ -685,6 +703,7 @@ class Template():
         self.containsNamedParameters = False
         self.insideString = False
         # Generate strings for output from given input
+        
 
         self.default_value_dictionary = {}
         nameList = self.templateDict['variables']
@@ -712,45 +731,30 @@ class Template():
             self.parameterList[key] = self.default_value_dictionary[key]
 
         nameList = self.templateDict['variables']
-        valueList = values.split()
 
-        for value in valueList:
-            valueString = ""
-            valueParts = value.split("=", 1)
-            name = ""
+        for name in nameList:
+            # Match the next value and only one value out of the string
+            value = self.valueRegex.match(values)
+            if value:
+               if(value.group(1)):
+                       name = value.group(1).strip("=")
+                       # the variable with the given name is set
+                       if not name in nameList:
+                               print("Error name " + name + " is not part of the defined function " + self.name)
+                               exit(1)
+               # Set the matched value
+               valueString = value.group(2).strip()
+               if(valueString.startswith("''")):
+                      valueString = valueString.strip("'")
+               self.parameterList[name] = valueString
 
-            if len(valueParts) == 2:
-                nameTmp = valueParts[0].strip()
-                if nameTmp in nameList:
-                    name = nameTmp
-                    self.namedVar = True
-                    valueParts[0] = valueParts[1]
-                else:
-                    valueParts[0] += "=" + valueParts[1]
+               # Truncate the found value from the value string
+               values = self.valueRegex.sub('', values, 1)
 
-            if name == "" and not self.namedVar:
-                if self.currentParameterIndex < len(nameList):
-                    name = nameList[self.currentParameterIndex]
-                else:
-                    name = nameList[-1]
+        # All further text belongs to the last parameter.
+        lastName = nameList[-1]
+        self.parameterList[lastName] += " " + values.strip()
 
-            # Set the matched value
-            valueString += valueParts[0]
-            if(valueString.startswith("''")):
-                valueString = valueString.strip("'")
-
-            if self.insideString:
-                self.parameterList[name] += " " + valueString
-            else:
-                self.parameterList[name] = valueString
-
-            if valueString.startswith('"'):
-                self.insideString = True
-            if valueString.endswith('"'):
-                self.insideString = False
-
-            if not self.insideString:
-                self.currentParameterIndex += 1            
 
 
     #
@@ -833,6 +837,9 @@ class Writer():
         output = open(self.outputFile, 'w')
 
         # write all needed includes
+        for match in defines:
+            print('#define ', match, end='\n', file=output)
+
         for match in includes:
             print('#include ', match, end='\n', file=output)
         print('\n', file=output)
@@ -1042,6 +1049,8 @@ class Writer():
         output = open(self.outputFile, 'w')
 
         print('#define _GNU_SOURCE', file=output)
+        for match in defines:
+            print('#define ', match, end='\n', file=output)
         print('#include <dlfcn.h>\n', file=output)
 
         # write all needed includes
@@ -1072,10 +1081,10 @@ class Writer():
         print("\nstatic void sioxSymbolInit() {\ninitialized_dlsym = 1;", file=output)	
         for function in functionList:
             print(function.getDlsym(), file=output)
-	print("}", file=output)
+        print("}", file=output)
 
         print("\nstatic void sioxInit() {\n", file=output)
-	print("\tif(initialized_dlsym == 0) sioxSymbolInit();", file=output)
+        print("\tif(initialized_dlsym == 0) sioxSymbolInit();", file=output)
         # write all init-templates
         for function in functionList:
             prepareGenericVariablesForTemplates(function)
@@ -1105,7 +1114,7 @@ class Writer():
             if returnType != "void":
                 functionCall = '\tret = ' + function.getCallPointer() + ';\n'
             else:
-                functionCall = '\t' + function.getCallPointer() + '\n'
+                functionCall = '\t' + function.getCallPointer() + ';\n'
 
             prepareGenericVariablesForTemplates(function, "if(initialized_dlsym == 0) sioxSymbolInit();\n" + functionCall + "\n")
 	

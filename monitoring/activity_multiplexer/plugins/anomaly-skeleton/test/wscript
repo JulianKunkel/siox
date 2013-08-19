@@ -2,4 +2,4 @@
 # encoding: utf-8
 
 def build(bld):    
-    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-activityPlugin-AnomalySkeleton", target = 'AnomalySkeletonTest', source = 'AnomalySkeletonTest.cpp', install_path = 'None')
+    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-activityPlugin-AnomalySkeleton", target = 'AnomalySkeletonTest', source = 'AnomalySkeletonTest.cpp', install_path = None)
