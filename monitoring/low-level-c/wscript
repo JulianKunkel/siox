@@ -13,5 +13,7 @@ def build(bld):
     bld.recurse(['test'], mandatory=True)
     bld.recurse(['examples'], mandatory=True)
 
+def options(conf):
+    conf.recurse(['examples'], mandatory=True)
 
 # -*- indent-tabs-mode: t -*-

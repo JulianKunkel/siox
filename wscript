@@ -26,10 +26,11 @@ def options(opt):
 	opt.load('compiler_cxx waf_unit_test compiler_c')
 	opt.load('boost')
 
+        gr = opt.get_option_group('configure options')
 	#bo = opt.add_option_group("Build options")
-	opt.add_option('--production', action='store_true', default=False, dest='production', help="Disable debugging mode")
-	opt.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
-	opt.add_option('--dummyCPPImplementations', action='store_true', default=False, dest='dummyCPPImplementations', help="Build dummy modules/plugins for all supporting layers")
+	gr.add_option('--production', action='store_true', default=False, dest='production', help="Disable debugging mode")
+	gr.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
+	gr.add_option('--dummyCPPImplementations', action='store_true', default=False, dest='dummyCPPImplementations', help="Build dummy modules/plugins for all supporting layers")
 
 	__recurse(opt)
 

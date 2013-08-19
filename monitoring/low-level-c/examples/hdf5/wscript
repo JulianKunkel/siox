@@ -3,20 +3,35 @@
 
 import os
 
+def options(opt):
+   gr = opt.get_option_group('configure options')
+   gr.add_option('--with-hdf5', action='store_true', dest='WITH_HDF5', help="Enable HDF5")
+   gr.add_option('--hdf5', action='store', dest='HDF5', help="Directory to HDF5")
+
+
 def configure(conf):
-   conf.check(features='c cprogram', lib=['hdf5','hdf5_hl'], cflags=['-I/usr/local/hdf5/include -L/usr/local/hdf5/lib'], uselib_store='HDF5')
-   #conf.check(features='c cprogram', lib=['hdf5_hl'], cflags=['-I/usr/local/hdf5/include -L/usr/local/hdf5/lib'], uselib_store='HDF5HL')
-   # cnf.check(features='cxx cxxprogram', lib=['m'], cflags=['-Wall'], defines=['var=foo'], uselib_store='M')
-	# conf.check_cfg(package='libhdf5-7', uselib_store='HDF5',  args=['--cflags', '--libs'], mandatory=False)
+   mandatoryHDF5 = False
+   if conf.options.WITH_HDF5:
+	   if conf.options.HDF5:
+		conf.env.append_value('INCLUDES_HDF5', [conf.options.HDF5 + '/include' ])
+		conf.env.append_value('LIBPATH_HDF5', [conf.options.HDF5 + '/lib' ])
+		mandatoryHDF5 = True
+
+	   conf.check(features='c cprogram', use="HDF5", lib=['hdf5','hdf5_hl'], cflags=['-I/usr/local/hdf5/include -L/usr/local/hdf5/lib'], uselib_store='HDF5', mandatory=mandatoryHDF5)
+   else:
+	print "HDF5 example not enabled"
 
 def build(bld):
+   if not bld.options.WITH_HDF5:
+	return
+
    try:
    		os.symlink(bld.path.abspath() + "/siox.conf", "build/monitoring/low-level-c/examples/hdf5/siox.conf")
    except OSError, e:
    	 	pass
 
-   # -I/usr/local/hdf5/include -L/usr/local/hdf5/lib
-   bld.program(includes="",  use = "siox-monitoring-siox-ll HDF5",  features='test c cprogram', target = 'hdf5-example', source = 'hdf5-example.c', install_path = None)
+   if bld.env['LIB_HDF5']:
+     bld.program(includes="",  use = "siox-monitoring-siox-ll HDF5",  features='test c cprogram', target = 'hdf5-example', source = 'hdf5-example.c', install_path = None)
 
    pass
 

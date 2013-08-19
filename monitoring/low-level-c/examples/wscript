@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+def options(conf):
+    conf.recurse(['hdf5'], mandatory=True)
+
 def configure(conf):
     conf.recurse(['hdf5'], mandatory=True)
 
