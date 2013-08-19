@@ -149,6 +149,9 @@ Implementation details for the requirements of a StatisticsCollector:
 		2. Handle timer in dedicated thread
 		Timer is in time.h or thread that sleeps for certain in a loop as workaround
 		Sleep has drawback: I.e. precision is 10ms Accuracy can be 200ms actual sleep.
+
+		Implement math with doubles here and may use the general core/MathematicalEquation/MathValueType
+
 	D8	This static value has to be exchanged every new interval time 10s for the last ten seconds, 1s for the last 1s and so on. So we may provide 
 		We need HUNDRED_MILLISECONDS, SECOND, TEN_SECONDS, MINUTE, TEN_MINUTES, so five values updated at different times.
 		So keep a small vector with six entries.
@@ -239,13 +242,15 @@ public:
 
 	// D8 - These statistics are up to date values for different intervals
 	virtual StatisticsValue getRollingStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
-	uint64_t hms, s, ts, m, tm;
+	uint64_t hms = 0, s = 0, ts = 0, m = 0, tm = 0;
 			vector <uint64_t> vRS{hms, s, ts, m, tm};
+
+			return vRS;
 	}
 
 	// These are D6
 	virtual StatisticsValue getReducedStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op){
-			
+
 	}
 
 
