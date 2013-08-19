@@ -1,9 +1,13 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+def options(conf):
+    conf.recurse(['hdf5'], mandatory=True)
+
+def configure(conf):
+    conf.recurse(['hdf5'], mandatory=True)
 
 def build(bld):
-    #bld.shlib(includes="",  target = "siox-monitoring-siox-ll", use = "siox-core-ModuleLoader siox-core-AutoConfigurator", lib=['pthread', 'rt'], source = 'siox-ll.cpp' )
     bld.recurse(['hdf5'], mandatory=True)
     bld.recurse(['mock-up-fs'], mandatory=True)
     #pass

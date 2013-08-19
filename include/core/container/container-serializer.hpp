@@ -21,6 +21,7 @@ public:
 	Container * parse(std::istream & stream);
 
 	Container * parse(std::string data);
+
 };
 
 

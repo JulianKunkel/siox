@@ -84,8 +84,13 @@ def build(bld):
 			linkflags=wrap_linkerflags)
 	bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
 
+	try:
+		os.symlink(bld.path.abspath() + "/test/siox.conf", "build/siox.conf")
+	except OSError, e:
+   		pass
+
+
 	from waflib.Tools import waf_unit_test
 	bld.add_post_fun(waf_unit_test.summary)
-
 	
 

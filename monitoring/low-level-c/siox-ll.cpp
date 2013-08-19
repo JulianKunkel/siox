@@ -409,7 +409,7 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
     }catch(InvalidConfiguration & e){
         cerr << "WARNING Invalid configuration: \"" << configName << "\"" << endl; 
         cerr << e.what() << endl;
-        return nullptr;
+        //return nullptr;
     }
 
     // check loaded components and assign them to the right struct elements.

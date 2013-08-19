@@ -26,10 +26,11 @@ def options(opt):
 	opt.load('compiler_cxx waf_unit_test compiler_c')
 	opt.load('boost')
 
+        gr = opt.get_option_group('configure options')
 	#bo = opt.add_option_group("Build options")
-	opt.add_option('--production', action='store_true', default=False, dest='production', help="Disable debugging mode")
-	opt.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
-	opt.add_option('--dummyCPPImplementations', action='store_true', default=False, dest='dummyCPPImplementations', help="Build dummy modules/plugins for all supporting layers")
+	gr.add_option('--production', action='store_true', default=False, dest='production', help="Disable debugging mode")
+	gr.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
+	gr.add_option('--dummyCPPImplementations', action='store_true', default=False, dest='dummyCPPImplementations', help="Build dummy modules/plugins for all supporting layers")
 
 	__recurse(opt)
 
@@ -39,21 +40,24 @@ def configure(conf):
 	conf.load('waf_unit_test')
 	conf.load('boost')
 
+	# Locate Plantuml for UML diagrams in documentation
 	conf.find_program('/usr/share/plantuml/plantuml.jar', var='PLANTUML', mandatory=False)
 	#conf.find_file('plantuml.jar', ['/usr'])
 	if not "PLANTUML" in conf.env:
 		print "\tI cannot create the UML images for the API documentation, but please proceed!"
+	# Locate Doxygen for documentation
 	conf.find_program('doxygen', var='DOXYGEN', mandatory=False)
 	if not "DOXYGEN" in conf.env:
 		print "\tI cannot create the API documentation, but please proceed!"
 
+	# Check various packages for correct installations and linkage
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
 	conf.check_cfg(package='gmodule-2.0', use="GLIB", uselib_store='GMODULES',   args=['--cflags', '--libs'], mandatory=True)
 
 	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
 
-
-        conf.check_boost(lib='system thread serialization regex program_options')
+	# Check Boost library for correct installation and linkage
+	conf.check_boost(lib='system thread serialization regex program_options')
 
 	conf.env.append_value("RPATH", conf.env.PREFIX + "/lib")
 
@@ -65,7 +69,6 @@ def configure(conf):
 	else:
 		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall']
 		conf.env.append_value("CFLAGS", ['-std=c99', '-g', '-Wall'])
-
 
 	print ""
 	__recurse(conf)

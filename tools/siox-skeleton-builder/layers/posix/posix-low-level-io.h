@@ -3,6 +3,8 @@
  * Kurzbeschreibungen hier hineinkopieren!
  */
 
+#define _GNU_SOURCE 1 
+
 #include <unistd.h>
 #include <sys/uio.h>
 #include <sys/types.h>
@@ -233,6 +235,57 @@ int fdatasync (int fd);
 int posix_fadvise (int fd, off_t offset, off_t len, int advise);
 
 
+// Linux specific, Xstat is redirected to Xstat64
+// stat() symbols do not exist, a macro rewrites them, problem stat64 types.
+// Be aware this might lead to problems.
+//@splice_once ''int stat(const char *path, struct stat *buf){ return __xstat64(1, path, buf); }''
+//@guard
+//@activity
+//@activity_attribute_pointer fileName path
+//@error ''ret<0'' errno
+//@guardEnd
+int __xstat64(int __ver, const char *path, struct stat64 *buf);
+
+//@splice_once ''int lstat(const char *path, struct stat *buf){ return __lxstat64(1, path, buf); }''
+//@guard
+//@activity
+//@activity_attribute_pointer fileName path
+//@error ''ret<0'' errno
+//@guardEnd
+int __lxstat64(int __ver, const char *path, struct stat64 *buf);
+
+//@splice_once ''int fstat(int fd, struct stat *buf){ return __fxstat64(1, fd, buf); }''
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+int __fxstat64(int __ver, int fd, struct stat64 *buf);
+
+//@guard
+//@activity
+//@activity_attribute_pointer fileName path
+//@error ''ret<0'' errno
+//@guardEnd
+int __xstat(int __ver, const char *path, struct stat *buf);
+
+//@guard
+//@activity
+//@activity_attribute_pointer fileName path
+//@error ''ret<0'' errno
+//@guardEnd
+int __lxstat(int __ver, const char *path, struct stat *buf);
+
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+int __fxstat(int __ver, int fd, struct stat *buf);
+
+
 /* See: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Memory_002dmapped-I_002fO */
 /* Probably we should record this type of usage with SIOX, but we cannot track the I/O on user-space */
 
@@ -240,6 +293,7 @@ void * mmap (void *address, size_t length, int protect, int flags, int filedes, 
 void * mremap (void *address, size_t length, size_t new_length, int flag);
 int munmap (void *addr, size_t length);
 int madvise (void *addr, size_t length, int advice);
+
 
 
 /* Asynchronous I/O */
