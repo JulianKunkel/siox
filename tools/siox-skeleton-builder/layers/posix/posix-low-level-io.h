@@ -14,6 +14,11 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include <limits.h> // for canonicalize_file_name and realpath
+
+//char *realpath(const char *path, char *resolved_path); => Buffer für resolved path
+
+
 // TODO: To ensure thread safety, calls which query the current position should be protected using a mutex.
 // TODO: Generall aproach to handle errors: How do we convert them to the platform dependent error message.
 
@@ -24,23 +29,31 @@
 //@register_attribute bytesToRead "POSIX" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesToWrite "POSIX" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute filePosition "POSIX" "file/position" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute fileExtent "POSIX" "file/extent" SIOX_STORAGE_64_BIT_UINTEGER
+
 
 //@register_attribute fileMemoryRegions "POSIX" "quantity/memoryRegions" SIOX_STORAGE_32_BIT_INTEGER
 
-//@register_attribute fileName "POSIX" "filename" SIOX_STORAGE_STRING
-//@register_attribute fileSystem "Global" "filesystem" SIOX_STORAGE_32_BIT_UINTEGER
-//@register_attribute fileHandle "POSIX" "filehandle" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute fileFopenFlags "POSIX" "descriptor/fopenFlags" SIOX_STORAGE_STRING
+
+//@register_attribute fileName "POSIX" "descriptor/filename" SIOX_STORAGE_STRING
+//@register_attribute fileSystem "Global" "descriptor/filesystem" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute fileHandle "POSIX" "descriptor/filehandle" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute bytesWritten "POSIX" "quantity/BytesWritten" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesRead "POSIX" "quantity/BytesRead" SIOX_STORAGE_64_BIT_UINTEGER
 
  //@register_attribute fileAdviseExtent "POSIX" "hint/advise-extent" SIOX_STORAGE_64_BIT_UINTEGER
  //@register_attribute fileAdvise "POSIX" "hints/advise" SIOX_STORAGE_32_BIT_INTEGER
+ //@register_attribute fileBufferSize "POSIX" "hints/bufferSize" SIOX_STORAGE_64_BIT_INTEGER
+ //@register_attribute fileBufferMode "POSIX" "hints/bufferMode" SIOX_STORAGE_32_BIT_INTEGER
+
 
 /* Prepare a (hash) map to link descriptors (in this case, of type int) to their activities.
    This is necessary for the horizontal linking of activities.
    The map and all other functions using it default to the same built-in name,
    so it can usually be omitted. */
 //@horizontal_map_create_int
+//@horizontal_map_create_size
 
 /*------------------------------------------------------------------------------
 End of global part
@@ -66,6 +79,7 @@ int creat(const char *pathname, mode_t mode);
 
 //@guard
 //@activity
+//@activity_link_int fd
 //@horizontal_map_remove_int fd
 //@activity_attribute_u32 fileHandle fd
 /*@error 'ret < 0' ret*/
@@ -235,12 +249,38 @@ int fdatasync (int fd);
 int posix_fadvise (int fd, off_t offset, off_t len, int advise);
 
 
+
+//  Deletes the file whose name is specified in filename.
+/* 
+ If the file is successfully deleted, a zero value is returned.
+On failure, a nonzero value is returned.
+On most library implementations, the errno variable is also set to a system-specific error code on failure.
+ */
+//@guard
+//@activity
+//@activity_attribute_pointer fileName filename
+//@error ''ret<0'' errno
+//@guardEnd
+int remove ( const char * filename );
+
+/*
+ If the file is successfully renamed, a zero value is returned.
+On failure, a nonzero value is returned.
+On most library implementations, the errno variable is also set to a system-specific error code on failure.
+ */
+//@guard
+//@activity
+//@activity_attribute_pointer fileName oldname
+//@error ''ret<0'' errno
+//@guardEnd
+int rename ( const char * oldname, const char * newname );
+
 // Linux specific, Xstat is redirected to Xstat64
 // stat() symbols do not exist, a macro rewrites them, problem stat64 types.
 // Be aware this might lead to problems.
 //@splice_once ''int stat(const char *path, struct stat *buf){ return __xstat64(1, path, buf); }''
 //@guard
-//@activity
+//@activity Name=stat
 //@activity_attribute_pointer fileName path
 //@error ''ret<0'' errno
 //@guardEnd
@@ -248,7 +288,7 @@ int __xstat64(int __ver, const char *path, struct stat64 *buf);
 
 //@splice_once ''int lstat(const char *path, struct stat *buf){ return __lxstat64(1, path, buf); }''
 //@guard
-//@activity
+//@activity Name=lstat
 //@activity_attribute_pointer fileName path
 //@error ''ret<0'' errno
 //@guardEnd
@@ -256,7 +296,7 @@ int __lxstat64(int __ver, const char *path, struct stat64 *buf);
 
 //@splice_once ''int fstat(int fd, struct stat *buf){ return __fxstat64(1, fd, buf); }''
 //@guard
-//@activity
+//@activity Name=fstat
 //@activity_attribute_u32 fileHandle fd
 //@activity_link_int fd
 //@error ''ret<0'' errno
@@ -264,21 +304,21 @@ int __lxstat64(int __ver, const char *path, struct stat64 *buf);
 int __fxstat64(int __ver, int fd, struct stat64 *buf);
 
 //@guard
-//@activity
+//@activity Name=stat
 //@activity_attribute_pointer fileName path
 //@error ''ret<0'' errno
 //@guardEnd
 int __xstat(int __ver, const char *path, struct stat *buf);
 
 //@guard
-//@activity
+//@activity Name=lstat
 //@activity_attribute_pointer fileName path
 //@error ''ret<0'' errno
 //@guardEnd
 int __lxstat(int __ver, const char *path, struct stat *buf);
 
 //@guard
-//@activity
+//@activity Name=fstat
 //@activity_attribute_u32 fileHandle fd
 //@activity_link_int fd
 //@error ''ret<0'' errno
@@ -289,10 +329,20 @@ int __fxstat(int __ver, int fd, struct stat *buf);
 /* See: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Memory_002dmapped-I_002fO */
 /* Probably we should record this type of usage with SIOX, but we cannot track the I/O on user-space */
 
-void * mmap (void *address, size_t length, int protect, int flags, int filedes, off_t offset);
-void * mremap (void *address, size_t length, size_t new_length, int flag);
-int munmap (void *addr, size_t length);
-int madvise (void *addr, size_t length, int advice);
+
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileExtent length
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+void * mmap (void *address, size_t length, int protect, int flags, int fd, off_t offset);
+
+//void * mremap (void *address, size_t length, size_t new_length, int flag);
+//int munmap (void *addr, size_t length);
+//int madvise (void *addr, size_t length, int advice);
 
 
 
@@ -310,8 +360,6 @@ lio_listio	Initiate a list of I/O operations
 
 
 
-// TODO STDIO interface
-
 //On success, the function returns zero.
 //In case of error, errno is set to a platform-specific positive value and the function returns a non-zero value.
 //The function fills the fpos_t object ...
@@ -327,7 +375,14 @@ If the file is successfully opened, the function returns a pointer to a FILE obj
 Otherwise, a null pointer is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
  */
-FILE * fopen ( const char * filename, const char * mode );
+//@guard
+//@activity
+//@activity_attribute_pointer fileName filename
+//@activity_attribute_pointer fileFopenFlags mode
+//@horizontal_map_put_size ret
+//@error ''ret<0'' errno
+//@guardEnd
+FILE * fopen( const char * filename, const char * mode );
 
 /*
 The  fdopen()  function  associates a stream with the existing file descriptor, fd.  The mode of the stream (one of the
@@ -336,7 +391,25 @@ indicator  of  the  new  stream  is  set to that belonging to fd, and the error 
 Modes "w" or "w+" do not cause truncation of the file.  The file descriptor is not dup'ed, and will be closed when  the
 stream created by fdopen() is closed. 
  */
+//@guard
+//@activity
+//@activity_link_int fd
+//@activity_attribute_pointer fileFopenFlags mode
+//@horizontal_map_put_size ret
+//@error ''ret<0'' errno
+//@guardEnd
 FILE *fdopen(int fd, const char *mode);
+
+// The function fileno() examines the argument stream and returns its integer descriptor.
+// Function does not fail, only if stream is invalid.
+
+//@guard
+//@activity
+//@activity_link_size stream
+//@horizontal_map_put_int ret
+//@error ''ret<0'' errno
+//@guardEnd
+int fileno(FILE * stream);
 
 /*
 Reuses stream to either open the file specified by filename or to change its access mode.
@@ -348,18 +421,48 @@ If the file is successfully reopened, the function returns the pointer passed as
 Otherwise, a null pointer is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
  */
+//@guard
+//@activity
+//@activity_attribute_pointer fileName filename
+//@activity_attribute_pointer fileFopenFlags mode
+//@horizontal_map_remove_size stream
+//@horizontal_map_put_size ret
+//@activity_link_size stream
+//@error ''ret<0'' errno
+//@guardEnd
 FILE * freopen ( const char * filename, const char * mode, FILE * stream );
 
-
+//@guard
+//@activity
+//@horizontal_map_put_size ret
+//@error ''ret<0'' errno
+//@guardEnd
 FILE * tmpfile ( void );
 
+//@guard
+//@activity
+//@activity_link_size stream
+//@horizontal_map_remove_size stream
+//@error ''ret<0'' errno
+//@guardEnd
 int fclose ( FILE * stream );
 
 //  If an error occurs, EOF is returned and the error indicator is set (see ferror). 
+//@guard
+//@activity
+//@activity_link_size stream
+//@error ''ret<0'' errno
+//@guardEnd
 int fflush ( FILE * stream );
 
 //On success, the character read is returned (promoted to an int value).
 //The return type is int to accommodate for the special value EOF, which indicates failure:
+
+//@guard
+//@activity
+//@activity_link_size stream
+//@error ''ret == EOF'' errno
+//@guardEnd
 int fgetc ( FILE * stream );
 
 /* 
@@ -368,9 +471,32 @@ The return type is int to accommodate for the special value EOF, which indicates
 If the position indicator was at the end-of-file, the function returns EOF and sets the eof indicator (feof) of stream.
 If some other reading error happens, the function also returns EOF, but sets its error indicator (ferror) instead.
  */
+//@guard
+//@activity
+//@activity_link_size stream
+//@error ''ret == EOF'' errno
+//@guardEnd
 int getc ( FILE * stream );
 
 
+/*
+ Writes a character to the stream and advances the position indicator.
+ On success, the character written is returned.
+ If a writing error occurs, EOF is returned and the error indicator (ferror) is set.
+ */
+//@guard
+//@activity
+//@activity_link_size stream
+//@error ''ret == EOF'' errno
+//@guardEnd
+int fputc ( int character, FILE * stream );
+
+//@guard
+//@activity
+//@activity_link_size stream
+//@error ''ret == EOF'' errno
+//@guardEnd
+int putc ( int character, FILE * stream );
 
 /*
 Reads characters from stream and stores them as a C string into str until (num-1) characters have been read or either a newline or the end-of-file is reached, whichever happens first.
@@ -378,53 +504,51 @@ Reads characters from stream and stores them as a C string into str until (num-1
 On success, the function returns str.
 If the end-of-file is encountered while attempting to read a character, the eof indicator is set (feof). If this happens before any characters could be read, the pointer returned is a null pointer (and the contents of str remain unchanged).
 If a read error occurs, the error indicator (ferror) is set and a null pointer is also returned (but the contents pointed by str may have changed).
- */
+*/
+
+//@guard
+//@activity
+//@activity_link_size stream
+//@splice_before ''size_t posB = ftell (stream );''
+//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@activity_attribute bytesRead posDelta
+//@activity_attribute filePosition posB
+//@error ''ret == NULL'' errno
+//@guardEnd
 char * fgets ( char * str, int num, FILE * stream );
 
-// The function fileno() examines the argument stream and returns its integer descriptor.
-// Function does not fail, only if stream is invalid.
-int fileno(File * stream);
-
-/*
-On success, the total number of characters written is returned.
-If a writing error occurs, the error indicator (ferror) is set and a negative number is returned.
-*/
-int fprintf ( FILE * stream, const char * format, ... );
-// call vprintf afterwards
-
-/*
-On success, the total number of characters written is returned.
-If a writing error occurs, the error indicator (ferror) is set and a negative number is returned.
-If a multibyte character encoding error occurs while writing wide characters, errno is set to EILSEQ and a negative number is returned.
- */
-int vfprintf ( FILE * stream, const char * format, va_list arg );
-
-/*
-On success, the function returns the number of items of the argument list successfully filled. This count can match the expected number of items or be less (even zero) due to a matching failure, a reading error, or the reach of the end-of-file.
-If a reading error happens or the end-of-file is reached while reading, the proper indicator is set (feof or ferror). And, if either happens before any data could be successfully read, EOF is returned.
-If an encoding error happens interpreting wide characters, the function sets errno to EILSEQ.
- */
-int vfscanf ( FILE * stream, const char * format, va_list arg );
-
-/*
- Writes a character to the stream and advances the position indicator.
- On success, the character written is returned.
- If a writing error occurs, EOF is returned and the error indicator (ferror) is set.
- */
-int fputc ( int character, FILE * stream );
-int putc ( int character, FILE * stream );
 
 /*
 On success, a non-negative value is returned.
 On error, the function returns EOF and sets the error indicator (ferror).
  */
+//@guard
+//@activity
+//@activity_link_size stream
+//@splice_before ''size_t posB = ftell (stream );''
+//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@activity_attribute bytesWritten posDelta
+//@activity_attribute filePosition posB
+//@error ''ret == EOF'' errno
+//@guardEnd
 int fputs ( const char * str, FILE * stream );
+
+
 
 /*
 The total number of elements successfully read is returned.
 If this number differs from the count parameter, either a reading error occurred or the end-of-file was reached while reading. In both cases, the proper indicator is set, which can be checked with ferror and feof, respectively.
 If either size or count is zero, the function returns zero and both the stream state and the content pointed by ptr remain unchanged.
  */
+//@guard
+//@activity
+//@activity_link_size stream
+//@splice_before ''size_t posB = ftell (stream );''
+//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@activity_attribute bytesRead posDelta
+//@activity_attribute filePosition posB
+//@error ''ret == count'' errno
+//@guardEnd
 size_t fread ( void * ptr, size_t size, size_t count, FILE * stream );
 
 /*
@@ -434,38 +558,28 @@ The total number of elements successfully written is returned.
 If this number differs from the count parameter, a writing error prevented the function from completing. In this case, the error indicator (ferror) will be set for the stream.
 If either size or count is zero, the function returns zero and the error indicator remains unchanged.
  */
+//@guard
+//@activity
+//@activity_link_size stream
+//@splice_before ''size_t posB = ftell (stream );''
+//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@activity_attribute bytesWritten posDelta
+//@activity_attribute filePosition posB
+//@error ''ret == count'' errno
+//@guardEnd
 size_t fwrite ( const void * ptr, size_t size, size_t count, FILE * stream );
 
 
-/*
-On success, the function returns the number of items of the argument list successfully filled. This count can match the expected number of items or be less (even zero) due to a matching failure, a reading error, or the reach of the end-of-file.
-If a reading error happens or the end-of-file is reached while reading, the proper indicator is set (feof or ferror). And, if either happens before any data could be successfully read, EOF is returned.
-If an encoding error happens interpreting wide characters, the function sets errno to EILSEQ.
- */
-int fscanf ( FILE * stream, const char * format, ... );
-
-// Redirection of stdout to a file? No, we do not handle this at the moment. 
-
-//  Deletes the file whose name is specified in filename.
-/* 
- If the file is successfully deleted, a zero value is returned.
-On failure, a nonzero value is returned.
-On most library implementations, the errno variable is also set to a system-specific error code on failure.
- */
-int remove ( const char * filename );
-
-/*
- If the file is successfully renamed, a zero value is returned.
-On failure, a nonzero value is returned.
-On most library implementations, the errno variable is also set to a system-specific error code on failure.
- */
-int rename ( const char * oldname, const char * newname );
 
 /*
 Specifies the buffer to be used by the stream for I/O operations, which becomes a fully buffered stream. Or, alternatively, if buffer is a null pointer, buffering is disabled for the stream, which becomes an unbuffered stream.
 
 This function should be called once the stream has been associated with an open file, but before any input or output operation is performed with it.
  */
+//@guard
+//@activity
+//@activity_link_size stream
+//@guardEnd
 void setbuf ( FILE * stream, char * buffer );
 
 /* 
@@ -473,6 +587,88 @@ void setbuf ( FILE * stream, char * buffer );
 If the buffer is correctly assigned to the file, a zero value is returned.
 Otherwise, a non-zero value is returned; This may be due to an invalid mode parameter or to some other error allocating or assigning the buffer.
  */
+
+//@guard
+//@activity
+//@activity_link_size stream
+//@activity_attribute fileBufferSize size
+//@activity_attribute fileBufferMode mode
+//@guardEnd
 int setvbuf ( FILE * stream, char * buffer, int mode, size_t size );
 
+
+/*
+On success, the total number of characters written is returned.
+If a writing error occurs, the error indicator (ferror) is set and a negative number is returned.
+*/
+// int fprintf ( FILE * stream, const char * format, ... );
+// call vprintf afterwards
+
+/*
+On success, the total number of characters written is returned.
+If a writing error occurs, the error indicator (ferror) is set and a negative number is returned.
+If a multibyte character encoding error occurs while writing wide characters, errno is set to EILSEQ and a negative number is returned.
+ */
+//@guard
+//@activity
+//@activity_link_size stream
+//@splice_before ''size_t posB = ftell (stream );''
+//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@activity_attribute bytesWritten posDelta
+//@activity_attribute filePosition posB
+//@error ''ret < 0'' errno
+//@guardEnd
+int vfprintf ( FILE * stream, const char * format, va_list arg );
+
+/*
+On success, the function returns the number of items of the argument list successfully filled. This count can match the expected number of items or be less (even zero) due to a matching failure, a reading error, or the reach of the end-of-file.
+If a reading error happens or the end-of-file is reached while reading, the proper indicator is set (feof or ferror). And, if either happens before any data could be successfully read, EOF is returned.
+If an encoding error happens interpreting wide characters, the function sets errno to EILSEQ.
+ */
+//@guard
+//@activity
+//@activity_link_size stream
+//@splice_before ''size_t posB = ftell (stream );''
+//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@activity_attribute bytesRead posDelta
+//@activity_attribute filePosition posB
+//@error ''ret < 0'' errno
+//@guardEnd
+int vfscanf ( FILE * stream, const char * format, va_list arg );
+
+
+/*
+On success, the function returns the number of items of the argument list successfully filled. This count can match the expected number of items or be less (even zero) due to a matching failure, a reading error, or the reach of the end-of-file.
+If a reading error happens or the end-of-file is reached while reading, the proper indicator is set (feof or ferror). And, if either happens before any data could be successfully read, EOF is returned.
+If an encoding error happens interpreting wide characters, the function sets errno to EILSEQ.
+ */
+
+//@guard
+//@activity
+//@activity_link_size stream
+//@splice_before ''size_t posB = ftell (stream );''
+//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@activity_attribute bytesRead posDelta
+//@activity_attribute filePosition posB
+//@error ''ret < 0'' errno
+//@guardEnd
+//@rewriteCall vfscanf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
+int fscanf ( FILE * stream, const char * format, ... );
+
+/*
+ */
+//@guard
+//@activity
+//@activity_link_size stream
+//@splice_before ''size_t posB = ftell (stream );''
+//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@activity_attribute bytesWritten posDelta
+//@activity_attribute filePosition posB
+//@error ''ret < 0'' errno
+//@guardEnd
+//@rewriteCall vfprintf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
+int fprintf(FILE *stream, const char *format, ...);
+
+
+// Redirection of stdout to a file? No, we do not handle this at the moment. 
 

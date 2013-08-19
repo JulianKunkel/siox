@@ -132,7 +132,21 @@ class Function():
         self.init = False
         # Indicates that the function is the last called function of the
         # library.
-        self.final = False
+        self.final = False        
+        self.rewriteCall = False
+        self.rewriteCallParams = False
+        self.rewriteCallArguments = False
+
+    def setTemplateList(self, usedTemplateList):
+        self.usedTemplateList = usedTemplateList
+
+        # Special rewrite rules for change in function names.
+        for t in self.usedTemplateList:
+            if(t.name == "rewriteCall"):
+                self.rewriteCall = t.parameterList['functionName']
+                self.rewriteCallArguments = t.parameterList['arguments']
+                self.rewriteCallParams = t.parameterList['parameters']
+
 
     #
     # @brief Generate the function call.
@@ -143,13 +157,16 @@ class Function():
     #
     # Generates the function call of the function object.
     def getCall(self):
+        if self.rewriteCallArguments:
+            arguments = self.rewriteCallArguments
+        else:
+            arguments = ', '.join(parameter.name for parameter in self.parameterList)
 
         if len(self.parameterList) == 1:
             if self.parameterList[0].name == 'void':
                 return '%s()' % (self.name)
 
-        return '%s(%s)' % (self.name,
-                           ', '.join(parameter.name for parameter in self.parameterList))
+        return '%s(%s)' % (self.name, arguments)
 
     #
     # @brief Generate the function definition.
@@ -180,12 +197,15 @@ class Function():
     # functionality. The Call will be prefixed with __real_ and used as the
     # original function.
     def getCallReal(self):
+        if self.rewriteCallArguments:
+            arguments = self.rewriteCallArguments
+        else:
+            arguments = ', '.join(parameter.name for parameter in self.parameterList)
 
         if len(self.parameterList) == 1:
             if self.parameterList[0].name == 'void':
                 return '__real_%s()' % (self.name)
-        return '__real_%s(%s)' % (self.name,
-                                  ', '.join(parameter.name for parameter in self.parameterList))
+        return '__real_%s(%s)' % (self.name, arguments)
 
     #
     # @brief Generate the function definition prefixed with __real_.
@@ -197,11 +217,15 @@ class Function():
     # Generates the function definition of the function object for the gcc wrap
     # functionality. The definition will be prefixed with __real_.
     def getDefinitionReal(self):
+        if self.rewriteCallParams:
+            arguments = self.rewriteCallParams
+        else:
+            arguments = ', '.join(' '.join([parameter.type, parameter.name])
+                                                   for parameter in self.parameterList)
+
 
         if self.definition == '':
-            return '%s __real_%s(%s)' % (self.type, self.name,
-                                         ', '.join(' '.join([parameter.type, parameter.name])
-                                                   for parameter in self.parameterList))
+            return '%s __real_%s(%s)' % (self.type, self.name, arguments)
 
         else:
             return '%s __real_%s %s' % (self.type, self.name, self.definition)
@@ -235,12 +259,15 @@ class Function():
     # Generate the function pointer call for dlsym. The function
     # pointer call looks something like: (__real_funcName)(parameter).
     def getCallPointer(self):
+        if self.rewriteCallArguments:
+            arguments = self.rewriteCallArguments
+        else:
+            arguments = ', '.join(parameter.name for parameter in self.parameterList)
 
         if len(self.parameterList) == 1:
             if self.parameterList[0].name == 'void':
                 return '(__real_*%s)()' % (self.name)
-        return '(__real_%s)(%s)' % (self.name,
-                                    ', '.join(parameter.name for parameter in self.parameterList))
+        return '(__real_%s)(%s)' % (self.name, arguments)
 
     #
     # @brief Generate the function pointer definition for dlsym.
@@ -253,10 +280,13 @@ class Function():
     # definition looks something like: funcType (*_real_funcName)(parType
     # parName).
     def getDefinitionPointer(self):
+        # Rewrite the function call to use, this is very helpfull for fprintf and such.
+        if self.rewriteCallParams:
+            parameters = self.rewriteCallParams
+        else:
+            parameters = ', '.join(' '.join([parameter.type, parameter.name]) for parameter in self.parameterList)
 
         if self.definition == '':
-            parameters = ', '.join(' '.join([parameter.type, parameter.name])
-                                   for parameter in self.parameterList)
 
             return ('static %s (*__real_%s) (%s);' % (self.type, self.name, parameters))
 
@@ -274,19 +304,25 @@ class Function():
     #
     # Generate the C code for the dlsym function call.
     def getDlsym(self):
+        # Rewrite the function call to use, this is very helpfull for fprintf and such.
+        if self.rewriteCall:
+            functionName = self.rewriteCall
+        else:
+            functionName = self.name        
 
         if self.definition == '':
 
             parameters = ', '.join(' '.join([parameter.type, parameter.name])
                                    for parameter in self.parameterList)
 
+
             return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");\n assert(__real_%s != NULL);' %
-                   (self.name, self.type, parameters, self.name, self.name))
+                   (self.name, self.type, parameters, functionName, self.name))
 
         else:
 
             return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s"); \n assert(__real_%s != NULL);' %
-                   (self.name, self.type, self.definition, self.name, self.name))
+                   (self.name, self.type, self.definition, functionName, self.name))
 
     #
     # @brief Generate an identifier of the function.
@@ -593,7 +629,7 @@ class CommandParser():
             if len(currentFunctionList) > 0:
 
                 currentFunction = currentFunctionList[0]
-                currentFunction.usedTemplateList = templateList[:]
+                currentFunction.setTemplateList(templateList[:])
                 functionList.append(currentFunction)
                 templateList = []
                 functionString = ""
@@ -903,13 +939,11 @@ class Writer():
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
-                print('\tva_list args;', file=output)
+                print('\tva_list valist;', file=output)
                 print(
-                    '\tva_start(args, %s);' % function.parameterList[-2].name,
+                    '\tva_start(valist, %s);' % function.parameterList[-2].name,
                     file=output)
-                print(
-                    '\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
-                    function.parameterList[-2].type), file=output)
+                #print( '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type,  function.parameterList[-2].type), file=output)
 
                 # set the name to args
                 function.parameterList[-1].name = "val"
@@ -942,7 +976,7 @@ class Writer():
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
-                print("\tva_end(args);", file=output)
+                print("\tva_end(valist);", file=output)
 
             # write the return statement and close the function
             if returnType != "void":
@@ -998,13 +1032,11 @@ class Writer():
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
-                print('\tva_list args;', file=output)
+                print('\tva_list valist;', file=output)
                 print(
-                    '\tva_start(args, %s);' % function.parameterList[-2].name,
+                    '\tva_start(valist, %s);' % function.parameterList[-2].name,
                     file=output)
-                print(
-                    '\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
-                    function.parameterList[-2].type), file=output)
+                #print(                    '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type,function.parameterList[-2].type), file=output)
                 # set the name to args
                 function.parameterList[-1].name = "val"
 
@@ -1029,7 +1061,7 @@ class Writer():
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
-                print("\tva_end(args);", file=output)
+                print("\tva_end(valist);", file=output)
 
             # write the return statement and close the function
             if returnType != "void":
@@ -1125,13 +1157,11 @@ class Writer():
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
-                print('\tva_list args;', file=output)
+                print('\tva_list valist;', file=output)
                 print(
-                    '\tva_start(args, %s);' % function.parameterList[-2].name,
+                    '\tva_start(valist, %s);' % function.parameterList[-2].name,
                     file=output)
-                print(
-                    '\t%s val = va_arg(args, %s);' % (function.parameterList[-2].type,
-                    function.parameterList[-2].type), file=output)
+             #   print( '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type, function.parameterList[-2].type), file=output)
                 # set the name to args
                 function.parameterList[-1].name = "val"
 
@@ -1162,7 +1192,7 @@ class Writer():
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
-                print("\tva_end(args);", file=output)
+                print("\tva_end(valist);", file=output)
 
             # write the return statement and close the function
             if returnType != "void":

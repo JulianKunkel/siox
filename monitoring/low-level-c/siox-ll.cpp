@@ -524,7 +524,10 @@ void siox_activity_stop(siox_activity * activity){
 void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, const void * value){
     assert(activity != nullptr);
     assert(attribute != nullptr);
-    assert(value != nullptr);
+    
+    if(value == nullptr){
+      return;
+    }
 
     FUNCTION_BEGIN
 

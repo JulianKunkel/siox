@@ -85,6 +85,15 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+'horizontal_map_create_size': {
+	'variables': 'MapName=activityHashTable_size',
+	'global': '''static GHashTable * %(MapName)s;''',
+    'init': '''%(MapName)s = g_hash_table_new(g_direct_hash, g_direct_equal);''',
+	'before': '',
+	'after': '',
+	'cleanup': '',
+	'final': ''
+},
 # activity
 #
 # Starts (at the beginning) and stops (at the end) a new
@@ -207,6 +216,16 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+
+'horizontal_map_put_size': {
+	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''g_hash_table_insert( %(MapName)s, GSIZE_TO_POINTER(%(Key)s), %(Activity)s );''',
+	'cleanup': '',
+	'final': ''
+},
 # horizontal_map_put_str
 #
 # Tie an attibute serving as a descriptor to an activity.
@@ -240,6 +259,15 @@ template = {
 	'init': '''''',
 	'before': '',
     'after': '''g_hash_table_remove( %(MapName)s, GINT_TO_POINTER(%(Key)s) );''',
+	'cleanup': '',
+	'final': ''
+},
+'horizontal_map_remove_size': {
+	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''g_hash_table_remove( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );''',
 	'cleanup': '',
 	'final': ''
 },
@@ -281,6 +309,19 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+
+'activity_link_size': {
+	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
+            if(Parent != NULL) siox_activity_link_to_parent( %(Activity)s, Parent ); 
+			  ''',
+	'cleanup': '',
+	'final': ''
+},
+
 
 'activity_lookup_int': {
 	'variables': 'Key Activity=Parent MapName=activityHashTable_int',
@@ -438,7 +479,17 @@ template = {
         'after': 'printf("In: "); printf(__FUNCTION__); printf("\\n");\n',
         'cleanup': '',
         'final': ''
+},
+'rewriteCall': { # This is a special template, interpreted by the skeleton-builder !
+        'variables': 'functionName arguments="" parameters=""',
+        'global': '',
+        'init': '',
+        'before': '',
+        'after': '',
+        'cleanup': '',
+        'final': ''
 }
+
 }
 
 # Insert global once
