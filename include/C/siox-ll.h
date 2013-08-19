@@ -178,14 +178,14 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
 /// Return @c false if a conflict with a currently set attribute occurs, as
 /// there currently is no way to change, unset or overwrite a set attribute.
 //////////////////////////////////////////////////////////////////////////////
-/// @param [in] parent
+/// @param [in] parent_attribute
 /// @param [in] meta_attribute
 /// @param [in] value
 //////////////////////////////////////////////////////////////////////////////
 /// @return @c true if everything went well; otherwise, @c false.
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p,%p'' parent,meta_attribute,value
-int siox_ontology_set_meta_attribute(siox_attribute * parent, siox_attribute * meta_attribute, const void * value);
+int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_attribute * meta_attribute, const void * value);
 
 /*
  * Retrieve an attribute by its name.

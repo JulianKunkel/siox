@@ -57,9 +57,9 @@ using namespace monitoring;
 	
 	Scheme:
 
-					Ontologie(Global standards)
+					Ontologie (Global standards)
 						|
-					Collector(node local with config)
+					Collector (node local with config)
 			/			|		\		...
 	Plugin OSMem	cpustat		iostat
 
@@ -135,6 +135,9 @@ Implementation details for the requirements of a StatisticsCollector:
 	R5|	The options of the ThreadCollector contain the list of statistics to query, so the user can set it as options.
 		The de/serialization is done using Boost.
 	R6	Calculate average values for several periods consisting of 10 intervals, between 100ms and 60s.
+	R8	Provide a rolling value for the last average value. This differs from R6 because the intervals in R6 are queried 
+		at fixed timestamps (every 10s for example), so when we ask for the last 10s at timestamp 19s we will get the value
+		for the interval 0-10.
 	R9|	Use a list to keep for each intervall all plugins which should be executed for these intervalls.
 
 	D6	As we have a fixed time base on every ten seconds we deliver for example four periods of average values: 4x 10*100ms StatisticIntervals.
@@ -146,7 +149,9 @@ Implementation details for the requirements of a StatisticsCollector:
 		2. Handle timer in dedicated thread
 		Timer is in time.h or thread that sleeps for certain in a loop as workaround
 		Sleep has drawback: I.e. precision is 10ms Accuracy can be 200ms actual sleep.
-
+	D8	This static value has to be exchanged every new interval time 10s for the last ten seconds, 1s for the last 1s and so on. So we may provide 
+		We need HUNDRED_MILLISECONDS, SECOND, TEN_SECONDS, MINUTE, TEN_MINUTES, so five values updated at different times.
+		So keep a small vector with six entries.
 */
 
 public class 
@@ -209,6 +214,7 @@ private:
 public:
 
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){		
+		assert(plugin != nullptr);
 		StatisticsIntervall minIntervall = plugin->minPollInterval();
 		// the configInterval must be at least minIntervall.
 
@@ -225,20 +231,21 @@ public:
     }
 
 	virtual void unregisterPlugin(StatisticsProviderPlugin * plugin){
-
+		plugin[configInterval].erase(plugin);
 	}
 
 	virtual array<StatisticsValue,10> getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
-
 	}
 
+	// D8 - These statistics are up to date values for different intervals
 	virtual StatisticsValue getRollingStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
-
+	uint64_t hms, s, ts, m, tm;
+			vector <uint64_t> vRS{hms, s, ts, m, tm};
 	}
 
-
+	// These are D6
 	virtual StatisticsValue getReducedStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op){
-
+			
 	}
 
 
