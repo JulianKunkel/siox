@@ -57,9 +57,9 @@ using namespace monitoring;
 	
 	Scheme:
 
-					Ontologie(Global standards)
+					Ontologie (Global standards)
 						|
-					Collector(node local with config)
+					Collector (node local with config)
 			/			|		\		...
 	Plugin OSMem	cpustat		iostat
 
@@ -209,6 +209,7 @@ private:
 public:
 
 	virtual void registerPlugin(StatisticsProviderPlugin * plugin){		
+		assert(plugin != nullptr);
 		StatisticsIntervall minIntervall = plugin->minPollInterval();
 		// the configInterval must be at least minIntervall.
 
@@ -225,7 +226,7 @@ public:
     }
 
 	virtual void unregisterPlugin(StatisticsProviderPlugin * plugin){
-
+		plugin[configInterval].erase(plugin);
 	}
 
 	virtual array<StatisticsValue,10> getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
