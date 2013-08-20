@@ -3,7 +3,7 @@ project(SIOX)
 
 include(FindProtobuf)
 find_package(Protobuf REQUIRED)
-find_package(Boost 1.53.0 COMPONENTS system thread REQUIRED)
+find_package(Boost 1.53.0 COMPONENTS unit_test_framework REQUIRED)
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${SIOX_INCLUDE}/core/comm/messages/siox.proto)
 

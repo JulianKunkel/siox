@@ -138,8 +138,31 @@ public:
 		return type_;
 	}
 
-	inline bool operator==(VariableDatatype const & v) const{
-		return v.type_ == this->type_ && ((this->data.i64 == v.data.i64) || (v.type_ == Type::STRING && strcmp(v.data.str, this->data.str) == 0)  ); 
+	inline bool operator==(VariableDatatype const & v) const {
+		
+		if (v.type_ != this->type_)
+			return false;
+		
+		switch(v.type_) {
+		case Type::INT32:
+			return this->data.i32 == v.data.i32;
+		case Type::UINT32:
+			return this->data.ui64 == v.data.ui64;
+		case Type::INT64:
+			return this->data.i64 == v.data.i64;
+		case Type::UINT64:
+			return this->data.ui64 == v.data.ui64;
+		case Type::FLOAT:
+			return this->data.f == v.data.f;
+		case Type::DOUBLE:
+			return this->data.d == v.data.d;
+		case Type::STRING:
+			return strcmp(v.data.str, this->data.str) == 0;
+		case Type::INVALID:
+		default:
+			return false;
+		}
+		
 	}
 
 	inline bool operator!=(VariableDatatype const & v) const{
