@@ -138,7 +138,7 @@ Implementation details for the requirements of a StatisticsCollector:
 	R8	Provide a rolling value for the last average value. This differs from R6 because the intervals in R6 are queried 
 		at fixed timestamps (every 10s for example), so when we ask for the last 10s at timestamp 19s we will get the value
 		for the interval 0-10.
-	R9|	Use a list to keep for each intervall all plugins which should be executed for these intervalls.
+	R9|	Use a list to keep all plugins for each intervall. The plugins should be executed for these intervalls.
 
 	D6	As we have a fixed time base on every ten seconds we deliver for example four periods of average values: 4x 10*100ms StatisticIntervals.
 		Every minute we deliver (four) periods of average values:  4x 10*1s
