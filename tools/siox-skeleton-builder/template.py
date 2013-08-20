@@ -146,7 +146,6 @@ template = {
 },
 
 
-
 # activity with hints
 #
 # Starts (at the beginning) and stops (at the end) a new

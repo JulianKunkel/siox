@@ -698,3 +698,13 @@ int aio_suspend(const struct aiocb * const aiocb_list[], int nitems, const struc
 int aio_cancel(int fd, struct aiocb *aiocbp);
 
 #endif 
+
+
+#include <sched.h>
+
+//@splice_before ''printf("Warning clone() called, presumably SIOX breaks!\n");''
+int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, pid_t *ptid, struct user_desc *tls, pid_t *ctid);
+
+//@splice_before ''printf("Warning fork() called, presumably SIOX breaks!\n");''
+pid_t fork(void);
+
