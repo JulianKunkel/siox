@@ -792,6 +792,12 @@ class Template():
         self.parameterList[lastName] += " " + values.strip()
 
 
+    def cleanOutput(self, output):
+       ret = output  % self.parameterList
+       for key in genericVariablesForTemplates:
+            ret = ret.replace( "%(" +  key + ")s",  genericVariablesForTemplates[key] );
+       return ret
+
 
     #
     # @brief Used for selective output
@@ -801,17 +807,17 @@ class Template():
     # @return The requested string from the template
     def output(self, type):	
         if (type == 'global'):
-            return self.world % self.parameterList % genericVariablesForTemplates
+            return self.cleanOutput(self.world)
         elif (type == 'init'):
-            return self.init % self.parameterList % genericVariablesForTemplates
+            return self.cleanOutput(self.init)
         elif (type == 'before'):
-            return self.before % self.parameterList % genericVariablesForTemplates
+            return self.cleanOutput(self.before)
         elif (type == 'after'):
-            return self.after % self.parameterList % genericVariablesForTemplates
+            return self.cleanOutput(self.after) 
         elif (type == 'final'):
-            return self.final % self.parameterList % genericVariablesForTemplates
+            return self.cleanOutput(self.final) 
         elif (type == 'cleanup'):
-            return self.cleanup % self.parameterList % genericVariablesForTemplates
+            return self.cleanOutput(self.cleanup)
         else:
             # Error
             print('ERROR: Section: ', type, ' not known.', file=sys.stderr)

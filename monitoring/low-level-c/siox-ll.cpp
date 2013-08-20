@@ -434,6 +434,8 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
 
     FUNCTION_END
 
+    assert(result != nullptr);
+
     return result;
 }
 

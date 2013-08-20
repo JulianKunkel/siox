@@ -190,7 +190,7 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
 //////////////////////////////////////////////////////////////////////////////
 /// @return @c true if everything went well; otherwise, @c false.
 //////////////////////////////////////////////////////////////////////////////
-//@test ''%p,%p,%p'' parent,meta_attribute,value
+//@test ''%p,%p,%p'' parent_attribute,meta_attribute,value
 int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_attribute * meta_attribute, const void * value);
 
 /*
