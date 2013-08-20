@@ -16,7 +16,9 @@ namespace boost{
 namespace serialization {
 	template<class Archive>
 	void serialize(Archive & ar, ComponentID & id, const unsigned int file_version){
+		cout << "   SERIALIZE " << & id << endl;
 		SER("pid", id.pid)
+		cout << "FIN" << endl;
 		SER("id", id.id)
 	}
 
@@ -33,8 +35,14 @@ namespace serialization {
 	void serialize(Archive & ar, ActivityID & id, const unsigned int file_version){
 		SER("cid", id.cid)
 		SER("id", id.id)
+		SER("tid", id.thread)
 	}
 }
 }
+
+BOOST_CLASS_TRACKING(ComponentID, boost::serialization::track_never)
+BOOST_CLASS_TRACKING(ProcessID, boost::serialization::track_never)
+BOOST_CLASS_TRACKING(ActivityID, boost::serialization::track_never)
+
 
 #endif

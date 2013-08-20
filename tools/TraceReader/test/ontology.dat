@@ -1,6 +1,6 @@
-<MAX_VALUE>14</MAX_VALUE>
+<MAX_VALUE>21</MAX_VALUE>
 <map class_id="0" tracking_level="0" version="0">
-	<count>13</count>
+	<count>20</count>
 	<item_version>0</item_version>
 	<item class_id="1" tracking_level="0" version="0">
 		<first>1</first>
@@ -140,7 +140,7 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>8</id>
-				<name>file-position</name>
+				<name>file/position</name>
 				<domain>POSIX</domain>
 				<storageType>1</storageType>
 			</attribute>
@@ -159,9 +159,9 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>9</id>
-				<name>filename</name>
+				<name>file/extent</name>
 				<domain>POSIX</domain>
-				<storageType>7</storageType>
+				<storageType>1</storageType>
 			</attribute>
 			<metas>
 				<count>0</count>
@@ -178,9 +178,9 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>10</id>
-				<name>filesystem</name>
-				<domain>Global</domain>
-				<storageType>3</storageType>
+				<name>quantity/memoryRegions</name>
+				<domain>POSIX</domain>
+				<storageType>2</storageType>
 			</attribute>
 			<metas>
 				<count>0</count>
@@ -197,9 +197,9 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>11</id>
-				<name>filehandle</name>
+				<name>descriptor/fopenFlags</name>
 				<domain>POSIX</domain>
-				<storageType>3</storageType>
+				<storageType>7</storageType>
 			</attribute>
 			<metas>
 				<count>0</count>
@@ -216,9 +216,9 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>12</id>
-				<name>quantity/BytesWritten</name>
+				<name>descriptor/filename</name>
 				<domain>POSIX</domain>
-				<storageType>1</storageType>
+				<storageType>7</storageType>
 			</attribute>
 			<metas>
 				<count>0</count>
@@ -235,9 +235,142 @@
 		<second class_id_reference="2">
 			<attribute>
 				<id>13</id>
+				<name>descriptor/filesystem</name>
+				<domain>Global</domain>
+				<storageType>3</storageType>
+			</attribute>
+			<metas>
+				<count>0</count>
+				<item_version>0</item_version>
+			</metas>
+			<values>
+				<count>0</count>
+				<item_version>0</item_version>
+			</values>
+		</second>
+	</item>
+	<item>
+		<first>14</first>
+		<second class_id_reference="2">
+			<attribute>
+				<id>14</id>
+				<name>descriptor/filehandle</name>
+				<domain>POSIX</domain>
+				<storageType>3</storageType>
+			</attribute>
+			<metas>
+				<count>0</count>
+				<item_version>0</item_version>
+			</metas>
+			<values>
+				<count>0</count>
+				<item_version>0</item_version>
+			</values>
+		</second>
+	</item>
+	<item>
+		<first>15</first>
+		<second class_id_reference="2">
+			<attribute>
+				<id>15</id>
+				<name>quantity/BytesWritten</name>
+				<domain>POSIX</domain>
+				<storageType>1</storageType>
+			</attribute>
+			<metas>
+				<count>0</count>
+				<item_version>0</item_version>
+			</metas>
+			<values>
+				<count>0</count>
+				<item_version>0</item_version>
+			</values>
+		</second>
+	</item>
+	<item>
+		<first>16</first>
+		<second class_id_reference="2">
+			<attribute>
+				<id>16</id>
 				<name>quantity/BytesRead</name>
 				<domain>POSIX</domain>
 				<storageType>1</storageType>
+			</attribute>
+			<metas>
+				<count>0</count>
+				<item_version>0</item_version>
+			</metas>
+			<values>
+				<count>0</count>
+				<item_version>0</item_version>
+			</values>
+		</second>
+	</item>
+	<item>
+		<first>17</first>
+		<second class_id_reference="2">
+			<attribute>
+				<id>17</id>
+				<name>hint/advise-extent</name>
+				<domain>POSIX</domain>
+				<storageType>1</storageType>
+			</attribute>
+			<metas>
+				<count>0</count>
+				<item_version>0</item_version>
+			</metas>
+			<values>
+				<count>0</count>
+				<item_version>0</item_version>
+			</values>
+		</second>
+	</item>
+	<item>
+		<first>18</first>
+		<second class_id_reference="2">
+			<attribute>
+				<id>18</id>
+				<name>hints/advise</name>
+				<domain>POSIX</domain>
+				<storageType>2</storageType>
+			</attribute>
+			<metas>
+				<count>0</count>
+				<item_version>0</item_version>
+			</metas>
+			<values>
+				<count>0</count>
+				<item_version>0</item_version>
+			</values>
+		</second>
+	</item>
+	<item>
+		<first>19</first>
+		<second class_id_reference="2">
+			<attribute>
+				<id>19</id>
+				<name>hints/bufferSize</name>
+				<domain>POSIX</domain>
+				<storageType>0</storageType>
+			</attribute>
+			<metas>
+				<count>0</count>
+				<item_version>0</item_version>
+			</metas>
+			<values>
+				<count>0</count>
+				<item_version>0</item_version>
+			</values>
+		</second>
+	</item>
+	<item>
+		<first>20</first>
+		<second class_id_reference="2">
+			<attribute>
+				<id>20</id>
+				<name>hints/bufferMode</name>
+				<domain>POSIX</domain>
+				<storageType>2</storageType>
 			</attribute>
 			<metas>
 				<count>0</count>

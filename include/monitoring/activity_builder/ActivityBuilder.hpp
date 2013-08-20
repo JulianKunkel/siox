@@ -25,9 +25,10 @@ class ActivityBuilder
 private:
 	vector<Activity*> activity_stack;
 	uint32_t next_activity_id;
+	uint32_t thread_id;
 
 protected:
-	ActivityBuilder();
+	ActivityBuilder();	
 
 public:
 	static ActivityBuilder* getNewInstance();
@@ -48,8 +49,7 @@ public:
 	void setRemoteCallAttribute(RemoteCall * remote_call, const Attribute  & attribute);
 	void startRemoteCall(RemoteCall *& remote_call, const Timestamp * t);
 
-protected:
-	map<uint32_t, Activity *> activities_in_flight;
+	//map<uint32_t, Activity *> activities_in_flight;
 };
 
 }

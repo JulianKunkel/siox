@@ -62,7 +62,7 @@ template = {
 'horizontal_map_create_str': {
 	'variables': 'MapName=activityHashTable_str',
 	'global': '''static GHashTable * %(MapName)s;''',
-    'init': '''%(MapName)s = g_hash_table_new(g_str_hash, g_str_equal);''',
+    'init': '''%(MapName)s = g_hash_table_new(g_str_hash, g_str_equal); GRWLock lock_%(MapName)s;''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
@@ -78,8 +78,17 @@ template = {
 # MapName: The name for this map; defaults to activityHashTable_int
 'horizontal_map_create_int': {
 	'variables': 'MapName=activityHashTable_int',
-	'global': '''static GHashTable * %(MapName)s;''',
-    'init': '''%(MapName)s = g_hash_table_new(g_direct_hash, g_direct_equal);''',
+	'global': '''static GHashTable * %(MapName)s;\nGRWLock lock_%(MapName)s;''',
+    'init': '''%(MapName)s = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, free);''',
+	'before': '',
+	'after': '',
+	'cleanup': '',
+	'final': ''
+},
+'horizontal_map_create_size': {
+	'variables': 'MapName=activityHashTable_size',
+	'global': '''static GHashTable * %(MapName)s; GRWLock lock_%(MapName)s;''',
+    'init': '''%(MapName)s = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, free);''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
@@ -203,7 +212,32 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), %(Activity)s );''',
+    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s); 
+    	g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), siox_activity_get_ID(%(Activity)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
+	'cleanup': '',
+	'final': ''
+},
+'horizontal_map_put_int_ID': {
+	'variables': 'Key MapName=activityHashTable_int ActivityID=sioxActivityID',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s); 
+    	g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), %(ActivityID)s );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
+	'cleanup': '',
+	'final': ''
+},
+
+'horizontal_map_put_size': {
+	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s); 
+    	g_hash_table_insert( %(MapName)s, GSIZE_TO_POINTER(%(Key)s), siox_activity_get_ID(%(Activity)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
 	'cleanup': '',
 	'final': ''
 },
@@ -221,7 +255,12 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_insert( %(MapName)s, %(Key)s, %(Activity)s );''',
+    'after': '''
+
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_insert( %(MapName)s, %(Key)s, siox_activity_get_ID(%(Activity)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+    	''',
 	'cleanup': '',
 	'final': ''
 },
@@ -239,7 +278,24 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_remove( %(MapName)s, GINT_TO_POINTER(%(Key)s) );''',
+    'after': '''
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_remove( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+    	''',
+	'cleanup': '',
+	'final': ''
+},
+'horizontal_map_remove_size': {
+	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_remove( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+    	''',
 	'cleanup': '',
 	'final': ''
 },
@@ -257,7 +313,11 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_remove( %(MapName)s, %(Key)s );''',
+    'after': '''
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_remove( %(MapName)s, %(Key)s );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+    	''',
 	'cleanup': '',
 	'final': ''
 },
@@ -275,19 +335,38 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
-            if(Parent != NULL) siox_activity_link_to_parent( %(Activity)s, Parent ); 
+	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); 
+		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
+		g_rw_lock_reader_unlock(& lock_%(MapName)s);
+        siox_activity_link_to_parent( %(Activity)s, Parent ); 
 			  ''',
 	'cleanup': '',
 	'final': ''
 },
 
-'activity_lookup_int': {
-	'variables': 'Key Activity=Parent MapName=activityHashTable_int',
+
+'activity_link_size': {
+	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''siox_activity * %(Activity)s = (siox_activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );''',
+	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
+		g_rw_lock_reader_unlock(& lock_%(MapName)s);
+        siox_activity_link_to_parent( %(Activity)s, Parent ); 
+			  ''',
+	'cleanup': '',
+	'final': ''
+},
+
+
+'activity_lookup_ID_int': {
+	'variables': 'Key ActivityID=Parent MapName=activityHashTable_int',
+	'global': '''''',
+	'init': '''''',
+    'before': '''''',
+	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); 
+		siox_activity_ID * %(ActivityID)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) ); 
+		g_rw_lock_reader_unlock(& lock_%(MapName)s);''',
 	'cleanup': '',
 	'final': ''
 },
@@ -306,8 +385,8 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, %(Key)s );
-    			siox_activity_link_to_parent( %(Activity)s, Parent );
+	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, %(Key)s ); g_rw_lock_reader_unlock(& lock_%(MapName)s);
+    	siox_activity_link_to_parent( %(Activity)s, Parent ); 
 			  ''',
 	'cleanup': '',
 	'final': ''
@@ -438,7 +517,17 @@ template = {
         'after': 'printf("In: "); printf(__FUNCTION__); printf("\\n");\n',
         'cleanup': '',
         'final': ''
+},
+'rewriteCall': { # This is a special template, interpreted by the skeleton-builder !
+        'variables': 'functionName arguments="" parameters=""',
+        'global': '',
+        'init': '',
+        'before': '',
+        'after': '',
+        'cleanup': '',
+        'final': ''
 }
+
 }
 
 # Insert global once

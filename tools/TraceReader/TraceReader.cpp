@@ -32,7 +32,7 @@ TraceReader::TraceReader(string activityFile, string systemInfoFile, string onto
 	FileAssociationMapperOptions * aop = new FileAssociationMapperOptions();
 	aop->filename = associationFile;
 	a->init(aop);
-	activityDeserializer = new FileDeserializer<ActivitySerializable>(activityFile);
+	activityDeserializer = new FileDeserializer<ActivityAccessor>(activityFile);
 }
 
 static inline void strtime(Timestamp t, stringstream & s){

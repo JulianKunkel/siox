@@ -22,7 +22,7 @@ public:
 	inline void append(CONTAINER * obj){
 		archive << obj;
 		// add end of line to force floshing
-		//file << endl;
+	    file.flush();
 	}
 
 	~FileSerializer(){

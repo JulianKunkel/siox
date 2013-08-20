@@ -116,8 +116,9 @@ static string readfile(const string & filename){
 
     // Some files from /proc contain 0.
     stringstream s;
+
     while(! file.eof()){
-        char c;
+        char c = 0;
         file >> c;
         if(c == 0){
             c = ' ';
@@ -189,7 +190,6 @@ __attribute__ ((constructor)) void siox_ll_ctor()
     local_hostname[1023] = '\0';
     gethostname(local_hostname, 1023);
     string hostname(local_hostname);
-
     // If necessary, do actual initialisation
     if(finalized){
        try{
@@ -270,9 +270,9 @@ __attribute__ ((constructor)) void siox_ll_ctor()
             cerr << "Received exception of type " << typeid(e).name() << " message: " << e.what() << endl;
             exit(1);
         }
-    }
 
-    add_program_information();
+        add_program_information();
+    }  
 
     finalized = false;
     FUNCTION_END
@@ -502,6 +502,7 @@ siox_activity * siox_activity_start(siox_component * component, siox_component_a
     FUNCTION_BEGIN
     siox_activity* a;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
+    //cout << "START: " << ab << endl;
 
     a = ab->startActivity(component->cid, P_TO_U32(activity), nullptr);
     FUNCTION_END
@@ -515,7 +516,6 @@ void siox_activity_stop(siox_activity * activity){
 
     FUNCTION_BEGIN
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
-
     ab->stopActivity(activity, nullptr);
     FUNCTION_END
 }
@@ -524,7 +524,10 @@ void siox_activity_stop(siox_activity * activity){
 void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, const void * value){
     assert(activity != nullptr);
     assert(attribute != nullptr);
-    assert(value != nullptr);
+    
+    if(value == nullptr){
+      return;
+    }
 
     FUNCTION_BEGIN
 
@@ -556,6 +559,8 @@ void siox_activity_end(siox_activity * activity){
     FUNCTION_BEGIN
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
+    //cout << "END: " << ab << endl;
+
     ab->endActivity(activity);
 
     // Find component's amux
@@ -563,22 +568,34 @@ void siox_activity_end(siox_activity * activity){
     siox_component * component = process_data.cid_to_component_map[cid];
     assert(component != nullptr);
     // Send activity to it
+
     component-> amux->Log(activity);
+    
+    delete(activity);
 
     FUNCTION_END
 }
 
+siox_activity_ID * siox_activity_get_ID(const siox_activity * activity){
+    assert(activity != nullptr);
 
-void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent){
+    assert(sizeof(siox_activity_ID) == sizeof(ActivityID) );
+    siox_activity_ID * id = (siox_activity_ID*) malloc(sizeof(ActivityID));
+    ActivityID aid = activity->aid(); 
+    memcpy(id, & aid, sizeof(ActivityID));
+    return id;
+}
+
+void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity_ID * aid){
+    if(aid == nullptr)
+      return;
+
     assert(activity_child != nullptr);
-    assert(activity_parent != nullptr);
 
     FUNCTION_BEGIN
-    ActivityID aid;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
-    aid = activity_parent->aid();
-    ab->linkActivities(activity_child, aid);
+    ab->linkActivities(activity_child, *((ActivityID*) aid));
 
     FUNCTION_END
 }
