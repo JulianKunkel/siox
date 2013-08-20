@@ -196,9 +196,10 @@ struct RemoteCallIdentifier{
 struct ActivityID{
 	ComponentID cid;
 	uint32_t id;
+    uint32_t thread;
 
    inline bool operator==(ActivityID const & b) const{
-        return memcmp(this, &b, sizeof(cid) + sizeof(id));
+        return memcmp(this, &b, sizeof(cid) + sizeof(id) + sizeof(thread));
     }   
 
     inline bool operator!=(ActivityID const & b) const{
@@ -207,7 +208,7 @@ struct ActivityID{
 };
 
 inline ostream& operator<<(ostream& os, const ActivityID & v){
-    os << "(" << v.cid << "," << v.id << ")";
+    os << "(" << v.cid << "," << v.id << "," << v.thread << ")";
     return os;
 }
 

@@ -1,13 +1,17 @@
 #include <iostream>
+#include <fstream>
 #include <list>
+#include <mutex>
 
+#include <boost/archive/text_oarchive.hpp> 
+
+#include <core/container/container-serializable.hpp>
 
 #include <monitoring/datatypes/ActivitySerializable.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
-#include <core/container/container-serializer-text.hpp>
 
 #include "ActivityFileWriterOptions.hpp"
 
@@ -18,11 +22,21 @@ using namespace core;
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
 class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerAsync {
 private:
-	FileSerializer<ActivitySerializable> * serializer = nullptr;
+	ofstream file;
+	bool synchronize;
+
+	boost::archive::text_oarchive * oa;
+
+	mutex motify_mutex;
 public:
+
 	void Notify(Activity * activity)
-	{ 
-		serializer->append((ActivitySerializable *) activity);
+	{ 		
+		lock_guard<mutex> lock(motify_mutex);
+		ActivityAccessor * as = reinterpret_cast<ActivityAccessor*>(activity);
+		*oa << as;
+		if (synchronize)
+	    	file.flush();
 	}
 
 	ComponentOptions * AvailableOptions(){
@@ -31,13 +45,17 @@ public:
 
 	void init(ActivityMultiplexer & multiplexer){
 		FileWriterPluginOptions & o = getOptions<FileWriterPluginOptions>();
-		serializer = new FileSerializer<ActivitySerializable>(o.filename);
+		file.open(o.filename);
+		oa = new boost::archive::text_oarchive(file, boost::archive::no_header | boost::archive::no_codecvt);
+
+		synchronize = o.synchronize;
 		
 		multiplexer.registerListener(this);
 	}
 
 	~FileWriterPlugin(){
-		delete(serializer);
+		file.close();
+		delete(oa);
 	}
 };
 

@@ -99,8 +99,8 @@ int close(int fd);
 //@guard
 //@activity
 //@activity_attribute_u32 fileHandle fd 
-//@activity_lookup_int fd Activity=Parent
-//@horizontal_map_put_int ret Activity=Parent
+//@activity_lookup_ID_int fd ActivityID=ParentID
+//@horizontal_map_put_int_ID ret ActivityID=ParentID
 //@error ''ret<0'' errno
 //@guardEnd
 int dup(int fd);
@@ -109,8 +109,8 @@ int dup(int fd);
 //@guard
 //@activity
 //@activity_attribute_u32 fileHandle oldfd 
-//@activity_lookup_int oldfd Activity=Parent
-//@horizontal_map_put_int newfd Activity=Parent
+//@activity_lookup_ID_int oldfd ActivityID=ParentID
+//@horizontal_map_put_int_ID newfd ActivityID=ParentID
 //@error ''ret<0'' errno
 //@guardEnd
 int dup2(int oldfd, int newfd); 
@@ -120,8 +120,8 @@ int dup2(int oldfd, int newfd);
 //@guard
 //@activity
 //@activity_attribute_u32 fileHandle oldfd 
-//@activity_lookup_int oldfd Activity=Parent
-//@horizontal_map_put_int newfd Activity=Parent
+//@activity_lookup_ID_int oldfd ActivityID=ParentID
+//@horizontal_map_put_int_ID newfd ActivityID=ParentID
 //@error ''ret<0'' errno
 //@guardEnd
 int dup3(int oldfd, int newfd, int flags); 
@@ -435,7 +435,7 @@ FILE * tmpfile ( void );
 //@horizontal_map_remove_size stream
 //@error ''ret<0'' errno
 //@guardEnd
-int fclose ( FILE * stream );
+int fclose(FILE * stream );
 
 //  If an error occurs, EOF is returned and the error indicator is set (see ferror). 
 //@guard
@@ -443,7 +443,7 @@ int fclose ( FILE * stream );
 //@activity_link_size stream
 //@error ''ret<0'' errno
 //@guardEnd
-int fflush ( FILE * stream );
+int fflush( FILE * stream );
 
 //On success, the character read is returned (promoted to an int value).
 //The return type is int to accommodate for the special value EOF, which indicates failure:
@@ -453,7 +453,7 @@ int fflush ( FILE * stream );
 //@activity_link_size stream
 //@error ''ret == EOF'' errno
 //@guardEnd
-int fgetc ( FILE * stream );
+int fgetc( FILE * stream );
 
 /* 
 On success, the character read is returned (promoted to an int value).

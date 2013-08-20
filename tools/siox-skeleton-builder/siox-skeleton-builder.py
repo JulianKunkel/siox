@@ -90,7 +90,7 @@ from a other header file.''')
                         # we have a default
                         (name, default) = v.split("=")
                         processedVars.append(name)
-                        entries["variablesDefaults"][name] = default
+                        entries["variablesDefaults"][name] = default.strip()
                     else:
                         processedVars.append(v)
                 entries["variables"] = processedVars
@@ -782,7 +782,7 @@ class Template():
                valueString = value.group(2).strip()
                if(valueString.startswith("''")):
                       valueString = valueString.strip("'")
-               self.parameterList[name] = valueString
+               self.parameterList[name] = valueString.strip();
 
                # Truncate the found value from the value string
                values = self.valueRegex.sub('', values, 1)

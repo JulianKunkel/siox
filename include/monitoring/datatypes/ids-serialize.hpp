@@ -33,6 +33,7 @@ namespace serialization {
 	void serialize(Archive & ar, ActivityID & id, const unsigned int file_version){
 		SER("cid", id.cid)
 		SER("id", id.id)
+		SER("tid", id.thread)
 	}
 }
 }

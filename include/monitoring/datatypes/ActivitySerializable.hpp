@@ -51,16 +51,7 @@ void serialize(Archive & ar, monitoring::Attribute & id, const unsigned int file
 
 namespace monitoring {
 
-class ActivitySerializable : public Activity{
-public:
-	/* Not needed we simply cast an Activity to an ActivitySerializable, kind of an hack.
-	ActivitySerializable(string name, uint64_t start_t, uint64_t end_t, ComponentID cid, 
-		vector<ComponentID> * parentArray, 
-		vector<Attribute> * attributeArray, 
-		vector<RemoteCall> * remoteCallsArray, 
-		RemoteCallIdentifier * remoteInvokee,  int32_t errorValue): Activity(name, start_t, end_t, cid, (parentArray), (attributeArray), (remoteCallsArray), remoteInvokee, errorValue){}
-	*/
-
+class ActivityAccessor : public Activity{
 private:
 	// allow serialization of this class
 	friend class boost::serialization::access;
@@ -91,19 +82,28 @@ private:
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int file_version){
-		SER("ucaid", ucaid_)
+				
+		SER("ucaid", ucaid_)		
 		SER("ts", time_start_)
 		SER("te", time_stop_)
 		SER("err", errorValue_)
+
+		//cout << "1" << endl;
 		SER("aid", aid_)
-		SER("a", 	attributeArray_)
+		//cout << "2" << endl;
+		SER("a", attributeArray_)
 		SER("p", parentArray_)
-		SER("r", 	remoteCallsArray_)
+		SER("r", remoteCallsArray_)
 		boost::serialization::split_member(ar, *this, file_version);
 	}
 };
-
 }
+
+// very important here:
+BOOST_CLASS_TRACKING(ActivityAccessor, boost::serialization::track_never)
+BOOST_CLASS_TRACKING(RemoteCallIdentifier, boost::serialization::track_never)
+BOOST_CLASS_TRACKING(Attribute, boost::serialization::track_never)
+BOOST_CLASS_TRACKING(RemoteCall, boost::serialization::track_never)
 
 
 

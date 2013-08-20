@@ -122,7 +122,9 @@ public:
 		remoteInvoker_ (remoteInvoker),errorValue_(errorValue){}
 
 	Activity(){
-		memset(this, 0, sizeof(Activity));
+		//memset(this, 0, sizeof(Activity));
+		remoteInvoker_ = nullptr;
+		errorValue_ = 0;
 	}
 
 	void print() {
@@ -131,7 +133,8 @@ public:
 		cout << endl << "Activity = " << this << endl;
 		cout << "t_start = " << time_start_ << endl;
 		cout << "t_stop  = " << time_stop_ << endl;
-		cout << "ActivityID.id = " << aid_.id << endl;
+		cout << "ActivityID = " << aid_ << endl;
+		cout << "ActivityID.thread = " << aid_.thread << endl;
 		cout << "ActivityID.ComponentID.num = " << aid_.cid.id << endl;
 		cout << "ActivityID.ComponentID.ProcessID.NodeID = " << aid_.cid.pid.nid << endl;
 		cout << "ActivityID.ComponentID.ProcessID.pid    = " << aid_.cid.pid.pid << endl;
@@ -141,6 +144,10 @@ public:
 			cout << "(" << i << ")" << endl;
 			cout << "\tid    = " << attributeArray_[i].id << endl;
 			cout << "\tvalue = " << attributeArray_[i].value << endl;
+		}
+		cout << "Parents " << parentArray_.size() << endl;
+		for(i=0; i< parentArray_.size(); i++) {
+			cout << "\t" <<  parentArray_[i] << endl;
 		}
 		cout << "RemoteCalls (" << remoteCallsArray_.size() << " items):" << endl;
 	}

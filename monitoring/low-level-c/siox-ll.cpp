@@ -569,21 +569,31 @@ void siox_activity_end(siox_activity * activity){
     assert(component != nullptr);
     // Send activity to it
     component-> amux->Log(activity);
+    delete(activity);
 
     FUNCTION_END
 }
 
+siox_activity_ID * siox_activity_get_ID(const siox_activity * activity){
+    assert(activity != nullptr);
 
-void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent){
+    assert(sizeof(siox_activity_ID) == sizeof(ActivityID) );
+    siox_activity_ID * id = (siox_activity_ID*) malloc(sizeof(ActivityID));
+    ActivityID aid = activity->aid(); 
+    memcpy(id, & aid, sizeof(ActivityID));
+    return id;
+}
+
+void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity_ID * aid){
+    if(aid == nullptr)
+      return;
+
     assert(activity_child != nullptr);
-    assert(activity_parent != nullptr);
 
     FUNCTION_BEGIN
-    ActivityID aid;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
-    aid = activity_parent->aid();
-    ab->linkActivities(activity_child, aid);
+    ab->linkActivities(activity_child, *((ActivityID*) aid));
 
     FUNCTION_END
 }
