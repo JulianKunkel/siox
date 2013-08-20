@@ -103,6 +103,22 @@ struct Attribute {
 
 	Attribute(){}
 	Attribute(OntologyAttributeID i, const AttributeValue & v) : id(i), value(v){}
+	
+	inline bool operator==(Attribute const &b) const 
+	{
+		if (id != b.id)
+			return false;
+		if (value != b.value)
+			return false;
+		
+		return true;
+	}   
+
+	inline bool operator!=(Attribute const &b) const
+	{
+		return ! (*this == b);
+	}
+
 };
 
 typedef uint64_t Timestamp;
@@ -208,6 +224,24 @@ struct RemoteCallIdentifier {
 
 	RemoteCallIdentifier() {};
 	RemoteCallIdentifier(NodeID n, UniqueInterfaceID u, AssociateID a) : nid(n), uuid(u), instance(a) {};
+	
+	inline bool operator==(RemoteCallIdentifier const &b) const
+	{
+		if (nid != b.nid)
+			return false;
+		if (uuid != b.uuid)
+			return false;
+		if (instance != b.instance)
+			return false;
+
+		return true;
+	}
+
+	inline bool operator!=(RemoteCallIdentifier const &b) const
+	{
+		return ! (*this == b);
+	}
+
 };
 
 /* Identifying an activity */
