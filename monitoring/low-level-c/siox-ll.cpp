@@ -568,7 +568,9 @@ void siox_activity_end(siox_activity * activity){
     siox_component * component = process_data.cid_to_component_map[cid];
     assert(component != nullptr);
     // Send activity to it
+
     component-> amux->Log(activity);
+    
     delete(activity);
 
     FUNCTION_END

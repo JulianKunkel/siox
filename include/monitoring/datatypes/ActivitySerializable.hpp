@@ -82,15 +82,13 @@ private:
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int file_version){
-				
 		SER("ucaid", ucaid_)		
 		SER("ts", time_start_)
 		SER("te", time_stop_)
 		SER("err", errorValue_)
 
-		//cout << "1" << endl;
+		cout << "AS SERIALIZE " << & aid_ << endl;
 		SER("aid", aid_)
-		//cout << "2" << endl;
 		SER("a", attributeArray_)
 		SER("p", parentArray_)
 		SER("r", remoteCallsArray_)
