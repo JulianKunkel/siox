@@ -97,12 +97,28 @@ typedef uint32_t UniqueInterfaceID;
 
 typedef VariableDatatype AttributeValue;
 
-struct Attribute{
+struct Attribute {
 	OntologyAttributeID id;
 	AttributeValue value;
 
-    Attribute(){}
-    Attribute(OntologyAttributeID i, const AttributeValue & v) : id(i), value(v){}
+	Attribute(){}
+	Attribute(OntologyAttributeID i, const AttributeValue & v) : id(i), value(v){}
+	
+	inline bool operator==(Attribute const &b) const 
+	{
+		if (id != b.id)
+			return false;
+		if (value != b.value)
+			return false;
+		
+		return true;
+	}   
+
+	inline bool operator!=(Attribute const &b) const
+	{
+		return ! (*this == b);
+	}
+
 };
 
 typedef uint64_t Timestamp;
@@ -115,22 +131,34 @@ typedef uint32_t ActivityError;
 // See @TODO 
 
 /* Software ID, identifying the application programm, may be a server as well */
-struct ProcessID{
+struct ProcessID {
+	
 	NodeID nid;
 	uint32_t pid;
 	uint32_t time;
 
-    inline bool operator==(ProcessID const & b) const{
-        return memcmp(this, &b, sizeof(nid) + sizeof(pid) + sizeof(time));
-    }   
+	inline bool operator==(ProcessID const &b) const 
+	{
+		if (nid != b.nid)
+			return false;
+		if (pid != b.pid)
+			return false;
+		if (time != b.time)
+			return false;
+		
+		return true;
+	}   
 
-    inline bool operator!=(ProcessID const & b) const{
-        return ! (*this == b);
-    }
+	inline bool operator!=(ProcessID const &b) const
+	{
+		return ! (*this == b);
+	}
 
-    inline bool operator<(ProcessID const & b) const{
-        return nid < b.nid || pid < b.pid || time < b.time;
-    }
+	inline bool operator<(ProcessID const &b) const
+	{
+		return nid < b.nid || pid < b.pid || time < b.time;
+	}
+	
 };
 
 
@@ -155,22 +183,28 @@ inline ostream& operator<<(ostream& os, const ProcessID & v){
 // Increase num...
 
 /* Identifying a SIOX component */
-struct ComponentID{
+struct ComponentID {
 	ProcessID pid;
 	//UniqueInterfaceID uiid;
 	uint16_t id;
 
-    inline bool operator==(ComponentID const & b) const{
-        return memcmp(this, &b, sizeof(pid) + sizeof(id));
-    }  
+	inline bool operator==(ComponentID const &b) const 
+	{
+		if (id != b.id) 
+			return false;
+		
+		return pid == b.pid;
+	}  
 
-    inline bool operator!=(ComponentID const & b) const{
-        return ! (*this == b);
-    }
+	inline bool operator!=(ComponentID const &b) const
+	{
+		return ! (*this == b);
+	}
 
-    inline bool operator<(ComponentID const & b) const{
-        return id < b.id || pid < b.pid;
-    }
+	inline bool operator<(ComponentID const &b) const
+	{
+		return id < b.id || pid < b.pid;
+	}
 };
 
 inline ostream& operator<<(ostream& os, const ComponentID & v){
@@ -182,7 +216,7 @@ inline ostream& operator<<(ostream& os, const ComponentID & v){
 // ComponentID(siox_component){}
 // ComponentID create_component_id(ProcessID 3*32 B, UIID + 16 bit);
 
-struct RemoteCallIdentifier{
+struct RemoteCallIdentifier {
 	// Several parameters assist matching of remote calls
 	NodeID nid; // optional
 	UniqueInterfaceID uuid; // optional
@@ -190,15 +224,34 @@ struct RemoteCallIdentifier{
 
 	RemoteCallIdentifier() {};
 	RemoteCallIdentifier(NodeID n, UniqueInterfaceID u, AssociateID a) : nid(n), uuid(u), instance(a) {};
+	
+	inline bool operator==(RemoteCallIdentifier const &b) const
+	{
+		if (nid != b.nid)
+			return false;
+		if (uuid != b.uuid)
+			return false;
+		if (instance != b.instance)
+			return false;
+
+		return true;
+	}
+
+	inline bool operator!=(RemoteCallIdentifier const &b) const
+	{
+		return ! (*this == b);
+	}
+
 };
 
 /* Identifying an activity */
-struct ActivityID{
+struct ActivityID {
 	ComponentID cid;
 	uint32_t id;
+    uint32_t thread;
 
    inline bool operator==(ActivityID const & b) const{
-        return memcmp(this, &b, sizeof(cid) + sizeof(id));
+        return memcmp(this, &b, sizeof(cid) + sizeof(id) + sizeof(thread));
     }   
 
     inline bool operator!=(ActivityID const & b) const{
@@ -207,7 +260,7 @@ struct ActivityID{
 };
 
 inline ostream& operator<<(ostream& os, const ActivityID & v){
-    os << "(" << v.cid << "," << v.id << ")";
+    os << "(" << v.cid << "," << v.id << "," << v.thread << ")";
     return os;
 }
 

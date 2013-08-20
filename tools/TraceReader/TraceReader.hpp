@@ -33,7 +33,7 @@ private:
 	AssociationMapper * a;
 	Ontology * o;
 	SystemInformationGlobalIDManager * s;
-	FileDeserializer<ActivitySerializable> * activityDeserializer;
+	FileDeserializer<ActivityAccessor> * activityDeserializer;
 
 	void strattribute(const Attribute & a, stringstream & s) throw(NotFoundError);
 };

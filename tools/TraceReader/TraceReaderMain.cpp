@@ -41,7 +41,6 @@ int main(int argc, char ** argv){
 			if( a == nullptr )
 				break;
 			tr.printActivity(a);
-			delete(a);
 		}
 	}catch(std::exception & e){
 		cerr << e.what() << endl;

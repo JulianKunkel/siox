@@ -193,7 +193,7 @@ __attribute__ ((constructor)) void siox_ll_ctor()
     // If necessary, do actual initialisation
     if(finalized){
        try{
-       printf("Initializing SIOX library\n");
+       printf("SIOX INITIALIZE\n");
 
        // Load required modules and pull the interfaces into global datastructures
        // Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
@@ -275,6 +275,7 @@ __attribute__ ((constructor)) void siox_ll_ctor()
     }  
 
     finalized = false;
+    printf("SIOX INITIALIZE END\n");
     FUNCTION_END
 }
 
@@ -397,7 +398,6 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
 
     cout << "siox_component_register: " << configName << endl;
 
-
     vector<Component*> loadedComponents;
     try{
         loadedComponents = process_data.configurator->LoadConfiguration("Interface", configName);
@@ -432,10 +432,9 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
         assert(result->amux != nullptr);
     }
 
-    // Map cid to component's address for later reference by activities
-    process_data.cid_to_component_map[result->cid] = result;
-
     FUNCTION_END
+
+    assert(result != nullptr);
 
     return result;
 }
@@ -467,10 +466,6 @@ siox_component_activity * siox_component_register_activity(siox_unique_interface
 void siox_component_unregister(siox_component * component){
     FUNCTION_BEGIN
     assert(component != nullptr);
-
-    // Remove component from cid map while key is still accessible
-    process_data.cid_to_component_map.erase(component->cid);
-
     // Simple implementation: rely on ComponentRegistrar for shutdown.
     delete(component);
     FUNCTION_END
@@ -500,14 +495,14 @@ siox_activity * siox_activity_start(siox_component * component, siox_component_a
     assert(activity != nullptr);
 
     FUNCTION_BEGIN
-    siox_activity* a;
+    Activity * a;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
     //cout << "START: " << ab << endl;
 
     a = ab->startActivity(component->cid, P_TO_U32(activity), nullptr);
     FUNCTION_END
 
-    return a;
+    return new siox_activity(a, component);
 }
 
 
@@ -516,7 +511,7 @@ void siox_activity_stop(siox_activity * activity){
 
     FUNCTION_BEGIN
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
-    ab->stopActivity(activity, nullptr);
+    ab->stopActivity(activity->activity, nullptr);
     FUNCTION_END
 }
 
@@ -534,7 +529,7 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
     Attribute attr(attribute->aID, convert_attribute(attribute, value));
 
-    ab->setActivityAttribute(activity, attr);
+    ab->setActivityAttribute(activity->activity, attr);
 
     FUNCTION_END
 }
@@ -547,43 +542,60 @@ void siox_activity_report_error(siox_activity * activity, siox_activity_error er
 
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
-    ab->reportActivityError(activity, error);
+    ab->reportActivityError(activity->activity, error);
 
     FUNCTION_END
 }
 
 
-void siox_activity_end(siox_activity * activity){
-    assert(activity != nullptr);
+void siox_activity_end(siox_activity * activity){    
+    assert(activity != nullptr);    
+    assert(activity->activity != nullptr);
 
     FUNCTION_BEGIN
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
     //cout << "END: " << ab << endl;
 
-    ab->endActivity(activity);
+    ab->endActivity(activity->activity);
 
     // Find component's amux
-    ComponentID cid = activity->aid().cid;
-    siox_component * component = process_data.cid_to_component_map[cid];
+    ComponentID cid = activity->activity->aid().cid;
+    siox_component * component = activity->component;
     assert(component != nullptr);
     // Send activity to it
-    component-> amux->Log(activity);
+
+    component-> amux->Log(activity->activity);
+
+    delete(activity->activity);
+
+    // prevent double free
+    activity->activity = nullptr;    
+    delete(activity);
 
     FUNCTION_END
 }
 
+siox_activity_ID * siox_activity_get_ID(const siox_activity * activity){
+    assert(activity != nullptr);
 
-void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent){
+    assert(sizeof(siox_activity_ID) == sizeof(ActivityID) );
+    siox_activity_ID * id = (siox_activity_ID*) malloc(sizeof(ActivityID));
+    ActivityID aid = activity->activity->aid(); 
+    memcpy(id, & aid, sizeof(ActivityID));
+    return id;
+}
+
+void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity_ID * aid){
+    if(aid == nullptr)
+      return;
+
     assert(activity_child != nullptr);
-    assert(activity_parent != nullptr);
 
     FUNCTION_BEGIN
-    ActivityID aid;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
-    aid = activity_parent->aid();
-    ab->linkActivities(activity_child, aid);
+    ab->linkActivities(activity_child->activity, *((ActivityID*) aid));
 
     FUNCTION_END
 }
@@ -600,7 +612,7 @@ siox_remote_call * siox_remote_call_setup(siox_activity * activity, siox_node * 
     siox_remote_call* rc;
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
 
-    rc = ab->setupRemoteCall(activity, P_TO_U32(target_node), P_TO_U32(target_unique_interface), P_TO_U32(target_associate));
+    rc = ab->setupRemoteCall(activity->activity, P_TO_U32(target_node), P_TO_U32(target_unique_interface), P_TO_U32(target_associate));
     FUNCTION_END
 
     return rc;
@@ -642,7 +654,7 @@ siox_activity * siox_activity_start_from_remote_call(siox_component * component,
     a = ab->startActivity(component->cid, P_TO_U32(activity), P_TO_U32(caller_node), P_TO_U32(caller_unique_interface), P_TO_U32(caller_associate), nullptr);
 
     FUNCTION_END
-    return a;
+    return new siox_activity(a, component);
 }
 
 

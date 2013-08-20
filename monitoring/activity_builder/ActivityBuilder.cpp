@@ -1,3 +1,5 @@
+#include <atomic>
+
 #include <monitoring/activity_builder/ActivityBuilder.hpp>
 
 #include <helpers/siox_time.h>
@@ -5,9 +7,12 @@
 using namespace std;
 
 
+// manage a global unique ID for each thread
+static atomic<uint32_t> current_thread_ID(0);
+
 namespace monitoring {
 
-ActivityBuilder::ActivityBuilder()
+ActivityBuilder::ActivityBuilder() : thread_id(++current_thread_ID)
 {
 	next_activity_id = 1;
 	printf( "ActivityBuilder %p ready.\n", this );
@@ -24,7 +29,7 @@ ActivityBuilder::~ActivityBuilder()
  */
 ActivityBuilder* ActivityBuilder::getNewInstance()
 {
-	return new ActivityBuilder;
+	return new ActivityBuilder();
 }
 
 /**
@@ -35,22 +40,22 @@ ActivityBuilder* ActivityBuilder::getThreadInstance()
 {
 	static __thread ActivityBuilder* myAB = nullptr;
 	if(myAB == nullptr) {
-		myAB = new ActivityBuilder;
+		myAB = new ActivityBuilder();		
 	}
 	return myAB;
 }
 
 Activity* ActivityBuilder::startActivity(const ComponentID & cid, UniqueComponentActivityID ucaid, const Timestamp * t)
-{
-	uint32_t aid;
-	Activity* a;
+{	
+	Activity* a = new Activity();
+
+	//printf( "ActivityBuilder %p start %p.\n", this, a);
 
 	assert(ucaid != 0);
 
-	aid = next_activity_id++;
-	a = new Activity;
-	a->aid_.id = aid;
+	a->aid_.id = next_activity_id++;
 	a->aid_.cid = cid;
+	a->aid_.thread = thread_id;
 	a->ucaid_ = ucaid;
 	a->remoteInvoker_ = nullptr;
 	a->time_stop_ = 0;
@@ -58,10 +63,10 @@ Activity* ActivityBuilder::startActivity(const ComponentID & cid, UniqueComponen
 	// a->errorValue_ = SIOX_ACTIVITY_SUCCESS;
 
 	// Add this activity to the list of currently active activities
-	activities_in_flight[aid] = a;
+	//activities_in_flight[aid] = a;
 
 	// Get last activity in call stack of this thread
-	if(!activity_stack.empty()) {
+	if(! activity_stack.empty()) {
 		a->parentArray_.push_back(activity_stack.back()->aid_);
 	}
 	activity_stack.push_back(a);
@@ -80,7 +85,6 @@ Activity* ActivityBuilder::startActivity(const ComponentID & cid, UniqueComponen
 	// REMARK: If t == nullptr, then startActivity will draw the current timestamp and all code in this function will count towards the time of the activity. As of now, it will be left this way for the sake of simplicity.
 
 	Activity* a;
-
 	a = startActivity(cid, ucaid, t);
 	a->remoteInvoker_ = new RemoteCallIdentifier(caller_node_id, caller_unique_interface_id, caller_associate_id);
 
@@ -108,8 +112,10 @@ void ActivityBuilder::endActivity(Activity* a)
 {
 	assert(a != nullptr);
 
+	//printf( "ActivityBuilder %p end %p.\n", this, a);
+
 	// Remove Activity from in-flight list
-	activities_in_flight.erase(a->aid_.id);
+	//activities_in_flight.erase(a->aid_.id);
 }
 
 void ActivityBuilder::setActivityAttribute(Activity* a, const Attribute & attribute)
@@ -129,7 +135,7 @@ void ActivityBuilder::reportActivityError(Activity* a, ActivityError error)
 
 void ActivityBuilder::linkActivities(Activity* child, const ActivityID & parent)
 {
-	assert(child != nullptr);
+	assert(child != nullptr);	
 
 	child->parentArray_.push_back(parent);
 }

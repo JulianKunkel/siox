@@ -98,6 +98,12 @@ typedef void siox_component_activity;
 typedef void siox_node;
 typedef void siox_associate;
 typedef void siox_unique_interface;
+
+// to be adjusted depending on ID-type.
+typedef struct {
+	char padding[24];
+} siox_activity_ID;
+
 /** @} */
 
 #define SIOX_INVALID_ID 0
@@ -184,7 +190,7 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
 //////////////////////////////////////////////////////////////////////////////
 /// @return @c true if everything went well; otherwise, @c false.
 //////////////////////////////////////////////////////////////////////////////
-//@test ''%p,%p,%p'' parent,meta_attribute,value
+//@test ''%p,%p,%p'' parent_attribute,meta_attribute,value
 int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_attribute * meta_attribute, const void * value);
 
 /*
@@ -450,7 +456,13 @@ void siox_activity_end(siox_activity * activity);
  * @param[in]   activity_parent  An activity causally preceding the current one.
  */
 //@test ''%p,%p'' activity_child,activity_parent
-void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity * activity_parent);
+void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity_ID * activity_parent);
+
+
+/*
+ The ownership of the returned datastructure is given to the caller.
+ */
+siox_activity_ID * siox_activity_get_ID(const siox_activity * activity);
 
 // TODO maybe just using ID?
 //void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity_ID?);

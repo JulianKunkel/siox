@@ -62,7 +62,7 @@ template = {
 'horizontal_map_create_str': {
 	'variables': 'MapName=activityHashTable_str',
 	'global': '''static GHashTable * %(MapName)s;''',
-    'init': '''%(MapName)s = g_hash_table_new(g_str_hash, g_str_equal);''',
+    'init': '''%(MapName)s = g_hash_table_new(g_str_hash, g_str_equal); GRWLock lock_%(MapName)s;''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
@@ -78,8 +78,8 @@ template = {
 # MapName: The name for this map; defaults to activityHashTable_int
 'horizontal_map_create_int': {
 	'variables': 'MapName=activityHashTable_int',
-	'global': '''static GHashTable * %(MapName)s;''',
-    'init': '''%(MapName)s = g_hash_table_new(g_direct_hash, g_direct_equal);''',
+	'global': '''static GHashTable * %(MapName)s;\nGRWLock lock_%(MapName)s;''',
+    'init': '''%(MapName)s = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, free);''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
@@ -87,8 +87,8 @@ template = {
 },
 'horizontal_map_create_size': {
 	'variables': 'MapName=activityHashTable_size',
-	'global': '''static GHashTable * %(MapName)s;''',
-    'init': '''%(MapName)s = g_hash_table_new(g_direct_hash, g_direct_equal);''',
+	'global': '''static GHashTable * %(MapName)s; GRWLock lock_%(MapName)s;''',
+    'init': '''%(MapName)s = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, free);''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
@@ -108,17 +108,29 @@ template = {
 	'variables': 'Name=%(FUNCTION_NAME)s ComponentVariable=cv%(FUNCTION_NAME)s ActivityVariable=sioxActivity',
 	'global': '''static siox_component_activity * %(ComponentVariable)s;''',
 	'init': '''%(ComponentVariable)s = siox_component_register_activity( global_uid, "%(Name)s" );''',
-    'before': '''siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
+    'before': '''
+    	assert(global_component);
+    	assert(%(ComponentVariable)s);
+    	siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
 	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
 },
 
+'guard_advanced': {
+	'variables': 'Name=guard',
+	'global': '''''',
+	'init': '''''',
+	'before': '''\tif(siox_namespace == 0 && global_component != NULL ){ ''',
+	'after': '''''',
+	'cleanup': '',
+	'final': ''
+},
 'guard': {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': '''\tif(siox_namespace == 0){ ''',
+	'before': '''\tif(siox_namespace == 0 ){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''
@@ -132,7 +144,6 @@ template = {
 	'cleanup': '\t}else{\n\t\t%(FC)s \t}',
 	'final': ''
 },
-
 
 
 # activity with hints
@@ -212,7 +223,23 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), %(Activity)s );''',
+    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s); 
+    	g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), siox_activity_get_ID(%(Activity)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
+	'cleanup': '',
+	'final': ''
+},
+'horizontal_map_put_int_ID': {
+	'variables': 'Key MapName=activityHashTable_int ActivityID=sioxActivityID',
+	'global': '''''',
+	'init': '''''',
+	'before': '',
+    'after': '''
+    	siox_activity_ID * nID = malloc(sizeof(siox_activity_ID));
+    	memcpy(nID, %(ActivityID)s, sizeof(siox_activity_ID));
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), nID );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
 	'cleanup': '',
 	'final': ''
 },
@@ -222,7 +249,9 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_insert( %(MapName)s, GSIZE_TO_POINTER(%(Key)s), %(Activity)s );''',
+    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s); 
+    	g_hash_table_insert( %(MapName)s, GSIZE_TO_POINTER(%(Key)s), siox_activity_get_ID(%(Activity)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
 	'cleanup': '',
 	'final': ''
 },
@@ -240,7 +269,12 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_insert( %(MapName)s, %(Key)s, %(Activity)s );''',
+    'after': '''
+
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_insert( %(MapName)s, %(Key)s, siox_activity_get_ID(%(Activity)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+    	''',
 	'cleanup': '',
 	'final': ''
 },
@@ -258,7 +292,11 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_remove( %(MapName)s, GINT_TO_POINTER(%(Key)s) );''',
+    'after': '''
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_remove( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+    	''',
 	'cleanup': '',
 	'final': ''
 },
@@ -267,7 +305,11 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_remove( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );''',
+    'after': '''
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_remove( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+    	''',
 	'cleanup': '',
 	'final': ''
 },
@@ -285,7 +327,11 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_hash_table_remove( %(MapName)s, %(Key)s );''',
+    'after': '''
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_remove( %(MapName)s, %(Key)s );
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+    	''',
 	'cleanup': '',
 	'final': ''
 },
@@ -303,32 +349,38 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
-            if(Parent != NULL) siox_activity_link_to_parent( %(Activity)s, Parent ); 
+	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); 
+		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
+		g_rw_lock_reader_unlock(& lock_%(MapName)s);
+        siox_activity_link_to_parent( %(Activity)s, Parent ); 
 			  ''',
 	'cleanup': '',
 	'final': ''
 },
+
 
 'activity_link_size': {
 	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
-            if(Parent != NULL) siox_activity_link_to_parent( %(Activity)s, Parent ); 
+	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
+		g_rw_lock_reader_unlock(& lock_%(MapName)s);
+        siox_activity_link_to_parent( %(Activity)s, Parent ); 
 			  ''',
 	'cleanup': '',
 	'final': ''
 },
 
 
-'activity_lookup_int': {
-	'variables': 'Key Activity=Parent MapName=activityHashTable_int',
+'activity_lookup_ID_int': {
+	'variables': 'Key ActivityID=Parent MapName=activityHashTable_int',
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''siox_activity * %(Activity)s = (siox_activity*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );''',
+	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); 
+		siox_activity_ID * %(ActivityID)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) ); 
+		g_rw_lock_reader_unlock(& lock_%(MapName)s);''',
 	'cleanup': '',
 	'final': ''
 },
@@ -347,8 +399,8 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''siox_activity * Parent = (siox_activity*) g_hash_table_lookup( %(MapName)s, %(Key)s );
-    			siox_activity_link_to_parent( %(Activity)s, Parent );
+	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, %(Key)s ); g_rw_lock_reader_unlock(& lock_%(MapName)s);
+    	siox_activity_link_to_parent( %(Activity)s, Parent ); 
 			  ''',
 	'cleanup': '',
 	'final': ''
@@ -499,4 +551,4 @@ globalOnce = "extern __thread int siox_namespace;"
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>']
+includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']

@@ -13,10 +13,10 @@ int main(){
 
   memset( & my_iocb, 0,  sizeof(struct aiocb) );
 
-  my_iocb.aio_buf = malloc(101);
+  my_iocb.aio_buf = malloc(1024);
   if (!my_iocb.aio_buf) perror("malloc");
 
-  my_iocb.aio_nbytes = 100;
+  my_iocb.aio_nbytes = 1000;
   my_iocb.aio_fildes = fd;
   my_iocb.aio_offset = 0;
 
@@ -28,7 +28,7 @@ int main(){
 	sleep(1);
   }
 
-  ((char *) my_iocb.aio_buf)[100] = 0;
+  ((char *) my_iocb.aio_buf)[1000] = 0;
 
   if ((ret = aio_return( &my_iocb )) > 0) {
 	printf("Read: %s\n", (char *) my_iocb.aio_buf);

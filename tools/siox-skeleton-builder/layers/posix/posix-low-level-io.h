@@ -99,8 +99,8 @@ int close(int fd);
 //@guard
 //@activity
 //@activity_attribute_u32 fileHandle fd 
-//@activity_lookup_int fd Activity=Parent
-//@horizontal_map_put_int ret Activity=Parent
+//@activity_lookup_ID_int fd ActivityID=ParentID
+//@horizontal_map_put_int_ID ret ActivityID=ParentID
 //@error ''ret<0'' errno
 //@guardEnd
 int dup(int fd);
@@ -109,8 +109,8 @@ int dup(int fd);
 //@guard
 //@activity
 //@activity_attribute_u32 fileHandle oldfd 
-//@activity_lookup_int oldfd Activity=Parent
-//@horizontal_map_put_int newfd Activity=Parent
+//@activity_lookup_ID_int oldfd ActivityID=ParentID
+//@horizontal_map_put_int_ID newfd ActivityID=ParentID
 //@error ''ret<0'' errno
 //@guardEnd
 int dup2(int oldfd, int newfd); 
@@ -120,8 +120,8 @@ int dup2(int oldfd, int newfd);
 //@guard
 //@activity
 //@activity_attribute_u32 fileHandle oldfd 
-//@activity_lookup_int oldfd Activity=Parent
-//@horizontal_map_put_int newfd Activity=Parent
+//@activity_lookup_ID_int oldfd ActivityID=ParentID
+//@horizontal_map_put_int_ID newfd ActivityID=ParentID
 //@error ''ret<0'' errno
 //@guardEnd
 int dup3(int oldfd, int newfd, int flags); 
@@ -181,7 +181,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
+//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
@@ -192,7 +192,7 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
+//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 
@@ -205,7 +205,7 @@ ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
+//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset);
 
@@ -216,7 +216,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset);
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
+//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset);
 
@@ -429,13 +429,13 @@ FILE * freopen ( const char * filename, const char * mode, FILE * stream );
 //@guardEnd
 FILE * tmpfile ( void );
 
-//@guard
+//@guard_advanced
 //@activity
 //@activity_link_size stream
 //@horizontal_map_remove_size stream
 //@error ''ret<0'' errno
 //@guardEnd
-int fclose ( FILE * stream );
+int fclose(FILE * stream );
 
 //  If an error occurs, EOF is returned and the error indicator is set (see ferror). 
 //@guard
@@ -443,7 +443,7 @@ int fclose ( FILE * stream );
 //@activity_link_size stream
 //@error ''ret<0'' errno
 //@guardEnd
-int fflush ( FILE * stream );
+int fflush( FILE * stream );
 
 //On success, the character read is returned (promoted to an int value).
 //The return type is int to accommodate for the special value EOF, which indicates failure:
@@ -453,7 +453,7 @@ int fflush ( FILE * stream );
 //@activity_link_size stream
 //@error ''ret == EOF'' errno
 //@guardEnd
-int fgetc ( FILE * stream );
+int fgetc( FILE * stream );
 
 /* 
 On success, the character read is returned (promoted to an int value).
@@ -698,3 +698,13 @@ int aio_suspend(const struct aiocb * const aiocb_list[], int nitems, const struc
 int aio_cancel(int fd, struct aiocb *aiocbp);
 
 #endif 
+
+
+#include <sched.h>
+
+//@splice_before ''printf("Warning clone() called, presumably SIOX breaks!\n");''
+int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, pid_t *ptid, struct user_desc *tls, pid_t *ctid);
+
+//@splice_before ''printf("Warning fork() called, presumably SIOX breaks!\n");''
+pid_t fork(void);
+
