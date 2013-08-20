@@ -108,17 +108,29 @@ template = {
 	'variables': 'Name=%(FUNCTION_NAME)s ComponentVariable=cv%(FUNCTION_NAME)s ActivityVariable=sioxActivity',
 	'global': '''static siox_component_activity * %(ComponentVariable)s;''',
 	'init': '''%(ComponentVariable)s = siox_component_register_activity( global_uid, "%(Name)s" );''',
-    'before': '''siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
+    'before': '''
+    	assert(global_component);
+    	assert(%(ComponentVariable)s);
+    	siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
 	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
 },
 
+'guard_advanced': {
+	'variables': 'Name=guard',
+	'global': '''''',
+	'init': '''''',
+	'before': '''\tif(siox_namespace == 0 && global_component != NULL ){ ''',
+	'after': '''''',
+	'cleanup': '',
+	'final': ''
+},
 'guard': {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': '''\tif(siox_namespace == 0){ ''',
+	'before': '''\tif(siox_namespace == 0 ){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''

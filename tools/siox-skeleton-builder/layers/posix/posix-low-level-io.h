@@ -429,7 +429,7 @@ FILE * freopen ( const char * filename, const char * mode, FILE * stream );
 //@guardEnd
 FILE * tmpfile ( void );
 
-//@guard
+//@guard_advanced
 //@activity
 //@activity_link_size stream
 //@horizontal_map_remove_size stream
