@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]){
 	assert(o != nullptr);
 	ThreadedStatisticsCollectorOptions & op = tsc->getOptions<ThreadedStatisticsCollectorOptions>();
 	op.filename = "ThreadedStatisticsCollector.dat";
-	o->init();
+	tsc->init();
 	string it1("Test 1");
 	string it2("Test 2");
 
