@@ -28,7 +28,7 @@ int main(){
 	sleep(1);
   }
 
-  ((char *) my_iocb.aio_buf)[1023] = 0;
+  ((char *) my_iocb.aio_buf)[1000] = 0;
 
   if ((ret = aio_return( &my_iocb )) > 0) {
 	printf("Read: %s\n", (char *) my_iocb.aio_buf);
