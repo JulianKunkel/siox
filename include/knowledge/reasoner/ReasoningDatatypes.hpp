@@ -80,7 +80,7 @@ public:
 	};
 
 	IssueLocation (){
-		memset(this, 0, sizeof(this));
+		memset(this, 0, sizeof(*this));
 		entity = Entity::UNKNOWN;
 	}
 
@@ -124,7 +124,7 @@ public:
 	};
 
 	IssueCause(){
-		memset(this, 0, sizeof(this));
+		memset(this, 0, sizeof(*this));
 		type = Type::UNKNOWN;
 	}
 
