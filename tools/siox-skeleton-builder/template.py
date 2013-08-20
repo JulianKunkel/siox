@@ -223,8 +223,11 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s); 
-    	g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), %(ActivityID)s );
+    'after': '''
+    	siox_activity_ID * nID = malloc(sizeof(siox_activity_ID));
+    	memcpy(nID, %(ActivityID)s, sizeof(siox_activity_ID));
+    	g_rw_lock_writer_lock(& lock_%(MapName)s);
+    	g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), nID );
     	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
 	'cleanup': '',
 	'final': ''
@@ -537,4 +540,4 @@ globalOnce = "extern __thread int siox_namespace;"
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>']
+includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']

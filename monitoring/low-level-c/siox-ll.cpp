@@ -193,7 +193,7 @@ __attribute__ ((constructor)) void siox_ll_ctor()
     // If necessary, do actual initialisation
     if(finalized){
        try{
-       printf("Initializing SIOX library\n");
+       printf("SIOX INITIALIZE\n");
 
        // Load required modules and pull the interfaces into global datastructures
        // Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
@@ -275,6 +275,7 @@ __attribute__ ((constructor)) void siox_ll_ctor()
     }  
 
     finalized = false;
+    printf("SIOX INITIALIZE END\n");
     FUNCTION_END
 }
 
@@ -396,7 +397,6 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
     }
 
     cout << "siox_component_register: " << configName << endl;
-
 
     vector<Component*> loadedComponents;
     try{
@@ -548,8 +548,9 @@ void siox_activity_report_error(siox_activity * activity, siox_activity_error er
 }
 
 
-void siox_activity_end(siox_activity * activity){
-    assert(activity != nullptr);
+void siox_activity_end(siox_activity * activity){    
+    assert(activity != nullptr);    
+    assert(activity->activity != nullptr);
 
     FUNCTION_BEGIN
     ActivityBuilder* ab = ActivityBuilder::getThreadInstance();
@@ -567,6 +568,9 @@ void siox_activity_end(siox_activity * activity){
     component-> amux->Log(activity->activity);
 
     delete(activity->activity);
+
+    // prevent double free
+    activity->activity = nullptr;    
     delete(activity);
 
     FUNCTION_END
