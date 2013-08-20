@@ -31,7 +31,7 @@ using namespace monitoring;
 
 
 /*! Software Structure
- 
+
  1) Requirements
 	using standard threads (c++11)
 	Time and Programming Sequence
@@ -54,7 +54,7 @@ using namespace monitoring;
 1.1) Design
  	Generalities can be extracted from ontology.
  	The local Computing guideline is located in a local config file as they are not standard generalities.
-	
+
 	Scheme:
 
 					Ontologie (Global standards)
@@ -63,7 +63,7 @@ using namespace monitoring;
 			/			|		\		...
 	Plugin OSMem	cpustat		iostat
 
-	- One single thread for statistics, multiple are optional 
+	- One single thread for statistics, multiple are optional
 
 
 2) Use Cases
@@ -71,7 +71,7 @@ using namespace monitoring;
 	What is their frequency?
 	How often are they called?
  	To reduce traffic we could split the plugin usage over time.
-	On a time sequence for example we could incorporate at 
+	On a time sequence for example we could incorporate at
 	t-4 plugin 3 and 2,
 	t-3 plugin 3 and 4,7
 	t-2 plugin 3 and 5
@@ -135,7 +135,7 @@ Implementation details for the requirements of a StatisticsCollector:
 	R5|	The options of the ThreadCollector contain the list of statistics to query, so the user can set it as options.
 		The de/serialization is done using Boost.
 	R6	Calculate average values for several periods consisting of 10 intervals, between 100ms and 60s.
-	R8	Provide a rolling value for the last average value. This differs from R6 because the intervals in R6 are queried 
+	R8	Provide a rolling value for the last average value. This differs from R6 because the intervals in R6 are queried
 		at fixed timestamps (every 10s for example), so when we ask for the last 10s at timestamp 19s we will get the value
 		for the interval 0-10.
 	R9|	Use a list to keep for each intervall all plugins which should be executed for these intervalls.
@@ -152,15 +152,15 @@ Implementation details for the requirements of a StatisticsCollector:
 
 		Implement math with doubles here and may use the general core/MathematicalEquation/MathValueType
 
-	D8	This static value has to be exchanged every new interval time 10s for the last ten seconds, 1s for the last 1s and so on. So we may provide 
+	D8	This static value has to be exchanged every new interval time 10s for the last ten seconds, 1s for the last 1s and so on. So we may provide
 		We need HUNDRED_MILLISECONDS, SECOND, TEN_SECONDS, MINUTE, TEN_MINUTES, so five values updated at different times.
 		So keep a small vector with six entries.
 */
 
 
-class ThreadedStatisticsCollector: StatisticsCollector{
+class ThreadedStatisticsCollector: StatisticsCollector {
 private:
-	 ActivityPluginDereferencing * facade;
+	ActivityPluginDereferencing * facade;
 	// Statistics Multiplexer
 
 	thread 					PeriodicThread1;
@@ -169,53 +169,52 @@ private:
 
 	bool terminated = false;
 
-	ComponentOptions * AvailableOptions(){
+	ComponentOptions * AvailableOptions() {
 		return new ComponentOptions();
 	}
 
 	list<StatisticsProviderPlugin*> plugins[INTERVALLS_NUMBER];
 
-	void sleep_ms(unsigned int ms)
-	{
-	using std::chrono::high_resolution_clock;
-	using std::chrono::milliseconds;
-	auto t0 = high_resolution_clock::now();
-	std::this_thread::sleep_for(milliseconds(ms));
-	auto t1 = high_resolution_clock::now();
-	milliseconds total_ms = std::chrono::duration_cast<milliseconds>(t1 - t0);
- 
-	std::cout << "This_thread_sleep (" << ms << ") milliseconds: " << total_ms.count() << "ms\n";
+	void sleep_ms(unsigned int ms) {
+		using std::chrono::high_resolution_clock;
+		using std::chrono::milliseconds;
+		auto t0 = high_resolution_clock::now();
+		std::this_thread::sleep_for(milliseconds(ms));
+		auto t1 = high_resolution_clock::now();
+		milliseconds total_ms = std::chrono::duration_cast<milliseconds>(t1 - t0);
+
+		std::cout << "This_thread_sleep (" << ms << ") milliseconds: " << total_ms.count() << "ms\n";
 	}
 
-	 // One thread for periodic issuing
-	 virtual void PeriodicThreadLoop(){
-	 	while(! terminated){
-	 		//Create permanent thread
-	 		PeriodicThread1.join();
-	 		//repeat_forever{loop for thread}
+	// One thread for periodic issuing
+	virtual void PeriodicThreadLoop() {
+		while(! terminated) {
+			//Create permanent thread
+			PeriodicThread1.join();
+			//repeat_forever{loop for thread}
 
-	 			//Do something
-	 			sleep_ms(98);
-	 		//for(;;){
-	 		//}
-	 		return 0;
-	 	
-	 	unique_lock<mutex> lock(RecentEvents_lock);
-		if(terminated){
+			//Do something
+			sleep_ms(98);
+			//for(;;){
+			//}
+			return 0;
+
+			unique_lock<mutex> lock(RecentEvents_lock);
+			if(terminated) {
 				break;
 			}
-	 	ConditiontoRun.wait_until(lock, timeout);
-	 	}
-	 }
+			ConditiontoRun.wait_until(lock, timeout);
+		}
+	}
 
-	 void CalculateAverageValues(){
+	void CalculateAverageValues() {
 
-	 	std::vector<VariableDatatype> AverageValues; // Size = number of periods //first try 4
-	 }
+		std::vector<VariableDatatype> AverageValues; // Size = number of periods //first try 4
+	}
 
 public:
 
-	virtual void registerPlugin(StatisticsProviderPlugin * plugin){		
+	virtual void registerPlugin(StatisticsProviderPlugin * plugin) {
 		assert(plugin != nullptr);
 		StatisticsIntervall minIntervall = plugin->minPollInterval();
 		// the configInterval must be at least minIntervall.
@@ -230,50 +229,50 @@ public:
 
 		// Add the plugin
 		plugins[configInterval].push_back(plugin);
-    }
+	}
 
-	virtual void unregisterPlugin(StatisticsProviderPlugin * plugin){
+	virtual void unregisterPlugin(StatisticsProviderPlugin * plugin) {
 		plugin[configInterval].erase(plugin);
 	}
 
-	virtual array<StatisticsValue,10> getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
+	virtual array<StatisticsValue,10> getStatistics(StatisticsIntervall intervall, StatisticsDescription & stat) {
 	}
 
 	// D8 - These statistics are up to date values for different intervals
-	virtual StatisticsValue getRollingStatistics(StatisticsIntervall intervall, StatisticsDescription & stat){
-	uint64_t hms = 0, s = 0, ts = 0, m = 0, tm = 0;
-			vector <uint64_t> vRS{hms, s, ts, m, tm};
+	virtual StatisticsValue getRollingStatistics(StatisticsIntervall intervall, StatisticsDescription & stat) {
+		uint64_t hms = 0, s = 0, ts = 0, m = 0, tm = 0;
+		vector <uint64_t> vRS {hms, s, ts, m, tm};
 
-			return vRS;
+		return vRS;
 	}
 
 	// These are D6
-	virtual StatisticsValue getReducedStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op){
+	virtual StatisticsValue getReducedStatistics(StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op) {
 
 	}
 
 
 
-	virtual list<StatisticsProviderDatatypes> availableMetrics(){
+	virtual list<StatisticsProviderDatatypes> availableMetrics() {
 		auto lst = list<StatisticsProviderDatatypes>();
 
 		return lst;
 	}
 
-	virtual ~ThreadedStatisticsCollector(){
+	virtual ~ThreadedStatisticsCollector() {
 
 	}
 
-	~Thread1StandardImplementation(){
+	~Thread1StandardImplementation() {
 		RecentEvents_lock.lock();
-			terminated = true;
-			ConditiontoRun.notify_one();
+		terminated = true;
+		ConditiontoRun.notify_one();
 		RecentEvents_lock.unlock();
 
 		PeriodicThread1.join();
 	}
 
-	virtual void init(){
+	virtual void init() {
 		ThreadedStatisticsOptions & options = getOptions<ThreadedStatisticsOptions>();
 		poll_interval_ms = options.poll_interval_ms;
 
@@ -285,7 +284,7 @@ public:
 	/**
 	 * this method initiates first the options for threaded statitistics and second the facade of the ActivityPlugin
 	 */
-	virtual void getOptions(ThreadedStatisticsOptions * options){
+	virtual void getOptions(ThreadedStatisticsOptions * options) {
 		ThreadedStatisticsOptions * o = (ThreadedStatisticsOptions*) options;
 	}
 
@@ -294,7 +293,7 @@ public:
 	/**
 	 * get Available ThreadedStatisticsOptions
 	 */
-	virtual ComponentOptions * AvailableOptions(){
+	virtual ComponentOptions * AvailableOptions() {
 		return new ThreadedStatisticsOptions();
 	}
 };
