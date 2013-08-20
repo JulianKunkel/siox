@@ -3,6 +3,8 @@
 #include <list>
 #include <mutex>
 
+#define TEXT_SERIALIZATION
+
 #include <boost/archive/text_oarchive.hpp> 
 
 #include <core/container/container-serializable.hpp>
@@ -11,7 +13,6 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
-#include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 
 #include "ActivityFileWriterOptions.hpp"
 
@@ -58,8 +59,6 @@ public:
 		delete(oa);
 	}
 };
-
-CREATE_SERIALIZEABLE_CLS(FileWriterPluginOptions)
 
 PLUGIN(FileWriterPlugin)
 

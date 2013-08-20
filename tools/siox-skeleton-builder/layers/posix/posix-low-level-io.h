@@ -181,7 +181,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
+//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
@@ -192,7 +192,7 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
+//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 
@@ -205,7 +205,7 @@ ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
+//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset);
 
@@ -216,7 +216,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset);
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
+//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset);
 

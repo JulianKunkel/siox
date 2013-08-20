@@ -16,15 +16,20 @@
 #include <boost/serialization/level.hpp>
 // To actually create the templates the archive must be created
 // see http://www.boost.org/doc/libs/1_53_0/libs/serialization/doc/special.html
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
 #include <boost/serialization/split_member.hpp>
-
-
 
 
 #include <core/container/container.hpp>
 #include <core/container/container-serializable.hpp>
+
+#ifdef TEXT_SERIALIZATION
+#define SER(x,y) ar & y;
+#else
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+
+#define SER(x,y) ar & boost::serialization::make_nvp(x, y);
+#endif
 
 /*
  Use the following macros to enable automatic serialization/parsing of configuration information.

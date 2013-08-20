@@ -8,17 +8,16 @@
 #define SIOX_IDS_SERIALIZE_H
 
 #include <monitoring/datatypes/ids.hpp>
+#include <core/container/container-macros.hpp>
+
 
 using namespace monitoring;
 
-#define SER(x,y) ar & boost::serialization::make_nvp(x, y);
 namespace boost{
 namespace serialization {
 	template<class Archive>
 	void serialize(Archive & ar, ComponentID & id, const unsigned int file_version){
-		cout << "   SERIALIZE " << & id << endl;
 		SER("pid", id.pid)
-		cout << "FIN" << endl;
 		SER("id", id.id)
 	}
 

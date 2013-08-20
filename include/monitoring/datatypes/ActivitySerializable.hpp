@@ -86,8 +86,6 @@ private:
 		SER("ts", time_start_)
 		SER("te", time_stop_)
 		SER("err", errorValue_)
-
-		cout << "AS SERIALIZE " << & aid_ << endl;
 		SER("aid", aid_)
 		SER("a", attributeArray_)
 		SER("p", parentArray_)
