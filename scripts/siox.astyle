@@ -1,0 +1,93 @@
+#
+# SIOX Coding Style Conventions
+# for the Artistic Style tool astyle
+#
+# Last modified: 2013-08-21 by Michaela Zimmer
+#
+# For further documentation, see:
+# http://astyle.sourceforge.net/astyle.html
+
+
+# Styling Options
+# ---------------
+
+# Mode: C or C++ code (this is the default, but let's be explicit here)
+--mode=c
+
+# Stroustrup style brackets and indentations
+--style=stroustrup
+
+# Tabs and Spaces
+#
+# Use tabs, with each tab replacing 4 spaces;
+# not specifying a number will yield the default of 4, so we may as well be explicit
+--indent=tab=4
+# Convert tabs to spaces in the non-indent parts of the lines
+--convert-tabs
+
+# Line Breaks
+#
+# We do NOT break lines after a certain length; the option for this (astyle >= 2.03 only) 
+# would be this, with # ranging from 50 to 200
+#--max-code-length=#
+# Don't break one-line blocks or one-line-statements
+#--keep-one-line-blocks
+#--keep-one-line-statements
+
+# Indentations
+#
+# Indent contents of namespaces
+--indent-namespaces
+# Indent contents of class blocks
+--indent-classes
+# Indent entire case block in switch statements
+--indent-switches
+# Indent wrapped preprocessor lines
+--indent-preprocessor
+# Indent wrapped header lines to align with opening parenthesis
+--min-conditional-indent=0
+
+# Space Padding
+#
+# Insert space padding around operators
+--pad-oper
+# Remove space padding around parentheses, keeping that inside
+--unpad-paren
+--pad-paren-in
+
+# Pointers and References
+#
+# Align * and & in the middle between vartype and varname
+--align-pointer=middle
+
+
+
+# Processing Options
+# ------------------
+
+# Show additional information
+--verbose
+# To suppress all of astyle's output, use this option
+#--quiet
+
+# Preserve file timestamps
+--preserve-date
+
+# Omit the usual backup copy of the original file (!)
+# We can do without it as we use Git for version control; plus, taking care to check in
+# regularly promotes good workflow and is less hassle than removing the .orig files manually :)
+--suffix=none
+
+# Show only formatted files;
+# uncomment this option to show unchanged files, too
+--formatted
+
+# Print errors to stdout instead of stderr
+--errors-to-stdout
+
+# Save processing time by excluding certain directories that may grow very large;
+# also ignore any errors from (not) matching these patterns (astyle >= 2.03 only)
+#--ignore-exclude-errors
+--exclude=build
+--exclude=doc
+
