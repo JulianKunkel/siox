@@ -1,2 +1,2 @@
 #! /bin/bash
-grep -n --color -e "$*" {*/*/*,*/*/*/*}.{hpp,cpp}
+grep -n --color -e "$*" $(find . -name *.c -o -name *.h -o -name *.cpp -o -name *.hpp)
