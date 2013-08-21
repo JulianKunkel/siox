@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include <core/module/module-loader.hpp>
+#include <core/component/Component.hpp>
 
 namespace core {
 
