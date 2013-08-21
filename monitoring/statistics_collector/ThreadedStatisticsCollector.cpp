@@ -302,4 +302,6 @@ public:
 CREATE_SERIALIZEABLE_CLS(ThreadedStatisticsOptions)
 //CREATE_SERIALIZEABLE_CLS(ThreadedCollectorStatistics)
 
-COMPONENT(ThreadedStatisticsCollector)
+extern "C"{
+	void * STATISTICS_COLLECTOR_INSTANCIATOR_NAME() { return new ThreadedStatisticsCollector(); }
+}
