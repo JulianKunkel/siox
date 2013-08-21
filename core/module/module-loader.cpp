@@ -4,8 +4,6 @@
 
 #include <core/module/module-loader.hpp>
 
-#define INSTANCE_FKT_PREFIX "get_instance_"
-
 namespace core {
 
 ModuleError::ModuleError(string module_path, string module_name, string interface, string msg)
@@ -47,7 +45,7 @@ void *module_create_instance(string module_path, string module_name, string inte
 	// lookup symbol which will create the instance
 
 	void *(*module_instance_function)();
-	string instance_fkt_name = INSTANCE_FKT_PREFIX + interface_name;
+	string instance_fkt_name = Component::component_instanciator_name(interface_name);
 
 	if (!g_module_symbol(module, instance_fkt_name.c_str(), (gpointer*) &module_instance_function )) {
 		throw ModuleError(module_path, module_name, interface_name,
