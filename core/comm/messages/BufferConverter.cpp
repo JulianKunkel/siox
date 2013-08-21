@@ -1,4 +1,5 @@
 #include <vector>
+#include <string>
 
 #include <siox.pb.h>
 #include <core/comm/messages/BufferConverter.hpp>
@@ -23,7 +24,7 @@ void BufferConverter::attribute_value(const VariableDatatype &s_atv,
 		break;
 	case VariableDatatype::Type::UINT64:
 		b_atv.set_type(buffers::AttributeValue::UINT64);
-		b_atv.set_ui64(s_atv.int64());
+		b_atv.set_ui64(s_atv.uint64());
 		break;
 	case VariableDatatype::Type::FLOAT:
 		b_atv.set_type(buffers::AttributeValue::FLOAT);
@@ -40,6 +41,7 @@ void BufferConverter::attribute_value(const VariableDatatype &s_atv,
 	default:
 		b_atv.set_type(buffers::AttributeValue::INVALID);
 	}
+	
 }
 
 
