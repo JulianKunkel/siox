@@ -5,10 +5,10 @@
 
 #ifndef NO_OBJECT_INJECTION
 
-#include <core/component/Component.hpp>
-#include <core/container/container-macros.hpp>
 #include <boost/serialization/split_free.hpp>
 
+#include <core/component/ComponentReference.hpp>
+#include <core/container/container-macros.hpp>
 #include <core/component/ComponentRegistrar.hpp>
 
 extern core::ComponentRegistrar * autoConfiguratorRegistrar;

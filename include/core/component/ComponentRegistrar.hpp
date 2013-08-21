@@ -6,6 +6,7 @@
 #include <exception>
 #include <sstream>
 
+#include <core/component/ComponentReference.hpp>
 #include <core/component/Component.hpp>
 
 namespace core {

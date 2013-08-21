@@ -1,6 +1,5 @@
 #include <string>
 
-#include <core/component/Component.hpp>
 #include <core/component/component-macros.hpp>
 
 

@@ -2,6 +2,7 @@
 #define SIOX_COMPONENT_MACROS_H
 
 #include <core/component/Component.hpp>
+#include <core/component/ComponentReference.hpp>
 #include <core/container/container-macros.hpp>
 
 
