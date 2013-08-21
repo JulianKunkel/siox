@@ -3,9 +3,6 @@
 
 #include <knowledge/optimizer/OptimizerPlugin.hpp>
 
-#define COMPONENT(x) \
-extern "C"{\
-void * get_instance_knowledge_optimizer_plugin() { return new x(); }\
-}
+#define KNOWLEDGE_OPTIMIZER_PLUGING_INSTANCIATOR_NAME COMPONENT_INSTANCIATOR_NAME(knowledge_optimizer_plugin)
 
 #endif
