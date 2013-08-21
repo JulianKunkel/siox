@@ -52,7 +52,7 @@ __thread int siox_namespace = 0;
 bool finalized = true;
 
 /// Struct to hold references to global objects needed.
-struct process_info process_data = {0};
+struct process_info process_data;
 
 
 
@@ -382,12 +382,14 @@ siox_node * siox_lookup_node_id( const char * hostname ){
 siox_component * siox_component_register(siox_unique_interface * uiid, const char * instance_name){
     assert(uiid != SIOX_INVALID_ID );
     assert(instance_name != nullptr);
+
     FUNCTION_BEGIN
+
+    boost::upgrade_lock<boost::shared_mutex> lock(process_data.critical_mutex);
 
     UniqueInterfaceID uid = P_TO_U32(uiid);
     const string & interface_implementation = process_data.system_information_manager->lookup_interface_implementation(uid);
     const string & interface_name = process_data.system_information_manager->lookup_interface_name(uid);
-
 
     char configName[1001];
     if(interface_implementation != ""){
@@ -412,8 +414,11 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
         //return nullptr;
     }
 
+    boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
+
     // check loaded components and assign them to the right struct elements.
     siox_component * result = new siox_component();
+    result->cid.id = ++process_data.last_componentID;
     result->cid.pid = process_data.pid;
     result->uid = uid;
 

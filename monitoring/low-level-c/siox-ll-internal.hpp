@@ -9,6 +9,7 @@
 #ifndef SIOX_LL_INTERNAL_H_
 #define SIOX_LL_INTERNAL_H_
 
+#include <boost/thread/shared_mutex.hpp>
 
 #include <C/siox-types.h>
 
@@ -69,6 +70,11 @@ struct process_info{
 
     /// Loads all component modules
     core::AutoConfigurator * configurator;
+
+    /// Protect critical datastructures    
+    boost::shared_mutex  critical_mutex;
+
+    uint16_t last_componentID;
 };
 
 
