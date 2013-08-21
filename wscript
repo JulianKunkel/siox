@@ -50,6 +50,11 @@ def configure(conf):
 	if not "DOXYGEN" in conf.env:
 		print "\tI cannot create the API documentation, but please proceed!"
 
+	# Locate astyle for style command
+	conf.find_program("astyle", var='ASTYLE', mandatory=False)
+	if not "ASTYLE" in conf.env:
+		print "\tI cannot apply siox style to the source tree, but please proceed!"
+
 	# Check various packages for correct installations and linkage
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
 	conf.check_cfg(package='gmodule-2.0', use="GLIB", uselib_store='GMODULES',   args=['--cflags', '--libs'], mandatory=True)
@@ -57,7 +62,7 @@ def configure(conf):
 	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
 
 	# Check Boost library for correct installation and linkage
-	conf.check_boost(lib='system thread thread-mt serialization regex program_options')
+	conf.check_boost(lib='system thread serialization regex program_options')
 
 	conf.env.append_value("RPATH", conf.env.PREFIX + "/lib")
 
@@ -75,6 +80,7 @@ def configure(conf):
 	print "Debugging:                               : %s" % conf.options.debug
 
 def doc(ctx):
+	"""Create developer's documentation, see doc/index.html. Requires doxygen."""
 	# Run plantuml to create *.png files from embedded code.
 	# Files are placed in ./doc/images/plantuml
 	# Recusively search from current folder scanning files fittin the file patterns
@@ -138,6 +144,18 @@ def build(bld):
 	for root, dirs, files in os.walk("include"):
 		for f in files:
 			bld.install_files("${PREFIX}/" + root, root + "/" + f)
+
+
+def style(ctx):
+	"""Format entire source tree according to SIOX conventions, see scripts/siox.astyle. Requires astyle."""
+	# Run astyle to format entire project source code tree according to SIOX style guidelines
+	# as defined in file siox.astyle
+	# 
+	ctx.exec_command('astyle --recursive --options=scripts/siox.astyle "*.h" "*.c" "*.hpp" "*.cpp"')
+	#" './*.h'")
+	# Remove backup files
+	#ctx.exec_command("find . -name *.[hc]pp.orig -or -name *.[hc].orig -delete")
+	pass
 
 
 # Code from Stackoverflow:
