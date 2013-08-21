@@ -81,7 +81,7 @@ int open(const char *pathname, int flags, ...);
 //@guard
 //@activity
 //@horizontal_map_put_int ret
-//@activity_attribute_pointer fileName pathname
+//@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret 
 //@error ''ret<0'' errno
 //@guardEnd

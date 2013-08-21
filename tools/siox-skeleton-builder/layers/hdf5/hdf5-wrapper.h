@@ -1,15 +1,209 @@
-#include <hdf5.h>
-// splice_before printf("SIOX: Call H5open.\n");
-// splice_after printf("SIOX: H5open terminated.\n");
-herr_t H5open(void);
-// splice_before printf("SIOX: Call H5close.\n");
-// splice_after printf("SIOX: H5close terminated.\n");
-herr_t H5close(void);
-herr_t H5dont_atexit(void);
-herr_t H5garbage_collect(void);
+#include "hdf5-helper.h"
+
+//@component "HDF5" implVersion "" unsigned major, minor, relnum; char implVersion[151]; int v_ret = H5get_libversion(& major, & minor, & relnum); if (v_ret >= 0) snprintf(implVersion, 150, "%d.%d", major, minor); else sprintf(implVersion, "0");
+
+//@register_attribute fileName "HDF5" "descriptor/filename" SIOX_STORAGE_STRING
+//@register_attribute fileHandle "HDF5" "descriptor/hid" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute fileOpenFlags "HDF5" "hints/openFlags" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute fileMountChild "HDF5" "descriptor/hidChild" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute fileMountGroup "HDF5" "descriptor/group" SIOX_STORAGE_STRING
+//@register_attribute fileDataset "HDF5" "descriptor/datasetName" SIOX_STORAGE_STRING
+//@register_attribute fileDatasetID "HDF5" "descriptor/datasetID" SIOX_STORAGE_32_BIT_UINTEGER
+
+//@horizontal_map_create_int 
+//@horizontal_map_create_int MapName=activityHashTable_dtypeMaps
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+// HDF5 API prefixes:
+// P: Property
+// O: Object
+// F: File
+// I: Identifier
+// T: Type
+// L: Link
+// G: Group
+// E: Error
+// D: Dataset
+// A: Attribute
+
+//@activity
+//@activity_attribute_pointer fileName filename
+//@activity_attribute_u32 fileHandle ret 
+//@splice_before uint32_t translatedFlags = translateHDFOpenFlagsToSIOX(flags);
+//@activity_attribute fileOpenFlags translatedFlags
+//@horizontal_map_put_int ret
+//@error ''ret<0'' ret
+hid_t H5Fcreate(const char *filename, unsigned flags, hid_t create_plist, hid_t access_plist);
+
+// hid_t H5Fget_access_plist(hid_t file_id);
+
+//@activity
+//@activity_attribute_pointer fileName filename
+//@activity_attribute_u32 fileHandle ret 
+//@splice_before uint32_t translatedFlags = translateHDFOpenFlagsToSIOX(flags);
+//@activity_attribute fileOpenFlags translatedFlags
+//@horizontal_map_put_int ret
+//@error ''ret<0'' ret
+hid_t H5Fopen(const char *filename, unsigned flags, hid_t access_plist);
+
+//@activity
+//@activity_attribute_u32 fileHandle file_id 
+//@activity_lookup_ID_int file_id ActivityID=ParentID
+//@horizontal_map_put_int_ID ret ActivityID=ParentID
+//@error ''ret<0'' ret
+hid_t H5Freopen(hid_t file_id);
+
+//@activity
+//@activity_attribute_u32 fileHandle object_id 
+//@error ''ret<0'' ret
+herr_t H5Fflush(hid_t object_id, H5F_scope_t scope);
+
+//@activity
+//@activity_attribute_u32 fileHandle file_id 
+//@activity_link_int file_id 
+//@horizontal_map_remove_int file_id
+//@error ''ret<0'' ret
+herr_t H5Fclose(hid_t file_id);
+
+
+//@activity
+//@activity_attribute_pointer fileName filename
+//@error ''ret<0'' ret
+htri_t H5Fis_hdf5(const char *filename);
+
+//@activity
+//@activity_attribute_u32 fileHandle loc 
+//@activity_attribute_pointer fileMountGroup name
+//@activity_attribute_u32 fileMountChild child
+//@error ''ret<0'' ret
+herr_t H5Fmount(hid_t loc, const char *name, hid_t child, hid_t plist);
+
+//@activity
+//@activity_attribute_u32 fileHandle loc 
+//@activity_attribute_pointer fileMountGroup name
+//@error ''ret<0'' ret
+herr_t H5Funmount(hid_t loc, const char *name);
+
+//@activity
+//@activity_attribute_u32 fileHandle file_id 
+//@error ''ret<0'' ret
+hssize_t H5Fget_freespace(hid_t file_id);
+
+//@activity
+//@activity_attribute_u32 fileHandle file_id
+//@error ''ret<0'' ret
+herr_t H5Fget_filesize(hid_t file_id, hsize_t *size);
+
+
+//@activity
+//@activity_attribute_u32 fileHandle loc_id
+//@activity_attribute_pointer fileDataset name
+//@activity_attribute_u32 fileDatasetID ret
+//@activity_link_int loc_id 
+//@horizontal_map_put_int ret MapName=activityHashTable_dtypeMaps
+//@error ''ret<0'' ret
+hid_t H5Dcreate1( hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t dcpl_id );
+
+//@activity
+//@activity_attribute_u32 fileHandle loc_id
+//@activity_attribute_pointer fileDataset name
+//@activity_attribute_u32 fileDatasetID ret
+//@activity_link_int loc_id 
+//@horizontal_map_put_int ret MapName=activityHashTable_dtypeMaps
+//@error ''ret<0'' ret
+hid_t H5Dcreate2( hid_t loc_id, const char *name, hid_t dtype_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id );
+
+//@activity
+//@activity_attribute_u32 fileHandle loc_id
+//@activity_attribute_pointer fileDataset name
+//@activity_attribute_u32 fileDatasetID ret
+//@horizontal_map_put_int ret MapName=activityHashTable_dtypeMaps
+//@error ''ret<0'' ret
+hid_t H5Dopen1( hid_t loc_id, const char *name );
+
+//@activity
+//@activity_attribute_u32 fileHandle loc_id
+//@activity_attribute_pointer fileDataset name
+//@activity_attribute_u32 fileDatasetID ret
+//@horizontal_map_put_int ret MapName=activityHashTable_dtypeMaps
+//@error ''ret<0'' ret
+hid_t H5Dopen2( hid_t loc_id, const char *name, hid_t dapl_id );
+
+//@activity
+//@activity_link_int dset_id MapName=activityHashTable_dtypeMaps
+//@activity_attribute_u32 fileDatasetID dset_id
+//@error ''ret<0'' ret
+herr_t H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t plist_id, void *buf);
+
+//@activity
+//@activity_link_int dset_id MapName=activityHashTable_dtypeMaps
+//@activity_attribute_u32 fileDatasetID dset_id
+//@error ''ret<0'' ret
+herr_t H5Dwrite(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t plist_id, const void *buf);
+
+//@activity
+//@activity_link_int dset_id MapName=activityHashTable_dtypeMaps
+//@activity_attribute_u32 fileDatasetID dset_id
+//@error ''ret<0'' ret
+herr_t H5Dset_extent( hid_t dset_id, const hsize_t size[]);
+
+//@activity
+//@activity_attribute_u32 fileDatasetID dataset_id
+//@activity_link_int dataset_id MapName=activityHashTable_dtypeMaps
+//@horizontal_map_remove_int dataset_id MapName=activityHashTable_dtypeMaps
+//@error ''ret<0'' ret
+herr_t H5Dclose(hid_t dataset_id );
+
+// H5FDpublic.h: Instrumentation of HDF5 VFL function depends on the module, that means name differ, thus we cannot instrument it here.
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Potential optimizations
+// http://www.hdfgroup.org/HDF5/doc/RM/RM_H5.html#Library-SetFreeListLimits
 herr_t H5set_free_list_limits(int reg_global_lim, int reg_list_lim, int arr_global_lim, int arr_list_lim, int blk_global_lim, int blk_list_lim);
-herr_t H5get_libversion(unsigned *majnum, unsigned *minnum, unsigned *relnum);
-herr_t H5check_version(unsigned majnum, unsigned minnum, unsigned relnum);
+
+herr_t H5Fget_mdc_config(hid_t file_id, H5AC_cache_config_t * config_ptr);
+herr_t H5Fset_mdc_config(hid_t file_id, H5AC_cache_config_t * config_ptr);
+herr_t H5Fget_mdc_hit_rate(hid_t file_id, double * hit_rate_ptr);
+herr_t H5Fget_mdc_size(hid_t file_id, size_t * max_size_ptr, size_t * min_clean_size_ptr, size_t * cur_size_ptr, int * cur_num_entries_ptr);
+herr_t H5Freset_mdc_hit_rate_stats(hid_t file_id);
+
+// Would be useful to instrument, but is not always available.
+
+// herr_t H5DOwrite_chunk( hid_t dset_id, hid_t dxpl_id, uint32_t filter_mask, hsize_t *offset, size_t data_size, const void *buf );
+
+// Measure overhead:
+herr_t H5garbage_collect(void); 
+
+herr_t H5Fget_mpi_atomicity( hid_t file_id, hbool_t *flag );
+
+herr_t H5Fset_mpi_atomicity( hid_t file_id, hbool_t flag );
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Potentially relevant: 
+//herr_t H5Fget_vfd_handle(hid_t file_id, hid_t fapl, void **file_handle);
+
+// herr_t H5Fclear_elink_file_cache( hid_t file_id );
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Irrelevant functions:
+
+// Library init / close:
+//herr_t H5open(void);
+//herr_t H5close(void);
+//herr_t H5check_version(unsigned majnum, unsigned minnum, unsigned relnum);
+
+hid_t H5Fget_create_plist(hid_t file_id);
+herr_t H5Fget_info(hid_t obj_id, H5F_info_t *bh_info);
+herr_t H5Fget_intent(hid_t file_id, unsigned * intent);
+ssize_t H5Fget_name(hid_t obj_id, char *name, size_t size);
+
+
+
 hid_t H5Iregister(H5I_type_t type, const void *object);
 void * H5Iobject_verify(hid_t id, H5I_type_t id_type);
 void * H5Iremove_verify(hid_t id, H5I_type_t id_type);
@@ -179,12 +373,6 @@ hid_t H5Dget_create_plist(hid_t dset_id);
 hid_t H5Dget_access_plist(hid_t dset_id);
 hsize_t H5Dget_storage_size(hid_t dset_id);
 haddr_t H5Dget_offset(hid_t dset_id);
-herr_t H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t plist_id, void *buf);
-herr_t H5Dwrite(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t plist_id, const void *buf);
-herr_t H5Diterate(void *buf, hid_t type_id, hid_t space_id, H5D_operator_t op, void *operator_data);
-herr_t H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t plist_id, void *buf);
-herr_t H5Dvlen_get_buf_size(hid_t dataset_id, hid_t type_id, hid_t space_id, hsize_t *size);
-herr_t H5Dfill(const void *fill, hid_t fill_type, void *buf, hid_t buf_type, hid_t space);
 herr_t H5Dset_extent(hid_t dset_id, const hsize_t size[]);
 herr_t H5Ddebug(hid_t dset_id);
 hid_t H5Dcreate1(hid_t file_id, const char *name, hid_t type_id, hid_t space_id, hid_t dcpl_id);
@@ -217,45 +405,6 @@ herr_t H5Eset_auto1(H5E_auto1_t func, void *client_data);
 herr_t H5Ewalk1(H5E_direction_t direction, H5E_walk1_t func, void *client_data);
 char * H5Eget_major(H5E_major_t maj);
 char * H5Eget_minor(H5E_minor_t min);
-htri_t H5Fis_hdf5(const char *filename);
-hid_t H5Fcreate(const char *filename, unsigned flags, hid_t create_plist, hid_t access_plist);
-hid_t H5Fopen(const char *filename, unsigned flags, hid_t access_plist);
-hid_t H5Freopen(hid_t file_id);
-herr_t H5Fflush(hid_t object_id, H5F_scope_t scope);
-herr_t H5Fclose(hid_t file_id);
-hid_t H5Fget_create_plist(hid_t file_id);
-hid_t H5Fget_access_plist(hid_t file_id);
-herr_t H5Fget_intent(hid_t file_id, unsigned * intent);
-ssize_t H5Fget_obj_count(hid_t file_id, unsigned types);
-ssize_t H5Fget_obj_ids(hid_t file_id, unsigned types, size_t max_objs, hid_t *obj_id_list);
-herr_t H5Fget_vfd_handle(hid_t file_id, hid_t fapl, void **file_handle);
-herr_t H5Fmount(hid_t loc, const char *name, hid_t child, hid_t plist);
-herr_t H5Funmount(hid_t loc, const char *name);
-hssize_t H5Fget_freespace(hid_t file_id);
-herr_t H5Fget_filesize(hid_t file_id, hsize_t *size);
-herr_t H5Fget_mdc_config(hid_t file_id, H5AC_cache_config_t * config_ptr);
-herr_t H5Fset_mdc_config(hid_t file_id, H5AC_cache_config_t * config_ptr);
-herr_t H5Fget_mdc_hit_rate(hid_t file_id, double * hit_rate_ptr);
-herr_t H5Fget_mdc_size(hid_t file_id, size_t * max_size_ptr, size_t * min_clean_size_ptr, size_t * cur_size_ptr, int * cur_num_entries_ptr);
-herr_t H5Freset_mdc_hit_rate_stats(hid_t file_id);
-ssize_t H5Fget_name(hid_t obj_id, char *name, size_t size);
-herr_t H5Fget_info(hid_t obj_id, H5F_info_t *bh_info);
-hid_t H5FDregister(const H5FD_class_t *cls);
-herr_t H5FDunregister(hid_t driver_id);
-H5FD_t * H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr);
-herr_t H5FDclose(H5FD_t *file);
-int H5FDcmp(const H5FD_t *f1, const H5FD_t *f2);
-int H5FDquery(const H5FD_t *f, unsigned long *flags);
-haddr_t H5FDalloc(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size);
-herr_t H5FDfree(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size);
-haddr_t H5FDget_eoa(H5FD_t *file, H5FD_mem_t type);
-herr_t H5FDset_eoa(H5FD_t *file, H5FD_mem_t type, haddr_t eoa);
-haddr_t H5FDget_eof(H5FD_t *file);
-herr_t H5FDget_vfd_handle(H5FD_t *file, hid_t fapl, void**file_handle);
-herr_t H5FDread(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size, void *buf);
-herr_t H5FDwrite(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size, const void *buf);
-herr_t H5FDflush(H5FD_t *file, hid_t dxpl_id, unsigned closing);
-herr_t H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing);
 hid_t H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id);
 hid_t H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id);
 hid_t H5Gopen2(hid_t loc_id, const char *name, hid_t gapl_id);

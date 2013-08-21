@@ -8,6 +8,8 @@ def options(opt):
 	gr.add_option('--siox', action='store', dest="SIOX", help='Directory to the SIOX installation')
 	gr.add_option('--siox-test-implementation', action='store', dest="SIOX_LL_IMPLEMENTATION", help='Directory to a testing SIOX low-level API to use')
 	gr.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
+	gr.add_option('--hdf5', action='store', dest='HDF5', help="Directory to HDF5")
+
 
 def configure(conf):
 	conf.load('compiler_c waf_unit_test')
@@ -17,6 +19,13 @@ def configure(conf):
 
 	conf.check_cc(lib='dl', uselib_store='DL', mandatory = True)
 
+	if conf.options.HDF5:
+		conf.env.append_value('INCLUDES_HDF5', [conf.options.HDF5 + '/include' ])
+		conf.env.append_value('LIBPATH_HDF5', [conf.options.HDF5 + '/lib' ])
+
+	conf.check(features='c cprogram', use="HDF5", lib=['hdf5','hdf5_hl'], cflags=['-I/usr/local/hdf5/include -L/usr/local/hdf5/lib'], uselib_store='HDF5', mandatory=True)
+
+
 	if conf.options.SIOX_LL_IMPLEMENTATION:
 		conf.env.append_value('LIBPATH', [conf.options.SIOX_LL_IMPLEMENTATION])
 		conf.env.LIBPATH_SIOX_LL = conf.options.SIOX_LL_IMPLEMENTATION
@@ -25,7 +34,7 @@ def configure(conf):
 	conf.env.LIB_SIOX_LL = ["siox-monitoring-siox-ll"]
 
 	if conf.options.SIOX:
-		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
+		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include', "."])
 		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
 
         conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
@@ -35,16 +44,14 @@ def configure(conf):
 	if not conf.options.SIOX_LL_IMPLEMENTATION:
 		conf.env.LIBPATH_SIOX_LL = os.path.dirname(conf.find_file('libsiox-monitoring-siox-ll.so', conf.env.LIBPATH))
 
-	# conf.env.append_value('LIBDIR', [conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"])
-
         if conf.options.debug:
 	        conf.env.append_value("CFLAGS", ['-std=c99', '-O3', '-Wall'])
 	else:
 		conf.env.append_value("CFLAGS", ['-std=c99', '-g', '-Wall'])
 
 def build(bld):
-	LAYER="posix"
-	HEADER="posix-low-level-io.h"
+	LAYER="hdf5"
+	HEADER="hdf5-wrapper.h"
 
         def wrap(task): 
 		return wrapper(task, "wrap")
@@ -76,19 +83,24 @@ def build(bld):
 
 	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = LAYER + ".wrap", install_path = "${LIBDIR}")
 
-	bld.shlib(includes="",  use = "GLIB SIOX_LL" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
-	bld.shlib(includes="",  use = "GLIB DL SIOX_LL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
+	bld.shlib(includes="",  use = "GLIB SIOX_LL HDF5" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
+	bld.shlib(includes="",  use = "GLIB DL SIOX_LL HDF5",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
 	
-	# build tests if a dummy implementation has been selected
-	bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,  
+
+	bld.program(includes="",  source = 'test/h5slabwrite.c', target = 'h5slabwrite-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,  
 			linkflags=wrap_linkerflags,  install_path = None)
-	bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
+	bld.program(includes="",  source = 'test/h5slabwrite.c', target = 'h5slabwrite-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
+
+	bld.program(includes="",  source = 'test/h5slabread.c', target = 'h5slabread-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,  
+			linkflags=wrap_linkerflags,  install_path = None)
+	bld.program(includes="",  source = 'test/h5slabread.c', target = 'h5slabread-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
 
 	try:
 		os.symlink(bld.path.abspath() + "/test/siox.conf", "build/siox.conf")
 	except OSError, e:
    		pass
 
+        bld.install_files("${PREFIX}/include", "siox-datatypes-helper-" + LAYER +".h")
 
 	from waflib.Tools import waf_unit_test
 	bld.add_post_fun(waf_unit_test.summary)
