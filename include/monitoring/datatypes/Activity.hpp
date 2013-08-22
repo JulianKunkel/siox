@@ -58,7 +58,7 @@
 /**
  * OPEN ISSUES
  * ===========
- * 1 - 
+ * 1 -
  */
 
 
@@ -79,117 +79,117 @@ using namespace std;
 namespace monitoring {
 
 // Forward declarations
-class Activity;
-class ActivityBuilder;
+	class Activity;
+	class ActivityBuilder;
 
 // The instance identifier such as "Port 4711" is relevant for matching of remote calls
 // See @TODO
-typedef struct {
-	RemoteCallIdentifier target;
-	vector<Attribute> attributes;
-	Activity* activity;
-} RemoteCall;
+	typedef struct {
+		RemoteCallIdentifier target;
+		vector<Attribute> attributes;
+		Activity * activity;
+	} RemoteCall;
 
 
-class Activity{
-	friend class ActivityBuilder;
-protected:
-	// The ontology provides a single ID for each ActivityType of a component, e.g. POSIX "open()"
-	UniqueComponentActivityID ucaid_;
-	
-	Timestamp time_start_;
-	Timestamp time_stop_;
+	class Activity {
+			friend class ActivityBuilder;
+		protected:
+			// The ontology provides a single ID for each ActivityType of a component, e.g. POSIX "open()"
+			UniqueComponentActivityID ucaid_;
 
-	ActivityID aid_;
+			Timestamp time_start_;
+			Timestamp time_stop_;
 
-	vector<ActivityID> parentArray_; 
-	vector<RemoteCall> remoteCallsArray_;
-	vector<Attribute> attributeArray_; 	
+			ActivityID aid_;
 
-	// If we are caused by a remote, we have to identify it.
-	RemoteCallIdentifier * remoteInvoker_; // NULL if none
+			vector<ActivityID> parentArray_;
+			vector<RemoteCall> remoteCallsArray_;
+			vector<Attribute> attributeArray_;
 
-	// interface specific error value.
-	ActivityError errorValue_;
+			// If we are caused by a remote, we have to identify it.
+			RemoteCallIdentifier * remoteInvoker_; // NULL if none
 
-public:
-	Activity(UniqueComponentActivityID ucaid, Timestamp start_t, Timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, ActivityError errorValue)
-		: 
-		ucaid_ (ucaid), time_start_ (start_t), time_stop_ (end_t),
-		aid_ (aid), parentArray_ (std::move(parentArray)),
-		remoteCallsArray_ (std::move(remoteCallsArray)),
-		attributeArray_ (std:: move(attributeArray)),		
-		remoteInvoker_ (remoteInvoker),errorValue_(errorValue){}
+			// interface specific error value.
+			ActivityError errorValue_;
 
-	Activity(){
-		//memset(this, 0, sizeof(Activity));
-		remoteInvoker_ = nullptr;
-		errorValue_ = 0;
-	}
+		public:
+			Activity( UniqueComponentActivityID ucaid, Timestamp start_t, Timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, ActivityError errorValue )
+				:
+				ucaid_( ucaid ), time_start_( start_t ), time_stop_( end_t ),
+				aid_( aid ), parentArray_( std::move( parentArray ) ),
+				remoteCallsArray_( std::move( remoteCallsArray ) ),
+				attributeArray_( std:: move( attributeArray ) ),
+				remoteInvoker_( remoteInvoker ), errorValue_( errorValue ) {}
 
-	void print() {
-		/// @todo: Really need reflection - have a look at Boost :-)
-		unsigned i;
-		cout << endl << "Activity = " << this << endl;
-		cout << "t_start = " << time_start_ << endl;
-		cout << "t_stop  = " << time_stop_ << endl;
-		cout << "ActivityID = " << aid_ << endl;
-		cout << "ActivityID.thread = " << aid_.thread << endl;
-		cout << "ActivityID.ComponentID.num = " << aid_.cid.id << endl;
-		cout << "ActivityID.ComponentID.ProcessID.NodeID = " << aid_.cid.pid.nid << endl;
-		cout << "ActivityID.ComponentID.ProcessID.pid    = " << aid_.cid.pid.pid << endl;
-		cout << "ActivityID.ComponentID.ProcessID.time   = " << aid_.cid.pid.time << endl;
-		cout << "Attributes (" << attributeArray_.size() << " items):" << endl;
-		for(i=0; i< attributeArray_.size(); i++) {
-			cout << "(" << i << ")" << endl;
-			cout << "\tid    = " << attributeArray_[i].id << endl;
-			cout << "\tvalue = " << attributeArray_[i].value << endl;
-		}
-		cout << "Parents " << parentArray_.size() << endl;
-		for(i=0; i< parentArray_.size(); i++) {
-			cout << "\t" <<  parentArray_[i] << endl;
-		}
-		cout << "RemoteCalls (" << remoteCallsArray_.size() << " items):" << endl;
-	}
+			Activity() {
+				//memset(this, 0, sizeof(Activity));
+				remoteInvoker_ = nullptr;
+				errorValue_ = 0;
+			}
 
-	inline Timestamp time_start() const{
-		return time_start_;
-	}
+			void print() {
+				/// @todo: Really need reflection - have a look at Boost :-)
+				unsigned i;
+				cout << endl << "Activity = " << this << endl;
+				cout << "t_start = " << time_start_ << endl;
+				cout << "t_stop  = " << time_stop_ << endl;
+				cout << "ActivityID = " << aid_ << endl;
+				cout << "ActivityID.thread = " << aid_.thread << endl;
+				cout << "ActivityID.ComponentID.num = " << aid_.cid.id << endl;
+				cout << "ActivityID.ComponentID.ProcessID.NodeID = " << aid_.cid.pid.nid << endl;
+				cout << "ActivityID.ComponentID.ProcessID.pid    = " << aid_.cid.pid.pid << endl;
+				cout << "ActivityID.ComponentID.ProcessID.time   = " << aid_.cid.pid.time << endl;
+				cout << "Attributes (" << attributeArray_.size() << " items):" << endl;
+				for( i = 0; i < attributeArray_.size(); i++ ) {
+					cout << "(" << i << ")" << endl;
+					cout << "\tid    = " << attributeArray_[i].id << endl;
+					cout << "\tvalue = " << attributeArray_[i].value << endl;
+				}
+				cout << "Parents " << parentArray_.size() << endl;
+				for( i = 0; i < parentArray_.size(); i++ ) {
+					cout << "\t" <<  parentArray_[i] << endl;
+				}
+				cout << "RemoteCalls (" << remoteCallsArray_.size() << " items):" << endl;
+			}
 
-	inline Timestamp time_stop() const{
-		return time_stop_;
-	}
+			inline Timestamp time_start() const {
+				return time_start_;
+			}
+
+			inline Timestamp time_stop() const {
+				return time_stop_;
+			}
 
 
-	inline UniqueComponentActivityID ucaid() const{
-		return ucaid_;
-	}
-	
-	inline ActivityID aid() const{
-		return aid_;
-	}
+			inline UniqueComponentActivityID ucaid() const {
+				return ucaid_;
+			}
 
-	inline const vector<ActivityID>& parentArray() const{
-		return parentArray_;
-	}
+			inline ActivityID aid() const {
+				return aid_;
+			}
 
-	inline const vector<RemoteCall>& remoteCallsArray() const{
-		return remoteCallsArray_;
-	}
+			inline const vector<ActivityID>& parentArray() const {
+				return parentArray_;
+			}
 
-	inline const vector<Attribute>& attributeArray() const{
-		return attributeArray_;
-	}
+			inline const vector<RemoteCall>& remoteCallsArray() const {
+				return remoteCallsArray_;
+			}
 
-	inline const RemoteCallIdentifier * remoteInvoker() const{
-		return remoteInvoker_;
-	}
+			inline const vector<Attribute>& attributeArray() const {
+				return attributeArray_;
+			}
 
-	inline ActivityError errorValue() const{
-		return errorValue_;
-	}
+			inline const RemoteCallIdentifier * remoteInvoker() const {
+				return remoteInvoker_;
+			}
 
-};
+			inline ActivityError errorValue() const {
+				return errorValue_;
+			}
+
+	};
 
 }
 

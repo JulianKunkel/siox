@@ -17,85 +17,85 @@
 using namespace core;
 using namespace monitoring;
 
-namespace knowledge{
+namespace knowledge {
 
-/**
- * A plug-in that will suggest optimal parameter values for one or more
- * OntologyAttribute types.
- *
- * Any implementation of this class, unless creating suggestions without
- * independent of the current system state, will also have to inherit from
- * either one or both of the ActivityMultiplexerPlugin and
- * StatisticsMultiplexerPlugin classes.
- *
- * Upon initialization, the plugin has to register for which attributes
- * it can provide suggestions, and should unregister these as well when
- * shutting down: 
- *
-	@startuml{Sequence-Optimizer.png}
-
-	participant "Self-Optimization-\nPlug-In" as sopi #Plum
-	participant "Optimizer" as opt #Plum
-	participant "siox-ll" as ll #SkyBlue
-
-	[-> sopi : [<i>Address of Optimizer</i>]
-
-	loop for every Attribute handled
-		sopi -> opt : registerPlugin( PlugIn,  Attribute )
-		sopi <-- opt
-	end
-
-	loop while SOPI active
-		opt <- ll : optimalParameter( Attribute )
-		sopi <- opt : optimalParameter( Attribute )
-		sopi --> opt : value
-		opt --> ll : value
-	end 
-
-	loop for every Attribute handled
-		sopi -> opt : unregisterPlugin( PLugIn )
-		sopi <-- opt
-	end
-	@enduml
- */
-class OptimizerPlugin : public Component{
-
-protected:
-	// Optimizer * parent_optimizer;
-	// OptimizerPluginDereferencing * dereferenceFacade;
-
-	// virtual void init(OptimizerPluginOptions * options, Optimizer & optimizer) = 0;
-
-public:
-/*	void init(OptimizerPluginOptions * options, Optimizer * optimizer, StatisticsPluginDereferencing * dereferenceFacade){
-		parent_optimizer = optimizer;
-		// may be 0.
-		this->dereferenceFacade = dereferenceFacade;
-
-		init(options, *parent_optimizer );		
-	}
-
-	void init(ComponentOptions * options){
-		OptimizerPluginOptions * o = (OptimizerPluginOptions *) options;
-		assert(options != nullptr);
-		assert(o->multiplexer.componentID != 0);
-
-		init(o, o->multiplexer.instance<Optimizer>(), o->dereferenceFacade.instance<StatisticsPluginDereferencing>());
-	}
-
-*/
-
-	/**	
-	 * Ask optimizer plugin to suggest a parameter for attribute.
+	/**
+	 * A plug-in that will suggest optimal parameter values for one or more
+	 * OntologyAttribute types.
 	 *
-	 * @param attribute [in]
-	 * 		The attribute in question
+	 * Any implementation of this class, unless creating suggestions without
+	 * independent of the current system state, will also have to inherit from
+	 * either one or both of the ActivityMultiplexerPlugin and
+	 * StatisticsMultiplexerPlugin classes.
 	 *
-	 * @return
-	 *		The best value for attribute, as judged by the plugin.
+	 * Upon initialization, the plugin has to register for which attributes
+	 * it can provide suggestions, and should unregister these as well when
+	 * shutting down:
+	 *
+	    @startuml{Sequence-Optimizer.png}
+
+	    participant "Self-Optimization-\nPlug-In" as sopi #Plum
+	    participant "Optimizer" as opt #Plum
+	    participant "siox-ll" as ll #SkyBlue
+
+	    [-> sopi : [<i>Address of Optimizer</i>]
+
+	    loop for every Attribute handled
+	        sopi -> opt : registerPlugin( PlugIn,  Attribute )
+	        sopi <-- opt
+	    end
+
+	    loop while SOPI active
+	        opt <- ll : optimalParameter( Attribute )
+	        sopi <- opt : optimalParameter( Attribute )
+	        sopi --> opt : value
+	        opt --> ll : value
+	    end
+
+	    loop for every Attribute handled
+	        sopi -> opt : unregisterPlugin( PLugIn )
+	        sopi <-- opt
+	    end
+	    @enduml
 	 */
-	virtual OntologyValue optimalParameter(const OntologyAttribute & attribute) const throw(NotFoundError) = 0;
-};
+	class OptimizerPlugin : public Component {
+
+		protected:
+			// Optimizer * parent_optimizer;
+			// OptimizerPluginDereferencing * dereferenceFacade;
+
+			// virtual void init(OptimizerPluginOptions * options, Optimizer & optimizer) = 0;
+
+		public:
+			/*  void init(OptimizerPluginOptions * options, Optimizer * optimizer, StatisticsPluginDereferencing * dereferenceFacade){
+			        parent_optimizer = optimizer;
+			        // may be 0.
+			        this->dereferenceFacade = dereferenceFacade;
+
+			        init(options, *parent_optimizer );
+			    }
+
+			    void init(ComponentOptions * options){
+			        OptimizerPluginOptions * o = (OptimizerPluginOptions *) options;
+			        assert(options != nullptr);
+			        assert(o->multiplexer.componentID != 0);
+
+			        init(o, o->multiplexer.instance<Optimizer>(), o->dereferenceFacade.instance<StatisticsPluginDereferencing>());
+			    }
+
+			*/
+
+			/**
+			 * Ask optimizer plugin to suggest a parameter for attribute.
+			 *
+			 * @param attribute [in]
+			 *      The attribute in question
+			 *
+			 * @return
+			 *      The best value for attribute, as judged by the plugin.
+			 */
+			virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) = 0;
+	};
 
 }
 

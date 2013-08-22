@@ -4,12 +4,12 @@
 /*
  This interface is triggered by the reasoner, if logging information should be forwarded.
  */
-namespace knowledge{
+namespace knowledge {
 
-class AnomalyTrigger{
-public:
-	virtual void triggerResponseForAnomaly() = 0;
-};
+	class AnomalyTrigger {
+		public:
+			virtual void triggerResponseForAnomaly() = 0;
+	};
 
 }
 

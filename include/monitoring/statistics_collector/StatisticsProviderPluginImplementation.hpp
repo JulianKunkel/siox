@@ -5,9 +5,9 @@
 
 
 #define PLUGIN(x) \
-extern "C"{\
-void * get_instance_monitoring_statistics_plugin() { return new x(); }\
-}
+	extern "C"{\
+		void * get_instance_monitoring_statistics_plugin() { return new x(); }\
+	}
 
 
 

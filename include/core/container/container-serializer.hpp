@@ -7,22 +7,22 @@
 #include <core/container/container.hpp>
 
 
-namespace core{
+namespace core {
 
-/**
- * Serialize a container into/from XML
- */
-class ContainerSerializer{
-public:
-	std::string serialize(const Container * object);
+	/**
+	 * Serialize a container into/from XML
+	 */
+	class ContainerSerializer {
+		public:
+			std::string serialize( const Container * object );
 
-	void serialize(const Container * object, std::ostream & os);
+			void serialize( const Container * object, std::ostream & os );
 
-	Container * parse(std::istream & stream);
+			Container * parse( std::istream & stream );
 
-	Container * parse(std::string data);
+			Container * parse( std::string data );
 
-};
+	};
 
 
 }

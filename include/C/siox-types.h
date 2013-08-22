@@ -2,7 +2,7 @@
  * @file siox-types.h
  * @date 2013-08-06
  */
- 
+
 #ifndef SIOX_C_TYPES_H
 #define SIOX_C_TYPES_H
 
@@ -27,15 +27,15 @@ typedef uint32_t siox_activity_error;
  * In that case, the scripts for the transaction system have to be modified.
  * Postgres needs datatypes twice as large as these for storage due to its internal structure.
  */
-enum siox_ont_storage_type{
-    SIOX_STORAGE_64_BIT_INTEGER,
-    SIOX_STORAGE_64_BIT_UINTEGER,
-    SIOX_STORAGE_32_BIT_INTEGER,
-    SIOX_STORAGE_32_BIT_UINTEGER,
-    SIOX_STORAGE_FLOAT,
-    SIOX_STORAGE_DOUBLE,
-    SIOX_STORAGE_UNASSIGNED,    
-    SIOX_STORAGE_STRING
+enum siox_ont_storage_type {
+	SIOX_STORAGE_64_BIT_INTEGER,
+	SIOX_STORAGE_64_BIT_UINTEGER,
+	SIOX_STORAGE_32_BIT_INTEGER,
+	SIOX_STORAGE_32_BIT_UINTEGER,
+	SIOX_STORAGE_FLOAT,
+	SIOX_STORAGE_DOUBLE,
+	SIOX_STORAGE_UNASSIGNED,
+	SIOX_STORAGE_STRING
 };
 
 #endif

@@ -9,10 +9,10 @@
 #include <stdio.h>
 
 //@printf "open %s\n",pathname
-int open(const char *pathname, int flags, ...);
+int open( const char * pathname, int flags, ... );
 
 //@printf "close\n"
-int close(int fd);
+int close( int fd );
 
 //@printf "write kram\n"
-ssize_t write(int fd, const void *buf, size_t count);
+ssize_t write( int fd, const void * buf, size_t count );

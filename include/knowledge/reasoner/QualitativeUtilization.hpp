@@ -9,13 +9,13 @@
 /*
  This interface is pulled by the reasoner on demand to query relative utilization.
  */
-namespace knowledge{
+namespace knowledge {
 
-class QualitativeUtilization{
-public:
-	// Return the current observation for the selected datatype
-	virtual StatisticObservation lastObservation(monitoring::OntologyAttributeID id) const throw(NotFoundError) = 0;
-};
+	class QualitativeUtilization {
+		public:
+			// Return the current observation for the selected datatype
+			virtual StatisticObservation lastObservation( monitoring::OntologyAttributeID id ) const throw( NotFoundError ) = 0;
+	};
 
 }
 

@@ -45,10 +45,10 @@
 //@register_attribute bytesWritten "POSIX" "quantity/BytesWritten" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesRead "POSIX" "quantity/BytesRead" SIOX_STORAGE_64_BIT_UINTEGER
 
- //@register_attribute fileAdviseExtent "POSIX" "hint/advise-extent" SIOX_STORAGE_64_BIT_UINTEGER
- //@register_attribute fileAdvise "POSIX" "hints/advise" SIOX_STORAGE_32_BIT_INTEGER
- //@register_attribute fileBufferSize "POSIX" "hints/bufferSize" SIOX_STORAGE_64_BIT_INTEGER
- //@register_attribute fileBufferMode "POSIX" "hints/bufferMode" SIOX_STORAGE_32_BIT_INTEGER
+//@register_attribute fileAdviseExtent "POSIX" "hint/advise-extent" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute fileAdvise "POSIX" "hints/advise" SIOX_STORAGE_32_BIT_INTEGER
+//@register_attribute fileBufferSize "POSIX" "hints/bufferSize" SIOX_STORAGE_64_BIT_INTEGER
+//@register_attribute fileBufferMode "POSIX" "hints/bufferMode" SIOX_STORAGE_32_BIT_INTEGER
 
 
 /* Prepare a (hash) map to link descriptors (in this case, of type int) to their activities.
@@ -71,21 +71,21 @@ End of global part
 //@guard
 //@activity
 //@splice_before SET_FILENAME(pathname)
-//@activity_attribute_u32 fileHandle ret 
+//@activity_attribute_u32 fileHandle ret
 //@horizontal_map_put_int ret
 //@error ''ret<0'' errno
 //@guardEnd
 //@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
-int open(const char *pathname, int flags, ...);
+int open( const char * pathname, int flags, ... );
 
 //@guard
 //@activity
 //@horizontal_map_put_int ret
-//@activity_attribute_pointer fileName pathname
-//@activity_attribute_u32 fileHandle ret 
+//@splice_before SET_FILENAME(pathname)
+//@activity_attribute_u32 fileHandle ret
 //@error ''ret<0'' errno
 //@guardEnd
-int creat(const char *pathname, mode_t mode);
+int creat( const char * pathname, mode_t mode );
 
 //@guard
 //@activity
@@ -94,37 +94,37 @@ int creat(const char *pathname, mode_t mode);
 //@activity_attribute_u32 fileHandle fd
 /*@error 'ret < 0' ret*/
 //@guardEnd
-int close(int fd);
+int close( int fd );
 
 //@guard
 //@activity
-//@activity_attribute_u32 fileHandle fd 
+//@activity_attribute_u32 fileHandle fd
 //@activity_lookup_ID_int fd ActivityID=ParentID
 //@horizontal_map_put_int_ID ret ActivityID=ParentID
 //@error ''ret<0'' errno
 //@guardEnd
-int dup(int fd);
+int dup( int fd );
 
 //This code is actually not completely correct, dup2 may close newfd:
 //@guard
 //@activity
-//@activity_attribute_u32 fileHandle oldfd 
+//@activity_attribute_u32 fileHandle oldfd
 //@activity_lookup_ID_int oldfd ActivityID=ParentID
 //@horizontal_map_put_int_ID newfd ActivityID=ParentID
 //@error ''ret<0'' errno
 //@guardEnd
-int dup2(int oldfd, int newfd); 
+int dup2( int oldfd, int newfd );
 
 
 //This code is actually not completely correct, dup3 may close newfd:
 //@guard
 //@activity
-//@activity_attribute_u32 fileHandle oldfd 
+//@activity_attribute_u32 fileHandle oldfd
 //@activity_lookup_ID_int oldfd ActivityID=ParentID
 //@horizontal_map_put_int_ID newfd ActivityID=ParentID
 //@error ''ret<0'' errno
 //@guardEnd
-int dup3(int oldfd, int newfd, int flags); 
+int dup3( int oldfd, int newfd, int flags );
 
 //@guard
 //@activity
@@ -136,7 +136,7 @@ int dup3(int oldfd, int newfd, int flags);
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
-ssize_t write(int fd, const void *buf, size_t count);
+ssize_t write( int fd, const void * buf, size_t count );
 
 //@guard
 //@activity
@@ -147,7 +147,7 @@ ssize_t write(int fd, const void *buf, size_t count);
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
-ssize_t read(int fd, void *buf, size_t count);
+ssize_t read( int fd, void * buf, size_t count );
 
 //@guard
 //@activity
@@ -159,7 +159,7 @@ ssize_t read(int fd, void *buf, size_t count);
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
-ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
+ssize_t writev( int fd, const struct iovec * iov, int iovcnt );
 
 //@guard
 //@activity
@@ -171,7 +171,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
-ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
+ssize_t readv( int fd, const struct iovec * iov, int iovcnt );
 
 
 //@guard
@@ -183,7 +183,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
 //@activity_link_int fd
 //@error ''ret==(size_t)-1'' errno
 //@guardEnd
-ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
+ssize_t pwrite( int fd, const void * buf, size_t count, off_t offset );
 
 //@guard
 //@activity
@@ -194,7 +194,7 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 //@activity_link_int fd
 //@error ''ret==(size_t)-1'' errno
 //@guardEnd
-ssize_t pread(int fd, void *buf, size_t count, off_t offset);
+ssize_t pread( int fd, void * buf, size_t count, off_t offset );
 
 
 
@@ -207,7 +207,7 @@ ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 //@activity_link_int fd
 //@error ''ret==(size_t)-1'' errno
 //@guardEnd
-ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset);
+ssize_t pwritev( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 //@guard
 //@activity
@@ -218,22 +218,14 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset);
 //@activity_link_int fd
 //@error ''ret==(size_t)-1'' errno
 //@guardEnd
-ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset);
+ssize_t preadv( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 
 
 //@guard
 //@activity
 //@guardEnd
-void sync (void);
-
-//@guard
-//@activity
-//@activity_attribute_u32 fileHandle fd
-//@activity_link_int fd
-//@error ''ret<0'' errno
-//@guardEnd
-int fsync (int fd);
+void sync( void );
 
 //@guard
 //@activity
@@ -241,7 +233,15 @@ int fsync (int fd);
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
-int fdatasync (int fd);
+int fsync( int fd );
+
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_link_int fd
+//@error ''ret<0'' errno
+//@guardEnd
+int fdatasync( int fd );
 
 
 /* Hints to the system, this might be used for optimizations by SIOX in the future */
@@ -256,12 +256,12 @@ int fdatasync (int fd);
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
-int posix_fadvise (int fd, off_t offset, off_t len, int advise);
+int posix_fadvise( int fd, off_t offset, off_t len, int advise );
 
 
 
 //  Deletes the file whose name is specified in filename.
-/* 
+/*
  If the file is successfully deleted, a zero value is returned.
 On failure, a nonzero value is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
@@ -271,7 +271,7 @@ On most library implementations, the errno variable is also set to a system-spec
 //@splice_before SET_FILENAME(filename)
 //@error ''ret<0'' errno
 //@guardEnd
-int remove ( const char * filename );
+int remove( const char * filename );
 
 /*
  If the file is successfully renamed, a zero value is returned.
@@ -283,7 +283,7 @@ On most library implementations, the errno variable is also set to a system-spec
 //@splice_before SET_FILENAME(oldname)
 //@error ''ret<0'' errno
 //@guardEnd
-int rename ( const char * oldname, const char * newname );
+int rename( const char * oldname, const char * newname );
 
 // Linux specific, Xstat is redirected to Xstat64
 // stat() symbols do not exist, a macro rewrites them, problem stat64 types.
@@ -294,7 +294,7 @@ int rename ( const char * oldname, const char * newname );
 //@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
-int __xstat64(int __ver, const char *path, struct stat64 *buf);
+int __xstat64( int __ver, const char * path, struct stat64 * buf );
 
 //@splice_once ''int lstat(const char *path, struct stat *buf){ return __lxstat64(1, path, buf); }''
 //@guard
@@ -302,7 +302,7 @@ int __xstat64(int __ver, const char *path, struct stat64 *buf);
 //@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
-int __lxstat64(int __ver, const char *path, struct stat64 *buf);
+int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 
 //@splice_once ''int fstat(int fd, struct stat *buf){ return __fxstat64(1, fd, buf); }''
 //@guard
@@ -311,21 +311,21 @@ int __lxstat64(int __ver, const char *path, struct stat64 *buf);
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
-int __fxstat64(int __ver, int fd, struct stat64 *buf);
+int __fxstat64( int __ver, int fd, struct stat64 * buf );
 
 //@guard
 //@activity Name=stat
 //@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
-int __xstat(int __ver, const char *path, struct stat *buf);
+int __xstat( int __ver, const char * path, struct stat * buf );
 
 //@guard
 //@activity Name=lstat
 //@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
-int __lxstat(int __ver, const char *path, struct stat *buf);
+int __lxstat( int __ver, const char * path, struct stat * buf );
 
 //@guard
 //@activity Name=fstat
@@ -333,7 +333,7 @@ int __lxstat(int __ver, const char *path, struct stat *buf);
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
-int __fxstat(int __ver, int fd, struct stat *buf);
+int __fxstat( int __ver, int fd, struct stat * buf );
 
 
 /* See: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Memory_002dmapped-I_002fO */
@@ -348,7 +348,7 @@ int __fxstat(int __ver, int fd, struct stat *buf);
 //@activity_link_int fd
 //@error ''ret<0'' errno
 //@guardEnd
-void * mmap (void *address, size_t length, int protect, int flags, int fd, off_t offset);
+void * mmap( void * address, size_t length, int protect, int flags, int fd, off_t offset );
 
 //void * mremap (void *address, size_t length, size_t new_length, int flag);
 //int munmap (void *addr, size_t length);
@@ -379,7 +379,7 @@ The  fdopen()  function  associates a stream with the existing file descriptor, 
 values "r", "r+", "w", "w+", "a", "a+") must be compatible with the mode of the file  descriptor.   The  file  position
 indicator  of  the  new  stream  is  set to that belonging to fd, and the error and end-of-file indicators are cleared.
 Modes "w" or "w+" do not cause truncation of the file.  The file descriptor is not dup'ed, and will be closed when  the
-stream created by fdopen() is closed. 
+stream created by fdopen() is closed.
  */
 //@guard
 //@activity
@@ -388,7 +388,7 @@ stream created by fdopen() is closed.
 //@horizontal_map_put_size ret
 //@error ''ret<0'' errno
 //@guardEnd
-FILE *fdopen(int fd, const char *mode);
+FILE * fdopen( int fd, const char * mode );
 
 // The function fileno() examines the argument stream and returns its integer descriptor.
 // Function does not fail, only if stream is invalid.
@@ -399,7 +399,7 @@ FILE *fdopen(int fd, const char *mode);
 //@horizontal_map_put_int ret
 //@error ''ret<0'' errno
 //@guardEnd
-int fileno(FILE * stream);
+int fileno( FILE * stream );
 
 /*
 Reuses stream to either open the file specified by filename or to change its access mode.
@@ -420,14 +420,14 @@ On most library implementations, the errno variable is also set to a system-spec
 //@activity_link_size stream
 //@error ''ret<0'' errno
 //@guardEnd
-FILE * freopen ( const char * filename, const char * mode, FILE * stream );
+FILE * freopen( const char * filename, const char * mode, FILE * stream );
 
 //@guard
 //@activity
 //@horizontal_map_put_size ret
 //@error ''ret<0'' errno
 //@guardEnd
-FILE * tmpfile ( void );
+FILE * tmpfile( void );
 
 //@guard_advanced
 //@activity
@@ -435,9 +435,9 @@ FILE * tmpfile ( void );
 //@horizontal_map_remove_size stream
 //@error ''ret<0'' errno
 //@guardEnd
-int fclose(FILE * stream );
+int fclose( FILE * stream );
 
-//  If an error occurs, EOF is returned and the error indicator is set (see ferror). 
+//  If an error occurs, EOF is returned and the error indicator is set (see ferror).
 //@guard
 //@activity
 //@activity_link_size stream
@@ -455,7 +455,7 @@ int fflush( FILE * stream );
 //@guardEnd
 int fgetc( FILE * stream );
 
-/* 
+/*
 On success, the character read is returned (promoted to an int value).
 The return type is int to accommodate for the special value EOF, which indicates failure:
 If the position indicator was at the end-of-file, the function returns EOF and sets the eof indicator (feof) of stream.
@@ -466,7 +466,7 @@ If some other reading error happens, the function also returns EOF, but sets its
 //@activity_link_size stream
 //@error ''ret == EOF'' errno
 //@guardEnd
-int getc ( FILE * stream );
+int getc( FILE * stream );
 
 
 /*
@@ -479,14 +479,14 @@ int getc ( FILE * stream );
 //@activity_link_size stream
 //@error ''ret == EOF'' errno
 //@guardEnd
-int fputc ( int character, FILE * stream );
+int fputc( int character, FILE * stream );
 
 //@guard
 //@activity
 //@activity_link_size stream
 //@error ''ret == EOF'' errno
 //@guardEnd
-int putc ( int character, FILE * stream );
+int putc( int character, FILE * stream );
 
 /*
 Reads characters from stream and stores them as a C string into str until (num-1) characters have been read or either a newline or the end-of-file is reached, whichever happens first.
@@ -505,7 +505,7 @@ If a read error occurs, the error indicator (ferror) is set and a null pointer i
 //@activity_attribute filePosition posB
 //@error ''ret == NULL'' errno
 //@guardEnd
-char * fgets ( char * str, int num, FILE * stream );
+char * fgets( char * str, int num, FILE * stream );
 
 
 /*
@@ -521,7 +521,7 @@ On error, the function returns EOF and sets the error indicator (ferror).
 //@activity_attribute filePosition posB
 //@error ''ret == EOF'' errno
 //@guardEnd
-int fputs ( const char * str, FILE * stream );
+int fputs( const char * str, FILE * stream );
 
 
 
@@ -539,7 +539,7 @@ If either size or count is zero, the function returns zero and both the stream s
 //@activity_attribute filePosition posB
 //@error ''ret == count'' errno
 //@guardEnd
-size_t fread ( void * ptr, size_t size, size_t count, FILE * stream );
+size_t fread( void * ptr, size_t size, size_t count, FILE * stream );
 
 /*
 Writes an array of count elements, each one with a size of size bytes, from the block of memory pointed by ptr to the current position in the stream.
@@ -557,7 +557,7 @@ If either size or count is zero, the function returns zero and the error indicat
 //@activity_attribute filePosition posB
 //@error ''ret == count'' errno
 //@guardEnd
-size_t fwrite ( const void * ptr, size_t size, size_t count, FILE * stream );
+size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
 
 
 
@@ -570,9 +570,9 @@ This function should be called once the stream has been associated with an open 
 //@activity
 //@activity_link_size stream
 //@guardEnd
-void setbuf ( FILE * stream, char * buffer );
+void setbuf( FILE * stream, char * buffer );
 
-/* 
+/*
 
 If the buffer is correctly assigned to the file, a zero value is returned.
 Otherwise, a non-zero value is returned; This may be due to an invalid mode parameter or to some other error allocating or assigning the buffer.
@@ -584,7 +584,7 @@ Otherwise, a non-zero value is returned; This may be due to an invalid mode para
 //@activity_attribute fileBufferSize size
 //@activity_attribute fileBufferMode mode
 //@guardEnd
-int setvbuf ( FILE * stream, char * buffer, int mode, size_t size );
+int setvbuf( FILE * stream, char * buffer, int mode, size_t size );
 
 /*
 On success, the total number of characters written is returned.
@@ -600,7 +600,7 @@ If a multibyte character encoding error occurs while writing wide characters, er
 //@activity_attribute filePosition posB
 //@error ''ret < 0'' errno
 //@guardEnd
-int vfprintf ( FILE * stream, const char * format, va_list arg );
+int vfprintf( FILE * stream, const char * format, va_list arg );
 
 /*
 On success, the function returns the number of items of the argument list successfully filled. This count can match the expected number of items or be less (even zero) due to a matching failure, a reading error, or the reach of the end-of-file.
@@ -616,7 +616,7 @@ If an encoding error happens interpreting wide characters, the function sets err
 //@activity_attribute filePosition posB
 //@error ''ret < 0'' errno
 //@guardEnd
-int vfscanf ( FILE * stream, const char * format, va_list arg );
+int vfscanf( FILE * stream, const char * format, va_list arg );
 
 
 /*
@@ -635,7 +635,7 @@ If an encoding error happens interpreting wide characters, the function sets err
 //@error ''ret < 0'' errno
 //@guardEnd
 //@rewriteCall vfscanf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
-int fscanf ( FILE * stream, const char * format, ... );
+int fscanf( FILE * stream, const char * format, ... );
 
 /*
  */
@@ -649,21 +649,21 @@ int fscanf ( FILE * stream, const char * format, ... );
 //@error ''ret < 0'' errno
 //@guardEnd
 //@rewriteCall vfprintf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
-int fprintf(FILE *stream, const char *format, ...);
+int fprintf( FILE * stream, const char * format, ... );
 
 
-// Redirection of stdout to a file? No, we do not handle this at the moment. 
+// Redirection of stdout to a file? No, we do not handle this at the moment.
 #ifdef HAVE_AIO
 /* Asynchronous I/O */
 /* see http://www.ibm.com/developerworks/linux/library/l-async/index.html */
 /*
-aio_read	Request an asynchronous read operation
-aio_error	Check the status of an asynchronous request
-aio_return	Get the return status of a completed asynchronous request
-aio_write	Request an asynchronous operation
-aio_suspend	Suspend the calling process until one or more asynchronous requests have completed (or failed)
-aio_cancel	Cancel an asynchronous I/O request
-lio_listio	Initiate a list of I/O operations
+aio_read    Request an asynchronous read operation
+aio_error   Check the status of an asynchronous request
+aio_return  Get the return status of a completed asynchronous request
+aio_write   Request an asynchronous operation
+aio_suspend Suspend the calling process until one or more asynchronous requests have completed (or failed)
+aio_cancel  Cancel an asynchronous I/O request
+lio_listio  Initiate a list of I/O operations
  */
 
 
@@ -671,40 +671,40 @@ lio_listio	Initiate a list of I/O operations
 //@activity
 //@error ''ret < 0'' errno
 //@guardEnd
-int aio_read(struct aiocb * cb);
+int aio_read( struct aiocb * cb );
 
 //@guard
 //@activity
 //@error ''ret < 0'' errno
 //@guardEnd
-int aio_write(struct aiocb * cb);
+int aio_write( struct aiocb * cb );
 
 //@guard
 //@activity
 //@error ''ret < 0'' errno
 //@guardEnd
-int lio_listio(int mode, struct aiocb *const aiocb_list[], int nitems, struct sigevent *sevp);
+int lio_listio( int mode, struct aiocb * const aiocb_list[], int nitems, struct sigevent * sevp );
 
 //@guard
 //@activity
 //@error ''ret < 0'' errno
 //@guardEnd
-int aio_suspend(const struct aiocb * const aiocb_list[], int nitems, const struct timespec *timeout);
+int aio_suspend( const struct aiocb * const aiocb_list[], int nitems, const struct timespec * timeout );
 
 //@guard
 //@activity
 //@error ''ret < 0'' errno
 //@guardEnd
-int aio_cancel(int fd, struct aiocb *aiocbp);
+int aio_cancel( int fd, struct aiocb * aiocbp );
 
-#endif 
+#endif
 
 
 #include <sched.h>
 
 //@splice_before ''printf("Warning clone() called, presumably SIOX breaks!\n");''
-int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, pid_t *ptid, struct user_desc *tls, pid_t *ctid);
+int clone( int ( *fn )( void * ), void * child_stack, int flags, void * arg, pid_t * ptid, struct user_desc * tls, pid_t * ctid );
 
 //@splice_before ''printf("Warning fork() called, presumably SIOX breaks!\n");''
-pid_t fork(void);
+pid_t fork( void );
 

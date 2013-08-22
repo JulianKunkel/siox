@@ -20,15 +20,15 @@
 #define BOOLEAN int
 #define SYNOPSIS printf ("synopsis: %s -f <file> [-v] [-h]\n", argv[0])
 
-int main(argc, argv)
-     int argc;
-     char *argv[];
+int main( argc, argv )
+int argc;
+char * argv[];
 {
-  /* my variables */
+	/* my variables */
 
 	int my_rank, pool_size, i, file_name_length;
 	BOOLEAN i_am_the_master = FALSE, input_error = FALSE, verbose = FALSE;
-	char *file_name = NULL;
+	char * file_name = NULL;
 
 	/* MPI variables */
 
@@ -40,91 +40,91 @@ int main(argc, argv)
 
 	/* getopt variables */
 
-	extern char *optarg;
+	extern char * optarg;
 	int c;
 
 	/* ACTION */
 
-	MPI_Init(&argc,&argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &pool_size);
-	
-	if (my_rank == MASTER_RANK) 
+	MPI_Init( &argc, &argv );
+	MPI_Comm_rank( MPI_COMM_WORLD, &my_rank );
+	MPI_Comm_size( MPI_COMM_WORLD, &pool_size );
+
+	if( my_rank == MASTER_RANK )
 		i_am_the_master = TRUE;
-	
-	if (i_am_the_master) {
-		
-		while ((c = getopt(argc, argv, "f:vh")) != EOF)
-			
-			switch(c) {
-			case 'f': 
-				file_name = optarg;
-				break;
-			case 'v':
-				verbose = TRUE;
-				break;
-			case 'h':
-				input_error = TRUE;
-				break;
-			case '?':
-				input_error = TRUE;
-				break;
+
+	if( i_am_the_master ) {
+
+		while( ( c = getopt( argc, argv, "f:vh" ) ) != EOF )
+
+			switch( c ) {
+				case 'f':
+					file_name = optarg;
+					break;
+				case 'v':
+					verbose = TRUE;
+					break;
+				case 'h':
+					input_error = TRUE;
+					break;
+				case '?':
+					input_error = TRUE;
+					break;
 			}
-			
-		if (file_name == NULL) 
+
+		if( file_name == NULL )
 			input_error = TRUE;
-		
-		if (input_error)
+
+		if( input_error )
 			SYNOPSIS;
 		else {
-			file_name_length = strlen(file_name) + 1;
-			
-			if (verbose) {
-				printf("file_name         = %s\n", file_name);
-				printf("file_name_length  = %d\n", 
-				       file_name_length);
+			file_name_length = strlen( file_name ) + 1;
+
+			if( verbose ) {
+				printf( "file_name         = %s\n", file_name );
+				printf( "file_name_length  = %d\n",
+				        file_name_length );
 			}
 		}
-		
-	} 
 
-	MPI_Bcast(&input_error, 1, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+	}
 
-	if (!input_error) {
-		
-		MPI_Bcast(&verbose, 1, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
-		MPI_Bcast(&file_name_length, 1, MPI_INT, MASTER_RANK, 
-			  MPI_COMM_WORLD);
-		
-		if (!i_am_the_master) 
-			file_name = (char*) malloc(file_name_length);
-		
-		MPI_Bcast(file_name, file_name_length, MPI_CHAR, MASTER_RANK, 
-			  MPI_COMM_WORLD);
+	MPI_Bcast( &input_error, 1, MPI_INT, MASTER_RANK, MPI_COMM_WORLD );
 
-		MPI_File_open(MPI_COMM_WORLD, file_name, MPI_MODE_CREATE | 
-			      MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-		MPI_File_get_info(fh, &info_used);
-		MPI_Info_get_nkeys(info_used, &nkeys);
+	if( !input_error ) {
 
-		for (i = 0; i < nkeys; i++) {
-			
-			MPI_Info_get_nthkey(info_used, i, key);
-			MPI_Info_get(info_used, key, MPI_MAX_INFO_VAL, value, 
-				     &exists);
-			
-			if (verbose)
-				if (exists)
-					printf("%3d: key = %s, value = %s\n", 
-					       my_rank, key, value);
+		MPI_Bcast( &verbose, 1, MPI_INT, MASTER_RANK, MPI_COMM_WORLD );
+		MPI_Bcast( &file_name_length, 1, MPI_INT, MASTER_RANK,
+		           MPI_COMM_WORLD );
+
+		if( !i_am_the_master )
+			file_name = ( char * ) malloc( file_name_length );
+
+		MPI_Bcast( file_name, file_name_length, MPI_CHAR, MASTER_RANK,
+		           MPI_COMM_WORLD );
+
+		MPI_File_open( MPI_COMM_WORLD, file_name, MPI_MODE_CREATE |
+		               MPI_MODE_RDWR, MPI_INFO_NULL, &fh );
+		MPI_File_get_info( fh, &info_used );
+		MPI_Info_get_nkeys( info_used, &nkeys );
+
+		for( i = 0; i < nkeys; i++ ) {
+
+			MPI_Info_get_nthkey( info_used, i, key );
+			MPI_Info_get( info_used, key, MPI_MAX_INFO_VAL, value,
+			              &exists );
+
+			if( verbose )
+				if( exists )
+					printf( "%3d: key = %s, value = %s\n",
+					        my_rank, key, value );
 		}
 
-		MPI_File_close(&fh);
-		MPI_Info_free(&info_used);
-		
+		MPI_File_close( &fh );
+		MPI_Info_free( &info_used );
+
 	}
 
 	MPI_Finalize();
-	exit(0);
-	
+	exit( 0 );
+
 }

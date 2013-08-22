@@ -5,36 +5,36 @@
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexerListener.hpp>
 #include <core/component/Component.hpp>
 
-namespace monitoring{
+namespace monitoring {
 
-
-/**
- * StatisticsMultiplexer
- * Forwards and filters statistics to registered listeners (e.g. Plugins) either
- * in an syncronised or asyncronous manner.
- */
-
-
-class StatisticsMultiplexer : public core::Component{
-public:
-
-	virtual void Log(StatisticsValue * element) = 0;
 
 	/**
-	 * Register listener to multiplexer
-	 *
-	 * @param	listener [in]	listener to notify in the future
+	 * StatisticsMultiplexer
+	 * Forwards and filters statistics to registered listeners (e.g. Plugins) either
+	 * in an syncronised or asyncronous manner.
 	 */
-	virtual void registerListener(StatisticsMultiplexerListener * listener) = 0;
 
-	/**
-	 * Unregister listener from multiplexer
-	 *
-	 * @param	listener [in]	listener to remove
-	 */
-	virtual void unregisterListener(StatisticsMultiplexerListener * listener) = 0;
 
-};
+	class StatisticsMultiplexer : public core::Component {
+		public:
+
+			virtual void Log( StatisticsValue * element ) = 0;
+
+			/**
+			 * Register listener to multiplexer
+			 *
+			 * @param   listener [in]   listener to notify in the future
+			 */
+			virtual void registerListener( StatisticsMultiplexerListener * listener ) = 0;
+
+			/**
+			 * Unregister listener from multiplexer
+			 *
+			 * @param   listener [in]   listener to remove
+			 */
+			virtual void unregisterListener( StatisticsMultiplexerListener * listener ) = 0;
+
+	};
 
 
 #define STATISTICS_MULTIPLEXER_INTERFACE "monitoring_statisticsmultiplexer"

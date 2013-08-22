@@ -7,27 +7,26 @@
 #include <core/logger/SioxLogger.hpp>
 #include <core/comm/ServerFactory.hpp>
 
-Logger *logger;
+Logger * logger;
 
 class LoggerCallback : public Callback {
-public:
-	void handle_message(ConnectionMessage &msg) const
-	{
-		logger->log(static_cast<Logger::Priority>(msg.get_msg()->priority()), 
-			    msg.get_msg()->logmsg().c_str());
-	}
+	public:
+		void handle_message( ConnectionMessage & msg ) const {
+			logger->log( static_cast<Logger::Priority>( msg.get_msg()->priority() ),
+			             msg.get_msg()->logmsg().c_str() );
+		}
 };
 
 
-class NetLoggerServer 
-   : public Logger {
+class NetLoggerServer
+		: public Logger {
 
-public:
-	NetLoggerServer(const std::string &local_uri);
-	~NetLoggerServer();
-	
-private:
-	ServiceServer *netserver_;
+	public:
+		NetLoggerServer( const std::string & local_uri );
+		~NetLoggerServer();
+
+	private:
+		ServiceServer * netserver_;
 };
 
 #endif

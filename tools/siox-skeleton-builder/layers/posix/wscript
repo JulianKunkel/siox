@@ -81,7 +81,7 @@ def build(bld):
 	
 	# build tests if a dummy implementation has been selected
 	bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,  
-			linkflags=wrap_linkerflags)
+			linkflags=wrap_linkerflags,  install_path = None)
 	bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
 
 	try:
