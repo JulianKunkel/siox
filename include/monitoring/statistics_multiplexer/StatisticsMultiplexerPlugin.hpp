@@ -10,27 +10,27 @@
 
 using namespace core;
 
-namespace monitoring{
+namespace monitoring {
 
-class StatisticsMultiplexerPlugin: public Component{
-protected:
+	class StatisticsMultiplexerPlugin: public Component {
+		protected:
 
-	virtual void init(StatisticsMultiplexerPluginOptions * options, StatisticsMultiplexer & multiplexer) = 0;
+			virtual void init( StatisticsMultiplexerPluginOptions * options, StatisticsMultiplexer & multiplexer ) = 0;
 
-public:
-	void init(StatisticsMultiplexerPluginOptions * options, StatisticsMultiplexer * statistics_multiplexer){
+		public:
+			void init( StatisticsMultiplexerPluginOptions * options, StatisticsMultiplexer * statistics_multiplexer ) {
 
-		init(options);
-	}
+				init( options );
+			}
 
-	void init(ComponentOptions * options){
-		StatisticsMultiplexerPluginOptions * o = (StatisticsMultiplexerPluginOptions *) options;
-		assert(options != nullptr);
-		assert(o->multiplexer.componentID != 0);
+			void init( ComponentOptions * options ) {
+				StatisticsMultiplexerPluginOptions * o = ( StatisticsMultiplexerPluginOptions * ) options;
+				assert( options != nullptr );
+				assert( o->multiplexer.componentID != 0 );
 
-		init(o, o->multiplexer.instance<StatisticsMultiplexer>(), o->dereferenceFacade.instance<StatisticsPluginDereferencing>());
-	}
-};
+				init( o, o->multiplexer.instance<StatisticsMultiplexer>(), o->dereferenceFacade.instance<StatisticsPluginDereferencing>() );
+			}
+	};
 
 }
 

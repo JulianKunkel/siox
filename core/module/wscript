@@ -3,7 +3,7 @@
 
 
 def build(bld):
-	bld.shlib(includes="",  use = "GMODULES", target = 'siox-core-ModuleLoader', source = 'module-loader.cpp' )
+	bld.shlib(includes="",  use = "GMODULES", target = 'siox-core-ModuleLoader', source = 'ModuleLoader.cpp' )
 	bld.recurse(['test'], mandatory=True)
 
 

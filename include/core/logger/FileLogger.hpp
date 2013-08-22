@@ -7,18 +7,18 @@
 
 #include <core/logger/Logger.hpp>
 
-class FileLogger 
-   : public Logger {
+class FileLogger
+		: public Logger {
 
-public:
-	FileLogger(const std::string &path);
-	~FileLogger();
+	public:
+		FileLogger( const std::string & path );
+		~FileLogger();
 
-protected:
-	void log_append(const Priority prio, const char *buffer);
+	protected:
+		void log_append( const Priority prio, const char * buffer );
 
-private:
-	std::ofstream logfile_;
+	private:
+		std::ofstream logfile_;
 };
 
 #endif

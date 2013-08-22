@@ -10,25 +10,27 @@
 
 namespace asio = boost::asio;
 
-class ServerFactoryException 
-   : public std::exception {
-	  
-public:
-	ServerFactoryException(const char *err_msg) : err_msg_(err_msg) {}
-	const char *what() const throw() { return err_msg_; }
-private:
-	const char *err_msg_;
-	
+class ServerFactoryException
+		: public std::exception {
+
+	public:
+		ServerFactoryException( const char * err_msg ) : err_msg_( err_msg ) {}
+		const char * what() const throw() {
+			return err_msg_;
+		}
+	private:
+		const char * err_msg_;
+
 };
 
 namespace ServerFactory {
-	
-/**
- * Creates a connection of the appropriate type according to the protocol 
- * especified in the given URI.
- */
-ServiceServer *create_server(const std::string &endpoint_uri);
-	
+
+	/**
+	 * Creates a connection of the appropriate type according to the protocol
+	 * especified in the given URI.
+	 */
+	ServiceServer * create_server( const std::string & endpoint_uri );
+
 };
 
 #endif

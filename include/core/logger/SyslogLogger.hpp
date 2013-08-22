@@ -6,17 +6,17 @@
 
 #include <core/logger/Logger.hpp>
 
-class SyslogLogger 
-   : public Logger {
-	
-public:
-	SyslogLogger(const std::string &logname);
-	
-	~SyslogLogger();
+class SyslogLogger
+		: public Logger {
 
-protected:
-	void log_append(const Priority prio, const char *buffer);
-	
+	public:
+		SyslogLogger( const std::string & logname );
+
+		~SyslogLogger();
+
+	protected:
+		void log_append( const Priority prio, const char * buffer );
+
 };
 
 

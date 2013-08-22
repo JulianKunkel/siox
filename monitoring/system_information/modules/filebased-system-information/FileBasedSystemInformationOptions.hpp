@@ -2,10 +2,10 @@
 
 using namespace std;
 
-class FileBasedSystemInformationOptions: public core::ComponentOptions{
-public:
-	string filename;
+class FileBasedSystemInformationOptions: public core::ComponentOptions {
+	public:
+		string filename;
 
-	SERIALIZE_CONTAINER(MEMBER(filename))
+		SERIALIZE_CONTAINER( MEMBER( filename ) )
 };
 

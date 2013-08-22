@@ -16,39 +16,41 @@
 namespace asio = boost::asio;
 
 
-class IPCConnectionException 
-   : public std::exception {
-	   
-public:
-	IPCConnectionException(const char *err_msg) : err_msg_(err_msg) {}
-	const char *what() const throw() { return err_msg_; }
-private:
-	const char *err_msg_;
-	
+class IPCConnectionException
+		: public std::exception {
+
+	public:
+		IPCConnectionException( const char * err_msg ) : err_msg_( err_msg ) {}
+		const char * what() const throw() {
+			return err_msg_;
+		}
+	private:
+		const char * err_msg_;
+
 };
 
 
-class IPCConnection 
-   : public Connection {
-	   
-public:
-	explicit IPCConnection(Service &service, 
-			       asio::io_service &io_service);
-	explicit IPCConnection(Service &service, 
-			       asio::io_service &io_service, 
-			       const std::string &path);
+class IPCConnection
+		: public Connection {
 
-	void start();
-	void isend(boost::shared_ptr<ConnectionMessage> msg);
-	asio::local::stream_protocol::socket &socket();
-	
-private:
-	std::string socket_path_;
-	asio::local::stream_protocol::socket socket_;
-	
-	void do_connection();
-	void do_disconnect();
-	void start_read_body(unsigned msglen);
+	public:
+		explicit IPCConnection( Service & service,
+		                        asio::io_service & io_service );
+		explicit IPCConnection( Service & service,
+		                        asio::io_service & io_service,
+		                        const std::string & path );
+
+		void start();
+		void isend( boost::shared_ptr<ConnectionMessage> msg );
+		asio::local::stream_protocol::socket & socket();
+
+	private:
+		std::string socket_path_;
+		asio::local::stream_protocol::socket socket_;
+
+		void do_connection();
+		void do_disconnect();
+		void start_read_body( unsigned msglen );
 };
 
 typedef boost::shared_ptr<IPCConnection> IPCConnection_ptr;

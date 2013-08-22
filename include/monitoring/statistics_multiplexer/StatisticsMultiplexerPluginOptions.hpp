@@ -6,16 +6,16 @@
 
 using namespace core;
 
-namespace monitoring{
+namespace monitoring {
 
 
-class StatisticsMultiplexerPluginOptions: public ComponentOptions{
-public:
-	ComponentReference multiplexer;
-	ComponentReference dereferenceFacade;
+	class StatisticsMultiplexerPluginOptions: public ComponentOptions {
+		public:
+			ComponentReference multiplexer;
+			ComponentReference dereferenceFacade;
 
-	SERIALIZE_CONTAINER(MEMBER(multiplexer) MEMBER(dereferenceFacade))
-};
+			SERIALIZE_CONTAINER( MEMBER( multiplexer ) MEMBER( dereferenceFacade ) )
+	};
 
 }
 

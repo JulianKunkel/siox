@@ -6,15 +6,15 @@
 
 using namespace core;
 
-namespace monitoring{
+namespace monitoring {
 
 
-class StatisticsProviderPluginOptions: public ComponentOptions{
-public:
-	ComponentReference statisticsCollector;
+	class StatisticsProviderPluginOptions: public ComponentOptions {
+		public:
+			ComponentReference statisticsCollector;
 
-	SERIALIZE_CONTAINER(MEMBER_INJECTION(statisticsCollector))
-};
+			SERIALIZE_CONTAINER( MEMBER_INJECTION( statisticsCollector ) )
+	};
 
 }
 

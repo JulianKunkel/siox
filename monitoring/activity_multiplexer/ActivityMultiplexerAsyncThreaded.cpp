@@ -8,23 +8,22 @@
 using namespace core;
 using namespace monitoring;
 
-namespace monitoring{
+namespace monitoring {
 
 
-/**
- * ActivityMultiplexer
- * Forwards logged activities to registered listeners (e.g. Plugins) either
- * in an syncronised or asyncronous manner.
- */
+	/**
+	 * ActivityMultiplexer
+	 * Forwards logged activities to registered listeners (e.g. Plugins) either
+	 * in an syncronised or asyncronous manner.
+	 */
 //class ActivityMultiplexerAsyncThreaded : public MultiplexerAsync<Activity, ActivityMultiplexer>
-class ActivityMultiplexerAsyncThreaded : public MultiplexerAsyncTemplate<Activity, ActivityMultiplexer, ActivityMultiplexerListener>
-{
+	class ActivityMultiplexerAsyncThreaded : public MultiplexerAsyncTemplate<Activity, ActivityMultiplexer, ActivityMultiplexerListener> {
 
-};
+	};
 
 }
 
 
-CREATE_SERIALIZEABLE_CLS(MultiplexerAsyncOptions)
+CREATE_SERIALIZEABLE_CLS( MultiplexerAsyncOptions )
 
-PLUGIN(ActivityMultiplexerAsyncThreaded)
+PLUGIN( ActivityMultiplexerAsyncThreaded )

@@ -5,29 +5,41 @@
 using namespace core;
 
 
-void MyChildModule::init(){
+void MyChildModule::init()
+{
 }
 
-ComponentOptions * MyChildModule::AvailableOptions(){
+ComponentOptions * MyChildModule::AvailableOptions()
+{
 	return new MyChildModuleOptions();
 }
 
-void MyParentModule::init(){
+void MyParentModule::init()
+{
 }
 
-ComponentOptions * MyParentModule::AvailableOptions(){
+ComponentOptions * MyParentModule::AvailableOptions()
+{
 	return new MyParentModuleOptions();
 }
 
-CREATE_SERIALIZEABLE_CLS(MyChildModuleOptions)
-CREATE_SERIALIZEABLE_CLS(MyParentModuleOptions)
+CREATE_SERIALIZEABLE_CLS( MyChildModuleOptions )
+CREATE_SERIALIZEABLE_CLS( MyParentModuleOptions )
 
 
-extern "C"{\
-void * get_instance_parent() { return new MyParentModule(); }\
+extern "C" {
+	\
+	void * get_instance_parent()
+	{
+		return new MyParentModule();
+	}\
 }
 
 
-extern "C"{\
-void * get_instance_child() { return new MyChildModule(); }\
+extern "C" {
+	\
+	void * get_instance_child()
+	{
+		return new MyChildModule();
+	}\
 }

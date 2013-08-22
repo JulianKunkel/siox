@@ -6,16 +6,16 @@
 
 using namespace core;
 
-namespace knowledge{
+namespace knowledge {
 
 
-class OptimizerPluginOptions: public ComponentOptions{
-public:
-	ComponentReference optimizer;
-	ComponentReference dereferenceFacade;
+	class OptimizerPluginOptions: public ComponentOptions {
+		public:
+			ComponentReference optimizer;
+			ComponentReference dereferenceFacade;
 
-	SERIALIZE_CONTAINER(MEMBER(optimizer) MEMBER(dereferenceFacade))
-};
+			SERIALIZE_CONTAINER( MEMBER( optimizer ) MEMBER( dereferenceFacade ) )
+	};
 
 }
 

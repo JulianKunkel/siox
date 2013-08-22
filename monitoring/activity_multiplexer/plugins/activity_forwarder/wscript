@@ -2,7 +2,8 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(includes="",  use = "siox-core-AutoConfigurator", target = 'siox-monitoring-activityPlugin-ActivityForwarder', source ='ActivityForwarder.cpp' )
+     pass
+#    bld.shlib(includes="",  use = "siox-core-AutoConfigurator", target = 'siox-monitoring-activityPlugin-ActivityForwarder', source ='ActivityForwarder.cpp' )
 
 #    bld.recurse(['test'], mandatory=True)
 

@@ -6,12 +6,12 @@
 using namespace std;
 using namespace monitoring;
 
-class FileWriterPluginOptions: public ActivityMultiplexerPluginOptions{
-public:
-	string filename;
-	bool synchronize = false;
+class FileWriterPluginOptions: public ActivityMultiplexerPluginOptions {
+	public:
+		string filename;
+		bool synchronize = false;
 
-	SERIALIZE_OPTIONS(MEMBER(filename) MEMBER(synchronize))
+		SERIALIZE_OPTIONS( MEMBER( filename ) MEMBER( synchronize ) )
 };
 
 

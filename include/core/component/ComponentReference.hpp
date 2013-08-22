@@ -9,7 +9,7 @@ namespace core {
 
 	typedef void * instance ComponentReference;
 
-	#define GET_INSTANCE(TYPE, Y) static_cast<TYPE>(Y);
+#define GET_INSTANCE(TYPE, Y) static_cast<TYPE>(Y);
 
 #else // OBJECT_INJECTION
 
@@ -20,18 +20,18 @@ namespace core {
 	/*
 	 * Use this class in the options to create a reference to a required component (interface).
 	 */
-	class ComponentReference{
-	public:
-		ComponentReferenceID componentID = 0;
-		bool global = false;
+	class ComponentReference {
+		public:
+			ComponentReferenceID componentID = 0;
+			bool global = false;
 
-		template<class TYPE>
-		TYPE* instance(){
-			return (TYPE*)(componentID);
-		}
+			template<class TYPE>
+			TYPE * instance() {
+				return ( TYPE * )( componentID );
+			}
 	};
 
-	#define GET_INSTANCE(TYPE, Y) Y.instance<TYPE>();
+#define GET_INSTANCE(TYPE, Y) Y.instance<TYPE>();
 
 #endif // OBJECT_INJECTION
 

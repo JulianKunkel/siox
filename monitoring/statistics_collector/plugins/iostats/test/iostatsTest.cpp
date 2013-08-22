@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 
 #include <monitoring/statistics_collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/statistics_collector/StatisticsCollector.hpp>
@@ -12,9 +12,10 @@ using namespace monitoring;
 using namespace core;
 
 
-int main(int argc, char const *argv[]){
-	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>("", 
-		"siox-monitoring-statisticsPlugin-IOstats" , MONITORING_STATISTICS_PLUGIN_INTERFACE);
+int main( int argc, char const * argv[] )
+{
+	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>( "",
+	                                    "siox-monitoring-statisticsPlugin-IOstats" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 
 	plugin->init();
 
@@ -23,14 +24,14 @@ int main(int argc, char const *argv[]){
 	cout << "iostats plugin" << endl;
 
 	plugin->nextTimestep();
-	for(auto it = list.begin() ; it != list.end(); it ++){
+	for( auto it = list.begin() ; it != list.end(); it ++ ) {
 		StatisticsProviderDatatypes & stat = *it;
-		cout << stat.topology[1].second << " " << stat.metrics << ": " << stat.value << " " << stat.si_unit << endl;				
+		cout << stat.topology[1].second << " " << stat.metrics << ": " << stat.value << " " << stat.si_unit << endl;
 	}
 
-	delete(plugin);
+	delete( plugin );
 
-	cout << "OK" << endl;	
+	cout << "OK" << endl;
 	return 0;
 }
 

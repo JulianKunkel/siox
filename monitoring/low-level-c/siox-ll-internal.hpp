@@ -34,54 +34,54 @@ typedef const OntologyAttribute siox_attribute;
 typedef RemoteCall siox_remote_call;
 
 
-struct siox_component{
-    ComponentID cid;
-    UniqueInterfaceID uid;
-    AssociateID instance_associate;
+struct siox_component {
+	ComponentID cid;
+	UniqueInterfaceID uid;
+	AssociateID instance_associate;
 
-    ActivityMultiplexer * amux;
-    // We need one ActivityBuilder per thread, independent of component
+	ActivityMultiplexer * amux;
+	// We need one ActivityBuilder per thread, independent of component
 };
 
 
-struct siox_activity{
-    Activity * activity;
-    siox_component * component;
+struct siox_activity {
+	Activity * activity;
+	siox_component * component;
 
-    siox_activity(Activity * a, siox_component * c) : activity(a), component(c){}
+	siox_activity( Activity * a, siox_component * c ) : activity( a ), component( c ) {}
 };
 
-struct process_info{
-    NodeID nid;
-    ProcessID pid;
+struct process_info {
+	NodeID nid;
+	ProcessID pid;
 
-    /// Loaded ontology implementation
-    monitoring::Ontology * ontology;
-    /// Loaded system information manager implementation
-    monitoring::SystemInformationGlobalIDManager * system_information_manager;
-    /// Loaded association mapper implementation
-    monitoring::AssociationMapper * association_mapper;
+	/// Loaded ontology implementation
+	monitoring::Ontology * ontology;
+	/// Loaded system information manager implementation
+	monitoring::SystemInformationGlobalIDManager * system_information_manager;
+	/// Loaded association mapper implementation
+	monitoring::AssociationMapper * association_mapper;
 
-    /// Loaded activity multiplexer implementation
-    ActivityMultiplexer * amux;
+	/// Loaded activity multiplexer implementation
+	ActivityMultiplexer * amux;
 
-    /// Contains all components
-    core::ComponentRegistrar * registrar;
+	/// Contains all components
+	core::ComponentRegistrar * registrar;
 
-    /// Loads all component modules
-    core::AutoConfigurator * configurator;
+	/// Loads all component modules
+	core::AutoConfigurator * configurator;
 
-    /// Protect critical datastructures    
-    boost::shared_mutex  critical_mutex;
+	/// Protect critical datastructures
+	boost::shared_mutex  critical_mutex;
 
-    uint16_t last_componentID;
+	uint16_t last_componentID;
 };
 
 
 /*
  * Create a local ProcessID
  */
-ProcessID create_process_id(NodeID node);
+ProcessID create_process_id( NodeID node );
 
 
 /*

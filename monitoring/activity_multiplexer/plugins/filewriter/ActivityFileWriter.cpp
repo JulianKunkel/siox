@@ -5,7 +5,7 @@
 
 #define TEXT_SERIALIZATION
 
-#include <boost/archive/text_oarchive.hpp> 
+#include <boost/archive/text_oarchive.hpp>
 
 #include <core/container/container-serializable.hpp>
 
@@ -22,43 +22,42 @@ using namespace core;
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
 class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerAsync {
-private:
-	ofstream file;
-	bool synchronize;
+	private:
+		ofstream file;
+		bool synchronize;
 
-	boost::archive::text_oarchive * oa;
+		boost::archive::text_oarchive * oa;
 
-	mutex motify_mutex;
-public:
+		mutex motify_mutex;
+	public:
 
-	void Notify(Activity * activity)
-	{ 		
-		lock_guard<mutex> lock(motify_mutex);
-		ActivityAccessor * as = reinterpret_cast<ActivityAccessor*>(activity);
-		*oa << as;
-		if (synchronize)
-	    	file.flush();
-	}
+		void Notify( Activity * activity ) {
+			lock_guard<mutex> lock( motify_mutex );
+			ActivityAccessor * as = reinterpret_cast<ActivityAccessor *>( activity );
+			*oa << as;
+			if( synchronize )
+				file.flush();
+		}
 
-	ComponentOptions * AvailableOptions(){
-		return new FileWriterPluginOptions();
-	}
+		ComponentOptions * AvailableOptions() {
+			return new FileWriterPluginOptions();
+		}
 
-	void init(ActivityMultiplexer & multiplexer){
-		FileWriterPluginOptions & o = getOptions<FileWriterPluginOptions>();
-		file.open(o.filename);
-		oa = new boost::archive::text_oarchive(file, boost::archive::no_header | boost::archive::no_codecvt);
+		void init( ActivityMultiplexer & multiplexer ) {
+			FileWriterPluginOptions & o = getOptions<FileWriterPluginOptions>();
+			file.open( o.filename );
+			oa = new boost::archive::text_oarchive( file, boost::archive::no_header | boost::archive::no_codecvt );
 
-		synchronize = o.synchronize;
-		
-		multiplexer.registerListener(this);
-	}
+			synchronize = o.synchronize;
 
-	~FileWriterPlugin(){
-		file.close();
-		delete(oa);
-	}
+			multiplexer.registerListener( this );
+		}
+
+		~FileWriterPlugin() {
+			file.close();
+			delete( oa );
+		}
 };
 
-PLUGIN(FileWriterPlugin)
+PLUGIN( FileWriterPlugin )
 
