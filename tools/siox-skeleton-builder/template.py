@@ -46,9 +46,13 @@ template = {
 #			 siox_attribute_register().
 # Value: Pointer to the real value of the attribute
 'component_attribute': {
-	'variables': 'Attribute Value',
+	'variables': 'Attribute Value SpliceCode=',
 	'global': '''''',
-	'init': '''siox_component_set_attribute( global_component,  %(Attribute)s, %(Value)s);''',
+	'init': '''
+				%(SpliceCode)s 
+				assert( %(Attribute)s != NULL );
+				siox_component_set_attribute( global_component,  %(Attribute)s, %(Value)s);
+			''',
     'before': '''''',
 	'after': '',
 	'cleanup': '',
@@ -187,7 +191,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
+	'after': 'assert( %(Attribute)s != NULL );siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -197,7 +201,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
+	'after': 'assert( %(Attribute)s != NULL );siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -207,7 +211,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '{uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
+	'after': 'assert( %(Attribute)s != NULL ); {uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
 	'cleanup': '',
 	'final': ''
 },
