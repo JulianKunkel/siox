@@ -2,7 +2,7 @@
 
 class HelloWorldImpl1 : public HelloWorld {
 	public:
-		virtual std::string testfunc(){
+		virtual std::string testfunc() {
 			return "Hello World!";
 		}
 };

@@ -12,14 +12,14 @@ using namespace std;
 
 int main( int argc, char ** argv )
 {
-	std::string compileTimeName(STRINGIFY(MODULE_INSTANCIATOR_NAME(foo)));
-	std::string runTimeName(core::ModuleInterface::instanciator_name("foo"));
+	std::string compileTimeName( STRINGIFY( MODULE_INSTANCIATOR_NAME( foo ) ) );
+	std::string runTimeName( core::ModuleInterface::instanciator_name( "foo" ) );
 
-	if(compileTimeName.compare(runTimeName)) {
+	if( compileTimeName.compare( runTimeName ) ) {
 		std::cout << "Error: compile time and run time names differ\n"
-		        "    compile time name = \"" << compileTimeName << "\"\n"
-		        "        run time name = \"" << runTimeName << "\"\n";
-		exit(1);
+		          "    compile time name = \"" << compileTimeName << "\"\n"
+		          "        run time name = \"" << runTimeName << "\"\n";
+		exit( 1 );
 	}
 
 	try {
@@ -35,10 +35,10 @@ int main( int argc, char ** argv )
 		HelloSaturn * hw = core::module_create_instance<HelloSaturn>( "", "test-module", "hello_world" );
 		cout << hw->alternativeFunc() << endl;
 		delete( hw );
-		assert(false);
+		assert( false );
 	} catch( core::ModuleError & e ) {
 		cerr << "As expected I caught the error: " << e.what() << endl;
-	}	
+	}
 
 	return 0;
 }

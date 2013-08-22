@@ -319,5 +319,8 @@ namespace monitoring {
 
 
 extern "C" {
-	void* MONITORING_SYSTEMINFORMATION_GLOBAL_ID_INSTANCIATOR_NAME() { return new FileBasedSystemInformation(); }
+	void * MONITORING_SYSTEMINFORMATION_GLOBAL_ID_INSTANCIATOR_NAME()
+	{
+		return new FileBasedSystemInformation();
+	}
 }

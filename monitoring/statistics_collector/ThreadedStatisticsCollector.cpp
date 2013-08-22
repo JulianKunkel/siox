@@ -302,6 +302,9 @@ class ThreadedStatisticsCollector: StatisticsCollector {
 CREATE_SERIALIZEABLE_CLS( ThreadedStatisticsOptions )
 //CREATE_SERIALIZEABLE_CLS(ThreadedCollectorStatistics)
 
-extern "C"{
-	void * STATISTICS_COLLECTOR_INSTANCIATOR_NAME() { return new ThreadedStatisticsCollector(); }
+extern "C" {
+	void * STATISTICS_COLLECTOR_INSTANCIATOR_NAME()
+	{
+		return new ThreadedStatisticsCollector();
+	}
 }

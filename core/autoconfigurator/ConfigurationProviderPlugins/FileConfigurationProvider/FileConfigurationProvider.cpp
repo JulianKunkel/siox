@@ -76,5 +76,8 @@ class FileConfigurationProvider : public ConfigurationProvider {
 };
 
 extern "C" {
-	void* CONFIGURATION_PROVIDER_INSTANCIATOR_NAME() { return new FileConfigurationProvider(); }
+	void * CONFIGURATION_PROVIDER_INSTANCIATOR_NAME()
+	{
+		return new FileConfigurationProvider();
+	}
 }

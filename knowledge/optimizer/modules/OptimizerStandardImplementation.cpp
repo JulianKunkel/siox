@@ -72,8 +72,11 @@ namespace knowledge {
 } // namespace knowledge
 
 
-extern "C"{
-	void * KNOWLEDGE_OPTIMIZER_INSTANCIATOR_NAME() { return new knowledge::OptimizerStandardImplementation(); }
+extern "C" {
+	void * KNOWLEDGE_OPTIMIZER_INSTANCIATOR_NAME()
+	{
+		return new knowledge::OptimizerStandardImplementation();
+	}
 }
 
 // BUILD_TEST_INTERFACE knowledge/optimizer/modules/

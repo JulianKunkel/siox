@@ -262,5 +262,8 @@ CREATE_SERIALIZEABLE_CLS_EXTERNAL( AttributeWithValues )
 CREATE_SERIALIZEABLE_CLS_EXTERNAL( OntologyAttribute )
 
 extern "C" {
-	void* MONITORING_ONTOLOGY_INSTANCIATOR_NAME() { return new FileOntology(); }
+	void * MONITORING_ONTOLOGY_INSTANCIATOR_NAME()
+	{
+		return new FileOntology();
+	}
 }
