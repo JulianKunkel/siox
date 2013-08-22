@@ -18,27 +18,22 @@ namespace monitoring {
 	 */
 	class ActivityMultiplexerPlugin: public Component {
 		protected:
-			ActivityMultiplexer * parent_multiplexer;
+			ActivityMultiplexer * multiplexer;
 
-			// needed for some boost magic?
-			ActivityPluginDereferencing * dereferenceFacade;
+			ActivityPluginDereferencing * facade;
 
-			virtual void init( ActivityMultiplexer & multiplexer ) = 0;
+			virtual void initPlugin( ) = 0;
 
 		public:
-			void init( ActivityMultiplexer * activity_multiplexer, ActivityPluginDereferencing * dereferenceFacade ) {
-				parent_multiplexer = activity_multiplexer;
-				// may be 0.
-				this->dereferenceFacade = dereferenceFacade;
-
-				init( *parent_multiplexer );
-			}
-
 			void init() {
 				ActivityMultiplexerPluginOptions & o = getOptions<ActivityMultiplexerPluginOptions>();
-				assert( o.multiplexer.componentID != 0 );
+				assert( o.multiplexer.componentPointer != nullptr );
 
-				init( GET_INSTANCE(ActivityMultiplexer, o.multiplexer), GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade) );
+				multiplexer = GET_INSTANCE(ActivityMultiplexer, o.multiplexer);
+				// may be NULL
+				facade = GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade);
+
+				initPlugin();
 			}
 	};
 

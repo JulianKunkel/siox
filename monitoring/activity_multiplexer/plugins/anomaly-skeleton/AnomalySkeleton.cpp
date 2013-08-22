@@ -22,21 +22,6 @@ CREATE_SERIALIZEABLE_CLS( AnomalySkeletonOptions )
 
 class AnomalySkeleton;
 
-class ActivityListenerAsync : public ActivityMultiplexerListenerAsync {
-	public:
-		virtual void Notify( Activity * element );
-
-		void Reset( int dropped ) {
-
-		}
-
-		ActivityListenerAsync( AnomalySkeleton * ap ) {
-			parentPlugin = ap;
-		}
-	private:
-		AnomalySkeleton * parentPlugin;
-};
-
 enum class ActivityToken : uint8_t {
     OPEN,
     CLOSE,
@@ -44,15 +29,12 @@ enum class ActivityToken : uint8_t {
 
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
-class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerSync, public AnomalyPlugin {
+class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener, public ActivityMultiplexerListenerAsync, public AnomalyPlugin {
 	private:
 		SystemInformationGlobalIDManager * sys;
 		OntologyAttribute filesize;
 		OntologyAttribute filesystem;
 		OntologyAttribute filename;
-
-		ActivityListenerAsync * ala;
-		ActivityMultiplexer * multiplexer;
 
 		set<AnomalyPluginObservation> * recentObservations = new set<AnomalyPluginObservation>();
 
@@ -84,7 +66,7 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiple
 			}
 		}
 
-		void NotifyAsync( Activity * activity ) {
+		void NotifyAsync( int lost_count, Activity * activity ) {
 		}
 
 		unique_ptr<set<AnomalyPluginObservation>> queryRecentObservations() {
@@ -99,27 +81,23 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiple
 		}
 
 		~AnomalySkeleton() {
-			if( multiplexer != nullptr ) {
-				multiplexer->unregisterListener( this );
-				multiplexer->unregisterListener( ala );
-			}
-
-			delete( ala );
+			multiplexer->unregisterListener( this );
+			multiplexer->unregisterAsyncListener( this );		
 		}
 
-		void init( ActivityMultiplexer & multiplexer ) {
-			AnomalySkeletonOptions & options = getOptions<AnomalySkeletonOptions>();
+		void initPlugin(  ) {
+			// AnomalySkeletonOptions & options = getOptions<AnomalySkeletonOptions>();
 
-			assert( dereferenceFacade != nullptr );
-			assert( dereferenceFacade->get_system_information() != nullptr );
-			sys = dereferenceFacade->get_system_information();
+			assert( facade != nullptr );
+			assert( facade->get_system_information() != nullptr );
+			sys = facade->get_system_information();
 
 			try {
-				filesize = dereferenceFacade->lookup_attribute_by_name( "test", "filesize" );
-				filename = dereferenceFacade->lookup_attribute_by_name( "test", "filename" );
-				filesystem = dereferenceFacade->lookup_attribute_by_name( "test", "filesystem" );
+				filesize = facade->lookup_attribute_by_name( "test", "filesize" );
+				filename = facade->lookup_attribute_by_name( "test", "filename" );
+				filesystem = facade->lookup_attribute_by_name( "test", "filesystem" );
 
-				const OntologyValue & val = dereferenceFacade->lookup_meta_attribute( filesize, "Meta", "Unit" );
+				const OntologyValue & val = facade->lookup_meta_attribute( filesize, "Meta", "Unit" );
 				cout << "Unit of filesize: " << val << endl;
 			} catch( NotFoundError & e ) {
 				// First run, we cannot register because the ontology does not hold filesize.
@@ -127,22 +105,12 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiple
 				return;
 			}
 
-			ala = new ActivityListenerAsync( this );
+			multiplexer->registerListener( this );
+			multiplexer->registerAsyncListener( this );
 
-			this->multiplexer = & multiplexer;
-			assert( this->multiplexer != nullptr );
-
-			multiplexer.registerListener( this );
-			multiplexer.registerListener( ala );
-
-			dereferenceFacade->registerAnomalyPlugin( this );
+			facade->registerAnomalyPlugin( this );
 		}
 };
-
-void ActivityListenerAsync::Notify( Activity * activity )
-{
-	parentPlugin->NotifyAsync( activity );
-}
 
 
 PLUGIN( AnomalySkeleton )

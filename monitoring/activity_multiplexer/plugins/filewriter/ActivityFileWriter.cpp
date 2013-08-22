@@ -21,7 +21,7 @@ using namespace monitoring;
 using namespace core;
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
-class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultiplexerListenerAsync {
+class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener {
 	private:
 		ofstream file;
 		bool synchronize;
@@ -43,17 +43,19 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultipl
 			return new FileWriterPluginOptions();
 		}
 
-		void init( ActivityMultiplexer & multiplexer ) {
+		void initPlugin( ) {
 			FileWriterPluginOptions & o = getOptions<FileWriterPluginOptions>();
 			file.open( o.filename );
 			oa = new boost::archive::text_oarchive( file, boost::archive::no_header | boost::archive::no_codecvt );
 
 			synchronize = o.synchronize;
 
-			multiplexer.registerListener( this );
+			multiplexer->registerListener( this );
 		}
 
 		~FileWriterPlugin() {
+			multiplexer->unregisterListener( this );
+
 			file.close();
 			delete( oa );
 		}

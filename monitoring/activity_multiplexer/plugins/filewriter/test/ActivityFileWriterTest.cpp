@@ -11,7 +11,7 @@ using namespace core;
 
 int main( int argc, char const * argv[] )
 {
-	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>( "", "siox-monitoring-ActivityMultiplexerAsyncThreaded", "monitoring_activitymultiplexer" );
+	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>( "", "siox-monitoring-ActivityMultiplexerAsync", "monitoring_activitymultiplexer" );
 
 	// wir registrieren das Plugin (normal geschieht dies automatisch)
 	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>( "", "siox-monitoring-activityPlugin-ActivityFileWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
@@ -20,8 +20,9 @@ int main( int argc, char const * argv[] )
 	// not necessary, but for testing...
 	FileWriterPluginOptions & op = ( FileWriterPluginOptions & ) ap->getOptions();
 	op.filename = "test.txt";
+	op.multiplexer.componentPointer = m1;
 
-	ap->init( m1, nullptr );
+	ap->init();
 
 	auto parentArray = vector<ActivityID> {  {.cid = {.pid = {2, 3, 4}, .id = 1}, .id = 1} };
 	auto attributeArray = vector<Attribute> {{.id = 111, .value = VariableDatatype( "myData" )}, {.id = 3, . value = ( uint64_t ) 4711}};
@@ -35,9 +36,9 @@ int main( int argc, char const * argv[] )
 
 	m1->Log( activity );
 
-	delete( m1 );
 	delete( ap );
 
+	delete( m1 );
 	cout << "OK" << endl;
 }
 
