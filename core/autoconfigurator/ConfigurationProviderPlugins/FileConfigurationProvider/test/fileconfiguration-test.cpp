@@ -34,14 +34,22 @@ int main()
 	child = dynamic_cast<MyChildModule *>( components[0] );
 	assert( child );
 
+	assert( parent->getOptions<MyParentModuleOptions>().childInterface.componentID );
+
 	cout << parent->getOptions<MyParentModuleOptions>().pname << endl;
 	cout << child->getOptions<MyChildModuleOptions>().name << endl;
 	cout << parent->getOptions<MyParentModuleOptions>().childInterface.componentID << endl;
-	assert( parent->getOptions<MyParentModuleOptions>().childInterface.componentID );
+	cout << child << endl;
+
+	Component * childPointer = parent->getOptions<MyParentModuleOptions>().childInterface.componentPointer;
+
+	assert((MyChildModule *) childPointer == child);
+
+	cout << dynamic_cast<MyChildModule *>(childPointer) << endl;
 
 	ComponentReference chi = parent->getOptions<MyParentModuleOptions>().childInterface;
 	void * instance = GET_INSTANCE( MyChildModule, chi );
-
+	assert( instance );	
 	assert( instance == child );
 
 	delete( registrar );

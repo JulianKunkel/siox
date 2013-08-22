@@ -37,7 +37,7 @@ namespace boost {
 				if( ! g.global ) {
 					myOffset = autoConfiguratorOffset;
 				}
-				g.componentID = ( core::ComponentReferenceID ) autoConfiguratorRegistrar->lookup_component( g.componentID + myOffset );
+				g.componentPointer = ( core::Component* ) autoConfiguratorRegistrar->lookup_component( g.componentID + myOffset );
 			}
 		}
 

@@ -6,7 +6,7 @@ template = {
 #
 # SWID: The name (software id) for this component
 'component': {
-	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" SpliceCode=""',
+	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" SpliceCode=',
 	'global': '''static siox_component * global_component;
 		     static siox_unique_interface * global_uid;
 				''',
