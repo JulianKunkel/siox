@@ -51,7 +51,6 @@ protected:
 	virtual ComponentOptions * AvailableOptions() = 0;
 public:
 	// Compile time and run time calculation of the module instanciator symbol names.
-	// TODO: Add a test that ensure that the results of the macro and function agree.
 	#define COMPONENT_INSTANCIATOR_NAME(INTERFACE_NAME) get_instance_ ## INTERFACE_NAME
 	static std::string component_instanciator_name(const std::string &interface_name) throw() {
 		return "get_instance_" + interface_name;
