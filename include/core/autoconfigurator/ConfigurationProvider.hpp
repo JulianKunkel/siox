@@ -4,6 +4,8 @@
 #include <string>
 #include <map>
 
+#include <core/module/ModuleInterface.hpp>
+
 using namespace std;
 
 namespace core {
@@ -50,7 +52,7 @@ namespace core {
 			}
 	};
 
-	class ConfigurationProvider {
+	class ConfigurationProvider : public ModuleInterface{
 		public:
 			/*
 			 * The configuration entry_point describes where to get the basic information, e.g. file or DB / demon connection to use for fetching the info.

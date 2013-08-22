@@ -1,17 +1,17 @@
 #include "test-module.hpp"
 
-std::string HelloWorld::testfunc()
-{
-	return "Hello World!";
-}
+class HelloWorldImpl1 : public HelloWorld {
+	public:
+		virtual std::string testfunc(){
+			return "Hello World!";
+		}
+};
 
 
 // module part.
 extern "C" {
-#include "./module.h"
-
 	void * get_instance_hello_world()
 	{
-		return new HelloWorld();
+		return new HelloWorldImpl1();
 	}
 }
