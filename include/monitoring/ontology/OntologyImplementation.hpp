@@ -3,15 +3,6 @@
 
 #include <monitoring/ontology/Ontology.hpp>
 
-
-// Module interfaces
-
-#define COMPONENT(x) \
-	extern "C"{\
-		void * get_instance_monitoring_ontology() { return new x(); }\
-	}
-
-
-
+#define MONITORING_ONTOLOGY_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_ontology)
 
 #endif

@@ -3,9 +3,6 @@
 
 #include <knowledge/reasoner/Reasoner.hpp>
 
-#define COMPONENT(x) \
-	extern "C"{\
-		void * get_instance_knowledge_reasoner() { return new x(); }\
-	}
+#define KNOWLEDGE_REASONER_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(knowledge_reasoner)
 
 #endif

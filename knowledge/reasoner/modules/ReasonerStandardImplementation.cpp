@@ -216,4 +216,9 @@ namespace knowledge {
 } // namespace knowledge
 CREATE_SERIALIZEABLE_CLS( ReasonerStandardImplementationOptions )
 
-COMPONENT( knowledge::ReasonerStandardImplementation )
+extern "C" {
+	void * KNOWLEDGE_REASONER_INSTANCIATOR_NAME()
+	{
+		return new knowledge::ReasonerStandardImplementation();
+	}
+}

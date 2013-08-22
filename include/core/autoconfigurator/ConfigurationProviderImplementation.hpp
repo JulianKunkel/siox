@@ -1,7 +1,4 @@
 #include <core/autoconfigurator/ConfigurationProvider.hpp>
 
-#define COMPONENT(x) \
-	extern "C"{\
-		void * get_instance_core_configuration_provider() { return new x(); }\
-	}
+#define CONFIGURATION_PROVIDER_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(core_configuration_provider)
 

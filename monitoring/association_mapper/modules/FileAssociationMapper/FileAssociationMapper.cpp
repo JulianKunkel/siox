@@ -289,4 +289,9 @@ CREATE_SERIALIZEABLE_CLS_EXTERNAL( ComponentID )
 
 
 
-COMPONENT( FileAssociationMapper )
+extern "C" {
+	void * MONITORING_ASSOCIATION_MAPPER_INSTANCIATOR_NAME()
+	{
+		return new FileAssociationMapper();
+	}
+}
