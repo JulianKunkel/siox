@@ -143,7 +143,7 @@ namespace core {
 			} catch( exception & e ) {
 				autoConfiguratorRegistrar = nullptr;
 				registrarMutex.unlock();
-				ComponentOptions availableOptions = component->getOptions();
+				ComponentOptions & availableOptions = component->getOptions();
 				string  str = cs.serialize( & availableOptions );
 				cerr << endl << "Expected configuration: " << str << endl;
 
