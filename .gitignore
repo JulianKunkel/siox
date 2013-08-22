@@ -1,0 +1,58 @@
+# Directories to ignore
+#
+/Komponenten/doc/html/
+/Komponenten/doc/latex/
+#!/Komponenten/doc/images/
+
+
+# File extensions to ignore
+#
+*~
+*.err
+*.log
+*.tmp
+*.o
+*.so
+*.bak
+*.h5
+*.mufs
+
+
+# From LaTeX
+*.bbl
+*.dvi
+*.gnuplot
+*.nav
+*.bib
+*.toc
+*.glg
+*.glo
+*.acr
+*.xdy
+*.fdb_latexmk
+*.gls
+*.out
+*.tdo
+*.acn
+*.snm
+*.synctex.gz
+*.blg
+*.aux
+*.alg
+
+# From Sublime Text Editor
+*.sublime-project
+*.sublime-workspace
+*.dat
+*.backup
+
+# From Vim
+*.swp
+
+# From Mac OS X
+.DS_Store
+build/
+.waf*
+.lock-*
+*.gch
+/siox.project/
