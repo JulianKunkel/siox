@@ -12,8 +12,9 @@ using namespace monitoring;
 using namespace core;
 
 
-int main(int argc, char const *argv[]){
-	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>("", "siox-monitoring-statisticsPlugin-providerskel-min" , MONITORING_STATISTICS_PLUGIN_INTERFACE);
+int main( int argc, char const * argv[] )
+{
+	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-providerskel-min" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 
 	plugin->init();
 
@@ -22,14 +23,14 @@ int main(int argc, char const *argv[]){
 	cout << "new plugin" << endl;
 
 	plugin->nextTimestep();
-	for(auto it = list.begin() ; it != list.end(); it ++){
+	for( auto it = list.begin() ; it != list.end(); it ++ ) {
 		StatisticsProviderDatatypes & stat = *it;
-		cout << stat.topology[1].second << " " << stat.metrics << ": " << stat.value << " " << stat.si_unit << endl;				
+		cout << stat.topology[1].second << " " << stat.metrics << ": " << stat.value << " " << stat.si_unit << endl;
 	}
 
-	delete(plugin);
-	
-	cout << "OK" << endl;	
+	delete( plugin );
+
+	cout << "OK" << endl;
 	return 0;
 }
 

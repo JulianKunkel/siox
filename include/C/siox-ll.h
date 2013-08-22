@@ -10,59 +10,59 @@
  * API is a centre piece of the system, as an overview of its interactions with other
  * SIOX modules and interfaces shows:
 
-	@startuml{siox-ll-interactions.png}
-		title Interactions between the Low-Level-C-API, SIOX-Components and Modules
+    @startuml{siox-ll-interactions.png}
+        title Interactions between the Low-Level-C-API, SIOX-Components and Modules
 
-		folder "Process" {
+        folder "Process" {
 
-		component [Thread] #Wheat
+        component [Thread] #Wheat
 
-		folder "Low-Level-C-API" {
-			component [SIOX-LL] #PowderBlue
-			interface "Monitoring" #Orange
-			component [Activity Builder] #Orange
+        folder "Low-Level-C-API" {
+            component [SIOX-LL] #PowderBlue
+            interface "Monitoring" #Orange
+            component [Activity Builder] #Orange
 
-			note left of [SIOX-LL]
-			 Bridge between C
-			 and C++ datatypes
-			end note
+            note left of [SIOX-LL]
+             Bridge between C
+             and C++ datatypes
+            end note
 
-			[Thread] ..> [SIOX-LL] : use
-		}
+            [Thread] ..> [SIOX-LL] : use
+        }
 
-		interface "ConfigurationProvider"
-		interface "Ontology" #Yellow
-		'component [FileOntology] #Yellow
-		'component [DBOntology] #Orange
-		component [Optimizer] #Plum
-		component [AMux] #Orange
-		component [AForwarder] #Orange
-		component [ModuleLoader]
-		component [AutoConfigurator]
+        interface "ConfigurationProvider"
+        interface "Ontology" #Yellow
+        'component [FileOntology] #Yellow
+        'component [DBOntology] #Orange
+        component [Optimizer] #Plum
+        component [AMux] #Orange
+        component [AForwarder] #Orange
+        component [ModuleLoader]
+        component [AutoConfigurator]
 
-		component [SOPI] #Plum
-		component [ADPI] #Plum
+        component [SOPI] #Plum
+        component [ADPI] #Plum
 
-		[AutoConfigurator] ..> [ConfigurationProvider] : use
-		[AutoConfigurator] ..> [ModuleLoader] : use
-		[SIOX-LL] ..> [Ontology] : use
-		'Ontology - [FileOntology]
-		'Ontology - [DBOntology]
-		[SIOX-LL] ..> [Optimizer] : use 
-		[SIOX-LL] ..> [AutoConfigurator] : use
-		[SIOX-LL] ..> [Monitoring] : use
+        [AutoConfigurator] ..> [ConfigurationProvider] : use
+        [AutoConfigurator] ..> [ModuleLoader] : use
+        [SIOX-LL] ..> [Ontology] : use
+        'Ontology - [FileOntology]
+        'Ontology - [DBOntology]
+        [SIOX-LL] ..> [Optimizer] : use
+        [SIOX-LL] ..> [AutoConfigurator] : use
+        [SIOX-LL] ..> [Monitoring] : use
 
-		[Monitoring] ..> [Activity Builder] : use
-		[Monitoring] --> [AMux] : Activity
+        [Monitoring] ..> [Activity Builder] : use
+        [Monitoring] --> [AMux] : Activity
 
 
-		[AMux] --> [SOPI] 
-		[AMux] --> [ADPI] 
-		[AMux] --> [AForwarder] 
-		[Optimizer] --> [SOPI] : chooses\nrelevant
+        [AMux] --> [SOPI]
+        [AMux] --> [ADPI]
+        [AMux] --> [AForwarder]
+        [Optimizer] --> [SOPI] : chooses\nrelevant
 
-		}
-	@enduml
+        }
+    @enduml
 
  *
  * A note on storage mangement:
@@ -112,12 +112,12 @@ typedef struct {
 /// Retrieve the node id object for a given hardware component.
 //////////////////////////////////////////////////////////////////////////////
 /// @param [in] hostname The hardware node's host name, which has to be
-/// 	system-wide unique. If set to NULL, SIOX will use the local hostname.
+///     system-wide unique. If set to NULL, SIOX will use the local hostname.
 //////////////////////////////////////////////////////////////////////////////
 /// @return A node id, which is system-wide unique
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s'' hostname
-siox_node * siox_lookup_node_id(const char * hostname);
+siox_node * siox_lookup_node_id( const char * hostname );
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -129,7 +129,7 @@ siox_node * siox_lookup_node_id(const char * hostname);
 /// @param [in] value The attribute's new value
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p'' attribute,value
-void siox_process_set_attribute(siox_attribute * attribute, const void * value);
+void siox_process_set_attribute( siox_attribute * attribute, const void * value );
 
 
 
@@ -138,21 +138,21 @@ void siox_process_set_attribute(siox_attribute * attribute, const void * value);
 /// found.
 //////////////////////////////////////////////////////////////////////////////
 /// @param [in] domain The contextual domain this attribute belongs to,
-///		e.g. "Node", "Process", "POSIX", "MPI" AND sth. like "OpenMPIV1"
+///     e.g. "Node", "Process", "POSIX", "MPI" AND sth. like "OpenMPIV1"
 /// @param [in] name The attribute's name
 /// @param storage_type [in] The minimum storage type required to represent
-///		data of this attribute
+///     data of this attribute
 //////////////////////////////////////////////////////////////////////////////
 /// @return A pointer to a globally unique representation in a siox_attribute,
-/// 	unless there already exists an attribute with identical domain and
-///		name but different storage_type.
-/// 	In the latter case, a @c nullptr is returned.
+///     unless there already exists an attribute with identical domain and
+///     name but different storage_type.
+///     In the latter case, a @c nullptr is returned.
 //////////////////////////////////////////////////////////////////////////////
 /// @note The key (domain, name) must be unique; it is not allowed to use
-///		different storage types and/or attributes with the same attribute.
+///     different storage types and/or attributes with the same attribute.
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s,%s,%d'' domain,name,storage_type
-siox_attribute * siox_ontology_register_attribute(const char * domain, const char * name, enum siox_ont_storage_type storage_type);
+siox_attribute * siox_ontology_register_attribute( const char * domain, const char * name, enum siox_ont_storage_type storage_type );
 
 /**@}*/
 
@@ -166,17 +166,17 @@ siox_attribute * siox_ontology_register_attribute(const char * domain, const cha
 /// @param [in] name The attribute's full qualified name.
 /// @param [in] unit The unit used to measure values in the attribute.
 /// @param storage_type [in] The minimum storage type required to store values
-/// 	of the attribute. This type will also be assumed for type casts!
+///     of the attribute. This type will also be assumed for type casts!
 //////////////////////////////////////////////////////////////////////////////
 /// @return A pointer to the @em siox_attribute for the attribute or NULL,
-/// 	if the data given is inconsistent with an existing attribute of the
-///		same name.
+///     if the data given is inconsistent with an existing attribute of the
+///     same name.
 //////////////////////////////////////////////////////////////////////////////
 /// @note Units themselves are implemented as meta attributes with storage
-/// 	type SIOX_STORAGE_STRING, domain "Meta" and name "Unit".
+///     type SIOX_STORAGE_STRING, domain "Meta" and name "Unit".
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s,%s,%s,%d'' domain,name,unit,storage_type
-siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain, const char * name, const char * unit, enum siox_ont_storage_type storage_type);
+siox_attribute * siox_ontology_register_attribute_with_unit( const char * domain, const char * name, const char * unit, enum siox_ont_storage_type storage_type );
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -191,13 +191,13 @@ siox_attribute * siox_ontology_register_attribute_with_unit(const char * domain,
 /// @return @c true if everything went well; otherwise, @c false.
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p,%p'' parent_attribute,meta_attribute,value
-int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_attribute * meta_attribute, const void * value);
+int siox_ontology_set_meta_attribute( siox_attribute * parent_attribute, siox_attribute * meta_attribute, const void * value );
 
 /*
  * Retrieve an attribute by its name.
  * @todo Use its attributes to retrieve it.
  *
- * @param [in]   domain    	The domain the attribute belongs to.
+ * @param [in]   domain     The domain the attribute belongs to.
  * @param [in]   name       The metric's full qualified name.
  *
  * @returns                 The @em siox_metric with the name given or NULL, if no such metric
@@ -214,7 +214,7 @@ int siox_ontology_set_meta_attribute(siox_attribute * parent_attribute, siox_att
 /// @return
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s,%s'' domain,name
-siox_attribute * siox_ontology_lookup_attribute_by_name(const char * domain, const char * name);
+siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name );
 
 /*
  * Example: interface_name POSIX, MPI, MPIv3 ...
@@ -232,7 +232,7 @@ siox_attribute * siox_ontology_lookup_attribute_by_name(const char * domain, con
 /// @return An ID that will be unique system-wide.
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s,%s'' interface_name,implementation_identifier
-siox_unique_interface * siox_system_information_lookup_interface_id(const char * interface_name, const char * implementation_identifier);
+siox_unique_interface * siox_system_information_lookup_interface_id( const char * interface_name, const char * implementation_identifier );
 
 /**
  * Report performance data @em not associated with a single activity.
@@ -243,9 +243,9 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
  * @param[in]   hw   The Node to report for.
  * @param[in]   metric     The metric.
  * @param[in]   value   A pointer to the metric's actual value.
- * 
+ *
  * The value describes the difference / delta of the statistic metric between start and end, e.g. 54 MiB has been read between start and end.
- * 
+ *
  */
 //#test ''%p,%p,%p'' component,metric,value
 //void siox_report_node_statistics(siox_node hw, siox_attribute * statistic, siox_timestamp start_of_interval, siox_timestamp end_of_interval, void * value);
@@ -271,17 +271,17 @@ siox_unique_interface * siox_system_information_lookup_interface_id(const char *
  * This function creates a process-local ID in the association mapper and relates it to the string.
  * Therefore, subsequent usages of the string can be replaced by the id.
  * The same string may be linked to the same ID.
- */ 
+ */
 //////////////////////////////////////////////////////////////////////////////
 /// Associate some instance information (such as IP port or thread ID) with
 /// the current invocation.
 //////////////////////////////////////////////////////////////////////////////
 /// @param instance_information [in]
 //////////////////////////////////////////////////////////////////////////////
-/// @return 
+/// @return
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s'' instance_information
-siox_associate * siox_associate_instance(const char * instance_information);
+siox_associate * siox_associate_instance( const char * instance_information );
 
 /*
  * Register this component with SIOX.
@@ -290,31 +290,31 @@ siox_associate * siox_associate_instance(const char * instance_information);
  *
  * @param[in]   uid    The component's @em SoftwareInterface identifier, e.g. „MPI2“ oder „POSIX“.
  * @param[in]   instance_name     The component's @em InstanceID (according to component type,
- *								  e.g. the ProcessID of a Thread or the IP address and Port of
- *								  a server cache).
+ *                                e.g. the ProcessID of a Thread or the IP address and Port of
+ *                                a server cache).
  * These arguments provide a human readable name for the software layer and are used for matching of remote calls.
- * 
+ *
  * @return  A fresh @em siox_component to be used in all the component's future communications
  *          with SIOX.
  *
- * 
+ *
  */
- //////////////////////////////////////////////////////////////////////////////
- /// Register the current component with SIOX.
- //////////////////////////////////////////////////////////////////////////////
- /// @param uiid [in] The unique ID of the component's interface (such as
- ///     POSIX or MPI-I/O)
- /// @param instance_name [in] Further information identifying the component's
- ///     current instance; this may be @c NULL.
- //////////////////////////////////////////////////////////////////////////////
- /// @return A pointer to the component's information, as represented by SIOX
- //////////////////////////////////////////////////////////////////////////////
- /// @note Any parameter SIOX can find out on its own (such as a ProcessID)
- /// may be @c NULL.
- //////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+/// Register the current component with SIOX.
+//////////////////////////////////////////////////////////////////////////////
+/// @param uiid [in] The unique ID of the component's interface (such as
+///     POSIX or MPI-I/O)
+/// @param instance_name [in] Further information identifying the component's
+///     current instance; this may be @c NULL.
+//////////////////////////////////////////////////////////////////////////////
+/// @return A pointer to the component's information, as represented by SIOX
+//////////////////////////////////////////////////////////////////////////////
+/// @note Any parameter SIOX can find out on its own (such as a ProcessID)
+/// may be @c NULL.
+//////////////////////////////////////////////////////////////////////////////
 
 //@test ''%p,%s'' uiid,instance_name
-siox_component * siox_component_register(siox_unique_interface * uiid, const char * instance_name);
+siox_component * siox_component_register( siox_unique_interface * uiid, const char * instance_name );
 
 /**
  * Report an attribute of this component to SIOX.
@@ -326,21 +326,21 @@ siox_component * siox_component_register(siox_unique_interface * uiid, const cha
  * @param[in]   value       A pointer to the attribute's value.
  */
 //@test ''%p,%p,%p'' component,attribute,value
-void siox_component_set_attribute(siox_component * component, siox_attribute * attribute, const void * value);
+void siox_component_set_attribute( siox_component * component, siox_attribute * attribute, const void * value );
 
 /**
  * Register a potential activity on a component.
  */
- //////////////////////////////////////////////////////////////////////////////
- /// Register a component-activity-type with SIOX.
- //////////////////////////////////////////////////////////////////////////////
- /// @param uiid [in]
- /// @param activity_name [in]
- //////////////////////////////////////////////////////////////////////////////
- /// @return
- //////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+/// Register a component-activity-type with SIOX.
+//////////////////////////////////////////////////////////////////////////////
+/// @param uiid [in]
+/// @param activity_name [in]
+//////////////////////////////////////////////////////////////////////////////
+/// @return
+//////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%s'' uiid,activity_name
-siox_component_activity * siox_component_register_activity(siox_unique_interface * uiid, const char * activity_name);
+siox_component_activity * siox_component_register_activity( siox_unique_interface * uiid, const char * activity_name );
 
 /**
  * Unregister a component with SIOX.
@@ -348,7 +348,7 @@ siox_component_activity * siox_component_register_activity(siox_unique_interface
  * @param[in]   component   The component.
  */
 //@test ''%p' component
-void siox_component_unregister(siox_component * component);
+void siox_component_unregister( siox_component * component );
 
 
 /**@}*/
@@ -395,7 +395,7 @@ void siox_component_unregister(siox_component * component);
  *                          further dealings with SIOX.
  */
 //@test ''%p,%p'' component,activity
-siox_activity * siox_activity_start(siox_component * component, siox_component_activity * activity);
+siox_activity * siox_activity_start( siox_component * component, siox_component_activity * activity );
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.
@@ -406,7 +406,7 @@ siox_activity * siox_activity_start(siox_component * component, siox_component_a
  * @param[in]   activity    The activity.
  */
 //@test ''%p'' activity
-void siox_activity_stop(siox_activity * activity);
+void siox_activity_stop( siox_activity * activity );
 
 /**
  * Report an attribute of an activity.
@@ -419,7 +419,7 @@ void siox_activity_stop(siox_activity * activity);
  * @param[in]   value       A pointer to the attribute's value.
  */
 //@test ''%p,%p,%p'' activity,attribute,value
-void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attribute, const void * value);
+void siox_activity_set_attribute( siox_activity * activity, siox_attribute * attribute, const void * value );
 
 /**
  * Report that the current call resulted in the error code @em error so that SIOX can mark any
@@ -430,7 +430,7 @@ void siox_activity_set_attribute(siox_activity * activity, siox_attribute * attr
  * @param[in]   error       The error code returned by the function. A value of 0 indicates SUCCESS.
  */
 //@test ''%p,%d'' activity,error
-void siox_activity_report_error(siox_activity * activity, siox_activity_error error);
+void siox_activity_report_error( siox_activity * activity, siox_activity_error error );
 
 /**
  * Mark the end of an activity's report phase and close it.
@@ -441,7 +441,7 @@ void siox_activity_report_error(siox_activity * activity, siox_activity_error er
  * @param[in]   activity    The activity.
  */
 //@test ''%p'' activity
-void siox_activity_end(siox_activity * activity);
+void siox_activity_end( siox_activity * activity );
 
 /**
  * Causally link an activity to another.
@@ -456,13 +456,13 @@ void siox_activity_end(siox_activity * activity);
  * @param[in]   activity_parent  An activity causally preceding the current one.
  */
 //@test ''%p,%p'' activity_child,activity_parent
-void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity_ID * activity_parent);
+void siox_activity_link_to_parent( siox_activity * activity_child, siox_activity_ID * activity_parent );
 
 
 /*
  The ownership of the returned datastructure is given to the caller.
  */
-siox_activity_ID * siox_activity_get_ID(const siox_activity * activity);
+siox_activity_ID * siox_activity_get_ID( const siox_activity * activity );
 
 // TODO maybe just using ID?
 //void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity_ID?);
@@ -515,7 +515,7 @@ siox_activity_ID * siox_activity_get_ID(const siox_activity * activity);
  *                            future communications with SIOX.
  */
 //@test ''%p,%p-%p-%p'' activity,target_node,target_unique_interface,target_associate
-siox_remote_call * siox_remote_call_setup(siox_activity *activity, siox_node * target_node, siox_unique_interface * target_unique_interface, siox_associate * target_associate);
+siox_remote_call * siox_remote_call_setup( siox_activity * activity, siox_node * target_node, siox_unique_interface * target_unique_interface, siox_associate * target_associate );
 
 /**
  * Report an attribute to be sent via a remote call.
@@ -525,7 +525,7 @@ siox_remote_call * siox_remote_call_setup(siox_activity *activity, siox_node * t
  * @param[in]   value       A pointer to the attribute's value.
  */
 //@test ''%p,%p,%p'' remote_call,attribute,value
-void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribute * attribute, const void * value);
+void siox_remote_call_set_attribute( siox_remote_call * remote_call, siox_attribute * attribute, const void * value );
 
 /**
  * Close attribute list for a remote call.
@@ -534,7 +534,7 @@ void siox_remote_call_set_attribute(siox_remote_call * remote_call, siox_attribu
  * @param[in]   remote_call    The remote call.
  */
 //@test ''%p'' remote_call
-void siox_remote_call_start(siox_remote_call * remote_call);
+void siox_remote_call_start( siox_remote_call * remote_call );
 
 //////////////////////////////////////////////////////////////////////////////
 /// Report that a local activity was initiated via a remote call.
@@ -542,7 +542,7 @@ void siox_remote_call_start(siox_remote_call * remote_call);
 /// (the one initiating the current function invocation) may be received.
 /// Hence, on the callee's side, the delimiting functions
 /// siox_remote_call_start() and siox_remote_call_submitted() are not needed.
-/// Also, its defining attributes are set for the activity, so no 
+/// Also, its defining attributes are set for the activity, so no
 /// siox_remote_call is involved on the callee's side at all!
 //////////////////////////////////////////////////////////////////////////////
 /// @param [in] component The component on which the activity is carried out
@@ -552,7 +552,7 @@ void siox_remote_call_start(siox_remote_call * remote_call);
 /// @param [in] caller_associate May be @c NULL
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p,%p,%p,%p'' component,activity,caller_node,caller_unique_interface,caller_associate
-siox_activity * siox_activity_start_from_remote_call(siox_component * component, siox_component_activity * activity, siox_node * caller_node, siox_unique_interface * caller_unique_interface, siox_associate * caller_associate);
+siox_activity * siox_activity_start_from_remote_call( siox_component * component, siox_component_activity * activity, siox_node * caller_node, siox_unique_interface * caller_unique_interface, siox_associate * caller_associate );
 
 
 #endif

@@ -6,13 +6,13 @@
 
 
 
-namespace boost{
-namespace serialization {
-template<class Archive>
-void serialize(Archive & ar, core::Container & g, const unsigned int version)
-{
-}
-}
+namespace boost {
+	namespace serialization {
+		template<class Archive>
+		void serialize( Archive & ar, core::Container & g, const unsigned int version )
+		{
+		}
+	}
 }
 
 #endif

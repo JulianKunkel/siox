@@ -6,39 +6,40 @@
 using namespace core;
 using namespace std;
 
-class MyContainer: public Container{
-public:
-	string name;
-	int value;
+class MyContainer: public Container {
+	public:
+		string name;
+		int value;
 
-	SERIALIZE(MEMBER(name) MEMBER(value) PARENT_CLASS(Container) )
+		SERIALIZE( MEMBER( name ) MEMBER( value ) PARENT_CLASS( Container ) )
 };
-CREATE_SERIALIZEABLE_CLS(MyContainer)
+CREATE_SERIALIZEABLE_CLS( MyContainer )
 
 
 
-class MyContainerChild: public MyContainer{
-public:
-	string str;
-	list<string> elems;
-	
-	SERIALIZE(MEMBER(str) MEMBER(elems) PARENT_CLASS(MyContainer) )
+class MyContainerChild: public MyContainer {
+	public:
+		string str;
+		list<string> elems;
+
+		SERIALIZE( MEMBER( str ) MEMBER( elems ) PARENT_CLASS( MyContainer ) )
 };
-CREATE_SERIALIZEABLE_CLS(MyContainerChild)
+CREATE_SERIALIZEABLE_CLS( MyContainerChild )
 
 
-int main(){
+int main()
+{
 	ContainerSerializer * cs = new ContainerSerializer();
 	MyContainerChild * test = new MyContainerChild();
-    test->name = "testname";
+	test->name = "testname";
 	test->value = 24;
-	test->elems.push_front("elem1");
-	test->elems.push_front("elem2");
-	
- 	string val = cs->serialize(test);
+	test->elems.push_front( "elem1" );
+	test->elems.push_front( "elem2" );
+
+	string val = cs->serialize( test );
 	cout << val << endl;
-	
+
 	MyContainerChild * parsedContainer;
- 	parsedContainer = dynamic_cast<MyContainerChild*>(cs->parse(val));
+	parsedContainer = dynamic_cast<MyContainerChild *>( cs->parse( val ) );
 	cout << parsedContainer->name << endl;
 }

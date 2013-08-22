@@ -8,14 +8,14 @@ using namespace std;
 using namespace monitoring;
 
 // You may or may not use this advanced options.
-class ActivityPluginDereferencingFacadeOptions: public ActivityMultiplexerPluginOptions{
-public:
-	ComponentReference ontology;
-	ComponentReference system_information_manager;
-	ComponentReference association_mapper;
-	ComponentReference reasoner;
+class ActivityPluginDereferencingFacadeOptions: public ActivityMultiplexerPluginOptions {
+	public:
+		ComponentReference ontology;
+		ComponentReference system_information_manager;
+		ComponentReference association_mapper;
+		ComponentReference reasoner;
 
-	SERIALIZE_CONTAINER(MEMBER(ontology) MEMBER(system_information_manager) MEMBER(association_mapper) MEMBER(reasoner))
+		SERIALIZE_CONTAINER( MEMBER( ontology ) MEMBER( system_information_manager ) MEMBER( association_mapper ) MEMBER( reasoner ) )
 };
 
 

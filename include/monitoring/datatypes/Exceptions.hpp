@@ -3,55 +3,49 @@
 
 #include <exception>
 
-class NotFoundError: public exception
-{
-public:	
-  string msg;
+class NotFoundError: public exception {
+	public:
+		string msg;
 
-  NotFoundError(){
-    msg = "Error Attribute/Value NotFound";
-  }
+		NotFoundError() {
+			msg = "Error Attribute/Value NotFound";
+		}
 
-  NotFoundError(const string & msg){
-  	this->msg = msg;
-  }
+		NotFoundError( const string & msg ) {
+			this->msg = msg;
+		}
 
-  virtual const char* what() const throw()
-  {
-    return msg.c_str();
-  }
+		virtual const char * what() const throw() {
+			return msg.c_str();
+		}
 };
 
 
-class IllegalStateError: public exception
-{
-public:	
-  string msg;
+class IllegalStateError: public exception {
+	public:
+		string msg;
 
-  IllegalStateError(const string & msg){
-  	this->msg = msg;
-  }
+		IllegalStateError( const string & msg ) {
+			this->msg = msg;
+		}
 
-  virtual const char* what() const throw()
-  {
-    return msg.c_str();
-  }
+		virtual const char * what() const throw() {
+			return msg.c_str();
+		}
 };
 
 
-class IllegalArgumentError: public exception
-{
-public:	
-  string msg;
+class IllegalArgumentError: public exception {
+	public:
+		string msg;
 
-  IllegalArgumentError(const string & msg){
-  	this->msg = msg;
-  }
+		IllegalArgumentError( const string & msg ) {
+			this->msg = msg;
+		}
 
-  virtual const char* what() const throw()
-  {
-    return msg.c_str();
-  }
+		virtual const char * what() const throw() {
+			return msg.c_str();
+		}
 };
 
 

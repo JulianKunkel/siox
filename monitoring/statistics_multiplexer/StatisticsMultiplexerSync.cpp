@@ -8,18 +8,17 @@
 using namespace core;
 using namespace monitoring;
 
-namespace monitoring{
+namespace monitoring {
 
-/**
- * ActivityMultiplexer
- * Forwards logged activities to registered listeners (e.g. Plugins) either
- * in an syncronised or asyncronous manner.
- */
+	/**
+	 * ActivityMultiplexer
+	 * Forwards logged activities to registered listeners (e.g. Plugins) either
+	 * in an syncronised or asyncronous manner.
+	 */
 //class StatisticsMultiplexerSync : public MultiplexerFilteredTemplate<Statistics>
-class StatisticsMultiplexerSync : public MultiplexerFilteredTemplate<StatisticsValue, StatisticsMultiplexerListener>
-{
+	class StatisticsMultiplexerSync : public MultiplexerFilteredTemplate<StatisticsValue, StatisticsMultiplexerListener> {
 
-};
+	};
 
 }
 

@@ -8,18 +8,18 @@
 #include <core/logger/Logger.hpp>
 #include <core/comm/ServiceClient.hpp>
 
-class NetLogger 
-   : public Logger {
+class NetLogger
+		: public Logger {
 
-public:
-	NetLogger(const std::string &server_uri);
-	~NetLogger();
-	
-protected:
-	void log_append(const Priority prio, const char *buffer);
+	public:
+		NetLogger( const std::string & server_uri );
+		~NetLogger();
 
-private:
-	ServiceClient *netservice_;
+	protected:
+		void log_append( const Priority prio, const char * buffer );
+
+	private:
+		ServiceClient * netservice_;
 };
 
 #endif

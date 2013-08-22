@@ -4,25 +4,25 @@
 #include <monitoring/datatypes/StatisticsTypes.hpp>
 #include <string>
 
-namespace monitoring{
+namespace monitoring {
 
 
-class StatisticsMultiplexerListener {
-public:
-	//virtual string [] requiredMetrics() =0;  // TODO return std::list of ontologies instead of string names of attributes
-	//virtual void Notify(Statistics statistics, Attribute & attribute /* TODO:, interval_enum */) =0;
-};
+	class StatisticsMultiplexerListener {
+		public:
+			//virtual string [] requiredMetrics() =0;  // TODO return std::list of ontologies instead of string names of attributes
+			//virtual void Notify(Statistics statistics, Attribute & attribute /* TODO:, interval_enum */) =0;
+	};
 
 
-/*
-class StatisticsMultiplexerListenerSync : public StatisticsMultiplexerListener
-{
-};
+	/*
+	class StatisticsMultiplexerListenerSync : public StatisticsMultiplexerListener
+	{
+	};
 
-class StatisticsMultiplexerListenerAsync : public StatisticsMultiplexerListener
-{
-};
-*/
+	class StatisticsMultiplexerListenerAsync : public StatisticsMultiplexerListener
+	{
+	};
+	*/
 
 
 }

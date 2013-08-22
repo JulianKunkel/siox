@@ -13,23 +13,23 @@
 #include <monitoring/transaction_system/TransactionBackend.hpp>
 
 class TransactionService {
-	   
-public:
-	TransactionService(const std::string &address);
-	~TransactionService();
-	
-	int run();
-	int stop();
-	
-	void register_transaction_backend(TransactionBackend *tb);
-	void clear_transaction_backends();
-	
-private:
-	ServiceServer *network_service_;
-	boost::ptr_list<TransactionBackend> backends_;
-	
-	void register_callback(Callback &cb);
-	void clear_callbacks();
+
+	public:
+		TransactionService( const std::string & address );
+		~TransactionService();
+
+		int run();
+		int stop();
+
+		void register_transaction_backend( TransactionBackend * tb );
+		void clear_transaction_backends();
+
+	private:
+		ServiceServer * network_service_;
+		boost::ptr_list<TransactionBackend> backends_;
+
+		void register_callback( Callback & cb );
+		void clear_callbacks();
 };
 
 #endif

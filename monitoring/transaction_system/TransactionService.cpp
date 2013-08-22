@@ -1,15 +1,15 @@
 #include <monitoring/transaction_system/TransactionService.hpp>
 
-TransactionService::TransactionService(const std::string &address)
+TransactionService::TransactionService( const std::string & address )
 {
 	try {
-		
-		network_service_ = ServerFactory::create_server(address);
-		
-	} catch(ServerFactoryException &e) {
-		
-		logger->log(Logger::ERR, 
-			    "Error creating network service: %s.", e.what());
+
+		network_service_ = ServerFactory::create_server( address );
+
+	} catch( ServerFactoryException & e ) {
+
+		logger->log( Logger::ERR,
+		             "Error creating network service: %s.", e.what() );
 	}
 }
 
@@ -34,10 +34,10 @@ int TransactionService::stop()
 }
 
 
-void TransactionService::register_transaction_backend(TransactionBackend *tb)
+void TransactionService::register_transaction_backend( TransactionBackend * tb )
 {
-	backends_.push_back(tb);
-	register_callback(*(tb->create_callback()));
+	backends_.push_back( tb );
+	register_callback( *( tb->create_callback() ) );
 }
 
 
@@ -47,9 +47,9 @@ void TransactionService::clear_transaction_backends()
 }
 
 
-void TransactionService::register_callback(Callback &cb)
+void TransactionService::register_callback( Callback & cb )
 {
-	network_service_->register_message_callback(cb);
+	network_service_->register_message_callback( cb );
 }
 
 

@@ -1,11 +1,12 @@
 #ifndef CONTAINER_HPP
 #define CONTAINER_HPP
 
-namespace core{
+namespace core {
 
-class Container{
-	public:	virtual ~Container(){}
-};
+	class Container {
+		public:
+			virtual ~Container() {}
+	};
 
 
 }

@@ -8,40 +8,42 @@
 #include <stdarg.h>
 #include <string>
 
-class LoggerException 
-   : public std::exception {
-	  
-public:
-	LoggerException(const char *err_msg) : err_msg_(err_msg) {}
-	const char *what() const throw() { return err_msg_; }
-private:
-	const char *err_msg_;
-	
+class LoggerException
+		: public std::exception {
+
+	public:
+		LoggerException( const char * err_msg ) : err_msg_( err_msg ) {}
+		const char * what() const throw() {
+			return err_msg_;
+		}
+	private:
+		const char * err_msg_;
+
 };
 
 
 class BasicLogger {
 
-public:
+	public:
 
-	enum Priority {
-		EMERG,
-		ALERT,
-		CRIT,
-		ERR,
-		WARNING,
-		NOTICE,
-		INFO,
-		DEBUG
-	};
-	
-	BasicLogger();
-	~BasicLogger();
-	
-	void log(const Priority prio, const char *format, ...);
+		enum Priority {
+			EMERG,
+			ALERT,
+			CRIT,
+			ERR,
+			WARNING,
+			NOTICE,
+			INFO,
+			DEBUG
+		};
 
-protected:
-	void log_append(const Priority prio, const char *buffer);
+		BasicLogger();
+		~BasicLogger();
+
+		void log( const Priority prio, const char * format, ... );
+
+	protected:
+		void log_append( const Priority prio, const char * buffer );
 
 };
 

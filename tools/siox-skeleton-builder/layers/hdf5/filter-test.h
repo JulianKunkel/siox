@@ -28,6 +28,6 @@
 #ifndef FILTER_TEST_INCLUDE_GUARD
 #define FILTER_TEST_INCLUDE_GUARD
 
-int filterTest(void);
+int filterTest( void );
 
-#endif	//FILTER_TEST_INCLUDE_GUARD
+#endif  //FILTER_TEST_INCLUDE_GUARD

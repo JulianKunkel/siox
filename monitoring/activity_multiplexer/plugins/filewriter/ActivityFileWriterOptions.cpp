@@ -3,5 +3,5 @@
 
 #include "ActivityFileWriterOptions.hpp"
 
-CREATE_SERIALIZEABLE_CLS(FileWriterPluginOptions)
+CREATE_SERIALIZEABLE_CLS( FileWriterPluginOptions )
 

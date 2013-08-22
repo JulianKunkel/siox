@@ -3,35 +3,32 @@
 
 #include <monitoring/datatypes/Activity.hpp>
 
-namespace monitoring{
-/**
- * ActivityMultiplexerListener
- * Interface plugins that want to register to a multiplexer need to implement.
- */
+namespace monitoring {
+	/**
+	 * ActivityMultiplexerListener
+	 * Interface plugins that want to register to a multiplexer need to implement.
+	 */
 // TODO: add second listener type, async/sync needs to have a signal for reset
 
-class ActivityMultiplexerListener
-{
-public:
-	/**
-	 * Receive logged activity from a multiplexer
-	 *
-	 * @param	element	a logged Activity
-	 */
-	virtual void Notify(Activity * element) {};
+	class ActivityMultiplexerListener {
+		public:
+			/**
+			 * Receive logged activity from a multiplexer
+			 *
+			 * @param   element a logged Activity
+			 */
+			virtual void Notify( Activity * element ) {};
 
-	virtual ~ActivityMultiplexerListener(){}
-};
-
+			virtual ~ActivityMultiplexerListener() {}
+	};
 
 
-class ActivityMultiplexerListenerSync : public ActivityMultiplexerListener
-{
-};
 
-class ActivityMultiplexerListenerAsync : public ActivityMultiplexerListener
-{
-};
+	class ActivityMultiplexerListenerSync : public ActivityMultiplexerListener {
+	};
+
+	class ActivityMultiplexerListenerAsync : public ActivityMultiplexerListener {
+	};
 
 
 }

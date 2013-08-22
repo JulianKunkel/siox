@@ -14,10 +14,10 @@ using namespace monitoring;
 
 // set up a smux listener
 
-int main(int argc, char *argv[])
+int main( int argc, char * argv[] )
 {
 
-	StatisticsMultiplexer * smux1 = core::module_create_instance<StatisticsMultiplexer>("", "StatisticsMultiplexerSync", "monitoring_statisticsmultiplexer");
+	StatisticsMultiplexer * smux1 = core::module_create_instance<StatisticsMultiplexer>( "", "StatisticsMultiplexerSync", "monitoring_statisticsmultiplexer" );
 
 
 	// maybe pass statistics to smux1

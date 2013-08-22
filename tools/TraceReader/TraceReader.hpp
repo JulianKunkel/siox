@@ -17,25 +17,25 @@ using namespace monitoring;
 using namespace core;
 
 
-class TraceReader{
-public:
-	TraceReader(string activityFile, string systemInfoFile, string ontologyFile, string associationFile);
+class TraceReader {
+	public:
+		TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile );
 
-	Activity * nextActivity(){
-		if (activityDeserializer->hasNext())
-			return activityDeserializer->parseNext();
-		else
-			return nullptr;
-	}
+		Activity * nextActivity() {
+			if( activityDeserializer->hasNext() )
+				return activityDeserializer->parseNext();
+			else
+				return nullptr;
+		}
 
-	void printActivity(Activity * activity);
-private:
-	AssociationMapper * a;
-	Ontology * o;
-	SystemInformationGlobalIDManager * s;
-	FileDeserializer<ActivityAccessor> * activityDeserializer;
+		void printActivity( Activity * activity );
+	private:
+		AssociationMapper * a;
+		Ontology * o;
+		SystemInformationGlobalIDManager * s;
+		FileDeserializer<ActivityAccessor> * activityDeserializer;
 
-	void strattribute(const Attribute & a, stringstream & s) throw(NotFoundError);
+		void strattribute( const Attribute & a, stringstream & s ) throw( NotFoundError );
 };
 
 #endif
