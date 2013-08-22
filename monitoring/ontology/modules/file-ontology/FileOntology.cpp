@@ -115,8 +115,8 @@ namespace monitoring {
 
 			const OntologyAttribute & register_attribute( const string & domain, const string & name, VariableDatatype::Type storage_type ) throw( IllegalStateError ) {
 				// lookup if the domain + name exists in the table.
-				stringstream unique( domain );
-				unique << "|" << name;
+				stringstream unique;
+				unique << domain << "|" << name;
 				string fqn( unique.str() );
 
 				if( domain_name_map[fqn] == nullptr ) {
