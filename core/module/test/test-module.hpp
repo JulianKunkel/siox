@@ -7,8 +7,16 @@
 
 class HelloWorld : public core::ModuleInterface {
 	public:
-		virtual std::string testfunc();
+		virtual std::string testfunc() = 0;
+		virtual ~HelloWorld(){};
 };
+
+class HelloSaturn : public core::ModuleInterface {
+	public:
+		virtual std::string alternativeFunc() = 0;
+		virtual ~HelloSaturn(){};
+};
+
 
 #endif
 

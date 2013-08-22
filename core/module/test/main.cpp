@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include <core/module/ModuleLoader.hpp>
 #include <iostream>
 
@@ -15,6 +17,15 @@ int main( int argc, char ** argv )
 		cerr << e.what() << endl;
 		exit( 1 );
 	}
+
+	try {
+		HelloSaturn * hw = core::module_create_instance<HelloSaturn>( "", "test-module", "hello_world" );
+		cout << hw->alternativeFunc() << endl;
+		delete( hw );
+		assert(false);
+	} catch( core::ModuleError & e ) {
+		cerr << "As expected I caught the error: " << e.what() << endl;
+	}	
 
 	return 0;
 }
