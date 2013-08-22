@@ -3,6 +3,6 @@
 
 #include <monitoring/ontology/Ontology.hpp>
 
-#define MONITORING_ONTOLOGY_INSTANCIATOR_NAME COMPONENT_INSTANCIATOR_NAME(monitoring_ontology)
+#define MONITORING_ONTOLOGY_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_ontology)
 
 #endif

@@ -3,6 +3,6 @@
 
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 
-#define MONITORING_ASSOCIATION_MAPPER_INSTANCIATOR_NAME COMPONENT_INSTANCIATOR_NAME(monitoring_association_mapper)
+#define MONITORING_ASSOCIATION_MAPPER_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_association_mapper)
 
 #endif

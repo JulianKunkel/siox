@@ -3,6 +3,6 @@
 
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 
-#define MONITORING_SYSTEMINFORMATION_GLOBAL_ID_INSTANCIATOR_NAME COMPONENT_INSTANCIATOR_NAME(monitoring_systeminformation_global_id)
+#define MONITORING_SYSTEMINFORMATION_GLOBAL_ID_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_systeminformation_global_id)
 
 #endif

@@ -3,6 +3,6 @@
 
 #include <knowledge/optimizer/Optimizer.hpp>
 
-#define KNOWLEDGE_OPTIMIZER_INSTANCIATOR_NAME COMPONENT_INSTANCIATOR_NAME(knowledge_optimizer)
+#define KNOWLEDGE_OPTIMIZER_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(knowledge_optimizer)
 
 #endif

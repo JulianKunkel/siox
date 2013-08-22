@@ -4,7 +4,7 @@
 
 def build(bld):
 	bld.shlib(includes="",  target = 'siox-core-ComponentRegistrar', source = 'ComponentRegistrar.cpp' )
-	bld.recurse(['test'], mandatory=True)
+	#bld.recurse(['test'], mandatory=True)
 
 
 # -*- indent-tabs-mode: t -*-

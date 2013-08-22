@@ -3,7 +3,6 @@
 #include <assert.h>
 
 #include <core/module/ModuleLoader.hpp>
-#include <core/component/Component.hpp>
 
 namespace core {
 
@@ -46,7 +45,7 @@ namespace core {
 			// lookup symbol which will create the instance
 
 			void *( *module_instance_function )();
-			string instance_fkt_name = Component::component_instanciator_name(interface_name);
+			string instance_fkt_name = ModuleInterface::instanciator_name(interface_name);
 
 			if( !g_module_symbol( module, instance_fkt_name.c_str(), ( gpointer * ) &module_instance_function ) ) {
 				throw ModuleError( module_path, module_name, interface_name,

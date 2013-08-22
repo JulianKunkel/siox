@@ -20,12 +20,6 @@ namespace core {
 			// This function returns the available options of this component.
 			virtual ComponentOptions * AvailableOptions() = 0;
 		public:
-			// Compile time and run time calculation of the module instanciator symbol names.
-			#define COMPONENT_INSTANCIATOR_NAME(INTERFACE_NAME) get_instance_ ## INTERFACE_NAME
-			static std::string component_instanciator_name(const std::string &interface_name) throw() {
-				return "get_instance_" + interface_name;
-			};
-
 			// The init method uses the configuration options to configure the component.
 			// It is responsible to delete the options if the options are not relevant any more after the initalization.
 

@@ -3,6 +3,6 @@
 
 #include <knowledge/reasoner/Reasoner.hpp>
 
-#define KNOWLEDGE_REASONER_INSTANCIATOR_NAME COMPONENT_INSTANCIATOR_NAME(knowledge_reasoner)
+#define KNOWLEDGE_REASONER_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(knowledge_reasoner)
 
 #endif
