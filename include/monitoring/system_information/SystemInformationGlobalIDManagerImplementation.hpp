@@ -3,13 +3,6 @@
 
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 
-
-
-// Module interfaces
-
-#define COMPONENT(x) \
-	extern "C"{\
-		void * get_instance_monitoring_systeminformation_global_id() { return new x(); }\
-	}
+#define MONITORING_SYSTEMINFORMATION_GLOBAL_ID_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_systeminformation_global_id)
 
 #endif

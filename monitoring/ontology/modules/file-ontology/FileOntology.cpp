@@ -261,4 +261,9 @@ namespace boost {
 CREATE_SERIALIZEABLE_CLS_EXTERNAL( AttributeWithValues )
 CREATE_SERIALIZEABLE_CLS_EXTERNAL( OntologyAttribute )
 
-COMPONENT( FileOntology )
+extern "C" {
+	void * MONITORING_ONTOLOGY_INSTANCIATOR_NAME()
+	{
+		return new FileOntology();
+	}
+}

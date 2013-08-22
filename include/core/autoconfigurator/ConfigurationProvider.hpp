@@ -52,7 +52,7 @@ namespace core {
 			}
 	};
 
-	class ConfigurationProvider : public ModuleInterface{
+	class ConfigurationProvider : public ModuleInterface {
 		public:
 			/*
 			 * The configuration entry_point describes where to get the basic information, e.g. file or DB / demon connection to use for fetching the info.

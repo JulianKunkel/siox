@@ -20,6 +20,14 @@ namespace core {
 	A COMPONENT is a module which usually is loaded just once per SIOX process.
 	A PLUGIN is a module of which multiple instances of different plugins are loaded, and controlled by another COMPONENT.
 
+	COMPONENTs are instanciated by calling a component instanciator function in the module;
+	each interface should define a macro with the name of this instanciator.
+	This instanciator typically simply returns a new, uninitialized instance of some Component subclass.
+	The only thing that really has to be initialized is the vtable pointer of the object because that allows the module loader to polymorphically call its init() function to actually initialize the object.
+	Then initialization may be parameterized via the options member variable which is set by Component before init() is called.
+
+
+
 	To write your own module, the following steps are needed.
 	A) If you create a new public interface (in the example the interface will be called [INTERFACE]) which is implementable by modules you have to do:
 
@@ -34,16 +42,13 @@ namespace core {
 	    _plugin is used to suffix Plugin interfaces.
 
 	2) Create [INTERFACE]Implementation.hpp in include, this file is intented for developers implementing your interface.
+	    It should usually only define a macro with the name of the instanciator function, but can contain anything that is only relevant for implementations of the interface.
 	    @code
 	    #include <[INTERFACE].hpp>
+
+	    #define [INTERFACE][_PLUGIN]_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME([interface][_plugin])
 	    @endcode
-	    This file should contain a macro called COMPONENT (or PLUGIN) which creates the interface, e.g.
-	    @code
-	    #define COMPONENT(x) \
-	    extern "C"{\
-	    void * get_instance_[INTERFACE][_plugin]() { return new x(); }\
-	    }
-	    @endcode
+
 
 
 	B) To implement a module (do not put any implementation file under include):
@@ -65,9 +70,11 @@ namespace core {
 	12 Create some CPP files, in one add "#include [INTERFACE]Implementation.hpp"
 	    and implement your interface according to the specification by deriving from your abstract class.
 	3) Add CREATE_SERIALIZEABLE_CLS(FileOntologyOptions) in one of your implementation CPP files to make sure the serialization code for your options is created.
-	4) Use the macro from A.2) to create the module interface in one of your implementation CPP files, e.g.:
+	4) Use the macro from A.2) to create the component instanciator function in one of your implementation CPP files, e.g.:
 	    @code
-	    COMPONENT(FileOntology)
+	    extern "C"{
+	        void * [INTERFACE][_PLUGIN]_INSTANCIATOR_NAME() { return new FileOntology(); }
+	    }
 	    @endcode
 	5) To create a valid module you have to implement the interfaces from a Component:
 	    @code
@@ -118,15 +125,15 @@ namespace core {
 	template <class COMPONENTTYPE>
 	COMPONENTTYPE * module_create_instance( string module_path, string module_name, string interface_name ) throw( ModuleError )
 	{
-		ModuleInterface * instance =  static_cast<ModuleInterface *>(module_internal::module_create_instance( module_path, module_name, interface_name ));
+		ModuleInterface * instance =  static_cast<ModuleInterface *>( module_internal::module_create_instance( module_path, module_name, interface_name ) );
 		if( instance == nullptr ) {
 			throw ModuleError( module_path, module_name, interface_name, "Instance is NULL. Fatal module error!" );
 			// WARNING module instance may now leak memory, but this is an implementation error of the module which must be fixed there.
 		}
-		
-		COMPONENTTYPE * instance_casted = dynamic_cast<COMPONENTTYPE*>( instance );
+
+		COMPONENTTYPE * instance_casted = dynamic_cast<COMPONENTTYPE *>( instance );
 		if( instance_casted == nullptr ) {
-			delete(instance);
+			delete( instance );
 			throw ModuleError( module_path, module_name, interface_name, "Instance has an invalid type. Fatal module error!" );
 			// WARNING module instance may now leak memory, but this is an implementation error of the module which must be fixed there.
 		}
