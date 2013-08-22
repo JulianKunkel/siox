@@ -24,6 +24,7 @@ namespace monitoring {
 			 */
 			virtual void registerListener( ActivityMultiplexerListener * listener ) = 0;
 
+
 			/**
 			 * Unregister listener from multiplexer
 			 *
@@ -31,6 +32,20 @@ namespace monitoring {
 			 */
 			virtual void unregisterListener( ActivityMultiplexerListener * listener ) = 0;
 
+			/**
+			 * Register listener to multiplexer
+			 *
+			 * @param   listener    listener to notify in the future
+			 */
+			virtual void registerAsyncListener( ActivityMultiplexerListenerAsync * listener ) = 0;
+
+
+			/**
+			 * Unregister listener from multiplexer
+			 *
+			 * @param   listener    listener to remove
+			 */
+			virtual void unregisterAsyncListener( ActivityMultiplexerListenerAsync * listener ) = 0;
 	};
 
 

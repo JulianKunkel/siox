@@ -25,8 +25,8 @@ class ActivityForwarder: public ActivityMultiplexerPlugin, public ActivityMultip
 			return new ActivityForwarderOptions();
 		}
 
-		void init( ActivityMultiplexer & multiplexer ) {
-			multiplexer.registerListener( this );
+		void initPlugin() {
+			multiplexer->registerListener( this );
 
 			ActivityForwarderOptions & options = getOptions<ActivityForwarderOptions>();
 			out = GET_INSTANCE(ActivityMultiplexer, options.target_multiplexer);

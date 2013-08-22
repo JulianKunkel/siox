@@ -8,7 +8,6 @@ namespace monitoring {
 	 * ActivityMultiplexerListener
 	 * Interface plugins that want to register to a multiplexer need to implement.
 	 */
-// TODO: add second listener type, async/sync needs to have a signal for reset
 
 	class ActivityMultiplexerListener {
 		public:
@@ -17,19 +16,17 @@ namespace monitoring {
 			 *
 			 * @param   element a logged Activity
 			 */
-			virtual void Notify( Activity * element ) {};
-
-			virtual ~ActivityMultiplexerListener() {}
+			virtual void Notify( Activity * activity ) = 0;
 	};
 
 
-
-	class ActivityMultiplexerListenerSync : public ActivityMultiplexerListener {
+	class ActivityMultiplexerListenerAsync {
+		public:
+			/*
+			 * lostActivities counts the of activities which have been lost before processing the activity.
+			 */
+			virtual void NotifyAsync( int lostActivitiesCount, Activity * activity ) = 0;
 	};
-
-	class ActivityMultiplexerListenerAsync : public ActivityMultiplexerListener {
-	};
-
 
 }
 
