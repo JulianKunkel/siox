@@ -302,4 +302,5 @@ class ThreadedStatisticsCollector: StatisticsCollector {
 CREATE_SERIALIZEABLE_CLS( ThreadedStatisticsOptions )
 //CREATE_SERIALIZEABLE_CLS(ThreadedCollectorStatistics)
 
+// Erzeugt eine C Funktion (siehe StatisticsCollectorImplementation.hpp), die eine Instanz des hier angegeben Namens zurückliefert
 COMPONENT( ThreadedStatisticsCollector )
