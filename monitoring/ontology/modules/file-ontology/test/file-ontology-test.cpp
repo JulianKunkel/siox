@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <iostream>
 
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 
 #include <monitoring/ontology/Ontology.hpp>
 

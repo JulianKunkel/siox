@@ -3,7 +3,7 @@
 
 #include <monitoring/datatypes/Statistics.hpp>
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexer.hpp>
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 
 using namespace std;
 using namespace monitoring;

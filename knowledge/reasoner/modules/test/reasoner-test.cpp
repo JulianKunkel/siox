@@ -3,7 +3,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 
 #include <knowledge/reasoner/Reasoner.hpp>
 #include <knowledge/reasoner/AnomalyPlugin.hpp>

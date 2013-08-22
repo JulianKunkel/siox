@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 
 #include <monitoring/statistics_collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/statistics_collector/ThreadedStatisticsCollector.hpp>

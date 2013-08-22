@@ -17,7 +17,7 @@
 #include <pwd.h>
 #include <typeinfo>
 
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 #include <core/datatypes/VariableDatatype.hpp>
 
 #include "siox-ll-internal.hpp"

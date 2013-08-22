@@ -3,7 +3,7 @@
 #include <list>
 
 #include <knowledge/optimizer/Optimizer.hpp>
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 #include <monitoring/ontology/OntologyImplementation.hpp>
 
 #include "../../../../monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp"

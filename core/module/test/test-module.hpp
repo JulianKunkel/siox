@@ -3,10 +3,11 @@
 
 #include <string>
 
-class HelloWorld {
+#include <core/module/ModuleInterface.hpp>
+
+class HelloWorld : public core::ModuleInterface{
 	public:
 		virtual std::string testfunc();
-		virtual ~HelloWorld(){};
 };
 
 #endif

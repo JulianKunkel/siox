@@ -1,7 +1,7 @@
 #include <mutex>
 
 #include <core/autoconfigurator/AutoConfigurator.hpp>
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 #include <core/container/container-serializer.hpp>
 #include <core/component/component-macros.hpp>
 

@@ -6,12 +6,13 @@
 #include <assert.h>
 
 #include <core/container/container.hpp>
+#include <core/module/ModuleInterface.hpp>
 
 namespace core {
 
 typedef Container ComponentOptions;
 
-class Component {
+class Component : public ModuleInterface{
 private:
 	ComponentOptions * options = nullptr;
 protected:

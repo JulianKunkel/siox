@@ -1,4 +1,4 @@
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
 #include <core/autoconfigurator/AutoConfigurator.hpp>

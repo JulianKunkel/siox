@@ -3,7 +3,7 @@
 
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 
 using namespace std;
 using namespace monitoring;

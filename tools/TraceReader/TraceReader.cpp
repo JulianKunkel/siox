@@ -4,7 +4,7 @@
 #include <time.h>
 
 
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 
 #include <monitoring/association_mapper/modules/FileAssociationMapper/FileAssociationMapperOptions.hpp>
 #include <monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp>

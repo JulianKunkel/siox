@@ -1,4 +1,4 @@
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 #include <iostream>
 
 #include "test-module.hpp"

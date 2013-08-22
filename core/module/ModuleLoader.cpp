@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 
 #define INSTANCE_FKT_PREFIX "get_instance_"
 

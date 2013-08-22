@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include <core/logger/SioxLogger.hpp>
-#include <core/module/module-loader.hpp>
+#include <core/module/ModuleLoader.hpp>
 #include <monitoring/transaction_system/PostgreSQLBackend.hpp>
 #include <monitoring/transaction_system/TransactionBackend.hpp>
 #include <monitoring/transaction_system/TransactionService.hpp>
