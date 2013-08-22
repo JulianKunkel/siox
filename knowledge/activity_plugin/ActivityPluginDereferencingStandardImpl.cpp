@@ -62,10 +62,10 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 
 		void init() {
 			ActivityPluginDereferencingFacadeOptions & o = getOptions<ActivityPluginDereferencingFacadeOptions>();
-			ontology =  o.ontology.instance<Ontology>();
-			system_information_manager = o.system_information_manager.instance<SystemInformationGlobalIDManager>();
-			association_mapper = o.association_mapper.instance<AssociationMapper>();
-			reasoner =  o.reasoner.instance<Reasoner>();
+			ontology =  GET_INSTANCE(Ontology, o.ontology);
+			system_information_manager = GET_INSTANCE(SystemInformationGlobalIDManager, o.system_information_manager);
+			association_mapper = GET_INSTANCE(AssociationMapper, o.association_mapper);
+			reasoner =  GET_INSTANCE(Reasoner, o.reasoner);
 		}
 
 		ComponentOptions * AvailableOptions() {

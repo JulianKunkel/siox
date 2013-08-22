@@ -38,7 +38,7 @@ namespace monitoring {
 				ActivityMultiplexerPluginOptions & o = getOptions<ActivityMultiplexerPluginOptions>();
 				assert( o.multiplexer.componentID != 0 );
 
-				init( o.multiplexer.instance<ActivityMultiplexer>(), o.dereferenceFacade.instance<ActivityPluginDereferencing>() );
+				init( GET_INSTANCE(ActivityMultiplexer, o.multiplexer), GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade) );
 			}
 	};
 

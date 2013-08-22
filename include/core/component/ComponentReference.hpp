@@ -1,13 +1,15 @@
 #ifndef SIOX_COMPONENT_REFERENCE_H
 #define SIOX_COMPONENT_REFERENCE_H
 
+#include <core/component/Component.hpp>
+
 namespace core {
 
 // For testing we may reference an object directly without casting an integer to a pointer.
 #ifdef COMPONENT_NO_OBJECT_INJECTION
 	// instances in options are the real objects
 
-	typedef void * instance ComponentReference;
+	typedef ComponentOptions * instance ComponentReference;
 
 #define GET_INSTANCE(TYPE, Y) static_cast<TYPE>(Y);
 
@@ -23,15 +25,11 @@ namespace core {
 	class ComponentReference {
 		public:
 			ComponentReferenceID componentID = 0;
+			Component *  componentPointer = nullptr;
 			bool global = false;
-
-			template<class TYPE>
-			TYPE * instance() {
-				return ( TYPE * )( componentID );
-			}
 	};
 
-#define GET_INSTANCE(TYPE, Y) Y.instance<TYPE>();
+#define GET_INSTANCE(TYPE, Y) (dynamic_cast<TYPE *>(Y.componentPointer))
 
 #endif // OBJECT_INJECTION
 
