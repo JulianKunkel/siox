@@ -25,8 +25,7 @@ namespace monitoring {
 			boost::shared_mutex  listener_change_mutex;
 	public:
 			virtual void Log( Activity * element ){
-				// lock_guard<boost::shared_mutex> lock( motify_mutex );
-				boost::upgrade_lock<boost::shared_mutex> lock( listener_change_mutex );
+				boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
 				for(auto l = listeners.begin(); l != listeners.end() ; l++){
 					(*l)->Notify(element);
 				}
@@ -34,10 +33,11 @@ namespace monitoring {
 
 			virtual void registerListener( ActivityMultiplexerListener * listener ){
 				boost::unique_lock<boost::shared_mutex> lock( listener_change_mutex );
+
 				//boost::upgrade_lock<boost::shared_mutex> lock( listener_change_mutex );
-				// reader lock
-				//boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock( lock );
-				// reader + writer lock
+				// if () {
+				// 		boost::upgrade_to_unique_lock<boost::shared_mutex> lock( listener_change_mutex );
+				// }
 
 				listeners.push_back(listener);
 			}
