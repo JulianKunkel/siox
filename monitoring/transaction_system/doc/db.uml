@@ -14,29 +14,6 @@ object activity {
 	attributes : attribute[]
 }
 
-object node {
-	unique_id : int8 primary key
-	hwid : int8 not null
-	swid : int8 not null
-	iid : int8 not null
-}
-
-
-object hardware {
-	unique_id : int8 primary key
-	description : varchar(255) not null
-}
-
-object software {
-	unique_id : int8 primary key
-	description : varchar(255) not null
-}
-
-object instance {
-	unique_id : int8 primary key
-	description : varchar(255) not null
-}
-
 object parent {
 	parent_aid_id : int8 not null
 	parent_cid_nid : int8 not null
@@ -45,10 +22,6 @@ object parent {
 	parent_cid_num : int4 not null
 	child_unique_id : int8 not null
 }
-
-node -- hardware : "hwid = unique_id"
-node -- software : "swid = unique_id"
-node -- instance : "iid = unique_id"
 
 parent -- activity : "child_unique_id = unique_id"
 
@@ -67,4 +40,33 @@ object ontology {
 
 activity -- ontology : "attribute.key = ontology.id"
 
+package SystemInformationGlobalIDManager <<frame>> {
+	object NodeMapping #skyblue {
+		NodeID : int4 key auto-increment
+		Hostname: string unique
+	}
+
+	object DeviceMapping #skyblue {
+		DeviceID : int4 key auto-increment
+		UniqueIdentifier: string unique
+		NodeID: int4 foreign key
+	}
+
+	object FilesystemMapping #skyblue {
+		FilesystemID : int4 key auto-increment
+		UniqueIdentifier: string unique
+	}
+
+	object UniqueInterfaceMapping #skyblue {
+		UniqueInterfaceID : int4 key auto-increment
+		Interface: string
+		Implementation: string
+	}
+
+	object ActivityMapping #skyblue {
+		ActivityID : int4 key auto-increment
+		Name: string
+		UniqueInterfaceID: int4 foreign-key
+	}
+}
 @enduml
