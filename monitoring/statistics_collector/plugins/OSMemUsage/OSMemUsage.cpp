@@ -72,5 +72,8 @@ class OSMemUsage: public ProcSingleFilePlugin<3> {
 		}
 };
 
-PLUGIN( OSMemUsage )
-
+extern "C"{
+	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME() {
+		return new OSMemUsage();
+	}
+}

@@ -61,5 +61,8 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultipl
 		}
 };
 
-PLUGIN( FileWriterPlugin )
-
+extern "C"{
+	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME() {
+		return new FileWriterPlugin();
+	}
+}

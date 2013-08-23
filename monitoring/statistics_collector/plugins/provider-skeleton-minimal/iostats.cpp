@@ -31,5 +31,8 @@ class IOstats: public StatisticsProviderPlugin {
 		}
 };
 
-PLUGIN( IOstats )
-
+extern "C"{
+	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME() {
+		return new IOstats();
+	}
+}

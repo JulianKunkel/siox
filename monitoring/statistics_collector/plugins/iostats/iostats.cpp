@@ -80,5 +80,8 @@ class IOstats: public ProcSingleFilePlugin<15> {
 		}
 };
 
-PLUGIN( IOstats )
-
+extern "C"{
+	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME() {
+		return new IOstats();
+	}
+}

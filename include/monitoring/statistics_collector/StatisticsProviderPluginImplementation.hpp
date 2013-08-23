@@ -3,13 +3,7 @@
 
 #include <monitoring/statistics_collector/StatisticsProviderPlugin.hpp>
 
-
-#define PLUGIN(x) \
-	extern "C"{\
-		void * get_instance_monitoring_statistics_plugin() { return new x(); }\
-	}
-
-
+#define MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_statistics_plugin)
 
 #endif
 

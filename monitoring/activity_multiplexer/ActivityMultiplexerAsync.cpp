@@ -71,4 +71,8 @@ namespace monitoring {
 
 CREATE_SERIALIZEABLE_CLS( ActivityMultiplexerAsyncOptions )
 
-PLUGIN( ActivityMultiplexerAsync )
+extern "C"{
+	void * MONITORING_ACTIVITY_MULTIPLEXER_INSTANCIATOR_NAME() {
+		return new ActivityMultiplexerAsync();
+	}
+}

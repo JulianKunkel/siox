@@ -3,9 +3,6 @@
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 
-#define PLUGIN(x) \
-	extern "C"{\
-		void * get_instance_monitoring_activitymultiplexer() { return new x(); }\
-	}
+#define MONITORING_ACTIVITY_MULTIPLEXER_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_activitymultiplexer)
 
 #endif

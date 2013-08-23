@@ -3,9 +3,6 @@
 
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexer.hpp>
 
-#define PLUGIN(x) \
-	extern "C"{\
-		void * get_instance_monitoring_statisticsmultiplexer() { return new x(); }\
-	}
+#define MONITORING_STATISTICS_MULTIPLEXER_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_statisticsmultiplexer)
 
 #endif

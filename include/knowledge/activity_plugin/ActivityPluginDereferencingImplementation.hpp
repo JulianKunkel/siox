@@ -4,10 +4,7 @@
 
 #include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
 
-#define PLUGIN(x) \
-	extern "C"{\
-		void * get_instance_monitoring_activity_plugin_dereferencing() { return new x(); }\
-	}
+#define MONITORING_ACTIVITY_PLUGIN_DEREFERENCING_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_activity_plugin_dereferencing)
 
 #endif
 

@@ -44,5 +44,8 @@ class ProviderSkeleton: public StatisticsProviderPlugin {
 		}
 };
 
-PLUGIN( ProviderSkeleton )
-
+extern "C"{
+	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME() {
+		return new ProviderSkeleton();
+	}
+}

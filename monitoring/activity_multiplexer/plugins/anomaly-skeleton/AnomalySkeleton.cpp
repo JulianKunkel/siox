@@ -112,6 +112,8 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiple
 		}
 };
 
-
-PLUGIN( AnomalySkeleton )
-
+extern "C"{
+	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME() {
+		return new AnomalySkeleton();
+	}
+}

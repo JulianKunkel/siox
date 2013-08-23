@@ -36,4 +36,8 @@ class ActivityForwarder: public ActivityMultiplexerPlugin, public ActivityMultip
 		ActivityMultiplexer * out = nullptr;
 };
 
-PLUGIN(ActivityForwarder)
+extern "C"{
+	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME() {
+		return new ActivityForwarder();
+	}
+}
