@@ -29,6 +29,8 @@ class TraceReader {
 		}
 
 		void printActivity( Activity * activity );
+
+		bool printHostname = false;
 	private:
 		AssociationMapper * a;
 		Ontology * o;
