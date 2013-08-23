@@ -144,10 +144,10 @@ package AssocationMapper <<frame>> {
 		value: text
 	}
 
-	ProcessAttributesStr -- Attribute
-	ProcessAttributesInt3264 -- Attribute
-	ComponentAttributesStr -- Attribute
-	ComponentAttributesInt3264 -- Attribute
+	Attribute -- ProcessAttributesStr
+	Attribute -- ProcessAttributesInt3264
+	Attribute -- ComponentAttributesStr
+	Attribute -- ComponentAttributesInt3264
 }
 
 package Statistics <<frame>> {
