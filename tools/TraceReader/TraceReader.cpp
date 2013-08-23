@@ -52,11 +52,25 @@ static inline void strtime( Timestamp t, stringstream & s )
 	s << buff;
 }
 
+static inline void strdelta( Timestamp t, stringstream & s )
+{
+	uint64_t ts = t / 1000000000ull;
+	uint64_t ns = t - ( ts * 1000000000ull );
+	char buff[200];
+	snprintf( buff, 20, "%lld.%.10lld", ( long long int ) ts, ( long long int ) ns );
+	s << buff;
+}
+
+
 void TraceReader::strattribute( const Attribute & a, stringstream & s ) throw( NotFoundError )
 {
 	const OntologyAttribute & oa = o->lookup_attribute_by_ID( a.id );
-	s << '"' << oa.domain << "/" << oa.name << '"' << "=";
-	s << a.value;
+	s << oa.domain << "/" << oa.name << "=";
+	if( a.value.type() == VariableDatatype::Type::STRING){
+		s << '"' << a.value << '"' ;
+	}else{
+		s << a.value ;
+	}
 }
 
 
@@ -65,13 +79,12 @@ void TraceReader::printActivity( Activity * a )
 
 	stringstream str;
 	try {
-		str << a->aid() << " ";
-		strtime( a->time_start(), str );
-		str << " " ;
-		strtime( a->time_stop(), str );
-		str << " ";
+		
+		strdelta( a->time_stop() - a->time_start(), str );
+		if( printHostname )
+			str << " " << s->lookup_node_hostname( a->aid().cid.pid.nid );
 
-		str << s->lookup_node_hostname( a->aid().cid.pid.nid ) << " ";
+		str  << " " << a->aid() << " ";
 
 		UniqueInterfaceID uid = s->lookup_interface_of_activity( a->ucaid() );
 
