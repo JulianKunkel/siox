@@ -1,12 +1,10 @@
 # Directories to ignore
 #
-/Komponenten/doc/html/
-/Komponenten/doc/latex/
-#!/Komponenten/doc/images/
 
+# Generated documentation
+doc/
 
 # File extensions to ignore
-#
 *~
 *.err
 *.log
