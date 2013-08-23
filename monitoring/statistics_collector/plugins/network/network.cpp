@@ -117,8 +117,9 @@ class NetworkStats: public ProcSingleFilePlugin<18> {
 		}
 };
 
-extern "C"{
-	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME() {
+extern "C" {
+	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME()
+	{
 		return new NetworkStats();
 	}
 }

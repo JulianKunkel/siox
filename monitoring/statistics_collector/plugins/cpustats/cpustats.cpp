@@ -129,8 +129,9 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 		}
 };
 
-extern "C"{
-	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME() {
+extern "C" {
+	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME()
+	{
 		return new CPUstats();
 	}
 }

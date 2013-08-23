@@ -25,8 +25,9 @@ namespace monitoring {
 
 //CREATE_SERIALIZEABLE_CLS(StatisticsSyncOptions)
 
-//extern "C"{
-//	void * MONITORING_STATISTICS_MULTIPLEXER_INSTANCIATOR_NAME() {
+//extern "C" {
+//	void * MONITORING_STATISTICS_MULTIPLEXER_INSTANCIATOR_NAME()
+//	{
 //		return new StatisticsMultiplexerSync();
 //	}
 //}

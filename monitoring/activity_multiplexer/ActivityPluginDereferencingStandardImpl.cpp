@@ -83,8 +83,9 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 		Reasoner * reasoner = nullptr;
 };
 
-extern "C"{
-	void * MONITORING_ACTIVITY_PLUGIN_DEREFERENCING_INSTANCIATOR_NAME() {
+extern "C" {
+	void * MONITORING_ACTIVITY_PLUGIN_DEREFERENCING_INSTANCIATOR_NAME()
+	{
 		return new ActivityPluginDereferencingImplementation();
 	}
 }

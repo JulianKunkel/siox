@@ -72,8 +72,11 @@ namespace core {
 	3) Add CREATE_SERIALIZEABLE_CLS(FileOntologyOptions) in one of your implementation CPP files to make sure the serialization code for your options is created.
 	4) Use the macro from A.2) to create the component instanciator function in one of your implementation CPP files, e.g.:
 	    @code
-	    extern "C"{
-	        void * [INTERFACE][_PLUGIN]_INSTANCIATOR_NAME() { return new FileOntology(); }
+	    extern "C" {
+	        void * [INTERFACE][_PLUGIN]_INSTANCIATOR_NAME()
+	        {
+	            return new FileOntology();
+	        }
 	    }
 	    @endcode
 	5) To create a valid module you have to implement the interfaces from a Component:
