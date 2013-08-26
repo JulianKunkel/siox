@@ -163,8 +163,9 @@ namespace monitoring {
 			}
 
 			const OntologyAttribute & lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) {
-				stringstream unique( domain );
-				unique << "|" << name;
+				stringstream unique;
+				unique << domain << "|" << name;
+				string fqn( unique.str() );
 
 				auto res = domain_name_map.find( unique.str() );
 
