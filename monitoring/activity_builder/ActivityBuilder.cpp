@@ -12,6 +12,12 @@ static atomic<uint32_t> current_thread_ID( 0 );
 
 namespace monitoring {
 
+
+	struct InternalRemoteCall : public RemoteCall{
+		Activity * activity;
+	};
+
+
 	ActivityBuilder::ActivityBuilder() : thread_id( ++current_thread_ID )
 	{
 		next_activity_id = 1;
@@ -142,7 +148,7 @@ namespace monitoring {
 	{
 		assert( a != nullptr );
 
-		RemoteCall * rc = new RemoteCall;
+		InternalRemoteCall * rc = new InternalRemoteCall;
 		rc->target = RemoteCallIdentifier( target_node_id, target_unique_interface_id, target_associate_id );
 		rc->activity = a;
 
@@ -162,9 +168,11 @@ namespace monitoring {
 	 * @param rc: RemoteCall reference obtained from setupRemoteCall().
 	 * @param t:
 	 */
-	void ActivityBuilder::startRemoteCall( RemoteCall* &rc, const Timestamp * t )
+	void ActivityBuilder::startRemoteCall( RemoteCall* & erc, const Timestamp * t )
 	{
-		assert( rc != nullptr );
+		assert( erc != nullptr );
+
+		InternalRemoteCall *& rc = (InternalRemoteCall* &) erc;
 
 		// The Activity to which this RemoteCall belongs
 		Activity * a = rc->activity;

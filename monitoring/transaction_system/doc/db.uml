@@ -1,31 +1,123 @@
 @startuml
 
-package Activity <<frame>> {
-	object activity {
-		unique_id : int8 primary key
-		aid_id : int8 not null
-		aid_cid_nid : int8 not null
-		aid_cid_pid : int8 not null
-		aid_cid_time : int8 not null
-		aid_cid_num : int4 not null
-		ucaid : int8 not null
+
+package Ontology <<frame>> {
+	object Attribute #yellow {
+		attributeID : int4 key auto-increment
+		domain : text
+		name : text		
+		storage_type : smallint
+		<domain, name> : unique
+		
+		'meta : int4[] (attributeID, value) stored as array, alternative 
+		'values: 
+	}
+
+	object MetaAttributeInt32 #yellow {
+		forID : int4 foreign-key
+		attribute : int4 foreign-key
+		value: int4
+	}
+
+	object MetaAttributeInt64 #yellow {
+		forID : int4 foreign-key
+		attribute : int4 foreign-key
+		value: int8
+	}
+
+	object MetaAttributeFloatDouble #yellow {
+		forID : int4 foreign-key
+		attribute : int4 foreign-key
+		value: int8
+	}
+
+	object MetaAttributeStr #yellow {
+		forID : int4 foreign-key
+		attribute : int4 foreign-key
+		value: text
+	}
+
+	MetaAttributeInt32 -- Attribute
+	MetaAttributeInt64 -- Attribute
+	MetaAttributeFloatDouble -- Attribute
+	MetaAttributeStr -- Attribute
+
+	note right of Attribute
+		Access to the meta attributes is performant
+		because we know the type of the meta-attr.
+		Enumeration comes with a cost.
+	end note
+}
+
+
+package Activities <<frame>> {
+
+	object ActivityID{
+		id : int8 key auto-increment
+
+		thread : int4 not null
+		id : int4 not null
+		
+		cid_pid_nid : int4 not null
+		cid_pid_pid : int4 not null
+		cid_pid_time : int4 not null		
+		cid_id : int4 not null
+	}
+
+	object RemoteCallIdentifier{
+' 		RemoteCallIdentifier
+'		NodeID nid; // optional
+'		UniqueInterfaceID uuid; // optional
+'		AssociateID instance; // optional, remote call instance identifier		
+		id : int8 key auto-increment
+
+		nid : int4 nullable
+		ucaid : int4 nullable
+		instance : text nullable
+	}
+
+	object RemoteCall{
+'	typedef struct {
+'		RemoteCallIdentifier target;
+'		vector<Attribute> attributes;
+'	} RemoteCall;	
+		id : int8 key auto-increment
+
+		rcID : int8 foreign-key
+
+		attributes : attribute[] TODO
+	}
+
+	object Activity {
+		id : int8 key auto-increment
+		ucaid : int4 not null
 		time_start : int8 not null
 		time_stop : int8
-		error_value : int8
-		attributes : attribute[]
+
+		parents : int8[] foreign-key
+
+'	typedef struct {
+'		RemoteCallIdentifier target;
+'		vector<Attribute> attributes;
+'	} RemoteCall;
+		remoteCalls : int8[] foreign-key
+
+'		OntologyAttributeID id;
+'		AttributeValue value;		
+		attributes : attribute[] TODO
+
+		remoteCallInvoker : int8 nullable foreign-key
+
+		error_value : int4
 	}
 
-	object parent {
-		parent_aid_id : int8 not null
-		parent_cid_nid : int8 not null
-		parent_cid_pid : int8 not null
-		parent_cid_time : int8 not null
-		parent_cid_num : int4 not null
-		child_unique_id : int8 not null
-	}
+	Activity -- ActivityID
+	Activity -- RemoteCallIdentifier
+	Activity -- RemoteCall
+	RemoteCallIdentifier -- RemoteCall
 
-	parent -- activity : "child_unique_id = unique_id"
-	activity -- ontology : "attribute.key = ontology.id"
+
+	Activity -- Attribute 
 }
 
 package SystemInformationGlobalIDManager <<frame>> {
@@ -62,54 +154,8 @@ package SystemInformationGlobalIDManager <<frame>> {
 	}
 
 	ComponentActivityMapping -- UniqueInterfaceMapping
-}
-
-package Ontology <<frame>> {
-	object Attribute #yellow {
-		attributeID : int4 key auto-increment
-		domain : text
-		name : text		
-		storage_type : smallint
-		<domain, name> : unique
-		
-		'meta : int4[] (attributeID, value) stored as array, alternative 
-		'values: 
-	}
-
-	object MetaAttributeInt32 #yellow {
-		forID : int4 foreign-key
-		attribute : int4 foreign-key
-		value: int4
-	}
-
-	object MetaAttributeInt64 #yellow {
-		forID : int4 foreign-key
-		attribute : int4 foreign-key
-		value: int8
-	}
-
-	object MetaAttributeDouble #yellow {
-		forID : int4 foreign-key
-		attribute : int4 foreign-key
-		value: int8
-	}
-
-	object MetaAttributeStr #yellow {
-		forID : int4 foreign-key
-		attribute : int4 foreign-key
-		value: text
-	}
-
-	MetaAttributeInt32 -- Attribute
-	MetaAttributeInt64 -- Attribute
-	MetaAttributeFloatDouble -- Attribute
-	MetaAttributeStr -- Attribute
-
-	note right of Attribute
-		Access to the meta attributes is performant
-		because we know the type of the meta-attr.
-		Enumeration comes with a cost.
-	end note
+	NodeMapping -- ActivityID
+	NodeMapping -- RemoteCallIdentifier
 }
 
 package AssocationMapper <<frame>> {

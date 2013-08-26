@@ -31,7 +31,6 @@ CREATE_SERIALIZEABLE_CLS( FileBasedSystemInformationOptions )
 
 
 namespace monitoring {
-
 	class FileBasedSystemInformation: public SystemInformationGlobalIDManager {
 
 			void load( string filename ) {

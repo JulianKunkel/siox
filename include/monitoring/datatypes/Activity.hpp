@@ -87,7 +87,6 @@ namespace monitoring {
 	typedef struct {
 		RemoteCallIdentifier target;
 		vector<Attribute> attributes;
-		Activity * activity;
 	} RemoteCall;
 
 

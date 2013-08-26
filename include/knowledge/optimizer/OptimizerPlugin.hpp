@@ -17,7 +17,7 @@
 using namespace core;
 using namespace monitoring;
 
-namespace knowledge {
+namespace knowledge { 
 
 	/**
 	 * A plug-in that will suggest optimal parameter values for one or more
