@@ -154,6 +154,8 @@ package SystemInformationGlobalIDManager <<frame>> {
 	}
 
 	ComponentActivityMapping -- UniqueInterfaceMapping
+	RemoteCallIdentifier -- UniqueInterfaceMapping
+	Activity -- ComponentActivityMapping
 	NodeMapping -- ActivityID
 	NodeMapping -- RemoteCallIdentifier
 }
@@ -198,5 +200,17 @@ package AssocationMapper <<frame>> {
 
 package Statistics <<frame>> {
 }
+
+package KnowledgeBase <<frame>> {
+	package SystemInformation <<frame>> {
+	}
+
+	package <PluginSpecific>Pattern <<frame>> {
+	}
+
+	package <PluginSpecific>Information <<frame>> {
+	}	
+}
+
 
 @enduml
