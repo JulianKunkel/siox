@@ -1,70 +1,156 @@
 @startuml
 
-object activity {
-	unique_id : int8 primary key
-	aid_id : int8 not null
-	aid_cid_nid : int8 not null
-	aid_cid_pid : int8 not null
-	aid_cid_time : int8 not null
-	aid_cid_num : int4 not null
-	ucaid : int8 not null
-	time_start : int8 not null
-	time_stop : int8
-	error_value : int8
-	attributes : attribute[]
+package Activity <<frame>> {
+	object activity {
+		unique_id : int8 primary key
+		aid_id : int8 not null
+		aid_cid_nid : int8 not null
+		aid_cid_pid : int8 not null
+		aid_cid_time : int8 not null
+		aid_cid_num : int4 not null
+		ucaid : int8 not null
+		time_start : int8 not null
+		time_stop : int8
+		error_value : int8
+		attributes : attribute[]
+	}
+
+	object parent {
+		parent_aid_id : int8 not null
+		parent_cid_nid : int8 not null
+		parent_cid_pid : int8 not null
+		parent_cid_time : int8 not null
+		parent_cid_num : int4 not null
+		child_unique_id : int8 not null
+	}
+
+	parent -- activity : "child_unique_id = unique_id"
+	activity -- ontology : "attribute.key = ontology.id"
 }
 
-object node {
-	unique_id : int8 primary key
-	hwid : int8 not null
-	swid : int8 not null
-	iid : int8 not null
+package SystemInformationGlobalIDManager <<frame>> {
+	object NodeMapping #gold {
+		NodeID : int4 key auto-increment
+		Hostname: text unique
+	}
+
+	object DeviceMapping #gold {
+		DeviceID : int4 key auto-increment
+		UniqueIdentifier: text
+		NodeID: int4 foreign key
+		<NodeID, UniqueIdentifier> : unique
+	}
+
+	DeviceMapping -- NodeMapping
+
+	object FilesystemMapping #gold {
+		FilesystemID : int4 key auto-increment
+		UniqueIdentifier: text unique
+	}
+
+	object UniqueInterfaceMapping #gold {
+		UniqueInterfaceID : int4 key auto-increment
+		Interface: text
+		Implementation: text
+		<Interface, Implementation> : unique
+	}
+
+	object ComponentActivityMapping #gold {
+		ActivityID : int4 key auto-increment
+		UniqueInterfaceID: int4 key foreign-key		
+		Name: text
+	}
+
+	ComponentActivityMapping -- UniqueInterfaceMapping
 }
 
+package Ontology <<frame>> {
+	object Attribute #yellow {
+		attributeID : int4 key auto-increment
+		domain : text
+		name : text		
+		storage_type : smallint
+		<domain, name> : unique
+		
+		'meta : int4[] (attributeID, value) stored as array, alternative 
+		'values: 
+	}
 
-object hardware {
-	unique_id : int8 primary key
-	description : varchar(255) not null
+	object MetaAttributeInt32 #yellow {
+		forID : int4 foreign-key
+		attribute : int4 foreign-key
+		value: int4
+	}
+
+	object MetaAttributeInt64 #yellow {
+		forID : int4 foreign-key
+		attribute : int4 foreign-key
+		value: int8
+	}
+
+	object MetaAttributeDouble #yellow {
+		forID : int4 foreign-key
+		attribute : int4 foreign-key
+		value: int8
+	}
+
+	object MetaAttributeStr #yellow {
+		forID : int4 foreign-key
+		attribute : int4 foreign-key
+		value: text
+	}
+
+	MetaAttributeInt32 -- Attribute
+	MetaAttributeInt64 -- Attribute
+	MetaAttributeFloatDouble -- Attribute
+	MetaAttributeStr -- Attribute
+
+	note right of Attribute
+		Access to the meta attributes is performant
+		because we know the type of the meta-attr.
+		Enumeration comes with a cost.
+	end note
 }
 
-object software {
-	unique_id : int8 primary key
-	description : varchar(255) not null
+package AssocationMapper <<frame>> {
+
+	object InstanceMapping #coral {
+		id : int4
+		value: text unique
+	}
+
+	object ComponentAttributesInt3264 #coral {
+		component : int4 foreign-key
+		attribute : int4 foreign-key
+		value: int8
+	}
+
+	object ComponentAttributesStr #coral {
+		component : int4 foreign-key
+		attribute : int4 foreign-key
+		value: text
+	}
+
+
+	object ProcessAttributesInt3264 #coral {
+		component : int4 foreign-key
+		attribute : int4 foreign-key
+		value: int8
+	}
+
+	object ProcessAttributesStr #coral {
+		component : int4 foreign-key
+		attribute : int4 foreign-key
+		value: text
+	}
+
+	Attribute -- ProcessAttributesStr
+	Attribute -- ProcessAttributesInt3264
+	Attribute -- ComponentAttributesStr
+	Attribute -- ComponentAttributesInt3264
 }
 
-object instance {
-	unique_id : int8 primary key
-	description : varchar(255) not null
+package Statistics <<frame>> {
 }
-
-object parent {
-	parent_aid_id : int8 not null
-	parent_cid_nid : int8 not null
-	parent_cid_pid : int8 not null
-	parent_cid_time : int8 not null
-	parent_cid_num : int4 not null
-	child_unique_id : int8 not null
-}
-
-node -- hardware : "hwid = unique_id"
-node -- software : "swid = unique_id"
-node -- instance : "iid = unique_id"
-
-parent -- activity : "child_unique_id = unique_id"
-
-object attribute {
-	key : int8
-	value : varchar(255)
-}
-note left: Not a table, but PostgreSQL type.
-
-object ontology {
-	id : int8 
-	domain : varchar(255)
-	name : varchar(255)
-	type : int2
-}
-
-activity -- ontology : "attribute.key = ontology.id"
 
 @enduml
