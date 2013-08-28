@@ -11,6 +11,26 @@ using namespace monitoring;
 
 namespace monitoring {
 
+	class ActivityMultiplexerQueue
+	{
+	public:
+			ActivityMultiplexerQueue () {};
+			virtual ~ActivityMultiplexerQueue () {};
+
+	private:
+			/* data */
+	};
+
+
+	class ActivityMultiplexerNotifier
+	{
+	public:
+			ActivityMultiplexerNotifier () {};
+			virtual ~ActivityMultiplexerNotifier () {};
+
+	private:
+			/* data */
+	};
 
 	/**
 	 * ActivityMultiplexer
@@ -24,10 +44,10 @@ namespace monitoring {
 
 			boost::shared_mutex  listener_change_mutex;
 	public:
-			virtual void Log( Activity * element ){
+			virtual void Log( Activity * activity ){
 				boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
 				for(auto l = listeners.begin(); l != listeners.end() ; l++){
-					(*l)->Notify(element);
+					(*l)->Notify(activity);
 				}
 			}
 

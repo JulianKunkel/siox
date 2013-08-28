@@ -15,7 +15,7 @@ namespace monitoring {
 	 */
 	class ActivityMultiplexer : public core::Component {
 		public:
-			virtual void Log( Activity * element ) = 0;
+			virtual void Log( Activity * activity ) = 0;
 
 			/**
 			 * Register listener to multiplexer
@@ -33,7 +33,7 @@ namespace monitoring {
 			virtual void unregisterListener( ActivityMultiplexerListener * listener ) = 0;
 
 			/**
-			 * Register listener to multiplexer
+			 * Register async listener to multiplexer
 			 *
 			 * @param   listener    listener to notify in the future
 			 */
@@ -41,7 +41,7 @@ namespace monitoring {
 
 
 			/**
-			 * Unregister listener from multiplexer
+			 * Unregister async listener from multiplexer
 			 *
 			 * @param   listener    listener to remove
 			 */
