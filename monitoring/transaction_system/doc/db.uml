@@ -3,37 +3,37 @@
 
 package Ontology <<frame>> {
 	object Attribute #yellow {
-		attributeID : int4 key auto-increment
+		attributeID : int32 key auto-increment
 		domain : text
-		name : text		
+		name : text
 		storage_type : smallint
 		<domain, name> : unique
-		
-		'meta : int4[] (attributeID, value) stored as array, alternative 
-		'values: 
+
+		'meta : int32[] (attributeID, value) stored as array, alternative
+		'values:
 	}
 
 	object MetaAttributeInt32 #yellow {
-		forID : int4 foreign-key
-		attribute : int4 foreign-key
-		value: int4
+		forID : int32 foreign-key
+		attribute : int32 foreign-key
+		value: int32
 	}
 
 	object MetaAttributeInt64 #yellow {
-		forID : int4 foreign-key
-		attribute : int4 foreign-key
-		value: int8
+		forID : int32 foreign-key
+		attribute : int32 foreign-key
+		value: int64
 	}
 
 	object MetaAttributeFloatDouble #yellow {
-		forID : int4 foreign-key
-		attribute : int4 foreign-key
-		value: int8
+		forID : int32 foreign-key
+		attribute : int32 foreign-key
+		value: int64
 	}
 
 	object MetaAttributeStr #yellow {
-		forID : int4 foreign-key
-		attribute : int4 foreign-key
+		forID : int32 foreign-key
+		attribute : int32 foreign-key
 		value: text
 	}
 
@@ -53,26 +53,26 @@ package Ontology <<frame>> {
 package Activities <<frame>> {
 
 	object ActivityID{
-		id : int8 key auto-increment
+		id : int64 key auto-increment
 
-		thread : int4 not null
-		id : int4 not null
-		
-		cid_pid_nid : int4 not null
-		cid_pid_pid : int4 not null
-		cid_pid_time : int4 not null		
-		cid_id : int4 not null
+		thread : int32 not null
+		id : int32 not null
+
+		cid_pid_nid : int32 not null
+		cid_pid_pid : int32 not null
+		cid_pid_time : int32 not null
+		cid_id : int32 not null
 	}
 
 	object RemoteCallIdentifier{
 ' 		RemoteCallIdentifier
 '		NodeID nid; // optional
 '		UniqueInterfaceID uuid; // optional
-'		AssociateID instance; // optional, remote call instance identifier		
-		id : int8 key auto-increment
+'		AssociateID instance; // optional, remote call instance identifier
+		id : int64 key auto-increment
 
-		nid : int4 nullable
-		ucaid : int4 nullable
+		nid : int32 nullable
+		ucaid : int32 nullable
 		instance : text nullable
 	}
 
@@ -80,35 +80,35 @@ package Activities <<frame>> {
 '	typedef struct {
 '		RemoteCallIdentifier target;
 '		vector<Attribute> attributes;
-'	} RemoteCall;	
-		id : int8 key auto-increment
+'	} RemoteCall;
+		id : int64 key auto-increment
 
-		rcID : int8 foreign-key
+		rcID : int64 foreign-key
 
 		attributes : attribute[] TODO
 	}
 
 	object Activity {
-		id : int8 key auto-increment
-		ucaid : int4 not null
-		time_start : int8 not null
-		time_stop : int8
+		id : int64 key auto-increment
+		ucaid : int32 not null
+		time_start : int64 not null
+		time_stop : int64
 
-		parents : int8[] foreign-key
+		parents : int64[] foreign-key
 
 '	typedef struct {
 '		RemoteCallIdentifier target;
 '		vector<Attribute> attributes;
 '	} RemoteCall;
-		remoteCalls : int8[] foreign-key
+		remoteCalls : int64[] foreign-key
 
 '		OntologyAttributeID id;
-'		AttributeValue value;		
+'		AttributeValue value;
 		attributes : attribute[] TODO
 
-		remoteCallInvoker : int8 nullable foreign-key
+		remoteCallInvoker : int64 nullable foreign-key
 
-		error_value : int4
+		error_value : int32
 	}
 
 	Activity -- ActivityID
@@ -117,39 +117,39 @@ package Activities <<frame>> {
 	RemoteCallIdentifier -- RemoteCall
 
 
-	Activity -- Attribute 
+	Activity -- Attribute
 }
 
 package SystemInformationGlobalIDManager <<frame>> {
 	object NodeMapping #gold {
-		NodeID : int4 key auto-increment
+		NodeID : int32 key auto-increment
 		Hostname: text unique
 	}
 
 	object DeviceMapping #gold {
-		DeviceID : int4 key auto-increment
+		DeviceID : int32 key auto-increment
 		UniqueIdentifier: text
-		NodeID: int4 foreign key
+		NodeID: int32 foreign key
 		<NodeID, UniqueIdentifier> : unique
 	}
 
 	DeviceMapping -- NodeMapping
 
 	object FilesystemMapping #gold {
-		FilesystemID : int4 key auto-increment
+		FilesystemID : int32 key auto-increment
 		UniqueIdentifier: text unique
 	}
 
 	object UniqueInterfaceMapping #gold {
-		UniqueInterfaceID : int4 key auto-increment
+		UniqueInterfaceID : int32 key auto-increment
 		Interface: text
 		Implementation: text
 		<Interface, Implementation> : unique
 	}
 
 	object ComponentActivityMapping #gold {
-		ActivityID : int4 key auto-increment
-		UniqueInterfaceID: int4 key foreign-key		
+		ActivityID : int32 key auto-increment
+		UniqueInterfaceID: int32 key foreign-key
 		Name: text
 	}
 
@@ -163,32 +163,32 @@ package SystemInformationGlobalIDManager <<frame>> {
 package AssocationMapper <<frame>> {
 
 	object InstanceMapping #coral {
-		id : int4
+		id : int32
 		value: text unique
 	}
 
 	object ComponentAttributesInt3264 #coral {
-		component : int4 foreign-key
-		attribute : int4 foreign-key
-		value: int8
+		component : int32 foreign-key
+		attribute : int32 foreign-key
+		value: int64
 	}
 
 	object ComponentAttributesStr #coral {
-		component : int4 foreign-key
-		attribute : int4 foreign-key
+		component : int32 foreign-key
+		attribute : int32 foreign-key
 		value: text
 	}
 
 
 	object ProcessAttributesInt3264 #coral {
-		component : int4 foreign-key
-		attribute : int4 foreign-key
-		value: int8
+		component : int32 foreign-key
+		attribute : int32 foreign-key
+		value: int64
 	}
 
 	object ProcessAttributesStr #coral {
-		component : int4 foreign-key
-		attribute : int4 foreign-key
+		component : int32 foreign-key
+		attribute : int32 foreign-key
 		value: text
 	}
 
@@ -209,7 +209,7 @@ package KnowledgeBase <<frame>> {
 	}
 
 	package <PluginSpecific>Information <<frame>> {
-	}	
+	}
 }
 
 
