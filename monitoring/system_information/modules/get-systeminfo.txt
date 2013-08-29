@@ -1,0 +1,121 @@
+This document describes where and how to get information about a compute node.
+
+Hostname:
+gethostname()
+
+CPU Vendor:
+Read from /proc/cpuinfo
+
+CPU Model:
+Read from /proc/cpuinfo
+
+Virtual CPU Core Count:
+Read from /proc/cpuinfo
+
+Physical CPU Coire Count:
+Read from /proc/cpuinfo
+
+
+--- The next entries apply to each core available on the node. ---
+
+CPU Core Available Scaling Governors:
+All scaling governors available on the node.
+Read from /sys/bus/devices/cpu($coreid)/cpufreq/scaling_available_governors
+
+CPU Core Scaling Governor:
+Current chosen governor.
+Read from /sys/bus/cpu/devices/cpu($coreid)/cpufreq/scaling_governor
+
+CPU Core Hardware Min Freq:
+Read from /sys/bus/cpu/devices/cpu($coreid)/cpufreq/cpuinfo_min_freq
+
+CPU Core Scaling Min Freq:
+This is minimal frequency set by the governor.
+Read from /sys/bus/cpu/devices/cpu($coreid)/cpufreq/scaling_min_freq
+
+CPU Core Hardware Max Freq:
+Read from /sys/bus/cpu/devices/cpu($coreid)/cpufreq/cpuinfo_max_freq
+
+CPU Core ID:
+Read from /sys/bus/cpu/devices/cpu($coreid)/topology/core_id
+
+CPU Core Siblings:
+Read from /sys/bus/cpu/devices/cpu($coreid)/topology/core_siblings_list
+
+CPU Core Thread Siblings:
+Read from /sys/bus/cpu/devices/cpu($coreid)/topology/thread_siblings_list
+
+--- Each core has access to multiple caches. ---
+
+Cache Level:
+Read from /sys/bus/cpu/devices/cpu($coreid)/cache/index($indexnr)/level
+
+Cache Size:
+Read from /sys/bus/cpu/devices/cpu($coreid)/cache/index($indexnr)/size
+
+Cache Shared CPUS:
+Read from /sys/bus/cpu/devices/cpu($coreid)/cache/index($indexnr)/shared_cpu_list
+
+Cache Type:
+Read from /sys/bus/cpu/devices/cpu($coreid)/cache/index($indexnr)/type
+
+--- Enough about the cpu. Gather information about attached pci devices. ---
+
+To get the attached PCI devices Parse the output of "lspci"
+and store the found devices in the database.
+
+Read the network devices from /sys/class/net
+
+To map the device to the entry in lspci have a look at the symlink, it
+contains the PCI address.
+
+--- Information about network devices. ---
+
+This is a example for a Ethernet device.
+
+Address:
+Read from /sys/class/net/($device)/address
+
+Duplex Mode:
+Read from /sys/class/net/($device)/duplex
+
+Operation state:
+Read from /sys/class/net/($device)/operstate
+
+Seed:
+The speed can only be read when the operstate is "up"
+Read from /sys/class/net/($device)/speed
+
+--- Information about block devices. ---
+
+Search for devices in /sys/class/block
+
+Model:
+Read from /sys/class/block/($device)/device/model
+
+Size:
+Read from /sys/class/block/($device)/size
+Queue Depth
+Read from /sys/class/block/($device)/device/queue_depth
+
+Revision:
+Read from /sys/class/block/($device)/device/rev
+
+Scsi Level:
+Read from /sys/class/block/($device)/device/scsi_level
+
+Vendor:
+Read from /sys/class/block/($device)/device/vendor
+
+Cache Type:
+Somethink like "write back"
+Read from /sys/class/block/($device)/device/scsi_disk/($addr)/cache_type
+
+Logical Block Size:
+Read from /sys/class/block/($device)/queue/logical_bock_size
+
+Hardware Sector Size:
+Read from /sys/class/block/($device)/queue/hw_sector_size
+
+IO Scheduler:
+Read from /sys/class/block/($device)/queue/scheduler
