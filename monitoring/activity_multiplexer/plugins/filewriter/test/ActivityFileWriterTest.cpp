@@ -22,6 +22,7 @@ int main( int argc, char const * argv[] )
 	op.filename = "test.txt";
 	op.multiplexer.componentPointer = m1;
 
+	m1->init();
 	ap->init();
 
 	auto parentArray = vector<ActivityID> {  {.cid = {.pid = {2, 3, 4}, .id = 1}, .id = 1} };
@@ -35,6 +36,8 @@ int main( int argc, char const * argv[] )
 	Activity * activity = new Activity( aid, 3, 5, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 );
 
 	m1->Log( activity );
+
+	sleep(1);
 
 	delete( ap );
 

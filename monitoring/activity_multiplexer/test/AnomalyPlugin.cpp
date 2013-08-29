@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <iostream>
 #include <list>
 
@@ -47,7 +48,7 @@ class AnomalyPlugin {
 // Diese Klassen werden für dein Plugin genau einmal registriert, hier sollte im Moment keine Änderung nötig sein.
 // Bitte implementieren.
 // Siehe UML Diagramme unter doc/*.svg
-class ActivityListenerSync : public ActivityMultiplexerListenerSync {
+class ActivityListenerSync : public ActivityMultiplexerListener {
 	public:
 		ActivityListenerSync( AnomalyPlugin * ap ) {
 			parentPlugin = ap;
