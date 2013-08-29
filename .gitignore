@@ -54,3 +54,5 @@ build/
 .lock-*
 *.gch
 /siox.project/
+.xmlSerialization
+.textSerialization
