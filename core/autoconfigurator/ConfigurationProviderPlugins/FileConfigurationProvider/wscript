@@ -5,7 +5,7 @@
 
 def build(bld):
         # ZTU1
-	bld.shlib(includes="",  use = "siox-core-AutoConfigurator siox-core-ContainerSerializer siox-core-AutoRegistrar" ,  target = 'siox-core-autoconfigurator-FileConfigurationProvider', source = 'FileConfigurationProvider.cpp' )
+	bld.shlib(includes="",  use = "siox-core-AutoConfigurator siox-core-ContainerSerializer " ,  target = 'siox-core-autoconfigurator-FileConfigurationProvider', source = 'FileConfigurationProvider.cpp' )
 	bld.recurse(['test'], mandatory=True)
 
 

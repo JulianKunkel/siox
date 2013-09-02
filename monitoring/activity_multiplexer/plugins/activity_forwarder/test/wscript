@@ -2,5 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-    #bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-activityPlugin-ActivityForwarder", target = 'ActivityForwarderTest', source = 'ActivityForwarderTest.cpp', install_path = 'None')
-    pass
+#    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-ActivityMultiplexerAsyncThreaded siox-core-ModuleLoader siox-monitoring-activityPlugin-ActivityFileWriter ", target = 'ActivityForwarderTest', source = 'ActivityForwarderTest.cpp', install_path = None)
+	pass
+
+# -*- indent-tabs-mode: t -*-
