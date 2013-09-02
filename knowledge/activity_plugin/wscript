@@ -3,5 +3,5 @@
 
 def build(bld):
 
-    bld.shlib(includes="", use="BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator siox-core-AutoRegistrar", target='siox-knowledge-DereferencingFacade', source='ActivityPluginDereferencingStandardImpl.cpp' )
+    bld.shlib(includes="", use="BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target='siox-knowledge-DereferencingFacade', source='ActivityPluginDereferencingStandardImpl.cpp' )
 

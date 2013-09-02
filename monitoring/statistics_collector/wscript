@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-   #bld.shlib(includes="", use="BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator siox-core-AutoRegistrar", target='siox-monitoring-ThreadedStatisticsCollector', source='ThreadedStatisticsCollector.cpp')
+   #bld.shlib(includes="", use="BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target='siox-monitoring-ThreadedStatisticsCollector', source='ThreadedStatisticsCollector.cpp')
    bld.recurse(['plugins'], mandatory=True)
 
 
