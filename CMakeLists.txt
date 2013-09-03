@@ -26,12 +26,39 @@ set(CMAKE_INCLUDE_PATH
 #    /opt/boost-1.53/include
 )
 
-include(FindProtobuf)
+include(FeatureSummary)
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
+# include(FindProtobuf)
 find_package(Protobuf REQUIRED)
-find_package(Boost 1.53.0 COMPONENTS serialization system thread unit_test_framework REQUIRED)
+set_package_properties(Protobuf PROPERTIES URL "http://code.google.com/p/protobuf" TYPE REQUIRED PURPOSE "Serialization using Google Protocol Buffers.")
+
+find_package(Boost 1.53.0 COMPONENTS regex serialization system thread REQUIRED)
+set_package_properties(Boost PROPERTIES URL "http://www.boost.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
+
 find_package(GLIB2 REQUIRED)
+set_package_properties(GLIB2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
+
 find_package(PostgreSQL)
+set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYPE OPTIONAL PURPOSE "SIOX PostgreSQL backend support.")
+
+find_package(NetCDF)
+set_package_properties(NetCDF PROPERTIES URL "http://www.unidata.ucar.edu/software/netcdf" TYPE OPTIONAL PURPOSE "SIOX NetCDF examples.")
+
+find_package(HDF5)
+set_package_properties(HDF5 PROPERTIES URL "http://www.hdfgroup.org/HDF5" TYPE OPTIONAL PURPOSE "SIOX HDF5 examples.")
+
+find_package(MPI)
+set_package_properties(MPI PROPERTIES URL "http://www.open-mpi.org" TYPE OPTIONAL PURPOSE "SIOX Open MPI examples.")
+
+include(SIOXMacros)
+
+siox_generate_buffers()
+
+include(CTest)
+
 add_subdirectory(core)
-add_subdirectory(knowledge)
-add_subdirectory(monitoring)
+#add_subdirectory(knowledge)
+#add_subdirectory(monitoring)
 

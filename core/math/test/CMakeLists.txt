@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_executable(test-math
@@ -12,6 +10,7 @@ add_executable(test-math
 
 target_link_libraries(
 	test-math
-	MathematicalEquation
+	siox-core-MathematicalEquation
 )
 
+add_test(Mathematics test-math)
