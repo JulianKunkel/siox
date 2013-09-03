@@ -7,7 +7,7 @@
 
 #include <knowledge/reasoner/Reasoner.hpp>
 
-#include "ActivityPluginDereferencingOptions.hpp"
+#include "DereferencingFacadeOptions.hpp"
 
 using namespace std;
 using namespace core;
@@ -59,7 +59,7 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 		}
 
 		void init() {
-			ActivityPluginDereferencingOptions & o = getOptions<ActivityPluginDereferencingOptions>();
+			DereferencingFacadeOptions & o = getOptions<DereferencingFacadeOptions>();
 			ontology =  GET_INSTANCE(Ontology, o.ontology);
 			system_information_manager = GET_INSTANCE(SystemInformationGlobalIDManager, o.system_information_manager);
 			association_mapper = GET_INSTANCE(AssociationMapper, o.association_mapper);
@@ -67,7 +67,7 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 		}
 
 		ComponentOptions * AvailableOptions() {
-			return new ActivityPluginDereferencingOptions();
+			return new DereferencingFacadeOptions();
 		}
 
 	private:

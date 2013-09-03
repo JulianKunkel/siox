@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="ActivityPluginDereferencingOptions.hpp", target="BoostXMLSerializable.cpp", name="ActivityPluginDereferencingOptions")
+	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="DereferencingFacadeOptions.hpp", target="BoostXMLSerializable.cpp", name="DereferencingFacadeOptions")
 
-	bld.shlib(includes="", use="BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target='siox-knowledge-DereferencingFacade', source='ActivityPluginDereferencingStandardImpl.cpp BoostXMLSerializable.cpp', depends_on="ActivityPluginDereferencingOptions" )
+	bld.shlib(includes="", use="BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target='siox-knowledge-DereferencingFacade', source='DereferencingFacadeStandardImpl.cpp BoostXMLSerializable.cpp', depends_on="DereferencingFacadeOptions" )
 
