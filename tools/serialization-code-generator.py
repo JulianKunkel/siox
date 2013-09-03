@@ -163,7 +163,8 @@ class BoostOutputGenerator(OutputGenerator):
                 """  % self.mapping , file = self.fh)
 
     def forceInclude(self, filename):
-        print("#include <%s>" % (filename), file = self.fh)
+        self.createFileIfNeeded()
+        print("#include <%s>" % (filename), file=self.fh)
 
     def registerInclude(self, include):
         # Recursively check include file for required serialization objects
@@ -270,6 +271,7 @@ def parseFile(file, options, output_generator):
     includeRegex = re.compile('\s*#include [<"]((?!boost).*/.*)[>"]\s*');
     
     containerMode = False
+    containerNesting = 0
     ignoreNextMember = False
 
     lines = string.split("\n")
@@ -296,16 +298,20 @@ def parseFile(file, options, output_generator):
                 assert(containerMode == False)
                 containerMode = True
                 # The next line is expected to be the class definition
-                m = re.search("class ([^:]*)(: (.*))? [{]", lines[lineNR+1])
+                m = re.search("(class|struct) ([a-zA-Z_0-9]+)(: ([^{]*))?\s*({?)", lines[lineNR+1])
+
                 assert(m)
-                if m.group(2) != None:
-                    parentClasses = m.group(3).replace("ComponentOptions", "Container").split(",")
+                if m.group(3) != None:
+                    parentClasses = m.group(4).replace("ComponentOptions", "Container").split(",")
                 else:
                     parentClasses = []
 
-                output_generator.registerAnnotatedHeader(m.group(1).strip(), parentClasses)       
+                output_generator.registerAnnotatedHeader(m.group(2).strip(), parentClasses)
 
                 lineNR = lineNR + 1
+
+                containerNesting = 0
+
                 continue
             elif command == "noserialization":
                 ignoreNextMember = True
@@ -321,12 +327,22 @@ def parseFile(file, options, output_generator):
                 annotations.append(command)
                 continue
         
-        if containerMode:
+        if containerMode:            
+            #print (str(containerNesting) + " " + line )
+
+            # Count "{"
             if line.find("}") > -1:
-                output_generator.registerAnnotatedHeaderEnd()
-                containerMode = False
-                continue
-            else:
+                containerNesting = containerNesting - 1
+
+                if containerNesting == 0:
+                    output_generator.registerAnnotatedHeaderEnd()
+                    containerMode = False
+                    continue
+
+            if line.find("{") > -1:
+                containerNesting = containerNesting + 1
+
+            if containerNesting == 1:
                 # Parse a member
                 m = re.search("\s*([^=]*)\s*[ \t]([a-zA-Z_][a-zA-Z_]*)\s*(=.*)?;", line)
                 if not m:
@@ -340,6 +356,7 @@ def parseFile(file, options, output_generator):
                 output_generator.registerMember(m.group(1).strip(), m.group(2), annotations)
                 annotations = []
                 continue
+            continue
 
         output_generator.registerIntermediatePart(line)
 

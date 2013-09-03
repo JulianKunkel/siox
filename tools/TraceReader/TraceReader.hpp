@@ -9,8 +9,7 @@
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
-
-#include <monitoring/datatypes/ActivitySerializable.hpp>
+#include <monitoring/datatypes/Activity.hpp>
 
 using namespace std;
 using namespace monitoring;
@@ -21,12 +20,7 @@ class TraceReader {
 	public:
 		TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile );
 
-		Activity * nextActivity() {
-			if( activityDeserializer->hasNext() )
-				return activityDeserializer->parseNext();
-			else
-				return nullptr;
-		}
+		Activity * nextActivity();
 
 		void printActivity( Activity * activity );
 
@@ -35,7 +29,7 @@ class TraceReader {
 		AssociationMapper * a;
 		Ontology * o;
 		SystemInformationGlobalIDManager * s;
-		FileDeserializer<ActivityAccessor> * activityDeserializer;
+		FileDeserializer<Activity> * activityDeserializer;
 
 		void strattribute( const Attribute & a, stringstream & s ) throw( NotFoundError );
 };

@@ -10,7 +10,7 @@
 #include <mutex>
 
 #include <monitoring/association_mapper/AssociationMapperImplementation.hpp>
-#include <core/datatypes/VariableDatatypeSerializable.hpp>
+#include <core/datatypes/VariableDatatypeBoostSerialization.hpp>
 
 
 #include <boost/archive/xml_oarchive.hpp>

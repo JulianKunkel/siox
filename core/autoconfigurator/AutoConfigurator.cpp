@@ -1,11 +1,12 @@
 #include <mutex>
+#include <iostream>
 
 #include <core/autoconfigurator/AutoConfigurator.hpp>
 #include <core/module/ModuleLoader.hpp>
+#include <core/autoconfigurator/AutoConfigurator.hpp>
 #include <core/container/container-serializer.hpp>
-#include <core/component/component-macros.hpp>
 
-#include <core/component/ComponentReferenceBoostSerialization.hpp>
+#include "ModuleOptions.hpp"
 
 using namespace std;
 
@@ -18,24 +19,6 @@ using namespace core;
 ComponentRegistrar * autoConfiguratorRegistrar;
 int autoConfiguratorOffset;
 static mutex registrarMutex;
-
-
-class LoadModule : public Container {
-	public:
-		// name of the module
-		std::string name;
-		// path to search for the module
-		std::string path;
-		// required interface
-		std::string interface;
-		// component number, this is useful for references
-		int componentID;
-
-		SERIALIZE_CONTAINER( MEMBER( componentID ) MEMBER( name ) MEMBER( path ) MEMBER( interface ) )
-};
-CREATE_SERIALIZEABLE_CLS( LoadModule )
-
-CREATE_SERIALIZEABLE_CLS_EXTERNAL( ComponentReference )
 
 namespace core {
 	/**

@@ -4,8 +4,10 @@
 import os
 
 def build(bld):
-   bld.shlib(includes="#", use="siox-core-ModuleLoader BOOST", features='cxx', target = 'siox-tools-TraceReader', source = 'TraceReader.cpp');
-   bld.program(includes="#", use="siox-tools-TraceReader", features='cxx cprogram', target = 'siox-trace-reader', source = 'TraceReaderMain.cpp')
-   bld.recurse(['test'], mandatory=True)
+	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC} -f text", source="ActivitySerializable.hpp", target="ActivitySerializableText.hpp", name ="ActivitySerializableText")
+
+	bld.shlib(includes="#", use="siox-core-ModuleLoader BOOST", features='cxx', target = 'siox-tools-TraceReader', source = 'TraceReader.cpp');
+	bld.program(includes="#", use="siox-tools-TraceReader", features='cxx cprogram', target = 'siox-trace-reader', source = 'TraceReaderMain.cpp', depends_on="ActivitySerializableText")
+	bld.recurse(['test'], mandatory=True)
 
 # -*- indent-tabs-mode: t -*-

@@ -3,18 +3,17 @@
 #include <list>
 #include <mutex>
 
-#define TEXT_SERIALIZATION
-
 #include <boost/archive/text_oarchive.hpp>
 
-#include <core/container/container-serializable.hpp>
+#include <monitoring/datatypes/Activity.hpp>
 
-#include <monitoring/datatypes/ActivitySerializable.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
-
 #include "ActivityFileWriterOptions.hpp"
+
+#include <build/tools/TraceReader/ActivitySerializableText.hpp>
+
 
 using namespace std;
 using namespace monitoring;
@@ -33,8 +32,7 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultipl
 
 		void Notify( Activity * activity ) {
 			lock_guard<mutex> lock( motify_mutex );
-			ActivityAccessor * as = reinterpret_cast<ActivityAccessor *>( activity );
-			*oa << as;
+			*oa << activity;
 			if( synchronize )
 				file.flush();
 		}
