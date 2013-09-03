@@ -12,8 +12,7 @@
 
 #include "ActivityFileWriterOptions.hpp"
 
-#include <build/tools/TraceReader/ActivitySerializableText.hpp>
-
+#include <build/core/component/ActivitySerializableText.hpp>
 
 using namespace std;
 using namespace monitoring;

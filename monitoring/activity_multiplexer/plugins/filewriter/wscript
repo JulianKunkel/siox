@@ -4,7 +4,7 @@
 def build(bld):
 	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="ActivityFileWriterOptions.hpp", target="ActivityFileWriterOptionsXML.cpp", name="ActivityFileWriterOptionsXML")
 
-	bld.shlib(includes="#",  use = "BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target = 'siox-monitoring-activityPlugin-ActivityFileWriter', source = 'ActivityFileWriter.cpp ActivityFileWriterOptionsXML.cpp', depends_on=["ActivityFileWriterOptionsXML", "ActivitySerializableText" ] )
+	bld.shlib(includes="#",  use = "BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target = 'siox-monitoring-activityPlugin-ActivityFileWriter', source = 'ActivityFileWriter.cpp ActivityFileWriterOptionsXML.cpp', depends_on=[ "ActivityFileWriterOptionsXML", "ActivitySerializableText" ] )
 
 	bld.recurse(['test'], mandatory=True)
 

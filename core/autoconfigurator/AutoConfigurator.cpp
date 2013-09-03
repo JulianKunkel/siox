@@ -114,7 +114,8 @@ namespace core {
 				autoConfiguratorRegistrar = nullptr;
 				registrarMutex.unlock();
 
-				throw InvalidConfiguration( "Error while parsing module configuration", "" );
+				cerr << "Error: " << e.what() << endl;
+				throw InvalidConfiguration( "Error while parsing module configuration", "");
 			}
 
 			//cout << "Parsed module description: "  << already_parsed_config.tellg() << endl;

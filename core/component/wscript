@@ -3,6 +3,8 @@
 
 
 def build(bld):
+	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC} -f text", source="ActivitySerializable.hpp", target="ActivitySerializableText.hpp", name ="ActivitySerializableText")
+
 	bld.shlib(includes="",  target = 'siox-core-ComponentRegistrar', source = 'ComponentRegistrar.cpp' )
 	#bld.recurse(['test'], mandatory=True)
 

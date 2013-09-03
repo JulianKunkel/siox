@@ -298,10 +298,11 @@ def parseFile(file, options, output_generator):
                 assert(containerMode == False)
                 containerMode = True
                 # The next line is expected to be the class definition
-                m = re.search("(class|struct) ([a-zA-Z_0-9]+)(: ([^{]*))?\s*({?)", lines[lineNR+1])
+                m = re.search("(class|struct) ([a-zA-Z_0-9]+)\s*(:\s*([^{]*))?\s*({?)", lines[lineNR+1])
 
                 assert(m)
-                if m.group(3) != None:
+
+                if m.group(4) != None:
                     parentClasses = m.group(4).replace("ComponentOptions", "Container").split(",")
                 else:
                     parentClasses = []
