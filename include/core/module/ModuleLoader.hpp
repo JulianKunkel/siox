@@ -54,22 +54,23 @@ namespace core {
 	B) To implement a module (do not put any implementation file under include):
 	1) Create valid options for your module, for example, a filename your module works on.
 	    @code
-	    #include <core/component/component-macros.hpp>
+	    #include <core/component/component-options.hpp>
 
 	    using namespace std;
 	    using namespace monitoring;
 
+		//@serializable
 	    class FileOntologyOptions: public core::ComponentOptions{
 	    public:
 	        string filename; // You can add any options, containers etc. here.
-
-	        SERIALIZE_CONTAINER(MEMBER(filename)) // add the name of the variable here as well.
 	    };
 	    @endcode
 
 	12 Create some CPP files, in one add "#include [INTERFACE]Implementation.hpp"
 	    and implement your interface according to the specification by deriving from your abstract class.
-	3) Add CREATE_SERIALIZEABLE_CLS(FileOntologyOptions) in one of your implementation CPP files to make sure the serialization code for your options is created.
+	3) Make sure to build serializable options in the wscript e.g. with this rule: bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="AnomalySkeletonOptions.hpp", target="BoostXMLSerializable.cpp", name="AnomalySkeletonOptions")
+		Add the dependency to the module library, e.g.
+			bld.shlib(includes="",  use = "siox-core-AutoConfigurator", target = 'siox-monitoring-activityPlugin-AnomalySkeleton', source = 'AnomalySkeleton.cpp BoostXMLSerializable.cpp', depends_on="AnomalySkeletonOptions" )
 	4) Use the macro from A.2) to create the component instanciator function in one of your implementation CPP files, e.g.:
 	    @code
 	    extern "C" {

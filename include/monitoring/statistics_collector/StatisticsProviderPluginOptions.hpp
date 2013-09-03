@@ -1,23 +1,20 @@
 #ifndef STATISTICS_PROVIDER_PLUGIN_OPTIONS
 #define STATISTICS_PROVIDER_PLUGIN_OPTIONS
 
-#include <core/component/component-macros.hpp>
+#include <core/component/component-options.hpp>
+#include <core/component/ComponentReference.hpp>
 
 
 using namespace core;
 
 namespace monitoring {
 
-
+	//@serializable
 	class StatisticsProviderPluginOptions: public ComponentOptions {
 		public:
 			ComponentReference statisticsCollector;
-
-			SERIALIZE_CONTAINER( MEMBER_INJECTION( statisticsCollector ) )
 	};
 
 }
-
-#define SERIALIZE_OPTIONS(VAR_) SERIALIZE(VAR_ PARENT_CLASS(StatisticsProviderPluginOptions))
 
 #endif

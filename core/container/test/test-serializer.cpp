@@ -1,7 +1,11 @@
 #include <iostream>
 
 #include <core/container/container-serializer.hpp>
-#include <core/component/component-macros.hpp>
+#include <core/component/Component.hpp>
+#include <core/component/ComponentReference.hpp>
+#include <core/container/container-macros.hpp>
+
+#define SERIALIZE_CONTAINER(VAR_) SERIALIZE(VAR_ PARENT_CLASS(Container))
 
 using namespace core;
 using namespace std;

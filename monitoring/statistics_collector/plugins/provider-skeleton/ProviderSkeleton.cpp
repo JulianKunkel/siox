@@ -7,9 +7,6 @@ using namespace std;
 using namespace monitoring;
 using namespace core;
 
-// Create an implementation of the options.
-CREATE_SERIALIZEABLE_CLS( ProviderSkeletonOptions )
-
 class ProviderSkeleton: public StatisticsProviderPlugin {
 
 		StatisticsValue i = ( int32_t ) 0;
