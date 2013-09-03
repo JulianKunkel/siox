@@ -1,19 +1,17 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_library(
-	ActivityForwarder
+	siox-monitoring-activityPlugin-ActivityForwarder
 	ActivityForwarder.cpp
 )
 
 target_link_libraries(
-	ActivityForwarder
-	AutoConfigurator
+	siox-monitoring-activityPlugin-ActivityForwarder
+	siox-core-AutoConfigurator
 )
 
 add_subdirectory(test)

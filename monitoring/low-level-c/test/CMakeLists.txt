@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_executable(
@@ -13,8 +11,8 @@ add_executable(
 
 target_link_libraries(
 	siox-ll-c-test
-	siox-ll
-	ActivityBuilder
-	FileConfigurationProvider
+	siox-monitoring-siox-ll 
+	siox-monitoring-ActivityBuilder
 )
 
+add_test(SIOX-Low-Level-C siox-ll-c-test)

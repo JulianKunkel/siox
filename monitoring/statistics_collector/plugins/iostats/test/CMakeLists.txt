@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_executable(
@@ -13,6 +11,8 @@ add_executable(
 
 target_link_libraries(
 	iostatsTest
-	iostats 
-	AutoConfigurator
+	siox-monitoring-statisticsPlugin-IOstats 
+	siox-core-AutoConfigurator
 )
+
+add_test(IO-Statistics iostatsTest)

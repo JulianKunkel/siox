@@ -1,10 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
-	${SIOX_INCLUDE}/monitoring/helpers
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_executable(
@@ -14,17 +11,9 @@ add_executable(
 
 target_link_libraries(
 	anomaly-plugin
-	module-loader
-	ActivityMultiplexerAsyncThreaded
+	siox-monitoring-ActivityMultiplexerAsyncThreaded 
+	siox-core-ModuleLoader 
+	siox-monitoring-activityPlugin-ActivityFileWriter
 )
 
-add_executable(
-	anomaly-plugin-threaded
-	AnomalyPluginThreaded.cpp
-)
-
-target_link_libraries(
-	anomaly-plugin-threaded
-	module-loader
-	ActivityMultiplexerAsyncThreaded
-)
+add_test(Anomaly-Plugin anomaly-plugin)

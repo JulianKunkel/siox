@@ -59,6 +59,6 @@ siox_generate_buffers()
 include(CTest)
 
 add_subdirectory(core)
-#add_subdirectory(knowledge)
-#add_subdirectory(monitoring)
+add_subdirectory(knowledge)
+add_subdirectory(monitoring)
 

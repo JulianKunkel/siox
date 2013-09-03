@@ -1,12 +1,16 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_library(
-	ActivityPluginDereferencingStandardImpl
+	siox-knowledge-DereferencingFacade
 	ActivityPluginDereferencingStandardImpl.cpp
+)
+
+target_link_libraries(
+	siox-knowledge-DereferencingFacade
+	siox-core-ContainerSerializer 
+	siox-core-AutoConfigurator
 )

@@ -1,23 +1,18 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-find_package(Boost 1.53.0 COMPONENTS regex serialization REQUIRED)
-
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIR}
 )
 
 add_library(
-	CPUstats
+	siox-monitoring-statisticsPlugin-CPUstats
 	cpustats.cpp
 )
 
 target_link_libraries(
-	CPUstats 
-	AutoConfigurator
-	module-loader
+	siox-monitoring-statisticsPlugin-CPUstats 
+	siox-core-AutoConfigurator
 	${Boost_LIBRARIES}
 )
 
