@@ -28,9 +28,6 @@ using namespace core;
 using namespace boost;
 
 
-CREATE_SERIALIZEABLE_CLS( FileOntologyOptions )
-
-
 
 namespace monitoring {
 

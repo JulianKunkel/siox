@@ -1,5 +1,4 @@
 #include <monitoring/statistics_collector/StatisticsProviderPluginImplementation.hpp>
-#include <core/component/ComponentReferenceSerializable.hpp>
 
 #include "ProviderSkeletonOptions.hpp"
 

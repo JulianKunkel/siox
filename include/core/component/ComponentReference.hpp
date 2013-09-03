@@ -22,6 +22,7 @@ namespace core {
 	/*
 	 * Use this class in the options to create a reference to a required component (interface).
 	 */
+	//@externalserialization
 	class ComponentReference {
 		public:
 			ComponentReferenceID componentID = 0;

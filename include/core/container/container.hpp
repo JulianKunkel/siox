@@ -3,6 +3,7 @@
 
 namespace core {
 
+	//@serializable
 	class Container {
 		public:
 			virtual ~Container() {}

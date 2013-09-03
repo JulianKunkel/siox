@@ -3,8 +3,10 @@
 
 
 def build(bld):
-    bld.shlib(includes="", use="BOOST ", target = "siox-monitoring-FileOntology", source = 'FileOntology.cpp' )
-    bld.recurse(['test'], mandatory=True)
-    bld.install_files('${PREFIX}/include/' + bld.path.relpath(), 'FileOntologyOptions.hpp') 
+	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="FileOntologyOptions.hpp", target="BoostXMLSerializable.cpp", name="FileOntologyOptions")
+
+	bld.shlib(includes="", use="BOOST ", target = "siox-monitoring-FileOntology", source = 'FileOntology.cpp BoostXMLSerializable.cpp', depends_on="FileOntologyOptions" )
+	bld.recurse(['test'], mandatory=True)
+	bld.install_files('${PREFIX}/include/' + bld.path.relpath(), 'FileOntologyOptions.hpp') 
 
 # -*- indent-tabs-mode: t -*-

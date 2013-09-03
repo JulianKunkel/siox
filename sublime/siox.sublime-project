@@ -9,6 +9,9 @@
 		},
 		{
 			"path": "monitoring"
+		},
+		{
+			"path": "knowledge"
 		}
 	]
 }

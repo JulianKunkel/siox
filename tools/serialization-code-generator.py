@@ -34,14 +34,18 @@ class Option():
                                help='''Choose which output-style to use.''')
 
         argParser.add_argument('--include', '-I', action='store', nargs="+",
-                               dest='includeDirs', default=['include', "."], help='Include folders')
+                               dest='includeDirs', default=['include', ".", "../include", "../"], help='Include folders')
 
         argParser.add_argument('--debug', '-d',
                                action='store_true', dest='debug',
                                help='Debug every line')
 
+        argParser.add_argument('--relative', '-r',
+                               action='store_true', dest='relative',
+                               help='Use relative include path')
+
         argParser.add_argument('--input-file', '-i', action='store', nargs=1,
-                               dest='inputFile', default='not-defined', help='The input file to parse.')
+                               dest='inputFile', default=None, help='The input file to parse.')
 
         argParser.add_argument('--output-file', '-o', action='store', nargs=1,
                                dest='outputFile', default=None, help='The output file to write.')
@@ -51,12 +55,19 @@ class Option():
 
         args = argParser.parse_args()
 
+        if not args.inputFile:
+            print("Error invalid syntax!")
+            os._exit(1)
+
         args.inputFile = args.inputFile[0]
 
         if not args.outputSuffix and not args.outputFile:
             args.outputSuffix = [ "." + args.flavor + "Serialization" ]
 
         # if the outputSuffix is set we create the output in the same directory.
+
+        if args.outputFile :
+            args.outputFile =  args.outputFile[0]
 
         if args.outputSuffix:
             args.outputSuffix = args.outputSuffix[0]
@@ -131,7 +142,11 @@ class BoostOutputGenerator(OutputGenerator):
 
         self.mapping = {"CLASS" : className , "PARENT" : ",".join(parentClasses), "FLAVOR" : self.flavor }
         self.parents = parentClasses
-        self.parentClassnames = map(lambda p: re.split("[ \t]+", p)[1].strip(), parentClasses)
+        try:
+            self.parentClassnames = map(lambda p: re.split("[ \t]+", p)[1].strip(), parentClasses)
+        except IndexError:            
+            print("Did you forget to specify public class inheritance for class \"" + className + "\" ?")
+            os._exit(1)
 
 
         if self.options.debug:
@@ -207,6 +222,11 @@ class BoostOutputGenerator(OutputGenerator):
 
 
     def initFile(self):
+        
+        if self.options.relative:
+            dir = os.path.basename(self.options.inputFile)
+        else:
+            dir = self.options.inputFile
         print("""#include <boost/serialization/serialization.hpp>
                 \n #include <boost/serialization/nvp.hpp>
                 \n #include <boost/serialization/vector.hpp>
@@ -215,10 +235,10 @@ class BoostOutputGenerator(OutputGenerator):
                 \n #include <boost/serialization/level.hpp>
                 \n #include <boost/serialization/export.hpp>
                 \n #include <boost/archive/%(FLAVOR)s_iarchive.hpp>
-                \n #include <boost/archive/%(FLAVOR)s_oarchive.hpp>                                
+                \n #include <boost/archive/%(FLAVOR)s_oarchive.hpp>                               
                 \n #include \"%(INFILE)s\" 
 
-                """ % { "INFILE" : os.path.basename(self.options.inputFile), "FLAVOR" : self.options.flavor } , file=self.fh)
+                """ % { "INFILE" : dir, "FLAVOR" : self.options.flavor } , file=self.fh)
 
 
     def finalize(self):
@@ -294,8 +314,8 @@ def parseFile(file, options, output_generator):
                 # We have to include the appropriate header file.
                 if options.debug:
                     print("Found external serialization tag in " + file)
-                filename = re.match("(.*)([.]...)", file)
-                output_generator.forceInclude(filename.group(1) + options.style + "Serialization" + filename.group(2))
+                filename = re.match("(../include/)?(.*)([.]...)", file)
+                output_generator.forceInclude(filename.group(2) + options.style + "Serialization" + filename.group(3))
                 continue
             else:
                 annotations.append(command)
@@ -308,7 +328,7 @@ def parseFile(file, options, output_generator):
                 continue
             else:
                 # Parse a member
-                m = re.search("\s*(.*)\s*[ \t]([a-zA-Z_][a-zA-Z_]*)\s*(=.*)?;", line)
+                m = re.search("\s*([^=]*)\s*[ \t]([a-zA-Z_][a-zA-Z_]*)\s*(=.*)?;", line)
                 if not m:
                     continue
 

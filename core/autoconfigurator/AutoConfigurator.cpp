@@ -5,7 +5,7 @@
 #include <core/container/container-serializer.hpp>
 #include <core/component/component-macros.hpp>
 
-#include <core/component/ComponentReferenceSerializable.hpp>
+#include <core/component/ComponentReferenceBoostSerialization.hpp>
 
 using namespace std;
 

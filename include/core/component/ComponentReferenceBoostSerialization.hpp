@@ -6,9 +6,9 @@
 #ifndef NO_OBJECT_INJECTION
 
 #include <boost/serialization/split_free.hpp>
+#include <boost/serialization/nvp.hpp>
 
 #include <core/component/ComponentReference.hpp>
-#include <core/container/container-macros.hpp>
 #include <core/component/ComponentRegistrar.hpp>
 
 extern core::ComponentRegistrar * autoConfiguratorRegistrar;

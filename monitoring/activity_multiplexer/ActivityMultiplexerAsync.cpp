@@ -333,7 +333,6 @@ namespace monitoring {
 }
 
 
-CREATE_SERIALIZEABLE_CLS( ActivityMultiplexerAsyncOptions )
 
 extern "C" {
 	void * MONITORING_ACTIVITY_MULTIPLEXER_INSTANCIATOR_NAME()

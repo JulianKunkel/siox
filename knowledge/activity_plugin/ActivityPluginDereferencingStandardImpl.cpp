@@ -3,7 +3,7 @@
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 
-#include <core/component/ComponentReferenceSerializable.hpp>
+#include <core/component/ComponentReferenceBoostSerialization.hpp>
 
 #include <knowledge/reasoner/Reasoner.hpp>
 
@@ -13,8 +13,6 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 using namespace knowledge;
-
-CREATE_SERIALIZEABLE_CLS( ActivityPluginDereferencingFacadeOptions )
 
 class ActivityPluginDereferencingImplementation : public ActivityPluginDereferencing {
 	public:
@@ -61,7 +59,7 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 		}
 
 		void init() {
-			ActivityPluginDereferencingFacadeOptions & o = getOptions<ActivityPluginDereferencingFacadeOptions>();
+			ActivityPluginDereferencingOptions & o = getOptions<ActivityPluginDereferencingOptions>();
 			ontology =  GET_INSTANCE(Ontology, o.ontology);
 			system_information_manager = GET_INSTANCE(SystemInformationGlobalIDManager, o.system_information_manager);
 			association_mapper = GET_INSTANCE(AssociationMapper, o.association_mapper);
@@ -69,7 +67,7 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 		}
 
 		ComponentOptions * AvailableOptions() {
-			return new ActivityPluginDereferencingFacadeOptions();
+			return new ActivityPluginDereferencingOptions();
 		}
 
 	private:
