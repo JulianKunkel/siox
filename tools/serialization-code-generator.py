@@ -30,7 +30,7 @@ class Option():
 
         argParser.add_argument('--flavor', '-f',
                                action='store', default='xml', dest='flavor',
-                               choices=['xml', "text"],
+                               choices=['xml', "text", "binary"],
                                help='''Choose which output-style to use.''')
 
         argParser.add_argument('--include', '-I', action='store', nargs="+",
@@ -86,6 +86,7 @@ def removeNamespace(cls):
 
 class OutputGenerator():
     fh = None
+    parsedIncludes = {}
 
     def __init__(self):
         pass
@@ -105,6 +106,30 @@ class OutputGenerator():
         pass
 
     def registerInclude(self, include):
+        # Recursively check include file for required serialization objects
+        if include in self.parsedIncludes:
+            return
+        
+        self.parsedIncludes[include] = 1
+
+        self.nestingDepth = self.nestingDepth + 1
+
+        for d in self.options.includeDirs:
+            # If we cannot parse the file we check the other files
+            try:                
+                parseFile(d + "/" + include, self.options, self)
+                self.foundIncludeFile(d + "/" + include)
+            except IOError:
+                continue
+
+            self.nestingDepth = self.nestingDepth - 1
+            return
+
+        print("Error, could not read include file \"" + include + "\"")
+        self.nestingDepth = self.nestingDepth - 1
+        return
+
+    def foundIncludeFile(self, include):
         pass
 
     def setOptions(self, options):
@@ -132,7 +157,6 @@ class BoostOutputGenerator(OutputGenerator):
         self.mapping = {}
         self.parents = ""
         self.namespace = {}
-        self.parsedIncludes = {}
 
     def registerAnnotatedHeader(self, className, parentClasses):
         self.createFileIfNeeded()
@@ -164,31 +188,7 @@ class BoostOutputGenerator(OutputGenerator):
 
     def forceInclude(self, filename):
         self.createFileIfNeeded()
-        print("#include <%s>" % (filename), file=self.fh)
-
-    def registerInclude(self, include):
-        # Recursively check include file for required serialization objects
-        if include in self.parsedIncludes:
-            return
-        
-        self.parsedIncludes[include] = 1
-
-        self.nestingDepth = self.nestingDepth + 1
-
-        for d in self.options.includeDirs:
-            # If we cannot parse the file we check the other files
-            try:                
-                parseFile(d + "/" + include, self.options, self)
-            except IOError:
-                continue
-
-            self.nestingDepth = self.nestingDepth - 1
-            return
-
-        print("Error, could not read include file \"" + include + "\"")
-        self.nestingDepth = self.nestingDepth - 1
-        return
-
+        print("#include <%sBoostSerialization.hpp>" % (filename), file=self.fh)
 
     def registerAnnotatedHeaderEnd(self):
         if self.options.debug:
@@ -251,6 +251,150 @@ class BoostOutputGenerator(OutputGenerator):
             print("""template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_oarchive & ar, %(CLASS)s & g, const unsigned int version);
                 template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_iarchive & ar, %(CLASS)s & g, const unsigned int version);
                 """ % self.mapping , file = self.fh)
+
+
+class ProtoBufOutputGenerator(OutputGenerator):
+
+    def __init__(self):
+        self.nestingDepth = 0
+        self.mapping = {}
+        self.parents = ""
+        self.namespace = {}
+        self.className = None
+        self.typeMap = {}
+        self.convertFileHPP = None
+        self.convertFileCPP = None
+        self.registeredTypes = []
+
+    def createFileIfNeeded(self):
+        if self.fh == None:
+            self.fh = open(self.options.outputFile + ".proto", "w")
+            self.convertFileCPP = open(self.options.outputFile + ".cpp", "w")
+            self.convertFileHPP = open(self.options.outputFile + ".hpp", "w")
+            self.initFile()
+
+
+    def initFile(self):
+        if self.options.relative:
+            dir = os.path.basename(self.options.inputFile)
+        else:
+            dir = self.options.inputFile
+        print("#include <" + dir + ">\n", file = self.convertFileHPP)
+        print("#include <" + self.options.outputFile + ".pb.h>\n", file = self.convertFileHPP)
+
+        print("#include <" + self.options.outputFile + ".hpp>\nnamespace convert{", file = self.convertFileCPP)
+
+        print("""package protobuf;\n"""  , file=self.fh)
+        for n in self.namespace:
+            #className = "::".join(self.namespace) + "::" + className 
+            print("using namespace " + n + ";", file = self.convertFileCPP)            
+
+    def finalize(self):
+        print("}", file = self.convertFileCPP)
+        self.convertFileCPP.close()
+        self.convertFileHPP.close()
+
+
+    def foundIncludeFile(self, include):
+        self.createFileIfNeeded()
+        print("#include <" + include + ">", file = self.convertFileHPP)
+
+
+    def map_memberType(self, type):
+        if type == "uint16_t":
+            return "uint32"    
+        if type == "uint32_t":
+            return "uint32"
+        if type == "uint64_t":
+            return "uint64" 
+        if type.startswith("vector"):
+            return self.map_memberType(type[7:-1]);
+        if type.endswith("*"):
+            return self.map_memberType(type[0:len(type)-2].strip());
+        if type in self.typeMap:
+            return self.map_memberType(self.typeMap[type])
+        return type
+
+    def protobuf_map_qualifier(self, type):
+        if type.startswith("vector"):
+            return "repeated";
+        if type.endswith("*"):
+            return "optional";
+        return "required"
+            
+    def registerAnnotatedHeader(self, className, parentClasses):
+        self.createFileIfNeeded()
+
+        self.mapping = {"CLASS" : className , "PARENT" : ",".join(parentClasses)}
+        print("""\tmessage %(CLASS)s {
+                """  % self.mapping , file = self.fh)
+        self.className = className
+
+        self.registeredTypes = []
+
+        self.currentNumber = 1;
+
+    def forceInclude(self, filename):
+        self.createFileIfNeeded()
+        fh = open(filename + ".proto")
+        data = fh.read()
+        print(data, file=self.fh)
+        fh.close()
+
+
+    def registerAnnotatedHeaderEnd(self):        
+        print("""\t}\n"""  % self.mapping, file = self.fh)
+        # create converter between protobuf and regular in-memory container.
+        for n in self.namespace:
+            #className = "::".join(self.namespace) + "::" + className 
+            print("using namespace " + n + ";", file = self.convertFileHPP)
+
+        print("""namespace convert{
+            %(CLASS)s convertToSerializable(const protobuf::%(CLASS)s & protobuf);
+            protobuf::%(CLASS)s convertToProto(const %(CLASS)s & serializable);
+            }
+            """  % self.mapping, file = self.convertFileHPP)
+
+        if self.options.debug:
+            print(self.registeredTypes)
+
+        # Implement the converter methods:
+        print("%(CLASS)s convertToSerializable(const protobuf::%(CLASS)s & protobuf){"
+             % self.mapping, file = self.convertFileCPP)
+        for type in self.registeredTypes:
+            print(type)
+        print("}", file = self.convertFileCPP)
+
+        print("protobuf::%(CLASS)s convertToProto(const %(CLASS)s & serializable){"  
+            % self.mapping, file = self.convertFileCPP)
+        for type in self.registeredTypes:
+            pass
+        print("}", file = self.convertFileCPP)
+
+
+
+        
+
+    def registerMember(self, memberType, memberName, annotations):
+            print("""\t\t %(QUALIFIER)s %(TYPE)s %(MEMBER)s = %(NUMBER)s;""" % {"QUALIFIER": self.protobuf_map_qualifier(memberType), "MEMBER" : memberName, "NUMBER" : self.currentNumber, "TYPE": self.map_memberType(memberType)
+                } , file = self.fh)
+            self.currentNumber = self.currentNumber + 1
+            self.registeredTypes.append([memberType, memberName])
+
+
+    def registerIntermediatePart(self, text):
+        #print(text, file=self.fh)
+        m = re.match("\s*namespace ([^{]*)({)?", text)
+        if m != None:
+            self.namespace[m.group(1).strip()] = 1
+
+        # remember typedefs
+        m = re.match("\s*typedef\s+(.*)\s+([a-zA-Z0-9_]+)", text)
+        if m:
+            if self.options.debug:
+                print (m.group(1) + " : " + m.group(2))
+            self.typeMap[m.group(2)] = m.group(1)
+
 
 
 def parseFile(file, options, output_generator):
@@ -322,7 +466,7 @@ def parseFile(file, options, output_generator):
                 if options.debug:
                     print("Found external serialization tag in " + file)
                 filename = re.match("(../include/)?(.*)([.]...)", file)
-                output_generator.forceInclude(filename.group(2) + options.style + "Serialization" + filename.group(3))
+                output_generator.forceInclude(filename.group(2))
                 continue
             else:
                 annotations.append(command)
@@ -361,24 +505,19 @@ def parseFile(file, options, output_generator):
 
         output_generator.registerIntermediatePart(line)
 
-    if foundAnnotation:
-        output_generator.finalize()
-
-
 def main():
     opt = Option()
     options = opt.parse()
 
-    #matchingHeaders = []
-    #for root, dirnames, filenames in os.walk(options.inputDir):
-    #  for filename in fnmatch.filter(filenames, '*.hpp'):
-    #      matches.append(os.path.join(root, filename))
-
-    og = BoostOutputGenerator()
+    if options.style == "Protobuf":
+        og = ProtoBufOutputGenerator()
+    else:
+        og = BoostOutputGenerator()
 
     og.setOptions(options)
 
     parseFile(options.inputFile, options, og)
+    og.finalize()
 
 if __name__ == '__main__':
     main()
