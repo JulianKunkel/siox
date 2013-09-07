@@ -202,10 +202,20 @@ class BoostOutputGenerator(OutputGenerator):
                 print(""" 
                 ar & boost::serialization::base_object<%(PARENT)s>(a)); """ % {"PARENT" : p }, file = self.fh)
 
-        print("""            
+        print("""
             }
             }
             }"""  % self.mapping, file = self.fh)
+
+        print("""
+            BOOST_CLASS_EXPORT(%(CLASS)s)
+            BOOST_CLASS_IMPLEMENTATION(%(CLASS)s, boost::serialization::object_serializable)
+            BOOST_CLASS_TRACKING(%(CLASS)s, boost::serialization::track_never)""" % self.mapping , file = self.fh)
+        
+        if self.nestingDepth == 0:
+            print("""template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_oarchive & ar, %(CLASS)s & g, const unsigned int version);
+                template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_iarchive & ar, %(CLASS)s & g, const unsigned int version);
+                """ % self.mapping , file = self.fh)
         
 
     def registerMember(self, memberType, memberName, annotations):
@@ -232,6 +242,7 @@ class BoostOutputGenerator(OutputGenerator):
                 \n #include <boost/serialization/nvp.hpp>
                 \n #include <boost/serialization/vector.hpp>
                 \n #include <boost/serialization/map.hpp>
+                \n #include <boost/serialization/list.hpp>
                 \n #include <boost/serialization/tracking.hpp>
                 \n #include <boost/serialization/level.hpp>
                 \n #include <boost/serialization/export.hpp>
@@ -241,16 +252,6 @@ class BoostOutputGenerator(OutputGenerator):
 
                 """ % { "INFILE" : dir, "FLAVOR" : self.options.flavor } , file=self.fh)
 
-
-    def finalize(self):
-        print("""
-            BOOST_CLASS_EXPORT(%(CLASS)s)
-            BOOST_CLASS_IMPLEMENTATION(%(CLASS)s, boost::serialization::object_serializable)
-            BOOST_CLASS_TRACKING(%(CLASS)s, boost::serialization::track_never)""" % self.mapping , file = self.fh)
-        if self.nestingDepth == 0:
-            print("""template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_oarchive & ar, %(CLASS)s & g, const unsigned int version);
-                template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_iarchive & ar, %(CLASS)s & g, const unsigned int version);
-                """ % self.mapping , file = self.fh)
 
 
 class ProtoBufOutputGenerator(OutputGenerator):

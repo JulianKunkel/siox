@@ -1,5 +1,4 @@
 #include "test-serialize-modules.hpp"
-#include <core/component/ComponentReferenceBoostSerialization.hpp>
 
 using namespace core;
 
@@ -22,23 +21,17 @@ ComponentOptions * MyParentModule::AvailableOptions()
 	return new MyParentModuleOptions();
 }
 
-CREATE_SERIALIZEABLE_CLS( MyChildModuleOptions )
-CREATE_SERIALIZEABLE_CLS( MyParentModuleOptions )
-
-
 extern "C" {
-	\
 	void * get_instance_parent()
 	{
 		return new MyParentModule();
-	}\
+	}
 }
 
 
 extern "C" {
-	\
 	void * get_instance_child()
 	{
 		return new MyChildModule();
-	}\
+	}
 }

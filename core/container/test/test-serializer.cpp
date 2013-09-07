@@ -1,35 +1,4 @@
-#include <iostream>
-
-#include <core/container/container-serializer.hpp>
-#include <core/component/Component.hpp>
-#include <core/component/ComponentReference.hpp>
-#include <core/container/container-macros.hpp>
-
-#define SERIALIZE_CONTAINER(VAR_) SERIALIZE(VAR_ PARENT_CLASS(Container))
-
-using namespace core;
-using namespace std;
-
-class MyContainer: public Container {
-	public:
-		string name;
-		int value;
-
-		SERIALIZE( MEMBER( name ) MEMBER( value ) PARENT_CLASS( Container ) )
-};
-CREATE_SERIALIZEABLE_CLS( MyContainer )
-
-
-
-class MyContainerChild: public MyContainer {
-	public:
-		string str;
-		list<string> elems;
-
-		SERIALIZE( MEMBER( str ) MEMBER( elems ) PARENT_CLASS( MyContainer ) )
-};
-CREATE_SERIALIZEABLE_CLS( MyContainerChild )
-
+#include "test-serializer.hpp"
 
 int main()
 {

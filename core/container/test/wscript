@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 def build(bld):
-	bld.program(includes="",  features='test cxx cxxprogram', use = "BOOST siox-core-ContainerSerializer",  target = 'test-serializer', source = 'test-serializer.cpp', install_path = None)
+	bld(features="seq", rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="test-serializer.hpp", target="BoostXMLSerializable.cpp")
+	bld.program(includes="",  features='test cxx cxxprogram', use = "BOOST siox-core-ContainerSerializer",  target = 'test-serializer', source = 'test-serializer.cpp BoostXMLSerializable.cpp', install_path = None)
 
 # -*- indent-tabs-mode: t -*-
