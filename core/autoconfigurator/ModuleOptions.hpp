@@ -9,7 +9,7 @@ using namespace core;
 class LoadModule : public Container {
 	public:
 		// component number, this is useful for references
-		int componentID;
+		uint32_t componentID;
 		// name of the module
 		std::string name;
 		// path to search for the module
