@@ -8,7 +8,7 @@
 #include <mutex>
 
 #include <monitoring/ontology/OntologyImplementation.hpp>
-#include <core/datatypes/VariableDatatypeSerializable.hpp>
+#include <core/datatypes/VariableDatatypeBoostSerialization.hpp>
 
 
 #include <boost/archive/xml_oarchive.hpp>
@@ -26,9 +26,6 @@ using namespace std;
 using namespace monitoring;
 using namespace core;
 using namespace boost;
-
-
-CREATE_SERIALIZEABLE_CLS( FileOntologyOptions )
 
 
 

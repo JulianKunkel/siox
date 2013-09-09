@@ -1,16 +1,14 @@
-#include <core/component/component-macros.hpp>
+#include <core/component/component-options.hpp>
 
 
 using namespace core;
 
 namespace monitoring {
 
-
+	//@container
 	class MultiplexerAsyncOptions: public ComponentOptions {
 		public:
 			float max_time_per_plugin = 0.01;
-
-			SERIALIZE_CONTAINER( MEMBER( max_time_per_plugin ) )
 	};
 
 }

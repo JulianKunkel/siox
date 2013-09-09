@@ -37,7 +37,7 @@ int main( int argc, char const * argv[] )
 
 	m1->Log( activity );
 
-	sleep(1);
+	//sleep(1);
 
 	delete( ap );
 

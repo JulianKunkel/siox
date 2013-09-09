@@ -214,7 +214,6 @@ namespace knowledge {
 	};
 
 } // namespace knowledge
-CREATE_SERIALIZEABLE_CLS( ReasonerStandardImplementationOptions )
 
 extern "C" {
 	void * KNOWLEDGE_REASONER_INSTANCIATOR_NAME()

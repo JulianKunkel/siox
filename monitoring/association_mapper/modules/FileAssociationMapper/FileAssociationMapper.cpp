@@ -10,7 +10,7 @@
 #include <mutex>
 
 #include <monitoring/association_mapper/AssociationMapperImplementation.hpp>
-#include <core/datatypes/VariableDatatypeSerializable.hpp>
+#include <core/datatypes/VariableDatatypeBoostSerialization.hpp>
 
 
 #include <boost/archive/xml_oarchive.hpp>
@@ -24,8 +24,6 @@ using namespace std;
 
 using namespace core;
 using namespace monitoring;
-
-CREATE_SERIALIZEABLE_CLS( FileAssociationMapperOptions )
 
 namespace monitoring {
 

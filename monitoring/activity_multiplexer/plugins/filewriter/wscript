@@ -2,9 +2,11 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(includes="",  use = "BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target = 'siox-monitoring-activityPlugin-ActivityFileWriter', source = 'ActivityFileWriter.cpp ActivityFileWriterOptions.cpp' )
+	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="ActivityFileWriterOptions.hpp", target="ActivityFileWriterOptionsXML.cpp", name="ActivityFileWriterOptionsXML")
 
-    bld.recurse(['test'], mandatory=True)
+	bld.shlib(includes="#",  use = "BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target = 'siox-monitoring-activityPlugin-ActivityFileWriter', source = 'ActivityFileWriter.cpp ActivityFileWriterOptionsXML.cpp', depends_on=[ "ActivityFileWriterOptionsXML", "ActivitySerializableText" ] )
+
+	bld.recurse(['test'], mandatory=True)
 
 
 # -*- indent-tabs-mode: t -*-

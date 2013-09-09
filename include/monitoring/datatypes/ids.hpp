@@ -97,6 +97,7 @@ namespace monitoring {
 
 	typedef VariableDatatype AttributeValue;
 
+	//@serializable
 	struct Attribute {
 		OntologyAttributeID id;
 		AttributeValue value;
@@ -128,7 +129,8 @@ namespace monitoring {
 // NodeID lookup_node_id(const char * hostname);
 // See @TODO
 
-	/* Software ID, identifying the application programm, may be a server as well */
+	/* Software ID, identifying the application programm, may be a server as well */	
+	//@serializable
 	struct ProcessID {
 
 		NodeID nid;
@@ -179,6 +181,7 @@ namespace monitoring {
 // Increase num...
 
 	/* Identifying a SIOX component */
+	//@serializable
 	struct ComponentID {
 		ProcessID pid;
 		//UniqueInterfaceID uiid;
@@ -210,6 +213,7 @@ namespace monitoring {
 // ComponentID(siox_component){}
 // ComponentID create_component_id(ProcessID 3*32 B, UIID + 16 bit);
 
+	//@serializable
 	struct RemoteCallIdentifier {
 		// Several parameters assist matching of remote calls
 		NodeID nid; // optional
@@ -237,6 +241,7 @@ namespace monitoring {
 	};
 
 	/* Identifying an activity */
+	//@serializable
 	struct ActivityID {
 		ComponentID cid;
 		uint32_t id;

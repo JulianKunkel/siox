@@ -16,10 +16,6 @@ using namespace core;
 using namespace monitoring;
 using namespace knowledge;
 
-
-// Create an implementation of the options.
-CREATE_SERIALIZEABLE_CLS( AnomalySkeletonOptions )
-
 class AnomalySkeleton;
 
 enum class ActivityToken : uint8_t {

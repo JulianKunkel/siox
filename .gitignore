@@ -56,3 +56,4 @@ build/
 /siox.project/
 .xmlSerialization
 .textSerialization
+.tags*

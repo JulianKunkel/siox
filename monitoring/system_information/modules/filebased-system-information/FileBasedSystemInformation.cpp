@@ -15,8 +15,6 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
 
-
-
 #include "FileBasedSystemInformationOptions.hpp"
 
 
@@ -25,9 +23,6 @@ using namespace std;
 using namespace monitoring;
 using namespace core;
 using namespace boost;
-
-
-CREATE_SERIALIZEABLE_CLS( FileBasedSystemInformationOptions )
 
 
 namespace monitoring {

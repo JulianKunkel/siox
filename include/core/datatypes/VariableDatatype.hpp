@@ -11,6 +11,7 @@ using namespace std;
 
 class VariableDatatypeAccessor;
 
+//@externalserialization
 class VariableDatatype {
 	public:
 	enum class Type : int8_t {

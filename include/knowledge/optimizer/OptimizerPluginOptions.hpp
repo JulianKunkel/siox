@@ -1,25 +1,20 @@
 #ifndef OPTIMIZER_PLUGIN_OPTIONS
 #define OPTIMIZER_PLUGIN_OPTIONS
 
-#include <core/component/component-macros.hpp>
+#include <core/component/component-options.hpp>
 
 
 using namespace core;
 
 namespace knowledge {
 
-
+	//@serializable
 	class OptimizerPluginOptions: public ComponentOptions {
 		public:
 			ComponentReference optimizer;
 			ComponentReference dereferenceFacade;
-
-			SERIALIZE_CONTAINER( MEMBER( optimizer ) MEMBER( dereferenceFacade ) )
 	};
 
 }
-
-
-#define SERIALIZE_OPTIONS(VAR_) SERIALIZE(VAR_ PARENT_CLASS(OptimizerPluginOptions))
 
 #endif

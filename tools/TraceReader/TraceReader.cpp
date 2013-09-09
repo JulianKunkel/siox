@@ -3,18 +3,22 @@
 #include <sstream>
 #include <time.h>
 
-
 #include <core/module/ModuleLoader.hpp>
 
 #include <monitoring/association_mapper/modules/FileAssociationMapper/FileAssociationMapperOptions.hpp>
 #include <monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp>
 #include <monitoring/system_information/modules/filebased-system-information/FileBasedSystemInformationOptions.hpp>
 
-
-
-
 #include "TraceReader.hpp"
 
+#include <build/core/component/ActivitySerializableText.hpp>
+
+Activity * TraceReader::nextActivity() {
+	if( activityDeserializer->hasNext() )
+		return activityDeserializer->parseNext();
+	else
+		return nullptr;
+}
 
 TraceReader::TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile )
 {
@@ -33,7 +37,7 @@ TraceReader::TraceReader( string activityFile, string systemInfoFile, string ont
 	FileAssociationMapperOptions * aop = new FileAssociationMapperOptions();
 	aop->filename = associationFile;
 	a->init( aop );
-	activityDeserializer = new FileDeserializer<ActivityAccessor>( activityFile );
+	activityDeserializer = new FileDeserializer<Activity>( activityFile );
 }
 
 static inline void strtime( Timestamp t, stringstream & s )
