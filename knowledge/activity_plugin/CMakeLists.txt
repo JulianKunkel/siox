@@ -6,7 +6,7 @@ include_directories(
 
 add_library(
 	siox-knowledge-DereferencingFacade
-	ActivityPluginDereferencingStandardImpl.cpp
+	DereferencingFacadeStandardImpl.cpp 
 )
 
 target_link_libraries(

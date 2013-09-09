@@ -12,4 +12,4 @@ if (MPI_FOUND)
 	add_subdirectory(mpi)
 endif (MPI_FOUND)
 
-add_subdirectory(mock-up-fs)
+#add_subdirectory(mock-up-fs)
