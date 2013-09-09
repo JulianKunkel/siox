@@ -15,6 +15,6 @@ target_link_libraries(
 	siox-core-AutoConfigurator 
 )
 
-add_subdirectory(plugins)
-add_subdirectory(test)
+#add_subdirectory(plugins)
+#add_subdirectory(test)
 

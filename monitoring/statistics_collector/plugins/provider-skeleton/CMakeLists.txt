@@ -1,7 +1,7 @@
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE_DIRs}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_library(

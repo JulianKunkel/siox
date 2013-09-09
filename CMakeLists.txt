@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 
 set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/include)
-set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE})
+set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${PROJECT_BINARY_DIR})
 
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SIOX_SOURCES}/tools/cmake)
@@ -26,11 +26,13 @@ set(CMAKE_INCLUDE_PATH
 #    /opt/boost-1.53/include
 )
 
+include(CTest)
 include(FeatureSummary)
+
+include(SIOXMacros)
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
-# include(FindProtobuf)
 find_package(Protobuf REQUIRED)
 set_package_properties(Protobuf PROPERTIES URL "http://code.google.com/p/protobuf" TYPE REQUIRED PURPOSE "Serialization using Google Protocol Buffers.")
 
@@ -52,11 +54,7 @@ set_package_properties(HDF5 PROPERTIES URL "http://www.hdfgroup.org/HDF5" TYPE O
 find_package(MPI)
 set_package_properties(MPI PROPERTIES URL "http://www.open-mpi.org" TYPE OPTIONAL PURPOSE "SIOX Open MPI examples.")
 
-include(SIOXMacros)
-
 siox_generate_buffers()
-
-include(CTest)
 
 add_subdirectory(core)
 add_subdirectory(knowledge)

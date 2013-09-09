@@ -11,7 +11,7 @@ add_executable(
 
 target_link_libraries(
 	ProviderSkeletonTest
-	siox-monitoring-activityPlugin-AnomalySkeleton 
+	siox-monitoring-statisticsPlugin-providerskel
 	siox-core-AutoConfigurator
 )
 

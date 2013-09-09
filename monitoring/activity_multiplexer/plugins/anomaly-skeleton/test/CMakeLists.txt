@@ -11,7 +11,7 @@ add_executable(
 
 target_link_libraries(
 	AnomalySkeletonTest
-	siox-monitoring-activityPlugin-AnomalySkeletonTest
+	siox-monitoring-activityPlugin-AnomalySkeleton
 )
 
 add_test(Anomaly-Skeleton AnomalySkeletonTest)

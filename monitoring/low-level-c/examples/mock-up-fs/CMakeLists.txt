@@ -5,13 +5,13 @@ include_directories(
 )
 
 add_library(
-	mufs
+	test-mufs
 	mufs.c
 )
 
 target_link_libraries(
-	mufs
-	siox-monitoring-siox-monitoring-siox-ll
+	test-mufs
+	siox-monitoring-siox-ll
 )
 
 add_executable(
@@ -21,7 +21,7 @@ add_executable(
 
 target_link_libraries(
 	mockupfs-example
-	test-mufs
+	test-mufs 
 	siox-monitoring-siox-ll 
 	siox-monitoring-ActivityBuilder
 )

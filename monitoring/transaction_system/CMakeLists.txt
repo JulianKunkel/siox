@@ -14,32 +14,28 @@ add_library(
 	PostgreSQLBackend.cpp
 	PostgreSQLPumpCallback.cpp
 	TransactionService.cpp
-	${PROTO_SRCS}
-	${PROTO_HDRS}
 )
 
 target_link_libraries(
 	monitoring-transactionsystem 
 	core-communication
+	core-comm-buffers
 	core-logger
-	${PROTOBUF_LIBRARIES}
 	${PostgreSQL_LIBRARIES}
 	${Boost_LIBRARIES}
 )
 
 add_library(
-	psql_backend MODULE
+	psql_backend 
 	PostgreSQLBackend.cpp
 	PostgreSQLPumpCallback.cpp
-	${PROTO_SRCS}
-	${PROTO_HDRS}
 )
 
 target_link_libraries(
 	psql_backend
 	core-communication 
+	core-comm-buffers
 	core-logger
-	${PROTOBUF_LIBRARIES}
 )
 
 add_executable(
@@ -52,7 +48,6 @@ target_link_libraries(
 	monitoring-transactionsystem
 	core-communication 
 	core-logger
-	${PROTOBUF_LIBRARIES}
 	${Boost_LIBRARIES}
 )
 

@@ -10,4 +10,4 @@ include_directories(
 # 	systeminfo_persistency_interface.cpp
 # )
 # 
-# add_subdirectory(test)
+#add_subdirectory(test)

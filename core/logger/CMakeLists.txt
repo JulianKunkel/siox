@@ -13,13 +13,11 @@ add_library(
 	SyslogLogger.cpp
 # 	NetLogger.cpp
 # 	NetLoggerServer.cpp
-# 	${PROTO_SRCS}
-# 	${PROTO_HDRS}
 )
 
 target_link_libraries(
 	core-logger 
 # 	core-communication 
-# 	${PROTOBUF_LIBRARIES}
+# 	core-comm-buffers
 	${Boost_LIBRARIES}
 )

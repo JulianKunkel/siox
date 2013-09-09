@@ -20,15 +20,14 @@ add_library(
 	tcp/TCPConnection.cpp
 	tcp/TCPServer.cpp
 	ServiceClient.cpp
-	${PROTO_SRCS}
-	${PROTO_HDRS}
 )
 
 target_link_libraries(
 	core-communication
 	core-logger
-	${PROTOBUF_LIBRARIES}
+	core-comm-buffers
 	${Boost_LIBRARIES}
 )
 
 add_subdirectory(messages)
+#add_subdirectory(test)

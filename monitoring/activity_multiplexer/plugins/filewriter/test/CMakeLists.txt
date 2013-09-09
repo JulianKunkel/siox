@@ -11,8 +11,8 @@ add_executable(
 
 target_link_libraries(
 	ActivityFileWriterTest
-	siox-monitoring-ActivityMultiplexerAsyncThreaded 
 	siox-core-ModuleLoader 
+	siox-monitoring-ActivityMultiplexerAsync
 	siox-monitoring-activityPlugin-ActivityFileWriter
 )
 

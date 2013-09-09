@@ -1,6 +1,15 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-#add_subdirectory(hdf5)
+if (HDF5_FOUND)
+	#add_subdirectory(hdf5)
+endif (HDF5_FOUND)
+
+if (NetCDF_FOUND)
+	add_subdirectory(netcdf)
+endif (NetCDF_FOUND)
+
+if (MPI_FOUND)
+	add_subdirectory(mpi)
+endif (MPI_FOUND)
+
 add_subdirectory(mock-up-fs)
-#add_subdirectory(mpi)

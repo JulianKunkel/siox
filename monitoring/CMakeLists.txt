@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
+
+set(SIOX_INCLUDE_DIRS ${SIOX_INCLUDE_DIRS} ${SIOX_SOURCES}/monitoring)
 
 add_subdirectory(activity_builder)
 add_subdirectory(activity_multiplexer)
