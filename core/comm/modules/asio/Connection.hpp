@@ -9,10 +9,10 @@
 
 #include <vector>
 
-#include <siox.pb.h>
-#include <core/comm/Callback.hpp>
-#include <core/comm/ConnectionMessage.hpp>
-#include <core/comm/Service.hpp>
+#include "siox.pb.h"
+#include "Callback.hpp"
+#include "ConnectionMessage.hpp"
+#include "Service.hpp"
 #include <core/logger/SioxLogger.hpp>
 
 namespace asio = boost::asio;

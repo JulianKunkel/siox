@@ -1,4 +1,4 @@
-#include <core/comm/tcp/TCPConnection.hpp>
+#include "../tcp/TCPConnection.hpp"
 
 TCPConnection::TCPConnection( Service & service,
                               asio::io_service & io_service )

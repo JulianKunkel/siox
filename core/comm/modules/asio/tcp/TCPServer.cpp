@@ -1,4 +1,4 @@
-#include <core/comm/tcp/TCPServer.hpp>
+#include "../tcp/TCPServer.hpp"
 
 TCPServer::TCPServer( const std::string & address, const std::string & port,
                       const std::size_t worker_pool_size )

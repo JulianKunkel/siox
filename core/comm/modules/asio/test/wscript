@@ -2,6 +2,6 @@
 # encoding: utf-8
 
 def build(bld):
-	bld.program(includes="",  features='test cxx cxxprogram', target = 'test-comm-interfaces',	source = 'test-comm-interfaces.cpp', install_path = None, )
+	bld.program(includes="",  features='test cxx cxxprogram', use = "siox-core-comm-asio siox-core-ModuleLoader", target = 'test-asio',	source = 'test-comm-interfaces.cpp', install_path = None, )
 
 # -*- indent-tabs-mode: t -*-

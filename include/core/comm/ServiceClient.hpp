@@ -3,8 +3,8 @@
  *
  */
 
-#ifndef SERVICE_CLIENT_H
-#define SERVICE_CLIENT_H
+#ifndef CORE_SERVICE_CLIENT_H
+#define CORE_SERVICE_CLIENT_H
 
 #include <exception>
 #include <string>

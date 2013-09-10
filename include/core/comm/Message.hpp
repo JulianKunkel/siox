@@ -1,5 +1,5 @@
-#ifndef CONNECTION_MESSAGE_H
-#define CONNECTION_MESSAGE_H
+#ifndef CORE_CONNECTION_MESSAGE_H
+#define CORE_CONNECTION_MESSAGE_H
 
 #include <memory> 
 

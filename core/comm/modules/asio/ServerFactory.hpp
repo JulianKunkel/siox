@@ -1,12 +1,12 @@
-#ifndef SERVER_FACTORY_H
-#define SERVER_FACTORY_H
+#ifndef SERVER_FACTORY_HPP
+#define SERVER_FACTORY_HPP
 
 #include <exception>
 #include <string>
 
-#include <core/comm/ipc/IPCServer.hpp>
-#include <core/comm/tcp/TCPServer.hpp>
-#include <misc/URI.hpp>
+#include "ipc/IPCServer.hpp"
+#include "tcp/TCPServer.hpp"
+#include "URI.hpp"
 
 namespace asio = boost::asio;
 

@@ -12,9 +12,9 @@
 
 #include <boost/ptr_container/ptr_list.hpp>
 
-#include <core/comm/Callback.hpp>
-#include <core/comm/Connection.hpp>
-#include <core/comm/ConnectionFactory.hpp>
+#include "Callback.hpp"
+#include "Connection.hpp"
+#include "ConnectionFactory.hpp"
 #include <core/logger/SioxLogger.hpp>
 
 namespace asio = boost::asio;

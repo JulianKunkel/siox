@@ -11,10 +11,10 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
 
-#include <core/comm/Callback.hpp>
-#include <core/comm/Connection.hpp>
-#include <core/comm/Service.hpp>
-#include <core/comm/ServiceServer.hpp>
+#include "Callback.hpp"
+#include "Connection.hpp"
+#include "Service.hpp"
+#include "ServiceServer.hpp"
 #include <core/logger/SioxLogger.hpp>
 
 namespace asio = boost::asio;

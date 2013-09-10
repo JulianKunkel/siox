@@ -1,8 +1,8 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 
-#include <core/comm/Connection.hpp>
-#include <core/comm/ConnectionMessage.hpp>
+#include "Connection.hpp"
+#include "ConnectionMessage.hpp"
 
 class Connection;
 

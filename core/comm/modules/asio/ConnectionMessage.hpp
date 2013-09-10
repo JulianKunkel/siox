@@ -18,7 +18,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 
-#include <siox.pb.h>
+#include "siox.pb.h"
 
 typedef std::vector<boost::uint8_t> data_buffer;
 

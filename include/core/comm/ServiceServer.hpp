@@ -1,5 +1,5 @@
-#ifndef SERVICE_SERVER_H
-#define SERVICE_SERVER_H
+#ifndef CORE_SERVICE_SERVER_H
+#define CORE_SERVICE_SERVER_H
 
 #include <memory> 
 

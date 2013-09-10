@@ -1,4 +1,4 @@
-#include <core/comm/ServiceClient.hpp>
+#include "ServiceClient.hpp"
 
 ServiceClient::ServiceClient( const std::string & endpoint_uri,
                               std::size_t worker_pool_size )
