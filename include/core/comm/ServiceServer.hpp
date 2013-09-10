@@ -1,69 +1,33 @@
 #ifndef SERVICE_SERVER_H
 #define SERVICE_SERVER_H
 
-#include <list>
-#include <map>
+#include <memory> 
 
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/ptr_container/ptr_list.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread/thread.hpp>
+#include <core/comm/Message.hpp>
 
-#include <core/comm/Callback.hpp>
-#include <core/comm/Connection.hpp>
-#include <core/comm/Service.hpp>
-#include <core/comm/ServiceServer.hpp>
-#include <core/logger/SioxLogger.hpp>
+namespace core{
 
-namespace asio = boost::asio;
 
-class ServiceServer
-	: public Service,
-	  private boost::noncopyable {
+class ServerCallback{
+public:
+	virtual void messageReceivedCB(std::shared_ptr<Connection> connection, std::shared_ptr<Message> msg) = 0;
+};
 
+class ServiceServer {
 	public:
-		ServiceServer( const std::size_t worker_pool_size );
-
-		/** Creates the workers and attaches them to the io_service. */
-		void run();
-
-		/** Stops all workers */
-		void stop();
-
 		/** Advertises a new message type among all connected clients. */
-		void advertise( boost::uint64_t mtype );
+		virtual void advertise(uint32_t mtype ) = 0;
 
 		/** Sends the message to all clients who subscribed the message's type */
-		void ipublish( boost::shared_ptr<ConnectionMessage> msg );
+		virtual void ipublish( std::shared_ptr<CreatedMessage> msg ) = 0;
 
-		void register_message_callback( Callback & msg_rcvd_callback );
-		void clear_message_callbacks();
+		virtual void register_message_callback(uint32_t mtype, ServerCallback * msg_rcvd_callback) = 0;
 
-		void register_error_callback( Callback & err_callback );
-		void clear_error_callbacks();
+		virtual void unregister_message_callback(uint32_t mtype) = 0;
 
-		void handle_message( ConnectionMessage & msg,
-		                     Connection & connection );
-
-		void handle_message( boost::shared_ptr<ConnectionMessage> msg,
-		                     Connection & connection );
-
-	protected:
-		asio::io_service io_service_;
-
-		void handle_stop();
-
-	private:
-		std::size_t worker_pool_size_;
-		boost::ptr_list<Callback> error_callbacks_;
-		boost::ptr_list<Callback> message_callbacks_;
-		std::vector<boost::shared_ptr<boost::thread> > workers_;
-		std::multimap<boost::uint32_t, Connection *> subscribed_connections;
-
-		void subscribe( boost::uint32_t mtype, Connection & connection );
+		virtual ~ServiceServer(){}
 };
+}
 
 #endif
 

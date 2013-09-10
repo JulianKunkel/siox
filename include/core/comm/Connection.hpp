@@ -1,57 +1,60 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include <boost/asio.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread/mutex.hpp>
+#include <stdint.h>
 
-#include <vector>
+#include <string>
+#include <memory>
 
-#include <siox.pb.h>
-#include <core/comm/Callback.hpp>
-#include <core/comm/ConnectionMessage.hpp>
-#include <core/comm/Service.hpp>
-#include <core/logger/SioxLogger.hpp>
+using namespace std;
 
-namespace asio = boost::asio;
+namespace core{
 
-class Connection
-	: public boost::enable_shared_from_this<Connection>,
-	  private boost::noncopyable {
-
-	public:
-		explicit Connection( asio::io_service & io_service );
-		explicit Connection( asio::io_service & io_service, Service & service );
-
-		void disconnect();
-		void ireconnect();
-		asio::io_service * get_io_service();
-
-		virtual void start() = 0;
-		virtual void isend( boost::shared_ptr<ConnectionMessage> msg ) = 0;
-		virtual void start_read_body( unsigned msglen ) = 0;
-
-	protected:
-		Service * service_;
-		asio::io_service * io_service_;
-		std::vector<uint8_t> buffer_out_;
-		std::vector<uint8_t> buffer_in_;
-		boost::mutex mtx_bufout_, mtx_bufin_;
-		ConnectionMessage msg_;
-
-		virtual void do_connection() = 0;
-		virtual void do_disconnect() = 0;
-
-		void handle_connect( const boost::system::error_code & e );
-		void handle_read_header( const boost::system::error_code & e );
-		void handle_read_body( const boost::system::error_code & e );
-		void handle_write( const boost::system::error_code & e );
-		void handle_write( boost::shared_ptr<ConnectionMessage> msg,
-		                   const boost::system::error_code & e );
-
-		void handle_message();
+enum class ConnectionError : uint8_t{
+	CONNECTION_LOST,
+	SERVER_NOT_ACCESSABLE,
+	MESSAGE_TYPE_NOT_AVAILABLE,
+	MESSAGE_INCOMPATIBLE
 };
+
+class Connection;
+class CreatedMessage;
+
+class ConnectionCallback{
+public:
+	virtual void connectionErrorCB(Connection & connection, ConnectionError error){}
+	virtual void connectionSuccessfullCB(Connection & connection){}
+};
+
+
+class Connection {
+protected:
+	ConnectionCallback * connectionCallback;
+public:
+		void setConnectionCallback(ConnectionCallback * ccb){
+			this->connectionCallback = ccb;
+		}
+
+		/**
+	  	 * Try to reconnect asynchronously and resend all currently pending messages. 
+	  	 */
+		virtual void ireconnect() = 0;
+
+		/**
+		 * Return the address of the target communication endpoint.
+		 */
+		virtual const string & getAddress() const = 0 ;
+
+		/**
+		 * Asynchronously sends a message to the ServiceServer.
+		 *
+		 * @note This function may return immediately.
+		 */
+		virtual void isend( std::shared_ptr<CreatedMessage> msg ) = 0;
+
+		virtual ~Connection(){}
+};
+
+}
 
 #endif
