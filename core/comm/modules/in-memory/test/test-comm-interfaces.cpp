@@ -34,7 +34,6 @@ class MyClientMessageCallback: public MessageCallback{
 public:
 	ConnectionError error; 
 	std::shared_ptr<Message> errMsg;
-	Connection * errconnection;
 
 	std::shared_ptr<Message> msg;
 	std::shared_ptr<Message> response;
@@ -60,10 +59,9 @@ public:
 		this->response = response;
 	}
 
-	void messageTransferErrorCB(Connection * connection, std::shared_ptr<CreatedMessage> msg, ConnectionError error){
+	void messageTransferErrorCB(std::shared_ptr<CreatedMessage> msg, ConnectionError error){
 		this->error = error;
 		this->errMsg = msg;
-		this->errconnection = connection;
 
 		state = State::Error;
 	}	
@@ -73,12 +71,12 @@ class MyServerCallback: public ServerCallback{
 public:
 	int messagesReceived = 0;
 	std::shared_ptr<Message> lastMessage;
-	std::shared_ptr<Connection> lastConnection;
+	ServiceServer * lastServer;
 
-	 void messageReceivedCB(std::shared_ptr<Connection> connection, std::shared_ptr<Message> msg){
+	 void messageReceivedCB(ServiceServer * server, std::shared_ptr<Message> msg){
 	 	this->messagesReceived++;
 	 	this->lastMessage = msg;
-	 	this->lastConnection = connection;
+	 	this->lastServer = server;
 	 }
 };
 
@@ -125,7 +123,6 @@ int main(){
 	// check if the message has been received
 	assert(mySCB.messagesReceived == 1);
 	assert(mySCB.lastMessage == msg);
-	assert(mySCB.lastConnection->getAddress() == c2->getAddress());
 
 	// check if the message has been send properly
 	assert(mycCB.state == MyClientMessageCallback::State::MessageSend);
@@ -133,7 +130,7 @@ int main(){
 	// send the response
 	MyClientMessageCallback myServerResponseCB;
 	auto response = std::shared_ptr<CreatedMessage>(new CreatedMessage(myServerResponseCB, 0, "response", 8));	
-	mySCB.lastConnection->isend(response);
+	mySCB.lastServer->isend(msg, response);
 
 	// check if the message response has been properly received
 	assert(mycCB.state == MyClientMessageCallback::State::MessageResponseReceived);

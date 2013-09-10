@@ -32,8 +32,12 @@ class ServiceServer
 		/** Stops all workers */
 		void stop();
 
+		virtual ~ServiceServer(){
+			stop();
+		}
+
 		/** Advertises a new message type among all connected clients. */
-		void advertise( boost::uint64_t mtype );
+		void advertise( boost::uint32_t mtype );
 
 		/** Sends the message to all clients who subscribed the message's type */
 		void ipublish( boost::shared_ptr<ConnectionMessage> msg );

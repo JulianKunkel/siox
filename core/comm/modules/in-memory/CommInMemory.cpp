@@ -16,6 +16,7 @@ using namespace std;
 namespace core{
 
 class InMemoryServiceServer;
+class InMemoryServiceClient;
 static map<string, InMemoryServiceServer*> servers;
 
 class InMemoryServiceServer : public ServiceServer{
@@ -24,6 +25,7 @@ public:
 	bool available = true;
 
 	map<uint32_t, ServerCallback*> callbacks;
+	map<std::shared_ptr<Message>, InMemoryServiceClient*> pendingResponses;
 
 	void advertise(uint32_t mtype ){
 		assert(false);
@@ -41,6 +43,7 @@ public:
 		callbacks.erase(mtype);
 	}
 
+	void isend( std::shared_ptr<Message> msg, std::shared_ptr<CreatedMessage> response );
 
 	~InMemoryServiceServer(){
 		cout << "Shutting down server" << endl;
@@ -71,7 +74,31 @@ public:
 		return this->address;
 	}
 
-	void isend( std::shared_ptr<CreatedMessage> msg );
+	void isend( std::shared_ptr<CreatedMessage> msg ){
+		InMemoryServiceServer * server = servers[address];
+		if (server == nullptr){
+			// we have an error here!
+			msg->mcb.messageTransferErrorCB(msg, ConnectionError::SERVER_NOT_ACCESSABLE);
+			return;
+		}
+
+		if(! server->available){
+			msg->mcb.messageTransferErrorCB(msg, ConnectionError::CONNECTION_LOST);
+			return;	
+		}
+
+		// notify server about reception of message
+		if (server->callbacks.find(msg->type) != server->callbacks.end()){
+			ServerCallback * cb = server->callbacks[msg->type];			
+			cb->messageReceivedCB(server, msg);
+		}else{
+			msg->mcb.messageTransferErrorCB(msg, ConnectionError::MESSAGE_TYPE_NOT_AVAILABLE);
+			return;
+		}
+
+		// message completion
+		msg->mcb.messageSendCB(msg);
+	}
 
 
 	~InMemoryServiceClient(){
@@ -80,70 +107,28 @@ public:
 };
 
 
-class InMemoryServerConnection : public Connection {
-public:
-	InMemoryServiceClient * client;
-	std::shared_ptr<CreatedMessage> clientMsg;
-	bool messageHasBeenSend = false;
+void InMemoryServiceServer::isend( std::shared_ptr<Message> msg, std::shared_ptr<CreatedMessage> response ){
+		auto  it = pendingResponses.find(msg);
 
-	InMemoryServerConnection(InMemoryServiceClient * client, std::shared_ptr<CreatedMessage> clientMsg) : client(client), clientMsg(clientMsg){
+		assert( it != pendingResponses.end());
 
-	}
+		pendingResponses.erase(it);
 
-	void ireconnect(){
-		// try to reconnect to the client to transmit the message.
-		// not implemented here.
-		assert(false);
-	}
+		InMemoryServiceClient * client = it->second;
 
-	const string & getAddress() const {
-		return client->address;
-	}
+		CreatedMessage * clientMessage = ((CreatedMessage*)(&*msg));
 
-	void isend( std::shared_ptr<CreatedMessage> msg ){
 		if(! client->available){
-			msg->mcb.messageTransferErrorCB(this, msg, ConnectionError::CONNECTION_LOST);
+			clientMessage->mcb.messageTransferErrorCB(response, ConnectionError::CONNECTION_LOST);
 			return;	
 		}
-
-		assert(! messageHasBeenSend);
 
 		// the server-side message has been sent
-		msg->mcb.messageSendCB(msg);
+		response->mcb.messageSendCB(response);
+
 
 		// deliver the response to the client
-		clientMsg->mcb.messageResponseCB(clientMsg, msg);
-
-		messageHasBeenSend = true;
-	}
-
-};
-
-
-void InMemoryServiceClient::isend( std::shared_ptr<CreatedMessage> msg ){
-		InMemoryServiceServer * server = servers[address];
-		if (server == nullptr){
-			// we have an error here!
-			msg->mcb.messageTransferErrorCB(this, msg, ConnectionError::SERVER_NOT_ACCESSABLE);
-			return;
-		}
-
-		if(! server->available){
-			msg->mcb.messageTransferErrorCB(this, msg, ConnectionError::CONNECTION_LOST);
-			return;	
-		}
-
-		// notify server about reception of message
-		if (server->callbacks.find(msg->type) != server->callbacks.end()){
-			ServerCallback * cb = server->callbacks[msg->type];			
-			cb->messageReceivedCB(std::shared_ptr<InMemoryServerConnection>(new InMemoryServerConnection(this, msg)), msg);
-		}else{
-			msg->mcb.messageTransferErrorCB(this, msg, ConnectionError::MESSAGE_TYPE_NOT_AVAILABLE);
-			return;
-		}
-
-		// message completion
-		msg->mcb.messageSendCB(msg);
+		clientMessage->mcb.messageResponseCB(*(std::shared_ptr<CreatedMessage> *) & msg, *(std::shared_ptr<Message> * ) & response);
 	}
 
 class CommInMemory : public CommunicationModule {

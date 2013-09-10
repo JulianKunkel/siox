@@ -8,9 +8,11 @@
 namespace core{
 
 
+class ServiceServer;
+
 class ServerCallback{
 public:
-	virtual void messageReceivedCB(std::shared_ptr<Connection> connection, std::shared_ptr<Message> msg) = 0;
+	virtual void messageReceivedCB(ServiceServer * server, std::shared_ptr<Message> msg) = 0;
 };
 
 class ServiceServer {
@@ -22,6 +24,8 @@ class ServiceServer {
 		virtual void ipublish( std::shared_ptr<CreatedMessage> msg ) = 0;
 
 		virtual void register_message_callback(uint32_t mtype, ServerCallback * msg_rcvd_callback) = 0;
+
+		virtual void isend( shared_ptr<Message> msg, shared_ptr<CreatedMessage> response ) = 0;
 
 		virtual void unregister_message_callback(uint32_t mtype) = 0;
 

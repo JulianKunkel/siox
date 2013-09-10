@@ -37,7 +37,7 @@ void ServiceServer::handle_stop()
 }
 
 
-void ServiceServer::advertise( boost::uint64_t mtype )
+void ServiceServer::advertise( boost::uint32_t mtype )
 {
 	boost::shared_ptr<buffers::MessageBuffer> mbuf( new buffers::MessageBuffer() );
 	mbuf->set_action( buffers::MessageBuffer::Advertise );

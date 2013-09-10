@@ -51,6 +51,10 @@ class ServiceClient
 		ServiceClient( const std::string & endpoint_uri,
 		               std::size_t worker_pool_size = 1 );
 
+		virtual ~ServiceClient(){
+			stop();
+		}
+
 		/**
 		 * Adds a Callback object to the list of callbacks responsible for error
 		 * handling.

@@ -14,7 +14,7 @@ class MessageCallback{
 public:
 	virtual void messageSendCB(std::shared_ptr<CreatedMessage> msg) = 0;
 	virtual void messageResponseCB(std::shared_ptr<CreatedMessage> msg, std::shared_ptr<Message> response){};
-	virtual void messageTransferErrorCB(Connection * connection, std::shared_ptr<CreatedMessage> msg, ConnectionError error) = 0;
+	virtual void messageTransferErrorCB(std::shared_ptr<CreatedMessage> msg, ConnectionError error) = 0;
 
 	virtual ~MessageCallback(){};
 };
