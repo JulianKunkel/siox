@@ -5,40 +5,39 @@ PostgreSQLBackend::PostgreSQLBackend()
 {
 }
 
-void PostgreSQLBackend::init( const std::string & dbinfo )
+void PostgreSQLBackend::init(const std::string &dbinfo)
 {
-	dbconn_ = PQconnectdb( dbinfo.c_str() );
+	dbconn_ = PQconnectdb(dbinfo.c_str());
 
-	if( PQstatus( dbconn_ ) != CONNECTION_OK ) {
+	if (PQstatus(dbconn_) != CONNECTION_OK) {
 
-		logger->log( Logger::ERR, "Error connecting to DB: %s.",
-		             PQerrorMessage( dbconn_ ) );
+		logger->log(Logger::ERR, "Error connecting to DB: %s.", PQerrorMessage(dbconn_));
 
-		PQfinish( dbconn_ );
+		PQfinish(dbconn_);
 
-		throw( new PostgreSQLBackendException( "Error connecting to the database." ) );
+		throw (new PostgreSQLBackendException("Error connecting to the database."));
 
 	}
 
 #ifndef NDEBUG
-	logger->log( Logger::NOTICE, "Successfully connected to the database." );
+	logger->log(Logger::NOTICE, "Successfully connected to the database.");
 #endif
 }
 
 
 PostgreSQLBackend::~PostgreSQLBackend()
 {
-	PQfinish( dbconn_ );
+	PQfinish(dbconn_);
 
 #ifndef NDEBUG
-	logger->log( Logger::NOTICE, "Connection to the database terminated." );
+	logger->log(Logger::NOTICE, "Connection to the database terminated.");
 #endif
 }
 
 
-Callback * PostgreSQLBackend::create_callback()
+Callback *PostgreSQLBackend::create_callback()
 {
-	return new PostgreSQLPumpCallback( *dbconn_ );
+	return new PostgreSQLPumpCallback(*dbconn_);
 }
 
 

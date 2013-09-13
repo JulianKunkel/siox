@@ -1,5 +1,5 @@
-#ifndef POSTGRESQL_SUCKER_H
-#define POSTGRESQL_SUCKER_H
+#ifndef POSTGRESQL_READER_H
+#define POSTGRESQL_READER_H
 
 /* This class is for testing purposes and will be refactored into a new one. */
 #include "libpq-fe.h"
@@ -13,10 +13,10 @@ using namespace monitoring;
 using namespace util;
 
 
-class PostgreSQLSucker {
+class PostgreSQLReader {
 public:
-	PostgreSQLSucker(const std::string &dbinfo);
-	~PostgreSQLSucker();
+	PostgreSQLReader(const std::string &dbinfo);
+	~PostgreSQLReader();
 	
 	ActivityID *activity_id(uint64_t id);
 private:

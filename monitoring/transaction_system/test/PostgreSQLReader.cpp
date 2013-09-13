@@ -1,6 +1,6 @@
-#include "PostgreSQLSucker.hpp"
+#include "PostgreSQLReader.hpp"
 
-PostgreSQLSucker::PostgreSQLSucker(const std::string &dbinfo) 
+PostgreSQLReader::PostgreSQLReader(const std::string &dbinfo) 
 {
 	dbconn_ = PQconnectdb(dbinfo.c_str());
 
@@ -21,13 +21,13 @@ PostgreSQLSucker::PostgreSQLSucker(const std::string &dbinfo)
 }
 
 
-PostgreSQLSucker::~PostgreSQLSucker() 
+PostgreSQLReader::~PostgreSQLReader() 
 {
 	PQfinish(dbconn_);
 }
 
 
-ActivityID *PostgreSQLSucker::activity_id(uint64_t uid)
+ActivityID *PostgreSQLReader::activity_id(uint64_t uid)
 {
 	uint64_t unique_id = htonll(uid);
 	

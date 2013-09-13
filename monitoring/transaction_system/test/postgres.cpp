@@ -10,7 +10,7 @@
 #include <monitoring/transaction_system/PostgreSQLBackend.hpp>
 #include <monitoring/transaction_system/PostgreSQLPumpCallback.hpp>
 #include <monitoring/transaction_system/TransactionBackend.hpp>
-#include <monitoring/transaction_system/test/PostgreSQLSucker.hpp>
+#include <monitoring/transaction_system/test/PostgreSQLReader.hpp>
 
 #include <core/logger/SioxLogger.hpp>
 #include <misc/Util.hpp>
@@ -31,7 +31,7 @@
 
 
 Logger *logger;
-PostgreSQLSucker *reader;
+PostgreSQLReader *reader;
 
 class PostgreSQLPumpCallbackTest {
 public:
@@ -49,9 +49,9 @@ public:
 // 		cb_->store_activity(act);
 	}
 
-	void save_activity_id(const ActivityID &aid) 
+	uint64_t save_activity_id(const ActivityID &aid) 
 	{
-		cb_->insert_activity_id(aid);
+		return cb_->insert_activity_id(aid);
 	}
 
 private:
@@ -61,8 +61,18 @@ private:
 
 void activity_id_test(PostgreSQLPumpCallbackTest &cb)
 {
-	ActivityID *aid = rnd::activity_id();
-	cb.save_activity_id(*aid);
+	ActivityID *aid1 = rnd::activity_id();
+	uint64_t uid = cb.save_activity_id(*aid1);
+	
+	ActivityID *aid2 = reader->activity_id(uid);
+	
+	std::cout << "ID: " << aid2->id << " THREAD: " << aid2->thread << std::endl;
+	
+	if (*aid1 != *aid2) {
+		std::cerr << "Activity ID mismatch." << std::endl;
+		exit(1);
+	}
+	
 }
 
 
@@ -78,11 +88,11 @@ int main()
 	PostgreSQLPumpCallback *pcb = dynamic_cast<PostgreSQLPumpCallback *>(cb);
 	PostgreSQLPumpCallbackTest pg(pcb);
  
-// 	reader = new PostgreSQLSucker(SIOX_DB_INFO);
+	reader = new PostgreSQLReader(SIOX_DB_INFO);
 	
 	srand(time(NULL));
 	
-// 	activity_id_test(pg);
+	activity_id_test(pg);
 	
 	return 0;
 }

@@ -6,11 +6,11 @@ include_directories(
 	${Boost_INCLUDE_DIR}
 )
 
-add_library(postgressucker
-	PostgreSQLSucker.cpp
+add_library(postgresreader
+	PostgreSQLReader.cpp
 )
 
-target_link_libraries(postgressucker
+target_link_libraries(postgresreader
 	monitoring-transactionsystem 
 	core-logger
 )
@@ -20,7 +20,7 @@ add_executable(postgresql_test
 )
 
 target_link_libraries(postgresql_test
-	postgressucker
+	postgresreader
 	monitoring-transactionsystem 
 	core-communication 
 	core-logger
