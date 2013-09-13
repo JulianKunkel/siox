@@ -11,7 +11,7 @@ namespace core{
 // The message callbacks are invoked on the server side
 class ServerClientMessage : public BareMessage{
 public:	
-		virtual BareMessage * isendResponse(void * object) = 0;
+		virtual void isendResponse(void * object) = 0;		
 		virtual void isendErrorResponse(CommunicationError error) = 0;
 
 		ServerClientMessage(const char * payload, uint64_t size) : BareMessage(payload, size){}	
@@ -43,7 +43,7 @@ class CommunicationModule;
 
 class ServiceServer{
 	protected:
-		ServerCallback * messageCallack;
+		ServerCallback * messageCallback;
 	public:
 		virtual void listen() throw(CommunicationModuleException) = 0;
 
@@ -59,7 +59,7 @@ class ServiceServer{
 		virtual uint32_t headerSizeClientMessage() = 0;
 
 		void setMessageCallback(ServerCallback * msg_rcvd_callback){
-			messageCallack = msg_rcvd_callback;
+			messageCallback = msg_rcvd_callback;
 		}		
 };
 

@@ -33,7 +33,7 @@ public:
 	}
 
 	inline ServerCallback * getMessageCallback(){
-		return messageCallack;
+		return messageCallback;
 	}
 
 	void ipublish( void * msg ){
@@ -66,7 +66,7 @@ public:
 		memcpy((void*) payload, msg->payload, size);
 	}	
 
-	BareMessage * isendResponse(void * object);
+	void isendResponse(void * object);
 	void isendErrorResponse(CommunicationError error);
 };
 
@@ -79,7 +79,7 @@ public:
 		return 0;
 	}
 
-	void serializeHeader(char * buffer, uint64_t & pos){
+	void serializeHeader(char * buffer, uint64_t & pos, uint64_t size){
 
 	}
 
@@ -109,6 +109,8 @@ public:
 		uint64_t pos = 0;
 
 		messageCallback->serializeMessage(object, payload, pos);
+
+		assert(pos == msg_size);
 
 		BareMessage * msg = new BareMessage(payload, msg_size);
 
@@ -155,7 +157,7 @@ public:
 
 
 
-BareMessage * InMemoryServerClientMessage::isendResponse(void * object){
+void InMemoryServerClientMessage::isendResponse(void * object){
 
 	uint64_t len = server->getMessageCallback()->serializeResponseMessageLen(this, object);
 	char * payload = (char *) malloc(len);
@@ -167,7 +169,8 @@ BareMessage * InMemoryServerClientMessage::isendResponse(void * object){
 	if(! client->available){
 		// notify the server that the connection has been lost
 		server->getMessageCallback()->responseTransferErrorCB(this, msg, CommunicationError::CONNECTION_LOST);
-		return msg;	
+		delete(msg);
+		return;
 	}
 
 	// the server-side message has been sent
@@ -178,7 +181,6 @@ BareMessage * InMemoryServerClientMessage::isendResponse(void * object){
 
 	delete(msg);
 
-	return nullptr;
 }
 
 void InMemoryServerClientMessage::isendErrorResponse(CommunicationError error){
@@ -207,12 +209,6 @@ public:
 
 	virtual ComponentOptions* AvailableOptions(){
 		return new CommInMemoryOptions();
-	}
-
-	~CommInMemory(){
-		for(auto itr = servers.begin(); itr != servers.end() ; itr++){
-			delete(itr->second);
-		}
 	}
 };
 

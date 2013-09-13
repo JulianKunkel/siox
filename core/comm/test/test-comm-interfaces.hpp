@@ -46,6 +46,7 @@ public:
 	void connectionErrorCB(ServiceClient & connection, CommunicationError error){
 		
 		cout << "connectionErrorCB " << ((int) error) << " in  " << connection.getAddress()  << " retry: " << retries << endl;
+		
 		if(retries >= 2){
 			cout << "Retry count reached, stopping.";
 			sthHappens();
@@ -61,6 +62,7 @@ public:
 	}
 
 	void connectionSuccessfullCB(ServiceClient & connection){
+		cout << "connectionSuccessfullCB";
 		retries = 0;
 
 		sthHappens();
@@ -121,7 +123,7 @@ public:
 	}
 
 	void serializeMessage(const void * msgObject, char * buffer, uint64_t & pos){
-		j_serialization::serialize( ((string *) msgObject)->c_str(), buffer, pos ) ;
+		j_serialization::serialize( *(string *) msgObject, buffer, pos ) ;
 	}
 
 
@@ -218,7 +220,6 @@ void runTestSuite(string module, string address1, string address2, string addres
 	EmptyServerCallback myEmptyServerCB;
 
 	ServiceServer * s1 = comm->startServerService(address1, & myEmptyServerCB);
-	ServiceServer * s2 = comm->startServerService(address2, & myEmptyServerCB );
 
 	try{
 		ServiceServer * s3 = comm->startServerService(address1,  & myEmptyServerCB );
@@ -226,11 +227,13 @@ void runTestSuite(string module, string address1, string address2, string addres
 	}catch(CommunicationModuleException & e){
 		// we expect that this server address is already occupied.
 	}
+	delete(s1);
 
+	
+	cout << endl << "Try to connect to a port which does not exist, so we should retry connecting" << endl;
 	MyConnectionCallback myCCB;
 	MyClientMessageCallback myMessageCB;
 
-	// try to connect to a port which does not exist, so we should retry connecting (here blocking):
 	ServiceClient * c1 = comm->startClientService(address3, & myCCB, & myMessageCB);
 	
 	assert(c1 != nullptr);
@@ -238,10 +241,16 @@ void runTestSuite(string module, string address1, string address2, string addres
 	while(myCCB.retries < 2){
 		myCCB.waitUntilSthHappened();
 	}
+	delete(c1);
 
-	ServiceClient * c2 = comm->startClientService(address2, & myCCB, & myMessageCB);
 
-	myCCB.waitUntilSthHappened();
+	cout << endl <<  "Connect to a server which rejects all messages " << endl;
+	MyConnectionCallback myCCB2;	
+	ServiceServer * s2 = comm->startServerService(address2, & myEmptyServerCB );
+
+	ServiceClient * c2 = comm->startClientService(address2, & myCCB2, & myMessageCB);
+
+	myCCB2.waitUntilSthHappened();
 
 	// produce an error because the target message type is not registered.
 	string data = "test";
@@ -254,9 +263,11 @@ void runTestSuite(string module, string address1, string address2, string addres
 	assert(myMessageCB.error == CommunicationError::MESSAGE_TYPE_NOT_AVAILABLE);
 
 	delete(s2);
+	delete(c2);
 	s2 = nullptr;
 
-	delete(c2);
+
+	cout << endl <<  "Simple message exchange" << endl;
 
 	MyServerCallback mySCB;	
 	ServiceServer * s3 = comm->startServerService(address2, & mySCB );
@@ -290,9 +301,8 @@ void runTestSuite(string module, string address1, string address2, string addres
 	assert(mySCB.state == MyServerCallback::State::MessageResponseSend);
 
 	// close connections:
-	delete(c1);
 	delete(c2);
-	delete(s1);
-	delete(s2);
+
+
 	delete(comm);
 }

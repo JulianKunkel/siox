@@ -37,7 +37,7 @@ BareMessage * MultiMessageTypeServiceClient::isend( uint32_t mtype, void * objec
 
 	char * payload = (char*) malloc(size);
 	// we call the backend to serialize its header.	
-	backend->serializeHeader(payload, pos);
+	backend->serializeHeader(payload, pos, size);
 
 	// serialize message type into the message
 	j_serialization::serialize(mtype, payload, pos);

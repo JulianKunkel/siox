@@ -24,7 +24,13 @@ namespace core{
 			assert(msg_rcvd_callback);
 			ServiceServer * server = startServerService(address);
 			server->setMessageCallback(msg_rcvd_callback);
-			server->listen();
+			try{
+				server->listen();
+			}catch(CommunicationModuleException & e){
+				delete(server);
+				throw e;
+			}
+			
 			return server;
 		}
 

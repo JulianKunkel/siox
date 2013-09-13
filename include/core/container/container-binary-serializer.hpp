@@ -140,21 +140,28 @@ inline void deserialize(long double & obj, const char * buffer, uint64_t & pos, 
 	pos += sizeof(obj);	
 }
 
+inline uint64_t serializeLen(const uint32_t & obj){
+	return 4;
+}
+
+inline uint64_t serializeLen(const uint64_t & obj){
+	return 8;
+}
+
 /////////// STRING /////////////////////////
 
 inline uint64_t serializeLen(const string & obj){
-	return 4 + obj.length();
+	uint32_t len = 0;
+	return serializeLen(len) + obj.length();
 }
 
-inline uint32_t serializeLen(const uint32_t & obj){
-	return 4;
-}
+using namespace std;
 
 inline void serialize(const string & obj, char * buffer, uint64_t & pos){
 	uint32_t len = obj.length();
 	serialize(len, buffer, pos);
 	memcpy(buffer + pos, obj.c_str(), len);
-	pos += len;
+	pos += len;	
 }
 
 inline void deserialize(string & obj, const char * buffer, uint64_t & pos, uint64_t length){

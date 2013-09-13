@@ -19,6 +19,7 @@
 using namespace core;
 using namespace std;
 
+#define MAGIC_KEY 1337
 
 // This function splits the string <hostname>:<port> into the tupel
 static pair<string, uint16_t> splitAddress(const string & address){
@@ -39,6 +40,29 @@ static pair<string, uint16_t> splitAddress(const string & address){
 	return {address.substr(0, pos), port};
 }
 
+static inline uint32_t clientMsgHeaderLen(){
+	const uint32_t magicKey = 0;
+	const uint32_t clientSidedID = 0;
+	const uint64_t msgLength = 0;
+	return j_serialization::serializeLen(magicKey) + j_serialization::serializeLen(clientSidedID) + j_serialization::serializeLen(msgLength);
+}
+
+static void serializeMsgHeader(char * buffer, uint64_t & pos, uint64_t size, uint32_t magicKey, uint32_t clientSidedID)
+{
+	j_serialization::serialize(magicKey, buffer, pos);
+	j_serialization::serialize(size, buffer, pos);
+	j_serialization::serialize(clientSidedID, buffer, pos);
+}
+
+static void deserializeMsgHeader(char * buffer, uint64_t & pos, uint64_t msgLength, uint64_t & size, uint32_t & magicKey, uint32_t & clientSidedID)
+{
+	j_serialization::deserialize(magicKey, buffer, pos, msgLength);
+	j_serialization::deserialize(size, buffer, pos, msgLength);
+	j_serialization::deserialize(clientSidedID, buffer, pos, msgLength);
+}
+
+
+
 #include "GIOClient.cpp"
 #include "GIOServer.cpp"
 
@@ -46,18 +70,12 @@ static pair<string, uint16_t> splitAddress(const string & address){
 class GIOCommModule : public CommunicationModule {
 public:
 	//virtual void setWorkProcessor() = 0; 
-	virtual ServiceServer * startServerService(const string & address) throw(CommunicationModuleException){
-		pair<string, uint16_t> out = splitAddress(address);
-
-		return new GIOServiceServer(out.first, out.second);
+	virtual ServiceServer * startServerService(const string & address) throw(CommunicationModuleException){		
+		return new GIOServiceServer(address);
 	}
 
-	virtual ServiceClient * startClientService(const string & server_address, ConnectionCallback & ccb) throw(CommunicationModuleException){
-
-		auto sc = new GIOClient(server_address);
-		sc->setConnectionCallback(& ccb);
-		sc->ireconnect();
-		return sc;
+	virtual ServiceClient * startClientService(const string & server_address) throw(CommunicationModuleException){
+		return new GIOClient(server_address);
 	}
 
 	virtual void init(){
