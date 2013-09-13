@@ -5,6 +5,7 @@
  * This include files contains functions for (de)serialization of primitive types.
  */
 
+#include <assert.h>
 #include <string.h>
 #include <string>
 #include <inttypes.h>
@@ -13,6 +14,7 @@
 
 using namespace std;
 
+#define CHECK_LENGTH(COUNT) assert(pos + COUNT <= length);
 
 namespace j_serialization{
 
@@ -71,6 +73,83 @@ inline void serialize(const long double & obj, char * buffer, uint64_t & pos){
 	pos += sizeof(obj);
 }
 
+
+inline void deserialize(uint8_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(1)
+	obj = buffer[pos];
+	pos++;	
+}
+
+inline void deserialize(int8_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(1)
+	obj = buffer[pos];
+	pos++;	
+}
+
+inline void deserialize(int16_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(2)
+	obj = buffer[pos];
+	pos += 2;	
+}
+
+inline void deserialize(uint16_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(2)
+	obj = buffer[pos];
+	pos += 2;	
+}
+
+inline void deserialize(int32_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(4)
+	obj = buffer[pos];
+	pos += 4;	
+}
+
+inline void deserialize(uint32_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(4)
+	obj = buffer[pos];
+	pos += 4;	
+}
+
+inline void deserialize(float & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(4)
+	obj = buffer[pos];
+	pos += 4;	
+}
+
+inline void deserialize(int64_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(8)
+	obj = buffer[pos];
+	pos += 8;	
+}
+
+inline void deserialize(uint64_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(8)
+	obj = buffer[pos];
+	pos += 8;	
+}
+
+inline void deserialize(double & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(8)
+	obj = buffer[pos];
+	pos += 4;	
+}
+
+inline void deserialize(long double & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(sizeof(obj))
+	memcpy(& obj, & buffer[pos], sizeof(obj) );
+	pos += sizeof(obj);	
+}
+
+/////////// STRING /////////////////////////
+
+inline uint64_t serializeLen(const string & obj){
+	return 4 + obj.length();
+}
+
+inline uint32_t serializeLen(const uint32_t & obj){
+	return 4;
+}
+
 inline void serialize(const string & obj, char * buffer, uint64_t & pos){
 	uint32_t len = obj.length();
 	serialize(len, buffer, pos);
@@ -78,78 +157,11 @@ inline void serialize(const string & obj, char * buffer, uint64_t & pos){
 	pos += len;
 }
 
-#define CHECK_LENGTH(COUNT) assert(pos + COUNT <= length);
-
-
-inline void deserialize(uint8_t & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(1)
-	obj = buffer[pos];
-	pos++;	
-}
-
-inline void deserialize(int8_t & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(1)
-	obj = buffer[pos];
-	pos++;	
-}
-
-inline void deserialize(int16_t & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(2)
-	obj = buffer[pos];
-	pos += 2;	
-}
-
-inline void deserialize(uint16_t & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(2)
-	obj = buffer[pos];
-	pos += 2;	
-}
-
-inline void deserialize(int32_t & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(4)
-	obj = buffer[pos];
-	pos += 4;	
-}
-
-inline void deserialize(uint32_t & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(4)
-	obj = buffer[pos];
-	pos += 4;	
-}
-
-inline void deserialize(float & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(4)
-	obj = buffer[pos];
-	pos += 4;	
-}
-
-inline void deserialize(int64_t & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(8)
-	obj = buffer[pos];
-	pos += 8;	
-}
-
-inline void deserialize(uint64_t & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(8)
-	obj = buffer[pos];
-	pos += 8;	
-}
-
-inline void deserialize(double & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(8)
-	obj = buffer[pos];
-	pos += 4;	
-}
-
-inline void deserialize(long double & obj, char * buffer, uint64_t & pos, uint64_t length){
-	CHECK_LENGTH(sizeof(obj))
-	memcpy(& obj, & buffer[pos], sizeof(obj) );
-	pos += sizeof(obj);	
-}
-
-inline void deserialize(string & obj, char * buffer, uint64_t & pos, uint64_t length){
+inline void deserialize(string & obj, const char * buffer, uint64_t & pos, uint64_t length){
 	uint32_t len;
-	deserialize(len, buffer, pos, length);	
+	CHECK_LENGTH(4)
+	deserialize(len, buffer, pos, length);
+
 	//cout << len << " " << (& buffer[pos]) << " " << pos << endl;
 	CHECK_LENGTH(len)
     obj.resize(0);
@@ -157,6 +169,10 @@ inline void deserialize(string & obj, char * buffer, uint64_t & pos, uint64_t le
 	pos += len;
 }
 
+
+
 }
+
+#undef CHECK_LENGTH
 
 #endif

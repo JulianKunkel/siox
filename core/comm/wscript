@@ -8,7 +8,10 @@ def configure(conf):
 	conf.recurse(['modules'], mandatory=True)
 
 def build(bld):
+	bld.shlib(includes="", use="BOOST ", target = "siox-core-comm-multiMessageService", source = 'MultiMessageTypeService.cpp')
+
 	bld.recurse(['modules'], mandatory=True)
+	bld.recurse(['test'], mandatory=True)
 
 
 # -*- indent-tabs-mode: t -*-

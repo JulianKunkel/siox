@@ -19,8 +19,6 @@
 using namespace core;
 using namespace std;
 
-//#include "GIOClient.cpp"
-#include "GIOServer.cpp"
 
 // This function splits the string <hostname>:<port> into the tupel
 static pair<string, uint16_t> splitAddress(const string & address){
@@ -41,6 +39,10 @@ static pair<string, uint16_t> splitAddress(const string & address){
 	return {address.substr(0, pos), port};
 }
 
+#include "GIOClient.cpp"
+#include "GIOServer.cpp"
+
+
 class GIOCommModule : public CommunicationModule {
 public:
 	//virtual void setWorkProcessor() = 0; 
@@ -51,11 +53,11 @@ public:
 	}
 
 	virtual ServiceClient * startClientService(const string & server_address, ConnectionCallback & ccb) throw(CommunicationModuleException){
-		//auto sc = new GIOClient(server_address);
-		//sc->setConnectionCallback(& ccb);
-		//sc->ireconnect();
-		//return sc;
-		return nullptr;
+
+		auto sc = new GIOClient(server_address);
+		sc->setConnectionCallback(& ccb);
+		sc->ireconnect();
+		return sc;
 	}
 
 	virtual void init(){

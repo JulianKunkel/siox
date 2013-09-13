@@ -13,47 +13,75 @@
 using namespace core;
 using namespace std;
 
-namespace core{
-
 class InMemoryServiceServer;
 class InMemoryServiceClient;
 static map<string, InMemoryServiceServer*> servers;
 
+
+
 class InMemoryServiceServer : public ServiceServer{
 public:
 	// simulates transient errors
-	bool available = true;
+	bool available = false;
+	const string address;
 
-	map<uint32_t, ServerCallback*> callbacks;
-	map<std::shared_ptr<Message>, InMemoryServiceClient*> pendingResponses;
+	InMemoryServiceServer(const string & address) throw (CommunicationModuleException) : address(address) {
+		if (servers.find(address) != servers.end()){
+			throw CommunicationModuleException("The address \"" + address + "\" is already occupied!");
+		}
+		servers[address] = this;
+	}
 
-	void advertise(uint32_t mtype ){
+	inline ServerCallback * getMessageCallback(){
+		return messageCallack;
+	}
+
+	void ipublish( void * msg ){
 		assert(false);
 	}
 
-	void ipublish( std::shared_ptr<CreatedMessage> msg ){
-		assert(false);
+	void listen() throw(CommunicationModuleException){
+		available = true;
 	}
 
-	void register_message_callback(uint32_t mtype, ServerCallback * msg_rcvd_callback){
-		callbacks[mtype] = msg_rcvd_callback;
+	uint32_t headerSizeClientMessage(){
+		return 0;
 	}
-
-	void unregister_message_callback(uint32_t mtype){
-		callbacks.erase(mtype);
-	}
-
-	void isend( std::shared_ptr<Message> msg, std::shared_ptr<CreatedMessage> response );
 
 	~InMemoryServiceServer(){
 		cout << "Shutting down server" << endl;
+		auto itr = servers.find(address);
+		servers.erase(itr);
 	}
+};
+
+
+class InMemoryServerClientMessage : public ServerClientMessage{
+public:
+	BareMessage * msg;
+	InMemoryServiceClient * client;
+	InMemoryServiceServer * server;
+
+	InMemoryServerClientMessage(BareMessage * msg, InMemoryServiceClient * client, InMemoryServiceServer * server) : ServerClientMessage( (char*) malloc(msg->size), msg->size), msg(msg), client(client), server(server) { 
+		memcpy((void*) payload, msg->payload, size);
+	}	
+
+	BareMessage * isendResponse(void * object);
+	void isendErrorResponse(CommunicationError error);
 };
 
 class InMemoryServiceClient : public ServiceClient{
 public:	
 	string address;
 	bool available = true;
+
+	uint32_t headerSize(){
+		return 0;
+	}
+
+	void serializeHeader(char * buffer, uint64_t & pos){
+
+	}
 
 	InMemoryServiceClient(const string & address){
 		this->address = address;
@@ -63,7 +91,7 @@ public:
 		InMemoryServiceServer * server = servers[address];
 		if (server == nullptr){
 			// we have an error here!
-			connectionCallback->connectionErrorCB(*this, ConnectionError::SERVER_NOT_ACCESSABLE);
+			connectionCallback->connectionErrorCB(*this, CommunicationError::SERVER_NOT_ACCESSABLE);
 			return;
 		}
 
@@ -74,30 +102,48 @@ public:
 		return this->address;
 	}
 
-	void isend( std::shared_ptr<CreatedMessage> msg ){
+	BareMessage * isend( void * object ){
+		// we have to serialize the object
+		uint64_t msg_size = messageCallback->serializeMessageLen(object);
+		char * payload = (char*) malloc(msg_size);
+		uint64_t pos = 0;
+
+		messageCallback->serializeMessage(object, payload, pos);
+
+		BareMessage * msg = new BareMessage(payload, msg_size);
+
+		isend(msg);
+		return msg;
+	}
+
+	void isend( BareMessage * msg ){
 		InMemoryServiceServer * server = servers[address];
+
 		if (server == nullptr){
 			// we have an error here!
-			msg->mcb.messageTransferErrorCB(msg, ConnectionError::SERVER_NOT_ACCESSABLE);
+			messageCallback->messageTransferErrorCB(msg, CommunicationError::SERVER_NOT_ACCESSABLE);
 			return;
 		}
 
 		if(! server->available){
-			msg->mcb.messageTransferErrorCB(msg, ConnectionError::CONNECTION_LOST);
+			messageCallback->messageTransferErrorCB(msg, CommunicationError::CONNECTION_LOST);
 			return;	
 		}
 
-		// notify server about reception of message
-		if (server->callbacks.find(msg->type) != server->callbacks.end()){
-			ServerCallback * cb = server->callbacks[msg->type];			
-			cb->messageReceivedCB(server, msg);
-		}else{
-			msg->mcb.messageTransferErrorCB(msg, ConnectionError::MESSAGE_TYPE_NOT_AVAILABLE);
-			return;
-		}
-
 		// message completion
-		msg->mcb.messageSendCB(msg);
+		messageCallback->messageSendCB(msg);
+
+		// notify server about reception of message
+		//if (server->callbacks.find(msg->type) != server->callbacks.end()){
+		//	ServerCallback * cb = server->callbacks[msg->type];
+		ServerClientMessage * smsg = new InMemoryServerClientMessage(msg, this, server);
+		server->getMessageCallback()->messageReceivedCB(smsg, smsg->payload, msg->size );
+		//	msg->mcb.messageTransferErrorCB(msg, ConnectionError::MESSAGE_TYPE_NOT_AVAILABLE);
+
+	}
+
+	inline MessageCallback * getMessageCallback(){
+		return messageCallback;
 	}
 
 
@@ -107,47 +153,52 @@ public:
 };
 
 
-void InMemoryServiceServer::isend( std::shared_ptr<Message> msg, std::shared_ptr<CreatedMessage> response ){
-		auto  it = pendingResponses.find(msg);
-
-		assert( it != pendingResponses.end());
-
-		pendingResponses.erase(it);
-
-		InMemoryServiceClient * client = it->second;
-
-		CreatedMessage * clientMessage = ((CreatedMessage*)(&*msg));
-
-		if(! client->available){
-			clientMessage->mcb.messageTransferErrorCB(response, ConnectionError::CONNECTION_LOST);
-			return;	
-		}
-
-		// the server-side message has been sent
-		response->mcb.messageSendCB(response);
 
 
-		// deliver the response to the client
-		clientMessage->mcb.messageResponseCB(*(std::shared_ptr<CreatedMessage> *) & msg, *(std::shared_ptr<Message> * ) & response);
+BareMessage * InMemoryServerClientMessage::isendResponse(void * object){
+
+	uint64_t len = server->getMessageCallback()->serializeResponseMessageLen(this, object);
+	char * payload = (char *) malloc(len);
+	uint64_t pos = 0;
+	server->getMessageCallback()->serializeResponseMessage(this, object, payload, pos);
+	assert(len == pos);
+
+	BareMessage * msg = new BareMessage(payload, len);
+	if(! client->available){
+		// notify the server that the connection has been lost
+		server->getMessageCallback()->responseTransferErrorCB(this, msg, CommunicationError::CONNECTION_LOST);
+		return msg;	
 	}
+
+	// the server-side message has been sent
+	server->getMessageCallback()->responseSendCB(this, msg);
+
+	// deliver the response to the client
+	client->getMessageCallback()->messageResponseCB(this->msg, payload, len);
+
+	delete(msg);
+
+	return nullptr;
+}
+
+void InMemoryServerClientMessage::isendErrorResponse(CommunicationError error){
+	if(client->available){
+		client->getMessageCallback()->messageTransferErrorCB(msg, error);
+	}
+	delete(msg);
+}
+
+
 
 class CommInMemory : public CommunicationModule {
 public:
 	//virtual void setWorkProcessor() = 0; 
 	virtual ServiceServer * startServerService(const string & address) throw(CommunicationModuleException){
-		if (servers.find(address) != servers.end()){
-			throw CommunicationModuleException("The address " + address + " is already occupied!");
-		}
-
-		servers[address] = new InMemoryServiceServer();
-		return servers[address];
+		return new InMemoryServiceServer(address);
 	}
 
-	virtual ServiceClient * startClientService(const string & server_address, ConnectionCallback & ccb) throw(CommunicationModuleException){
-		auto sc = new InMemoryServiceClient(server_address);
-		sc->setConnectionCallback(& ccb);
-		sc->ireconnect();
-		return sc;
+	virtual ServiceClient * startClientService(const string & server_address) throw(CommunicationModuleException){
+		return new InMemoryServiceClient(server_address);
 	}
 
 	virtual void init(){
@@ -165,11 +216,9 @@ public:
 	}
 };
 
-}
-
 extern "C" {
 	void * CORE_COMM_INSTANCIATOR_NAME()
 	{
-		return new core::CommInMemory();
+		return new CommInMemory();
 	}
 }

@@ -13,24 +13,30 @@
 using namespace std;
 
 namespace core{
-	class CommunicationModuleException : public std::exception {
+	class CommunicationModule : public Component {
+	protected:		
+		virtual ServiceServer * startServerService(const string & address) throw(CommunicationModuleException) = 0;
+		virtual ServiceClient * startClientService(const string & server_address) throw(CommunicationModuleException) = 0;		
 	public:
-		CommunicationModuleException( const string & err_msg ) : err_msg_( err_msg ) {}
-
-		const char * what() const throw() {
-		   return err_msg_.c_str();
+		
+		//virtual void setWorkProcessor() = 0; 
+		ServiceServer * startServerService(const string & address, ServerCallback * msg_rcvd_callback) throw(CommunicationModuleException){
+			assert(msg_rcvd_callback);
+			ServiceServer * server = startServerService(address);
+			server->setMessageCallback(msg_rcvd_callback);
+			server->listen();
+			return server;
 		}
 
-	private:
-		const string err_msg_;
-	};
+		ServiceClient * startClientService(const string & server_address, ConnectionCallback * ccb, MessageCallback * messageCallback) throw(CommunicationModuleException){
+			ServiceClient * client = startClientService(server_address);
 
+			client->setConnectionCallback(ccb);
+			client->setMessageCallback(messageCallback);
 
-	class CommunicationModule : public Component {
-	public:
-		//virtual void setWorkProcessor() = 0; 
-		virtual ServiceServer * startServerService(const string & address) throw(CommunicationModuleException) = 0;
-		virtual ServiceClient * startClientService(const string & server_address, ConnectionCallback & ccb) throw(CommunicationModuleException) = 0;
+			client->ireconnect();
+			return client;
+		}
 	};
 }
 

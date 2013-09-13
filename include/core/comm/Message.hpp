@@ -3,52 +3,49 @@
 
 #include <memory> 
 
-#include <core/comm/Connection.hpp>
+#include <core/container/container-binary-serializer.hpp>
 
 namespace core{
 
-class Message;
-class CreatedMessage;
 
-class MessageCallback{
-public:
-	virtual void messageSendCB(std::shared_ptr<CreatedMessage> msg) = 0;
-	virtual void messageResponseCB(std::shared_ptr<CreatedMessage> msg, std::shared_ptr<Message> response){};
-	virtual void messageTransferErrorCB(std::shared_ptr<CreatedMessage> msg, ConnectionError error) = 0;
-
-	virtual ~MessageCallback(){};
+enum class CommunicationError : uint8_t{
+	CONNECTION_LOST,
+	SERVER_NOT_ACCESSABLE,
+	MESSAGE_TYPE_NOT_AVAILABLE,
+	MESSAGE_INCOMPATIBLE,
+	UNKNOWN
 };
 
+class CommunicationModuleException : public std::exception {
+private:
+	const string err_msg_;
 
-class Message{
+public:
+	CommunicationModuleException( const string & err_msg ) : err_msg_( err_msg ), error(CommunicationError::UNKNOWN) {}
+	CommunicationModuleException( const string & err_msg, CommunicationError error) : err_msg_( err_msg ), error(error) {}
+	const char * what() const throw() {
+	   return err_msg_.c_str();
+	}
+	const CommunicationError error;
+};
+
+class BareMessage{
 	public:
-		// message type / or response
-		uint32_t type;
-
 		// message size
 		uint64_t size;
 
-		// payload of the message
+		// message payload includes only the raw user data.
 		const char * payload;
 
 		// the ownership of the payload is given to the connection message.
-		Message(uint32_t type, const char * payload, uint64_t size) : type(type), size(size) , payload(payload){}
+		BareMessage(const char * payload, uint64_t size) : size(size) , payload(payload){}
 
-		~Message(){
+		virtual ~BareMessage(){
 			if(payload != nullptr){
 				free(nullptr);
 			}
 		}
 };
-
-class CreatedMessage : public Message{
-public:	
-		// the local message callback to invoke if the message transfer fails or completes.
-		MessageCallback & mcb;
-
-		CreatedMessage(MessageCallback & mcb,  uint32_t type, const char * payload, uint64_t size) : Message(type, payload, size), mcb(mcb) {}		
-};
-
 
 }
 
