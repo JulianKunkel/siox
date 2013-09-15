@@ -103,7 +103,8 @@ public:
 		this->msg = msg;
 		uint64_t pos = 0;
 		j_serialization::deserialize(this->response, buffer, pos, buffer_size);
-		assert(buffer_size == this->response.length() + 4 );
+
+		assert(buffer_size == pos );
 
 		sthHappens();
 	}
@@ -136,16 +137,6 @@ public:
 		msg->isendErrorResponse( CommunicationError::MESSAGE_TYPE_NOT_AVAILABLE );
 		sthHappens();
 	}
-
-	void responseSendCB(ServerClientMessage * msg, BareMessage * response){
-		sthHappens();
-	}
-
-	void responseTransferErrorCB(ServerClientMessage * msg, BareMessage * response, CommunicationError error){
-		delete(msg);
-		delete(response);
-		sthHappens();
-	};
 
 	uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType){
 		assert(false);
@@ -258,6 +249,10 @@ void runTestSuite(string module, string address1, string address2, string addres
 	c2->isend(& data);
 
 	myMessageCB.waitUntilSthHappened();
+	if (myMessageCB.state == MyClientMessageCallback::State::MessageSend){
+		// wait for receiving the answer
+		myMessageCB.waitUntilSthHappened();
+	}
 	
 	assert(myMessageCB.state == MyClientMessageCallback::State::Error);
 	assert(myMessageCB.error == CommunicationError::MESSAGE_TYPE_NOT_AVAILABLE);
@@ -280,6 +275,7 @@ void runTestSuite(string module, string address1, string address2, string addres
 	c2->isend(& data);
 
 	mySCB.waitUntilSthHappened();
+	myMessageCB.waitUntilSthHappened();
 
 	// check if the message has been received
 	assert(mySCB.messagesReceived == 1);
@@ -295,10 +291,6 @@ void runTestSuite(string module, string address1, string address2, string addres
 	// check if the message response has been properly received
 	assert(myMessageCB.state == MyClientMessageCallback::State::MessageResponseReceived);
 	assert(myMessageCB.response == response);
-
-	mySCB.waitUntilSthHappened();
-	// check if the proper reception is marked on the server-side
-	assert(mySCB.state == MyServerCallback::State::MessageResponseSend);
 
 	// close connections:
 	delete(c2);

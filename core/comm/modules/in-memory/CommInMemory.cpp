@@ -117,7 +117,7 @@ public:
 		isend(msg);
 		return msg;
 	}
-
+	
 	void isend( BareMessage * msg ){
 		InMemoryServiceServer * server = servers[address];
 
@@ -168,13 +168,12 @@ void InMemoryServerClientMessage::isendResponse(void * object){
 	BareMessage * msg = new BareMessage(payload, len);
 	if(! client->available){
 		// notify the server that the connection has been lost
-		server->getMessageCallback()->responseTransferErrorCB(this, msg, CommunicationError::CONNECTION_LOST);
 		delete(msg);
 		return;
 	}
 
 	// the server-side message has been sent
-	server->getMessageCallback()->responseSendCB(this, msg);
+	//server->getMessageCallback()->responseSendCB(this, msg);
 
 	// deliver the response to the client
 	client->getMessageCallback()->messageResponseCB(this->msg, payload, len);

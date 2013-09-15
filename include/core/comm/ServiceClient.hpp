@@ -10,7 +10,7 @@
 #include <string>
 
 #include <core/comm/Message.hpp>
-
+ 
 using namespace std;
 
 namespace core{
@@ -33,8 +33,6 @@ public:
 	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size) = 0;
 
 	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error) = 0;
-		//delete(msg);
-
 
 	virtual uint64_t serializeMessageLen(const void * msgObject)  = 0;
 	virtual void serializeMessage(const void * msgObject, char * buffer, uint64_t & pos) = 0;
@@ -55,6 +53,16 @@ public:
 			messageCallback = mcb;
 		}
 
+
+		inline ConnectionCallback * getConnectionCallback(){
+			return connectionCallback;
+		}
+
+		inline MessageCallback * getMessageCallback(){
+			return messageCallback;
+		}
+
+
 		/**
 	  	 * Try to reconnect asynchronously and resend all currently pending messages. 
 	  	 */
@@ -65,12 +73,6 @@ public:
 		 */
 		virtual const string & getAddress() const = 0 ;
 
-		/**
-		 * The object is serialized using the messageCallack.
-		 * @note This function may return immediately.
-		 */
-		virtual BareMessage * isend( void * object ) = 0;
-
 		// This method sends a correctly serialized message.
 		virtual void isend( BareMessage * msg ) = 0;
 
@@ -80,6 +82,29 @@ public:
 		virtual void serializeHeader(char * buffer, uint64_t & pos, uint64_t size) = 0;
 
 		virtual ~ServiceClient(){}
+
+
+		/**
+		 * The object is serialized using the messageCallack.
+		 * @note This function may return immediately.
+		 */
+		 BareMessage * isend( void * object ){
+			uint64_t msg_size = headerSize() + messageCallback->serializeMessageLen(object);
+			char * payload = (char*) malloc(msg_size);
+
+			uint64_t pos = 0;
+
+			serializeHeader(payload, pos, msg_size);
+			assert(headerSize() == pos);
+
+			messageCallback->serializeMessage(object, payload, pos);
+			assert(pos == msg_size);
+
+			BareMessage * msg = new BareMessage(payload, msg_size);
+
+			isend(msg);
+			return msg;
+		}		
 };
 
 }

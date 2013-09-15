@@ -9,11 +9,13 @@ namespace core{
 
 
 enum class CommunicationError : uint8_t{
+	SUCCESS,
 	CONNECTION_LOST,
 	SERVER_NOT_ACCESSABLE,
 	MESSAGE_TYPE_NOT_AVAILABLE,
 	MESSAGE_INCOMPATIBLE,
 	MESSAGE_DAMAGED,
+	MESSAGE_TOO_SHORT,
 	UNKNOWN
 };
 
@@ -47,6 +49,7 @@ class BareMessage{
 			}
 		}
 };
+
 
 }
 

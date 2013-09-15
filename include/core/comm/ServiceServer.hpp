@@ -26,10 +26,10 @@ public:
 	virtual void messageReceivedCB(ServerClientMessage * msg, const char * message_data, uint64_t buffer_size) = 0;
 
 	// After a response has been sent, the client message and response are destroyed.
-	virtual void responseSendCB(ServerClientMessage * msg, BareMessage * response) = 0;
+	//virtual void responseSendCB(ServerClientMessage * msg, BareMessage * response) = 0;
 
 	// It is the responsibility of this function to delete msg & response if needed.
-	virtual void responseTransferErrorCB(ServerClientMessage * msg, BareMessage * response, CommunicationError error) = 0;
+	//virtual void responseTransferErrorCB(ServerClientMessage * msg, BareMessage * response, CommunicationError error) = 0;
 
 	virtual uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType) = 0;
 	virtual void serializeResponseMessage(const ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos) = 0;
@@ -60,7 +60,7 @@ class ServiceServer{
 
 		void setMessageCallback(ServerCallback * msg_rcvd_callback){
 			messageCallback = msg_rcvd_callback;
-		}		
+		}
 };
 
 

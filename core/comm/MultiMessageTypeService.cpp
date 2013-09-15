@@ -103,12 +103,12 @@ public:
 
 	void responseSendCB(ServerClientMessage * msg, BareMessage * response){
 		uint32_t mtype = server->getClientMessageType(msg);
-		server->callbacks[mtype]->responseSendCB(msg, response);
+		//server->callbacks[mtype]->responseSendCB(msg, response);
 	}
 
 	void responseTransferErrorCB(ServerClientMessage * msg, BareMessage * response, CommunicationError error){
 		uint32_t mtype = server->getClientMessageType(msg);
-		server->callbacks[mtype]->responseSendCB(msg, response);
+		//server->callbacks[mtype]->responseSendCB(msg, response);
 	}
 
 	uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType){

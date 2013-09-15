@@ -7,7 +7,7 @@ def configure(conf):
 def build(bld):
 	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="GIOOptions.hpp", target="BoostXMLSerializable.cpp", name="GIOOptions")
 
-	bld.shlib(includes="", use="BOOST GIO GLIB", target = "siox-core-comm-gio", source = 'GIO.cpp BoostXMLSerializable.cpp', depends_on="GIOOptions")
+	bld.shlib(includes="", use="BOOST GIO GLIB", target = "siox-core-comm-gio", source = 'GIO.cpp GIOClient.cpp GIOServer.cpp BoostXMLSerializable.cpp', depends_on="GIOOptions")
 	
 	bld.recurse(['test'], mandatory=True)
 

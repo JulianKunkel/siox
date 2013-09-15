@@ -29,42 +29,42 @@ inline void serialize(const int8_t & obj, char * buffer, uint64_t & pos){
 }
 
 inline void serialize(const int16_t & obj, char * buffer, uint64_t & pos){
-	buffer[pos] = obj;
+	memcpy(& buffer[pos], & obj, 2);
 	pos += 2;
 }
 
 inline void serialize(const uint16_t & obj, char * buffer, uint64_t & pos){
-	buffer[pos] = obj;
+	memcpy(& buffer[pos], & obj, 2);
 	pos += 2;
 }
 
 inline void serialize(const int32_t & obj, char * buffer, uint64_t & pos){
-	buffer[pos] = obj;
+	memcpy(& buffer[pos], & obj, 4);
 	pos += 4;
 }
 
 inline void serialize(const uint32_t & obj, char * buffer, uint64_t & pos){
-	buffer[pos] = obj;
+	memcpy(& buffer[pos], & obj, 4);
 	pos += 4;
 }
 
 inline void serialize(const float & obj, char * buffer, uint64_t & pos){
-	buffer[pos] = obj;
+	memcpy(& buffer[pos], & obj, 4);
 	pos += 4;
 }
 
 inline void serialize(const int64_t & obj, char * buffer, uint64_t & pos){
-	buffer[pos] = obj;
+	memcpy(& buffer[pos], & obj, 8);
 	pos += 8;
 }
 
 inline void serialize(const uint64_t & obj, char * buffer, uint64_t & pos){
-	buffer[pos] = obj;
+	memcpy(& buffer[pos], & obj, 8);
 	pos += 8;
 }
 
 inline void serialize(const double & obj, char * buffer, uint64_t & pos){
-	buffer[pos] = obj;
+	memcpy(& buffer[pos], & obj, 8);
 	pos += 4;
 }
 
@@ -88,50 +88,50 @@ inline void deserialize(int8_t & obj, const char * buffer, uint64_t & pos, uint6
 
 inline void deserialize(int16_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
 	CHECK_LENGTH(2)
-	obj = buffer[pos];
+	memcpy(& obj, & buffer[pos], 2);
 	pos += 2;	
 }
 
 inline void deserialize(uint16_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
 	CHECK_LENGTH(2)
-	obj = buffer[pos];
+	memcpy(& obj, & buffer[pos], 2);
 	pos += 2;	
 }
 
 inline void deserialize(int32_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
 	CHECK_LENGTH(4)
-	obj = buffer[pos];
+	memcpy(& obj, & buffer[pos], 4);
 	pos += 4;	
 }
 
 inline void deserialize(uint32_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
 	CHECK_LENGTH(4)
-	obj = buffer[pos];
+	memcpy(& obj, & buffer[pos], 4);
 	pos += 4;	
 }
 
 inline void deserialize(float & obj, const char * buffer, uint64_t & pos, uint64_t length){
 	CHECK_LENGTH(4)
-	obj = buffer[pos];
+	memcpy(& obj, & buffer[pos], 4);
 	pos += 4;	
 }
 
 inline void deserialize(int64_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
 	CHECK_LENGTH(8)
-	obj = buffer[pos];
+	memcpy(& obj, & buffer[pos], 8);
 	pos += 8;	
 }
 
 inline void deserialize(uint64_t & obj, const char * buffer, uint64_t & pos, uint64_t length){
 	CHECK_LENGTH(8)
-	obj = buffer[pos];
-	pos += 8;	
+	memcpy(& obj, & buffer[pos], 8);
+	pos += 8;
 }
 
 inline void deserialize(double & obj, const char * buffer, uint64_t & pos, uint64_t length){
 	CHECK_LENGTH(8)
-	obj = buffer[pos];
-	pos += 4;	
+	memcpy(& obj, & buffer[pos], 8);
+	pos += 8;
 }
 
 inline void deserialize(long double & obj, const char * buffer, uint64_t & pos, uint64_t length){

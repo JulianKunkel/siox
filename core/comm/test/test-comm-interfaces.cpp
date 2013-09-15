@@ -70,10 +70,6 @@ int main(){
 	assert(myClientMessageCB.state == MyClientMessageCallback::State::MessageResponseReceived);
 	assert(myClientMessageCB.response == response);
 
-	// check if the proper reception is marked on the server-side
-	assert(mySCB.state == MyServerCallback::State::MessageResponseSend);
-	//assert(mySCB.response == response);
-
 	// close connections:
 	delete(c1);
 	delete(comm);
