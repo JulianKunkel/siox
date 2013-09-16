@@ -15,7 +15,6 @@ enum class CommunicationError : uint8_t{
 	MESSAGE_TYPE_NOT_AVAILABLE,
 	MESSAGE_INCOMPATIBLE,
 	MESSAGE_DAMAGED,
-	MESSAGE_TOO_SHORT,
 	UNKNOWN
 };
 
@@ -43,9 +42,20 @@ class BareMessage{
 		// the ownership of the payload is given to the connection message.
 		BareMessage(const char * payload, uint64_t size) : size(size) , payload(payload){}
 
+		BareMessage(BareMessage && msg): size(size) , payload(msg.payload){ 
+			msg.payload = nullptr;
+		}
+
+		BareMessage(const BareMessage & msg) : size(msg.size), payload((char*) malloc(msg.size)){ 
+			memcpy((void*) payload, msg.payload, msg.size);
+		}
+
+		// remove assignment operator
+    	BareMessage & operator=(const BareMessage&) = delete;    	
+
 		virtual ~BareMessage(){
 			if(payload != nullptr){
-				free(nullptr);
+				free((void*) payload);
 			}
 		}
 };

@@ -10,7 +10,7 @@
 #include <string>
 
 #include <core/comm/Message.hpp>
- 
+
 using namespace std;
 
 namespace core{
@@ -91,6 +91,8 @@ public:
 		 BareMessage * isend( void * object ){
 			uint64_t msg_size = headerSize() + messageCallback->serializeMessageLen(object);
 			char * payload = (char*) malloc(msg_size);
+
+			assert(payload);
 
 			uint64_t pos = 0;
 

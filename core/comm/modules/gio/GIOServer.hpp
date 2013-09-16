@@ -37,6 +37,9 @@ protected:
 	// map thread_id to the thread
 	map<uint64_t, pair<thread*, GCancellable*>> pendingClientThreads;
 
+	thread* finishedThread = nullptr;
+	void cleanTerminatedThread();
+
 public:
 	void ipublish( void * object );
 	

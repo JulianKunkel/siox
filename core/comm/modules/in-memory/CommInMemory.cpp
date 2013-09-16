@@ -132,16 +132,14 @@ public:
 			return;	
 		}
 
-		// message completion
+		// message completion on the client
 		messageCallback->messageSendCB(msg);
 
-		// notify server about reception of message
-		//if (server->callbacks.find(msg->type) != server->callbacks.end()){
-		//	ServerCallback * cb = server->callbacks[msg->type];
 		shared_ptr<ServerClientMessage>  smsg = shared_ptr<ServerClientMessage>(new InMemoryServerClientMessage(msg, this, server));
+
+		// notify server about reception of message
 		server->getMessageCallback()->messageReceivedCB(smsg, smsg->payload, msg->size );
 		//	msg->mcb.messageTransferErrorCB(msg, ConnectionError::MESSAGE_TYPE_NOT_AVAILABLE);
-
 	}
 
 	inline MessageCallback * getMessageCallback(){

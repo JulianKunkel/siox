@@ -33,7 +33,6 @@ protected:
 	string address;
 
 	GSocketClient * socket  = nullptr;
-	GSocketConnection * conn = nullptr;
 	
 	atomic_int_fast32_t lastMessageID;	
 

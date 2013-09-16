@@ -72,16 +72,16 @@ public:
 class MyClientMessageCallback: public MessageCallback, public ProtectRaceConditions{
 public:
 	CommunicationError error; 
-	BareMessage * errMsg;
+	shared_ptr<BareMessage> errMsg;
 
-	BareMessage * msg;
+	shared_ptr<BareMessage> msg;
 	string response;
 
 	enum class State: uint8_t{
-		Init,
-		MessageSend,
-		MessageResponseReceived,
-		Error
+		Init = 0,
+		MessageSend = 1,
+		MessageResponseReceived = 2,
+		Error = 3
 	};
 
 	State state = State::Init;
@@ -90,7 +90,7 @@ public:
 		cout << "messageSendCB" << endl;
 
 		state = State::MessageSend;
-		this->msg = msg;
+		this->msg = shared_ptr<BareMessage>(new BareMessage(*msg));
 
 		sthHappens();
 	}
@@ -100,7 +100,7 @@ public:
 
 		state = State::MessageResponseReceived;
 
-		this->msg = msg;
+		this->msg = shared_ptr<BareMessage>(new BareMessage(*msg));
 		uint64_t pos = 0;
 		j_serialization::deserialize(this->response, buffer, pos, buffer_size);
 
@@ -113,7 +113,7 @@ public:
 		cout << "messageTransferErrorCB" << endl;
 
 		this->error = error;
-		this->errMsg = msg;
+		this->errMsg = shared_ptr<BareMessage>(new BareMessage(*msg));
 
 		state = State::Error;
 		sthHappens();
@@ -171,7 +171,7 @@ public:
 
 	int messagesReceived = 0;
 	shared_ptr<ServerClientMessage> lastMessage;
-	BareMessage * response;
+	shared_ptr<BareMessage> response;
 
 	string lastMessageText;
 
@@ -189,18 +189,10 @@ public:
 
 	void responseSendCB(ServerClientMessage * msg, BareMessage * r){
 		state = State::MessageResponseSend;
-		response = r;
+		response = shared_ptr<BareMessage>(new BareMessage(*r));
 
 		sthHappens();
 	}
-
-	void responseTransferErrorCB(ServerClientMessage * msg, BareMessage * response, CommunicationError error)
-	{
-		state = State::Error;
-
-		sthHappens();
-	};
-
 
 	void invalidMessageReceivedCB(CommunicationError error){		
 		cout << "Invalid message, error: " << (uint32_t) error << endl;
@@ -219,12 +211,8 @@ public:
 
 };
 
-void runTestSuite(string module, string address1, string address2, string address3){
-	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", module, CORE_COMM_INTERFACE );
 
-	assert(comm != nullptr);
-	comm->init();
-
+void doubleListenerError(CommunicationModule * comm, string address1, string address2, string address3){
 	EmptyServerCallback myEmptyServerCB;
 
 	ServiceServer * s1 = comm->startServerService(address1, & myEmptyServerCB);
@@ -236,8 +224,9 @@ void runTestSuite(string module, string address1, string address2, string addres
 		// we expect that this server address is already occupied.
 	}
 	delete(s1);
+}
 
-	
+void missingListener(CommunicationModule * comm, string address1, string address2, string address3){
 	cout << endl << "Try to connect to a port which does not exist, so we should retry connecting" << endl;
 	MyConnectionCallback myCCB;
 	MyClientMessageCallback myMessageCB;
@@ -250,15 +239,19 @@ void runTestSuite(string module, string address1, string address2, string addres
 		myCCB.waitUntilSthHappened();
 	}
 	delete(c1);
+}
 
+void rejectingListener(CommunicationModule * comm, string address1, string address2, string address3){
+	EmptyServerCallback myEmptyServerCB;
+	MyConnectionCallback myCCB;
+	MyClientMessageCallback myMessageCB;
 
 	cout << endl <<  "Connect to a server which rejects all messages " << endl;
-	MyConnectionCallback myCCB2;	
 	ServiceServer * s2 = comm->startServerService(address2, & myEmptyServerCB );
 
-	ServiceClient * c2 = comm->startClientService(address2, & myCCB2, & myMessageCB);
+	ServiceClient * c2 = comm->startClientService(address2, & myCCB, & myMessageCB);
 
-	myCCB2.waitUntilSthHappened();
+	myCCB.waitUntilSthHappened();
 
 	// produce an error because the target message type is not registered.
 	string data = "test";
@@ -279,18 +272,22 @@ void runTestSuite(string module, string address1, string address2, string addres
 
 	delete(s2);
 	delete(c2);
-	s2 = nullptr;
+}
 
+void messageExchange(CommunicationModule * comm, string address1, string address2, string address3){
+	MyConnectionCallback myCCB;
+	MyClientMessageCallback myMessageCB;
 
 	cout << endl <<  "Simple message exchange" << endl;
 
 	MyServerCallback mySCB;	
 	ServiceServer * s3 = comm->startServerService(address2, & mySCB );
 
-	c2 = comm->startClientService(address2, & myCCB, & myMessageCB);
+	ServiceClient * c2 = comm->startClientService(address2, & myCCB, & myMessageCB);
 
 	myCCB.waitUntilSthHappened();
-
+	
+	string data = "test";
 	// register a message type on the server and re-send the previous message:
 	c2->isend(& data);
 
@@ -314,7 +311,20 @@ void runTestSuite(string module, string address1, string address2, string addres
 
 	// close connections:
 	delete(c2);
+	delete(s3);	
+}
 
+
+void runTestSuite(string module, string address1, string address2, string address3){
+	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", module, CORE_COMM_INTERFACE );
+
+	assert(comm != nullptr);
+	comm->init();
+
+	doubleListenerError(comm, address1, address2, address3);
+	missingListener(comm, address1, address2, address3);
+	rejectingListener(comm, address1, address2, address3);
+	messageExchange(comm, address1, address2, address3);
 
 	delete(comm);
 }

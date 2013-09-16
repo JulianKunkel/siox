@@ -65,6 +65,7 @@ inline uint32_t clientMsgHeaderLen(){
 inline void serializeMsgHeader(char * buffer, uint64_t & pos, uint64_t size, uint32_t magicKey, uint32_t clientSidedID)
 {
 	assert(pos == 0);
+
 	j_serialization::serialize(clientSidedID, buffer, pos);
 	j_serialization::serialize(magicKey, buffer, pos);
 	j_serialization::serialize(size, buffer, pos);
@@ -86,6 +87,7 @@ inline char * readSocketMessage(GInputStream * istream, uint64_t & msgLength, ui
 
     gsize messageSizeRead = 0;
     gboolean ret = FALSE;
+    errorValue = CommunicationError::SUCCESS;
 
     const uint32_t header_length = clientMsgHeaderLen();
     char * header = (char*) malloc(header_length);
@@ -123,9 +125,9 @@ inline char * readSocketMessage(GInputStream * istream, uint64_t & msgLength, ui
     uint64_t toRead = msgLength - header_length;   
 
     ret =  g_input_stream_read_all(istream, message + header_length, toRead, & messageSizeRead, cancelable, NULL);
-    if(!ret || messageSizeRead != toRead ) { 
-    	free(header);
-    	errorValue = CommunicationError::MESSAGE_TOO_SHORT;
+    if(! ret || messageSizeRead != toRead ) { 
+    	free(message);
+    	errorValue = CommunicationError::MESSAGE_DAMAGED;
 		return nullptr;
     }
 

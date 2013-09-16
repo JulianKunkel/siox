@@ -11,6 +11,7 @@ private:
 protected:
 	virtual void messageSend(BareMessage * response){
 		server->getMessageCallback()->responseSendCB(response);
+		delete(response);
 	}
 public:
 	ServerMessageSendQueue(GIOServiceServer * server): server(server){}
@@ -68,7 +69,6 @@ void GIOServiceServer::addAcceptorThread(){
 
 	uint64_t threadID = lastThreadID++;
 
-
     GCancellable * one_thread_cancelable = g_cancellable_new();
 	thread * threadPointer = new thread(& GIOServiceServer::acceptThreadFunc, this, threadID, one_thread_cancelable);
 	pendingClientThreads[threadID] = {threadPointer, one_thread_cancelable};
@@ -77,7 +77,15 @@ void GIOServiceServer::addAcceptorThread(){
 void GIOServiceServer::removeAcceptorThread(uint64_t threadID){
 	unique_lock<mutex> lk(pendingClientThreadMutex);
 	auto itr = pendingClientThreads.find(threadID);
+
+	cleanTerminatedThread();
+
 	if (itr != pendingClientThreads.end()){
+		auto var = itr->second;
+
+	    g_object_unref(var.second);
+		finishedThread = var.first;
+
 		pendingClientThreads.erase(itr);
 	}
 
@@ -86,12 +94,24 @@ void GIOServiceServer::removeAcceptorThread(uint64_t threadID){
 	}
 }
 
+void GIOServiceServer::cleanTerminatedThread(){
+	if(finishedThread == nullptr){
+		return;
+	}
+	finishedThread->join();
+	delete(finishedThread);
+	finishedThread = nullptr;
+}
+
 void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_thread_error_cancelable){
 	GSocketConnection * connection;
 
 	while( (connection =  g_socket_listener_accept(listener, nullptr, cancelable, nullptr)) == nullptr ){
 
 		if ( g_cancellable_is_cancelled (cancelable)){
+			if(connection){
+				g_object_unref(connection);
+			}
 			removeAcceptorThread(threadID);
 			return;
 		}
@@ -120,7 +140,7 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
         	if (msgLength > 0){        		
         		messageCallback->invalidMessageReceivedCB(error);
         		TCPClientMessage errMsg(this, 0, & messageSendQueueInstance, nullptr, 0);
-        		errMsg.isendErrorResponse(error);        		
+        		errMsg.isendErrorResponse(error);
         	}
 
         	break;
@@ -136,7 +156,6 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
     messageSendQueueInstance.terminate();
 
     g_object_unref(connection);
-    g_object_unref(one_thread_error_cancelable);
 
     removeAcceptorThread(threadID);
 }
@@ -145,7 +164,7 @@ void GIOServiceServer::listen() throw(CommunicationModuleException){
 	assert(listener == nullptr);
 
 	listener = g_socket_listener_new();
-	if(listener == nullptr ){
+	if(listener == nullptr ){		
 		throw CommunicationModuleException("Could not instantiate listener");
 	}
 
@@ -160,15 +179,20 @@ void GIOServiceServer::listen() throw(CommunicationModuleException){
 	}
 
 	GSocketAddress * sa = g_inet_socket_address_new(localhost, addresses.second);
-	GSocketAddress * real_addr;
-	if(! g_socket_listener_add_address(listener, sa, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, & real_addr, & error)){
+	g_object_unref(localhost);
+
+	// G_SOCKET_TYPE_DATAGRAM G_SOCKET_PROTOCOL_UDP
+	if(! g_socket_listener_add_address(listener, sa, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, & error)){
 		g_object_unref(sa);
 
 		CommunicationModuleException e = CommunicationModuleException(error->message);
 		g_error_free(error);
 		throw e;
 	}
-	g_object_unref(real_addr);
+	if(error != NULL){
+		g_error_free(error);
+	}
+
 	g_object_unref(sa);
 
 	addAcceptorThread();
@@ -195,7 +219,11 @@ GIOServiceServer::~GIOServiceServer(){
 		allThreadsFinished.wait(lock);
 	}
 
-	g_object_unref(listener);
+	cleanTerminatedThread();
+
+	if (listener){
+		g_object_unref(listener);
+	}
 	g_object_unref(cancelable);
 
 	cout << "Done server" << endl;
