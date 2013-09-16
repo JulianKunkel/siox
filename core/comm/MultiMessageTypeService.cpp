@@ -64,7 +64,7 @@ public:
 	// this function de-serializes the buffer as well
 	void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size){
 		uint32_t mtype = client->getType(msg);
-		client->callbacks[mtype]->messageResponseCB(msg, buffer, buffer_size);
+		client->callbacks[mtype]->messageResponseCB(msg, buffer + headerLen(), buffer_size - headerLen());
 	}
 
 	void messageTransferErrorCB(BareMessage * msg, CommunicationError error){
@@ -88,8 +88,8 @@ public:
 
 	MultiMessageServerCallback(MultiMessageTypeServiceServer * server): server(server){}
 
-	void messageReceivedCB(ServerClientMessage * msg, const char * message_data, uint64_t buffer_size){
-		uint32_t mtype = server->getClientMessageType(msg);
+	void messageReceivedCB(shared_ptr<ServerClientMessage> msg, const char * message_data, uint64_t buffer_size){
+		uint32_t mtype = server->getClientMessageType(&*msg);
 
 		auto itr = server->callbacks.find(mtype);
 		if(itr == server->callbacks.end()){
@@ -101,23 +101,31 @@ public:
 		itr->second->messageReceivedCB(msg, message_data + headerLen(), buffer_size - headerLen());
 	}
 
-	void responseSendCB(ServerClientMessage * msg, BareMessage * response){
-		uint32_t mtype = server->getClientMessageType(msg);
-		//server->callbacks[mtype]->responseSendCB(msg, response);
+	void responseSendCB(BareMessage * response){
+		uint32_t mtype = server->getClientMessageType(response);
+		server->callbacks[mtype]->responseSendCB(response);
 	}
 
-	void responseTransferErrorCB(ServerClientMessage * msg, BareMessage * response, CommunicationError error){
-		uint32_t mtype = server->getClientMessageType(msg);
+	void invalidMessageReceivedCB(CommunicationError error){
+ 	}
+
+
+	//void responseTransferErrorCB(ServerClientMessage * msg, BareMessage * response, CommunicationError error){
+	//	uint32_t mtype = server->getClientMessageType(msg);
 		//server->callbacks[mtype]->responseSendCB(msg, response);
-	}
+	//}
 
 	uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType){
 		uint32_t mtype = server->getClientMessageType(msg);
-		return server->callbacks[mtype]->serializeResponseMessageLen(msg, responseType);
+		assert( server->callbacks.find(mtype) != server->callbacks.end() );
+		return server->callbacks[mtype]->serializeResponseMessageLen(msg, responseType)  + headerLen();
 	}
 
 	void serializeResponseMessage(const ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos){
+
 		uint32_t mtype = server->getClientMessageType(msg);
+		j_serialization::serialize(mtype, buffer, pos);
+
 		server->callbacks[mtype]->serializeResponseMessage(msg, responseType, buffer, pos);
 	}
 };

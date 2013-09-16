@@ -123,7 +123,7 @@ public:
 
 		if (server == nullptr){
 			// we have an error here!
-			messageCallback->messageTransferErrorCB(msg, CommunicationError::SERVER_NOT_ACCESSABLE);
+			messageCallback->messageTransferErrorCB(msg, CommunicationError::SERVER_NOT_ACCESSABLE);			
 			return;
 		}
 
@@ -138,7 +138,7 @@ public:
 		// notify server about reception of message
 		//if (server->callbacks.find(msg->type) != server->callbacks.end()){
 		//	ServerCallback * cb = server->callbacks[msg->type];
-		ServerClientMessage * smsg = new InMemoryServerClientMessage(msg, this, server);
+		shared_ptr<ServerClientMessage>  smsg = shared_ptr<ServerClientMessage>(new InMemoryServerClientMessage(msg, this, server));
 		server->getMessageCallback()->messageReceivedCB(smsg, smsg->payload, msg->size );
 		//	msg->mcb.messageTransferErrorCB(msg, ConnectionError::MESSAGE_TYPE_NOT_AVAILABLE);
 
@@ -173,7 +173,7 @@ void InMemoryServerClientMessage::isendResponse(void * object){
 	}
 
 	// the server-side message has been sent
-	//server->getMessageCallback()->responseSendCB(this, msg);
+	server->getMessageCallback()->responseSendCB(msg);
 
 	// deliver the response to the client
 	client->getMessageCallback()->messageResponseCB(this->msg, payload, len);

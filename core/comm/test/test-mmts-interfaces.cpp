@@ -43,6 +43,8 @@ int main(){
 	delete(s2);
 	s2 = nullptr;
 
+
+	cout << "Message exchange" << endl;
 	MyServerCallback mySCB;	
 	MultiMessageTypeServiceServer * s3 = comm->startServerService("local:2");
 

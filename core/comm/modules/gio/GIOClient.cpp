@@ -114,13 +114,15 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 
 	// the receiving connection has been closed, so we should join the writer thread.
 	sendQueue->disconnect();
+
 	g_object_unref(conn);
-	g_object_unref(one_thread_error_cancelable);
 
 	if (! g_cancellable_is_cancelled (shutdown_cancelable)){
 		// we expect the server terminated the connection for some reason.
 		connectionCallback->connectionErrorCB(* this, comm_error);
 	}
+
+	cout << "connectionThreadFunc End" << endl;
 }
 
 
@@ -184,7 +186,7 @@ void GIOClient::serializeHeader(char * buffer, uint64_t & pos, uint64_t size){
 }
 
 GIOClient::~GIOClient(){
-	//cout << "Shutting down client \"" << getAddress() << "\"" << endl;
+	cout << "Shutting down client \"" << getAddress() << "\"" << endl;
 
 	connection_ready_mutex.lock();
 
@@ -195,10 +197,11 @@ GIOClient::~GIOClient(){
 		g_cancellable_cancel(one_thread_error_cancelable);
 
 		connection_ready_mutex.unlock();		
-
 		lastConnectionThread->join();
+
+		g_object_unref(one_thread_error_cancelable);
 		
-		delete(lastConnectionThread);
+		delete(lastConnectionThread);		
 	}
 
 	g_object_unref(socket);
@@ -207,4 +210,6 @@ GIOClient::~GIOClient(){
 	sendQueue->waitUntilAllMsgsAreSend();
 
 	delete(sendQueue);
+
+	cout << "Done client" << endl;
 }

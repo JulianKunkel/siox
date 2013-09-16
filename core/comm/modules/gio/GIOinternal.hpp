@@ -9,6 +9,7 @@
 #include <gio/gio.h>
 #include <sstream>
 
+
 // this two magic keys indicate the message type
 #define MAGIC_KEY 14099
 #define MAGIC_ERROR_KEY 16962

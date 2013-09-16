@@ -5,6 +5,18 @@
 
 class GIOServiceServer;
 
+class ServerMessageSendQueue : public MessageSendQueue{
+private:
+	GIOServiceServer * server;
+protected:
+	virtual void messageSend(BareMessage * response){
+		server->getMessageCallback()->responseSendCB(response);
+	}
+public:
+	ServerMessageSendQueue(GIOServiceServer * server): server(server){}
+};
+
+
 class TCPClientMessage : public ServerClientMessage{
 public:
 	MessageSendQueue * rspThread;
@@ -90,7 +102,7 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
     GInputStream * istream = g_io_stream_get_input_stream(G_IO_STREAM(connection));
 
     // this spawns a response thread
-    MessageSendQueue messageSendQueueInstance;
+    ServerMessageSendQueue messageSendQueueInstance(this);
 
     messageSendQueueInstance.connect(g_io_stream_get_output_stream(G_IO_STREAM(connection)), one_thread_error_cancelable);
 
@@ -105,18 +117,18 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
 		char * payload = readSocketMessage(istream, msgLength, clientSidedID, error, one_thread_error_cancelable);
 
         if ( payload == nullptr ){
-        	if (msgLength > 0){
-        		cout << "Invalid message, error: " << (uint32_t) error << endl;
+        	if (msgLength > 0){        		
+        		messageCallback->invalidMessageReceivedCB(error);
         		TCPClientMessage errMsg(this, 0, & messageSendQueueInstance, nullptr, 0);
         		errMsg.isendErrorResponse(error);        		
-        	}       	
+        	}
 
         	break;
         }
 
         //cout << "Received message" << endl;
 
-        TCPClientMessage * msg = new TCPClientMessage(this, clientSidedID, & messageSendQueueInstance, payload, msgLength);
+        auto msg = shared_ptr<TCPClientMessage>(new TCPClientMessage(this, clientSidedID, & messageSendQueueInstance, payload, msgLength));
 
         messageCallback->messageReceivedCB(msg, payload + clientMsgHeaderLen(), msgLength - clientMsgHeaderLen());
     }
@@ -185,4 +197,6 @@ GIOServiceServer::~GIOServiceServer(){
 
 	g_object_unref(listener);
 	g_object_unref(cancelable);
+
+	cout << "Done server" << endl;
 }

@@ -132,8 +132,10 @@ public:
 
 class EmptyServerCallback: public ServerCallback, public ProtectRaceConditions{
 public:
+	bool invalidMessage = false;
+
 	// The ownership of msg is given to this function.
-	void messageReceivedCB(ServerClientMessage * msg, const char * message_data, uint64_t buffer_size){
+	void messageReceivedCB(shared_ptr<ServerClientMessage> msg, const char * message_data, uint64_t buffer_size){
 		msg->isendErrorResponse( CommunicationError::MESSAGE_TYPE_NOT_AVAILABLE );
 		sthHappens();
 	}
@@ -146,10 +148,18 @@ public:
 		assert(false);
 	}
 
+	void invalidMessageReceivedCB(CommunicationError error){
+		cout << "Invalid message, error: " << (uint32_t) error << endl;
+
+		invalidMessage = true;
+		sthHappens();
+	}
 };
 
 class MyServerCallback: public ServerCallback, public ProtectRaceConditions{
 public:
+	bool invalidMessage = false;
+
 	enum class State: uint8_t{
 		Init,
 		MessageReceived,
@@ -160,13 +170,13 @@ public:
 	State state = State::Init;
 
 	int messagesReceived = 0;
-	ServerClientMessage * lastMessage;
+	shared_ptr<ServerClientMessage> lastMessage;
 	BareMessage * response;
 
 	string lastMessageText;
 
 
-	 void messageReceivedCB(ServerClientMessage * msg, const char * message_data, uint64_t buffer_size){
+	 void messageReceivedCB(shared_ptr<ServerClientMessage> msg, const char * message_data, uint64_t buffer_size){
 	 	this->messagesReceived++;
 	 	this->lastMessage = msg;
 		
@@ -190,6 +200,13 @@ public:
 
 		sthHappens();
 	};
+
+
+	void invalidMessageReceivedCB(CommunicationError error){		
+		cout << "Invalid message, error: " << (uint32_t) error << endl;
+		invalidMessage = true;
+		sthHappens();
+	}
 
 
 	uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType){
@@ -256,6 +273,9 @@ void runTestSuite(string module, string address1, string address2, string addres
 	
 	assert(myMessageCB.state == MyClientMessageCallback::State::Error);
 	assert(myMessageCB.error == CommunicationError::MESSAGE_TYPE_NOT_AVAILABLE);
+
+	// block forever:
+	//myMessageCB.waitUntilSthHappened();
 
 	delete(s2);
 	delete(c2);
