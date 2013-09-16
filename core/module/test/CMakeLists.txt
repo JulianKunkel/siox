@@ -1,12 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-find_package(GLIB2 REQUIRED)
-
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
-	${GLIB2_INCLUDE_DIRS}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_executable(
@@ -16,8 +11,7 @@ add_executable(
 
 target_link_libraries(
 	test-module-loader
-	test-module
-	${GLIB2_LIBRARIES}
+	siox-core-ModuleLoader
 )
 
 add_library(test-module
@@ -26,7 +20,7 @@ add_library(test-module
 
 target_link_libraries(
 	test-module
-	module-loader
-	${GLIB2_LIBRARIES}
+	siox-core-ModuleLoader
 )
 
+add_test(Module-Loader test-module-loader)

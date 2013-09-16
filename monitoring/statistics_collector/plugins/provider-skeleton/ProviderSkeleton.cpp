@@ -1,5 +1,4 @@
 #include <monitoring/statistics_collector/StatisticsProviderPluginImplementation.hpp>
-#include <core/component/ComponentReferenceSerializable.hpp>
 
 #include "ProviderSkeletonOptions.hpp"
 
@@ -7,9 +6,6 @@
 using namespace std;
 using namespace monitoring;
 using namespace core;
-
-// Create an implementation of the options.
-CREATE_SERIALIZEABLE_CLS( ProviderSkeletonOptions )
 
 class ProviderSkeleton: public StatisticsProviderPlugin {
 

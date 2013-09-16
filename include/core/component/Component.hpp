@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-#include <core/container/container.hpp>
+#include <core/component/component-options.hpp>
 #include <core/module/ModuleInterface.hpp>
 
 namespace core {

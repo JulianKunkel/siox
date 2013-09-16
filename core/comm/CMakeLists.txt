@@ -1,16 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-include(FindProtobuf)
-find_package(Protobuf REQUIRED)
-find_package(Boost 1.53.0 REQUIRED)
-
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${SIOX_INCLUDE}/core/comm/messages/siox.proto)
-
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
-	${CMAKE_CURRENT_BINARY_DIR}
+	${SIOX_INCLUDE_DIRS}
 	${PROTOBUF_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIR}
 )
@@ -29,15 +20,14 @@ add_library(
 	tcp/TCPConnection.cpp
 	tcp/TCPServer.cpp
 	ServiceClient.cpp
-	${PROTO_SRCS}
-	${PROTO_HDRS}
 )
 
 target_link_libraries(
 	core-communication
 	core-logger
-	${PROTOBUF_LIBRARIES}
+	core-comm-buffers
 	${Boost_LIBRARIES}
 )
 
 add_subdirectory(messages)
+#add_subdirectory(test)

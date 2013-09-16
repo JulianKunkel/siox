@@ -1,20 +1,18 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
-	${SIOX_SOURCES}/monitoring
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_library(
-	StatisticsMultiplexerSync
+	siox-monitoring-StatisticsMultiplexerSync
 	StatisticsMultiplexerSync.cpp
 )
 
 target_link_libraries(
-	StatisticsMultiplexerSync
-	core-container-serializer
+	siox-monitoring-StatisticsMultiplexerSync
+	siox-core-ContainerSerializer 
+	siox-core-AutoConfigurator
 )
 
 add_subdirectory(test)

@@ -1,6 +1,7 @@
 #ifndef UTIL_HPP
 #define UTIL_HPP
 
+#include <iostream>
 #include <arpa/inet.h>
 #include <sys/time.h>
 
@@ -33,6 +34,12 @@ namespace util {
 		struct timeval tv;
 		gettimeofday( &tv, NULL );
 		return tv.tv_sec;
+	}
+
+	inline void fail(const std::string &msg)
+	{
+		std::cerr << msg << std::endl;
+		exit(1);
 	}
 
 };

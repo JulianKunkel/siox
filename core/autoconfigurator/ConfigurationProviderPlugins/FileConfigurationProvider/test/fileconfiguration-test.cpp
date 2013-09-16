@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <iostream>
+#include <unistd.h>
 
 #include <core/autoconfigurator/AutoConfigurator.hpp>
 

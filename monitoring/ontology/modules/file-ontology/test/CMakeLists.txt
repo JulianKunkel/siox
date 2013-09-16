@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_executable(
@@ -13,7 +11,8 @@ add_executable(
 
 target_link_libraries(
 	file-ontology-test
-	FileOntology 
-	module-loader
+	siox-core-ModuleLoader 
+	siox-monitoring-FileOntology
 )
 
+add_test(File-Ontology file-ontology-test)

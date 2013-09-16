@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_executable(
@@ -13,7 +11,9 @@ add_executable(
 
 target_link_libraries(
 	ProviderSkeletonTest
-	StatisticsProviderSkeleton
-	AutoConfigurator
-	module-loader
+	siox-monitoring-statisticsPlugin-providerskel
+	siox-core-AutoConfigurator
 )
+
+add_test(Provider-Skeleton ProviderSkeletonTest)
+

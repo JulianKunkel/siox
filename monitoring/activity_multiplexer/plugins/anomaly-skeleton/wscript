@@ -2,9 +2,11 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(includes="",  use = "siox-core-AutoConfigurator", target = 'siox-monitoring-activityPlugin-AnomalySkeleton', source = 'AnomalySkeleton.cpp' )
+	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="AnomalySkeletonOptions.hpp", target="BoostXMLSerializable.cpp", name="AnomalySkeletonOptions.hpp")
 
-    bld.recurse(['test'], mandatory=True)
+	bld.shlib(includes="",  use = "siox-core-AutoConfigurator", target = 'siox-monitoring-activityPlugin-AnomalySkeleton', source = 'AnomalySkeleton.cpp BoostXMLSerializable.cpp', depends_on="AnomalySkeletonOptions.hpp" )
+
+	bld.recurse(['test'], mandatory=True)
 
 
 # -*- indent-tabs-mode: t -*-

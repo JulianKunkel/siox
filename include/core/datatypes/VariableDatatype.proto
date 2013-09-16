@@ -1,0 +1,22 @@
+message VariableDatatype {
+	enum Type {
+		INT64   = 0;
+		UINT64  = 1;
+		INT32   = 2;
+		UINT32  = 3;
+		FLOAT   = 4;
+		DOUBLE  = 5;
+		INVALID = 6;
+		STRING  = 7;
+	}
+	
+	required   Type type = 1;
+	optional   int32 i32 = 2;
+	optional   int64 i64 = 3;
+	optional uint32 ui32 = 4;
+	optional uint64 ui64 = 5;
+	optional     float f = 6;
+	optional    double d = 7;
+	optional  string str = 8;
+}
+

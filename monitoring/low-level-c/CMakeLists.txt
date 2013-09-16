@@ -1,22 +1,21 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_library(
-	siox-ll
+	siox-monitoring-siox-ll
 	siox-ll.cpp
 )
 
 target_link_libraries(
-	siox-ll
-	AutoConfigurator
-	module-loader
+	siox-monitoring-siox-ll
+	siox-core-ModuleLoader 
+	siox-core-AutoConfigurator 
+	siox-monitoring-ActivityBuilder
 )
 
 add_subdirectory(examples)
-add_subdirectory(test)
+#add_subdirectory(test)
 

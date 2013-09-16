@@ -1,27 +1,25 @@
 #include <string>
 
-#include <core/component/component-macros.hpp>
-
+#include <core/component/Component.hpp>
+#include <core/component/ComponentReference.hpp>
 
 using namespace std;
 using namespace core;
 
+//@serializable
 class MyChildModuleOptions : public ComponentOptions {
 	public:
 		string name = "ChildOpt1";
 		int value = 3;
-
-		SERIALIZE_CONTAINER( MEMBER( name ) MEMBER( value ) )
 };
 
 
+//@serializable
 class MyParentModuleOptions : public ComponentOptions {
 	public:
 		string pname = "Test";
 		int pvalue = -1;
 		ComponentReference childInterface;
-
-		SERIALIZE_CONTAINER( MEMBER( pname ) MEMBER( pvalue ) MEMBER( childInterface ) )
 };
 
 class MyParentModule : public Component {

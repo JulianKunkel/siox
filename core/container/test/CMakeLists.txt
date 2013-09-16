@@ -1,12 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-find_package(Boost 1.53.0 COMPONENTS serialization)
- 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
-	${Boost_INCLUDE_DIR}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_executable(
@@ -16,6 +11,7 @@ add_executable(
 
 target_link_libraries(
 	test-serializer 
-	core-container-serializer
-	${Boost_LIBRARIES}
+	siox-core-ContainerSerializer
 )
+
+add_test(Serializer test-serializer)

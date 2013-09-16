@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_executable(
@@ -13,5 +11,9 @@ add_executable(
 
 target_link_libraries(
 	filebasedsysteminformation-test
-	FileBasedSystemInformation
+	siox-core-ModuleLoader 
+	siox-monitoring-FileBasedSystemInformation
 )
+
+add_test(File-Based-System-Information filebasedsysteminformation-test)
+

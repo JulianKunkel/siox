@@ -1,23 +1,17 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
-find_package(Boost 1.53.0 COMPONENTS serialization REQUIRED)
-
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_library(
-	ReasonerStandardImplementation
+	siox-knowledge-ReasonerStandardImplementation
 	ReasonerStandardImplementation.cpp
-	${Boost_INCLUDE_DIR}
 )
 
 target_link_libraries(
-	ReasonerStandardImplementation
-	module-loader
-	${Boost_LIBRARIES}
+	siox-knowledge-ReasonerStandardImplementation
+	siox-core-AutoConfigurator
 )
 
 add_subdirectory(test)

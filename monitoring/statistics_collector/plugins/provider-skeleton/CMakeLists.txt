@@ -1,14 +1,17 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_library(
-	StatisticsProviderSkeleton
+	siox-monitoring-statisticsPlugin-providerskel
 	ProviderSkeleton.cpp
+)
+
+target_link_libraries(
+	siox-monitoring-statisticsPlugin-providerskel
+	siox-core-AutoConfigurator
 )
 
 add_subdirectory(test)

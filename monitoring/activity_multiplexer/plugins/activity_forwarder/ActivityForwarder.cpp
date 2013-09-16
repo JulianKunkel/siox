@@ -6,8 +6,6 @@
 
 using namespace monitoring;
 
-CREATE_SERIALIZEABLE_CLS( ActivityForwarderOptions )
-
 /**
  * Forward an activity from one ActivityMultiplexer to another.
  *

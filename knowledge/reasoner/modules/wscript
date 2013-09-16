@@ -2,9 +2,11 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.shlib(includes="", use="siox-core-AutoConfigurator siox-core-AutoRegistrar", target='siox-knowledge-ReasonerStandardImplementation', source='ReasonerStandardImplementation.cpp' )
+	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="ReasonerStandardImplementationOptions.hpp", target="BoostXMLSerializable.cpp", name="ReasonerStandardImplementationOptions")
 
-    bld.recurse(['test'], mandatory=True)
+	bld.shlib(includes="", use="siox-core-AutoConfigurator ", target='siox-knowledge-ReasonerStandardImplementation', source='ReasonerStandardImplementation.cpp BoostXMLSerializable.cpp', depends_on="ReasonerStandardImplementationOptions" )
+
+	bld.recurse(['test'], mandatory=True)
 
 
 # -*- indent-tabs-mode: t -*-

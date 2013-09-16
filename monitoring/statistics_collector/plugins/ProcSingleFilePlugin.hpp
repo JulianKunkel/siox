@@ -4,7 +4,6 @@
 #include <string>
 
 #include <monitoring/statistics_collector/StatisticsProviderPluginImplementation.hpp>
-#include <core/component/ComponentReferenceSerializable.hpp>
 
 using namespace std;
 using namespace monitoring;

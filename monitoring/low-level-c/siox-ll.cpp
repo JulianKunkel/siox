@@ -20,6 +20,9 @@
 #include <core/module/ModuleLoader.hpp>
 #include <core/datatypes/VariableDatatype.hpp>
 
+#include <util/autoLoadModules.hpp>
+
+
 #include "siox-ll-internal.hpp"
 
 extern "C" {
@@ -189,85 +192,27 @@ extern "C" {
 	__attribute__( ( constructor ) ) void siox_ll_ctor()
 	{
 		FUNCTION_BEGIN
-		// Retrieve hostname; NodeID and PID will follow once process_data is set up
-		// TODO: Adapt this to C++?
-		char local_hostname[1024];
-		local_hostname[1023] = '\0';
-		gethostname( local_hostname, 1023 );
-		string hostname( local_hostname );
+		// Retrieve hostname; NodeID and PID will follow once process_data is set up		
+		string hostname = util::getHostname();
 		// If necessary, do actual initialisation
 		if( finalized ) {
 			try {
-				printf( "SIOX INITIALIZE\n" );
-
 				// Load required modules and pull the interfaces into global datastructures
 				// Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
 				process_data.registrar = new ComponentRegistrar();
 
-				// Check relevant environment modules:
-				{
-					const char * provider = getenv( "SIOX_CONFIGURATION_PROVIDER_MODULE" );
-					const char * path = getenv( "SIOX_CONFIGURATION_PROVIDER_PATH" );
-					const char * configuration = getenv( "SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT" );
+				vector<Component *> loadedComponents = util::LoadConfiguration(& process_data.configurator, process_data.registrar);
 
-					provider = ( provider != nullptr ) ? provider : "siox-core-autoconfigurator-FileConfigurationProvider" ;
-					path = ( path != nullptr ) ? path : "";
-					configuration = ( configuration != nullptr ) ? configuration :  "siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf" ;
+				// check loaded components and assign them to the right struct elements.
+				process_data.ontology = process_data.configurator->searchFor<Ontology>( loadedComponents );
+				process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>( loadedComponents );
+				process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>( loadedComponents );
+				process_data.amux = process_data.configurator->searchFor<ActivityMultiplexer>( loadedComponents );
 
-					process_data.configurator = new AutoConfigurator( process_data.registrar, provider, path, configuration );
-
-					const char * configurationMode = getenv( "SIOX_CONFIGURATION_PROVIDER_MODE" );
-					const char * configurationOverride = getenv( "SIOX_CONFIGURATION_SECTION_TO_USE" );
-
-					string configName;
-					if( configurationOverride != nullptr ) {
-						configName = configurationOverride;
-					} else {
-						// hostname configurationMode (is optional)
-
-						{
-							stringstream configName_s;
-							configName_s << hostname;
-							if( configurationMode != nullptr ) {
-								configName_s << " " << configurationMode;
-							}
-							configName = configName_s.str();
-						}
-					}
-
-					cout << provider << " path " << path << " " << configuration << " ConfigName: \"" << configName << "\"" << endl;
-
-					vector<Component *> loadedComponents;
-					try {
-						loadedComponents = process_data.configurator->LoadConfiguration( "Process", configName );
-					} catch( InvalidConfiguration & e ) {
-						// fallback to global configuration
-						loadedComponents = process_data.configurator->LoadConfiguration( "Process", "" );
-					}
-
-
-					// if(loadedComponents == nullptr){ // MZ: Error, "==" not defined
-					if( loadedComponents.empty() ) {
-						cerr << "FATAL Invalid configuration set: " << endl;
-						cerr << "SIOX_CONFIGURATION_PROVIDER_MODULE=" << provider << endl;
-						cerr << "SIOX_CONFIGURATION_PROVIDER_PATH=" << path << endl;
-						cerr << "SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT=" << configuration << endl;
-						cerr << "SIOX_CONFIGURATION_PROVIDER_MODE=" << configurationMode << endl;
-						// TODO use FATAL function somehow?
-						exit( 1 );
-					}
-
-					// check loaded components and assign them to the right struct elements.
-					process_data.ontology = process_data.configurator->searchFor<Ontology>( loadedComponents );
-					process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>( loadedComponents );
-					process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>( loadedComponents );
-					process_data.amux = process_data.configurator->searchFor<ActivityMultiplexer>( loadedComponents );
-
-					assert( process_data.ontology );
-					assert( process_data.system_information_manager );
-					assert( process_data.association_mapper );
-					assert( process_data.amux );
-				}
+				assert( process_data.ontology );
+				assert( process_data.system_information_manager );
+				assert( process_data.association_mapper );
+				assert( process_data.amux );
 				// Retrieve NodeID and PID now that we have a valid SystemInformationManager
 				process_data.nid = lookup_node_id( hostname );
 				process_data.pid = create_process_id( process_data.nid );
@@ -280,7 +225,6 @@ extern "C" {
 		}
 
 		finalized = false;
-		printf( "SIOX INITIALIZE END\n" );
 		FUNCTION_END
 	}
 

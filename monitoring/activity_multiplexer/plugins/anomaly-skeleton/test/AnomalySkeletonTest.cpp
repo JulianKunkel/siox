@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include <core/module/ModuleLoader.hpp>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>

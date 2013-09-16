@@ -77,22 +77,18 @@
 using namespace std;
 
 namespace monitoring {
-
-// Forward declarations
-	class Activity;
-	class ActivityBuilder;
-
 // The instance identifier such as "Port 4711" is relevant for matching of remote calls
 // See @TODO
-	typedef struct {
+
+	//@serializable
+	struct RemoteCall{
 		RemoteCallIdentifier target;
 		vector<Attribute> attributes;
-	} RemoteCall;
+	};
 
-
+	//@serializable
 	class Activity {
-			friend class ActivityBuilder;
-		protected:
+		public:
 			// The ontology provides a single ID for each ActivityType of a component, e.g. POSIX "open()"
 			UniqueComponentActivityID ucaid_;
 
@@ -111,7 +107,6 @@ namespace monitoring {
 			// interface specific error value.
 			ActivityError errorValue_;
 
-		public:
 			Activity( UniqueComponentActivityID ucaid, Timestamp start_t, Timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, ActivityError errorValue )
 				:
 				ucaid_( ucaid ), MeasuredPointinTime_start_( start_t ), MeasuredPointinTime_stop_( end_t ),

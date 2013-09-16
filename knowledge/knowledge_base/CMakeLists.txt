@@ -1,15 +1,13 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 # add_library(
-# 	knowledge-systeminfo SHARED
+# 	siox-knowledge-SystemInfoPersistency
 # 	systeminfo_containers.cpp
 # 	systeminfo_persistency_interface.cpp
 # )
 # 
-# add_subdirectory(test)
+#add_subdirectory(test)

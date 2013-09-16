@@ -1,11 +1,60 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
+
+cmake_minimum_required(VERSION 2.8)
 
 set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/include)
+set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${PROJECT_BINARY_DIR})
+
 set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SIOX_SOURCES}/tools/cmake/cmake-glib2)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SIOX_SOURCES}/tools/cmake)
+
 set(BUILD_SHARED_LIBS ON)
+
+# you can adjust the installation path here
+set(CMAKE_INSTALL_PREFIX /usr/local)
+
+# this is for self-compiled libraries that are not in the system's ld-path
+set(CMAKE_LIBRARY_PATH
+    ${CMAKE_LIBRARY_PATH}
+#  /opt/boost-1.53/lib
+)
+
+# this is for the header files of self-compiled libraries
+set(CMAKE_INCLUDE_PATH
+    ${CMAKE_INCLUDE_PATH}
+#    /opt/boost-1.53/include
+)
+
+include(CTest)
+include(FeatureSummary)
+
+include(SIOXMacros)
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
+find_package(Protobuf REQUIRED)
+set_package_properties(Protobuf PROPERTIES URL "http://code.google.com/p/protobuf" TYPE REQUIRED PURPOSE "Serialization using Google Protocol Buffers.")
+
+find_package(Boost 1.53.0 COMPONENTS regex serialization system thread REQUIRED)
+set_package_properties(Boost PROPERTIES URL "http://www.boost.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
+
+find_package(GLIB2 REQUIRED)
+set_package_properties(GLIB2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
+
+find_package(PostgreSQL)
+set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYPE OPTIONAL PURPOSE "SIOX PostgreSQL backend support.")
+
+find_package(NetCDF)
+set_package_properties(NetCDF PROPERTIES URL "http://www.unidata.ucar.edu/software/netcdf" TYPE OPTIONAL PURPOSE "SIOX NetCDF examples.")
+
+find_package(HDF5)
+set_package_properties(HDF5 PROPERTIES URL "http://www.hdfgroup.org/HDF5" TYPE OPTIONAL PURPOSE "SIOX HDF5 examples.")
+
+find_package(MPI)
+set_package_properties(MPI PROPERTIES URL "http://www.open-mpi.org" TYPE OPTIONAL PURPOSE "SIOX Open MPI examples.")
+
+siox_generate_buffers()
 
 add_subdirectory(core)
 add_subdirectory(knowledge)

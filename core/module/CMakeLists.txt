@@ -1,7 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
-
-find_package(GLIB2 REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lgmodule-2.0")
 
@@ -12,8 +9,8 @@ include_directories(
 )
 
 add_library(
-	module-loader
-	module-loader.cpp
+	siox-core-ModuleLoader
+	ModuleLoader.cpp
 )
 
 add_subdirectory(test)

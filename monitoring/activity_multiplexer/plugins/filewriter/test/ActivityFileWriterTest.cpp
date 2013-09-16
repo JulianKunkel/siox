@@ -36,8 +36,11 @@ int main( int argc, char const * argv[] )
 	Activity * activity = new Activity( aid, 3, 5, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 );
 
 	m1->Log( activity );
+	m1->Log( activity );
+	m1->Log( activity );
+	m1->Log( activity );
 
-	sleep(1);
+	//sleep(1);
 
 	delete( ap );
 

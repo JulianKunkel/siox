@@ -10,11 +10,22 @@
 from waflib import Logs
 from waflib import Options
 #from waflib.Tools import c_preproc
+from waflib import Task
+from waflib import TaskGen
+from waflib.TaskGen import feature, before_method
 
 import fnmatch
 import mmap
 import os
 import re
+
+@feature('*')
+@before_method('process_rule')
+def post_the_other(self):
+    deps = getattr(self, 'depends_on', [])
+    for name in self.to_list(deps):
+        other = self.bld.get_tgen_by_name(name)
+        other.post() 
 
 def __recurse(ctx):
 	workDir = ctx.path.abspath()
@@ -75,6 +86,8 @@ def configure(conf):
 		conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall']
 		conf.env.append_value("CFLAGS", ['-std=c99', '-g', '-Wall'])
 
+	conf.env.CODEGEN=conf.path.abspath() + "/tools/serialization-code-generator.py"
+
 	print ""
 	__recurse(conf)
 	print "Debugging:                               : %s" % conf.options.debug
@@ -117,6 +130,7 @@ def build(bld):
 	bld.recurse(['core'], mandatory=True)
 	bld.recurse(['monitoring'], mandatory=True)
 	bld.recurse(['knowledge'], mandatory=True)
+	bld.recurse(['util'], mandatory=True)
 	bld.recurse(['tools'])
 
 	# build test interfaces

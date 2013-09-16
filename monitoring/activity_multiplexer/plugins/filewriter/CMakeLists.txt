@@ -1,20 +1,20 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIR}
 )
 
 add_library(
-	ActivityFileWriter
+	siox-monitoring-activityPlugin-ActivityFileWriter
 	ActivityFileWriter.cpp
 )
 
 target_link_libraries(
-	ActivityFileWriter
-	core-container-serializer 
-	AutoConfigurator 
+	siox-monitoring-activityPlugin-ActivityFileWriter
+	siox-core-ContainerSerializer 
+	siox-core-AutoConfigurator
+	${Boost_LIBRARIES}
 )
 
 add_subdirectory(test)

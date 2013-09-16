@@ -10,7 +10,7 @@
 
 #include <list>
 
-#include <core/component/component-macros.hpp>
+#include <core/component/component-options.hpp>
 
 
 using namespace core;
@@ -18,7 +18,8 @@ using namespace std;
 
 namespace monitoring {
 
-	class ThreadedCollectorStatistics: Container {
+	//@serializable
+	class ThreadedCollectorStatistics: public Container {
 		public:
 			string entity;
 			string scope;
@@ -29,20 +30,16 @@ namespace monitoring {
 			string topology_instance;
 
 			uint32_t poll_interval_ms;
-
-			SERIALIZE_CONTAINER( MEMBER( scope ) MEMBER( entity ) MEMBER( metrics ) MEMBER( topology ) MEMBER( topology_instance ) MEMBER( poll_interval_ms ) )
-
 	};
 
 
+	//@serializable
 	class ThreadedStatisticsOptions: public ComponentOptions {
 		public:
 			ComponentReference facade;
 			ComponentReference smux;
 
 			list<ThreadedCollectorStatistics> statistics;
-
-			SERIALIZE_CONTAINER( MEMBER( smux ) MEMBER( facade ) MEMBER( statistics ) )
 	};
 
 }

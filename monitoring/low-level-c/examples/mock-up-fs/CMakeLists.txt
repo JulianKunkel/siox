@@ -1,20 +1,17 @@
-cmake_minimum_required(VERSION 2.8)
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 )
 
 add_library(
-	mufs
+	test-mufs
 	mufs.c
 )
 
 target_link_libraries(
-	mufs
-	siox-ll
-	FileConfigurationProvider
+	test-mufs
+	siox-monitoring-siox-ll
 )
 
 add_executable(
@@ -24,8 +21,8 @@ add_executable(
 
 target_link_libraries(
 	mockupfs-example
-	mufs
-	siox-ll
-	ActivityBuilder
+	test-mufs 
+	siox-monitoring-siox-ll 
+	siox-monitoring-ActivityBuilder
 )
 

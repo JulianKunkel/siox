@@ -3,9 +3,12 @@
 
 
 def build(bld):
-    bld.shlib(includes="", use="BOOST siox-core-AutoRegistrar", target = "siox-monitoring-FileAssociationMapper", source = 'FileAssociationMapper.cpp' )
-    bld.recurse(['test'], mandatory=True)
-    bld.install_files('${PREFIX}/include/' + bld.path.relpath(), 'FileAssociationMapperOptions.hpp')
+
+	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="FileAssociationMapperOptions.hpp", target="BoostXMLSerializable.cpp", name="FileAssociationMapperOptions.hpp")
+
+	bld.shlib(includes="", use="BOOST ", target = "siox-monitoring-FileAssociationMapper", source = 'FileAssociationMapper.cpp BoostXMLSerializable.cpp', depends_on="FileAssociationMapperOptions.hpp")
+	bld.recurse(['test'], mandatory=True)
+	bld.install_files('${PREFIX}/include/' + bld.path.relpath(), 'FileAssociationMapperOptions.hpp')
 
 
 # -*- indent-tabs-mode: t -*-

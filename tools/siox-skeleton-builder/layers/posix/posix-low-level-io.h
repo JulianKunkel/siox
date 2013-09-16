@@ -289,7 +289,7 @@ int rename( const char * oldname, const char * newname );
 // stat() symbols do not exist, a macro rewrites them, problem stat64 types.
 // Be aware this might lead to problems.
 //@splice_once ''int stat(const char *path, struct stat *buf){ return __xstat64(1, path, buf); }''
-//@guard
+//@guard_advanced
 //@activity Name=stat
 //@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
@@ -297,7 +297,7 @@ int rename( const char * oldname, const char * newname );
 int __xstat64( int __ver, const char * path, struct stat64 * buf );
 
 //@splice_once ''int lstat(const char *path, struct stat *buf){ return __lxstat64(1, path, buf); }''
-//@guard
+//@guard_advanced
 //@activity Name=lstat
 //@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
@@ -305,7 +305,7 @@ int __xstat64( int __ver, const char * path, struct stat64 * buf );
 int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 
 //@splice_once ''int fstat(int fd, struct stat *buf){ return __fxstat64(1, fd, buf); }''
-//@guard
+//@guard_advanced
 //@activity Name=fstat
 //@activity_attribute_u32 fileHandle fd
 //@activity_link_int fd
@@ -313,21 +313,21 @@ int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 //@guardEnd
 int __fxstat64( int __ver, int fd, struct stat64 * buf );
 
-//@guard
+//@guard_advanced
 //@activity Name=stat
 //@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
 int __xstat( int __ver, const char * path, struct stat * buf );
 
-//@guard
+//@guard_advanced
 //@activity Name=lstat
 //@splice_before SET_FILENAME(path)
 //@error ''ret<0'' errno
 //@guardEnd
 int __lxstat( int __ver, const char * path, struct stat * buf );
 
-//@guard
+//@guard_advanced
 //@activity Name=fstat
 //@activity_attribute_u32 fileHandle fd
 //@activity_link_int fd
@@ -365,7 +365,7 @@ If the file is successfully opened, the function returns a pointer to a FILE obj
 Otherwise, a null pointer is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
  */
-//@guard
+//@guard_advanced
 //@activity
 //@splice_before SET_FILENAME(filename)
 //@activity_attribute_pointer fileFopenFlags mode
