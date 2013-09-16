@@ -69,7 +69,7 @@ void activity_id_test(PostgreSQLPumpCallbackTest &cb)
 	std::cout << "ID: " << aid2->id << " THREAD: " << aid2->thread << std::endl;
 	
 	if (*aid1 != *aid2) {
-		std::cerr << "Activity ID mismatch." << std::endl;
+		std::cerr << "Activity ID mismatch. (" << aid1->id << ") != (" << aid2->id << ")" << std::endl;
 		exit(1);
 	}
 	
@@ -87,7 +87,7 @@ int main()
 	Callback *cb = be->create_callback();
 	PostgreSQLPumpCallback *pcb = dynamic_cast<PostgreSQLPumpCallback *>(cb);
 	PostgreSQLPumpCallbackTest pg(pcb);
- 
+
 	reader = new PostgreSQLReader(SIOX_DB_INFO);
 	
 	srand(time(NULL));

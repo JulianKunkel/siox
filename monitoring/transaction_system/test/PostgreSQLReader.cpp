@@ -36,7 +36,7 @@ ActivityID *PostgreSQLReader::activity_id(uint64_t uid)
 	const int param_lengths[nparams] = {sizeof(unique_id)};
 	const Oid param_types[nparams] =   {20};
 	const int param_formats[nparams] = {1};
-	const int result_format = 0;
+	const int result_format = 1;
 
 	const char *command = "SELECT * FROM activities.activity_id WHERE unique_id = $1::int8;";
 		
