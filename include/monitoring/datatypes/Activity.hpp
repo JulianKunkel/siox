@@ -96,8 +96,8 @@ namespace monitoring {
 			// The ontology provides a single ID for each ActivityType of a component, e.g. POSIX "open()"
 			UniqueComponentActivityID ucaid_;
 
-			Timestamp time_start_;
-			Timestamp time_stop_;
+			Timestamp MeasuredPointinTime_start_;
+			Timestamp MeasuredPointinTime_stop_;
 
 			ActivityID aid_;
 
@@ -114,7 +114,7 @@ namespace monitoring {
 		public:
 			Activity( UniqueComponentActivityID ucaid, Timestamp start_t, Timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, ActivityError errorValue )
 				:
-				ucaid_( ucaid ), time_start_( start_t ), time_stop_( end_t ),
+				ucaid_( ucaid ), MeasuredPointinTime_start_( start_t ), MeasuredPointinTime_stop_( end_t ),
 				aid_( aid ), parentArray_( std::move( parentArray ) ),
 				remoteCallsArray_( std::move( remoteCallsArray ) ),
 				attributeArray_( std:: move( attributeArray ) ),
@@ -130,8 +130,8 @@ namespace monitoring {
 				/// @todo: Really need reflection - have a look at Boost :-)
 				unsigned i;
 				cout << endl << "Activity = " << this << endl;
-				cout << "t_start = " << time_start_ << endl;
-				cout << "t_stop  = " << time_stop_ << endl;
+				cout << "t_start = " << MeasuredPointinTime_start_ << endl;
+				cout << "t_stop  = " << MeasuredPointinTime_stop_ << endl;
 				cout << "ActivityID = " << aid_ << endl;
 				cout << "ActivityID.thread = " << aid_.thread << endl;
 				cout << "ActivityID.ComponentID.num = " << aid_.cid.id << endl;
@@ -151,12 +151,12 @@ namespace monitoring {
 				cout << "RemoteCalls (" << remoteCallsArray_.size() << " items):" << endl;
 			}
 
-			inline Timestamp time_start() const {
-				return time_start_;
+			inline Timestamp MeasuredPointinTime_start() const {
+				return MeasuredPointinTime_start_;
 			}
 
-			inline Timestamp time_stop() const {
-				return time_stop_;
+			inline Timestamp MeasuredPointinTime_stop() const {
+				return MeasuredPointinTime_stop_;
 			}
 
 
