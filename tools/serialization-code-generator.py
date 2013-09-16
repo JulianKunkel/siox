@@ -226,9 +226,7 @@ class JBinaryOutputGenerator(OutputGenerator):
         if type.endswith("*"):
             return "if (" + name + " == nullptr ) { count += 1 ; } else{ " + self.map_type_length(type[0:len(type)-2].strip(), "*" + name) + " + 1; }"
         #if type in self.typeMap:
-        #    return self.map_memberType(self.typeMap[type])
-        if type in "string" or type in "std::string":
-            return "count += 4 + " + name + ".length()"
+        #    return self.map_memberType(self.typeMap[type])        
         #return "ERROR invalid type: " + type + " for " + name
         return "count += serializeLen(" + name + ")"
 
@@ -285,7 +283,7 @@ class JBinaryOutputGenerator(OutputGenerator):
 
         print("}", file = self.fh)
 
-        print("inline void deserialize(%(CLASS)s & obj, char * buffer, uint64_t & pos, uint64_t length){\n\tint8_t ptr;\n\tuint32_t vlen;\n\t"  % self.mapping, file = self.fh)
+        print("inline void deserialize(%(CLASS)s & obj, const char * buffer, uint64_t & pos, uint64_t length){\n\tint8_t ptr;\n\tuint32_t vlen;\n\t"  % self.mapping, file = self.fh)
 
         for p in self.parentClassnames:
             print("\tdeserialize( *( " + p + " *) "  + "this );" , file = self.fh)

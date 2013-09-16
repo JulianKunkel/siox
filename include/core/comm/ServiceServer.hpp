@@ -1,69 +1,73 @@
-#ifndef SERVICE_SERVER_H
-#define SERVICE_SERVER_H
+#ifndef CORE_SERVICE_SERVER_H
+#define CORE_SERVICE_SERVER_H
 
-#include <list>
-#include <map>
+#include <memory> 
 
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/ptr_container/ptr_list.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread/thread.hpp>
+#include <core/comm/Message.hpp>
 
-#include <core/comm/Callback.hpp>
-#include <core/comm/Connection.hpp>
-#include <core/comm/Service.hpp>
-#include <core/comm/ServiceServer.hpp>
-#include <core/logger/SioxLogger.hpp>
+namespace core{
 
-namespace asio = boost::asio;
+// A message from a client which is received by a server.
+// The message callbacks are invoked on the server side
+class ServerClientMessage : public BareMessage{
+public:	
+		virtual void isendResponse(void * object) = 0;		
+		virtual void isendErrorResponse(CommunicationError error) = 0;
 
-class ServiceServer
-	: public Service,
-	  private boost::noncopyable {
-
-	public:
-		ServiceServer( const std::size_t worker_pool_size );
-
-		/** Creates the workers and attaches them to the io_service. */
-		void run();
-
-		/** Stops all workers */
-		void stop();
-
-		/** Advertises a new message type among all connected clients. */
-		void advertise( boost::uint64_t mtype );
-
-		/** Sends the message to all clients who subscribed the message's type */
-		void ipublish( boost::shared_ptr<ConnectionMessage> msg );
-
-		void register_message_callback( Callback & msg_rcvd_callback );
-		void clear_message_callbacks();
-
-		void register_error_callback( Callback & err_callback );
-		void clear_error_callbacks();
-
-		void handle_message( ConnectionMessage & msg,
-		                     Connection & connection );
-
-		void handle_message( boost::shared_ptr<ConnectionMessage> msg,
-		                     Connection & connection );
-
-	protected:
-		asio::io_service io_service_;
-
-		void handle_stop();
-
-	private:
-		std::size_t worker_pool_size_;
-		boost::ptr_list<Callback> error_callbacks_;
-		boost::ptr_list<Callback> message_callbacks_;
-		std::vector<boost::shared_ptr<boost::thread> > workers_;
-		std::multimap<boost::uint32_t, Connection *> subscribed_connections;
-
-		void subscribe( boost::uint32_t mtype, Connection & connection );
+		ServerClientMessage(const char * payload, uint64_t size) : BareMessage(payload, size){}	
 };
+
+
+class ServiceServer;
+
+class ServerCallback{
+public:
+	// This function also de-serializes the incoming data stream of the message.
+	virtual void messageReceivedCB(ServerClientMessage * msg, const char * message_data, uint64_t buffer_size) = 0;
+
+	// After a response has been sent, the client message and response are destroyed.
+	//virtual void responseSendCB(ServerClientMessage * msg, BareMessage * response) = 0;
+
+	// It is the responsibility of this function to delete msg & response if needed.
+	//virtual void responseTransferErrorCB(ServerClientMessage * msg, BareMessage * response, CommunicationError error) = 0;
+
+	virtual uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType) = 0;
+	virtual void serializeResponseMessage(const ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos) = 0;
+
+	virtual ~ServerCallback(){};
+};
+
+
+
+class CommunicationModule;
+
+class ServiceServer{
+	protected:
+		ServerCallback * messageCallback;
+	public:
+		virtual void listen() throw(CommunicationModuleException) = 0;
+
+
+		/** Advertises a new client among all connected clients. */
+		// virtual void advertise(uint32_t mtype) = 0;
+
+		/** Sends the message to all clients who subscribed the message's response type */
+		virtual void ipublish( void * object ) = 0;
+
+		virtual ~ServiceServer(){}
+
+		virtual uint32_t headerSizeClientMessage() = 0;
+
+		void setMessageCallback(ServerCallback * msg_rcvd_callback){
+			messageCallback = msg_rcvd_callback;
+		}
+};
+
+
+
+
+
+}
 
 #endif
 

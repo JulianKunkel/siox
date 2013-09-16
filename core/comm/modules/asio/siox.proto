@@ -1,0 +1,18 @@
+package buffers;
+
+message MessageBuffer {
+
+	enum Action {
+		Advertise      = 0;
+		Subscribe      = 1;
+		Message	       = 2;
+	}
+	
+	required Action action = 1 [default = Message];
+	required     uint32 type = 2;
+
+	optional uint32 priority = 3;
+	optional uint64 msg_size = 4;
+	optional bytes  msg_data = 5;
+}
+
