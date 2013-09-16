@@ -365,7 +365,7 @@ If the file is successfully opened, the function returns a pointer to a FILE obj
 Otherwise, a null pointer is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
  */
-//@guard
+//@guard_advanced
 //@activity
 //@splice_before SET_FILENAME(filename)
 //@activity_attribute_pointer fileFopenFlags mode

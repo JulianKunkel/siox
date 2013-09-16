@@ -18,6 +18,7 @@
 #include <list>
 #include <deque>
 #include <mutex>
+#include <condition_variable>
 
 #include <thread>
 
@@ -28,6 +29,10 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
 #include "ActivityMultiplexerAsyncOptions.hpp"
+
+
+
+
 
 using namespace core;
 using namespace monitoring;
@@ -41,7 +46,7 @@ namespace monitoring {
 	class Dispatcher
 	{
 	public:
-		virtual void Dispatch(void * work) {};
+		virtual void Dispatch(int lost, void * work) {	 printf("Dispatch(Dummy): %p", work); }
 	};
 
 
@@ -51,6 +56,12 @@ namespace monitoring {
 	 */
 	class ActivityMultiplexerQueue
 	{
+		friend class ActivityMultiplexerNotifier;
+
+		std::mutex lock;
+		std::condition_variable not_full;
+		std::condition_variable not_empty;
+
 	public:
 			ActivityMultiplexerQueue () {};
 			virtual ~ActivityMultiplexerQueue () {};
@@ -58,10 +69,7 @@ namespace monitoring {
 			/**
 			 * Check whether or not the queue has still capacity
 			 *
-			 * @return  bool
-				for( int i = 0; i < dispatcher; ++i ) {
-					t.push_back( std::thread( &MultiplexerNotifierTemplate::Run, this ) );
-				}    true = queue is full, false = not full
+			 * @return  bool	true = queue is full, false = not full
 			 */
 			virtual bool Full() {
 				bool result = ( queue.size() > capacity );
@@ -97,6 +105,10 @@ namespace monitoring {
 			virtual void Push(Activity * activity) {
 				std::lock_guard<std::mutex> lock( mut );
 
+				//TODO CV: std::unique_lock<std::mutex> l(lock);
+				//TODO CV: not_full.wait(l, [&count, &capacity](){return count != capacity; });
+				//TODO CV: not_full.wait(l, [=](){return this->Full() != 1; });
+
 				printf("push %p\n", activity);
 				// maybe this should happen in notifier run()
 				/*
@@ -118,6 +130,9 @@ namespace monitoring {
 						queue.push_back( activity );
 					}
 				}
+
+
+				//TODO CV: not_empty.notify_one();
 			};
 
 
@@ -127,17 +142,22 @@ namespace monitoring {
 			 * @return	Activity	an activity that needs to be dispatched to async listeners
 			 */
 			virtual Activity * Pop() {
+
 				std::lock_guard<std::mutex> lock( mut );
+
+				//TODO 2 CV: std::unique_lock<std::mutex> l(lock);
+				//TODO 2 CV: not_empty.wait(l, [queue](){return queue.Empty() != 0; });
 
 				Activity * activity = nullptr;
 				if (queue.empty())
 						return nullptr;
 
 				auto itr = queue.begin();
-
 				queue.erase(itr);
-
 				printf("pop %p\n", *itr);
+
+
+				//TODO CV: not_full.notify_one();
 
 				return *itr;
 			};
@@ -145,6 +165,7 @@ namespace monitoring {
 	private:
 			std::deque<Activity *> queue;
 			unsigned int capacity = 1000; // TODO specify by options
+
 			bool overloaded = false;
 			int lost = 1;
 
@@ -155,6 +176,8 @@ namespace monitoring {
 
 	class ActivityMultiplexerNotifier
 	{
+		friend class ActivityMultiplexerQueue;
+
 	public:
 			ActivityMultiplexerNotifier (Dispatcher * dispatcher, ActivityMultiplexerQueue * queue) {
 				this->dispatcher = dispatcher;
@@ -174,11 +197,21 @@ namespace monitoring {
 			virtual void Run() {
 				assert(queue);
 				// call dispatch of Dispatcher
+
 				while( !terminate ) {
+
+					//TODO CV: std::unique_lock<std::mutex> l(queue->lock);
+					//TODO CV: queue->not_empty.wait(l, [queue](){return queue->empty() !=0; });
+
+
 					Activity * activity = queue->Pop();
 
 					if ( activity )
-						dispatcher->Dispatch((void *)activity);
+					{
+						dispatcher->Dispatch(-1, (void *)activity);
+					}
+
+					//TODO CV: not_full.notify_one();
 
 				}
 			}
@@ -208,6 +241,7 @@ namespace monitoring {
 	 */
 	class ActivityMultiplexerAsync : public ActivityMultiplexer, public Dispatcher {
 	//class ActivityMultiplexerAsync : public ActivityMultiplexer {
+
 	private:
 			list<ActivityMultiplexerListener *> 		listeners;
 			list<ActivityMultiplexerListenerAsync *> 	listeners_async;
@@ -246,8 +280,9 @@ namespace monitoring {
 					}
 				}
 				// add to async patch
-				if ( queue )
+				if ( queue ) {
 					queue->Push(activity);
+				}
 			}
 
 			// this functions is registered to a notifier as callback
@@ -259,6 +294,7 @@ namespace monitoring {
 			 * @param	work	activtiy as void pointer to support abstract notifier
 			 */
 			virtual void Dispatch(int lost, void * work) {
+				printf("dispatch: %p\n", work);
 				Activity * activity = (Activity *) work;
 				assert( activity != nullptr );
 				boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex_async );
