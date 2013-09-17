@@ -33,10 +33,10 @@ include(SIOXMacros)
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
-find_package(Protobuf REQUIRED)
-set_package_properties(Protobuf PROPERTIES URL "http://code.google.com/p/protobuf" TYPE REQUIRED PURPOSE "Serialization using Google Protocol Buffers.")
+# find_package(Protobuf REQUIRED)
+# set_package_properties(Protobuf PROPERTIES URL "http://code.google.com/p/protobuf" TYPE REQUIRED PURPOSE "Serialization using Google Protocol Buffers.")
 
-find_package(Boost 1.53.0 COMPONENTS regex serialization system thread REQUIRED)
+find_package(Boost 1.49.0 COMPONENTS regex serialization system thread REQUIRED)
 set_package_properties(Boost PROPERTIES URL "http://www.boost.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
 find_package(GLIB2 REQUIRED)
