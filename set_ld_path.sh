@@ -14,3 +14,7 @@ done
 
 echo "export LD_LIBRARY_PATH=$D"
 export LD_LIBRARY_PATH=$D
+
+export G_SLICE=always-malloc
+export G_DEBUG=gc-friendly
+

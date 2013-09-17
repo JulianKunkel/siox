@@ -78,7 +78,7 @@ ActivityID *PostgreSQLReader::activity_id(uint64_t uid)
 	
 	aid->id           = ntohl(*((uint32_t *) id));
 	aid->thread       = ntohl(*((uint32_t *) thread_id));
-	aid->cid.id       = ntohs(*((uint16_t *) cid_id));
+	aid->cid.id       = ntohl(*((uint32_t *) cid_id));
 	aid->cid.pid.nid  = ntohl(*((uint32_t *) cid_pid_nid));
 	aid->cid.pid.pid  = ntohl(*((uint32_t *) cid_pid_pid));
 	aid->cid.pid.time = ntohl(*((uint32_t *) cid_pid_time));

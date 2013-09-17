@@ -69,7 +69,7 @@ void activity_id_test(PostgreSQLPumpCallbackTest &cb)
 	std::cout << "ID: " << aid2->id << " THREAD: " << aid2->thread << std::endl;
 	
 	if (*aid1 != *aid2) {
-		std::cerr << "Activity ID mismatch. (" << aid1->id << ") != (" << aid2->id << ")" << std::endl;
+		std::cerr << "Activity ID mismatch. (" << aid1->id << ", " << aid1->thread << ", " << aid1->cid.id << ", " << aid1->cid.pid.nid << ", " << aid1->cid.pid.pid << ", " << aid1->cid.pid.time << ") != (" << aid2->id << ", " << aid2->thread << ", " << aid2->cid.id << ", " << aid2->cid.pid.nid << ", " << aid2->cid.pid.pid << ", " << aid2->cid.pid.time << ")" << std::endl;
 		exit(1);
 	}
 	

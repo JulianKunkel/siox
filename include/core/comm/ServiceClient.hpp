@@ -3,112 +3,112 @@
  *
  */
 
-#ifndef SERVICE_CLIENT_H
-#define SERVICE_CLIENT_H
+#ifndef CORE_SERVICE_CLIENT_H
+#define CORE_SERVICE_CLIENT_H
 
 #include <exception>
 #include <string>
-#include <vector>
 
-#include <boost/ptr_container/ptr_list.hpp>
+#include <core/comm/Message.hpp>
 
-#include <core/comm/Callback.hpp>
-#include <core/comm/Connection.hpp>
-#include <core/comm/ConnectionFactory.hpp>
-#include <core/logger/SioxLogger.hpp>
+using namespace std;
 
-namespace asio = boost::asio;
+namespace core{
 
 
-class ServiceClientException
-		: public std::exception {
+class ServiceClient;
+class CommunicationModule;
 
-	public:
-		ServiceClientException( const char * err_msg ) : err_msg_( err_msg ) {}
-		const char * what() const throw() {
-			return err_msg_;
+class ConnectionCallback{
+public:
+	virtual void connectionErrorCB(ServiceClient & client, CommunicationError error){}
+	virtual void connectionSuccessfullCB(ServiceClient & client){}
+};
+
+class MessageCallback{
+public:
+	virtual void messageSendCB(BareMessage * msg) = 0;
+
+	// this function de-serializes the buffer as well
+	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size) = 0;
+
+	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error) = 0;
+
+	virtual uint64_t serializeMessageLen(const void * msgObject)  = 0;
+	virtual void serializeMessage(const void * msgObject, char * buffer, uint64_t & pos) = 0;
+
+	virtual ~MessageCallback(){};
+};
+
+class ServiceClient{
+protected:
+	ConnectionCallback * connectionCallback;
+	MessageCallback * messageCallback;
+public:
+		void setConnectionCallback(ConnectionCallback * ccb){
+			this->connectionCallback = ccb;
 		}
-	private:
-		const char * err_msg_;
 
+		void setMessageCallback(MessageCallback * mcb){
+			messageCallback = mcb;
+		}
+
+
+		inline ConnectionCallback * getConnectionCallback(){
+			return connectionCallback;
+		}
+
+		inline MessageCallback * getMessageCallback(){
+			return messageCallback;
+		}
+
+
+		/**
+	  	 * Try to reconnect asynchronously and resend all currently pending messages. 
+	  	 */
+		virtual void ireconnect() = 0;
+
+		/**
+		 * Return the address of the target communication endpoint.
+		 */
+		virtual const string & getAddress() const = 0 ;
+
+		// This method sends a correctly serialized message.
+		virtual void isend( BareMessage * msg ) = 0;
+
+
+		// the number of bytes required for the header of any message!
+		virtual uint32_t headerSize() = 0;
+		virtual void serializeHeader(char * buffer, uint64_t & pos, uint64_t size) = 0;
+
+		virtual ~ServiceClient(){}
+
+
+		/**
+		 * The object is serialized using the messageCallack.
+		 * @note This function may return immediately.
+		 */
+		 BareMessage * isend( void * object ){
+			uint64_t msg_size = headerSize() + messageCallback->serializeMessageLen(object);
+			char * payload = (char*) malloc(msg_size);
+
+			assert(payload);
+
+			uint64_t pos = 0;
+
+			serializeHeader(payload, pos, msg_size);
+			assert(headerSize() == pos);
+
+			messageCallback->serializeMessage(object, payload, pos);
+			assert(pos == msg_size);
+
+			BareMessage * msg = new BareMessage(payload, msg_size);
+
+			isend(msg);
+			return msg;
+		}		
 };
 
-
-class ServiceClient
-	: public Service,
-	  private boost::noncopyable {
-
-	public:
-		/**
-		 * Creates an instance of ServiceClient and connects it to the given
-		 * address.
-		 *
-		 * @param endpoint_uri Address where the ServiceServer is listening for
-		 * connections.E.g. <i>ipc:///tmp/sioxsock</i> and <i>tcp://host:port</i>.
-		 * @param worker_pool_size The number of threads handling the messages.
-		 * (Default is 1).
-		 */
-		ServiceClient( const std::string & endpoint_uri,
-		               std::size_t worker_pool_size = 1 );
-
-		/**
-		 * Adds a Callback object to the list of callbacks responsible for error
-		 * handling.
-		 *
-		 */
-		void register_error_callback( Callback & err_cb );
-
-		/**
-		 * Adds a Callback object to the list of callbacks responsible for
-		 * handling the message responses from the connected ServiceServer.
-		 */
-		void register_response_callback( Callback & rsp_cb );
-
-		/**
-		 * Remove all callbacks from the list of error handling callbacks.
-		 */
-		void clear_error_callbacks();
-
-		/**
-		 * Remove all callbacks from the list of response handling callbacks.
-		 */
-		void clear_response_callbacks();
-
-		/**
-		 * Asynchronously sends a message to the ServiceServer.
-		 *
-		 * @note This function returns immediately and the message is actually
-		 * sent by the threads spawn by the run() method.
-		 */
-		void isend( boost::shared_ptr<ConnectionMessage> msg );
-
-		/**
-		 * Spawns the worker threads and starts the event processing loop.
-		 *
-		 * @note If the ServiceClient is not running, messages won't be
-		 * processed.
-		 */
-		void run();
-
-		/**
-		 * Stops the client and waits for completion of all worker threads.
-		 */
-		void stop();
-
-		void handle_message( ConnectionMessage & msg,
-		                     Connection & connection );
-
-		void handle_message( boost::shared_ptr<ConnectionMessage> msg,
-		                     Connection & connection );
-
-	private:
-		Connection * connection_;
-		asio::io_service io_service_;
-		std::size_t worker_pool_size_;
-		boost::ptr_list<Callback> error_callbacks;
-		boost::ptr_list<Callback> response_callbacks;
-		std::vector<boost::shared_ptr<boost::thread> > workers;
-};
-
+}
 
 #endif
