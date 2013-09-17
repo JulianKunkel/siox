@@ -15,7 +15,7 @@
 #include <string>
 
 #include <monitoring/datatypes/Activity.hpp>
-#include <core/comm/Callback.hpp>
+#include <core/comm/modules/asio/Callback.hpp>
 #include <core/logger/SioxLogger.hpp>
 
 /*
