@@ -15,7 +15,7 @@
 #include <string>
 
 #include <monitoring/datatypes/Activity.hpp>
-#include <core/comm/Callback.hpp>
+#include <core/comm/modules/asio/Callback.hpp>
 #include <core/logger/SioxLogger.hpp>
 
 /*
@@ -44,32 +44,34 @@ class PostgreSQLPumpCallbackTest;
 
 class PostgreSQLPumpCallback : public Callback {
 
-		friend class PostgreSQLPumpCallbackTest;
+friend class PostgreSQLPumpCallbackTest;
 
-	public:
-		PostgreSQLPumpCallback( PGconn & dbconn );
+public:
+	PostgreSQLPumpCallback(PGconn &dbconn);
 
-	protected:
-		void handle_message( ConnectionMessage & msg ) const;
-		void handle_message( boost::shared_ptr<ConnectionMessage> msg ) const;
+protected:
+// 	void handle_message(ConnectionMessage &msg) const;
+// 	void handle_message(boost::shared_ptr<ConnectionMessage> msg) const;
 
-	private:
-		PGconn * dbconn_;
+private:
+	PGconn *dbconn_;
 
-		void store_node( ConnectionMessage & msg ) const;
-		void store_node( const std::string & hwdesc, const std::string & swdesc,
-		                 const std::string & indesc ) const;
-
-		uint64_t insert_node( uint64_t hwid, uint64_t swid, uint64_t iid ) const;
-		uint64_t insert_hwdesc( const std::string & hwdesc ) const;
-		uint64_t insert_swdesc( const std::string & swdesc ) const;
-		uint64_t insert_indesc( const std::string & indesc ) const;
-
-		void store_activity( ConnectionMessage & msg ) const;
-		void store_activity( const Activity & act ) const;
-		uint64_t insert_activity( const Activity & act ) const;
-		void insert_parent( const ActivityID & parent, uint64_t child_id ) const;
-		std::string serialize_attributes( const Activity & act ) const;
+	void store_activity(Activity &act) const;
+	uint64_t insert_activity_id(const ActivityID &aid) const;
+	
+// 	void store_node(ConnectionMessage &msg) const;
+// 	void store_node(const std::string &hwdesc, const std::string &swdesc, const std::string &indesc) const;
+// 
+// 	uint64_t insert_node(uint64_t hwid, uint64_t swid, uint64_t iid) const;
+// 	uint64_t insert_hwdesc(const std::string &hwdesc) const;
+// 	uint64_t insert_swdesc(const std::string &swdesc) const;
+// 	uint64_t insert_indesc(const std::string &indesc) const;
+// 
+// 	void store_activity(ConnectionMessage &msg) const;
+// 	void store_activity(const Activity &act) const;
+// 	uint64_t insert_activity(const Activity &act) const;
+// 	void insert_parent(const ActivityID &parent, uint64_t child_id) const;
+// 	std::string serialize_attributes(const Activity &act) const;
 
 };
 

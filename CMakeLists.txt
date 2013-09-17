@@ -54,7 +54,7 @@ set_package_properties(HDF5 PROPERTIES URL "http://www.hdfgroup.org/HDF5" TYPE O
 find_package(MPI)
 set_package_properties(MPI PROPERTIES URL "http://www.open-mpi.org" TYPE OPTIONAL PURPOSE "SIOX Open MPI examples.")
 
-siox_generate_buffers()
+# siox_generate_buffers()
 
 add_subdirectory(core)
 add_subdirectory(knowledge)

@@ -5,31 +5,31 @@
 #include <boost/shared_ptr.hpp>
 #include <string>
 
-#include <core/comm/Connection.hpp>
-#include <core/comm/ConnectionMessage.hpp>
-#include <core/comm/ServerFactory.hpp>
-#include <core/comm/ServiceServer.hpp>
+#include <core/comm/modules/asio/Connection.hpp>
+#include <core/comm/modules/asio/ConnectionMessage.hpp>
+#include <core/comm/modules/asio/ServerFactory.hpp>
+#include <core/comm/modules/asio/ServiceServer.hpp>
 #include <core/logger/SioxLogger.hpp>
 #include <monitoring/transaction_system/TransactionBackend.hpp>
 
 class TransactionService {
 
-	public:
-		TransactionService( const std::string & address );
-		~TransactionService();
+public:
+	TransactionService(const std::string &address);
+	~TransactionService();
 
-		int run();
-		int stop();
+	int run();
+	int stop();
 
-		void register_transaction_backend( TransactionBackend * tb );
-		void clear_transaction_backends();
+	void register_transaction_backend(TransactionBackend *tb);
+	void clear_transaction_backends();
 
-	private:
-		ServiceServer * network_service_;
-		boost::ptr_list<TransactionBackend> backends_;
+private:
+	ServiceServer *network_service_;
+	boost::ptr_list<TransactionBackend> backends_;
 
-		void register_callback( Callback & cb );
-		void clear_callbacks();
+	void register_callback(Callback &cb);
+	void clear_callbacks();
 };
 
 #endif

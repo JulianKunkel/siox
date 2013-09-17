@@ -6,13 +6,21 @@ include_directories(
 	${Boost_INCLUDE_DIR}
 )
 
-add_executable(postgresql_test
-	postgres.cpp
-	${PROTO_SRCS}
-	${PROTO_HDRS}
+add_library(postgresreader
+	PostgreSQLReader.cpp
 )
 
-target_link_libraries(postgresql_test 
+target_link_libraries(postgresreader
+	monitoring-transactionsystem 
+	core-logger
+)
+
+add_executable(postgresql_test
+	postgres.cpp
+)
+
+target_link_libraries(postgresql_test
+	postgresreader
 	monitoring-transactionsystem 
 	core-communication 
 	core-logger
