@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+# Waf documentation, see http://docs.waf.googlecode.com/git/book_16/single.html
+
+from waflib import Logs
+
+import os
+
+def __recurse(ctx):
+	workDir = ctx.path.abspath()
+	dirs = [ name for name in os.listdir(workDir)    if   os.path.isdir(os.path.join(workDir, name)) and not name.startswith(".") ]
+	Logs.debug("walk into " + workDir)
+	ctx.recurse(dirs, mandatory=False)
+
+def options(opt):
+	__recurse(opt)
+	
+def configure(conf):
+	__recurse(conf)
+	
+def build(bld):
+	__recurse(bld)
+
+def install(ctx):
+	__recurse(ctx)
+
+def clean(ctx):
+	__recurse(ctx)
+
+def distcheck(ctx):
+	__recurse(ctx)
+
+def distclean(ctx):
+	__recurse(ctx)
+
+def step(ctx):
+	__recurse(ctx)
+
+def uninstall(ctx):
+	__recurse(ctx)
+
+
+# -*- indent-tabs-mode: t -*-
