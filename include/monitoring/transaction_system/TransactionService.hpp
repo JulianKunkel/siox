@@ -5,10 +5,10 @@
 #include <boost/shared_ptr.hpp>
 #include <string>
 
-#include <core/comm/Connection.hpp>
-#include <core/comm/ConnectionMessage.hpp>
-#include <core/comm/ServerFactory.hpp>
-#include <core/comm/ServiceServer.hpp>
+#include <core/comm/modules/asio/Connection.hpp>
+#include <core/comm/modules/asio/ConnectionMessage.hpp>
+#include <core/comm/modules/asio/ServerFactory.hpp>
+#include <core/comm/modules/asio/ServiceServer.hpp>
 #include <core/logger/SioxLogger.hpp>
 #include <monitoring/transaction_system/TransactionBackend.hpp>
 
