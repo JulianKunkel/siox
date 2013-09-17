@@ -38,42 +38,35 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 
 	one_thread_error_cancelable = g_cancellable_new();
 
-	GSocketAddressEnumerator *enumerator;
-	{
-		pair<string, uint16_t> hostPort = splitAddress(address);
-		GSocketConnectable * addr = g_network_address_new (hostPort.first.c_str(), hostPort.second);
-  		enumerator = g_socket_connectable_enumerate (addr);
-  		g_object_unref (addr);
-  	}
+
 
 	GError * error = NULL;
-	GSocketConnection * conn = nullptr;
-
-	GSocketAddress *sockaddr = nullptr;
-  	while (! conn && (sockaddr = g_socket_address_enumerator_next (enumerator, NULL, NULL)))
-    {
+	GSocketConnection * conn = nullptr;	
+	{
+		SocketType type;
+		GSocketAddress * gsocketAddr = getSocket(address, type);
     	// by adding a cancelable here, a memleak happens.
-      	conn = g_socket_client_connect(socket, G_SOCKET_CONNECTABLE(sockaddr), NULL, error ? NULL : & error);
-      	g_object_unref (sockaddr);
-    }
-  	g_object_unref(enumerator);
+
+		g_socket_client_set_protocol(socket, G_SOCKET_PROTOCOL_DEFAULT);
+		g_socket_client_set_socket_type(socket, type == SocketType::IPC ? G_SOCKET_TYPE_STREAM :  (GSocketType) type);
+		g_socket_client_set_family(socket, type == SocketType::IPC ? G_SOCKET_FAMILY_UNIX : G_SOCKET_FAMILY_IPV4);
+      	
+      	conn = g_socket_client_connect(socket, G_SOCKET_CONNECTABLE(gsocketAddr), NULL, error ? NULL : & error);
+      	g_object_unref (gsocketAddr);		
+  	}
 
 	connection_ongoing = false;
 	connection_ready_mutex.unlock();
 
 	if (conn == nullptr){
 		//cout << "Error " << error->message << endl;
-		if( error ){
-			g_error_free(error);
-		}
+		g_clear_error(& error);
 
 		connectionCallback->connectionErrorCB(* this, CommunicationError::SERVER_NOT_ACCESSABLE);
 		return;
 	}
 
-	if(error){
-		g_error_free(error);
-	}
+	g_clear_error(& error);
 
 	connection_established = true;
 
@@ -95,18 +88,23 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 		uint32_t clientSidedID = 0;
 
 		char * payload = readSocketMessage(istream, msgLength, clientSidedID, comm_error, one_thread_error_cancelable);
+		if ( msgLength == 0 ){			
+			break;
+		}
 
 		pendingResponses_mutex.lock();
 		auto itr = pendingResponses.find(clientSidedID);
 		if(itr == pendingResponses.end()){
 			// we have received the response already
-			cerr << "Received response without previous post -- discarding." << endl;
+			cerr << "Received response without previous post -- discarding ID: " << clientSidedID << " " << (int) comm_error <<  endl;
 			if(payload != nullptr){
 				free(payload);
 			}
 			pendingResponses_mutex.unlock();
 			continue;
 		}
+
+		//cerr << "Received valid response" << endl;
 
 		// remove message because we have now a response
 		BareMessage * msg = itr->second;

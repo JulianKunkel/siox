@@ -9,13 +9,13 @@ namespace core{
 
 
 enum class CommunicationError : uint8_t{
-	SUCCESS,
-	CONNECTION_LOST,
-	SERVER_NOT_ACCESSABLE,
-	MESSAGE_TYPE_NOT_AVAILABLE,
-	MESSAGE_INCOMPATIBLE,
-	MESSAGE_DAMAGED,
-	UNKNOWN
+	SUCCESS = 0,
+	CONNECTION_LOST = 1,
+	SERVER_NOT_ACCESSABLE = 2,
+	MESSAGE_TYPE_NOT_AVAILABLE = 3,
+	MESSAGE_INCOMPATIBLE = 4,
+	MESSAGE_DAMAGED = 5,
+	UNKNOWN = 255
 };
 
 class CommunicationModuleException : public std::exception {

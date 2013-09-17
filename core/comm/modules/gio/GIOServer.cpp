@@ -137,16 +137,18 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
 		char * payload = readSocketMessage(istream, msgLength, clientSidedID, error, one_thread_error_cancelable);
 
         if ( payload == nullptr ){
-        	if (msgLength > 0){        		
+        	if (msgLength > 0){ 
+        		cout << "Received broken message" << endl;
+
         		messageCallback->invalidMessageReceivedCB(error);
-        		TCPClientMessage errMsg(this, 0, & messageSendQueueInstance, nullptr, 0);
+        		TCPClientMessage errMsg(this, clientSidedID, & messageSendQueueInstance, nullptr, 0);
         		errMsg.isendErrorResponse(error);
         	}
 
         	break;
         }
 
-        //cout << "Received message" << endl;
+        cout << "Received message" << endl;
 
         auto msg = shared_ptr<TCPClientMessage>(new TCPClientMessage(this, clientSidedID, & messageSendQueueInstance, payload, msgLength));
 
@@ -170,30 +172,25 @@ void GIOServiceServer::listen() throw(CommunicationModuleException){
 
 	//cout << "listen on " << address << endl;
 
-	pair<string, uint16_t> addresses = splitAddress(address);
+
+	SocketType type;	
+	GSocketAddress * gsocketAddr = getSocket(address, type);
 
 	GError * error = NULL;
-	GInetAddress* localhost = g_inet_address_new_any(G_SOCKET_FAMILY_IPV4);
-	if (! localhost) {
-	    localhost = g_inet_address_new_any(G_SOCKET_FAMILY_IPV6);
-	}
 
-	GSocketAddress * sa = g_inet_socket_address_new(localhost, addresses.second);
-	g_object_unref(localhost);
+	int ret = g_socket_listener_add_address(listener, gsocketAddr, type == SocketType::IPC ?  (GSocketType) SocketType::TCP : (GSocketType) type, G_SOCKET_PROTOCOL_DEFAULT, NULL, NULL, & error);
 
-	// G_SOCKET_TYPE_DATAGRAM G_SOCKET_PROTOCOL_UDP
-	if(! g_socket_listener_add_address(listener, sa, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, & error)){
-		g_object_unref(sa);
+	g_object_unref(gsocketAddr);
 
+	if (! ret){
 		CommunicationModuleException e = CommunicationModuleException(error->message);
 		g_error_free(error);
 		throw e;
 	}
+
 	if(error != NULL){
 		g_error_free(error);
 	}
-
-	g_object_unref(sa);
 
 	addAcceptorThread();
 }
@@ -225,6 +222,17 @@ GIOServiceServer::~GIOServiceServer(){
 		g_object_unref(listener);
 	}
 	g_object_unref(cancelable);
+
+	// remove unix socket.
+	SocketType type;
+	string hostname;
+	uint16_t port;
+	string ipcPath;
+	splitAddressParts(address, type, hostname, port, ipcPath);
+
+	if(ipcPath != ""){
+		unlink (ipcPath.c_str());
+	}
 
 	cout << "Done server" << endl;
 }

@@ -7,8 +7,11 @@
 #include <assert.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <gio/gunixsocketaddress.h>
+
 #include <sstream>
 
+#include <boost/regex.hpp>
 
 // this two magic keys indicate the message type
 #define MAGIC_KEY 14099
@@ -16,6 +19,7 @@
 
 using namespace std;
 
+#define SIOX_IPC_PATH "/tmp/"
 
 inline string convertHex( const char * payload, uint64_t size )
 {
@@ -35,24 +39,101 @@ inline string convertHex( const char * payload, uint64_t size )
 	return s.str();
 }
 
+enum class SocketType : int{
+	TCP = G_SOCKET_TYPE_STREAM,
+	SCTP = G_SOCKET_TYPE_SEQPACKET,
+	IPC = G_SOCKET_TYPE_DATAGRAM
 
-// This function splits the string <hostname>:<port> into the tupel
-inline pair<string, uint16_t> splitAddress(const string & address){
-	int pos = address.find(":");
-	if (pos == -1){
-		uint16_t port = (uint16_t) atoi(address.c_str());
-		if (port == 0){
-			throw CommunicationModuleException("Invalid address " + address);
+	// G_SOCKET_TYPE_DATAGRAM   G_SOCKET_PROTOCOL_UDP => not useable with socket_client
+	// G_SOCKET_TYPE_SEQPACKET  G_SOCKET_PROTOCOL_SCTP
+	// G_SOCKET_TYPE_STREAM     G_SOCKET_PROTOCOL_TCP	
+};
+
+inline void splitAddressParts(const string & address, SocketType & type, string & hostname, uint16_t & port, string & ipcPath) throw(CommunicationModuleException){
+	port = 4711;
+
+	boost::cmatch cm;
+	if ( boost::regex_match(address.c_str(), cm, boost::regex("(?:(ipc|tcp|sctp)://)?(?:([^:]*):?)?([0-9]+)?") ) ) {
+		if(cm[1] == "ipc"){
+			type = SocketType::IPC;
+		}else if (cm[1] == "sctp"){
+			type = SocketType::SCTP;
+			assert(true); // not 100% supported, yet.
+		}else{
+			type = SocketType::TCP;
 		}
-		return {"localhost", port };
-	}
+		hostname = cm[2];
 
-	uint16_t port = (uint16_t) atoi(address.substr(pos+1).c_str());
-	if (port == 0){
+		if(cm[3] != ""){
+			port = atoi(cm[3].str().c_str());
+		}
+
+
+		if(type == SocketType::IPC){
+			string address;
+			address = SIOX_IPC_PATH;
+
+			if (hostname == ""){
+				throw CommunicationModuleException("Invalid IPC address " + address);
+			}
+
+			address += hostname;
+			address += ".socket";
+
+			ipcPath = address;
+		}else{
+			ipcPath = "";
+		}
+
+	}else{
 		throw CommunicationModuleException("Invalid address " + address);
 	}
-	
-	return {address.substr(0, pos), port};
+}
+
+// This function splits the string [type://]<hostname>:<port> into the tupel and returns a socket address.
+// Additionally it supports the protocol
+inline GSocketAddress * getSocket(const string & address, SocketType & type) {
+	string hostname;
+	uint16_t port;
+	string ipcPath;
+	GSocketAddress * gsocketAddr;
+
+	splitAddressParts(address, type, hostname, port, ipcPath);
+
+	if(type == SocketType::IPC){
+		gsocketAddr = G_SOCKET_ADDRESS(g_unix_socket_address_new(ipcPath.c_str()));
+	}else{
+		// for the server
+		if (hostname == "all" || hostname == ""){
+			GInetAddress* localhost = g_inet_address_new_any(G_SOCKET_FAMILY_IPV4);
+			if (! localhost) {
+			    localhost = g_inet_address_new_any(G_SOCKET_FAMILY_IPV6);
+			}
+			gsocketAddr = g_inet_socket_address_new(localhost, port);
+			g_object_unref(localhost);
+		}else{				
+			GSocketAddressEnumerator * enumerator;
+			GSocketConnectable * addr = g_network_address_new (hostname.c_str(), port);
+		  	enumerator = g_socket_connectable_enumerate (addr);
+		  	g_object_unref (addr);
+
+		  	GError * error = NULL;
+		  	gsocketAddr = g_socket_address_enumerator_next(enumerator, NULL, & error);
+	    	// by adding a cancelable here, a memleak happens.
+		  	g_object_unref(enumerator);
+
+		  	if(gsocketAddr == nullptr){
+		  		string what = error->message;
+		  		g_clear_error(& error);
+
+		  		throw CommunicationModuleException("Address cannot be resolved " + address + " error: " + what);
+		  	}
+
+		  	g_clear_error(& error);
+		}
+	}
+
+	return gsocketAddr;
 }
 
 inline uint32_t clientMsgHeaderLen(){
@@ -91,13 +172,21 @@ inline char * readSocketMessage(GInputStream * istream, uint64_t & msgLength, ui
 
     const uint32_t header_length = clientMsgHeaderLen();
     char * header = (char*) malloc(header_length);
+    
+    //GError * error = NULL;
 
 	// Read header
-    ret =  g_input_stream_read_all(istream, header, header_length, &messageSizeRead, cancelable, NULL);   
+    ret =  g_input_stream_read_all(istream, header, header_length, &messageSizeRead, cancelable, nullptr);   
+
     if(!ret || messageSizeRead != header_length) { 
     	free(header);
+    	
     	errorValue = CommunicationError::MESSAGE_DAMAGED;
     	msgLength = messageSizeRead;
+
+		//if( error ){
+		//	g_error_free(error);
+		//}
 
         return nullptr;
     }
@@ -189,6 +278,7 @@ protected:
 			pendingMessages.pop_front();
 			}
 
+			//cout << "Sending !" << endl;
 			// if we cannot send data to the remote we close the connection.
 			if ( ! sendSocketMessage(msg, ostream) ) {
 				unique_lock<mutex> lk(m);
@@ -200,6 +290,8 @@ protected:
 
 				return;
 			}
+
+			//cout << "Done" << endl;
 			messageSend(msg);
 		}	
 	}

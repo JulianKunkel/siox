@@ -24,6 +24,8 @@ public:
 	}
 
 	virtual void init(){
+		setenv("GIO_USE_VFS", "local", 0 );		
+		setenv("GVFS_DISABLE_FUSE", "true" , 0);
 		g_type_init();
 	}
 
