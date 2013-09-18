@@ -2,7 +2,7 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIR}
+	${Boost_INCLUDE_DIR}	
 )
 
 add_library(
@@ -14,7 +14,7 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	siox-core-ModuleLoader 
 	siox-core-ContainerSerializer 
-	siox-core-ComponentRegistrar
+	siox-core-ComponentRegistrar	
 	${Boost_LIBRARIES}
 )
 

@@ -16,6 +16,6 @@ target_link_libraries(
 	siox-monitoring-ActivityBuilder
 )
 
-add_subdirectory(examples)
+#add_subdirectory(examples)
 #add_subdirectory(test)
 

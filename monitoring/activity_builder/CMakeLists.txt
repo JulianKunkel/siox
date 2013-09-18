@@ -11,4 +11,9 @@ add_library(
 	${SIOX_SOURCES}/monitoring/helpers/siox_time.c
 )
 
+target_link_libraries(
+	siox-monitoring-ActivityBuilder
+	rt
+)
+
 add_subdirectory(test)

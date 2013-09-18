@@ -2,6 +2,7 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIR}
 )
 
 add_executable(
@@ -18,11 +19,15 @@ target_link_libraries(
 add_library(
 	test-serialize-modules
 	test-serialize-modules.cpp
+	BoostXMLSerializable.cpp
 )
 
 target_link_libraries(
 	test-serialize-modules 
 	siox-core-AutoConfigurator
 )
+
+siox_run_serializer(test-serialize-modules.hpp BoostXMLSerializable.cpp)
+
 
 add_test(File-Configuration test-fileconfiguration)

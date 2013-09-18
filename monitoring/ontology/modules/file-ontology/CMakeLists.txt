@@ -8,11 +8,15 @@ include_directories(
 add_library(
 	siox-monitoring-FileOntology
 	FileOntology.cpp
+	BoostXMLSerializable.cpp
 )
 
 target_link_libraries(
 	siox-monitoring-FileOntology
 	${Boost_LIBRARIES}
 )
+
+siox_run_serializer(FileOntologyOptions.hpp BoostXMLSerializable.cpp)
+
 
 add_subdirectory(test)

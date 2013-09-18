@@ -8,6 +8,7 @@ include_directories(
 add_library(
 	siox-monitoring-activityPlugin-ActivityFileWriter
 	ActivityFileWriter.cpp
+	BoostXMLSerializable.cpp
 )
 
 target_link_libraries(
@@ -16,6 +17,9 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	${Boost_LIBRARIES}
 )
+
+siox_run_serializer(ActivityFileWriterOptions.hpp BoostXMLSerializable.cpp)
+
 
 add_subdirectory(test)
 

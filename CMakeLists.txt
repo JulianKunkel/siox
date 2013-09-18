@@ -42,6 +42,12 @@ set_package_properties(Boost PROPERTIES URL "http://www.boost.org" TYPE REQUIRED
 find_package(GLIB2 REQUIRED)
 set_package_properties(GLIB2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
+find_package(GMODULE2 REQUIRED)
+set_package_properties(GMODULE2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
+
+find_package(GIOUNIX2 REQUIRED)
+set_package_properties(GIOUNIX2 PROPERTIES URL "http://www.gtk.org" TYPE OPTIONAL PURPOSE "GIO communication module.")
+
 find_package(PostgreSQL)
 set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYPE OPTIONAL PURPOSE "SIOX PostgreSQL backend support.")
 

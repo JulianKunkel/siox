@@ -13,4 +13,11 @@ add_library(
 	ModuleLoader.cpp
 )
 
+target_link_libraries(
+	siox-core-ModuleLoader
+	${GLIB2_LIBRARIES}
+	${GMODULE2_LIBRARIES}
+)
+
+
 add_subdirectory(test)

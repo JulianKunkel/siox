@@ -8,12 +8,16 @@ include_directories(
 add_library(
 	siox-monitoring-FileAssociationMapper
 	FileAssociationMapper.cpp
+	BoostXMLSerializable.cpp
 )
 
 target_link_libraries(
 	siox-monitoring-FileAssociationMapper
 	${Boost_LIBRARIES}
 )
+
+siox_run_serializer(FileAssociationMapperOptions.hpp BoostXMLSerializable.cpp)
+
 
 add_subdirectory(test)
 

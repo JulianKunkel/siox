@@ -8,12 +8,16 @@ include_directories(
 add_library(
 	siox-monitoring-FileBasedSystemInformation
 	FileBasedSystemInformation.cpp
+	BoostXMLSerializable.cpp
 )
 
 target_link_libraries(
 	siox-monitoring-FileBasedSystemInformation
 	${Boost_LIBRARIES}
 )
+
+siox_run_serializer(FileBasedSystemInformationOptions.hpp BoostXMLSerializable.cpp)
+
 
 add_subdirectory(test)
 
