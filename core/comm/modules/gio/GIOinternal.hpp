@@ -44,7 +44,7 @@ enum class SocketType : int{
 	SCTP = G_SOCKET_TYPE_SEQPACKET,
 	IPC = G_SOCKET_TYPE_DATAGRAM
 
-	// G_SOCKET_TYPE_DATAGRAM   G_SOCKET_PROTOCOL_UDP => not useable with socket_client
+	// G_SOCKET_TYPE_DATAGRAM   G_SOCKET_PROTOCOL_UDP => not usable with socket_client
 	// G_SOCKET_TYPE_SEQPACKET  G_SOCKET_PROTOCOL_SCTP
 	// G_SOCKET_TYPE_STREAM     G_SOCKET_PROTOCOL_TCP	
 };
@@ -299,6 +299,12 @@ protected:
 public:
 	virtual ~MessageSendQueue(){}
 
+	void clearPendingMessages(){
+		 for(auto itr = pendingMessages.begin() ; itr != pendingMessages.end() ; itr++){
+    		delete(*itr);
+    	}
+	}
+
 	void connect(GOutputStream * ostream, GCancellable * cancelable){
 		m.lock();
 		assert(! connected);
@@ -339,9 +345,7 @@ public:
 		disconnect();
 
     	// Destroy all pending messages without notification.
-    	for(auto itr = pendingMessages.begin() ; itr != pendingMessages.end() ; itr++){
-    		delete(*itr);
-    	}
+		clearPendingMessages();
 	}
 
 	void waitUntilAllMsgsAreSend(){

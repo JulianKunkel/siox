@@ -63,6 +63,7 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 		g_clear_error(& error);
 
 		connectionCallback->connectionErrorCB(* this, CommunicationError::SERVER_NOT_ACCESSABLE);
+
 		return;
 	}
 
@@ -139,7 +140,10 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 
 	if (! g_cancellable_is_cancelled (shutdown_cancelable)){
 		// we expect the server terminated the connection for some reason.
-		connectionCallback->connectionErrorCB(*this, comm_error);
+		bool deletePendingMessages = connectionCallback->connectionErrorCB(*this, comm_error);
+		if(deletePendingMessages){
+			sendQueue->clearPendingMessages();
+		}
 	}
 
 	cout << "connectionThreadFunc End" << endl;

@@ -21,7 +21,8 @@ class CommunicationModule;
 
 class ConnectionCallback{
 public:
-	virtual void connectionErrorCB(ServiceClient & client, CommunicationError error){}
+	// the return value determines if the currently pending messages should be deleted or not.
+	virtual bool connectionErrorCB(ServiceClient & client, CommunicationError error){ return false;}
 	virtual void connectionSuccessfullCB(ServiceClient & client){}
 };
 
