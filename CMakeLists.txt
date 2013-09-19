@@ -31,8 +31,6 @@ include(FeatureSummary)
 
 include(SIOXMacros)
 
-feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
-
 # find_package(Protobuf REQUIRED)
 # set_package_properties(Protobuf PROPERTIES URL "http://code.google.com/p/protobuf" TYPE REQUIRED PURPOSE "Serialization using Google Protocol Buffers.")
 
@@ -60,7 +58,12 @@ set_package_properties(HDF5 PROPERTIES URL "http://www.hdfgroup.org/HDF5" TYPE O
 find_package(MPI)
 set_package_properties(MPI PROPERTIES URL "http://www.open-mpi.org" TYPE OPTIONAL PURPOSE "SIOX Open MPI examples.")
 
+find_package(PythonInterp 2.7 REQUIRED)
+set_package_properties(PythonInterp PROPERTIES URL "http://www.python.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
+
 # siox_generate_buffers()
+
+feature_summary(WHAT PACKAGES_NOT_FOUND INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following packages couldn't be found on your system:\n") 
 
 add_subdirectory(core)
 add_subdirectory(knowledge)
