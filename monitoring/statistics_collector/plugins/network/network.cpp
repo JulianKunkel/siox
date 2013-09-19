@@ -91,8 +91,8 @@ class NetworkStats: public ProcSingleFilePlugin<18> {
 
 	public:
 
-		virtual list<StatisticsProviderDatatypes> availableMetrics() {
-			auto lst = list<StatisticsProviderDatatypes>();
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
+			vector<StatisticsProviderDatatypes> lst;
 
 			for( auto iter = CurrentValues.begin(); iter != CurrentValues.end(); iter++ ) {
 				string name = iter -> first;

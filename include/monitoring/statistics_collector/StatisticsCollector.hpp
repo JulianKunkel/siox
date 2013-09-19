@@ -110,23 +110,23 @@ namespace monitoring {
 			 * - 100 seconds in 10 second increments
 			 * - 10 minutes in 1 minute increments
 			 */
-			virtual array<StatisticsValue, 10> getStatistics( StatisticsIntervall intervall, StatisticsDescription & stat ) = 0;
+			virtual array<StatisticsValue, 10> getStatistics( StatisticsInterval interval, StatisticsDescription & stat ) = 0;
 
 			/*
 			 */
-			virtual StatisticsValue getRollingStatistics( StatisticsIntervall intervall, StatisticsDescription & stat ) = 0;
+			virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, StatisticsDescription & stat ) = 0;
 
-			virtual StatisticsValue getReducedStatistics( StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op ) = 0;
+			virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) = 0;
 
 			/* D10
 			 * What are the available source metrics and available sources for metrics if they are combined ones?
 			 */
-			virtual list<StatisticsDescription> availableMetrics() = 0;
+			virtual vector<StatisticsDescription> availableMetrics() = 0;
 	};
 
 }
 
 
-#define STATISTICS_INTERFACE "monitoring_statistics_collector"
+#define STATISTICS_COLLECTOR_INTERFACE "monitoring_statistics_collector"
 
 #endif /* STATISTICS_COLLECTOR_H */

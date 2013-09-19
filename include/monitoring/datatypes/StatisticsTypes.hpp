@@ -20,6 +20,7 @@
 #include <map>
 
 #include <core/datatypes/VariableDatatype.hpp>
+#include <monitoring/datatypes/ids.hpp>
 
 using namespace std;
 
@@ -27,7 +28,7 @@ namespace monitoring {
 
 	/*
 	Statistical Attributes
-	- Startzeit und Endzeit = Intervall
+	- Startzeit und Endzeit = Interval
 	- "Metric identifier" in Ontologie: "throughput/network/[MIN/MAX/AVG]"
 	--- STORAGE_TYPE
 	--- SI_Unit
@@ -84,14 +85,14 @@ namespace monitoring {
 		COMPONENT
 	};
 
-	typedef enum StatisticsIntervall {
+	typedef enum StatisticsInterval {
 		HUNDRED_MILLISECONDS,
 		SECOND,
 		TEN_SECONDS,
 		MINUTE,
 		TEN_MINUTES,
 		INTERVALLS_NUMBER
-	} StatisticsIntervall;
+	} StatisticsInterval;
 
 	enum StatisticsReduceOperator {
 		MIN,
@@ -104,25 +105,8 @@ namespace monitoring {
 
 	class StatisticsDescription {
 		public:
-			StatisticsEntity entity;
-			StatisticsScope  scope;
-
-			string metrics;
-
-			vector<pair<string, string> > topology;
-			//1)map<string,string> PAIR;
-			//1)map<string,PAIR> topology;
-			//1)topology MapofMapObject;
-
-			// Less overhead than vector<pair<string,string>>:
-			map<string, map<string, string>> MetricMapObject;
-
-
-			string si_unit;
-
-			/* TODO StatisticsDescription(XX){} @Julian Marc: What is the aim here ???
-			 IS this the user readable description as in the StatisticPlugins?
-			 Side note: Found out that vector pair as two more unnecessary copies than MapofMap */
+			OntologyAttributeID ontologyId;
+			vector<pair<string, string> > topology;	//TODO: Create a service that can map this to an ID for faster comparison.
 	};
 
 }

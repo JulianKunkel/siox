@@ -3,7 +3,7 @@
 
 #include <monitoring/statistics_collector/StatisticsCollector.hpp>
 
-#define STATISTICS_COLLECTOR_INSTANCIATOR_NAME COMPONENT_INSTANCIATOR_NAME(monitoring_statistics_collector)
+#define STATISTICS_COLLECTOR_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_statistics_collector)
 
 #endif
 

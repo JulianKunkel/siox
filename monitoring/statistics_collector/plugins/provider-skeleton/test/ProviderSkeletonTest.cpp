@@ -34,24 +34,24 @@ class StatisticsCollectorTester : public StatisticsCollector {
 		}
 
 
-		virtual array<StatisticsValue, 10> getStatistics( StatisticsIntervall intervall, StatisticsDescription & stat ) {
+		virtual array<StatisticsValue, 10> getStatistics( StatisticsInterval interval, StatisticsDescription & stat ) {
 			return array<StatisticsValue, 10>();
 		}
 
-		virtual StatisticsValue getRollingStatistics( StatisticsIntervall intervall, StatisticsDescription & stat ) {
+		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, StatisticsDescription & stat ) {
 			return StatisticsValue( 1 );
 		}
 
-		virtual StatisticsValue getReducedStatistics( StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op ) {
+		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) {
 			return StatisticsValue( 1 );
 		}
 
-		virtual StatisticsValue getStatistics( StatisticsIntervall intervall, StatisticsDescription & stat, StatisticsReduceOperator op ) {
+		virtual StatisticsValue getStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) {
 			return StatisticsValue( 1 );
 		}
 
-		virtual list<StatisticsDescription> availableMetrics() {
-			auto metrics = list<StatisticsDescription>();
+		virtual vector<StatisticsDescription> availableMetrics() {
+			vector<StatisticsDescription> metrics;
 			return metrics;
 		}
 

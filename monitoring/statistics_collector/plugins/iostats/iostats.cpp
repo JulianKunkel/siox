@@ -45,8 +45,8 @@ class IOstats: public ProcSingleFilePlugin<15> {
 
 	public:
 
-		virtual list<StatisticsProviderDatatypes> availableMetrics() {
-			auto lst = list<StatisticsProviderDatatypes>();
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
+			vector<StatisticsProviderDatatypes> lst;
 			// walk through all known devices:
 
 			// TODO: determine available DEVICES using /sys/block/

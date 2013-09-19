@@ -3,6 +3,6 @@
 
 #include <knowledge/optimizer/OptimizerPlugin.hpp>
 
-#define KNOWLEDGE_OPTIMIZER_PLUGING_INSTANCIATOR_NAME COMPONENT_INSTANCIATOR_NAME(knowledge_optimizer_plugin)
+#define KNOWLEDGE_OPTIMIZER_PLUGING_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(knowledge_optimizer_plugin)
 
 #endif

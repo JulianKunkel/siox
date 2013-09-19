@@ -125,7 +125,7 @@ namespace monitoring {
 			vector<pair<string, StatisticsDescription>> variables;
 
 			/* Equation to compute the new metrics based on existing metrics.
-			 * Whenever any metrics changes we have to recompute the value, at best the update intervall is identical for all metrics.
+			 * Whenever any metrics changes we have to recompute the value, at best the update interval is identical for all metrics.
 			 * Existing reduction operators: average, sum, min, max, count (this is the number of variables)
 			 * Example equations, variables are specified above (the return type is only added for illustrating purpose):
 			 * averageOPsize = size / count

@@ -3,25 +3,28 @@
 #include <core/module/ModuleLoader.hpp>
 
 #include <monitoring/statistics_collector/StatisticsProviderPlugin.hpp>
-#include <monitoring/statistics_collector/ThreadedStatisticsCollector.hpp>
+#include <monitoring/statistics_collector/StatisticsCollector.hpp>
 
-
+#include "../ThreadedStatisticsOptions.hpp"
 
 
 int main( int argc, char const * argv[] )
 {
-	StatisticsCollector * tsc = core::module_create_instance<StatisticsCollector>( "", "ThreadedStatisticsCollector", THREADED_STATISTICS_COLLECTOR_INTERFACE );
-	assert( o != nullptr );
-	ThreadedStatisticsCollectorOptions & op = tsc->getOptions<ThreadedStatisticsCollectorOptions>();
-	op.filename = "ThreadedStatisticsCollector.dat";
-	tsc->init();
-	string it1( "Test 1" );
-	string it2( "Test 2" );
+	monitoring::StatisticsCollector * collector = core::module_create_instance<monitoring::StatisticsCollector>( "", "siox-monitoring-ThreadedStatisticsCollector", STATISTICS_COLLECTOR_INTERFACE );
+	collector->init();
+	monitoring::StatisticsProviderPlugin* plugin = module_create_instance<monitoring::StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-providerskel", MONITORING_STATISTICS_PLUGIN_INTERFACE);
+	plugin->init();
 
-}
+	collector->registerPlugin(plugin);
+//	collector->availableMetrics();
 
-cout << "OK" << endl;
-return 0;
+	sleep(2);
+
+	delete collector;
+	delete plugin;
+
+	cout << "OK" << endl;
+	return 1;
 }
 
 

@@ -1,5 +1,5 @@
-#ifndef STATISTICS_PROVIDER_PLUGIN_OPTIONS
-#define STATISTICS_PROVIDER_PLUGIN_OPTIONS
+#ifndef THREADED_STATISTICS_COLLECTOR_OPTIONS
+#define THREADED_STATISTICS_COLLECTOR_OPTIONS
 
 /*!
  * Here we also integrate Userderived statistics such as GBytes/s from the bytes/ms Throughput we already have.
@@ -10,6 +10,7 @@
 
 #include <list>
 
+#include <core/component/ComponentReference.hpp>
 #include <core/component/component-options.hpp>
 
 

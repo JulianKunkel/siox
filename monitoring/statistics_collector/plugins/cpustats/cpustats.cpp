@@ -86,8 +86,8 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 			return "/proc/stat";
 		}
 
-		virtual list<StatisticsProviderDatatypes> availableMetrics() {
-			auto lst = list<StatisticsProviderDatatypes>();
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
+			vector<StatisticsProviderDatatypes> lst;
 
 			uint64_t overflow_value = ( uint64_t ) 1 << 63; //TODO CHECK ME, we expect 64 Bit...
 

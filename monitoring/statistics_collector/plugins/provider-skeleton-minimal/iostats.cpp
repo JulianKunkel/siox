@@ -18,8 +18,8 @@ class IOstats: public StatisticsProviderPlugin {
 			f = f2 * 2;
 		}
 
-		virtual list<StatisticsProviderDatatypes> availableMetrics() {
-			auto lst = list<StatisticsProviderDatatypes>();
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
+			vector<StatisticsProviderDatatypes> lst;
 
 			lst.push_back( {SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", {{"node", LOCAL_HOSTNAME}, {"semantics", "testing"}}, i, GAUGE, "%", "test desc", 0, 0} );
 			lst.push_back( {HARDWARE_SPECIFIC, NODE, "test/weather", {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}}, f, INCREMENTAL, "uhh", "desc2",  0, 0} );
