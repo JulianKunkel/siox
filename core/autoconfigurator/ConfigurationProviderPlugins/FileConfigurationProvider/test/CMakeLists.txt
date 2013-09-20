@@ -9,11 +9,10 @@ add_executable(
 	test-fileconfiguration
 	fileconfiguration-test.cpp
 )
-
 target_link_libraries(
 	test-fileconfiguration
 	test-serialize-modules
-	siox-core-AutoConfigurator  
+	siox-core-AutoConfigurator
 )
 
 add_library(
@@ -28,6 +27,8 @@ target_link_libraries(
 )
 
 siox_run_serializer(test-serialize-modules.hpp BoostXMLSerializable.cpp)
+
+symlink(test.config)
 
 
 add_test(File-Configuration test-fileconfiguration)

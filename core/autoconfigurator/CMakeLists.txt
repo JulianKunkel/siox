@@ -8,6 +8,7 @@ include_directories(
 add_library(
 	siox-core-AutoConfigurator
 	AutoConfigurator.cpp
+	BoostXMLSerializable.cpp
 )
 
 target_link_libraries(
@@ -17,5 +18,8 @@ target_link_libraries(
 	siox-core-ComponentRegistrar	
 	${Boost_LIBRARIES}
 )
+
+siox_run_serializer(ModuleOptions.hpp BoostXMLSerializable.cpp)
+
 
 add_subdirectory(ConfigurationProviderPlugins)

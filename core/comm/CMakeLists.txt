@@ -16,4 +16,4 @@ target_link_libraries(
 
 
 add_subdirectory(modules)
-# add_subdirectory(test)
+add_subdirectory(test)

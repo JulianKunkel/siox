@@ -29,4 +29,10 @@ endmacro(SIOX_RUN_BINARY_SERIALIZER)
     )
 endmacro(SIOX_RUN_TEXT_SERIALIZER)
 
+macro(SYMLINK IN)
+	add_custom_target(symlink ALL
+    		COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/${IN} ${IN}
+	)
+endmacro(SYMLINK)
+
  
