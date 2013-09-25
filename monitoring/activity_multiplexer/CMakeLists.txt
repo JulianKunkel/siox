@@ -20,6 +20,6 @@ target_link_libraries(
 	${Boost_LIBRARIES}
 )
 
-#add_subdirectory(plugins)
+add_subdirectory(plugins)
 #add_subdirectory(test)
 

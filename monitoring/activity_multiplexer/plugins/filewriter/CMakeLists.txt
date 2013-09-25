@@ -13,7 +13,7 @@ add_library(
 
 target_link_libraries(
 	siox-monitoring-activityPlugin-ActivityFileWriter
-	siox-core-ContainerSerializer 
+	siox-core-ContainerSerializer
 	siox-core-AutoConfigurator
 	${Boost_LIBRARIES}
 )

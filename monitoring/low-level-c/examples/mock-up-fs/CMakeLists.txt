@@ -23,6 +23,17 @@ target_link_libraries(
 	mockupfs-example
 	test-mufs 
 	siox-monitoring-siox-ll 
-	siox-monitoring-ActivityBuilder
+	siox-core-autoconfigurator-FileConfigurationProvider
+	siox-monitoring-activityPlugin-AnomalySkeleton
+	siox-monitoring-FileOntology
+	siox-monitoring-FileAssociationMapper
+	siox-monitoring-FileBasedSystemInformation
+	siox-knowledge-ReasonerStandardImplementation
+	siox-knowledge-DereferencingFacade
+	siox-monitoring-ActivityMultiplexerAsync	
+	siox-monitoring-activityPlugin-ActivityForwarder	
 )
 
+symlink(siox.conf siox.conf)
+
+add_test(monitoring-low-level-c-examples-mockupfs-example mockupfs-example)

@@ -14,8 +14,9 @@ target_link_libraries(
 	siox-core-ModuleLoader 
 	siox-core-AutoConfigurator 
 	siox-monitoring-ActivityBuilder
+	siox-util
 )
 
-#add_subdirectory(examples)
-#add_subdirectory(test)
+add_subdirectory(examples)
+add_subdirectory(test)
 

@@ -3,9 +3,19 @@ project(SIOX)
 include_directories(${SIOX_INCLUDE_DIRS})
 
 add_library(
-	siox-core-ComponentRegistrar
-	ComponentRegistrar.cpp
-	ActivitySerializableText.hpp
+	siox-core-ActivitySerializable
+	ActivitySerializableText.cpp
 )
 
-siox_run_text_serializer(ActivitySerializable.hpp ActivitySerializableText.hpp)
+add_library(
+	siox-core-ComponentRegistrar
+	ComponentRegistrar.cpp
+)
+
+target_link_libraries(
+	siox-core-ComponentRegistrar
+	siox-core-ActivitySerializable
+)
+
+
+siox_run_text_serializer(ActivitySerializable.hpp ActivitySerializableText.cpp)

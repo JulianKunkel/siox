@@ -16,5 +16,5 @@ target_link_libraries(
 	siox-monitoring-activityPlugin-ActivityFileWriter
 )
 
-add_test(Activity-File-Writer ActivityFileWriterTest)
+add_test(core-activity_multiplexer-filewriter-ActivityFileWriterTest ActivityFileWriterTest)
 

@@ -11,8 +11,7 @@ add_library(
 	BoostXMLSerializable.cpp
 )
 
-siox_run_serializer(ReasonerStandardImplementationOptions.hpp BoostXMLSerializable.cpp)
-
+siox_run_serializer(ActivityForwarderOptions.hpp BoostXMLSerializable.cpp)
 
 target_link_libraries(
 	siox-monitoring-activityPlugin-ActivityForwarder

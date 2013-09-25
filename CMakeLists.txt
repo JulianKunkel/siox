@@ -34,7 +34,7 @@ include(SIOXMacros)
 # find_package(Protobuf REQUIRED)
 # set_package_properties(Protobuf PROPERTIES URL "http://code.google.com/p/protobuf" TYPE REQUIRED PURPOSE "Serialization using Google Protocol Buffers.")
 
-find_package(Boost 1.49.0 COMPONENTS regex serialization system thread REQUIRED)
+find_package(Boost 1.49.0 COMPONENTS regex serialization system thread program_options REQUIRED)
 set_package_properties(Boost PROPERTIES URL "http://www.boost.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
 find_package(GLIB2 REQUIRED)
@@ -52,7 +52,7 @@ set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYP
 find_package(NetCDF)
 set_package_properties(NetCDF PROPERTIES URL "http://www.unidata.ucar.edu/software/netcdf" TYPE OPTIONAL PURPOSE "SIOX NetCDF examples.")
 
-find_package(HDF5)
+find_package(HDF5 NO_MODULE)
 set_package_properties(HDF5 PROPERTIES URL "http://www.hdfgroup.org/HDF5" TYPE OPTIONAL PURPOSE "SIOX HDF5 examples.")
 
 find_package(MPI)
@@ -68,4 +68,5 @@ feature_summary(WHAT PACKAGES_NOT_FOUND INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_
 add_subdirectory(core)
 add_subdirectory(knowledge)
 add_subdirectory(monitoring)
-
+add_subdirectory(util)
+add_subdirectory(tools)

@@ -11,7 +11,7 @@ add_executable(
 
 target_link_libraries(
 	iostatsTestSkel
-	siox-monitoring-statisticsPlugin-IOstats 
+	siox-monitoring-statisticsPlugin-providerskel-min
 	siox-core-AutoConfigurator
 )
 
