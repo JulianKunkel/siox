@@ -21,4 +21,4 @@ siox_run_serializer(FileAssociationMapperOptions.hpp BoostXMLSerializable.cpp)
 
 add_subdirectory(test)
 
-
+install(TARGETS siox-monitoring-FileAssociationMapper LIBRARY DESTINATION lib)

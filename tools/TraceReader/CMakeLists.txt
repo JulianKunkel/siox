@@ -33,3 +33,6 @@ target_link_libraries(
 )
 
 add_subdirectory(test)
+
+install(TARGETS siox-tools-TraceReader siox-trace-reader LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+

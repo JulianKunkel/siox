@@ -20,3 +20,4 @@ siox_run_serializer(ReasonerStandardImplementationOptions.hpp BoostXMLSerializab
 
 add_subdirectory(test)
 
+install(TARGETS siox-knowledge-ReasonerStandardImplementation LIBRARY DESTINATION lib)

@@ -12,7 +12,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SIOX_SOURCES}/tools/cmake)
 set(BUILD_SHARED_LIBS ON)
 
 # you can adjust the installation path here
-set(CMAKE_INSTALL_PREFIX /usr/local)
+# IF we set it here we cannot change it using for example ccmake
+# set(CMAKE_INSTALL_PREFIX /usr/local)
 
 # this is for self-compiled libraries that are not in the system's ld-path
 set(CMAKE_LIBRARY_PATH
@@ -69,7 +70,8 @@ add_subdirectory(core)
 add_subdirectory(knowledge)
 add_subdirectory(monitoring)
 add_subdirectory(util)
+add_subdirectory(daemon)
 add_subdirectory(tools)
 
-install(DIRECTORY include/ DESTINATION include/siox)
+install(DIRECTORY include/ DESTINATION include/)
 

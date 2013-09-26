@@ -10,3 +10,5 @@ add_library(
 )
 
 add_subdirectory(test)
+
+install(TARGETS siox-core-MathematicalEquation LIBRARY DESTINATION lib)

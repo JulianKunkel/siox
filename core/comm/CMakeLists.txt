@@ -17,3 +17,5 @@ target_link_libraries(
 
 add_subdirectory(modules)
 add_subdirectory(test)
+
+install(TARGETS siox-core-comm-multiMessageService LIBRARY DESTINATION lib)

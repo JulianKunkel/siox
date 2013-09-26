@@ -4,7 +4,7 @@
 	<item_version>0</item_version>
 	<item class_id="1" tracking_level="0" version="0">
 		<first>1</first>
-		<second>julian-Latitude-E6410</second>
+		<second>thunder</second>
 	</item>
 	<item>
 		<first>3</first>
@@ -245,7 +245,7 @@
 	<count>1</count>
 	<item_version>0</item_version>
 	<item class_id="10" tracking_level="0" version="0">
-		<first>julian-Latitude-E6410</first>
+		<first>thunder</first>
 		<second>1</second>
 	</item>
 </nodeMap>

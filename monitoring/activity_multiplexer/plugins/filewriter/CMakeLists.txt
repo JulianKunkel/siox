@@ -23,3 +23,4 @@ siox_run_serializer(ActivityFileWriterOptions.hpp BoostXMLSerializable.cpp)
 
 add_subdirectory(test)
 
+install(TARGETS siox-monitoring-activityPlugin-ActivityFileWriter LIBRARY DESTINATION lib)

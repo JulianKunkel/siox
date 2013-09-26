@@ -19,3 +19,5 @@ target_link_libraries(
 
 
 siox_run_text_serializer(ActivitySerializable.hpp ActivitySerializableText.cpp)
+
+install(TARGETS siox-core-ComponentRegistrar siox-core-ActivitySerializable LIBRARY DESTINATION lib)

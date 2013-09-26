@@ -11,6 +11,7 @@ add_library(
 
 target_link_libraries(
 	siox-util
+	siox-core-AutoConfigurator
 )
 
-
+install(TARGETS siox-util LIBRARY DESTINATION lib)

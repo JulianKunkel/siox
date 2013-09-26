@@ -20,3 +20,5 @@ siox_run_serializer(FileOntologyOptions.hpp BoostXMLSerializable.cpp)
 
 
 add_subdirectory(test)
+
+install(TARGETS siox-monitoring-FileOntology LIBRARY DESTINATION lib)

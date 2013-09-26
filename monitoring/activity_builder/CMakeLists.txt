@@ -17,3 +17,5 @@ target_link_libraries(
 )
 
 add_subdirectory(test)
+
+install(TARGETS siox-monitoring-ActivityBuilder LIBRARY DESTINATION lib)

@@ -20,3 +20,5 @@ target_link_libraries(
 add_subdirectory(examples)
 add_subdirectory(test)
 
+install(TARGETS siox-monitoring-siox-ll LIBRARY DESTINATION lib)
+
