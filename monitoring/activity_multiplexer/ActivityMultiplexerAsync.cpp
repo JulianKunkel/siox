@@ -62,6 +62,18 @@ namespace monitoring {
 		std::condition_variable not_full;
 		std::condition_variable not_empty;
 
+		std::deque<Activity *> queue;
+		unsigned int capacity = 1000; // TODO specify by options
+
+		bool overloaded = false;
+		int lost = 1;
+
+		// old mutex
+		std::mutex mut;
+
+		bool terminate = false;
+
+
 	public:
 			ActivityMultiplexerQueue () {};
 			virtual ~ActivityMultiplexerQueue () {};
@@ -103,21 +115,19 @@ namespace monitoring {
 			 * @param   activity     an activity that need to be dispatched in the future
 			 */
 			virtual void Push(Activity * activity) {
-				std::lock_guard<std::mutex> lock( mut );
+				//std::lock_guard<std::mutex> lock( mut );
 
-				//TODO CV: std::unique_lock<std::mutex> l(lock);
-				//TODO CV: not_full.wait(l, [&count, &capacity](){return count != capacity; });
-				//TODO CV: not_full.wait(l, [=](){return this->Full() != 1; });
+				std::unique_lock<std::mutex> l(lock);
+				not_full.wait(l, [=](){ return this->Full() == 0; });
 
 				printf("push %p\n", activity);
-				// maybe this should happen in notifier run()
-				/*
+
 				if (Overloaded() && Empty()) {
 				    // TODO notifier.Reset(lost);
 				    lost = 0;
 				    overloaded = false;
 				}
-				*/
+
 
 				if( Overloaded() ) {
 					lost++;
@@ -132,7 +142,7 @@ namespace monitoring {
 				}
 
 
-				//TODO CV: not_empty.notify_one();
+				not_empty.notify_one();
 			};
 
 
@@ -143,33 +153,34 @@ namespace monitoring {
 			 */
 			virtual Activity * Pop() {
 
-				std::lock_guard<std::mutex> lock( mut );
+				//std::lock_guard<std::mutex> lock( mut );
 
-				//TODO 2 CV: std::unique_lock<std::mutex> l(lock);
-				//TODO 2 CV: not_empty.wait(l, [queue](){return queue.Empty() != 0; });
+				std::unique_lock<std::mutex> l(lock);
+
+				not_empty.wait(l, [=](){ return (this->Empty() == 0 || terminate); });
 
 				Activity * activity = nullptr;
-				if (queue.empty())
+				if (queue.empty() || terminate) {
 						return nullptr;
+				}
 
 				auto itr = queue.begin();
 				queue.erase(itr);
 				printf("pop %p\n", *itr);
 
 
-				//TODO CV: not_full.notify_one();
+				not_full.notify_one();
 
 				return *itr;
 			};
 
-	private:
-			std::deque<Activity *> queue;
-			unsigned int capacity = 1000; // TODO specify by options
+			virtual void finalize() {
+				printf("Queue:  Finalizing\n");
+				terminate = true;
 
-			bool overloaded = false;
-			int lost = 1;
-
-			std::mutex mut;
+				// this is important to wake up waiting pop/notifier
+				not_empty.notify_one();
+			}
 	};
 
 
@@ -198,27 +209,24 @@ namespace monitoring {
 				assert(queue);
 				// call dispatch of Dispatcher
 
+
 				while( !terminate ) {
-
-					//TODO CV: std::unique_lock<std::mutex> l(queue->lock);
-					//TODO CV: queue->not_empty.wait(l, [queue](){return queue->empty() !=0; });
-
 
 					Activity * activity = queue->Pop();
 
 					if ( activity )
 					{
+						//TODO get overloaded with pop
 						dispatcher->Dispatch(-1, (void *)activity);
 					}
-
-					//TODO CV: not_full.notify_one();
 
 				}
 			}
 
 			virtual void finalize() {
-				printf("Finalizing\n");
+				printf("Notifier:  Finalizing\n");
 				terminate = true;
+				queue->finalize();
 			}
 
 	private:
@@ -240,7 +248,6 @@ namespace monitoring {
 	 * in an syncronised or asyncronous manner.
 	 */
 	class ActivityMultiplexerAsync : public ActivityMultiplexer, public Dispatcher {
-	//class ActivityMultiplexerAsync : public ActivityMultiplexer {
 
 	private:
 			list<ActivityMultiplexerListener *> 		listeners;
@@ -264,7 +271,6 @@ namespace monitoring {
 
 			}
 
-
 			/**
 			 * hand over activity to registered listeners
 			 *
@@ -284,8 +290,6 @@ namespace monitoring {
 					queue->Push(activity);
 				}
 			}
-
-			// this functions is registered to a notifier as callback
 
 			/**
 			 * Notify async listeners of activity
