@@ -13,7 +13,6 @@
 #include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
 #include <monitoring/statistics_collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
 #include "ThreadedStatisticsOptions.hpp" // own options of this implementation
-#include "StatisticsProviderPluginData.hpp"
 
 #include <thread> // header for threads
 #include <atomic>
@@ -25,6 +24,10 @@
 #include <ctime> //(time.h) get C header time
 
 #include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
+#include <monitoring/statistics_collector/Statistic.hpp>
+#include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
+#include <monitoring/statistics_collector/StatisticsProviderPlugin.hpp>
+#include <monitoring/ontology/Ontology.hpp>
 
 
 using namespace std;
@@ -142,6 +145,8 @@ Implementation details for the requirements of a StatisticsCollector:
         for the interval 0-10.
     R9| Use a list to keep all plugins for each interval. The plugins should be executed for these intervals.
 
+    TODO: The following two points should  be moved to Statistics.hpp
+
     D6  As we have a fixed time base on every ten seconds we deliver for example four periods of average values: 4x 10*100ms StatisticIntervals.
         Every minute we deliver (four) periods of average values:  4x 10*1s
         Every ten minutes we deliver : 4x 10*10s
@@ -161,168 +166,163 @@ Implementation details for the requirements of a StatisticsCollector:
 
 using namespace std;
 
-class ThreadedStatisticsCollector: StatisticsCollector {
+class ThreadedStatisticsCollector : StatisticsCollector {
+	public:
+
+		virtual void init() throw();
+
+		virtual void registerPlugin( StatisticsProviderPlugin * plugin ) throw();
+		//TODO: XXX: Do we really need to be able to unregister plugins?
+		//I raise the question because of the Statistic objects, to which we provide access here:
+		//We can delete them when their plugin is unregistered, this leaves external references dangling, likely invoking undefined behaviour.
+		//We can keep them around, but that would insert stale statistics into our list of Statistics.
+		//We can use shared_ptr<>, but that does not deal with the external references becoming stale.
+		//Then again, I don't really see a use case for unregistering a plugin, so why bother with this functionality?
+		virtual void unregisterPlugin( StatisticsProviderPlugin * plugin ) throw();
+
+		virtual vector<shared_ptr<Statistic> > getStatistics() throw();
+
+		virtual ~ThreadedStatisticsCollector() throw();
+
+		/**
+		 * get Available ThreadedStatisticsOptions
+		 */
+		virtual ComponentOptions * AvailableOptions() throw();
+
 	private:
-		ActivityPluginDereferencing * facade;
+		Ontology* ontology = 0;
 		// Statistics Multiplexer
 
-		vector<shared_ptr<StatisticsProviderPluginData> > sources;
+		vector<StatisticsProviderPlugin*> plugins;	//protected by sourcesLock
+		vector<shared_ptr<Statistic> > statistics;	//protected by sourcesLock
 		boost::shared_mutex sourcesLock;
 
 		thread pollingThread;
 		size_t pollCount;
 		volatile bool terminated = false;	//This flag is only raised once to signal the polling thread to terminate.
 
-		int64_t getMicroSeconds() throw() {
-			struct timeval curTime;
-			gettimeofday(&curTime, NULL);
-			return 1000*1000ll*curTime.tv_sec + curTime.tv_usec;
+		int64_t getMicroSeconds() throw();
+		void microSecondSleep(int64_t microSeconds) throw();
+		void pollingThreadMain() throw();	// One thread for periodic issuing
+};
+
+
+
+void ThreadedStatisticsCollector::init() throw() {
+	//XXX I've taken out reading a polling interval from the options, because that should be determined from the StatisticsProviderPlugins.
+	ThreadedStatisticsOptions& o = getOptions<ThreadedStatisticsOptions>();
+	ontology =  GET_INSTANCE(Ontology, o.ontology);
+	pollCount = 0;
+	pollingThread = thread( &ThreadedStatisticsCollector::pollingThreadMain, this );
+}
+
+void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plugin ) throw() {
+	assert( plugin );
+	sourcesLock.lock();
+	// Check whether this plugin is alread registered.
+	for(size_t i = plugins.size(); i--; ) {
+		assert( plugins[i] != plugin && "Statistics Collector Plugins may only be registered with a StatisticsCollector once." ), abort();
+	}
+	// Add the plugin
+	plugins.emplace_back( plugin );
+	vector<StatisticsProviderDatatypes> metrics( plugin->availableMetrics() );
+	for( size_t i = metrics.size(); i--; ) {
+		statistics.emplace_back( new Statistic( metrics[i], plugin, ontology ) );
+	}
+	sourcesLock.unlock();
+}
+
+void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * plugin ) throw() {
+	sourcesLock.lock();
+	// Remove the plugin from the plugin list.
+	for( size_t i = plugins.size(); i--; ) {
+		if( plugins[i] == plugin ) {
+			plugins.erase(plugins.begin() + i);
 		}
-
-		void microSecondSleep(int64_t microSeconds) throw() {
-			struct timespec sleepTime;
-			sleepTime.tv_sec = microSeconds/1000/1000;
-			sleepTime.tv_nsec = (microSeconds - 1000*1000*sleepTime.tv_sec)*1000;
-			nanosleep(&sleepTime, NULL);
+	}
+	// Remove the dependent Statistics from the statistics list.
+	for( size_t i = statistics.size(); i--; ) {
+		if( statistics[i]->provider == plugin) {
+			statistics.erase(statistics.begin() + i);
 		}
+	}
+	sourcesLock.unlock();
+}
 
-		// One thread for periodic issuing
-		virtual void pollingThreadMain() throw() {
-			using namespace std::chrono;
-			int64_t nextPollTime = getMicroSeconds();
-			while( ! terminated ) {
-				sourcesLock.lock_shared();
-				for( size_t i = sources.size(); i--; ) {
-					sources[i]->doPolling();
-				}
-				sourcesLock.unlock_shared();
-				// Sleep until it's time to poll again.
-				// I have moved this from its own function, because we have to check `terminated` after every call to sleep_for.
-				nextPollTime += 100*1000;
-				int64_t curTime = getMicroSeconds();
-				while(nextPollTime - curTime >= 0) {
-					printf("sleeping for %ld micro seconds\n", nextPollTime - curTime);
-					microSecondSleep(nextPollTime - curTime);
-					curTime = getMicroSeconds();
-					// Check whether we were awoken to terminate.
-					atomic_thread_fence( memory_order_acquire );	//Make sure that the value of terminated is up to date.
-					if( terminated ) return;
-				}
-			}
-		}
+vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::getStatistics() throw() {
+	return statistics;
+}
 
-		void CalculateAverageValues() throw() {
-			vector<VariableDatatype> AverageValues; // Size = number of periods //first try 4
-			assert(0), abort();	//TODO
-		}
+ThreadedStatisticsCollector::~ThreadedStatisticsCollector() throw() {
+	terminated = true;
+	atomic_thread_fence( memory_order_release );
+	pollingThread.join();
+	if( !sourcesLock.try_lock() ) {
+		assert(0 && "Someone tried to destruct a ThreadedStatisticsCollector while another thread is still using it!"), abort();
+	}
+	sourcesLock.unlock();
+}
 
-	public:
-
-		virtual void registerPlugin( StatisticsProviderPlugin * plugin ) throw() {
-			assert( plugin );
-			StatisticsProviderPluginData* newSource = new StatisticsProviderPluginData( plugin );
-			sourcesLock.lock();
-			// Check whether this plugin is alread registered.
-			for(size_t i = sources.size(); i--; ) {
-				assert( sources[i]->getPlugin() != plugin && "Statistics Collector Plugins may only be registered with a StatisticsCollector once." );
-			}
-			// Add the plugin
-			sources.emplace_back( newSource );
-			sourcesLock.unlock();
-		}
-
-		virtual void unregisterPlugin( StatisticsProviderPlugin * plugin ) throw() {
-			sourcesLock.lock();
-			// Find the data object associated with the plugin and delete it.
-			for( size_t i = sources.size(); i--; ) {
-				if( sources[i]->getPlugin() == plugin ) {
-					sources.erase(sources.begin() + i);
-					return;
-				}
-			}
-			sourcesLock.unlock();
-		}
-
-		virtual array<StatisticsValue, 10> getStatistics( StatisticsInterval interval, StatisticsDescription & stat ) throw() {
-			assert(0), abort();	//TODO
-		}
-
-		// D8 - These statistics are up to date values for different intervals
-		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, StatisticsDescription & stat ) throw() {
-			uint64_t hms = 0, s = 0, ts = 0, m = 0, tm = 0;
-			vector <uint64_t> vRS {hms, s, ts, m, tm};
-
-			assert(0), abort();	//TODO
-//			return vRS;
-		}
-
-		// These are D6
-		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) throw() {
-			assert(0), abort();	//TODO
-		}
-
-
-
-		virtual vector<StatisticsDescription> availableMetrics() throw() {
-			sourcesLock.lock_shared();
-			printf("Count of plugins: %ld\n", sources.size());
-			for(size_t i = sources.size(); i--; ) printf("\tPlugin %ld: %ld metrics\n", i, sources[i]->availableMetrics().size());
-			sourcesLock.unlock_shared();
-			assert(0), abort();	//TODO
-//			vector<StatisticsDescription> result;
-//			sourcesLock.lock_shared();
-//			// Make sure, we don't do any unnecessary copying...
-//			size_t metricCount = 0;
-//			for( size_t i = sources.size(); i--; ) {
-//				metricCount += sources[i]->availableMetrics().size();
-//			}
-//			result.reserve(metricCount);
-//			// Concatenate the lists.
-//			for( size_t i = sources.size(); i--; ) {
-//				const vector<StatisticsProviderDatatypes>& curMetrics = sources[i]->availableMetrics();
-//				result.insert(result.back(), curMetrics.begin(), curMetrics.end());
-//			}
-//			sourcesLock.unlock_shared();
-//			return result;
-		}
-
-		virtual ~ThreadedStatisticsCollector() throw() {
-			terminated = true;
-			atomic_thread_fence( memory_order_release );
-			pollingThread.join();
-			if( !sourcesLock.try_lock() ) {
-				assert(0 && "Someone tried to destruct a ThreadedStatisticsCollector while another thread is still using it!"), abort();
-			}
-			sourcesLock.unlock();
-		}
-
-		virtual void init() throw() {
-			//XXX I've taken out reading a polling interval from the options, because that should be determined from the StatisticsProviderPlugins.
-
-			//ActivityPluginDereferencing * facade = o->dereferingFacade.instance<ActivityPluginDereferencing>();
-			pollCount = 0;
-			atomic_thread_fence( memory_order_release );
-			pollingThread = thread( &ThreadedStatisticsCollector::pollingThreadMain, this );
-		}
-
-		/**
-		 * this method initiates first the options for threaded statitistics and second the facade of the ActivityPlugin
-		 * TODO: There is no declaration of this method in any superclass, so it can't be called from outside.
-		 */
-//		virtual void getOptions( ThreadedStatisticsOptions * options ) {
+/**
+ * this method initiates first the options for threaded statitistics and second the facade of the ActivityPlugin
+ * TODO: There is no declaration of this method in any superclass, so it can't be called from outside.
+ */
+//		virtual void ThreadedStatisticsCollector::getOptions( ThreadedStatisticsOptions * options ) {
 //			ThreadedStatisticsOptions * o = ( ThreadedStatisticsOptions * ) options;
 //		}
 
+/**
+ * get Available ThreadedStatisticsOptions
+ */
+ComponentOptions * ThreadedStatisticsCollector::AvailableOptions() throw() {
+	return new ThreadedStatisticsOptions();
+}
 
+int64_t ThreadedStatisticsCollector::getMicroSeconds() throw() {
+	struct timeval curTime;
+	gettimeofday(&curTime, NULL);
+	return 1000*1000ll*curTime.tv_sec + curTime.tv_usec;
+}
 
-		/**
-		 * get Available ThreadedStatisticsOptions
-		 */
-		virtual ComponentOptions * AvailableOptions() throw() {
-			return new ThreadedStatisticsOptions();
+void ThreadedStatisticsCollector::microSecondSleep(int64_t microSeconds) throw() {
+	struct timespec sleepTime;
+	sleepTime.tv_sec = microSeconds/1000/1000;
+	sleepTime.tv_nsec = (microSeconds - 1000*1000*sleepTime.tv_sec)*1000;
+	nanosleep(&sleepTime, NULL);
+}
+
+// One thread for periodic issuing
+void ThreadedStatisticsCollector::pollingThreadMain() throw() {
+	using namespace std::chrono;
+	int64_t nextPollTime = getMicroSeconds();
+	while( ! terminated ) {
+		//perform polling
+		sourcesLock.lock_shared();
+		//produce new values
+		chrono::high_resolution_clock::time_point measurementTime = chrono::high_resolution_clock::now();
+		for( size_t i = plugins.size(); i--; ) {
+			plugins[i]->nextTimestep();
 		}
-};
+		//bring the histories of the Statistics up to date
+		for( size_t i = statistics.size(); i--; ) {
+			statistics[i]->update(measurementTime);
+		}
+		sourcesLock.unlock_shared();
 
+		// Sleep until it's time to poll again.
+		// I have moved this from its own function, because we have to check `terminated` after every call to sleep_for.
+		nextPollTime += 100*1000;
+		int64_t curTime = getMicroSeconds();
+		while(nextPollTime - curTime >= 0) {
+			cerr << "sleeping for " << nextPollTime - curTime << " micro seconds\n";
+			microSecondSleep(nextPollTime - curTime);
+			curTime = getMicroSeconds();
+			// Check whether we were awoken to terminate.
+			atomic_thread_fence( memory_order_acquire );	//Make sure that the value of terminated is up to date.
+			if( terminated ) return;
+		}
+	}
+}
 
 extern "C" {
 	void * STATISTICS_COLLECTOR_INSTANCIATOR_NAME()

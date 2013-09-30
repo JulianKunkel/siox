@@ -169,16 +169,108 @@ class VariableDatatype {
 			return type_;
 		}
 
+		inline VariableDatatype& operator+=( VariableDatatype const & v ) {
+			if( v.type_ != type_ ) assert(0 && "tried to add VariableDatatypes of unequal type"), abort();
+
+			switch( type_ ) {
+				case Type::INT32:
+					data.i32 += v.data.i32;
+					break;
+				case Type::UINT32:
+					data.ui32 += v.data.ui32;
+					break;
+				case Type::INT64:
+					data.i64 += v.data.i64;
+					break;
+				case Type::UINT64:
+					data.ui64 += v.data.ui64;
+					break;
+				case Type::FLOAT:
+					data.f += v.data.f;
+					break;
+				case Type::DOUBLE:
+					data.d += v.data.d;
+					break;
+				case Type::STRING: {
+					char* result;
+					if(asprintf(&result, "%s%s", data.str, v.data.str) < 0) {
+						std::cerr << "Fatal error: asprintf() failed\n";
+						abort();
+					}
+					free(data.str);
+					data.str = result;
+					break;
+				}
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to add VariableDatatypes of invalid type"), abort();
+			}
+			return *this;
+		}
+
+		inline VariableDatatype& operator/=( int64_t divisor ) {
+			switch( type_ ) {
+				case Type::INT32:
+					data.i32 /= divisor;
+					break;
+				case Type::UINT32:
+					data.ui32 /= divisor;
+					break;
+				case Type::INT64:
+					data.i64 /= divisor;
+					break;
+				case Type::UINT64:
+					data.ui64 /= divisor;
+					break;
+				case Type::FLOAT:
+					data.f /= divisor;
+					break;
+				case Type::DOUBLE:
+					data.d /= divisor;
+					break;
+				case Type::STRING:
+					assert(0 && "tried to divide a VariableDatatype of string type"), abort();
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to divide a VariableDatatype of invalid type"), abort();
+			}
+			return *this;
+		}
+
+		inline bool operator<( VariableDatatype const & v ) const {
+			if( v.type_ != type_ ) assert(0 && "tried to sort VariableDatatypes of unequal type"), abort();
+
+			switch( type_ ) {
+				case Type::INT32:
+					return this->data.i32 < v.data.i32;
+				case Type::UINT32:
+					return this->data.ui32 < v.data.ui32;
+				case Type::INT64:
+					return this->data.i64 < v.data.i64;
+				case Type::UINT64:
+					return this->data.ui64 < v.data.ui64;
+				case Type::FLOAT:
+					return this->data.f < v.data.f;
+				case Type::DOUBLE:
+					return this->data.d < v.data.d;
+				case Type::STRING:
+					return strcmp( this->data.str, v.data.str ) < 0;
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to sort VariableDatatypes of invalid type"), abort();
+			}
+		}
+
 		inline bool operator==( VariableDatatype const & v ) const {
 
-			if( v.type_ != this->type_ )
+			if( v.type_ != type_ )
 				return false;
 
-			switch( v.type_ ) {
+			switch( type_ ) {
 				case Type::INT32:
 					return this->data.i32 == v.data.i32;
 				case Type::UINT32:
-					return this->data.ui64 == v.data.ui64;
+					return this->data.ui32 == v.data.ui32;
 				case Type::INT64:
 					return this->data.i64 == v.data.i64;
 				case Type::UINT64:
@@ -198,6 +290,85 @@ class VariableDatatype {
 
 		inline bool operator!=( VariableDatatype const & v ) const {
 			return !( v == *this );
+		}
+
+		inline void setMax() {
+			switch( type_ ) {
+				case Type::INT32:
+					data.i32 = 0x7fffffff;
+					break;
+				case Type::UINT32:
+					data.ui32 = (uint32_t)-1;
+					break;
+				case Type::INT64:
+					data.i64 = 0x7fffffffffffffffll;
+					break;
+				case Type::UINT64:
+					data.ui64 = (uint64_t)-1;
+					break;
+				case Type::FLOAT:
+					data.f = 1.0/0.0;
+					break;
+				case Type::DOUBLE:
+					data.d = 1.0/0.0;
+					break;
+				case Type::STRING:
+					assert(0 && "tried to set a string to a maximal value, which is not possible"), abort();
+					break;
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to set the value of a VariableDatatype of invalid type"), abort();
+			}
+		}
+
+		inline void setMin() {
+			switch( type_ ) {
+				case Type::INT32:
+					data.i32 = 0x80000000;
+					break;
+				case Type::UINT32:
+					data.ui32 = 0;
+					break;
+				case Type::INT64:
+					data.i64 = 0x8000000000000000ll;
+					break;
+				case Type::UINT64:
+					data.ui64 = 0;
+					break;
+				case Type::FLOAT:
+					data.f = -1.0/0.0;
+					break;
+				case Type::DOUBLE:
+					data.d = -1.0/0.0;
+					break;
+				case Type::STRING:
+					if(data.str) free(data.str);
+					data.str = strdup( "" );
+					break;
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to set the value of a VariableDatatype of invalid type"), abort();
+			}
+		}
+
+		inline void setZero() {
+			switch( type_ ) {
+				case Type::INT32:
+				case Type::UINT32:
+				case Type::INT64:
+				case Type::UINT64:
+				case Type::FLOAT:
+				case Type::DOUBLE:
+					data.ui64 = 0;	//Ain't it nice that the representation of zero is independent of type like this?
+					break;
+				case Type::STRING:
+					if(data.str) free(data.str);
+					data.str = strdup( "" );
+					break;
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to set the value of a VariableDatatype of invalid type"), abort();
+			}
 		}
 };
 

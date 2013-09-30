@@ -4,7 +4,7 @@
 def build(bld):
    bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="ThreadedStatisticsOptions.hpp", target="BoostXMLSerializable.cpp", name="ThreadedStatisticsOptions")
 
-   bld.shlib(includes="", use="BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target='siox-monitoring-ThreadedStatisticsCollector', source='StatisticsProviderPluginData.cpp ThreadedStatisticsCollector.cpp BoostXMLSerializable.cpp', depends_on="ThreadedStatisticsOptions")
+   bld.shlib(includes="", use="BOOST siox-core-ContainerSerializer siox-core-AutoConfigurator ", target='siox-monitoring-ThreadedStatisticsCollector', source='Statistic.cpp ThreadedStatisticsCollector.cpp BoostXMLSerializable.cpp', depends_on="ThreadedStatisticsOptions")
    bld.recurse(['plugins'], mandatory=True)
    bld.recurse(['test'], mandatory=True)
 

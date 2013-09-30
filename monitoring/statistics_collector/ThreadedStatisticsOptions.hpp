@@ -37,7 +37,7 @@ namespace monitoring {
 	//@serializable
 	class ThreadedStatisticsOptions: public ComponentOptions {
 		public:
-			ComponentReference facade;
+			ComponentReference ontology;
 			ComponentReference smux;
 
 			list<ThreadedCollectorStatistics> statistics;

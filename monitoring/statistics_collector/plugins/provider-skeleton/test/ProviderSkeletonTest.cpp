@@ -33,27 +33,29 @@ class StatisticsCollectorTester : public StatisticsCollector {
 
 		}
 
-
-		virtual array<StatisticsValue, 10> getStatistics( StatisticsInterval interval, StatisticsDescription & stat ) {
-			return array<StatisticsValue, 10>();
+		virtual vector<shared_ptr<Statistic> > getStatistics() {
+			return vector<shared_ptr<Statistic> >();
 		}
-
-		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, StatisticsDescription & stat ) {
-			return StatisticsValue( 1 );
-		}
-
-		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) {
-			return StatisticsValue( 1 );
-		}
-
-		virtual StatisticsValue getStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) {
-			return StatisticsValue( 1 );
-		}
-
-		virtual vector<StatisticsDescription> availableMetrics() {
-			vector<StatisticsDescription> metrics;
-			return metrics;
-		}
+//		virtual array<StatisticsValue, 10> getStatistics( StatisticsInterval interval, StatisticsDescription & stat ) {
+//			return array<StatisticsValue, 10>();
+//		}
+//
+//		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, StatisticsDescription & stat ) {
+//			return StatisticsValue( 1 );
+//		}
+//
+//		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) {
+//			return StatisticsValue( 1 );
+//		}
+//
+//		virtual StatisticsValue getStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) {
+//			return StatisticsValue( 1 );
+//		}
+//
+//		virtual vector<StatisticsDescription> availableMetrics() {
+//			vector<StatisticsDescription> metrics;
+//			return metrics;
+//		}
 
 
 		virtual void init() {

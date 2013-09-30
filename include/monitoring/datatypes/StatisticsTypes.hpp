@@ -21,6 +21,7 @@
 
 #include <core/datatypes/VariableDatatype.hpp>
 #include <monitoring/datatypes/ids.hpp>
+#include <monitoring/ontology/OntologyDatatypes.hpp>
 
 using namespace std;
 
@@ -102,11 +103,15 @@ namespace monitoring {
 		SUM
 	};
 
-
 	class StatisticsDescription {
 		public:
 			OntologyAttributeID ontologyId;
 			vector<pair<string, string> > topology;	//TODO: Create a service that can map this to an ID for faster comparison.
+
+			StatisticsDescription(const OntologyAttribute& attribute, const vector<pair<string, string> > topology) :
+				ontologyId(attribute.aID),
+				topology(topology)
+			{};
 	};
 
 }
