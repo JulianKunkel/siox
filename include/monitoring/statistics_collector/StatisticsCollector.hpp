@@ -85,11 +85,11 @@ Rationales & design decisions/Issues and questions:
 
 #include <monitoring/datatypes/StatisticsTypes.hpp>
 #include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
+#include <monitoring/statistics_collector/Statistic.hpp>
 
 namespace monitoring {
 
 	class StatisticsProviderPlugin;
-	class Statistic;
 
 	class StatisticsCollector : public core::Component {
 		public:
@@ -101,7 +101,8 @@ namespace monitoring {
 
 			virtual void unregisterPlugin( StatisticsProviderPlugin * plugin ) = 0;
 
-			virtual std::vector<std::shared_ptr<Statistic> > getStatistics() = 0;
+			virtual std::vector<std::shared_ptr<Statistic> > getStatistics() throw()  = 0;
+
 			/*
 			 * The return value may be updated in the background?
 			 * Double buffering of values
@@ -111,7 +112,7 @@ namespace monitoring {
 			 * - 100 seconds in 10 second increments
 			 * - 10 minutes in 1 minute increments
 			 */
-//			virtual array<StatisticsValue, 10> getStatistics( StatisticsInterval interval, StatisticsDescription & stat ) = 0;
+			virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & description ) throw() = 0;
 
 			/*
 			 */

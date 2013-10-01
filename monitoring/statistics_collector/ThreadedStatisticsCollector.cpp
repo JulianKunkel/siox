@@ -8,7 +8,6 @@
  *
  */
 
-
 #include <core/component/Component.hpp>
 #include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
 #include <monitoring/statistics_collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
@@ -22,12 +21,18 @@
 #include <condition_variable> // for conditions
 #include <cstdlib> //(stdlib.h) get C header stdlib
 #include <ctime> //(time.h) get C header time
+#include <unordered_map>
+#include <string>
+#include <utility>
+
+#include <workarounds.hpp>
 
 #include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
 #include <monitoring/statistics_collector/Statistic.hpp>
 #include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
 #include <monitoring/statistics_collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/ontology/Ontology.hpp>
+#include <monitoring/datatypes/ids.hpp>
 
 
 using namespace std;
@@ -181,6 +186,7 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 		virtual void unregisterPlugin( StatisticsProviderPlugin * plugin ) throw();
 
 		virtual vector<shared_ptr<Statistic> > getStatistics() throw();
+		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
 
 		virtual ~ThreadedStatisticsCollector() throw();
 
@@ -195,6 +201,8 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 
 		vector<StatisticsProviderPlugin*> plugins;	//protected by sourcesLock
 		vector<shared_ptr<Statistic> > statistics;	//protected by sourcesLock
+		//TODO: replace the string for the topology with a topologyId
+		unordered_map<pair<OntologyAttributeID, string>, shared_ptr<Statistic> > index;	//protected by sourcesLock
 		boost::shared_mutex sourcesLock;
 
 		thread pollingThread;
@@ -227,7 +235,12 @@ void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plu
 	plugins.emplace_back( plugin );
 	vector<StatisticsProviderDatatypes> metrics( plugin->availableMetrics() );
 	for( size_t i = metrics.size(); i--; ) {
-		statistics.emplace_back( new Statistic( metrics[i], plugin, ontology ) );
+		shared_ptr<Statistic> curStatistic( new Statistic( metrics[i], plugin, ontology ) );
+		string topology = "";
+		for( size_t j = 0; j < curStatistic->topology.size(); j++) topology += curStatistic->topology[j].first + curStatistic->topology[j].second;
+		pair<OntologyAttributeID, string> curKey(curStatistic->ontologyId, topology);
+		statistics.emplace_back( curStatistic );
+		index[curKey] = curStatistic;
 	}
 	sourcesLock.unlock();
 }
@@ -243,7 +256,12 @@ void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * p
 	// Remove the dependent Statistics from the statistics list.
 	for( size_t i = statistics.size(); i--; ) {
 		if( statistics[i]->provider == plugin) {
+			Statistic* curStatistic = &*statistics[i];
+			string topology = "";
+			for( size_t j = 0; j < curStatistic->topology.size(); j++) topology += curStatistic->topology[j].first + curStatistic->topology[j].second;
+			pair<OntologyAttributeID, string> curKey(statistics[i]->ontologyId, topology);
 			statistics.erase(statistics.begin() + i);
+			index.erase(curKey);
 		}
 	}
 	sourcesLock.unlock();
@@ -251,6 +269,17 @@ void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * p
 
 vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::getStatistics() throw() {
 	return statistics;
+}
+
+array<StatisticsValue, Statistic::kHistorySize> ThreadedStatisticsCollector::getStatistics( StatisticsInterval interval, const StatisticsDescription & description ) throw() {
+	array<StatisticsValue, Statistic::kHistorySize> result;
+	string topology = "";
+	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
+	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
+	if(Statistic* statistic = &*index[key]) {
+		statistic->getHistoricValues( interval, &result, NULL );
+	}
+	return result;
 }
 
 ThreadedStatisticsCollector::~ThreadedStatisticsCollector() throw() {

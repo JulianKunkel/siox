@@ -11,7 +11,7 @@
 #include "../ThreadedStatisticsOptions.hpp"
 
 
-int main( int argc, char const * argv[] ) {
+int main( int argc, char const * argv[] ) throw() {
 	monitoring::Ontology* ontology = core::module_create_instance<monitoring::Ontology>( "", "siox-monitoring-FileOntology", ONTOLOGY_INTERFACE );
 	FileOntologyOptions* ontologyOptions = new FileOntologyOptions();
 	ontologyOptions->filename = "optimizer-ontology-example.dat";
@@ -24,12 +24,11 @@ int main( int argc, char const * argv[] ) {
 
 	monitoring::StatisticsProviderPlugin* plugin = module_create_instance<monitoring::StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-providerskel", MONITORING_STATISTICS_PLUGIN_INTERFACE);
 	plugin->init();
-
 	collector->registerPlugin(plugin);
-//	collector->availableMetrics();
 
 	cerr << "sleeping\n";
 	sleep(1);
+	cerr << "waking up\n";
 
 	vector<shared_ptr<monitoring::Statistic> > statistics = collector->getStatistics();
 	assert(statistics.size() == 3);
@@ -42,6 +41,10 @@ int main( int argc, char const * argv[] ) {
 		assert(values[0][i].dbl() == expectedValue);
 		assert(values[1][i].dbl() == expectedValue);
 	}
+
+	monitoring::StatisticsDescription description(ontology->lookup_attribute_by_name( "Statistics", "test/weather"), {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}});
+	array<monitoring::StatisticsValue, monitoring::Statistic::kHistorySize> nameLookupValues = collector->getStatistics(monitoring::HUNDRED_MILLISECONDS, description);
+	assert(values[1] == nameLookupValues);
 
 	delete collector;
 	delete plugin;

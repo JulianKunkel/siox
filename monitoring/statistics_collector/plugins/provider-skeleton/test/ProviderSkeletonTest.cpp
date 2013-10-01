@@ -33,13 +33,13 @@ class StatisticsCollectorTester : public StatisticsCollector {
 
 		}
 
-		virtual vector<shared_ptr<Statistic> > getStatistics() {
+		virtual vector<shared_ptr<Statistic> > getStatistics() throw() {
 			return vector<shared_ptr<Statistic> >();
 		}
-//		virtual array<StatisticsValue, 10> getStatistics( StatisticsInterval interval, StatisticsDescription & stat ) {
-//			return array<StatisticsValue, 10>();
-//		}
-//
+		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() {
+			return array<StatisticsValue, Statistic::kHistorySize>();
+		}
+
 //		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, StatisticsDescription & stat ) {
 //			return StatisticsValue( 1 );
 //		}
