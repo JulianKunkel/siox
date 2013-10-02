@@ -37,8 +37,6 @@ int main( int argc, char const * argv[] )
 
 	m1->Log( activity );
 	m1->Log( activity );
-	m1->Log( activity );
-	m1->Log( activity );
 
 	//sleep(1);
 

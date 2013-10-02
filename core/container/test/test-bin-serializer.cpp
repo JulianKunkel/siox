@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include <build/core/container/test/test-bin-serializerBinary.hpp>
+#include <core/container/test/test-bin-serializerBinary.hpp>
 
 using namespace std;
 using namespace j_serialization;

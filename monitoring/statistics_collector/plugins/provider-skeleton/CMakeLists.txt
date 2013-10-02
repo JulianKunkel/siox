@@ -15,3 +15,5 @@ target_link_libraries(
 )
 
 add_subdirectory(test)
+
+# install(TARGETS  LIBRARY DESTINATION lib)

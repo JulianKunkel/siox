@@ -2,32 +2,20 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
-	${PROTOBUF_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIR}
+	${GIOUNIX2_INCLUDE_DIRS}
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -lrt")
-
 add_library(
-	core-communication
-	ConnectionMessage.cpp
-	Connection.cpp
-	ConnectionFactory.cpp
-	ServerFactory.cpp
-	ServiceServer.cpp
-	ipc/IPCConnection.cpp
-	ipc/IPCServer.cpp
-	tcp/TCPConnection.cpp
-	tcp/TCPServer.cpp
-	ServiceClient.cpp
+	siox-core-comm-multiMessageService
+	MultiMessageTypeService.cpp
 )
 
 target_link_libraries(
-	core-communication
-	core-logger
-	core-comm-buffers
-	${Boost_LIBRARIES}
+	siox-core-comm-multiMessageService
 )
 
-add_subdirectory(messages)
-#add_subdirectory(test)
+
+add_subdirectory(modules)
+add_subdirectory(test)
+
+install(TARGETS siox-core-comm-multiMessageService LIBRARY DESTINATION lib)

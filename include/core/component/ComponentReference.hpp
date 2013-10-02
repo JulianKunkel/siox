@@ -9,7 +9,7 @@ namespace core {
 #ifdef COMPONENT_NO_OBJECT_INJECTION
 	// instances in options are the real objects
 
-	typedef ComponentOptions * instance ComponentReference;
+	typedef Component* ComponentReference;
 
 #define GET_INSTANCE(TYPE, Y) static_cast<TYPE>(Y);
 
@@ -28,6 +28,9 @@ namespace core {
 			ComponentReferenceID componentID = 0;
 			Component *  componentPointer = nullptr;
 			bool global = false;
+
+			ComponentReference(){}
+			ComponentReference(Component * component) : componentPointer(component){}
 	};
 
 #define GET_INSTANCE(TYPE, Y) (dynamic_cast<TYPE *>(Y.componentPointer))

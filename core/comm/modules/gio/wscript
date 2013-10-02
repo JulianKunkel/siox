@@ -1,0 +1,17 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def configure(conf):
+	conf.check_cfg(package='gio-2.0', uselib_store='GIO',   args=['--cflags', '--libs'], mandatory=True)
+	conf.check_cfg(package='gio-unix-2.0', uselib_store='GIOUNIX',   args=['--cflags', '--libs'], mandatory=True)
+	
+	
+def build(bld):
+	bld(rule="${CODEGEN} -o ${TGT} -i ${SRC}", source="GIOOptions.hpp", target="BoostXMLSerializable.cpp", name="GIOOptions")
+
+	bld.shlib(includes="", use="BOOST GIO GLIB GIOUNIX", target = "siox-core-comm-gio", source = 'GIO.cpp GIOClient.cpp GIOServer.cpp BoostXMLSerializable.cpp', depends_on="GIOOptions")
+	
+	bld.recurse(['test'], mandatory=True)
+
+
+# -*- indent-tabs-mode: t -*-

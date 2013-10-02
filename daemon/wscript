@@ -1,0 +1,9 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+import os
+
+def build(bld):
+	bld.program(includes="#", use="siox-util BOOST siox-core-AutoConfigurator", features='cxx cprogram', target = 'siox-deamon', source = 'Daemon.cpp')	
+
+# -*- indent-tabs-mode: t -*-

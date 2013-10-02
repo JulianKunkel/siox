@@ -10,13 +10,17 @@ add_executable (
 	hdf5-example
 	hdf5-example.c
 	${HDF5_INCLUDE_DIRS}
-
 )
 
 
 target_link_libraries(
 	hdf5-example
 	siox-monitoring-siox-ll 
+	siox-util
 	${HDF5_LIBRARIES}
-	${HDF5_HL_LIBRARIES}
+	${HDF5_HL_LIBRARY}
 )
+
+symlink(siox.conf siox.conf)
+
+add_test(monitoring-low-level-c-examples-hdf5-example hdf5-example)

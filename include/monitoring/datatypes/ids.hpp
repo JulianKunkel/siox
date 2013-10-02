@@ -248,7 +248,15 @@ namespace monitoring {
 		uint32_t thread;
 
 		inline bool operator==( ActivityID const & b ) const {
-			return memcmp( this, &b, sizeof( cid ) + sizeof( id ) + sizeof( thread ) );
+			
+			if (id != b.id)
+				return false;
+			
+			if (thread != b.thread)
+				return false;
+			
+			return cid == b.cid;
+
 		}
 
 		inline bool operator!=( ActivityID const & b ) const {

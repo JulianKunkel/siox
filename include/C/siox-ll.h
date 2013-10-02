@@ -536,6 +536,11 @@ void siox_remote_call_set_attribute( siox_remote_call * remote_call, siox_attrib
 //@test ''%p'' remote_call
 void siox_remote_call_start( siox_remote_call * remote_call );
 
+
+// if the out_value is of type string, ownership is given to the caller
+// return true if an optimal value is found
+int siox_suggest_optimal_value( siox_attribute * attribute, void * out_value );
+
 //////////////////////////////////////////////////////////////////////////////
 /// Report that a local activity was initiated via a remote call.
 /// While during a single activity, many remote calls may be sent, only one

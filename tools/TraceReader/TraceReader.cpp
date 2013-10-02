@@ -11,7 +11,7 @@
 
 #include "TraceReader.hpp"
 
-#include <build/core/component/ActivitySerializableText.hpp>
+#include <core/component/ActivitySerializableText.cpp>
 
 Activity * TraceReader::nextActivity() {
 	if( activityDeserializer->hasNext() )

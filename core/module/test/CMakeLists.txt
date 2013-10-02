@@ -12,6 +12,7 @@ add_executable(
 target_link_libraries(
 	test-module-loader
 	siox-core-ModuleLoader
+	test-module
 )
 
 add_library(test-module

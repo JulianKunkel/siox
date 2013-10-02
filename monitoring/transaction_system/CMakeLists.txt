@@ -21,7 +21,6 @@ target_link_libraries(
 	core-communication
 	core-comm-buffers
 	core-logger
-	${PostgreSQL_LIBRARIES}
 	${Boost_LIBRARIES}
 )
 
@@ -50,4 +49,6 @@ target_link_libraries(
 	core-logger
 	${Boost_LIBRARIES}
 )
+
+add_subdirectory(test)
 
