@@ -1,4 +1,4 @@
-@startuml
+@startuml "db-big.png"
 
 
 package Ontology <<frame>> {
@@ -213,4 +213,38 @@ package KnowledgeBase <<frame>> {
 }
 
 
+@enduml
+
+@startuml "dw-activity.png"
+package Activities <<frame>> {
+
+	object ActivityID{
+		id : int64 key auto-increment
+
+		thread : int32 not null
+		id : int32 not null
+
+		cid_pid_nid : int32 not null
+		cid_pid_pid : int32 not null
+		cid_pid_time : int32 not null
+		cid_id : int32 not null
+	}
+
+	object Activity {
+		id : int64 key auto-increment
+		ucaid : int32 not null
+		time_start : int64 not null
+		time_stop : int64
+
+		parents : int64[] foreign-key
+		remoteCalls : int64[] foreign-key
+
+		attributes : attribute[] 
+
+
+		error_value : int32
+	}
+
+	Activity -- ActivityID
+}
 @enduml
