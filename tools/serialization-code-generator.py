@@ -243,11 +243,11 @@ class JBinaryOutputGenerator(OutputGenerator):
     def map_type_deserializer(self, type, name):
         if type.startswith("vector") or type.startswith("list") or type.startswith("std::vector") or type.startswith("std::list"):
             childType = type[ type.find("<") + 1 : -1];
-            return "deserialize(vlen, buffer, pos, length);\n\t%(NAME)s.resize(0);\n\tfor(uint32_t i=0; i < vlen; i++){\n\t\t%(CHILDTYPE)s var;\n\t\t%(CHILD)s;\n\t\t%(NAME)s.push_back(var);\n\t}"  % {"NAME" : name, "TYPE" : type, "CHILD": self.map_type_deserializer(childType, "var"), "CHILDTYPE": childType}
+            return "{ uint32_t vlen;  deserialize(vlen, buffer, pos, length);\n\t%(NAME)s.resize(0);\n\tfor(uint32_t i=0; i < vlen; i++){\n\t\t%(CHILDTYPE)s var;\n\t\t%(CHILD)s;\n\t\t%(NAME)s.push_back(var);\n\t}}"  % {"NAME" : name, "TYPE" : type, "CHILD": self.map_type_deserializer(childType, "var"), "CHILDTYPE": childType}
 
         if type.endswith("*"):
             childType = type[0:len(type)-2].strip()
-            return "\n\tdeserialize(ptr, buffer, pos, length);\n\tif ( ptr == 0 ) { %(NAME)s = nullptr; } else{\n\t\t%(NAME)s = (%(TYPE)s) malloc(sizeof(%(CHILDTYPE)s));\n\t\tdeserialize(*%(NAME)s, buffer, pos, length);\n\t}" % { "NAME" : name, "TYPE" : type, "CHILDTYPE" : childType, "CHILD" : self.map_type_deserializer(childType, "* " + name) }
+            return "\n\t{\n\tint8_t ptr; deserialize(ptr, buffer, pos, length);\n\tif ( ptr == 0 ) { %(NAME)s = nullptr; } else{\n\t\t%(NAME)s = (%(TYPE)s) malloc(sizeof(%(CHILDTYPE)s));\n\t\tdeserialize(*%(NAME)s, buffer, pos, length);\n\t}}" % { "NAME" : name, "TYPE" : type, "CHILDTYPE" : childType, "CHILD" : self.map_type_deserializer(childType, "* " + name) }
 
         return "deserialize(" + name + ", buffer, pos, length)";
 
@@ -283,7 +283,7 @@ class JBinaryOutputGenerator(OutputGenerator):
 
         print("}", file = self.fh)
 
-        print("inline void deserialize(%(CLASS)s & obj, const char * buffer, uint64_t & pos, uint64_t length){\n\tint8_t ptr;\n\tuint32_t vlen;\n\t"  % self.mapping, file = self.fh)
+        print("inline void deserialize(%(CLASS)s & obj, const char * buffer, uint64_t & pos, uint64_t length){\n\t"  % self.mapping, file = self.fh)
 
         for p in self.parentClassnames:
             print("\tdeserialize( *( " + p + " *) "  + "this );" , file = self.fh)
