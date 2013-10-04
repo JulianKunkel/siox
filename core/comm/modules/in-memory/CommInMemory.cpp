@@ -66,7 +66,7 @@ public:
 		memcpy((void*) payload, msg->payload, size);
 	}	
 
-	void isendResponse(void * object);
+	void isendResponse(const void * object);
 	void isendErrorResponse(CommunicationError error);
 };
 
@@ -102,7 +102,7 @@ public:
 		return this->address;
 	}
 
-	BareMessage * isend( void * object ){
+	BareMessage * isend( const void * object ){
 		// we have to serialize the object
 		uint64_t msg_size = messageCallback->serializeMessageLen(object);
 		char * payload = (char*) malloc(msg_size);
@@ -155,7 +155,7 @@ public:
 
 
 
-void InMemoryServerClientMessage::isendResponse(void * object){
+void InMemoryServerClientMessage::isendResponse(const void * object){
 
 	uint64_t len = server->getMessageCallback()->serializeResponseMessageLen(this, object);
 	char * payload = (char *) malloc(len);

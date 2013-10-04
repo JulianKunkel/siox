@@ -6,16 +6,21 @@
 
 #include "rpc-sample-interface.hpp"
 
+// normally we do not need to load the options, this is just for testing...
+#include "rpc-server-module-options.hpp"
+#include "rpc-client-module-options.hpp"
+
+
 using namespace core;
 
 /* This class represents the final RPC-target, thus could be any existing module*/
 class RPCTargetImplementation : public SampleInterface{
 	void rpc1(const DataForRPC1 & data){
-		cout << "rpc1" << endl;
+		cout << "RPCTargetImplementation: rpc1 " << data.a << endl;
 	}
 
 	DataFromRPC2 rpc2(const DataForRPC2 & data){
-		cout << "rpc2 " << data.b << endl;
+		cout << "RPCTargetImplementation: rpc2 " << data.b << endl;
 		DataFromRPC2 x = {1, "testResponse"};
 		return x;
 	}
@@ -42,14 +47,28 @@ int main(){
 	SampleInterface * client = core::module_create_instance<SampleInterface>( "", "siox-core-comm-rpc-client", RPCSAMPLE_CLIENT_INTERFACE );
 	Component * server = core::module_create_instance<Component>( "", "siox-core-comm-rpc-server", RPCSAMPLE_SERVER_INTERFACE );
 
-	server->init();
-	client->init();
+	RPCServerModuleOptions * smo = new RPCServerModuleOptions();
+	smo->commAddress = "localhost:8080";
+	smo->comm = comm;
+
+	RPCTargetImplementation testTarget;
+	smo->rpcTarget = & testTarget;
+
+	RPCCLientModuleOptions * cmo = new RPCCLientModuleOptions();
+	cmo->commAddress = "localhost:8080";
+	cmo->comm = comm;
+
+
+	server->init(smo);
+	client->init(cmo);
+
+	// END Setup: All the previous work has been done by the auto-configurator
 
 	// run the real test using RPC:
 	client->rpc1({2});
 	client->rpc1({5});
 	DataFromRPC2 rpc2_ret = client->rpc2({"testString"});
-	cout << rpc2_ret.c << " " << rpc2_ret.d << endl;
+	cout << "RPC response received: " << rpc2_ret.c << " " << rpc2_ret.d << endl;
 
 	delete(client);
 	delete(server);

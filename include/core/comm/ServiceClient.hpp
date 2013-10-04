@@ -89,7 +89,7 @@ public:
 		 * The object is serialized using the messageCallack.
 		 * @note This function may return immediately.
 		 */
-		 BareMessage * isend( void * object ){
+		 BareMessage * isend(const void * object, const void * user_ptr = nullptr ){
 			uint64_t msg_size = headerSize() + messageCallback->serializeMessageLen(object);
 			char * payload = (char*) malloc(msg_size);
 
@@ -103,7 +103,7 @@ public:
 			messageCallback->serializeMessage(object, payload, pos);
 			assert(pos == msg_size);
 
-			BareMessage * msg = new BareMessage(payload, msg_size);
+			BareMessage * msg = new BareMessage(payload, msg_size, user_ptr);
 
 			isend(msg);
 			return msg;

@@ -8,7 +8,7 @@ using namespace std;
 
 //@serializable
 struct DataForRPC1{
-	int a;
+	int64_t a;
 };
 
 //@serializable
@@ -18,7 +18,7 @@ struct DataForRPC2{
 
 //@serializable
 struct DataFromRPC2{
-	int c;
+	int32_t c;
 	string d;
 };
 

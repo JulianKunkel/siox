@@ -39,10 +39,13 @@ class BareMessage{
 		// message payload includes only the raw user data.
 		const char * payload;
 
-		// the ownership of the payload is given to the connection message.
-		BareMessage(const char * payload, uint64_t size) : size(size) , payload(payload){}
+		// information associated with this message
+		const void * user_ptr;
 
-		BareMessage(BareMessage && msg): size(size) , payload(msg.payload){ 
+		// the ownership of the payload is given to the connection message.
+		BareMessage(const char * payload, uint64_t size, const void * user_ptr = nullptr) : size(size) , payload(payload), user_ptr(user_ptr){}
+
+		BareMessage(BareMessage && msg): size(size) , payload(msg.payload), user_ptr(msg.user_ptr){ 
 			msg.payload = nullptr;
 		}
 

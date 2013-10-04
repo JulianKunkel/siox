@@ -26,12 +26,12 @@ public:
 
 	TCPClientMessage(GIOServiceServer * server, uint64_t clientSidedID, MessageSendQueue* rspThread,  const char * payload, uint64_t size) : ServerClientMessage( payload, size), rspThread(rspThread), server(server), clientSidedID(clientSidedID) {}	
 
-	void isendResponse(void * object);
+	void isendResponse(const void * object);
 
 	void isendErrorResponse(CommunicationError error);
 };
 
-void TCPClientMessage::isendResponse(void * object){
+void TCPClientMessage::isendResponse(const void * object){
 	uint64_t msg_size = clientMsgHeaderLen() + server->messageCallback->serializeResponseMessageLen(this, object);
 	char * payload = (char*) malloc(msg_size);
 	uint64_t pos = 0;

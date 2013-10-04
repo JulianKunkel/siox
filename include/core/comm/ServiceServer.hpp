@@ -12,7 +12,7 @@ namespace core{
 class ServerClientMessage : public BareMessage{
 public:	
 		// after a response is queued the message is freed !
-		virtual void isendResponse(void * object) = 0;
+		virtual void isendResponse(const void * object) = 0;
 		virtual void isendErrorResponse(CommunicationError error) = 0;
 
 		ServerClientMessage(const char * payload, uint64_t size) : BareMessage(payload, size){}	

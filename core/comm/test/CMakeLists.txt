@@ -21,22 +21,26 @@ target_link_libraries(
 siox_run_serializer(rpc-client-module-options.hpp rpc-client-module-options.cpp)
 siox_run_serializer(rpc-server-module-options.hpp rpc-server-module-options.cpp)
 
+siox_run_binary_serializer(rpc-sample-interface.hpp rpc-sample-interfaceBinarySerializable.hpp)
+
 
 add_library(
 	siox-core-comm-rpc-client
 	rpc-client-module.cpp	
 	rpc-client-module-options.cpp
+	rpc-sample-interfaceBinarySerializable.hpp
 )
 
 target_link_libraries(
 	siox-core-comm-rpc-client
-	siox-core-AutoConfigurator	
+	siox-core-AutoConfigurator
 )
 
 add_library(
 	siox-core-comm-rpc-server
 	rpc-server-module.cpp
 	rpc-server-module-options.cpp
+	rpc-sample-interfaceBinarySerializable.hpp
 )
 
 target_link_libraries(
