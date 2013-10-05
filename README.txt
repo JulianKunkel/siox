@@ -61,7 +61,6 @@ To set the variables correctly run in (the bash):
 source ./scripts/set_ld_path.sh
 
 
-
 Building, testing & installing the wrappers
 ===========================================
 The wrappers are not built automatically, they are not a part of the global siox build system. With all the consequences.
@@ -76,11 +75,32 @@ Configuration is the same as for the general siox package, however, you have to 
 	$ ./waf install
 
 
+
+
+To build, test and install waf-based sub-projects:
+==================================================
+1. Configuration
+
+	$ cd $SUBPROJECT
+	$ ./waf configure  --prefix=/usr/local/siox
+
+
 Patching waf to actually return the output of failing tests to the user:
 ========================================================================
+Note, that you have to have executed ./waf before you can patch it. Don't worry, though, this script is intelligent enough to detect this condition and tell you about it.
 Just rerun the patch-waf-output script inside the wrapper directory
 
-	$ ../../../../scripts/patch-waf-output
+	$ $SIOX/scripts/patch-waf-output
+
+2. Building, testing & installing
+Note, that while `./waf build` will run some tests, the dependencies of the tests are incomplete due to the modular architecture of siox that waf does not know about.
+This will lead both to false positives and false negatives.
+To get definit test results, always run the tests with a separate command.
+
+	$ ./waf build
+	$ ./waf --alltests
+	$ ./waf install
+
 
 
 
@@ -114,6 +134,15 @@ More about testing:
 ====================
 With waf you can build sample sub modules implementing a particular interface.
 Once called the stub will just output function names or append call information to a list (for debugging).
-To build run ./waf configure build
+To build go to the directory scripts/dummy-stubs/ and run 
+./waf configure build
 Internally the script will search for the string "// BUILD_TEST_INTERFACE" inside all include files. 
 If found, stubs will be build.
+
+Documentation:
+==============
+
+Code documentation is provided inline and can be created invoking
+doxygen
+
+For developers there is additional 

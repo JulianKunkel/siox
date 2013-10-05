@@ -616,8 +616,8 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  = doc-source
-INPUT                 += include
-INPUT 				  += core knowledge monitoring
+INPUT                 += ../include
+INPUT 				  += ../core ../knowledge ../monitoring ../daemon ../tools ../util
 # tools
 
 # This tag can be used to specify the character encoding of the source files
