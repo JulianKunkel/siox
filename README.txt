@@ -4,28 +4,116 @@ Requirements
 The communication code requires the components especified in the CMakeLists.txt 
 file, that is:
 
-* Google protocol buffers
-* Boost library (threads, system and unit_test_framework)
-* YAML-CPP
+* Boost library (threads, system, regex, unit_test_framework)
 * PostgreSQL devel packages and libpq
 
 During development the following versions were used:
 
-* Google protocol buffers 2.5.0
-* Boost 1.53
+* Boost 1.49
 * GCC 4.7 (for C++0x support)
-* YAML-CPP 0.3.0
 * PostgreSQL 9.2
+
+Additional requirements for the wrappers are found under tools/siox-skeleton-builder/layers
+
+
+Ubuntu 13.04
+===========
+To build the SIOX core system:
+apt-get install libboost-all-dev ninja-boost cmake libglib2.0-dev libpqxx3-dev
+
+
 
 Compilation
 ===========
-
-To compile create a "build" directory and run cmake followed by make:
+By utilizing CMake we can either use the traditional make tool or ninja which has a faster build process (Ubuntu package ninja-build).
+To compile create a "build" directory and run cmake to create the required files:
 
 mkdir build
 cd build
 cmake ..
-make
 
-To execute the unit tests, do:
-make test
+Then you can compile SIOX:
+make -j 4
+make install
+
+To use ninja instead of make run:
+cmake -GNinja ../
+ninja
+
+ccmake is a graphical frontend to cmake which allows easy configuration of the project.
+
+
+Testing
+===========
+
+To execute the unit tests, run :
+make test 
+  or
+ctest
+
+The output of the tests are then stored in:
+<BUILD-DIR>/Testing/Temporary/LastTest.log
+
+To run tests manually, i.e. for debugging purpose, a script is provided which
+sets the required LD_LIBRARY_PATH and other environment variables to ease manual execution.
+
+To set the variables correctly run in (the bash):
+source ./scripts/set_ld_path.sh
+
+
+
+Building, testing & installing the wrappers
+===========================================
+The wrappers are not built automatically, they are not a part of the global siox build system. With all the consequences.
+The wrappers are located under tools/siox-skeleton-builder/layers .
+Configuration is the same as for the general siox package, however, you have to supply the --siox option:
+
+	$ cd tools/siox-skeleton-builder/layers/posix
+	$ ./waf configure --siox=$INSTALL --prefix=$INSTALL
+
+	$ ./waf build
+	$ ./waf --alltests
+	$ ./waf install
+
+
+Patching waf to actually return the output of failing tests to the user:
+========================================================================
+Just rerun the patch-waf-output script inside the wrapper directory
+
+	$ ../../../../scripts/patch-waf-output
+
+
+
+4. Using the wrappers
+=====================
+4.1 Instrumenting without linking
+You can apply any combination of wrappers by setting the LD_PRELOAD environment variable when running the program. This works with any binary, including system commands like `ls`.
+To specify more than one preload, separate the paths with a colon ':'.
+
+	$ LD_PRELOAD=$INSTALL/lib/libsiox-posix-dlsym.so ls
+
+
+4.2 Instrumenting at link-time
+To hardcode the siox instrumentation into the executable, simply link against the appropriate wrappers.
+Warning: The wrapper should appear right in front of the library it wraps.
+If that is not the case, you might end up in a situation where the linker silently throws out either the library or the wrapper, both of which will lead to hard to debug errors.
+
+	$ gcc -o myCoolApp ... -L$INSTALL/lib -lsiox-netcdf-dlsym -lnetcdf ...
+	$ ./myCoolApp
+
+
+
+5 Reading a trace
+When an instrumented application is executed, four files will be created in the current working directory: activities.dat, association.dat, ontology.dat, and system-info.dat
+To display the information in a somewhat more human readable format use the siox-trace-reader:
+
+	$ $INSTALL/bin/siox-trace-reader
+
+
+More about testing:
+====================
+With waf you can build sample sub modules implementing a particular interface.
+Once called the stub will just output function names or append call information to a list (for debugging).
+To build run ./waf configure build
+Internally the script will search for the string "// BUILD_TEST_INTERFACE" inside all include files. 
+If found, stubs will be build.

@@ -66,6 +66,8 @@ class Function():
         # A list of templates associated with the function.
         self.definition = ''
         self.usedTemplateList = []
+
+	self.suffix = ""
         # Indicates that the function is the first called function of the
         # library and initialize SIOX.
         self.init = False
@@ -157,13 +159,13 @@ class FunctionParser():
 
         self.regexClass = re.compile( 'class[\s]+(\w+)[\s]*:' , re.S
         );
-        self.regexNamespace = re.compile( "namespace[\s]+(\w+)[\s]*{")
+        self.regexNamespace = re.compile( "namespace[\s]+(\w+)\s*{")
 
         # This regular expression searches for the general function definition.
         self.regexFunctionDefinition = re.compile(
-            'virtual[\s]+([^(]+)[\s]+(\w+)[\s]*[(]([^);]*)[)][\s]*=[\s]*0[\s]*;', re.S)
-        
+            'virtual[\s]+([^(]+)[\s]+([a-zA-Z0-9_]+)\s*[(]([^);]*)[)]\s*([^=]*)=\s*0\s*;', re.S)         
         self.regexSIOXInterface = re.compile( "#define\s+(\w+_INTERFACE)\s+\"(\w+)\"")
+
 
         # This regular expression matches parameter type and name.
         self.regexParamterDefinition = re.compile('(.*)[\s]+(\w+)[\s]*')
@@ -238,6 +240,8 @@ class FunctionParser():
             
             # Substitute multiple blanks
             parameterString = re.sub('\s+', ' ', parameterString)
+
+            function.suffix = functionDefinition.group(4).strip()
 
             # If the C source code should be generated split the string into a
             # list of parameters and extract the type and name of the
@@ -325,10 +329,10 @@ class Writer():
         
         newClassName = className + "_" + style
         
-        print("\nclass " + newClassName + " : " + className + "{" , file=output)
+        print("\nclass " + newClassName + " :  public " + className + "{\n\tpublic:\n" , file=output)
         # implement all functions:
         for function in functionList:
-	  print("  " + function.type + " " + function.name + "(" + function.parameterString + "){", file=output)
+	  print("  virtual " + function.type + " " + function.name + "(" + function.parameterString + ") "  + function.suffix + " {", file=output)
 	  if style == "cout":
 	      print("    cout << \"" + className + " - " + function.name + "(\";", file=output)
 	      #for parameter in function.parameterList:

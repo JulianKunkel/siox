@@ -27,12 +27,6 @@ def post_the_other(self):
         other = self.bld.get_tgen_by_name(name)
         other.post() 
 
-def __recurse(ctx):
-	workDir = ctx.path.abspath()
-	dirs = [ name for name in os.listdir(workDir)    if   os.path.isdir(os.path.join(workDir, name)) and not name.startswith(".") ]
-	Logs.debug("walk into " + workDir)
-	ctx.recurse(dirs, mandatory=False)
-
 def options(opt):
 	opt.load('compiler_cxx waf_unit_test compiler_c')
 	opt.load('boost')
@@ -41,9 +35,6 @@ def options(opt):
 	#bo = opt.add_option_group("Build options")
 	gr.add_option('--production', action='store_true', default=False, dest='production', help="Disable debugging mode")
 	gr.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
-	gr.add_option('--dummyCPPImplementations', action='store_true', default=False, dest='dummyCPPImplementations', help="Build dummy modules/plugins for all supporting layers")
-
-	__recurse(opt)
 
 def configure(conf):
 	conf.load('compiler_cxx')
@@ -67,13 +58,12 @@ def configure(conf):
 		print "\tI cannot apply siox style to the source tree, but please proceed!"
 
 	# Check various packages for correct installations and linkage
-	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
-	conf.check_cfg(package='gmodule-2.0', use="GLIB", uselib_store='GMODULES',   args=['--cflags', '--libs'], mandatory=True)
-
-	conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
+	#conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
+	#conf.check_cfg(package='gmodule-2.0', use="GLIB", uselib_store='GMODULES',   args=['--cflags', '--libs'], mandatory=True)
+	#conf.check_cfg(package='libpqxx', uselib_store='PQXX',   args=['--cflags', '--libs'], mandatory=True)
 
 	# Check Boost library for correct installation and linkage
-	conf.check_boost(lib='system thread serialization regex program_options')
+	#conf.check_boost(lib='system thread serialization regex program_options')
 
 	conf.env.append_value("RPATH", conf.env.PREFIX + "/lib")
 
@@ -89,7 +79,6 @@ def configure(conf):
 	conf.env.CODEGEN=conf.path.abspath() + "/tools/serialization-code-generator.py"
 
 	print ""
-	__recurse(conf)
 	print "Debugging:                               : %s" % conf.options.debug
 
 def doc(ctx):
@@ -127,19 +116,11 @@ def build(bld):
 	bld.dummyCPP = dummyCPP
 
 
-	bld.recurse(['core'], mandatory=True)
-	bld.recurse(['monitoring'], mandatory=True)
-	bld.recurse(['knowledge'], mandatory=True)
-	bld.recurse(['util'], mandatory=True)
-	bld.recurse(['tools'])
-
+	#bld.recurse(['core'], mandatory=True)
 	# build test interfaces
-	# Manual usage would be:
-	#bld.dummyCPP(bld, source="include/monitoring/ontology/Ontology.hpp", target='monitoring/ontology/modules/Ontology')
-	if Options.options.dummyCPPImplementations:
-	  test_interface_re = re.compile("BUILD_TEST_INTERFACE\s+([^ \n]+)",  re.M)
-	  for root, dirnames, filenames in os.walk('include'):
-	    for filename in fnmatch.filter(filenames, '*.hpp'):
+	test_interface_re = re.compile("BUILD_TEST_INTERFACE\s+([^ \n]+)",  re.M)
+	for root, dirnames, filenames in os.walk('include'):
+		for filename in fnmatch.filter(filenames, '*.hpp'):
 		  fqfilename = os.path.join(root, filename)
 		  lastlines = tail(fqfilename)
 		  if lastlines == 0:

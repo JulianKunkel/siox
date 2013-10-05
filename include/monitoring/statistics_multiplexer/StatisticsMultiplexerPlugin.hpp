@@ -38,4 +38,3 @@ namespace monitoring {
 
 #endif
 
-// BUILD_TEST_INTERFACE monitoring/statistics_multiplexer/plugins/StatisticsMultiplexerPlugin
