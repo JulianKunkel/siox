@@ -1,9 +1,6 @@
 # Directories to ignore
 #
 
-# Generated documentation
-doc/
-
 # File extensions to ignore
 *~
 *.err
@@ -49,11 +46,17 @@ doc/
 
 # From Mac OS X
 .DS_Store
+
+# Generated files
+
 build/
 .waf*
 .lock-*
 *.gch
 /siox.project/
-.xmlSerialization
-.textSerialization
 .tags*
+tmp*
+
+# Generated documentation
+doc-created/
+

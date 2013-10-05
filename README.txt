@@ -58,7 +58,7 @@ To run tests manually, i.e. for debugging purpose, a script is provided which
 sets the required LD_LIBRARY_PATH and other environment variables to ease manual execution.
 
 To set the variables correctly run in (the bash):
-source ./scripts/set_ld_path.sh
+source ./devel/scripts/set_ld_path.sh
 
 
 Building, testing & installing the wrappers

@@ -1,9 +1,21 @@
+The primary directory structure is:
+devel -- contains functionality needed for building and helping during the development process
+doc -- basic documentation and root directory for building documentation
+src -- main folder for source
+tools -- additional tools, i.e. to automatically create wrappers.
+         These tools must be build manually, thus they are not included in the main build process of SIOX.
+
+For developers (we are talking about the src/ directory)
+========================================================
+
 Public interfaces are placed under:
 include/<package>/<component>/<interface>.h[pp]
 include/siox-ll/monitoring.h,optimization.h
 
 All component implementations are derived from:
 include/core/component/component.hpp
+
+If you are interested to develop your own component read the component.hpp for a description.
 
 Rationale:
 * All these files offer global and mandatory interfaces for all implementations.
