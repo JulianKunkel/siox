@@ -2,10 +2,92 @@
 	"folders":
 	[
 		{
-			"path": "src"
+			"path": "src/include"
+		},
+		{
+			"path": "src",
+			 "folder_exclude_patterns": ["include"],
+			 "file_exclude_patterns": [".tags*", "*~"]
 		},
 		{
 			"path": "tools"
 		}
-	]
+	],
+    "settings":
+    {
+        "tab_size": 3
+    },
+    "build_systems": 
+    [
+        {
+         "name": "Ninja",
+			"cmd" : [ "ninja", "-v"],
+			"working_dir": "${project_path}/build/",
+				"file_regex": "^(../..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+				"selector": "source.c, source.c++, source.cpp, source.hpp, source.h, source.txt",
+				"variants":
+				[
+				{
+				"cmd": ["cmake", "-GNinja", "../"],
+				"name": "Configure"
+				},
+				{
+				"cmd": ["ninja", "clean"],
+				"name": "Clean"
+				},
+				{
+				"cmd": ["ctest"],
+				"name": "Run"
+				},
+				{
+				"cmd": ["ninja", "install"],
+				"name": "Install"
+				},
+				{
+				"cmd": ["${project_path}/devel/scripts/serialization-code-generator.py", "-i", "$file", "-o", "$file-BinarySerialization.cpp", "--style", "JBinary"],
+				"name": "Create Binary Serialization"
+				},
+				{
+				"cmd": ["${project_path}/devel/scripts/serialization-code-generator.py", "-i", "$file", "-o", "$file-BoostSerialization.cpp", "--style", "Boost"],
+				"name": "Create Boost Serialization"
+				}
+				]         
+			
+
+        },
+        {
+            "name": "CMake",
+				"working_dir": "${project_path}/build/",
+				"cmd": ["make", "-v"],
+				"file_regex": "^(../..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+				"selector": "source.c, source.c++, source.cpp, source.hpp, source.h, source.txt",
+				"variants":
+				[
+				{
+				"cmd": ["cmake", "../"],
+				"name": "Configure"
+				},
+				{
+				"cmd": ["make", "clean"],
+				"name": "Clean"
+				},
+				{
+				"cmd": ["make", "test"],
+				"name": "Run"
+				},
+				{
+				"cmd": ["make", "install"],
+				"name": "Install"
+				},
+				{
+				"cmd": ["${project_path}/devel/scripts/serialization-code-generator.py", "-i", "$file", "-o", "$file-BinarySerialization.cpp", "--style", "JBinary"],
+				"name": "Create Binary Serialization"
+				},
+				{
+				"cmd": ["${project_path}/devel/scripts/serialization-code-generator.py", "-i", "$file", "-o", "$file-BoostSerialization.cpp", "--style", "Boost"],
+				"name": "Create Boost Serialization"
+				}
+				]            
+        }        
+    ]
 }

@@ -60,3 +60,5 @@ tmp*
 # Generated documentation
 doc-created/
 
+*.hpp-*
+*.cpp-*

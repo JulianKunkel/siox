@@ -74,6 +74,8 @@ class Option():
             filename = re.match("(.*)[.]...", args.inputFile)
             args.outputFile = filename.group(1) + args.outputSuffix
 
+	print ("Creating " + args.outputFile);
+
         return args
 
 
