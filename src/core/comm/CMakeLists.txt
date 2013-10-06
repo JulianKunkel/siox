@@ -15,6 +15,17 @@ target_link_libraries(
 )
 
 
+add_library(
+	siox-core-comm
+	CommunicationModule.cpp
+)
+
+target_link_libraries(
+	siox-core-comm
+	siox-util-jobProcessors
+)
+
+
 add_subdirectory(modules)
 add_subdirectory(test)
 

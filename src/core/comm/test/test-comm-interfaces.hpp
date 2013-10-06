@@ -43,14 +43,14 @@ class MyConnectionCallback: public ConnectionCallback, public ProtectRaceConditi
 public:
 	int retries = 0;
 
-	bool connectionErrorCB(ServiceClient & connection, CommunicationError error){
+	void connectionErrorCB(ServiceClient & connection, CommunicationError error){
 		
 		cout << "connectionErrorCB " << ((int) error) << " in  " << connection.getAddress()  << " retry: " << retries << endl;
 		
 		if(retries >= 2){
 			cout << "Retry count reached, stopping.";
 			sthHappens();
-			return true;
+			return;
 		}
 
 		retries++;
@@ -59,9 +59,6 @@ public:
 
 		// normally we would add a sleeping time here...
 		connection.ireconnect();
-
-		// do not delete pending messages
-		return false;
 	}
 
 	void connectionSuccessfullCB(ServiceClient & connection){

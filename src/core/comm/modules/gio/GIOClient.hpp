@@ -18,6 +18,9 @@
 #include <core/comm/ServiceClient.hpp>
 #include <core/comm/Message.hpp>
 
+#include <util/JobProcessorQueue.hpp>
+
+
 using namespace std;
 using namespace core;
 
@@ -58,7 +61,7 @@ public:
 	void connectionThreadFunc(thread * lastThread);
 	
 
-	GIOClient(const string & address);
+	GIOClient(const string & address, ProcessorQueue * sendQueue);
 
 	const string & getAddress() const{
 		return this->address;

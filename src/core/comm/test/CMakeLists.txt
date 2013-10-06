@@ -16,6 +16,7 @@ target_link_libraries(
 	siox-core-ModuleLoader
 )
 
+add_test(core-comm-mmts-in-memory core-comm-mmts-in-memory)
 
 # build the rpc client and server test-modules
 siox_run_serializer(rpc-client-module-options.hpp rpc-client-module-options.cpp)
@@ -62,5 +63,20 @@ target_link_libraries(
 	siox-core-comm-gio
 )
 
-add_test(core-comm-mmts-in-memory core-comm-mmts-in-memory)
+
+
 add_test(core-comm-rpc-modules-test core-comm-rpc-modules-test)
+
+
+add_executable(
+	core-comm-multi-endpoint-client-test
+	multi-endpoint-client-test.cpp
+)
+
+target_link_libraries(
+	core-comm-multi-endpoint-client-test
+	siox-core-ModuleLoader
+	siox-core-comm-gio
+)
+
+add_test(core-comm-multi-endpoint-client-test core-comm-multi-endpoint-client-test)

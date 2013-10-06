@@ -2,7 +2,6 @@
 
 #include "GIOinternal.hpp"
 
-
 using namespace std;
 using namespace core;
 
@@ -140,10 +139,7 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 
 	if (! g_cancellable_is_cancelled (shutdown_cancelable)){
 		// we expect the server terminated the connection for some reason.
-		bool deletePendingMessages = connectionCallback->connectionErrorCB(*this, comm_error);
-		if(deletePendingMessages){
-			sendQueue->clearPendingMessages();
-		}
+		connectionCallback->connectionErrorCB(*this, comm_error);
 	}
 
 	cout << "connectionThreadFunc End" << endl;
@@ -221,7 +217,7 @@ GIOClient::~GIOClient(){
 	g_object_unref(socket);
 	g_object_unref(shutdown_cancelable);
 
-	sendQueue->waitUntilAllMsgsAreSend();
+	sendQueue->shutdown();
 
 	delete(sendQueue);
 

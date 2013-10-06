@@ -8,6 +8,8 @@
 
 #include <core/comm/CommunicationModule.hpp>
 
+#include <util/JobProcessors/DefaultProcessorQueues.cpp>
+
 
 using namespace core;
 

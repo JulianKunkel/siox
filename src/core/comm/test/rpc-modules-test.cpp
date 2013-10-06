@@ -33,7 +33,6 @@ class RPCTargetImplementation : public SampleInterface{
 	virtual void init(){
 
 	}
-
 };
 
 int main(){

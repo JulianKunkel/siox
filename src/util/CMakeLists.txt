@@ -16,3 +16,5 @@ target_link_libraries(
 )
 
 install(TARGETS siox-util LIBRARY DESTINATION lib)
+
+add_subdirectory(JobProcessors)

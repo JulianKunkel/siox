@@ -17,6 +17,9 @@
 
 #include <core/comm/ServiceServer.hpp>
 
+#include <util/JobProcessorQueue.hpp>
+
+
 using namespace std;
 using namespace core;
 
@@ -53,7 +56,7 @@ public:
 
 	void listen() throw(CommunicationModuleException);
 
-	GIOServiceServer(const string & address) throw(CommunicationModuleException);
+	GIOServiceServer(const string & address, ProcessorQueue * sendQueue) throw(CommunicationModuleException);
 
 	~GIOServiceServer();
 };

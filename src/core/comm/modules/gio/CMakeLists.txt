@@ -12,16 +12,17 @@ add_library(
 	GIO.cpp 
 	GIOClient.cpp 
 	GIOServer.cpp 
-	BoostXMLSerializable.cpp
+	GIOOptions.cpp
 )
 
 target_link_libraries(
 	siox-core-comm-gio
+	siox-util-jobProcessors
 	${Boost_LIBRARIES}
 	${GLIB2_LIBRARIES}
 	${GIOUNIX2_LIBRARIES}
 )
-siox_run_serializer(GIOOptions.hpp BoostXMLSerializable.cpp)
+siox_run_serializer(GIOOptions.hpp GIOOptions.cpp)
 
 add_subdirectory(test)
 

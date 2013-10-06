@@ -21,8 +21,7 @@ class CommunicationModule;
 
 class ConnectionCallback{
 public:
-	// the return value determines if the currently pending messages should be deleted or not.
-	virtual bool connectionErrorCB(ServiceClient & client, CommunicationError error){ return false;}
+	virtual void connectionErrorCB(ServiceClient & client, CommunicationError error){}
 	virtual void connectionSuccessfullCB(ServiceClient & client){}
 };
 
@@ -31,7 +30,7 @@ public:
 	virtual void messageSendCB(BareMessage * msg) = 0;
 
 	// this function de-serializes the buffer as well
-	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size) = 0;
+	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size){};
 
 	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error) = 0;
 
@@ -89,7 +88,7 @@ public:
 		 * The object is serialized using the messageCallack.
 		 * @note This function may return immediately.
 		 */
-		 BareMessage * isend(const void * object, const void * user_ptr = nullptr ){
+		 virtual BareMessage * isend(const void * object, const void * user_ptr = nullptr ){
 			uint64_t msg_size = headerSize() + messageCallback->serializeMessageLen(object);
 			char * payload = (char*) malloc(msg_size);
 

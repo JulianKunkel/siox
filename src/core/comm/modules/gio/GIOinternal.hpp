@@ -13,11 +13,14 @@
 
 #include <boost/regex.hpp>
 
+#include <util/JobProcessors/SingleThreadedJobProcessor.hpp>
+
 // this two magic keys indicate the message type
 #define MAGIC_KEY 14099
 #define MAGIC_ERROR_KEY 16962
 
 using namespace std;
+using namespace util;
 
 #define SIOX_IPC_PATH "/tmp/"
 
@@ -239,70 +242,39 @@ inline bool sendSocketMessage(BareMessage * msg, GOutputStream * ostream){
 }
 
 
-class MessageSendQueue{
+class MessageSendQueue : protected SingleThreadedJobProcessor{
 protected:
 	bool connected = false;
-
-	// protect central data structures
-	mutex m;
-	condition_variable cv;
 	
-	list<BareMessage*> pendingMessages;
 	GCancellable * cancelable;
-
-	// the response thread owned
-	thread * myThread; 
 
 	GOutputStream * ostream = nullptr;
 
 	virtual void messageSend(BareMessage * msg){		
 	}
 
+	void processJob(void * job){
+		BareMessage* msg = (BareMessage*) job;
 
-	void msgThreadFunc(){
-		while(true){
-			BareMessage* msg;
-			{
+		if ( ! sendSocketMessage(msg, ostream) ) {
 			unique_lock<mutex> lk(m);
-			
-			while(pendingMessages.size() == 0){
-				if (! connected ){
-					return;
-				}				
-				cv.wait(lk);
-			}
-			if (! connected){
-				return;
-			}
-			msg = pendingMessages.front();
-			pendingMessages.pop_front();
-			}
+	
+			stopProcessing();
 
-			//cout << "Sending !" << endl;
-			// if we cannot send data to the remote we close the connection.
-			if ( ! sendSocketMessage(msg, ostream) ) {
-				unique_lock<mutex> lk(m);
-				pendingMessages.push_back(msg);
+			// insert the job in the start of the queue
+			queue->enqueueFront(job);
 
-				connected = false;
+	    	g_cancellable_cancel(cancelable);
 
-		    	g_cancellable_cancel(cancelable);
+			return;
+		}		
 
-				return;
-			}
-
-			//cout << "Done" << endl;
-			messageSend(msg);
-		}	
+		messageSend(msg);
 	}
 
 public:
-	virtual ~MessageSendQueue(){}
-
-	void clearPendingMessages(){
-		 for(auto itr = pendingMessages.begin() ; itr != pendingMessages.end() ; itr++){
-    		delete(*itr);
-    	}
+	inline void enqueue(BareMessage * msg){
+		iStartJob(msg);
 	}
 
 	void connect(GOutputStream * ostream, GCancellable * cancelable){
@@ -312,11 +284,10 @@ public:
 		this->cancelable = cancelable;
 		connected = true;
 		this->ostream = ostream;
+
+		startProcessing();
 		m.unlock();
-
-		myThread = new thread( & MessageSendQueue::msgThreadFunc, this);
 	}
-
 
 	void disconnect(){
    		// terminate response thread
@@ -326,53 +297,18 @@ public:
     		return;
     	}
     	connected = false;
+
+    	stopProcessing();
     	m.unlock();
-
-	    cv.notify_one();
-    	myThread->join();
-    	delete(myThread);
-	}
-
-	void enqueue(BareMessage * msg){
-		unique_lock<mutex> lk(m);
-		pendingMessages.push_back(msg);
-		if( pendingMessages.size() == 1){
-			cv.notify_one();
-		}
 	}
 
 	void terminate(){
-		disconnect();
-
-    	// Destroy all pending messages without notification.
-		clearPendingMessages();
+		SingleThreadedJobProcessor::terminate();
 	}
 
-	void waitUntilAllMsgsAreSend(){
-
-		disconnect();
-
-		// now we try to send all pending messages by ourselve.
-		unique_lock<mutex> lk(m);
-
-		while(pendingMessages.size() > 0){
-			if (! connected ){
-				break;
-			}
-
-			auto msg = pendingMessages.front();
-			pendingMessages.pop_front();
-
-			if ( sendSocketMessage(msg, ostream) ){
-				messageSend(msg);
-			}
-		}
-	}
-
-	list<BareMessage*> getUnsendMessages(){
-		assert(ostream == nullptr);
-		return pendingMessages;
-	}
+	void shutdown(){
+		SingleThreadedJobProcessor::shutdown();
+	}	
 };
 
 
