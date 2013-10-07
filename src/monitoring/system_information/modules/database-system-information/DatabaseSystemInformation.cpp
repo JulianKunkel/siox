@@ -54,6 +54,12 @@ namespace monitoring {
 				return id;
 			}
 
+			// TODO: Check if already in Database? What happens when inserted twice? -> http://stackoverflow.com/questions/15710162/conditional-insert-into-statement-in-postgres
+			// ^ Recherche: http://stackoverflow.com/questions/1109061/insert-on-duplicate-update-postgresql
+			// Mehr: http://stackoverflow.com/questions/4069718/postgres-insert-if-does-not-exist-already
+			// TODO: ERROR der nie passieren sollte? Abfangen oder weglassen? Eigene Exception?
+			// TODO: Fehlermeldungen weiterhin ignorieren?
+
 	        // Create a new transaction. It gets automatically destroyed at the end of this funtion.
 	        work insertAction(*conn, "Insert Transaction");
 
@@ -77,7 +83,7 @@ namespace monitoring {
 		        }
 		    }
 		    else {
-		        // TODO: ERROR
+		        // TODO: ERROR (Sollte nie passieren?)
 		        return NULL;
 		    }
 
@@ -391,14 +397,14 @@ namespace monitoring {
 	        work insertAction(*conn, "Insert Transaction");
 
 	        string sqlstring;
-	        sprintf(sqlstring, "INSERT INTO UniqueInterfaceMapping (Implementation, Interface) VALUES ('"+insertAction.esc(interface)+"', '"+insertAction.esc(implementation)+"')");
+	        sprintf(sqlstring, "INSERT INTO UniqueInterfaceMapping (Implementation, Interface) VALUES ('"+insertAction.esc(implementation)+"', '"+insertAction.esc(interface)+"')");
 
 	        // Perform the insert
 	        insertAction.exec(sqlstring);
 	        insertAction.commit();
 
 	        work selectAction(*conn, "Select Transaction");
-	        sprintf(sqlstring, "SELECT UniqueInterfaceID FROM UniqueInterfaceMapping WHERE Implementation='" + selectAction.esc(global_unique_identifier) + "' AND Interface = '"+insertAction.esc(implementation)+"'");
+	        sprintf(sqlstring, "SELECT UniqueInterfaceID FROM UniqueInterfaceMapping WHERE Implementation='" + selectAction.esc(implementation) + "' AND Interface = '"+insertAction.esc(interface)+"'");
 
 		    // Perform a select
 		    result resultSelect = selectAction.exec(sqlstring);
@@ -436,10 +442,30 @@ namespace monitoring {
 				uint32_t cur = res->second;
 				return cur;
 			} else {
-				throw NotFoundError();
-			}
+				UniqueInterfaceID retInterfaceID;
 
-			// TODO: Falls CHECK fehlschlägt: Datenbank abfragen, dann erst exception
+				work selectAction(*conn, "Select Transaction");
+	        	sprintf(sqlstring, "SELECT UniqueInterfaceID FROM UniqueInterfaceMapping WHERE Implementation='" + selectAction.esc(implementation) + "' AND Interface = '"+insertAction.esc(interface)+"'");
+
+		    	// Perform a select
+		    	result resultSelect = selectAction.exec(sqlstring);
+		    	selectAction.commit();
+
+		    	// Check if there is only one result
+		    	if (resultSelect.size() == 1) {
+		        	// Check if results are sane (and convert them)
+		        	// TODO: Conversion okay?
+		        	if (!resultSelect[0]["UniqueInterfaceID"].to(retInterfaceID)) {
+		            	throw integretyError;
+		            	return NULL;
+		        	}
+		        	return retInterfaceID;
+		    	}
+		    	else {
+		        	throw NotFoundError();
+		        	return NULL;
+		    	}
+			}
 		}
 
 		const string & lookup_interface_name( UniqueInterfaceID id ) const throw( NotFoundError )  {
@@ -447,10 +473,30 @@ namespace monitoring {
 			if( res != interfaceImplStrMap.end() ) {
 				return res->second.first;
 			} else {
-				throw NotFoundError();
-			}
+				string retInterfaceName;
 
-			// TODO: Falls CHECK fehlschlägt: Datenbank abfragen, dann erst exception
+				work selectAction(*conn, "Select Transaction");
+	        	sprintf(sqlstring, "SELECT Interface FROM UniqueInterfaceMapping WHERE Implementation='" + selectAction.esc(implementation) + "' AND UniqueInterfaceID = '"+insertAction.esc(id)+"'");
+
+		    	// Perform a select
+		    	result resultSelect = selectAction.exec(sqlstring);
+		    	selectAction.commit();
+
+		    	// Check if there is only one result
+		    	if (resultSelect.size() == 1) {
+		        	// Check if results are sane (and convert them)
+		        	// TODO: Conversion okay?
+		        	if (!resultSelect[0]["Interface"].to(retInterfaceName)) {
+		            	throw integretyError;
+		            	return NULL;
+		        	}
+		        	return retInterfaceName;
+		    	}
+		    	else {
+		        	throw NotFoundError();
+		        	return NULL;
+		    	}
+			}
 		}
 
 		const string & lookup_interface_implementation( UniqueInterfaceID id ) const throw( NotFoundError ) {
@@ -458,10 +504,30 @@ namespace monitoring {
 			if( res != interfaceImplStrMap.end() ) {
 				return res->second.second;
 			} else {
-				throw NotFoundError();
-			}
+				string retInterfaceImpl;
 
-			// TODO: Falls CHECK fehlschlägt: Datenbank abfragen, dann erst exception
+				work selectAction(*conn, "Select Transaction");
+	        	sprintf(sqlstring, "SELECT Implementation FROM UniqueInterfaceMapping WHERE UniqueInterfaceID = '"+insertAction.esc(id)+"'");
+
+		    	// Perform a select
+		    	result resultSelect = selectAction.exec(sqlstring);
+		    	selectAction.commit();
+
+		    	// Check if there is only one result
+		    	if (resultSelect.size() == 1) {
+		        	// Check if results are sane (and convert them)
+		        	// TODO: Conversion okay?
+		        	if (!resultSelect[0]["Implementation"].to(retInterfaceImpl)) {
+		            	throw integretyError;
+		            	return NULL;
+		        	}
+		        	return retInterfaceImpl;
+		    	}
+		    	else {
+		        	throw NotFoundError();
+		        	return NULL;
+		    	}
+			}
 		}
 
 		UniqueComponentActivityID register_activityID( UniqueInterfaceID id, const string & name ) {
@@ -473,10 +539,38 @@ namespace monitoring {
 				return aid;
 			}
 
+	        // Create a new transaction. It gets automatically destroyed at the end of this funtion.
+	        work insertAction(*conn, "Insert Transaction");
 
-			// TODO: Datenbank
+	        string sqlstring;
+	        sprintf(sqlstring, "INSERT INTO ComponentActivityMapping (UniqueInterfaceID, Name) VALUES ('"+insertAction.esc(id)+"', '"+insertAction.esc(name)+"')");
+
+	        // Perform the insert
+	        insertAction.exec(sqlstring);
+	        insertAction.commit();
+
+	        work selectAction(*conn, "Select Transaction");
+	        sprintf(sqlstring, "SELECT ActivityID FROM ComponentActivityMapping WHERE UniqueInterfaceID='" + selectAction.esc(id) + "' AND Name = '"+insertAction.esc(name)+"'");
+
+		    // Perform a select
+		    result resultSelect = selectAction.exec(sqlstring);
+		    selectAction.commit();
+
+		    // Check if there is only one result
+		    if (resultSelect.size() == 1) {
+		        // Check if results are sane (and convert them)
+		        // TODO: Conversion okay?
+		        if (!resultSelect[0]["ActivityID"].to(aid)) {
+		            throw integretyError;
+		            return NULL;
+		        }
+		    }
+		    else {
+		        // TODO: ERROR
+		        return NULL;
+		    }
+
 			m.lock();
-			aid = nextID++;
 			activityMap[pair_str] = aid;
 			activityInterfaceIDMap[aid] = id;
 			valueStringMap[aid] = name;
@@ -489,19 +583,85 @@ namespace monitoring {
 
 			CHECK( activityMap, pair_str )
 
-			// TODO: Falls CHECK fehlschlägt: Datenbank abfragen, dann erst exception
+			UniqueComponentActivityID RetActivityID;
+
+			work selectAction(*conn, "Select Transaction");
+	        sprintf(sqlstring, "SELECT ActivityID FROM ComponentActivityMapping WHERE UniqueInterfaceID='" + selectAction.esc(id) + "' AND Name = '"+insertAction.esc(name)+"'");
+
+		    // Perform a select
+		    result resultSelect = selectAction.exec(sqlstring);
+		    selectAction.commit();
+
+		    // Check if there is only one result
+		    if (resultSelect.size() == 1) {
+		        // Check if results are sane (and convert them)
+		        // TODO: Conversion okay?
+		        if (!resultSelect[0]["ActivityID"].to(RetActivityID)) {
+		            throw integretyError;
+		            return NULL;
+		        }
+		        return RetActivityID;
+		    }
+		    else {
+		        throw NotFoundError();
+		        return NULL;
+		    }
 		}
 
 		UniqueInterfaceID lookup_interface_of_activity( UniqueComponentActivityID id ) const throw( NotFoundError ) {
 			CHECK( activityInterfaceIDMap, id )
 
-			// TODO: Falls CHECK fehlschlägt: Datenbank abfragen, dann erst exception
+			UniqueInterfaceID RetInterfaceID;
+
+			work selectAction(*conn, "Select Transaction");
+	        sprintf(sqlstring, "SELECT UniqueInterfaceID FROM ComponentActivityMapping WHERE ActivityID='" + selectAction.esc(id) + "'");
+
+		    // Perform a select
+		    result resultSelect = selectAction.exec(sqlstring);
+		    selectAction.commit();
+
+		    // Check if there is only one result
+		    if (resultSelect.size() == 1) {
+		        // Check if results are sane (and convert them)
+		        // TODO: Conversion okay?
+		        if (!resultSelect[0]["UniqueInterfaceID"].to(RetInterfaceID)) {
+		            throw integretyError;
+		            return NULL;
+		        }
+		        return RetInterfaceID;
+		    }
+		    else {
+		        throw NotFoundError();
+		        return NULL;
+		    }
 		}
 
 		const string & lookup_activity_name( UniqueComponentActivityID id ) const throw( NotFoundError ) {
 			CHECK( valueStringMap, id )
 
-			// TODO: Falls CHECK fehlschlägt: Datenbank abfragen, dann erst exception
+			string RetActName;
+
+			work selectAction(*conn, "Select Transaction");
+	        sprintf(sqlstring, "SELECT Name FROM ComponentActivityMapping WHERE UniqueInterfaceID='" + selectAction.esc(id) + "'");
+
+		    // Perform a select
+		    result resultSelect = selectAction.exec(sqlstring);
+		    selectAction.commit();
+
+		    // Check if there is only one result
+		    if (resultSelect.size() == 1) {
+		        // Check if results are sane (and convert them)
+		        // TODO: Conversion okay?
+		        if (!resultSelect[0]["Name"].to(RetActName)) {
+		            throw integretyError;
+		            return NULL;
+		        }
+		        return RetActName;
+		    }
+		    else {
+		        throw NotFoundError();
+		        return NULL;
+		    }
 		}		
 
 
