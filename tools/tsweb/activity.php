@@ -2,6 +2,7 @@
 
 require_once "include/DB.php";
 require_once "include/Activity.php";
+require_once "include/Util.php";
 
 $site_title = "Causal Chain View"; 
 $site_description = "Visualization of the causal chain for the activity"; 
@@ -51,10 +52,10 @@ require_once "header.php";
 		<th>attributes</th><td class="odd"><?=$act->attributes?></td>
 	</tr>
 	<tr>
-		<th>remote_calls</th><td class="even"><?=implode(', ', $act->remote_calls);?></td>
+		<th>remote_calls</th><td class="even"><?=implode(', ', hyperlink_ids('remote_call.php?unique_id=', $act->remote_calls));?></td>
 	</tr>
 	<tr>
-		<th>parents</th><td class="odd"><?=implode(', ', $act->parents);?></td>
+		<th>parents</th><td class="odd"><?=implode(', ', hyperlink_ids('activity.php?unique_id=', $act->parents));?></td>
 	</tr>
 	<tr>
 		<th>error_value</th><td class="even"><?=$act->error_value?></td>

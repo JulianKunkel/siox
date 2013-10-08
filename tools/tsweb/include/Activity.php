@@ -135,6 +135,7 @@ static function get_child_ids($unique_id)
 static function add_child_edges(&$gv, $children, $parent)
 {
 	foreach ($children as $child) {
+		$gv->addNode($child->unique_id, array('style' => 'filled','URL' => "activity.php?unique_id=$child->unique_id"));
 		$gv->addEdge(array($parent->unique_id => $child->unique_id));
 		if (!empty($child->children))
 			self::add_child_edges($gv, $child->children, $child);
@@ -145,11 +146,13 @@ static function add_child_edges(&$gv, $children, $parent)
 static function add_parent_edges(&$gv, $parents, $child)
 {
 	foreach ($parents as $parent) {
+		$gv->addNode($parent->unique_id, array('style' => 'filled','URL' => "activity.php?unique_id=$parent->unique_id"));
 		$gv->addEdge(array($parent->unique_id => $child->unique_id));
 		if (!empty($parent->parents))
 			self::add_parent_edges($gv, $parent->parents, $parent);
 	}
 }
+
 
 static function print_dot($unique_id)
 {
