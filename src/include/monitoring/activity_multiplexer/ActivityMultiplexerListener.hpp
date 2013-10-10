@@ -14,7 +14,7 @@ namespace monitoring {
 			/**
 			 * Receive logged activity from a multiplexer
 			 *
-			 * @param   element a logged Activity
+			 * @param    activity	a logged Activity
 			 */
 			virtual void Notify( Activity * activity ) = 0;
 	};
@@ -23,7 +23,10 @@ namespace monitoring {
 	class ActivityMultiplexerListenerAsync {
 		public:
 			/*
-			 * lostActivities counts the of activities which have been lost before processing the activity.
+			 * lost activities counts the of activities which have been lost before processing the activity.
+			 *
+			 * @param	lostActivitiesCount	numbers of activities lost before this activity came through
+			 * @param	activtiy	a logged activity
 			 */
 			virtual void NotifyAsync( int lostActivitiesCount, Activity * activity ) = 0;
 	};

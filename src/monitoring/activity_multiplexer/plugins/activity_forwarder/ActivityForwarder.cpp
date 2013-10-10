@@ -13,16 +13,26 @@ using namespace monitoring;
 class ActivityForwarder: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener {
 	public:
 		/**
-		 * Implements ActivityMultiplexerListener Notify, passes activity to out.
+		 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 		 */
 		virtual void Notify( Activity * element ) {
 			out->Log( element );
 		}
 
+		/**
+		 * Dummy implementation for ActivityForwarder Options.
+		 */
 		ComponentOptions * AvailableOptions() {
 			return new ActivityForwarderOptions();
 		}
 
+		/**
+		 * Forwarder setup:
+		 * Register this to a already created multiplexer
+		 * (a ActivityMultiplexerPlugin always also creates a Multiplexer).
+		 * Create a second ActivityMultiplexer instance that serves as an
+		 * out going end of the Forwarder.
+		 */
 		void initPlugin() {
 			multiplexer->registerListener( this );
 
@@ -31,6 +41,7 @@ class ActivityForwarder: public ActivityMultiplexerPlugin, public ActivityMultip
 		}
 
 	private:
+		/** Receiving ActivityMultiplexer */
 		ActivityMultiplexer * out = nullptr;
 };
 

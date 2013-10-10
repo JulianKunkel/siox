@@ -15,6 +15,11 @@ namespace monitoring {
 	 */
 	class ActivityMultiplexer : public core::Component {
 		public:
+			/**
+			 * Notify ActivityMultiplexer that an activity needs to be passed to listerns
+			 *
+			 * @param	activity	logged activity
+			 */
 			virtual void Log( Activity * activity ) = 0;
 
 			/**
