@@ -187,6 +187,7 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 
 		virtual vector<shared_ptr<Statistic> > getStatistics() throw();
 		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
+		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, StatisticsDescription & stat ) throw();
 
 		virtual ~ThreadedStatisticsCollector() throw();
 
@@ -280,6 +281,16 @@ array<StatisticsValue, Statistic::kHistorySize> ThreadedStatisticsCollector::get
 		statistic->getHistoricValues( interval, &result, NULL );
 	}
 	return result;
+}
+
+StatisticsValue ThreadedStatisticsCollector::getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & description ) throw();
+	string topology = "";
+	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
+	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
+	if(Statistic* statistic = &*index[key]) {
+		return statistic->getRollingValue( interval );
+	}
+	return StatisticsValue();
 }
 
 ThreadedStatisticsCollector::~ThreadedStatisticsCollector() throw() {

@@ -40,15 +40,15 @@ class StatisticsCollectorTester : public StatisticsCollector {
 			return array<StatisticsValue, Statistic::kHistorySize>();
 		}
 
-//		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, StatisticsDescription & stat ) {
+		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() {
+			return StatisticsValue( 1 );
+		}
+
+//		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat, StatisticsReduceOperator op ) {
 //			return StatisticsValue( 1 );
 //		}
 //
-//		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) {
-//			return StatisticsValue( 1 );
-//		}
-//
-//		virtual StatisticsValue getStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) {
+//		virtual StatisticsValue getStatistics( StatisticsInterval interval, const StatisticsDescription & stat, StatisticsReduceOperator op ) {
 //			return StatisticsValue( 1 );
 //		}
 //

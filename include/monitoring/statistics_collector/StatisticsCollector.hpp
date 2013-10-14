@@ -116,9 +116,9 @@ namespace monitoring {
 
 			/*
 			 */
-//			virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, StatisticsDescription & stat ) = 0;
+			virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() = 0;
 
-//			virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, StatisticsDescription & stat, StatisticsReduceOperator op ) = 0;
+//			virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat, StatisticsReduceOperator op ) = 0;
 
 			/* D10
 			 * What are the available source metrics and available sources for metrics if they are combined ones?
