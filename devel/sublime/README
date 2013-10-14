@@ -1,0 +1,29 @@
+To use sublime together with cmake / ninja some preparation is needed:
+$ cd siox
+$ ln -sf devel/sublime/siox.sublime-project siox.sublime-project 
+$ mkdir build/
+$ cd build
+$ cmake -GNinja ../
+
+To change configuration options:
+$ ccmake ../ 
+
+Now select Tools/Build System/Ninja in Sublime.
+
+Alternatively to manual cmake: start Sublime press CTRL-SHIFT-P select "BUILD: Configure", now it should run cmake...
+Now you can use F7 or CTRL-B to build the project and F4 to walk the errors.
+
+
+
+OLD:
+
+To setup sublime to build with waf:
+
+$ cp waf-sublime ../
+
+open sublime, preferences, browse packages
+go to C++ folder
+
+copy C++.sublime-build into this folder replacing the old file.
+
+Now you can use F7 or CTRL-B to build the project and F4 to walk the errors.

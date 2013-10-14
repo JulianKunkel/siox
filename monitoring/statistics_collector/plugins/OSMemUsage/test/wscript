@@ -1,7 +1,0 @@
-#! /usr/bin/env python
-# encoding: utf-8
-
-def build(bld):
-    bld.program(includes="",  features='test cxx cxxprogram', use = "siox-monitoring-statisticsPlugin-OSMemUsage siox-core-AutoConfigurator", target = 'OSMemUsageTest', source = 'OSMemUsageTest.cpp', install_path = None)
-
-# -*- indent-tabs-mode: t -*-
