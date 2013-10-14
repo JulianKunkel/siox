@@ -20,6 +20,7 @@ namespace monitoring {
 			Statistic( const StatisticsProviderDatatypes& source, const StatisticsProviderPlugin* provider, Ontology* ontology ) throw();
 
 			void getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<std::chrono::high_resolution_clock::time_point, kHistorySize>* times ) throw();	//Both values and times may be null pointers, if that information is irrelevant.
+			StatisticsValue getRollingValue( StatisticsInterval interval ) throw();
 
 			void update(std::chrono::high_resolution_clock::time_point time) throw();	//The StatisticsCollector is expected to call this ten times per second.
 			size_t measurementIncrement( StatisticsInterval pollInterval ) throw();

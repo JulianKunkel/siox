@@ -22,6 +22,10 @@ void monitoring::Statistic::getHistoricValues( StatisticsInterval interval, std:
 	}
 }
 
+monitoring::StatisticsValue monitoring::Statistic::getRollingValue( monitoring::StatisticsInterval interval ) throw() {
+	assert(0 && "TODO"), abort();
+}
+
 void monitoring::Statistic::update( std::chrono::high_resolution_clock::time_point time ) throw() {
 	//write the current value into the history
 	size_t newIndex = lastIndex + 1;
