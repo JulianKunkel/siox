@@ -21,6 +21,7 @@ target_link_libraries(
 	${Boost_LIBRARIES}
 	${GLIB2_LIBRARIES}
 	${GIOUNIX2_LIBRARIES}
+	siox-core-comm
 )
 siox_run_serializer(GIOOptions.hpp GIOOptions.cpp)
 

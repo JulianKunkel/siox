@@ -7,7 +7,7 @@ namespace util{
 	class ProcessorCallback{
 	protected:
 		virtual void processJob(void * job) = 0;
-		virtual void jobAborted(void * job){};
+		virtual void jobAborted(void * job) = 0;
 	};
 
 

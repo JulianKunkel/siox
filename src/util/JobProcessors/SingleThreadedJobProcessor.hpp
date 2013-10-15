@@ -17,7 +17,7 @@ class SingleThreadedJobProcessor : public JobProcessor{
 protected:
 	std::mutex m;
 	std::condition_variable cv;
-	std::thread * myThread;
+	std::thread * myThread = nullptr;
 
 	enum class OperationalStatus : uint8_t{
 		OPERATIONAL = 0,
@@ -36,7 +36,7 @@ public:
 
 	virtual void startProcessing();
 
-	SingleThreadedJobProcessor();
+	~SingleThreadedJobProcessor();
 	
 protected:
 	void process();

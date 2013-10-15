@@ -4,7 +4,6 @@
 namespace util{
 	/*
  		The ProcessorQueue offers an abstraction to manage pending work of any kind.
- 		It is NOT thread safe. Thread safety must be enforced by the JobPocessor.
  	*/
 	class ProcessorQueue {
 	public:

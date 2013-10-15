@@ -7,6 +7,8 @@
 
 #include <core/comm/CommunicationModule.hpp>
 #include <core/module/ModuleLoader.hpp>
+#include <util/DefaultProcessorQueues.hpp>
+
 
 #include <core/container/container-binary-serializer.hpp>
 
@@ -315,6 +317,33 @@ void messageExchange(CommunicationModule * comm, string address1, string address
 }
 
 
+void messageDiscardedInClient(CommunicationModule * comm, string address1, string address2, string address3){
+	MyConnectionCallback myCCB;
+	MyClientMessageCallback myMessageCB;
+
+	cout << endl <<  "The client will discard all messages" << endl;
+
+	MyServerCallback mySCB;	
+	ServiceServer * s3 = comm->startServerService(address2, & mySCB );
+
+	ProcessorQueueDiscardWrapper * discardQueue = new ProcessorQueueDiscardWrapper(0, new FIFOProcessorQueue());
+
+	ServiceClient * c2 = comm->startClientService(address2, & myCCB, & myMessageCB, discardQueue);
+
+	myCCB.waitUntilSthHappened();
+
+	string data = "test";
+	// register a message type on the server and re-send the previous message:
+	c2->isend(& data);
+
+	myMessageCB.waitUntilSthHappened();
+	assert( myMessageCB.state == MyClientMessageCallback::State::Error );
+	assert( myMessageCB.error == CommunicationError::UNKNOWN );
+
+	delete(c2);
+	delete(s3);
+}
+
 void runTestSuite(string module, string address1, string address2, string address3){
 	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", module, CORE_COMM_INTERFACE );
 
@@ -325,6 +354,9 @@ void runTestSuite(string module, string address1, string address2, string addres
 	missingListener(comm, address1, address2, address3);
 	rejectingListener(comm, address1, address2, address3);
 	messageExchange(comm, address1, address2, address3);
+
+	// test discarding of client message
+	// messageDiscardedInClient(comm, address1, address2, address3);
 
 	delete(comm);
 }

@@ -15,6 +15,7 @@ add_library(
 target_link_libraries(
 	siox-core-comm-inmemory
 	${Boost_LIBRARIES}
+	siox-core-comm
 )
 
 siox_run_serializer(CommInMemoryOptions.hpp BoostXMLSerializable.cpp)

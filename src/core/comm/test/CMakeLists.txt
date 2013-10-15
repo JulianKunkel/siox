@@ -14,6 +14,7 @@ target_link_libraries(
 	siox-core-comm-multiMessageService 
 	siox-core-comm-inmemory 
 	siox-core-ModuleLoader
+	siox-core-comm
 )
 
 add_test(core-comm-mmts-in-memory core-comm-mmts-in-memory)
@@ -35,6 +36,7 @@ add_library(
 target_link_libraries(
 	siox-core-comm-rpc-client
 	siox-core-AutoConfigurator
+	siox-core-comm
 )
 
 add_library(
@@ -46,7 +48,8 @@ add_library(
 
 target_link_libraries(
 	siox-core-comm-rpc-server
-	siox-core-AutoConfigurator	
+	siox-core-AutoConfigurator
+	siox-core-comm
 )
 
 
@@ -68,15 +71,15 @@ target_link_libraries(
 add_test(core-comm-rpc-modules-test core-comm-rpc-modules-test)
 
 
-add_executable(
-	core-comm-multi-endpoint-client-test
-	multi-endpoint-client-test.cpp
-)
+# add_executable(
+# 	core-comm-multi-endpoint-client-test
+# 	multi-endpoint-client-test.cpp
+# )
 
-target_link_libraries(
-	core-comm-multi-endpoint-client-test
-	siox-core-ModuleLoader
-	siox-core-comm-gio
-)
+# target_link_libraries(
+# 	core-comm-multi-endpoint-client-test
+# 	siox-core-ModuleLoader
+# 	siox-core-comm-gio
+# )
 
-add_test(core-comm-multi-endpoint-client-test core-comm-multi-endpoint-client-test)
+# add_test(core-comm-multi-endpoint-client-test core-comm-multi-endpoint-client-test)

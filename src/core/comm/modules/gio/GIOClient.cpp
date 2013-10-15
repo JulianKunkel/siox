@@ -1,3 +1,5 @@
+#include <valgrind/memcheck.h>
+
 #include "GIOClient.hpp"
 
 #include "GIOinternal.hpp"
@@ -5,15 +7,19 @@
 using namespace std;
 using namespace core;
 
-class ClientMessageSendQueue : public MessageSendQueue{
+class ClientMessageSendProcessor : public MessageSendProcessor{
 private:
 	GIOClient * client;
 protected:
 	virtual void messageSend(BareMessage * msg){
 		client->getMessageCallback()->messageSendCB(msg);
 	}
+
+	virtual void messageAborted(BareMessage * msg){
+		client->getMessageCallback()->messageTransferErrorCB(msg, CommunicationError::UNKNOWN);
+	}	
 public:
-	ClientMessageSendQueue(GIOClient * client): client(client){}
+	ClientMessageSendProcessor(GIOClient * client): client(client){}
 };
 
 /**
@@ -79,7 +85,7 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 
 	GInputStream * istream = g_io_stream_get_input_stream (G_IO_STREAM (conn));
 
-	sendQueue->connect(g_io_stream_get_output_stream (G_IO_STREAM (conn)), one_thread_error_cancelable);
+	sendProcessor->connect(g_io_stream_get_output_stream (G_IO_STREAM (conn)), one_thread_error_cancelable);
 	CommunicationError comm_error;
 
 	// start receiving responses
@@ -131,7 +137,7 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 	}
 
 	// the receiving connection has been closed, so we should join the writer thread.
-	sendQueue->disconnect();
+	sendProcessor->disconnect();
 
 	g_io_stream_close(G_IO_STREAM (conn), shutdown_cancelable, NULL);
 
@@ -146,12 +152,13 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 }
 
 
-GIOClient::GIOClient(const string & address){
+GIOClient::GIOClient(const string & address, util::ProcessorQueue * sendQueue){
 	this->address = address;
 
 	socket = g_socket_client_new();
 	shutdown_cancelable =  g_cancellable_new();
-	sendQueue = new ClientMessageSendQueue(this);
+	sendProcessor = new ClientMessageSendProcessor(this);
+	sendProcessor->setProcessorQueue(sendQueue);
 	lastMessageID++;
 }
 
@@ -184,7 +191,7 @@ void GIOClient::isend( BareMessage * msg ) {
 	pendingResponses[clientSidedID] = msg;
 	pendingResponses_mutex.unlock();
 	
-	sendQueue->enqueue(msg);
+	sendProcessor->enqueue(msg);
 }
 
 uint32_t GIOClient::headerSize(){
@@ -217,9 +224,9 @@ GIOClient::~GIOClient(){
 	g_object_unref(socket);
 	g_object_unref(shutdown_cancelable);
 
-	sendQueue->shutdown();
+	sendProcessor->shutdown();
 
-	delete(sendQueue);
+	delete(sendProcessor);
 
 	cout << "Done client" << endl;
 }

@@ -61,6 +61,8 @@ int main(){
 	cout << *s.pa << " " << *out.pa << endl;
 	assert(*s.pa == *out.pa);
 
+	free(out.pa);
+
 	cout << out.v.size() << endl;
 	assert(s.v.size() == out.v.size());
 

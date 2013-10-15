@@ -5,12 +5,12 @@ include_directories(
 )
 
 add_executable(
-	siox-ll-c-test
+	monitoring-low-level-c-test
 	siox-ll-c-test.c
 )
 
 target_link_libraries(
-	siox-ll-c-test
+	monitoring-low-level-c-test
 	siox-monitoring-siox-ll 
 	siox-monitoring-activityPlugin-AnomalySkeleton
 	siox-core-autoconfigurator-FileConfigurationProvider
@@ -25,4 +25,4 @@ target_link_libraries(
 
 symlink(siox.conf siox.conf)
 
-add_test(monitoring-low-level-c_siox-ll-c-test siox-ll-c-test)
+add_test(monitoring-low-level-c-test monitoring-low-level-c-test)

@@ -192,7 +192,7 @@ void InMemoryServerClientMessage::isendErrorResponse(CommunicationError error){
 class CommInMemory : public CommunicationModule {
 public:
 	//virtual void setWorkProcessor() = 0; 
-	virtual ServiceServer * startServerService(const string & address, ProcessorQueue * sendQueue) throw(CommunicationModuleException){
+	virtual ServiceServer * startServerService(const string & address) throw(CommunicationModuleException){
 		return new InMemoryServiceServer(address);
 	}
 

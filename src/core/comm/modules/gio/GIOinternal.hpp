@@ -242,7 +242,7 @@ inline bool sendSocketMessage(BareMessage * msg, GOutputStream * ostream){
 }
 
 
-class MessageSendQueue : protected SingleThreadedJobProcessor{
+class MessageSendProcessor : protected SingleThreadedJobProcessor{
 protected:
 	bool connected = false;
 	
@@ -253,10 +253,15 @@ protected:
 	virtual void messageSend(BareMessage * msg){		
 	}
 
+	virtual void messageAborted(BareMessage * msg){
+	}
+
+
 	void processJob(void * job){
 		BareMessage* msg = (BareMessage*) job;
 
 		if ( ! sendSocketMessage(msg, ostream) ) {
+			// the connection broke
 			unique_lock<mutex> lk(m);
 	
 			stopProcessing();
@@ -267,12 +272,22 @@ protected:
 	    	g_cancellable_cancel(cancelable);
 
 			return;
-		}		
+		}
 
 		messageSend(msg);
 	}
 
+	void jobAborted(void * job){
+		BareMessage* msg = (BareMessage*) job;
+		messageAborted(msg);
+		delete(msg);
+	}
+
 public:
+	void setProcessorQueue(ProcessorQueue * queue){
+		this->queue = queue;
+	}
+
 	inline void enqueue(BareMessage * msg){
 		iStartJob(msg);
 	}
@@ -284,9 +299,9 @@ public:
 		this->cancelable = cancelable;
 		connected = true;
 		this->ostream = ostream;
+		m.unlock();
 
 		startProcessing();
-		m.unlock();
 	}
 
 	void disconnect(){

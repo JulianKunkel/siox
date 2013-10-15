@@ -19,7 +19,7 @@ public:
 
 	virtual bool removeJob(void * job);
 
-	virtual void enqueueFront( void * job ) = 0;
+	virtual void enqueueFront( void * job );
 };
 
 class ProcessorQueueDiscardWrapper : public ProcessorQueue{
@@ -41,7 +41,9 @@ public:
 
 	virtual bool removeJob(void * job);
 
-	virtual void enqueueFront( void * job ) = 0;
+	virtual void enqueueFront( void * job );
+
+	~ProcessorQueueDiscardWrapper();
 };
 
 }

@@ -17,11 +17,11 @@ using namespace std;
 namespace core{
 	class CommunicationModule : public Component {
 	protected:		
-		virtual ServiceServer * startServerService(const string & address, ProcessorQueue * sendQueue) throw(CommunicationModuleException) = 0;
+		virtual ServiceServer * startServerService(const string & address) throw(CommunicationModuleException) = 0;
 		virtual ServiceClient * startClientService(const string & server_address, ProcessorQueue * sendQueue) throw(CommunicationModuleException) = 0;		
 	public:
 		
-		ServiceServer * startServerService(const string & address, ServerCallback * msg_rcvd_callback, ProcessorQueue * sendQueue = nullptr) throw(CommunicationModuleException);
+		ServiceServer * startServerService(const string & address, ServerCallback * msg_rcvd_callback) throw(CommunicationModuleException);
 
 		ServiceClient * startClientService(const string & server_address, ConnectionCallback * ccb, MessageCallback * messageCallback, ProcessorQueue * sendQueue = nullptr) throw(CommunicationModuleException);
 	};

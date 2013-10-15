@@ -2,10 +2,12 @@
 
 #include "GIOinternal.hpp"
 
+#include <util/DefaultProcessorQueues.hpp>
+
 
 class GIOServiceServer;
 
-class ServerMessageSendQueue : public MessageSendQueue{
+class ServerMessageSendProcessor : public MessageSendProcessor{
 private:
 	GIOServiceServer * server;
 protected:
@@ -14,17 +16,17 @@ protected:
 		delete(response);
 	}
 public:
-	ServerMessageSendQueue(GIOServiceServer * server): server(server){}
+	ServerMessageSendProcessor(GIOServiceServer * server): server(server){}
 };
 
 
 class TCPClientMessage : public ServerClientMessage{
 public:
-	MessageSendQueue * rspThread;
+	MessageSendProcessor * rspThread;
 	GIOServiceServer * server;
 	uint64_t clientSidedID;
 
-	TCPClientMessage(GIOServiceServer * server, uint64_t clientSidedID, MessageSendQueue* rspThread,  const char * payload, uint64_t size) : ServerClientMessage( payload, size), rspThread(rspThread), server(server), clientSidedID(clientSidedID) {}	
+	TCPClientMessage(GIOServiceServer * server, uint64_t clientSidedID, MessageSendProcessor* rspThread,  const char * payload, uint64_t size) : ServerClientMessage( payload, size), rspThread(rspThread), server(server), clientSidedID(clientSidedID) {}	
 
 	void isendResponse(const void * object);
 
@@ -122,13 +124,15 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
     GInputStream * istream = g_io_stream_get_input_stream(G_IO_STREAM(connection));
 
     // this spawns a response thread
-    ServerMessageSendQueue messageSendQueueInstance(this);
+    ServerMessageSendProcessor messageSendQueueInstance(this);
+    messageSendQueueInstance.setProcessorQueue(new FIFOProcessorQueue());
 
     messageSendQueueInstance.connect(g_io_stream_get_output_stream(G_IO_STREAM(connection)), one_thread_error_cancelable);
 
-	// spawn another thread to accept the next connection
-	addAcceptorThread();
+	 // spawn another thread to accept the next connection
+	 addAcceptorThread();
 
+	 // this thread now will receive messages.
     while(1) {
 		uint64_t msgLength;
 		uint32_t clientSidedID;
@@ -138,7 +142,7 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
 
         if ( payload == nullptr ){
         	if (msgLength > 0){ 
-        		cout << "Received broken message" << endl;
+        		// cout << "Received broken message" << endl;
 
         		messageCallback->invalidMessageReceivedCB(error);
         		TCPClientMessage errMsg(this, clientSidedID, & messageSendQueueInstance, nullptr, 0);
@@ -148,7 +152,7 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
         	break;
         }
 
-        cout << "Received message" << endl;
+        // cout << "Received message" << endl;
 
         auto msg = shared_ptr<TCPClientMessage>(new TCPClientMessage(this, clientSidedID, & messageSendQueueInstance, payload, msgLength));
 

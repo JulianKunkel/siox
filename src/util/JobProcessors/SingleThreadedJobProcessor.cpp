@@ -8,6 +8,10 @@ void SingleThreadedJobProcessor::startProcessing(){
 	unique_lock<mutex> lk(m);
 	enabledProcessing = true;
 	cv.notify_one();
+
+	if(myThread == nullptr){
+		myThread = new thread( & SingleThreadedJobProcessor::process, this );
+	}
 }
 
 void SingleThreadedJobProcessor::iStartJob(void * job){
@@ -35,18 +39,29 @@ void SingleThreadedJobProcessor::shutdown(){
 		status = OperationalStatus::SHUTTING_DOWN;
 		cv.notify_one();
 	}
-	myThread->join();
+	if( myThread != nullptr ){
+		// maybe the thread has never been started.
+		myThread->join();
+	}
 }
 
 void SingleThreadedJobProcessor::terminate(){
+	{
 	unique_lock<mutex> lk(m);
 	status = OperationalStatus::SHUTTING_DOWN;
 	abortPendingJobs();
 	cv.notify_one();		
+	}
+	if( myThread != nullptr ){
+		// maybe the thread has never been started.
+		myThread->join();
+	}
 }
 
-SingleThreadedJobProcessor::SingleThreadedJobProcessor(){
-	myThread = new thread( & SingleThreadedJobProcessor::process, this );
+SingleThreadedJobProcessor::~SingleThreadedJobProcessor(){
+	if ( status == OperationalStatus::OPERATIONAL ){
+		terminate();
+	}
 }
 
 void SingleThreadedJobProcessor::process(){

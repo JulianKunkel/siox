@@ -24,7 +24,7 @@
 using namespace std;
 using namespace core;
 
-class MessageSendQueue;
+class MessageSendProcessor;
 
 /*
 The client creates two threads.
@@ -47,7 +47,7 @@ protected:
 	thread * connectionThread = nullptr;
 	GCancellable * shutdown_cancelable;
 	GCancellable * one_thread_error_cancelable;
-	MessageSendQueue * sendQueue;
+	MessageSendProcessor * sendProcessor;
 
 	mutex pendingResponses_mutex;
 	unordered_map<uint32_t, BareMessage*> pendingResponses;
@@ -61,7 +61,7 @@ public:
 	void connectionThreadFunc(thread * lastThread);
 	
 
-	GIOClient(const string & address, ProcessorQueue * sendQueue);
+	GIOClient(const string & address, util::ProcessorQueue * sendQueue);
 
 	const string & getAddress() const{
 		return this->address;

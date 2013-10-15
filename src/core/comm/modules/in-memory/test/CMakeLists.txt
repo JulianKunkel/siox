@@ -12,7 +12,7 @@ add_executable(
 target_link_libraries(
 	test-comm-in-memory
 	siox-core-ModuleLoader
-	siox-core-comm-inmemory 
+	siox-core-comm-inmemory
 )
 
 add_test(comm-in-memory test-comm-in-memory)

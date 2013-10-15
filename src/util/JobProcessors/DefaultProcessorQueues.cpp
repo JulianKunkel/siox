@@ -29,7 +29,11 @@ void FIFOProcessorQueue::enqueueFront( void * job ){
 	pendingJobs.push_front(job);
 }
 
-ProcessorQueueDiscardWrapper::ProcessorQueueDiscardWrapper(int maxPendingJobs, ProcessorQueue * queue) : maxPendingJobs(maxPendingJobs), currentJobs(currentJobs), queue(queue) {}
+ProcessorQueueDiscardWrapper::~ProcessorQueueDiscardWrapper(){
+	delete(queue);
+}
+
+ProcessorQueueDiscardWrapper::ProcessorQueueDiscardWrapper(int maxPendingJobs, ProcessorQueue * queue) : maxPendingJobs(maxPendingJobs), currentJobs(0), queue(queue) {}
 
 void ProcessorQueueDiscardWrapper::enqueueJob( void * job ){
 	currentJobs++;
@@ -60,7 +64,6 @@ bool ProcessorQueueDiscardWrapper::removeJob(void * job){
 
 void ProcessorQueueDiscardWrapper::enqueueFront( void * job ){
 	// we must obey and enqueue the operation
-
 	currentJobs++;
 	queue->enqueueFront(job);	
 }

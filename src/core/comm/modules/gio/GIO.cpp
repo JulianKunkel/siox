@@ -15,8 +15,8 @@ using namespace std;
 class GIOCommModule : public CommunicationModule {
 public:
 	//virtual void setWorkProcessor() = 0; 
-	virtual ServiceServer * startServerService(const string & address, ProcessorQueue * sendQueue) throw(CommunicationModuleException){		
-		return new GIOServiceServer(address, sendQueue);
+	virtual ServiceServer * startServerService(const string & address) throw(CommunicationModuleException){		
+		return new GIOServiceServer(address);
 	}
 
 	virtual ServiceClient * startClientService(const string & server_address, ProcessorQueue * sendQueue) throw(CommunicationModuleException){
