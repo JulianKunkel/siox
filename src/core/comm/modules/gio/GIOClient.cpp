@@ -1,5 +1,3 @@
-#include <valgrind/memcheck.h>
-
 #include "GIOClient.hpp"
 
 #include "GIOinternal.hpp"
@@ -159,7 +157,7 @@ GIOClient::GIOClient(const string & address, util::ProcessorQueue * sendQueue){
 	shutdown_cancelable =  g_cancellable_new();
 	sendProcessor = new ClientMessageSendProcessor(this);
 	sendProcessor->setProcessorQueue(sendQueue);
-	lastMessageID++;
+	lastMessageID = 1;
 }
 
 

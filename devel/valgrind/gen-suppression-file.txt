@@ -1,0 +1,4 @@
+Create a suppression file
+valgrind  --gen-suppressions=all --leak-check=full --track-origins=yes <TEST_TO_RUN> 2>/tmp/supp
+grep -v "^=="  /tmp/supp | sed "s/<insert_a_suppression_name_here>/Suppressed/" > ../devel/valgrind/glib.supp
+

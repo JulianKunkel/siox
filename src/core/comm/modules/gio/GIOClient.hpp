@@ -37,7 +37,7 @@ protected:
 
 	GSocketClient * socket  = nullptr;
 	
-	atomic_int_fast32_t lastMessageID;	
+	atomic_int_fast32_t lastMessageID;
 
 	mutex connection_ready_mutex;
 	

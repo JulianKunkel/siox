@@ -6,6 +6,9 @@
 #ifndef CORE_SERVICE_CLIENT_H
 #define CORE_SERVICE_CLIENT_H
 
+
+#include <iostream>
+
 #include <exception>
 #include <string>
 
@@ -95,6 +98,8 @@ public:
 			assert(payload);
 
 			uint64_t pos = 0;
+
+			// memset(payload, 255, msg_size);
 
 			serializeHeader(payload, pos, msg_size);
 			assert(headerSize() == pos);

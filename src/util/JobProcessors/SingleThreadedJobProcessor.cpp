@@ -34,33 +34,26 @@ void SingleThreadedJobProcessor::iCancelJob(void * job){
 }
 
 void SingleThreadedJobProcessor::shutdown(){
-	{
-		unique_lock<mutex> lk(m);
-		status = OperationalStatus::SHUTTING_DOWN;
-		cv.notify_one();
-	}
-	if( myThread != nullptr ){
-		// maybe the thread has never been started.
-		myThread->join();
-	}
+	unique_lock<mutex> lk(m);
+	status = OperationalStatus::SHUTTING_DOWN;
+	cv.notify_one();
 }
 
 void SingleThreadedJobProcessor::terminate(){
-	{
 	unique_lock<mutex> lk(m);
 	status = OperationalStatus::SHUTTING_DOWN;
 	abortPendingJobs();
 	cv.notify_one();		
-	}
-	if( myThread != nullptr ){
-		// maybe the thread has never been started.
-		myThread->join();
-	}
 }
 
 SingleThreadedJobProcessor::~SingleThreadedJobProcessor(){
 	if ( status == OperationalStatus::OPERATIONAL ){
 		terminate();
+	}
+	if(myThread != nullptr){
+		// maybe the thread has never been started.
+		myThread->join();		
+		delete(myThread);
 	}
 }
 
