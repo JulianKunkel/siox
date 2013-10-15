@@ -1,3 +1,12 @@
+/**
+ * @file Statistic.hpp
+ *
+ * This class is used to add history information to a StatisticsDescription.
+ *
+ * @author Nathanael Hübbe
+ * @date   2013
+ */
+
 #ifndef INCLUDE_GUARD_MONITORING_STATISTIC
 #define INCLUDE_GUARD_MONITORING_STATISTIC
 
@@ -20,15 +29,19 @@ namespace monitoring {
 			Statistic( const StatisticsProviderDatatypes& source, const StatisticsProviderPlugin* provider, Ontology* ontology ) throw();
 
 			void getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<std::chrono::high_resolution_clock::time_point, kHistorySize>* times ) throw();	//Both values and times may be null pointers, if that information is irrelevant.
+			StatisticsValue getRollingValue( StatisticsInterval interval ) throw();
+			StatisticsValue getReducedValue( StatisticsInterval interval ) throw();
 
 			void update(std::chrono::high_resolution_clock::time_point time) throw();	//The StatisticsCollector is expected to call this ten times per second.
-			size_t measurementIncrement( StatisticsInterval pollInterval ) throw();
+			static size_t measurementIncrement( StatisticsInterval pollInterval ) throw();
 
 		private:
 			size_t lastIndex;
 			StatisticsReduceOperator reductionOp;
 			StatisticsValue history[INTERVALLS_NUMBER][kHistorySize + 1];
 			std::chrono::high_resolution_clock::time_point times[INTERVALLS_NUMBER][kHistorySize + 1];
+
+			StatisticsValue inferValue( StatisticsInterval interval, size_t sourceIndex ) const throw();	//Aggregates the values of (interval-1) up to the value at sourceIndex. Source index is given in terms of (interval-1).
 
 			Statistic() = delete;
 			Statistic(const Statistic&) = delete;

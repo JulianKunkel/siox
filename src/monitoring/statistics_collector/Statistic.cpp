@@ -1,3 +1,12 @@
+/**
+ * @file Statistic.cpp
+ *
+ * @author Nathanael Hübbe
+ * @date   2013
+ */
+
+#include <atomic>
+
 #include <monitoring/statistics_collector/Statistic.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 
@@ -22,6 +31,54 @@ void monitoring::Statistic::getHistoricValues( StatisticsInterval interval, std:
 	}
 }
 
+monitoring::StatisticsValue monitoring::Statistic::inferValue( monitoring::StatisticsInterval interval, size_t sourceIndex ) const throw() {
+	assert( interval != HUNDRED_MILLISECONDS && "This condition should be handled in the caller.");
+	size_t integrationPeriod = measurementIncrement(interval) / measurementIncrement((StatisticsInterval)( (size_t)interval - 1 ) );
+	StatisticsValue result = curValue;	//set the correct type
+	switch( reductionOp ) {
+		case MIN:
+			result.setMax();
+			for( size_t timeOffset = integrationPeriod; timeOffset--; ) {
+				if( history[interval - 1][wrapIndex( sourceIndex - timeOffset )] < result) {
+					result = history[interval - 1][wrapIndex( sourceIndex - timeOffset )];
+				}
+			}
+			break;
+		case MAX:
+			result.setMin();
+			for( size_t timeOffset = integrationPeriod; timeOffset--; ) {
+				if( result < history[interval - 1][wrapIndex( sourceIndex - timeOffset )]) {
+					result = history[interval - 1][wrapIndex( sourceIndex - timeOffset )];
+				}
+			}
+			break;
+		case COUNT: assert(0 && "TODO: What is this reduction op supposed to do? Always return the latest value?"), abort(); break;
+		case AVERAGE:
+			result.setZero();
+			for( size_t timeOffset = integrationPeriod; timeOffset--; ) {
+				result += history[interval - 1][wrapIndex( sourceIndex - timeOffset )];
+			}
+			result /= integrationPeriod;
+			break;
+		case SUM:
+			result.setZero();
+			for( size_t timeOffset = integrationPeriod; timeOffset--; ) {
+				result += history[interval - 1][wrapIndex( sourceIndex - timeOffset )];
+			}
+			break;
+	}
+	return result;
+}
+
+monitoring::StatisticsValue monitoring::Statistic::getRollingValue( monitoring::StatisticsInterval interval ) throw() {
+	return history[interval][wrapIndex( lastIndex/measurementIncrement( interval ) )];
+}
+
+monitoring::StatisticsValue monitoring::Statistic::getReducedValue( monitoring::StatisticsInterval interval ) throw() {
+	if( interval == HUNDRED_MILLISECONDS ) return curValue;
+	return inferValue( interval, lastIndex/measurementIncrement( (StatisticsInterval)( (size_t)interval - 1 ) ) );
+}
+
 void monitoring::Statistic::update( std::chrono::high_resolution_clock::time_point time ) throw() {
 	//write the current value into the history
 	size_t newIndex = lastIndex + 1;
@@ -34,41 +91,15 @@ void monitoring::Statistic::update( std::chrono::high_resolution_clock::time_poi
 	history[HUNDRED_MILLISECONDS][wrapIndex( newIndex )] = curValue;
 	times[HUNDRED_MILLISECONDS][wrapIndex( newIndex )] = time;
 	//now the hard part: calculate the aggregated history values
-	size_t previousIncrement = measurementIncrement(HUNDRED_MILLISECONDS), curIncrement = measurementIncrement(SECOND);
-	for( size_t curInterval = SECOND; curInterval < INTERVALLS_NUMBER && !( newIndex % curIncrement ); curInterval++ ) {
-		size_t sourceIndex = newIndex/previousIncrement;
-		StatisticsValue* curResult = &history[curInterval][wrapIndex( newIndex/curIncrement )];
-		switch(reductionOp) {
-			case MIN:
-				curResult->setMax();
-				for( size_t timeOffset = 10; timeOffset--; ) {
-					if( history[curInterval][wrapIndex( sourceIndex - timeOffset )] < *curResult ) {
-						*curResult = history[curInterval][wrapIndex( sourceIndex - timeOffset )];
-					}
-				}
-			break; case MAX:
-				curResult->setMin();
-				for( size_t timeOffset = 10; timeOffset--; ) {
-					if( *curResult < history[curInterval][wrapIndex( sourceIndex - timeOffset )] ) {
-						*curResult = history[curInterval][wrapIndex( sourceIndex - timeOffset )];
-					}
-				}
-			break; case COUNT:
-				assert(0 && "TODO: What is this reduction op supposed to do? Always return the latest value?"), abort();
-			break; case AVERAGE:
-				curResult->setZero();
-				for( size_t timeOffset = 10; timeOffset--; ) {
-					*curResult += history[curInterval][wrapIndex( sourceIndex - timeOffset )];
-				}
-				*curResult /= 10;
-			break; case SUM:
-				curResult->setZero();
-				for( size_t timeOffset = 10; timeOffset--; ) {
-					*curResult += history[curInterval][wrapIndex( sourceIndex - timeOffset )];
-				}
-			break;
-		}
-		previousIncrement = curIncrement, curIncrement = measurementIncrement( (StatisticsInterval)curInterval );
+	size_t previousIncrement = measurementIncrement(HUNDRED_MILLISECONDS), curIncrement;
+	for(
+		size_t curInterval = SECOND;
+		curInterval < INTERVALLS_NUMBER && ! ( newIndex % ( curIncrement = measurementIncrement( (StatisticsInterval)curInterval ) ) );
+		curInterval++
+	) {
+		history[curInterval][wrapIndex( newIndex/curIncrement )] = inferValue( (StatisticsInterval)curInterval, newIndex/previousIncrement );
+		previousIncrement = curIncrement;
 	}
+	std::atomic_thread_fence( std::memory_order_release );
 	lastIndex = newIndex;
 }
