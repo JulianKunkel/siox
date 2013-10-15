@@ -354,7 +354,6 @@ void ThreadedStatisticsCollector::pollingThreadMain() throw() {
 		nextPollTime += 100*1000;
 		int64_t curTime = getMicroSeconds();
 		while(nextPollTime - curTime >= 0) {
-			cerr << "sleeping for " << nextPollTime - curTime << " micro seconds\n";
 			microSecondSleep(nextPollTime - curTime);
 			curTime = getMicroSeconds();
 			// Check whether we were awoken to terminate.

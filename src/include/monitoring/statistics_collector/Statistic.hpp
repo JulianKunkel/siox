@@ -23,13 +23,15 @@ namespace monitoring {
 			StatisticsValue getRollingValue( StatisticsInterval interval ) throw();
 
 			void update(std::chrono::high_resolution_clock::time_point time) throw();	//The StatisticsCollector is expected to call this ten times per second.
-			size_t measurementIncrement( StatisticsInterval pollInterval ) throw();
+			static size_t measurementIncrement( StatisticsInterval pollInterval ) throw();
 
 		private:
 			size_t lastIndex;
 			StatisticsReduceOperator reductionOp;
 			StatisticsValue history[INTERVALLS_NUMBER][kHistorySize + 1];
 			std::chrono::high_resolution_clock::time_point times[INTERVALLS_NUMBER][kHistorySize + 1];
+
+			StatisticsValue inferValue( StatisticsInterval interval, size_t sourceIndex ) const throw();	//Aggregates the values of (interval-1) up to the value at sourceIndex. Source index is given in terms of (interval-1).
 
 			Statistic() = delete;
 			Statistic(const Statistic&) = delete;
