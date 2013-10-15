@@ -14,7 +14,8 @@ namespace monitoring {
 
 
 	/**
-	 *
+	 *	A minimal interface for an ActivityMultiplexerPlugin that can be loaded
+	 *	as a siox component.
 	 */
 	class ActivityMultiplexerPlugin: public Component {
 		protected:
@@ -22,9 +23,20 @@ namespace monitoring {
 
 			ActivityPluginDereferencing * facade;
 
+			/**
+			 * Custom init function that needs to be provided by plugin
+			 * implementors. It is called at the end of the plugin initialisation
+			 * procedure.
+			 */
 			virtual void initPlugin( ) = 0;
 
 		public:
+			/**
+			 * ActivityMultiplexerPlugin specific init function to satisfy
+			 * Core::Component
+			 *
+			 * It creates an multiplexer instance with the options given.
+			 */
 			void init() {
 				ActivityMultiplexerPluginOptions & o = getOptions<ActivityMultiplexerPluginOptions>();
 				assert( o.multiplexer.componentPointer != nullptr );
