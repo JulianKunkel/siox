@@ -140,6 +140,14 @@ inline void deserialize(long double & obj, const char * buffer, uint64_t & pos, 
 	pos += sizeof(obj);	
 }
 
+inline uint64_t serializeLen(const uint8_t & obj){
+	return 1;
+}
+
+inline uint64_t serializeLen(const int8_t & obj){
+	return 1;
+}
+
 inline uint64_t serializeLen(const uint32_t & obj){
 	return 4;
 }
@@ -148,14 +156,55 @@ inline uint64_t serializeLen(const uint64_t & obj){
 	return 8;
 }
 
+inline uint64_t serializeLen(const int32_t & obj){
+	return 4;
+}
+
+inline uint64_t serializeLen(const int64_t & obj){
+	return 8;
+}
+
+inline uint64_t serializeLen(const float & obj){
+	return 4;
+}
+
+inline uint64_t serializeLen(const double & obj){
+	return 8;
+}
+
 /////////// STRING /////////////////////////
+
+using namespace std;
+
+
+inline uint64_t serializeLen(const char * str){
+	uint32_t len = 0;
+	return strlen(str) + serializeLen(len);
+}
+
+inline void serialize(const char * obj, char * buffer, uint64_t & pos){
+	uint32_t len = strlen(obj);
+	serialize(len, buffer, pos);
+	memcpy(buffer + pos, obj, len);
+	pos += len;	
+}
+
+inline void deserialize(char *& obj, const char * buffer, uint64_t & pos, uint64_t length){
+	uint32_t len;
+	CHECK_LENGTH(4)
+	deserialize(len, buffer, pos, length);
+
+	CHECK_LENGTH(len)
+	obj = strdup(& buffer[pos]);
+	pos += len;
+}
+
 
 inline uint64_t serializeLen(const string & obj){
 	uint32_t len = 0;
 	return serializeLen(len) + obj.length();
 }
 
-using namespace std;
 
 inline void serialize(const string & obj, char * buffer, uint64_t & pos){
 	uint32_t len = obj.length();

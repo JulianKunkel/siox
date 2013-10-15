@@ -262,6 +262,8 @@ class JBinaryOutputGenerator(OutputGenerator):
         if self.options.debug:
             print("\tEnd class")
   
+        print("\nnamespace j_serialization{", file=self.fh)
+
         # create the required methods for (de)serialization
         print("\ninline uint64_t serializeLen(const %(CLASS)s & obj){"  % self.mapping, file = self.fh)
         print("\n\tuint64_t count = 0;", file = self.fh)
@@ -294,6 +296,7 @@ class JBinaryOutputGenerator(OutputGenerator):
             print("\t" + self.map_type_deserializer(memberType, "obj." + memberName) + ";", file = self.fh)
 
         print("}\n", file = self.fh)
+        print("}\n", file=self.fh)
 
 
 
@@ -308,10 +311,10 @@ class JBinaryOutputGenerator(OutputGenerator):
 
         print("#include \"%(INFILE)s\"" % { "INFILE" : dir } , file=self.fh)
 
-        print("#include <core/container/container-binary-serializer.hpp>\n\nnamespace j_serialization{", file=self.fh)
+        print("#include <core/container/container-binary-serializer.hpp>\n\n", file=self.fh)
 
     def finalize(self):
-        print("}", file=self.fh)
+        pass
 
 
 
@@ -345,6 +348,8 @@ class BoostOutputGenerator(OutputGenerator):
 
 
         print("""
+            #ifndef BOOST_SERIALIZABLE_%(CLASS)s
+            #define BOOST_SERIALIZABLE_%(CLASS)s
             namespace boost{
             namespace serialization {
             template<class Archive>
@@ -382,6 +387,9 @@ class BoostOutputGenerator(OutputGenerator):
             print("""template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_oarchive & ar, %(CLASS)s & g, const unsigned int version);
                 template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_iarchive & ar, %(CLASS)s & g, const unsigned int version);
                 """ % self.mapping , file = self.fh)
+        print("\n#endif", file = self.fh)
+
+
         
 
     def registerMember(self, memberType, memberName, annotations):

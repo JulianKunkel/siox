@@ -18,6 +18,7 @@ class VariableDatatype {
 		    INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE, INVALID, STRING // LONG_DOUBLE not needed right now, it will bloat this structure unnecessarily.
 		};
 	protected:
+		friend VariableDatatypeAccessor;
 
 		union Data {
 			int32_t i32;
@@ -33,7 +34,6 @@ class VariableDatatype {
 		union Data data;
 		enum Type type_;
 
-		friend VariableDatatypeAccessor;
 	public:
 		VariableDatatype() {
 			data.i64 = 0;
@@ -145,9 +145,9 @@ class VariableDatatype {
 			return data.ui64;
 		}
 
-		inline string str() const {
+		inline char * str() const {
 			assert( type_ == Type::STRING );
-			return string( data.str );
+			return data.str;
 		}
 
 		inline float flt() const {

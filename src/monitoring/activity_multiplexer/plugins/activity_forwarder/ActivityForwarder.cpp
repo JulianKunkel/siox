@@ -10,7 +10,7 @@ using namespace monitoring;
  * Forward an activity from one ActivityMultiplexer to another.
  *
  */
-class ActivityForwarder: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener {
+class ActivityForwarder: public ActivityMultiplexerPlugin {
 	public:
 		/**
 		 * Implements ActivityMultiplexerListener::Notify, passes activity to out.

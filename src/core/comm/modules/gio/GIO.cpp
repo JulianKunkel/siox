@@ -27,6 +27,8 @@ public:
 		setenv("GIO_USE_VFS", "local", 0 );		
 		setenv("GVFS_DISABLE_FUSE", "true" , 0);
 		g_type_init();
+
+		g_log_set_always_fatal( (GLogLevelFlags) (G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL) );
 	}
 
 	virtual ComponentOptions* AvailableOptions(){
