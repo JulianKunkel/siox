@@ -33,7 +33,7 @@ class StatisticsCollectorTester : public StatisticsCollector {
 
 		}
 
-		virtual vector<shared_ptr<Statistic> > getStatistics() throw() {
+		virtual vector<shared_ptr<Statistic> > availableMetrics() throw() {
 			return vector<shared_ptr<Statistic> >();
 		}
 		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() {

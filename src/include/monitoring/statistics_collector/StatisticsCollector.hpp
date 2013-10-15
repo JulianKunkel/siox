@@ -101,7 +101,10 @@ namespace monitoring {
 
 			virtual void unregisterPlugin( StatisticsProviderPlugin * plugin ) = 0;
 
-			virtual std::vector<std::shared_ptr<Statistic> > getStatistics() throw()  = 0;
+			/* D10
+			 * What are the available source metrics and available sources for metrics if they are combined ones?
+			 */
+			virtual std::vector<std::shared_ptr<Statistic> > availableMetrics() throw()  = 0;
 
 			/*
 			 * The return value may be updated in the background?
@@ -120,10 +123,6 @@ namespace monitoring {
 
 //			virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat, StatisticsReduceOperator op ) = 0;
 
-			/* D10
-			 * What are the available source metrics and available sources for metrics if they are combined ones?
-			 */
-//			virtual vector<StatisticsDescription> availableMetrics() = 0;
 	};
 
 }

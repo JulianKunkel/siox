@@ -185,7 +185,7 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 		//Then again, I don't really see a use case for unregistering a plugin, so why bother with this functionality?
 		virtual void unregisterPlugin( StatisticsProviderPlugin * plugin ) throw();
 
-		virtual vector<shared_ptr<Statistic> > getStatistics() throw();
+		virtual vector<shared_ptr<Statistic> > availableMetrics() throw();
 		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
 		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
 
@@ -268,7 +268,7 @@ void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * p
 	sourcesLock.unlock();
 }
 
-vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::getStatistics() throw() {
+vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::availableMetrics() throw() {
 	return statistics;
 }
 

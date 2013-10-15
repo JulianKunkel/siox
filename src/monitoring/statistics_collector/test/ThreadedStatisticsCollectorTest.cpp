@@ -30,7 +30,7 @@ int main( int argc, char const * argv[] ) throw() {
 	sleep( 1 );
 	cerr << "waking up\n";
 
-	vector<shared_ptr<monitoring::Statistic> > statistics = collector->getStatistics();
+	vector<shared_ptr<monitoring::Statistic> > statistics = collector->availableMetrics();
 	assert( statistics.size() == 3 );
 	array<monitoring::StatisticsValue, monitoring::Statistic::kHistorySize> values[3];
 	statistics[0]->getHistoricValues( monitoring::HUNDRED_MILLISECONDS, &values[0], NULL );
