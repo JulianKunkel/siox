@@ -11,6 +11,7 @@
 #define INCLUDE_GUARD_MONITORING_STATISTIC
 
 #include <chrono>
+#include <array>
 
 #include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
 #include <monitoring/datatypes/StatisticsTypes.hpp>

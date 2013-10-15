@@ -25,7 +25,7 @@ enum class ActivityToken : uint8_t {
 
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
-class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiplexerListener, public ActivityMultiplexerListenerAsync, public AnomalyPlugin {
+class AnomalySkeleton: public ActivityMultiplexerPlugin, public AnomalyPlugin {
 	private:
 		SystemInformationGlobalIDManager * sys;
 		OntologyAttribute filesize;
@@ -76,11 +76,6 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiple
 			return new AnomalySkeletonOptions();
 		}
 
-		~AnomalySkeleton() {
-			multiplexer->unregisterListener( this );
-			multiplexer->unregisterAsyncListener( this );		
-		}
-
 		void initPlugin(  ) {
 			// AnomalySkeletonOptions & options = getOptions<AnomalySkeletonOptions>();
 
@@ -100,9 +95,6 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public ActivityMultiple
 				cout << e.what() << endl;
 				return;
 			}
-
-			multiplexer->registerListener( this );
-			multiplexer->registerAsyncListener( this );
 
 			facade->registerAnomalyPlugin( this );
 		}

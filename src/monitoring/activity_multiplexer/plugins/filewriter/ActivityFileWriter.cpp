@@ -46,13 +46,9 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin, public ActivityMultipl
 			oa = new boost::archive::text_oarchive( file, boost::archive::no_header | boost::archive::no_codecvt );
 
 			synchronize = o.synchronize;
-
-			multiplexer->registerListener( this );
 		}
 
 		~FileWriterPlugin() {
-			multiplexer->unregisterListener( this );
-
 			file.close();
 			delete( oa );
 		}

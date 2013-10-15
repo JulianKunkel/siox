@@ -34,8 +34,6 @@ class ActivityForwarder: public ActivityMultiplexerPlugin, public ActivityMultip
 		 * out going end of the Forwarder.
 		 */
 		void initPlugin() {
-			multiplexer->registerListener( this );
-
 			ActivityForwarderOptions & options = getOptions<ActivityForwarderOptions>();
 			out = GET_INSTANCE(ActivityMultiplexer, options.target_multiplexer);
 		}

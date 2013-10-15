@@ -17,7 +17,7 @@ namespace monitoring {
 	 *	A minimal interface for an ActivityMultiplexerPlugin that can be loaded
 	 *	as a siox component.
 	 */
-	class ActivityMultiplexerPlugin: public Component {
+	class ActivityMultiplexerPlugin: public Component, public ActivityMultiplexerListener {
 		protected:
 			ActivityMultiplexer * multiplexer;
 
@@ -46,6 +46,12 @@ namespace monitoring {
 				facade = GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade);
 
 				initPlugin();
+
+				multiplexer->registerListener( this );
+			}
+
+			~ActivityMultiplexerPlugin(){
+				multiplexer->unregisterListener( this );	
 			}
 	};
 

@@ -251,13 +251,11 @@ namespace monitoring {
 
 	private:
 			list<ActivityMultiplexerListener *> 		listeners;
-			list<ActivityMultiplexerListenerAsync *> 	listeners_async;
 
 			ActivityMultiplexerQueue * queue = nullptr;
 			ActivityMultiplexerNotifier * notifier = nullptr;
 
 			boost::shared_mutex  listener_change_mutex;
-			boost::shared_mutex  listener_change_mutex_async;
 	public:
 
 			~ActivityMultiplexerAsync() {
@@ -301,8 +299,8 @@ namespace monitoring {
 				printf("dispatch: %p\n", work);
 				Activity * activity = (Activity *) work;
 				assert( activity != nullptr );
-				boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex_async );
-				for(auto l = listeners_async.begin(); l != listeners_async.end() ; l++){
+				boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
+				for(auto l = listeners.begin(); l != listeners.end() ; l++){
 					(*l)->NotifyAsync(lost, activity);
 				}
 			}
@@ -333,28 +331,6 @@ namespace monitoring {
 				boost::unique_lock<boost::shared_mutex> lock( listener_change_mutex );
 				listeners.remove(listener);
 			}
-
-			/**
-			 * Register Listener to async path
-			 *
-			 * @param	listener	listener to be registered
-			 */
-			virtual void registerAsyncListener( ActivityMultiplexerListenerAsync * listener ){
-				boost::unique_lock<boost::shared_mutex> lock( listener_change_mutex_async );
-				listeners_async.push_back(listener);
-			}
-
-
-			/**
-			 * Unegister Listener from async path
-			 *
-			 * @param	listener	listener to be unregistered
-			 */
-			virtual void unregisterAsyncListener( ActivityMultiplexerListenerAsync * listener ){
-				boost::unique_lock<boost::shared_mutex> lock( listener_change_mutex_async );
-				listeners_async.remove(listener);
-			}
-
 
 			/* Satisfy Component Requirements
 			 */
