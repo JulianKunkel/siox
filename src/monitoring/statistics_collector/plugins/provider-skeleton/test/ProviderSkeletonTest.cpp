@@ -44,18 +44,9 @@ class StatisticsCollectorTester : public StatisticsCollector {
 			return StatisticsValue( 1 );
 		}
 
-//		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat, StatisticsReduceOperator op ) {
-//			return StatisticsValue( 1 );
-//		}
-//
-//		virtual StatisticsValue getStatistics( StatisticsInterval interval, const StatisticsDescription & stat, StatisticsReduceOperator op ) {
-//			return StatisticsValue( 1 );
-//		}
-//
-//		virtual vector<StatisticsDescription> availableMetrics() {
-//			vector<StatisticsDescription> metrics;
-//			return metrics;
-//		}
+		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() {
+			return StatisticsValue( 1 );
+		}
 
 
 		virtual void init() {

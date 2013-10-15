@@ -3,42 +3,10 @@
  *
  * An implementation of the (software) component for collecting statistical values.
  *
- * @author Marc Wiedemann, Julian Kunkel
+ * @author Nathanael Hübbe, Julian Kunkel, Marc Wiedemann
  * @date   2013
  *
  */
-
-#include <core/component/Component.hpp>
-#include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
-#include <monitoring/statistics_collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
-#include "ThreadedStatisticsOptions.hpp" // own options of this implementation
-
-#include <thread> // header for threads
-#include <atomic>
-#include <chrono> // header for periodic timing
-#include <iostream> // header that defines I/O stream objects
-#include <boost/thread/shared_mutex.hpp> // defines for mutex class
-#include <condition_variable> // for conditions
-#include <cstdlib> //(stdlib.h) get C header stdlib
-#include <ctime> //(time.h) get C header time
-#include <unordered_map>
-#include <string>
-#include <utility>
-
-#include <workarounds.hpp>
-
-#include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
-#include <monitoring/statistics_collector/Statistic.hpp>
-#include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
-#include <monitoring/statistics_collector/StatisticsProviderPlugin.hpp>
-#include <monitoring/ontology/Ontology.hpp>
-#include <monitoring/datatypes/ids.hpp>
-
-
-using namespace std;
-using namespace core;
-using namespace monitoring;
-
 
 /*! Software Structure
 
@@ -169,7 +137,37 @@ Implementation details for the requirements of a StatisticsCollector:
         So keep a small vector with six entries.
 */
 
+#include <core/component/Component.hpp>
+#include <monitoring/statistics_collector/StatisticsCollectorImplementation.hpp>
+#include <monitoring/statistics_collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
+#include "ThreadedStatisticsOptions.hpp" // own options of this implementation
+
+#include <thread> // header for threads
+#include <atomic>
+#include <chrono> // header for periodic timing
+#include <iostream> // header that defines I/O stream objects
+#include <boost/thread/shared_mutex.hpp> // defines for mutex class
+#include <condition_variable> // for conditions
+#include <cstdlib> //(stdlib.h) get C header stdlib
+#include <ctime> //(time.h) get C header time
+#include <unordered_map>
+#include <string>
+#include <utility>
+
+#include <workarounds.hpp>
+
+#include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
+#include <monitoring/statistics_collector/Statistic.hpp>
+#include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
+#include <monitoring/statistics_collector/StatisticsProviderPlugin.hpp>
+#include <monitoring/ontology/Ontology.hpp>
+#include <monitoring/datatypes/ids.hpp>
+
+#define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
+
 using namespace std;
+using namespace core;
+using namespace monitoring;
 
 class ThreadedStatisticsCollector : StatisticsCollector {
 	public:
@@ -188,6 +186,7 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 		virtual vector<shared_ptr<Statistic> > availableMetrics() throw();
 		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
 		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
+		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
 
 		virtual ~ThreadedStatisticsCollector() throw();
 
@@ -287,10 +286,18 @@ StatisticsValue ThreadedStatisticsCollector::getRollingStatistics( StatisticsInt
 	string topology = "";
 	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
 	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
-	if(Statistic* statistic = &*index[key]) {
-		return statistic->getRollingValue( interval );
-	}
-	return StatisticsValue();
+	Statistic* statistic = NULL;
+	IGNORE_EXCEPTIONS( statistic = &*index.at(key); );
+	return (statistic) ? statistic->getRollingValue( interval ) : StatisticsValue();
+}
+
+StatisticsValue ThreadedStatisticsCollector::getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & description ) throw() {
+	string topology = "";
+	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
+	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
+	Statistic* statistic = NULL;
+	IGNORE_EXCEPTIONS( statistic = &*index.at(key); );
+	return (statistic) ? statistic->getReducedValue( interval ) : StatisticsValue();
 }
 
 ThreadedStatisticsCollector::~ThreadedStatisticsCollector() throw() {
@@ -303,17 +310,6 @@ ThreadedStatisticsCollector::~ThreadedStatisticsCollector() throw() {
 	sourcesLock.unlock();
 }
 
-/**
- * this method initiates first the options for threaded statitistics and second the facade of the ActivityPlugin
- * TODO: There is no declaration of this method in any superclass, so it can't be called from outside.
- */
-//		virtual void ThreadedStatisticsCollector::getOptions( ThreadedStatisticsOptions * options ) {
-//			ThreadedStatisticsOptions * o = ( ThreadedStatisticsOptions * ) options;
-//		}
-
-/**
- * get Available ThreadedStatisticsOptions
- */
 ComponentOptions * ThreadedStatisticsCollector::AvailableOptions() throw() {
 	return new ThreadedStatisticsOptions();
 }

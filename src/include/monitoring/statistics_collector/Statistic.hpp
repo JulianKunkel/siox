@@ -1,3 +1,12 @@
+/**
+ * @file Statistic.hpp
+ *
+ * This class is used to add history information to a StatisticsDescription.
+ *
+ * @author Nathanael Hübbe
+ * @date   2013
+ */
+
 #ifndef INCLUDE_GUARD_MONITORING_STATISTIC
 #define INCLUDE_GUARD_MONITORING_STATISTIC
 
@@ -21,6 +30,7 @@ namespace monitoring {
 
 			void getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<std::chrono::high_resolution_clock::time_point, kHistorySize>* times ) throw();	//Both values and times may be null pointers, if that information is irrelevant.
 			StatisticsValue getRollingValue( StatisticsInterval interval ) throw();
+			StatisticsValue getReducedValue( StatisticsInterval interval ) throw();
 
 			void update(std::chrono::high_resolution_clock::time_point time) throw();	//The StatisticsCollector is expected to call this ten times per second.
 			static size_t measurementIncrement( StatisticsInterval pollInterval ) throw();

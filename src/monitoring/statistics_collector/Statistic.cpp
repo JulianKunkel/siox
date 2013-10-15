@@ -1,3 +1,12 @@
+/**
+ * @file Statistic.cpp
+ *
+ * @author Nathanael Hübbe
+ * @date   2013
+ */
+
+#include <atomic>
+
 #include <monitoring/statistics_collector/Statistic.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 
@@ -62,6 +71,10 @@ monitoring::StatisticsValue monitoring::Statistic::inferValue( monitoring::Stati
 }
 
 monitoring::StatisticsValue monitoring::Statistic::getRollingValue( monitoring::StatisticsInterval interval ) throw() {
+	return history[interval][wrapIndex( lastIndex/measurementIncrement( interval ) )];
+}
+
+monitoring::StatisticsValue monitoring::Statistic::getReducedValue( monitoring::StatisticsInterval interval ) throw() {
 	if( interval == HUNDRED_MILLISECONDS ) return curValue;
 	return inferValue( interval, lastIndex/measurementIncrement( (StatisticsInterval)( (size_t)interval - 1 ) ) );
 }
@@ -87,5 +100,6 @@ void monitoring::Statistic::update( std::chrono::high_resolution_clock::time_poi
 		history[curInterval][wrapIndex( newIndex/curIncrement )] = inferValue( (StatisticsInterval)curInterval, newIndex/previousIncrement );
 		previousIncrement = curIncrement;
 	}
+	std::atomic_thread_fence( std::memory_order_release );
 	lastIndex = newIndex;
 }

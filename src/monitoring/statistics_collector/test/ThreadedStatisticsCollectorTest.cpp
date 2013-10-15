@@ -1,3 +1,10 @@
+/**
+ * @file ThreadedStatisticsCollectorTest.cpp
+ *
+ * @author Nathanael Hübbe
+ * @date   2013
+ */
+
 #include <iostream>
 
 #include <core/module/ModuleLoader.hpp>
@@ -38,17 +45,22 @@ int main( int argc, char const * argv[] ) throw() {
 	statistics[2]->getHistoricValues( monitoring::HUNDRED_MILLISECONDS, &values[2], NULL );
 	double expectedSum = 0;
 	for(size_t i = 0; i < monitoring::Statistic::kHistorySize; i++) {
-		double expectedValue = 0.8*(1<< values[2][i].int32())/2;
+		double expectedValue = 0.8*(1 << values[2][i].int32())/2;
 		expectedSum += expectedValue;
-		assert( values[0][i].dbl() == expectedValue );
-		assert( values[1][i].dbl() == expectedValue );
+		assert( values[0][i] == expectedValue );
+		assert( values[1][i] == expectedValue );
 	}
 
 	monitoring::StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ), {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}} );
 	array<monitoring::StatisticsValue, monitoring::Statistic::kHistorySize> nameLookupValues = collector->getStatistics( monitoring::HUNDRED_MILLISECONDS, description );
 	assert( values[1] == nameLookupValues );
-	monitoring::StatisticsValue aggregatedValue = collector->getRollingStatistics( monitoring::SECOND, *statistics[0] );
+	monitoring::StatisticsValue aggregatedValue = collector->getReducedStatistics( monitoring::SECOND, *statistics[0] );
 	assert( aggregatedValue == expectedSum );
+
+	monitoring::StatisticsValue rollingValue = collector->getRollingStatistics( monitoring::SECOND, *statistics[0] );
+	expectedSum = 0;
+	for(size_t i = 10; i--; ) expectedSum += 0.8*(1 << i);
+	assert( rollingValue == expectedSum );
 
 	delete collector;
 	delete plugin;

@@ -3,7 +3,7 @@
  *
  * A (software) component for collecting statistical values.
  *
- * @author Marc Wiedemann, Julian Kunkel
+ * @author Julian Kunkel, Marc Wiedemann, Nathanael Hübbe
  * @date   2013
  *
  */
@@ -26,7 +26,7 @@ the specific device statistics can be optionally collected.
 
 Metrics such as Throughput rely on the smallest units bytes, microseconds (smallest unit when collecting /proc/lock_stat output as INT),
 System Temperature in °C,
-The StatisticsInterval can be 1 second and significantly longer (10s,100s,60s,600s).
+The StatisticsInterval can be 0.1 second and significantly longer (1s,10s,60s,600s).
 Other values are computed if available at the response of the Statistics_Collecter and StatisticsCollectorThreaded
 
 We have the deltas as a first approach defined only in the interval from t1 to t2 not in between. The slopes are the average slope of all slopes of the value's curve between t1 and t2.
@@ -68,6 +68,32 @@ Rationales & design decisions/Issues and questions:
         Every ten minutes we deliver : 4x 10*10s
         Se we need a vector of size number of periods with the data of average values.
     D10| To query ALL AVAILABLE STATS we keep a list of StatisticsDescription
+
+Implementation deviations and rationales:
+    1   Instead of preserving min/max/average values (R3) for all statistics, one of min/max/average/sum/(count?) is preserved.
+        The selection of the reduction operator depends on the statistic.
+        Rationale:
+            Integrating memory consumption over time (the sum operation) is nonsense.
+            Likewise, computing min/max/average values for the total data sent over a network connection is nonsense.
+            The set of sensible operations depends on the nature of the statistic.
+            TODO: Allow the statistics to use more than one aggregation operator.
+    2   The current implementation allows the user to register/unregister StatisticsProviderPlugins,
+        but it does not allow him to select which Statistics should actually be collected (R5).
+        Rationale:
+            The current StatisticsProviderPluginInterface does not provide this functionality;
+            and providing a statistic is generally much more expensive than just collecting its value and updating a history.
+            So, it's the StatisticsProviderPlugins that would have to provide this functionality.
+            However, should they be able to do so one fine day,
+            it should be relatively easy to provide a convenience functionality in the StatisticsCollector.
+    3   The current implementation does not allow the user to change the polling frequency (R5).
+        Rationale:
+            The expensive factor in terms of performance is the generation of the statistics, not the history keeping;
+            and afaik, the provider plugins are meant to bundle a multitude of different statistics,
+            each of which is likely to ask for a different polling interval.
+            As such, it is not only difficult to implement different polling intervals in the StatisticsCollector,
+            it also appears to be not exactly useful.
+            Taken together, it seemed prudent not to implement different polling frequencies at this point,
+            rather relying on the provider plugins to reduce a fixed, high polling frequency as they see fit.
  */
 
 
@@ -121,7 +147,7 @@ namespace monitoring {
 			 */
 			virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() = 0;
 
-//			virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat, StatisticsReduceOperator op ) = 0;
+			virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() = 0;
 
 	};
 
