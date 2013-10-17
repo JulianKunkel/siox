@@ -43,15 +43,16 @@ class ActivityNetworkServerForwarder: public NetworkService, public ServerCallba
 		Activity * activity = new Activity();
 		uint64_t pos = 0;
 		j_serialization::deserialize(*activity, message_data, pos, buffer_size);
-		target->Log(activity);		
+		target->Log(activity);
+
+		msg->isendResponse(nullptr);
 	}
 
 	virtual uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType){
-		assert(false);
+		return 0;
 	}
 
-	virtual void serializeResponseMessage(const ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos){
-		assert(false);
+	virtual void serializeResponseMessage(const ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos){		
 	}
 
 
