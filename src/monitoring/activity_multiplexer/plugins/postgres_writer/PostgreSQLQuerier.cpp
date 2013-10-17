@@ -1,4 +1,4 @@
-#include <monitoring/transaction_system/backends/psql/PostgreSQLQuerier.hpp>
+#include <monitoring/activity_multiplexer/plugins/postgres_writer/PostgreSQLQuerier.hpp>
 
 
 PostgreSQLQuerier::PostgreSQLQuerier(PGconn &dbconn) : dbconn_(&dbconn)
