@@ -3,6 +3,7 @@
 
 #include <map>
 
+#include <core/comm/CommunicationModule.hpp>
 #include <core/comm/ServiceServer.hpp>
 #include <core/comm/ServiceClient.hpp>
 

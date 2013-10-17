@@ -45,7 +45,8 @@ class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, MessageC
 
 	virtual void messageSendCB(BareMessage * msg){ /* do nothing */ }
 
-	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size){	}
+	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size){
+	}
 
 	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error){  }
 

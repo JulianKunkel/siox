@@ -1,6 +1,7 @@
-#include "test-comm-interfaces.hpp"
+#include <core/hcomm/MultiMessageTypeService.hpp>
+#include <core/comm/test/test-comm-interfaces.hpp>
 
-#include <core/comm/MultiMessageTypeService.hpp>
+using namespace core;
 
 int main(){
 	CommunicationModule * backend = core::module_create_instance<CommunicationModule>( "", "siox-core-comm-inmemory", CORE_COMM_INTERFACE );

@@ -79,7 +79,6 @@ public:
 		// This method sends a correctly serialized message.
 		virtual void isend( BareMessage * msg ) = 0;
 
-
 		// the number of bytes required for the header of any message!
 		virtual uint32_t headerSize() = 0;
 		virtual void serializeHeader(char * buffer, uint64_t & pos, uint64_t size) = 0;
