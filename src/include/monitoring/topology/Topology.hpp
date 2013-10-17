@@ -5,6 +5,41 @@
  * @date 2013
  */
 
+/*
+@startuml Topology.png
+
+	class Type {
+		+uint32_t id
+		+string name
+	}
+
+	class Object {
+		+uint32_t id
+		+Type type
+	}
+
+	class Relation {
+		+Object parent
+		+string childName
+		+Object child
+		+Type type
+	}
+
+	class Attribute {
+		+uint32_t id
+		+string name
+		+string dataType
+	}
+
+	class Value {
+		+Object object
+		+Attribute attribute
+		+string value
+	}
+@enduml
+*/
+
+
 #ifndef INCLUDE_GUARD_MONITORING_TOPOLOGY_HPP
 #define INCLUDE_GUARD_MONITORING_TOPOLOGY_HPP
 
