@@ -8,7 +8,74 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 
+--
+-- Name: activity; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA activity;
+
+
+ALTER SCHEMA activity OWNER TO postgres;
+
+--
+-- Name: SCHEMA activity; Type: COMMENT; Schema: -; Owner: postgres
+--
+
+COMMENT ON SCHEMA activity IS 'Activities and Remote Calls';
+
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
 SET search_path = public, pg_catalog;
+
+--
+-- Name: process_id; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE process_id AS (
+	nid bigint,
+	pid bigint,
+	"time" bigint
+);
+
+
+ALTER TYPE public.process_id OWNER TO postgres;
+
+--
+-- Name: component_id; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE component_id AS (
+	pid process_id,
+	num integer
+);
+
+
+ALTER TYPE public.component_id OWNER TO postgres;
+
+--
+-- Name: activity_id; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE activity_id AS (
+	id bigint,
+	cid component_id
+);
+
+
+ALTER TYPE public.activity_id OWNER TO postgres;
 
 --
 -- Name: attribute; Type: TYPE; Schema: public; Owner: postgres
@@ -22,36 +89,41 @@ CREATE TYPE attribute AS (
 
 ALTER TYPE public.attribute OWNER TO postgres;
 
+SET search_path = activity, pg_catalog;
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: activity; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: activities; Type: TABLE; Schema: activity; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE activity (
+CREATE TABLE activities (
     unique_id bigint NOT NULL,
-    aid_id bigint NOT NULL,
-    aid_cid_nid bigint NOT NULL,
-    aid_cid_pid bigint NOT NULL,
-    aid_cid_time bigint NOT NULL,
-    aid_cid_num integer NOT NULL,
-    ucaid bigint NOT NULL,
+    ucaid integer NOT NULL,
     time_start bigint NOT NULL,
     time_stop bigint,
-    error_value bigint,
-    attributes attribute[]
+    error_value integer,
+    remote_calls bigint[],
+    attributes character varying(255)
 );
 
 
-ALTER TABLE public.activity OWNER TO postgres;
+ALTER TABLE activity.activities OWNER TO postgres;
 
 --
--- Name: activity_unique_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: COLUMN activities.remote_calls; Type: COMMENT; Schema: activity; Owner: postgres
 --
 
-CREATE SEQUENCE activity_unique_id_seq
+COMMENT ON COLUMN activities.remote_calls IS 'Elements are of type activities.remote_call_id.unique_id';
+
+
+--
+-- Name: activities_unique_id_seq; Type: SEQUENCE; Schema: activity; Owner: postgres
+--
+
+CREATE SEQUENCE activities_unique_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -59,32 +131,44 @@ CREATE SEQUENCE activity_unique_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.activity_unique_id_seq OWNER TO postgres;
+ALTER TABLE activity.activities_unique_id_seq OWNER TO postgres;
 
 --
--- Name: activity_unique_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: activities_unique_id_seq; Type: SEQUENCE OWNED BY; Schema: activity; Owner: postgres
 --
 
-ALTER SEQUENCE activity_unique_id_seq OWNED BY activity.unique_id;
+ALTER SEQUENCE activities_unique_id_seq OWNED BY activities.unique_id;
 
 
 --
--- Name: hardware; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: activity_ids; Type: TABLE; Schema: activity; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE hardware (
-    id bigint NOT NULL,
-    description character varying(255) NOT NULL
+CREATE TABLE activity_ids (
+    unique_id bigint NOT NULL,
+    id integer NOT NULL,
+    thread_id integer NOT NULL,
+    cid_pid_nid integer NOT NULL,
+    cid_pid_pid integer NOT NULL,
+    cid_pid_time integer NOT NULL,
+    cid_id integer NOT NULL
 );
 
 
-ALTER TABLE public.hardware OWNER TO postgres;
+ALTER TABLE activity.activity_ids OWNER TO postgres;
 
 --
--- Name: hardware_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: TABLE activity_ids; Type: COMMENT; Schema: activity; Owner: postgres
 --
 
-CREATE SEQUENCE hardware_id_seq
+COMMENT ON TABLE activity_ids IS 'ActivityIDs';
+
+
+--
+-- Name: activity_id_unique_id_seq; Type: SEQUENCE; Schema: activity; Owner: postgres
+--
+
+CREATE SEQUENCE activity_id_unique_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -92,32 +176,94 @@ CREATE SEQUENCE hardware_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hardware_id_seq OWNER TO postgres;
+ALTER TABLE activity.activity_id_unique_id_seq OWNER TO postgres;
 
 --
--- Name: hardware_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: activity_id_unique_id_seq; Type: SEQUENCE OWNED BY; Schema: activity; Owner: postgres
 --
 
-ALTER SEQUENCE hardware_id_seq OWNED BY hardware.id;
+ALTER SEQUENCE activity_id_unique_id_seq OWNED BY activity_ids.unique_id;
 
 
 --
--- Name: instance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: parents; Type: TABLE; Schema: activity; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE instance (
-    id bigint NOT NULL,
-    description character varying(255) NOT NULL
+CREATE TABLE parents (
+    child_id bigint NOT NULL,
+    parent_id bigint NOT NULL
 );
 
 
-ALTER TABLE public.instance OWNER TO postgres;
+ALTER TABLE activity.parents OWNER TO postgres;
 
 --
--- Name: instance_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: TABLE parents; Type: COMMENT; Schema: activity; Owner: postgres
 --
 
-CREATE SEQUENCE instance_id_seq
+COMMENT ON TABLE parents IS 'Parent activities.';
+
+
+--
+-- Name: COLUMN parents.child_id; Type: COMMENT; Schema: activity; Owner: postgres
+--
+
+COMMENT ON COLUMN parents.child_id IS 'Foreign key to activity_id.unique_id';
+
+
+--
+-- Name: COLUMN parents.parent_id; Type: COMMENT; Schema: activity; Owner: postgres
+--
+
+COMMENT ON COLUMN parents.parent_id IS 'Foreign key to activity_id.unique_id';
+
+
+--
+-- Name: remote_call_ids; Type: TABLE; Schema: activity; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE remote_call_ids (
+    unique_id bigint NOT NULL,
+    nid integer,
+    uuid integer,
+    instance integer,
+    activity_uid bigint
+);
+
+
+ALTER TABLE activity.remote_call_ids OWNER TO postgres;
+
+--
+-- Name: TABLE remote_call_ids; Type: COMMENT; Schema: activity; Owner: postgres
+--
+
+COMMENT ON TABLE remote_call_ids IS 'RemoteCallIdentifiers';
+
+
+--
+-- Name: remote_calls; Type: TABLE; Schema: activity; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE remote_calls (
+    unique_id bigint NOT NULL,
+    attributes character varying(255)
+);
+
+
+ALTER TABLE activity.remote_calls OWNER TO postgres;
+
+--
+-- Name: TABLE remote_calls; Type: COMMENT; Schema: activity; Owner: postgres
+--
+
+COMMENT ON TABLE remote_calls IS 'RemoteCalls';
+
+
+--
+-- Name: remte_call_id_unique_id_seq; Type: SEQUENCE; Schema: activity; Owner: postgres
+--
+
+CREATE SEQUENCE remte_call_id_unique_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -125,232 +271,66 @@ CREATE SEQUENCE instance_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.instance_id_seq OWNER TO postgres;
+ALTER TABLE activity.remte_call_id_unique_id_seq OWNER TO postgres;
 
 --
--- Name: instance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: remte_call_id_unique_id_seq; Type: SEQUENCE OWNED BY; Schema: activity; Owner: postgres
 --
 
-ALTER SEQUENCE instance_id_seq OWNED BY instance.id;
-
-
---
--- Name: node; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE node (
-    id bigint NOT NULL,
-    hwid bigint NOT NULL,
-    swid bigint,
-    iid bigint
-);
-
-
-ALTER TABLE public.node OWNER TO postgres;
-
---
--- Name: node_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE node_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.node_id_seq OWNER TO postgres;
-
---
--- Name: node_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE node_id_seq OWNED BY node.id;
+ALTER SEQUENCE remte_call_id_unique_id_seq OWNED BY remote_call_ids.unique_id;
 
 
 --
--- Name: ontology; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: unique_id; Type: DEFAULT; Schema: activity; Owner: postgres
 --
 
-CREATE TABLE ontology (
-    id bigint NOT NULL,
-    domain character varying(255),
-    name character varying(255),
-    type smallint
-);
-
-
-ALTER TABLE public.ontology OWNER TO postgres;
-
---
--- Name: parent; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE parent (
-    parent_aid_id bigint NOT NULL,
-    parent_cid_nid bigint NOT NULL,
-    parent_cid_pid bigint NOT NULL,
-    parent_cid_time bigint NOT NULL,
-    parent_cid_num integer NOT NULL,
-    child_unique_id bigint NOT NULL
-);
-
-
-ALTER TABLE public.parent OWNER TO postgres;
-
---
--- Name: software; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE software (
-    id bigint NOT NULL,
-    description character varying(255) NOT NULL
-);
-
-
-ALTER TABLE public.software OWNER TO postgres;
-
---
--- Name: software_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE software_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.software_id_seq OWNER TO postgres;
-
---
--- Name: software_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE software_id_seq OWNED BY software.id;
+ALTER TABLE ONLY activities ALTER COLUMN unique_id SET DEFAULT nextval('activities_unique_id_seq'::regclass);
 
 
 --
--- Name: unique_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: unique_id; Type: DEFAULT; Schema: activity; Owner: postgres
 --
 
-ALTER TABLE ONLY activity ALTER COLUMN unique_id SET DEFAULT nextval('activity_unique_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hardware ALTER COLUMN id SET DEFAULT nextval('hardware_id_seq'::regclass);
+ALTER TABLE ONLY activity_ids ALTER COLUMN unique_id SET DEFAULT nextval('activity_id_unique_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: unique_id; Type: DEFAULT; Schema: activity; Owner: postgres
 --
 
-ALTER TABLE ONLY instance ALTER COLUMN id SET DEFAULT nextval('instance_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY node ALTER COLUMN id SET DEFAULT nextval('node_id_seq'::regclass);
+ALTER TABLE ONLY remote_call_ids ALTER COLUMN unique_id SET DEFAULT nextval('remte_call_id_unique_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: activities_pkey; Type: CONSTRAINT; Schema: activity; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY software ALTER COLUMN id SET DEFAULT nextval('software_id_seq'::regclass);
-
-
---
--- Name: activity_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY activity
-    ADD CONSTRAINT activity_pkey PRIMARY KEY (unique_id);
+ALTER TABLE ONLY activities
+    ADD CONSTRAINT activities_pkey PRIMARY KEY (unique_id);
 
 
 --
--- Name: hardware_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: activity_id_pkey; Type: CONSTRAINT; Schema: activity; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY hardware
-    ADD CONSTRAINT hardware_pkey PRIMARY KEY (id);
-
-
---
--- Name: instance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY instance
-    ADD CONSTRAINT instance_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY activity_ids
+    ADD CONSTRAINT activity_id_pkey PRIMARY KEY (unique_id);
 
 
 --
--- Name: node_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: remote_calls_pkey; Type: CONSTRAINT; Schema: activity; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY node
-    ADD CONSTRAINT node_pkey PRIMARY KEY (id);
-
-
---
--- Name: parent_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY parent
-    ADD CONSTRAINT parent_pkey PRIMARY KEY (parent_aid_id, parent_cid_nid, parent_cid_pid, parent_cid_time, parent_cid_num, child_unique_id);
+ALTER TABLE ONLY remote_calls
+    ADD CONSTRAINT remote_calls_pkey PRIMARY KEY (unique_id);
 
 
 --
--- Name: software_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: remte_call_id_pkey; Type: CONSTRAINT; Schema: activity; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY software
-    ADD CONSTRAINT software_pkey PRIMARY KEY (id);
-
-
---
--- Name: activity_aid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE UNIQUE INDEX activity_aid_idx ON activity USING btree (aid_id, aid_cid_nid, aid_cid_pid, aid_cid_time, aid_cid_num);
-
-
---
--- Name: node_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE UNIQUE INDEX node_id_idx ON ontology USING btree (id);
-
-
---
--- Name: hardware_id_idx; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY node
-    ADD CONSTRAINT hardware_id_idx FOREIGN KEY (hwid) REFERENCES hardware(id);
-
-
---
--- Name: instance_id_idx; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY node
-    ADD CONSTRAINT instance_id_idx FOREIGN KEY (iid) REFERENCES instance(id);
-
-
---
--- Name: software_id_idx; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY node
-    ADD CONSTRAINT software_id_idx FOREIGN KEY (swid) REFERENCES software(id);
+ALTER TABLE ONLY remote_call_ids
+    ADD CONSTRAINT remte_call_id_pkey PRIMARY KEY (unique_id);
 
 
 --
