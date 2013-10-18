@@ -9,4 +9,3 @@ if (PostgreSQL_FOUND)
 	add_subdirectory(postgres_writer)
 endif (PostgreSQL_FOUND)
 
-
