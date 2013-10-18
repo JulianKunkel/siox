@@ -36,6 +36,16 @@
 		+Attribute attribute
 		+string value
 	}
+
+	Object --> Type
+
+	Relation --> Object
+	Relation --> Object
+	Relation --> Type
+
+	Value --> Object
+	Value --> Attribute
+
 @enduml
 */
 
