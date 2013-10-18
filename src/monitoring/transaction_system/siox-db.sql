@@ -91,6 +91,21 @@ ALTER TYPE public.attribute OWNER TO postgres;
 
 SET search_path = activity, pg_catalog;
 
+--
+-- Name: reset_all(); Type: FUNCTION; Schema: activity; Owner: postgres
+--
+
+CREATE FUNCTION reset_all() RETURNS void
+    LANGUAGE sql
+    AS $$truncate activity.activities, activity.activity_ids, activity.parents, activity.remote_calls, activity.remote_call_ids;
+alter sequence activity.activities_unique_id_seq restart with 1;
+alter sequence activity.activity_id_unique_id_seq restart with 1;
+alter sequence activity.remte_call_id_unique_id_seq restart with 1;
+$$;
+
+
+ALTER FUNCTION activity.reset_all() OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;

@@ -42,6 +42,12 @@ public:
 		PostgreSQLWriterPluginOptions &o = getOptions<PostgreSQLWriterPluginOptions>();
 		
 		dbconn_ = PQconnectdb(o.db_info.c_str());
+		
+		if (PQstatus(dbconn_) != CONNECTION_OK) {
+			
+			std::cerr << "Connection to database failed: " << PQerrorMessage(dbconn_) << std::endl;
+		}
+		
 		querier_ = new PostgreSQLQuerier(*dbconn_);
 	}
 

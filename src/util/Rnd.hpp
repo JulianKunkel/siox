@@ -1,6 +1,8 @@
 #ifndef SIOX_RANDOM_H
 #define SIOX_RANDOM_H
 
+#include <algorithm>
+
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/datatypes/Activity.hpp>
 
