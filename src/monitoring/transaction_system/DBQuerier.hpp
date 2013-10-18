@@ -5,24 +5,6 @@
 
 using namespace monitoring;
 
-typedef struct {
-	NodeID unique_id;
-	std::string name;
-} SysinfoNode;
-
-typedef struct {
-	UniqueInterfaceID unique_id;
-	std::string name;
-	std::string implementation;
-} SysinfoInterface;
-
-typedef struct {
-	DeviceID unique_id;
-	NodeID nid;
-	std::string name;
-} SysinfoDevice;
-
-
 class DBQuerier {
 public:
 	/** Activities **/
