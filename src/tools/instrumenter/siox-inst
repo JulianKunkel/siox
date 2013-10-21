@@ -15,6 +15,18 @@ function ABORT(){
 
 INSTALL_DIR=$(dirname $(dirname $0))
 
+
+# Verbosity level
+VERBOSE=
+if [[ "$1" == "-h" ]];then
+	ABORT
+fi
+
+if [[ "$1" == "-v" ]];	then
+	VERBOSE=1
+	shift
+fi
+
 # Layers to instrument are specified by the user
 LAYERS="$1"
 shift
@@ -31,14 +43,17 @@ if [[ "$1" == "wrap" ]];then
 	shift
 fi
 
-pushd $INSTALL_DIR/lib
+pushd $INSTALL_DIR/lib >/dev/null
 AVAILABLE_WRAPPERS=$(ls libsiox-*dlsym* | sed "s/libsiox-//g" | sed "s/-dlsym.*//" )
-popd
+popd >/dev/null
 
 if [[ "$1" == "" ]] ; then
 	ABORT
 fi
 
+if [ $VERBOSE ];then
+	echo "INFO: $AVAILABLE_WRAPPERS"
+fi
 
 # checking availability of selected wrappers:
 LAYERS_TO_INSTRUMENT=(${LAYERS//,/ })
@@ -57,10 +72,21 @@ for l in "${LAYERS_TO_INSTRUMENT[@]}";do
 done
 
 if [[ $TYPE == "dlsym" ]] ; then
+	
+	if [ $VERBOSE ];then
+		echo "LD_PRELOAD=\"$LDSTRING\" $@"
+	fi
+
 	echo "[EXE] $LAYERS \"$@\" "
 	export LD_LIBRARY_PATH=$INSTALL_DIR/lib:$LD_LIBRARY_PATH
-	LD_PRELOAD="$LDSTRING" $@
+
+	LD_PRELOAD="INFO: $LDSTRING" $@
 else
+
+	if [ $VERBOSE ];then
+		echo "INFO: $@ $WRAPSTRING $WRAPLIBS"
+	fi
+
 	echo "[CC] $LAYERS \"$@\""
 	$@ $WRAPSTRING $WRAPLIBS
 fi
