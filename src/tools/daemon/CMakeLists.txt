@@ -16,3 +16,5 @@ target_link_libraries(
 	${Boost_LIBRARIES}
 )
 
+
+install(TARGETS siox-daemon RUNTIME DESTINATION bin)
