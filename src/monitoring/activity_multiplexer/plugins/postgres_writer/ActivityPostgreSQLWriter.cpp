@@ -21,7 +21,7 @@ using namespace monitoring;
 using namespace core;
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
-class PostgreSQLWriterPlugin: public ActivityMultiplexerPlugin {
+class PostgreSQLWriterPlugin : public ActivityMultiplexerPlugin {
 private:
 	PostgreSQLQuerier *querier_;
 	PGconn *dbconn_;
