@@ -6,8 +6,7 @@ using namespace monitoring;
 //@serializable
 class PostgreSQLWriterPluginOptions: public ActivityMultiplexerPluginOptions {
 public:
-	string db_info;
-
+	string dbinfo;
 };
 
 

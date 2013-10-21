@@ -17,7 +17,7 @@ int main(int argc, char const *argv[])
 	ActivityMultiplexerPlugin *ap = core::module_create_instance<ActivityMultiplexerPlugin>("", "siox-monitoring-activityPlugin-ActivityPostgreSQLWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE);
 
 	PostgreSQLWriterPluginOptions &op = (PostgreSQLWriterPluginOptions &) ap->getOptions();
-	op.db_info = SIOX_DB_INFO;
+	op.dbinfo = SIOX_DB_INFO;
 	op.multiplexer.componentPointer = m1;
 
 	m1->init();

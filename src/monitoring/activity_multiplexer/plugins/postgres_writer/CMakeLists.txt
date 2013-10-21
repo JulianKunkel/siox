@@ -12,7 +12,7 @@ add_library(
 	siox-monitoring-activityPlugin-ActivityPostgreSQLWriter
 	ActivityPostgreSQLWriter.cpp
 	PostgreSQLQuerier.cpp
-	BoostXMLSerializable.cpp
+	ActivityPostgreSQLWriterOptions.cpp
 )
 
 target_link_libraries(
@@ -20,9 +20,10 @@ target_link_libraries(
 	siox-core-ContainerSerializer
 	siox-core-AutoConfigurator
 	${Boost_LIBRARIES}
+	pq
 )
 
-siox_run_serializer(ActivityPostgreSQLWriterOptions.hpp BoostXMLSerializable.cpp)
+siox_run_serializer(ActivityPostgreSQLWriterOptions.hpp ActivityPostgreSQLWriterOptions.cpp)
 
 add_subdirectory(test)
 

@@ -41,7 +41,7 @@ public:
 	{
 		PostgreSQLWriterPluginOptions &o = getOptions<PostgreSQLWriterPluginOptions>();
 		
-		dbconn_ = PQconnectdb(o.db_info.c_str());
+		dbconn_ = PQconnectdb(o.dbinfo.c_str());
 		
 		if (PQstatus(dbconn_) != CONNECTION_OK) {
 			
