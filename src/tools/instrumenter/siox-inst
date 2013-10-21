@@ -74,13 +74,13 @@ done
 if [[ $TYPE == "dlsym" ]] ; then
 	
 	if [ $VERBOSE ];then
-		echo "LD_PRELOAD=\"$LDSTRING\" $@"
+		echo "INFO: LD_PRELOAD=\"$LDSTRING\" $@"
 	fi
 
 	echo "[EXE] $LAYERS \"$@\" "
 	export LD_LIBRARY_PATH=$INSTALL_DIR/lib:$LD_LIBRARY_PATH
 
-	LD_PRELOAD="INFO: $LDSTRING" $@
+	LD_PRELOAD="$LDSTRING" $@
 else
 
 	if [ $VERBOSE ];then

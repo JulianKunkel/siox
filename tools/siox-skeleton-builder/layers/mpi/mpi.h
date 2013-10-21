@@ -1,40 +1,36 @@
 //@include <mpi.h>
 
 /* Set the interface name for the library*/
-//@component "MPIIO"
+//@component "MPIIO" ""
 
 /* Register the data types for the descriptors */
-//@register_attribute bytesToRead "Bytes to read" SIOX_STORAGE_64_BIT_INTEGER
-//@register_attribute bytesToWrite "Bytes to write" SIOX_STORAGE_64_BIT_INTEGER
-//@register_descriptor fileName "File Name" SIOX_STORAGE_STRING
-//@register_descriptor fileHandle "POSIX File Handle" SIOX_STORAGE_64_BIT_INTEGER
+//@register_attribute bytesToRead "MPI" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute bytesToWrite "MPI" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute filePosition "MPI" "file/position" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute fileExtent "MPI" "file/extent" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute fileHandle "POSIX" "descriptor/filehandle" SIOX_STORAGE_64_BIT_UINTEGER
 
-/* Register the metrics to grab the performance data */
-//@register_metric bytesWritten "/Throughput/Write" SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
-//@register_metric bytesRead "/Troughput/Read" SIOX_UNIT_BYTES SIOX_STORAGE_64_BIT_INTEGER SIOX_SCOPE_SUM
+//@register_attribute fileName "MPI" "descriptor/filename" SIOX_STORAGE_STRING
+//@register_attribute fileSystem "Global" "descriptor/filesystem" SIOX_STORAGE_32_BIT_UINTEGER
 
 /* Prepare a (hash) map to link descriptors (in this case, of type int) to their activities.
    This is necessary for the horizontal linking of activities.
    The map and all other functions using it default to the same built-in name,
    so it can usually be omitted. */
-//@horizontal_map_create_int
-//@horizontal_map_create_str
+//@horizontal_map_create_size
 
 /*------------------------------------------------------------------------------
 End of global part
 ------------------------------------------------------------------------------*/
 
 //@activity
-//@error ''ret!=0'' ret
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_Init( int * argc, char ** *argv );
 
 //@activity
-//@error ''ret!=0'' ret
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_Finalize( void );
 
-//@activity_with_hints
-//@activity_link_int fh
-//@error ''ret!=0'' ret
 /*
     MPI_Info list:
 
@@ -76,38 +72,47 @@ int MPI_Finalize( void );
     NON-SETTABLE HINTS:
     - filename: Access this hint to get the name of the file.
 */
+//@activity
+//@activity_attribute_pointer fileName filename
+//@activity_attribute fileHandle fh
+//@horizontal_map_put_size fh
+//@error ''ret != MPI_SUCCESS '' ret
 int MPI_File_open( MPI_Comm comm, char * filename, int amode, MPI_Info info, MPI_File * fh );
+
 //@activity
-//@horizontal_map_remove_int fh
-//@error ''ret!=0'' ret
+//@horizontal_map_remove_size fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_close( MPI_File * fh );
+
 //@activity
-//@horizontal_map_put_str filename
-//@error ''ret!=0'' ret
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_delete( char * filename, MPI_Info info );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_set_size( MPI_File fh, MPI_Offset size );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_preallocate( MPI_File fh, MPI_Offset size );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_size( MPI_File fh, MPI_Offset * size );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_group( MPI_File fh, MPI_Group * group );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_amode( MPI_File fh, int * amode );
-//@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+
 //TODO Shall we define an array for info?
 /*
     MPI_Info list:
@@ -150,10 +155,12 @@ int MPI_File_get_amode( MPI_File fh, int * amode );
     NON-SETTABLE HINTS:
     - filename: Access this hint to get the name of the file.
 */
+
+//@activity
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_set_info( MPI_File fh, MPI_Info info );
-//@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+
 //TODO Shall we define an array for info?
 /*
     MPI_Info list:
@@ -196,10 +203,12 @@ int MPI_File_set_info( MPI_File fh, MPI_Info info );
     NON-SETTABLE HINTS:
     - filename: Access this hint to get the name of the file.
 */
+
+//@activity
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_info( MPI_File fh, MPI_Info * info_used );
-//@activity_with_hints
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+
 /*
     MPI_Info list:
 
@@ -241,190 +250,233 @@ int MPI_File_get_info( MPI_File fh, MPI_Info * info_used );
     NON-SETTABLE HINTS:
     - filename: Access this hint to get the name of the file.
 */
+
+//@activity
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_set_view( MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype, char * datarep, MPI_Info info );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_view( MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype, MPI_Datatype * filetype, char * datarep );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iwrite_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iread( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iwrite( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_seek( MPI_File fh, MPI_Offset offset, int whence );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_position( MPI_File fh, MPI_Offset * offset );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_byte_offset( MPI_File fh, MPI_Offset offset, MPI_Offset * disp );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iread_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iwrite_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_ordered( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_ordered( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_seek_shared( MPI_File fh, MPI_Offset offset, int whence );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_position_shared( MPI_File fh, MPI_Offset * offset );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_at_all_begin( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_at_all_end( MPI_File fh, void * buf, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_at_all_begin( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_at_all_end( MPI_File fh, void * buf, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_all_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_all_end( MPI_File fh, void * buf, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_all_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_all_end( MPI_File fh, void * buf, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_ordered_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_ordered_end( MPI_File fh, void * buf, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_ordered_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_ordered_end( MPI_File fh, void * buf, MPI_Status * status );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_type_extent( MPI_File fh, MPI_Datatype datatype, MPI_Aint * extent );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_set_atomicity( MPI_File fh, int flag );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_atomicity( MPI_File fh, int * flag );
+
 //@activity
-//@activity_link_int fh
-//@error ''ret!=0'' ret
+//@activity_link_size &fh
+//@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_sync( MPI_File fh );
 
 
-//@activity
-//@horizontal_map_create_str info
-//@error ''ret!=0'' ret
 //TODO Shall we define an array for info?
 /*
     MPI_Info_create creates a new info object. The newly created
     object contains no key/value pairs.
 */
-int MPI_Info_create( MPI_Info * info );
 //@activity
-//@horizontal_map_remove_str info
-//@error ''ret!=0'' ret
+//@error ''ret!=MPI_SUCCESS'' ret
+int MPI_Info_create( MPI_Info * info );
+
+//@activity
+//@error ''ret!=MPI_SUCCESS'' ret
 //TODO Shall we define an array for info?
 /*
     MPI_Info_delete deletes a (key,value) pair from info. If key is not
     defined in info, the call raises an error of class MPI_ERR_INFO_NOKEY.
 */
 int MPI_Info_delete( MPI_Info info, char * key );
+
 //@activity
-//@activity_link_str info
-//@error ''ret!=0'' ret
+//@error ''ret!=MPI_SUCCESS'' ret
 //TODO Shall we define an array for info?
 /*
     MPI_Info_dup duplicates an existing info object, creating a new object,
@@ -434,15 +486,15 @@ int MPI_Info_dup( MPI_Info info, MPI_Info * newinfo );
 
 //@activity
 //@horizontal_map_remove_str info
-//@error ''ret!=0'' ret
+//@error ''ret!=MPI_SUCCESS'' ret
 //TODO Shall we define an array for info?
 /*
     MPI_Info_free frees info and sets it to MPI_INFO_NULL.
 */
 int MPI_Info_free( MPI_Info * info );
+
 //@activity
-//@activity_link_str info
-//@error ''ret!=0'' ret
+//@error ''ret!=MPI_SUCCESS'' ret
 //TODO Shall we define an array for info?
 /*
     MPI_Info_get retrieves the value associated with key in a previous call
@@ -456,9 +508,9 @@ int MPI_Info_free( MPI_Info * info );
     If key is larger than MPI_MAX_INFO_KEY, the call is erroneous.
 */
 int MPI_Info_get( MPI_Info info, char * key, int valuelen, char * value, int * flag );
+
 //@activity
-//@activity_link_str info
-//@error ''ret!=0'' ret
+//@error ''ret!=MPI_SUCCESS'' ret
 //TODO Shall we define an array for info?
 /*
     MPI_Info_set adds the (key,value) pair to info and overrides the value
