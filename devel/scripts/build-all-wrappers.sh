@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SIOX=/usr/local/siox
-TARGET=/usr/local/siox/wrappers
 CLEAN="$1"
 
 (
@@ -11,7 +10,7 @@ for L in tools/siox-skeleton-builder/layers/*; do
 	if [[ $CLEAN != "" ]] ; then
 		rm -rf build
 	fi
-	./waf configure --siox=$SIOX --prefix=$TARGET 2>&1
+	./waf configure --siox=$SIOX --prefix=$SIOX 2>&1
 	./waf install || ERROR="$ERROR $(basename $L)"
 	popd
 done
