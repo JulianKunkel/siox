@@ -1,4 +1,4 @@
-Requirements
+﻿Requirements
 ============
 
 The communication code requires the components especified in the CMakeLists.txt 
@@ -34,7 +34,7 @@ cmake ..
 
 Then you can compile SIOX:
 make -j 4
-make install
+sudo make install
 
 To use ninja instead of make run:
 cmake -GNinja ../
@@ -57,7 +57,8 @@ The output of the tests are then stored in:
 To run tests manually, i.e. for debugging purpose, a script is provided which
 sets the required LD_LIBRARY_PATH and other environment variables to ease manual execution.
 
-To set the variables correctly run in (the bash):
+To set the variables correctly run in (the bash)
+on level of README.txt:
 source ./devel/scripts/set_ld_path.sh
 
 
