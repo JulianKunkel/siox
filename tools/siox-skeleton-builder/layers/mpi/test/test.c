@@ -5,8 +5,7 @@ int main( int argc, char * argv[] )
 {
 	int rank, size;
 	MPI_File fh;
-	MPI_Datatype etype, filetype;
-	MPI_Offset disp = 0;
+	MPI_Datatype etype; 
 	MPI_Status status;
 	char buf;
 

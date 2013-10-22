@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
-import os.path
-from os import path
+import os
+from subprocess import call
+import sys
 
 def options(opt):
 	opt.load('compiler_c waf_unit_test')
@@ -42,7 +43,7 @@ def configure(conf):
         # locate mpi.h and mpicc
 	if conf.options.MPI:
 		conf.env.INCLUDES = conf.options.MPI + "/include"		
-		conf.find_program(conf.options.MPICC, var='MPICC', path_list=[conf.options.MPI+path.sep+'bin'].append(os.environ["PATH"].split(":"))) 
+		conf.find_program(conf.options.MPICC, var='MPICC', path_list=[conf.options.MPI+os.path.sep+'bin'].append(os.environ["PATH"].split(":"))) 
 	else:
 		conf.find_program(conf.options.MPICC, var='MPICC')
 	
@@ -85,6 +86,11 @@ def build(bld):
 	bld(rule=dlsym, source=HEADER, target='siox-' + LAYER + '-dlsym.c')
 	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = LAYER + ".wrap", install_path = "${LIBDIR}")
 
+
+	what=(bld.path.abspath() + '/../../siox-skeleton-builder.py -o /dev/null -t %s -s wrap -W build/%s.wrap %s' % (bld.path.abspath() + "/../../template.py", LAYER, HEADER)).split(" ")
+	print("[Wrapper] " + LAYER + str(what))
+	call(what)
+
 	# Non-existing wrap file leads to race conditions when the file is not created, yet.
 	# Therefore, added a second pass.
 	wrap_file="build/" + LAYER + ".wrap"
@@ -92,7 +98,8 @@ def build(bld):
 	if os.path.isfile(wrap_file):
 		wrap_linkerflags = open(wrap_file, 'r').read()
 	else:
-		print "Please rerun ./waf build to build wrapped examples"
+		print "Could not read wrapper flags, this is critical!"
+		sys.exit(1)
 
 	bld.shlib(includes="",  use = "GLIB SIOX_LL" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)	
 	bld.shlib(includes="",  use = "GLIB DL SIOX_LL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
