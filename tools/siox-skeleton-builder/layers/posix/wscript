@@ -28,7 +28,9 @@ def configure(conf):
 		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
 		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
 
-        conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
+      conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
+   else:
+      conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)   	
 
 	conf.check_cc(lib='siox-monitoring-siox-ll', mandatory = True)
 
