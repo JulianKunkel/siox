@@ -34,6 +34,8 @@ def configure(conf):
    	else:
 		conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)   	
 
+	conf.env.append_value('INCLUDES', ['.' ])
+
 	conf.check_cc(lib='siox-monitoring-siox-ll', mandatory = True)
 
 	if not conf.options.SIOX_LL_IMPLEMENTATION:
@@ -42,7 +44,7 @@ def configure(conf):
 
         # locate mpi.h and mpicc
 	if conf.options.MPI:
-		conf.env.INCLUDES = conf.options.MPI + "/include"		
+		conf.env.append_value('INCLUDES', conf.options.MPI + "/include")
 		conf.find_program(conf.options.MPICC, var='MPICC', path_list=[conf.options.MPI+os.path.sep+'bin'].append(os.environ["PATH"].split(":"))) 
 	else:
 		conf.find_program(conf.options.MPICC, var='MPICC')
@@ -64,7 +66,7 @@ def configure(conf):
 
 def build(bld):
 	LAYER="mpi"
-	HEADER="mpi.h"
+	HEADER=LAYER + "-wrapper.h"
 
         def wrap(task): 
 		return wrapper(task, "wrap")
@@ -104,6 +106,16 @@ def build(bld):
 	bld.shlib(includes="",  use = "GLIB SIOX_LL" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)	
 	bld.shlib(includes="",  use = "GLIB DL SIOX_LL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
 
+	try:
+		os.symlink(bld.path.abspath() + "/test/siox.conf", "build/siox.conf")
+	except OSError, e:
+   		pass
+
+        bld.install_files("${PREFIX}/include", "siox-datatypes-helper-" + LAYER +".h")
+
+	from waflib.Tools import waf_unit_test
+	bld.add_post_fun(waf_unit_test.summary)
+	
 
 	
 

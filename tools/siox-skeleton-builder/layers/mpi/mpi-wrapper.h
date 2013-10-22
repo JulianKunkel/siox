@@ -1,7 +1,12 @@
-//@include <mpi.h>
+#include "mpi-helper.h"
 
 /* Set the interface name for the library*/
-//@component "MPIIO" ""
+//@component "MPI" implVersion "" int major, minor; char implVersion[151]; int v_ret = MPI_Get_version(& major, & minor); if (v_ret >= 0) snprintf(implVersion, 150, "%d.%d", major, minor); else sprintf(implVersion, "0");
+
+//@register_attribute commSize "MPI" "description/commSize" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute commRank "MPI" "description/commRank" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute threadLevelRequired "MPI" "description/threadLevelRequired" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute pidRank0 "MPI" "description/pidRank0" SIOX_STORAGE_64_BIT_UINTEGER
 
 /* Register the data types for the descriptors */
 //@register_attribute bytesToRead "MPI" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
@@ -9,6 +14,16 @@
 //@register_attribute filePosition "MPI" "file/position" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute fileExtent "MPI" "file/extent" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute fileHandle "POSIX" "descriptor/filehandle" SIOX_STORAGE_64_BIT_UINTEGER
+
+//@register_attribute fileOpenFlags "MPI" "hints/openFlags" SIOX_STORAGE_32_BIT_UINTEGER
+
+//@register_attribute infoReadBuffSize "MPI" "hints/noncollReadBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute infoWriteBuffSize "MPI" "hints/noncollWriteBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute infoCollReadBuffSize "MPI" "hints/collReadBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute infoCollWriteBuffSize "MPI" "hints/collWriteBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute infoConcurrency "MPI" "hints/ioconcurrency" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute infoCollContiguous "MPI" "hints/collContiguous" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute infoString "MPI" "hints/info" SIOX_STORAGE_STRING
 
 //@register_attribute fileName "MPI" "descriptor/filename" SIOX_STORAGE_STRING
 //@register_attribute fileSystem "Global" "descriptor/filesystem" SIOX_STORAGE_32_BIT_UINTEGER
@@ -23,9 +38,27 @@
 End of global part
 ------------------------------------------------------------------------------*/
 
+
+// In MPI_Init() we will determine global MPI parameters and set them as component attributes.
+// To link the processes together, Rank 0 broadcasts its pid to all other processes.
+// All processes record the pid of Rank 0 then.
+
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
+//@component_attribute commSize mpi_sz  int mpi_sz; PMPI_Comm_size(MPI_COMM_WORLD, & mpi_sz);
+//@component_attribute commRank mpi_rank  int mpi_rank; PMPI_Comm_rank(MPI_COMM_WORLD, & mpi_rank);
+//@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); PMPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 int MPI_Init( int * argc, char ** *argv );
+
+
+//@activity
+//@error ''ret!=MPI_SUCCESS'' ret
+//@component_attribute commSize mpi_sz  int mpi_sz; MPI_Comm_size(MPI_COMM_WORLD, & mpi_sz);
+//@component_attribute commRank mpi_rank  int mpi_rank; MPI_Comm_rank(MPI_COMM_WORLD, & mpi_rank);
+//@splice_before int32_t translatedFlags = translateMPIThreadLevelToSIOX(required);
+//@component_attribute threadLevelRequired translatedFlags
+//@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); PMPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+int MPI_Init_thread( int *argc, char ** *argv, int required, int *provided );
 
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
@@ -74,8 +107,12 @@ int MPI_Finalize( void );
 */
 //@activity
 //@activity_attribute_pointer fileName filename
+//@splice_before uint32_t translatedFlags = translateMPIOpenFlagsToSIOX(amode);
+//@activity_attribute fileOpenFlags translatedFlags
 //@activity_attribute fileHandle fh
+//@activity_attribute_pointer fileName filename
 //@horizontal_map_put_size fh
+//@splice_after recordDefaultInfo(sioxActivity, info);
 //@error ''ret != MPI_SUCCESS '' ret
 int MPI_File_open( MPI_Comm comm, char * filename, int amode, MPI_Info info, MPI_File * fh );
 
@@ -85,6 +122,7 @@ int MPI_File_open( MPI_Comm comm, char * filename, int amode, MPI_Info info, MPI
 int MPI_File_close( MPI_File * fh );
 
 //@activity
+//@activity_attribute_pointer fileName filename
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_delete( char * filename, MPI_Info info );
 
@@ -158,6 +196,7 @@ int MPI_File_get_amode( MPI_File fh, int * amode );
 
 //@activity
 //@activity_link_size &fh
+//@splice_after recordDefaultInfo(sioxActivity, info);
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_set_info( MPI_File fh, MPI_Info info );
 
@@ -463,12 +502,12 @@ int MPI_File_sync( MPI_File fh );
     object contains no key/value pairs.
 */
 //@activity
+//TODO Shall we define an array for info?
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_Info_create( MPI_Info * info );
 
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
-//TODO Shall we define an array for info?
 /*
     MPI_Info_delete deletes a (key,value) pair from info. If key is not
     defined in info, the call raises an error of class MPI_ERR_INFO_NOKEY.
@@ -477,7 +516,6 @@ int MPI_Info_delete( MPI_Info info, char * key );
 
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
-//TODO Shall we define an array for info?
 /*
     MPI_Info_dup duplicates an existing info object, creating a new object,
     with the same (key,value) pairs and the same ordering of keys.
@@ -485,9 +523,7 @@ int MPI_Info_delete( MPI_Info info, char * key );
 int MPI_Info_dup( MPI_Info info, MPI_Info * newinfo );
 
 //@activity
-//@horizontal_map_remove_str info
 //@error ''ret!=MPI_SUCCESS'' ret
-//TODO Shall we define an array for info?
 /*
     MPI_Info_free frees info and sets it to MPI_INFO_NULL.
 */
@@ -495,7 +531,6 @@ int MPI_Info_free( MPI_Info * info );
 
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
-//TODO Shall we define an array for info?
 /*
     MPI_Info_get retrieves the value associated with key in a previous call
     to MPI_Info_set. If such a key exists, it sets flag to true and returns
@@ -511,7 +546,6 @@ int MPI_Info_get( MPI_Info info, char * key, int valuelen, char * value, int * f
 
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
-//TODO Shall we define an array for info?
 /*
     MPI_Info_set adds the (key,value) pair to info and overrides the value
     if a value for the same key was previously set. The key and value
