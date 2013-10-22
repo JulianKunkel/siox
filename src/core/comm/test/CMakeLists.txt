@@ -4,21 +4,6 @@ include_directories(
 	${SIOX_INCLUDE_DIRS}
 )
 
-add_executable(
-	core-comm-mmts-in-memory
-	test-mmts-interfaces.cpp
-)
-
-target_link_libraries(
-	core-comm-mmts-in-memory
-	siox-core-comm-multiMessageService 
-	siox-core-comm-inmemory 
-	siox-core-ModuleLoader
-	siox-core-comm
-)
-
-add_test(core-comm-mmts-in-memory core-comm-mmts-in-memory)
-
 # build the rpc client and server test-modules
 siox_run_serializer(rpc-client-module-options.hpp rpc-client-module-options.cpp)
 siox_run_serializer(rpc-server-module-options.hpp rpc-server-module-options.cpp)
@@ -70,16 +55,3 @@ target_link_libraries(
 
 add_test(core-comm-rpc-modules-test core-comm-rpc-modules-test)
 
-
-# add_executable(
-# 	core-comm-multi-endpoint-client-test
-# 	multi-endpoint-client-test.cpp
-# )
-
-# target_link_libraries(
-# 	core-comm-multi-endpoint-client-test
-# 	siox-core-ModuleLoader
-# 	siox-core-comm-gio
-# )
-
-# add_test(core-comm-multi-endpoint-client-test core-comm-multi-endpoint-client-test)

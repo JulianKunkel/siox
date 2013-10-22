@@ -1,12 +1,20 @@
 The primary directory structure is:
-devel -- contains functionality needed for building and helping during the development process
-doc -- basic documentation and root directory for building documentation
-src -- main folder for source
-tools -- additional tools, i.e. to automatically create wrappers.
-         These tools must be build manually, thus they are not included in the main build process of SIOX.
+devel	contains functionality needed for building and helping during the development process
+doc 	basic documentation and root directory for building documentation
+src 	main folder for source
+tools 	additional tools, i.e. to automatically create wrappers.
+        These tools must be build manually, thus they are not included in the main build process of SIOX.
 
 For developers (we are talking about the src/ directory)
 ========================================================
+
+Directories in src/:
+include 	Contains all interfaces of SIOX, the directory structure mimics the structure of src/.
+core  		Elementary components, not specific for the knowledge or monitoring path
+knowledge	Components of the knowledge path.
+monitoring	Components of the monitoring path (may additionally be used by the knowledge path).
+util		Generic programming pieces and libraries which are used for components and command line tools.
+tools		Command line tools such as the daemon which are installed with SIOX.
 
 Public interfaces are placed under:
 include/<package>/<component>/<interface>.h[pp]

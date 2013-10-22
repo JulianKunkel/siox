@@ -75,7 +75,7 @@ Configuration is the same as for the general siox package, however, you have to 
 	$ ./waf --alltests
 	$ ./waf install
 
-
+To build all layers after the installation of SIOX run: ./devel/scripts/build-all-wrappers.sh
 
 
 To build, test and install waf-based sub-projects:

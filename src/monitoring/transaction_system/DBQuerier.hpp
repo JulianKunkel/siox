@@ -5,24 +5,6 @@
 
 using namespace monitoring;
 
-typedef struct {
-	NodeID unique_id;
-	std::string name;
-} SysinfoNode;
-
-typedef struct {
-	UniqueInterfaceID unique_id;
-	std::string name;
-	std::string implementation;
-} SysinfoInterface;
-
-typedef struct {
-	DeviceID unique_id;
-	NodeID nid;
-	std::string name;
-} SysinfoDevice;
-
-
 class DBQuerier {
 public:
 	/** Activities **/
@@ -46,18 +28,6 @@ public:
 	virtual uint64_t insert_remote_call_id(const RemoteCallIdentifier &rcid, const uint64_t activity_uid) = 0;
 	virtual uint64_t query_remote_call_unique_id(const RemoteCallIdentifier &rcid) = 0;
 	
-	/** System Info **/
-	
-	virtual uint32_t insert_node(const SysinfoNode &node) = 0;
-	virtual SysinfoNode *query_node(const uint32_t unique_id) = 0;
-	virtual SysinfoNode *query_node(const std::string &name) = 0;
-	
-	virtual uint32_t insert_interface(const SysinfoInterface &interface) = 0;
-	virtual SysinfoInterface *query_interface(const uint32_t unique_id) = 0;
-	virtual SysinfoInterface *query_interface(const std::string &name, const std::string &implementation) = 0;
-	
-	virtual uint32_t insert_device(const SysinfoDevice &device) = 0;
-	virtual SysinfoDevice *query_device(const uint32_t unique_id) = 0;
 };
 
 #endif

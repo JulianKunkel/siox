@@ -1,5 +1,5 @@
-#include <core/comm/MultiMessageTypeService.hpp>
 #include <core/comm/CommunicationModule.hpp>
+#include <core/hcomm/MultiMessageTypeService.hpp>
 #include <core/container/container-binary-serializer.hpp>
 
 #include <iostream>

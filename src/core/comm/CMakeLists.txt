@@ -6,16 +6,6 @@ include_directories(
 )
 
 add_library(
-	siox-core-comm-multiMessageService
-	MultiMessageTypeService.cpp
-)
-
-target_link_libraries(
-	siox-core-comm-multiMessageService
-)
-
-
-add_library(
 	siox-core-comm
 	CommunicationModule.cpp
 )
@@ -29,4 +19,3 @@ target_link_libraries(
 add_subdirectory(modules)
 add_subdirectory(test)
 
-install(TARGETS siox-core-comm-multiMessageService LIBRARY DESTINATION lib)

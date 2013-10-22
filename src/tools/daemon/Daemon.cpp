@@ -70,7 +70,7 @@ int main( int argc, char ** argv )
 		if (configSection != "")
 			setenv( "SIOX_CONFIGURATION_SECTION_TO_USE", configSection.c_str(), 1 );
 
-        // load configuration 
+      // load configuration 
 		registrar = new ComponentRegistrar();
 		AutoConfigurator * configurator = nullptr;
 		vector<Component *> loadedComponents = util::LoadConfiguration(& configurator, registrar);
