@@ -15,7 +15,7 @@ Since objects may have multiple parents, it is possible to look up the same obje
 XXX: Do we need to add a facility to generate paths? I. e. something like `enumeratePaths( ObjectId )`? I hesitate, because then we would need to ensure that this method would not explode when an object is its own grandfather.
 
 All objects and relations have a type, which is simply a string describing the kind of object/relation.
-Example types for objects would be: node, HDD, NIC, Network-Switch, etc.
+Example types for objects would be: node, block device, NIC, Network-Switch, etc.
 Example types for relations are: includes, connects to, runs on, etc.
 
 Objects may be connected to attributes that add further description.
@@ -34,26 +34,26 @@ Values store a concrete value for an Attribute/Object combination.
 
 	class Object {
 		+uint32_t id
-		+Type type
+		+uint32_t typeID
 	}
 
 	class Relation {
-		+Object parent
+		+uint32_t parentObjectID
 		+string childName
-		+Object child
-		+Type type
+		+uint32_t objectChildID
+		+uint32_t relationTypeID
 	}
 
 	class Attribute {
 		+uint32_t id
 		+string name
-		+string dataType
+		+uint8_t dataType
 	}
 
 	class Value {
-		+Object object
-		+Attribute attribute
-		+string value
+		+uint32_t objectID
+		+uint32_t attributeID
+		+VariableDatatype value
 	}
 
 	Object --> Type
@@ -83,6 +83,9 @@ namespace monitoring {
 			typedef uint32_t ValueId;
 			typedef uint32_t AttributeId;
 
+			typedef VariableDatatype TopologyValue;
+
+
 			class Type;
 			class Object;
 			class Relation;
@@ -98,19 +101,23 @@ namespace monitoring {
 			virtual const Object& lookupObjectById( Object anId ) throw( NotFoundError ) = 0;
 			virtual const Object& lookupObjectByPath( string Path ) throw( NotFoundError ) = 0;
 
-			virtual const Relation& registerRelation( TypeId relationType, ObjectId parent, ObjectId child, string childName ) throw( IllegalStateError ) = 0;
+			virtual const Relation& registerRelation( TypeId relationType, ObjectId parent, ObjectId child, string & childName ) throw( IllegalStateError ) = 0;
 			virtual const Relation& lookupRelation( ObjectId parent, string childName ) throw( NotFoundError ) = 0;
-			virtual vector<const Relation&> enumerateChildren( ObjectId parent ) throw() = 0;
-			virtual vector<const Relation&> enumerateParents( ObjectId child ) throw() = 0;
 
-			virtual const Attribute& registerAttribute( string name, string datatype ) throw( IllegalStateError ) = 0;
-			virtual const Attribute& lookupAttribute( string name ) throw( NotFoundError ) = 0;
+			// RelationType may be 0 which indicates any parent/child.
+			virtual vector<const Relation&> enumerateChildren( ObjectId parent, TypeID relationType ) throw() = 0;
+			virtual vector<const Relation&> enumerateParents( ObjectId child, TypeID relationType ) throw() = 0;
 
-			virtual const Value& registerValue( ObjectId object, AttributeId, string value ) throw( IllegalStateError ) = 0;
-			virtual const Value& lookupValueByObject( ObjectId object, AttributeId ) throw( NotFoundError ) = 0;
+
+			virtual const Attribute& registerAttribute( string name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
+			virtual const Attribute& lookupAttribute( string name ) throw( NotFoundError ) = 0; 
+			virtual void objectSetAttribute( ObjectId object, AttributeId, const TopologyValue & value ) throw( IllegalStateError ) = 0;
+
+			virtual const TopologyValue & lookupValueByObject( ObjectId object, AttributeId ) throw( NotFoundError ) = 0;
 			virtual const Value& lookupValueById( ValueId ) throw( NotFoundError ) = 0;
-			virtual vector<const Value&> enumerateAttributes( ObjectId object ) throw() = 0;
+			// virtual const Object& lookupObjectByValueId( ValueId ) throw( NotFoundError ) = 0; not needed since ObjectID is part of Value
 
+			virtual vector<const Value&> enumerateAttributes( ObjectId object ) throw() = 0;
 	};
 }
 
