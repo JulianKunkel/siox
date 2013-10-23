@@ -31,6 +31,18 @@ This is especially true for values, which only become explicit when an object is
 
 
 
+Use cases:
+	U1	Store and retrieve static system information like which nodes/devices/connections/deamons/etc. the system consists of.
+	U2	Talk about any part of the system by using a unique ID.
+	U3	Implement an ontology using the abstractions provided by the topology (simple code reuse, because describing the topology requires more powerful abstractions than the ontology).
+
+Requirements:
+	R1	U1 => Relations between objects must be representable, and it must be possible to enumerate them.
+	R2	U2 => It must be possible to lookup objects by their ID.
+	R3	U3 => Attributes must consist of a name and a domain.
+
+
+
 @startuml Topology.png
 
 	class Type {
@@ -40,25 +52,26 @@ This is especially true for values, which only become explicit when an object is
 
 	class Object {
 		+uint32_t id
-		+uint32_t typeID
+		+uint32_t typeId
 	}
 
 	class Relation {
-		+uint32_t parentObjectID
+		+uint32_t parentObjectId
 		+string childName
-		+uint32_t childObjectID
-		+uint32_t relationTypeID
+		+uint32_t childObjectId
+		+uint32_t relationTypeId
 	}
 
 	class Attribute {
 		+uint32_t id
 		+string name
+		+uint32_t domainTypeId
 		+uint8_t dataType
 	}
 
 	class Value {
-		+uint32_t objectID
-		+uint32_t attributeID
+		+uint32_t objectId
+		+uint32_t attributeId
 		+TopologyValue value
 	}
 
@@ -109,6 +122,7 @@ namespace monitoring {
 			class Attribute {
 				string name;
 				AttributeId id;	//SQL key
+				TypeId domainId;	//XXX Maybe, we should change this to a string.
 				VariableDatatype::Type dataType;
 			};
 			class Value {
@@ -123,8 +137,8 @@ namespace monitoring {
 			virtual const Type& lookupTypeById( TypeId anId ) throw( NotFoundError ) = 0;
 
 			virtual const Object& registerObject( ObjectId parent, TypeId objectType, TypeId relationType, const string& childName ) throw( IllegalStateError ) = 0;
-			virtual const Object& lookupObjectById( Object anId ) throw( NotFoundError ) = 0;	//Passing 0 yields a reference to the root object.
 			virtual const Object& lookupObjectByPath( const string& Path ) throw( NotFoundError ) = 0;
+			virtual const Object& lookupObjectById( Object anId ) throw( NotFoundError ) = 0;	//Passing 0 yields a reference to the root object.
 
 			virtual const Relation& registerRelation( TypeId relationType, ObjectId parent, ObjectId child, const string& childName ) throw( IllegalStateError ) = 0;
 			virtual const Relation& lookupRelation( ObjectId parent, const string& childName ) throw( NotFoundError ) = 0;
@@ -134,8 +148,9 @@ namespace monitoring {
 			virtual vector<const Relation&> enumerateParents( ObjectId child, TypeID relationType ) throw() = 0;
 
 
-			virtual const Attribute& registerAttribute( const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
-			virtual const Attribute& lookupAttribute( const string& name ) throw( NotFoundError ) = 0;
+			virtual const Attribute& registerAttribute( TypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
+			virtual const Attribute& lookupAttributeByName( TypeId domain, const string& name ) throw( NotFoundError ) = 0;
+			virtual const Attribute& lookupAttributeById( AttributeId attributeId ) throw( NotFoundError ) = 0;
 			virtual void setAttribute( ObjectId object, AttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) = 0;
 			virtual const TopologyValue& getAttribute( ObjectId object, AttributeId attribute ) throw( NotFoundError ) = 0;
 			virtual vector<const Value&> enumerateAttributes( ObjectId object ) throw() = 0;
