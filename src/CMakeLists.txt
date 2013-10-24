@@ -50,6 +50,8 @@ set_package_properties(GIOUNIX2 PROPERTIES URL "http://www.gtk.org" TYPE OPTIONA
 find_package(PostgreSQL)
 set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYPE OPTIONAL PURPOSE "SIOX PostgreSQL backend support.")
 
+# Change this accordingly.
+set(NetCDF_INCLUDE_PATH /usr/local/include)
 find_package(NetCDF)
 set_package_properties(NetCDF PROPERTIES URL "http://www.unidata.ucar.edu/software/netcdf" TYPE OPTIONAL PURPOSE "SIOX NetCDF examples.")
 

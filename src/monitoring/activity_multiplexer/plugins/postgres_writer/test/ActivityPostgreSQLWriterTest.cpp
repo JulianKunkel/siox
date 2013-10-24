@@ -27,6 +27,7 @@ int main(int argc, char const *argv[])
 	Activity *act = rnd::activity();
 	m1->Log(act);
 
+	delete(act);
 	delete(ap);
 	delete(m1);
 	
