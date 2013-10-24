@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-FIND_PATH(NetCDF_INCLUDE_DIR netcfd.h)
+FIND_PATH(NetCDF_INCLUDE_DIR netcdf.h HINTS ${NetCDF_INCLUDE_PATH})
 FIND_LIBRARY(NetCDF_LIBRARY NAMES netcdf)
 
 IF (NetCDF_INCLUDE_DIR AND NetCDF_LIBRARY)
