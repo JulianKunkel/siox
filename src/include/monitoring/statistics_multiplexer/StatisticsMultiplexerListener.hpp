@@ -16,6 +16,8 @@ These NULL pointers may subsequently be replaced by functional pointers when a c
 #include <monitoring/topology/Topology.hpp>
 #include <monitoring/statistics_collector/Statistic.hpp>
 
+#include <memory>
+
 namespace monitoring {
 
 

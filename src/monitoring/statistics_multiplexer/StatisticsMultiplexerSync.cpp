@@ -8,6 +8,7 @@
 #include <monitoring/datatypes/StatisticsTypes.hpp>
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexerImplementation.hpp>
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexerListener.hpp>
+#include "StatisticsMultiplexerSyncOptions.hpp"
 
 #include <boost/thread/shared_mutex.hpp>
 
@@ -70,11 +71,12 @@ namespace monitoring {
 			if( curRequests ) {
 				bool outstandingRequests = false;
 				for( size_t i = curStatistics->size(); i--; ) {
-					if( curStatistics[i] ) continue;
+					if( (*curStatistics)[i] ) continue;
 					for( size_t j = statistics.size(); j--; ) {
-						if( matches( statistics[j], curRequests[i] ) ) curStatistics[i] = statistics[j];
+						#define matches(...) ( assert( 0 && "TODO" ), 0 )
+						if( matches( statistics[j], (*curRequests)[i] ) ) (*curStatistics)[i] = statistics[j];
 					}
-					if( !curStatistics[i] ) outstandingRequests = true;
+					if( !(*curStatistics)[i] ) outstandingRequests = true;
 				}
 				if( !outstandingRequests ) curRequests = NULL;
 			}
@@ -94,7 +96,7 @@ namespace monitoring {
 
 	void StatisticsMultiplexerSync::unregisterListener( StatisticsMultiplexerListener * listener ) throw() {
 		listenersLock.lock();
-		for( size_t i = listeners.size(); i--; ) if( listeners[i].listener == listener ) listener[i].listener = NULL;
+		for( size_t i = listeners.size(); i--; ) if( listeners[i].listener == listener ) listeners[i].listener = NULL;
 		listenersLock.unlock();
 	}
 
@@ -113,6 +115,6 @@ namespace monitoring {
 extern "C" {
 	void * MONITORING_STATISTICS_MULTIPLEXER_INSTANCIATOR_NAME()
 	{
-		return new StatisticsMultiplexerSync();
+		return new monitoring::StatisticsMultiplexerSync();
 	}
 }

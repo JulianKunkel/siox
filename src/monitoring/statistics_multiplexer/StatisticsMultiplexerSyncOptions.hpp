@@ -12,7 +12,7 @@
 
 namespace monitoring {
 	//@serializable
-	class StatisticsMultiplexerAsyncOptions : public core::ComponentOptions {
+	class StatisticsMultiplexerSyncOptions : public core::ComponentOptions {
 	};
 }
 

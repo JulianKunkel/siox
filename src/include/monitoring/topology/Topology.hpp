@@ -91,6 +91,9 @@ Requirements:
 #ifndef INCLUDE_GUARD_MONITORING_TOPOLOGY_HPP
 #define INCLUDE_GUARD_MONITORING_TOPOLOGY_HPP
 
+#include <core/component/Component.hpp>
+#include <monitoring/datatypes/Exceptions.hpp>
+
 #include <string>
 
 namespace monitoring {
@@ -144,8 +147,8 @@ namespace monitoring {
 			virtual const Relation& lookupRelation( ObjectId parent, const string& childName ) throw( NotFoundError ) = 0;
 
 			// RelationType may be 0 which indicates any parent/child.
-			virtual vector<const Relation&> enumerateChildren( ObjectId parent, TypeID relationType ) throw() = 0;
-			virtual vector<const Relation&> enumerateParents( ObjectId child, TypeID relationType ) throw() = 0;
+			virtual vector<const Relation&> enumerateChildren( ObjectId parent, TypeId relationType ) throw() = 0;
+			virtual vector<const Relation&> enumerateParents( ObjectId child, TypeId relationType ) throw() = 0;
 
 
 			virtual const Attribute& registerAttribute( TypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
