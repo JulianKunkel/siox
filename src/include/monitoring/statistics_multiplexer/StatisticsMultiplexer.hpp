@@ -2,6 +2,7 @@
 #define STATISTICS_MULTIPLEXER_H
 
 #include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics_collector/Statistic.hpp>
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexerListener.hpp>
 #include <core/component/Component.hpp>
 
@@ -10,29 +11,28 @@ namespace monitoring {
 
 	/**
 	 * StatisticsMultiplexer
-	 * Forwards and filters statistics to registered listeners (e.g. Plugins) either
-	 * in an syncronised or asyncronous manner.
+	 * Notifies all listeners when new statistics data becomes available, providing them with a short list of statistics they requested.
 	 */
 
 
 	class StatisticsMultiplexer : public core::Component {
 		public:
 
-			virtual void Log( StatisticsValue * element ) = 0;
+			virtual void newDataAvailable( const std::vector<std::shared_ptr<Statistic> >& statistics ) throw() = 0;
 
 			/**
 			 * Register listener to multiplexer
 			 *
 			 * @param   listener [in]   listener to notify in the future
 			 */
-			virtual void registerListener( StatisticsMultiplexerListener * listener ) = 0;
+			virtual void registerListener( StatisticsMultiplexerListener * listener ) throw() = 0;
 
 			/**
 			 * Unregister listener from multiplexer
 			 *
 			 * @param   listener [in]   listener to remove
 			 */
-			virtual void unregisterListener( StatisticsMultiplexerListener * listener ) = 0;
+			virtual void unregisterListener( StatisticsMultiplexerListener * listener ) throw() = 0;
 
 	};
 
