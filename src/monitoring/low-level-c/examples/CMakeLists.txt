@@ -5,7 +5,7 @@ if (HDF5_FOUND)
 endif (HDF5_FOUND)
 
 if (NetCDF_FOUND)
-	add_subdirectory(netcdf)
+	#add_subdirectory(netcdf)
 endif (NetCDF_FOUND)
 
 if (MPI_FOUND)
