@@ -2,6 +2,7 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIR}
 )
 
 # build the rpc client and server test-modules
@@ -22,6 +23,7 @@ target_link_libraries(
 	siox-core-comm-rpc-client
 	siox-core-AutoConfigurator
 	siox-core-comm
+	${Boost_LIBRARIES}
 )
 
 add_library(
@@ -35,6 +37,7 @@ target_link_libraries(
 	siox-core-comm-rpc-server
 	siox-core-AutoConfigurator
 	siox-core-comm
+	${Boost_LIBRARIES}
 )
 
 
@@ -42,6 +45,7 @@ add_executable(
 	core-comm-rpc-modules-test
 	rpc-modules-test.cpp
 )
+
 target_link_libraries(
 	core-comm-rpc-modules-test
 	siox-core-comm-rpc-server
@@ -49,9 +53,8 @@ target_link_libraries(
 	siox-core-ModuleLoader
 	# link any module here...	
 	siox-core-comm-gio
+	${Boost_LIBRARIES}
 )
-
-
 
 add_test(core-comm-rpc-modules-test core-comm-rpc-modules-test)
 
