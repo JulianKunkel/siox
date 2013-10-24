@@ -56,6 +56,7 @@ build/
 /siox.project/
 .tags*
 tmp*
+src/include/monitoring/topology/Topology.png
 
 # Generated documentation
 doc-created/

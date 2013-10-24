@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 import os.path
+from subprocess import call
+import sys
 
 def options(opt):
 	opt.load('compiler_c waf_unit_test')
@@ -27,10 +29,9 @@ def configure(conf):
 	if conf.options.SIOX:
 		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
 		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
-
-      conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
-   else:
-      conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)   	
+		conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
+	else:
+		conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)   	
 
 	conf.check_cc(lib='siox-monitoring-siox-ll', mandatory = True)
 
@@ -64,8 +65,12 @@ def build(bld):
                 cmd = ""
                 return task.exec_command(cmd)
 
-	bld(rule=wrap, source=HEADER, target='siox-' + LAYER + '-wrap.c')
+	what=(bld.path.abspath() + '/../../siox-skeleton-builder.py -o /dev/null -t %s -s wrap -W build/%s.wrap %s' % (bld.path.abspath() + "/../../template.py", LAYER, HEADER)).split(" ")
+	print("[Wrapper] " + LAYER + str(what))
+	call(what)
+
 	bld(rule=dlsym, source=HEADER, target='siox-' + LAYER + '-dlsym.c')
+	bld(rule=wrap, source=HEADER, target='siox-' + LAYER + '-wrap.c')
 
 	# Non-existing wrap file leads to race conditions when the file is not created, yet.
 	# Therefore, added a second pass.
@@ -74,7 +79,8 @@ def build(bld):
 	if os.path.isfile(wrap_file):
 		wrap_linkerflags = open(wrap_file, 'r').read()
 	else:
-		print "Please rerun ./waf build to build wrapped examples"
+		print "Could not read wrapper flags, this is critical!"
+		sys.exit(1)		
 
 	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = LAYER + ".wrap", install_path = "${LIBDIR}")
 
