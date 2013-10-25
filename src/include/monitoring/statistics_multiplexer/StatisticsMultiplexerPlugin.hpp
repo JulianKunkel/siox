@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include <core/component/Component.hpp>
+#include <monitoring/statistics_multiplexer/StatisticsMultiplexerListener.hpp>
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexer.hpp>
 #include <monitoring/statistics_multiplexer/StatisticsMultiplexerPluginOptions.hpp>
 #include <monitoring/statistics_multiplexer/StatisticsPluginDereferencing.hpp>
@@ -12,7 +13,7 @@ using namespace core;
 
 namespace monitoring {
 
-	class StatisticsMultiplexerPlugin: public Component {
+	class StatisticsMultiplexerPlugin: public Component, public StatisticsMultiplexerListener {
 		protected:
 
 			virtual void init( StatisticsMultiplexerPluginOptions * options, StatisticsMultiplexer & multiplexer ) = 0;

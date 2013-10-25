@@ -3,6 +3,8 @@
  *
  * @author Jakob Luettgau, Julian Kunkel
  * @date   2013
+ *
+ * XXX: Currently this is dead code. It appears that the original purpose was to ease the implementation of a StatisticsMultiplexer while providing a general implementation of the observer pattern. However, if it is general, it should not be used for its original purpose due to the unnecessary overhead that it would entail. On the other hand, if it is adapted to fit its original purpose, it is not a general template anymore, and its code should not be at this place. I'm leaving it now the way it is, but I strongly believe that this file should simply be discarded.
  */
 
 /**
@@ -64,6 +66,7 @@ namespace monitoring {
 			list<PARENTLISTENER *> listeners;
 
 			// thread safety, kept namespace verbose for clarity
+			//FIXME: This is not threadsafe! An increment and a decrement of not_invalidating can occur concurrently, causing either the increment or the decrement to be lost. Sorry, I don't have the time to fix it now...
 			std::mutex inc;
 			std::mutex dec;
 			int not_invalidating = 0;
@@ -83,7 +86,7 @@ namespace monitoring {
 
 				for( auto it = listeners.begin(); it != listeners.end(); ++it ) {
 
-
+					//XXX: Filtering statistics at this point is not a good idea from a performance persective. With 100 statistics, 10 listeners requesting 10 statistics each, and 0.1 second polling interval this would already produce 9000 unsuccessful (i. e. exhaustive) searches per second. This is unnecessary overhead.
 					// if element.metric is in (*it).requiredMetrics()
 					{
 						( *it )->Notify( element );
