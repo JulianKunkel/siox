@@ -40,3 +40,6 @@ target_link_libraries(
 	${GLIB2_LIBRARIES}
 )
 
+install(TARGETS siox-${LAYER}-wrap LIBRARY DESTINATION lib)
+install(TARGETS siox-${LAYER}-dlsym LIBRARY DESTINATION lib)
+
