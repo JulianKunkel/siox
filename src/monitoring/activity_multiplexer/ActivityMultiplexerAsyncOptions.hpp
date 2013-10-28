@@ -1,3 +1,6 @@
+#ifndef INCLUDE_GUARD_MONITORING_ACTIVITY_MULTIPLEXER_ASYNC_OPTIONS_H
+#define INCLUDE_GUARD_MONITORING_ACTIVITY_MULTIPLEXER_ASYNC_OPTIONS_H
+
 #include <core/component/component-options.hpp>
 
 using namespace core;
@@ -14,3 +17,5 @@ namespace monitoring {
 	};
 
 }
+
+#endif

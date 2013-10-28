@@ -10,7 +10,6 @@
 #include "libpq-fe.h"
 
 #include <util/Util.hpp>
-#include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/transaction_system/DBQuerier.hpp>
 
