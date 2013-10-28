@@ -1,7 +1,7 @@
 project(SIOX)
 
 if (HDF5_FOUND)
-	add_subdirectory(hdf5)
+#	add_subdirectory(hdf5)
 endif (HDF5_FOUND)
 
 if (NetCDF_FOUND)

@@ -3,7 +3,7 @@ project(SIOX)
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIR}
-	${GLIB2_INCLUDE_DIRS}
+	${GLIB_INCLUDE_DIRS}
 	${GIOUNIX2_INCLUDE_DIRS}
 )
 
@@ -19,7 +19,6 @@ target_link_libraries(
 	siox-core-comm-gio
 	siox-util-jobProcessors
 	${Boost_LIBRARIES}
-	${GLIB2_LIBRARIES}
 	${GIOUNIX2_LIBRARIES}
 	siox-core-comm
 )

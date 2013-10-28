@@ -43,11 +43,8 @@ include(SIOXMacros)
 find_package(Boost 1.49.0 COMPONENTS regex serialization system thread program_options REQUIRED)
 set_package_properties(Boost PROPERTIES URL "http://www.boost.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
-find_package(GLIB2 REQUIRED)
-set_package_properties(GLIB2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
-
-find_package(GMODULE2 REQUIRED)
-set_package_properties(GMODULE2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
+find_package(GLIB 2.30 COMPONENTS gio gobject gmodule REQUIRED)
+set_package_properties(GLIB PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
 find_package(GIOUNIX2 REQUIRED)
 set_package_properties(GIOUNIX2 PROPERTIES URL "http://www.gtk.org" TYPE OPTIONAL PURPOSE "GIO communication module.")
@@ -60,7 +57,7 @@ set(NetCDF_INCLUDE_PATH /usr/local/include)
 find_package(NetCDF)
 set_package_properties(NetCDF PROPERTIES URL "http://www.unidata.ucar.edu/software/netcdf" TYPE OPTIONAL PURPOSE "SIOX NetCDF examples.")
 
-find_package(HDF5 NO_MODULE)
+find_package(HDF5)
 set_package_properties(HDF5 PROPERTIES URL "http://www.hdfgroup.org/HDF5" TYPE OPTIONAL PURPOSE "SIOX HDF5 examples.")
 
 find_package(MPI)

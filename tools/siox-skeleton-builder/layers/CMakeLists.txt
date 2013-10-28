@@ -11,7 +11,6 @@ if (MPI_FOUND)
 endif (MPI_FOUND)
 
 if (NetCDF_FOUND)
-	message("netcdf going...")
 	add_subdirectory(netcdf4)
 endif (NetCDF_FOUND)
 

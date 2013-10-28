@@ -6,7 +6,7 @@ include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${SIOX_SOURCES}/tools/siox-skeleton-builder/layers/${LAYER}
 	${CMAKE_CURRENT_BINARY_DIR}
-	${GLIB2_INCLUDE_DIRS}
+	${GLIB_INCLUDE_DIRS}
 )
 
 siox_skeleton_builder(wrap  ${LAYER}-wrapper.h ${SKELETON_TEMPLATE} ${LAYER} siox-${LAYER}-wrap.c)
@@ -23,11 +23,11 @@ add_library(
 target_link_libraries(
 	siox-${LAYER}-wrap
 	siox-monitoring-siox-ll
-	${GLIB2_LIBRARIES}
+	${GLIB_LIBRARIES}
 )
 
-set_target_properties(siox-${LAYER}-wrap PROPERTIES LD_FLAGS ${WRAP_LD_OPTS} )
-
+get_target_property(OLD_LD_OPTS siox-${LAYER}-wrap LD_FLAGS)
+set_target_properties(siox-${LAYER}-wrap PROPERTIES LD_FLAGS "${OLD_LD_OPTS} ${WRAP_LD_OPTS}")
 
 add_library(
 	siox-${LAYER}-dlsym
@@ -37,8 +37,10 @@ add_library(
 target_link_libraries(
 	siox-${LAYER}-dlsym
 	siox-monitoring-siox-ll
-	${GLIB2_LIBRARIES}
+	${GLIB_LIBRARIES}
 )
+
+set_target_properties(siox-${LAYER}-dlsym PROPERTIES LD_FLAGS "-ldl")
 
 install(TARGETS siox-${LAYER}-wrap LIBRARY DESTINATION lib)
 install(TARGETS siox-${LAYER}-dlsym LIBRARY DESTINATION lib)
