@@ -161,6 +161,7 @@ Implementation details for the requirements of a StatisticsCollector:
 #include <monitoring/statistics_collector/StatisticsProviderDatatypes.hpp>
 #include <monitoring/statistics_collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/ontology/Ontology.hpp>
+#include <monitoring/statistics_multiplexer/StatisticsMultiplexer.hpp>
 #include <monitoring/datatypes/ids.hpp>
 
 #define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
@@ -197,7 +198,7 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 
 	private:
 		Ontology* ontology = 0;
-		// Statistics Multiplexer
+		StatisticsMultiplexer* smux = 0;
 
 		vector<StatisticsProviderPlugin*> plugins;	//protected by sourcesLock
 		vector<shared_ptr<Statistic> > statistics;	//protected by sourcesLock
@@ -220,6 +221,7 @@ void ThreadedStatisticsCollector::init() throw() {
 	//XXX I've taken out reading a polling interval from the options, because that should be determined from the StatisticsProviderPlugins.
 	ThreadedStatisticsOptions& o = getOptions<ThreadedStatisticsOptions>();
 	ontology =  GET_INSTANCE(Ontology, o.ontology);
+	smux = GET_INSTANCE(StatisticsMultiplexer, o.smux);
 	pollCount = 0;
 	pollingThread = thread( &ThreadedStatisticsCollector::pollingThreadMain, this );
 }
@@ -344,6 +346,8 @@ void ThreadedStatisticsCollector::pollingThreadMain() throw() {
 			statistics[i]->update(measurementTime);
 		}
 		sourcesLock.unlock_shared();
+		//notify consumers of the statistics
+		if( smux ) smux->newDataAvailable( statistics );
 
 		// Sleep until it's time to poll again.
 		// I have moved this from its own function, because we have to check `terminated` after every call to sleep_for.
