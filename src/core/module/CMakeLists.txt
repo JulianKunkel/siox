@@ -16,6 +16,7 @@ add_library(
 target_link_libraries(
 	siox-core-ModuleLoader
 	${GLIB_LIBRARIES}
+	${GMODULE2_LIBRARIES}
 )
 
 
