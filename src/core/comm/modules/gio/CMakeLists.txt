@@ -19,6 +19,10 @@ target_link_libraries(
 	siox-core-comm-gio
 	siox-util-jobProcessors
 	${Boost_LIBRARIES}
+	${GLIB_LIBRARIES}
+        ${GLIB_GOBJECT_LIBRARIES}
+        ${GLIB_GMODULE_LIBRARIES}
+        ${GLIB_GIO_LIBRARIES}
 	${GIOUNIX2_LIBRARIES}
 	siox-core-comm
 )

@@ -30,7 +30,7 @@ To compile create a "build" directory and run cmake to create the required files
 
 mkdir build
 cd build
-cmake ..
+cmake -DBOOST_ROOT=/opt/siox/boost/1.54 -DBOOST_INCLUDE_DIR=/opt/siox/boost/1.54/include -DBOOST_LIBRARYDIR=/opt/siox/boost/1.54/lib ..
 
 Then you can compile SIOX:
 make -j 4
