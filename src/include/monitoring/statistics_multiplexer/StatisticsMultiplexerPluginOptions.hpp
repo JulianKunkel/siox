@@ -2,7 +2,7 @@
 #define STATISTICS_MULTIPLEXER_PLUGIN_OPTIONS
 
 #include <core/component/component-options.hpp>
-
+#include <core/component/ComponentReference.hpp>
 
 using namespace core;
 

@@ -20,10 +20,11 @@ These NULL pointers may subsequently be replaced by functional pointers when a c
 
 namespace monitoring {
 
-
+	//TODO: remove the dependency on the Ontology from the listener, requiring him to just supply an ontology attribute name and domain, and a topology path.
 	class StatisticsMultiplexerListener {
 		public:
-			virtual const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >& requiredMetrics() throw() = 0;
+			//virtual const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >& requiredMetrics() throw() = 0;
+			virtual const std::vector<std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > > >& requiredMetrics() throw() = 0;
 			virtual void notify(const std::vector<std::shared_ptr<Statistic> >& statistics) throw() = 0;	//The supplied vector is synchronous to the vector that was returned by requiredMetrics(). Pointers may be NULL when the corresponding statistic is not provided by the statistics collector.
 	};
 

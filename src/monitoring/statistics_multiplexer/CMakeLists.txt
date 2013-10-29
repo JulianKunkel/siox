@@ -18,5 +18,6 @@ target_link_libraries(
 )
 
 add_subdirectory(test)
+add_subdirectory(plugins)
 
 install(TARGETS siox-monitoring-StatisticsMultiplexerSync LIBRARY DESTINATION lib)
