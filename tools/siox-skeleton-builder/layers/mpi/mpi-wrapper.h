@@ -1,5 +1,3 @@
-#include "mpi-helper.h"
-
 /* Set the interface name for the library*/
 //@component "MPI" implVersion "" int major, minor; char implVersion[151]; int v_ret = MPI_Get_version(& major, & minor); if (v_ret >= 0) snprintf(implVersion, 150, "%d.%d", major, minor); else sprintf(implVersion, "0");
 
@@ -15,7 +13,15 @@
 //@register_attribute fileExtent "MPI" "file/extent" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute fileHandle "POSIX" "descriptor/filehandle" SIOX_STORAGE_64_BIT_UINTEGER
 
+//@register_attribute fileDatarepresentation "MPI" "hints/datarepresentation" SIOX_STORAGE_STRING
+
 //@register_attribute fileOpenFlags "MPI" "hints/openFlags" SIOX_STORAGE_32_BIT_UINTEGER
+
+//@register_attribute hintFileSize "MPI" "hints/fileSize" SIOX_STORAGE_64_BIT_UINTEGER
+
+//@register_attribute attribute_etype "MPI" "description/etype" SIOX_STORAGE_STRING
+//@register_attribute attribute_filetype "MPI" "description/filetype" SIOX_STORAGE_STRING
+
 
 //@register_attribute infoReadBuffSize "MPI" "hints/noncollReadBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute infoWriteBuffSize "MPI" "hints/noncollWriteBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
@@ -23,6 +29,8 @@
 //@register_attribute infoCollWriteBuffSize "MPI" "hints/collWriteBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute infoConcurrency "MPI" "hints/ioconcurrency" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute infoCollContiguous "MPI" "hints/collContiguous" SIOX_STORAGE_32_BIT_UINTEGER
+
+//Contains all hints:
 //@register_attribute infoString "MPI" "hints/info" SIOX_STORAGE_STRING
 
 //@register_attribute fileName "MPI" "descriptor/filename" SIOX_STORAGE_STRING
@@ -34,10 +42,11 @@
    so it can usually be omitted. */
 //@horizontal_map_create_size
 
+//@include "mpi-helper.h"
+
 /*------------------------------------------------------------------------------
 End of global part
 ------------------------------------------------------------------------------*/
-
 
 // In MPI_Init() we will determine global MPI parameters and set them as component attributes.
 // To link the processes together, Rank 0 broadcasts its pid to all other processes.
@@ -49,7 +58,6 @@ End of global part
 //@component_attribute commRank mpi_rank  int mpi_rank; PMPI_Comm_rank(MPI_COMM_WORLD, & mpi_rank);
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); PMPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 int MPI_Init( int * argc, char ** *argv );
-
 
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
@@ -112,7 +120,7 @@ int MPI_Finalize( void );
 //@activity_attribute fileHandle fh
 //@activity_attribute_pointer fileName filename
 //@horizontal_map_put_size fh
-//@splice_after recordDefaultInfo(sioxActivity, info);
+//@splice_after recordFileInfo(sioxActivity, *fh);
 //@error ''ret != MPI_SUCCESS '' ret
 int MPI_File_open( MPI_Comm comm, char * filename, int amode, MPI_Info info, MPI_File * fh );
 
@@ -128,11 +136,13 @@ int MPI_File_delete( char * filename, MPI_Info info );
 
 //@activity
 //@activity_link_size &fh
+//@activity_attribute hintFileSize size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_set_size( MPI_File fh, MPI_Offset size );
 
 //@activity
 //@activity_link_size &fh
+//@activity_attribute hintFileSize size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_preallocate( MPI_File fh, MPI_Offset size );
 
@@ -196,7 +206,7 @@ int MPI_File_get_amode( MPI_File fh, int * amode );
 
 //@activity
 //@activity_link_size &fh
-//@splice_after recordDefaultInfo(sioxActivity, info);
+//@splice_after recordFileInfo(sioxActivity, fh);
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_set_info( MPI_File fh, MPI_Info info );
 
@@ -292,6 +302,11 @@ int MPI_File_get_info( MPI_File fh, MPI_Info * info_used );
 
 //@activity
 //@activity_link_size &fh
+//@splice_after if(info != MPI_INFO_NULL) { recordFileInfo(sioxActivity, fh); }
+//@splice_after recordDatatype(sioxActivity, attribute_filetype, filetype);
+//@splice_after recordDatatype(sioxActivity, attribute_etype, etype);
+//@activity_attribute filePosition disp
+//@activity_attribute_pointer fileDatarepresentation datarep
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_set_view( MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype, char * datarep, MPI_Info info );
 
@@ -302,61 +317,104 @@ int MPI_File_get_view( MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype, MPI
 
 //@activity
 //@activity_link_size &fh
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 //@activity
 //@activity_link_size &fh
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iwrite_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
+
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iread( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iwrite( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
@@ -367,6 +425,7 @@ int MPI_File_seek( MPI_File fh, MPI_Offset offset, int whence );
 
 //@activity
 //@activity_link_size &fh
+//@activity_attribute filePosition *offset
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_get_position( MPI_File fh, MPI_Offset * offset );
 
@@ -495,63 +554,3 @@ int MPI_File_get_atomicity( MPI_File fh, int * flag );
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_sync( MPI_File fh );
 
-
-//TODO Shall we define an array for info?
-/*
-    MPI_Info_create creates a new info object. The newly created
-    object contains no key/value pairs.
-*/
-//@activity
-//TODO Shall we define an array for info?
-//@error ''ret!=MPI_SUCCESS'' ret
-int MPI_Info_create( MPI_Info * info );
-
-//@activity
-//@error ''ret!=MPI_SUCCESS'' ret
-/*
-    MPI_Info_delete deletes a (key,value) pair from info. If key is not
-    defined in info, the call raises an error of class MPI_ERR_INFO_NOKEY.
-*/
-int MPI_Info_delete( MPI_Info info, char * key );
-
-//@activity
-//@error ''ret!=MPI_SUCCESS'' ret
-/*
-    MPI_Info_dup duplicates an existing info object, creating a new object,
-    with the same (key,value) pairs and the same ordering of keys.
-*/
-int MPI_Info_dup( MPI_Info info, MPI_Info * newinfo );
-
-//@activity
-//@error ''ret!=MPI_SUCCESS'' ret
-/*
-    MPI_Info_free frees info and sets it to MPI_INFO_NULL.
-*/
-int MPI_Info_free( MPI_Info * info );
-
-//@activity
-//@error ''ret!=MPI_SUCCESS'' ret
-/*
-    MPI_Info_get retrieves the value associated with key in a previous call
-    to MPI_Info_set. If such a key exists, it sets flag to true and returns
-    the value in value; otherwise it sets flag to false and leaves value
-    unchanged. valuelen is the number of characters available in value. If
-    it is less than the actual size of the value, the returned value is
-    truncated. In C, valuelen should be one less than the amount of allocated
-    space to allow for the null terminator.
-
-    If key is larger than MPI_MAX_INFO_KEY, the call is erroneous.
-*/
-int MPI_Info_get( MPI_Info info, char * key, int valuelen, char * value, int * flag );
-
-//@activity
-//@error ''ret!=MPI_SUCCESS'' ret
-/*
-    MPI_Info_set adds the (key,value) pair to info and overrides the value
-    if a value for the same key was previously set. The key and value
-    parameters are null-terminated strings in C. In Fortran, leading and
-    trailing spaces in key and value are stripped. If either key or value is
-    larger than the allowed maximums, the error MPI_ERR_INFO_KEY or
-    MPI_ERR_INFO_VALUE is raised, respectively.
-*/
-int MPI_Info_set( MPI_Info info, char * key, char * value );

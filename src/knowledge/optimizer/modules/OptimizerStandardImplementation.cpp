@@ -15,6 +15,7 @@
 
 #include <unordered_map>
 
+#include "OptimizerOptions.hpp"
 
 namespace knowledge {
 
@@ -29,7 +30,7 @@ namespace knowledge {
 		protected:
 
 			ComponentOptions * AvailableOptions() {
-				return new ComponentOptions();
+				return new OptimizerOptions();
 			}
 
 
