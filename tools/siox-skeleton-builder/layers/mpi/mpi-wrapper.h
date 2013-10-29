@@ -436,26 +436,43 @@ int MPI_File_get_byte_offset( MPI_File fh, MPI_Offset offset, MPI_Offset * disp 
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position_shared(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position_shared(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position_shared(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iread_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position_shared(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_iwrite_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 //@activity
 //@activity_link_size &fh
+
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_ordered( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
@@ -476,6 +493,10 @@ int MPI_File_get_position_shared( MPI_File fh, MPI_Offset * offset );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_at_all_begin( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype );
 
@@ -486,6 +507,10 @@ int MPI_File_read_at_all_end( MPI_File fh, void * buf, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_at_all_begin( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype );
 
@@ -496,6 +521,10 @@ int MPI_File_write_at_all_end( MPI_File fh, void * buf, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_all_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
 
@@ -506,6 +535,10 @@ int MPI_File_read_all_end( MPI_File fh, void * buf, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_all_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
 
@@ -514,8 +547,14 @@ int MPI_File_write_all_begin( MPI_File fh, void * buf, int count, MPI_Datatype d
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_all_end( MPI_File fh, void * buf, MPI_Status * status );
 
+
+
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position_shared(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_read_ordered_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
 
@@ -526,6 +565,10 @@ int MPI_File_read_ordered_end( MPI_File fh, void * buf, MPI_Status * status );
 
 //@activity
 //@activity_link_size &fh
+//@splice_before ''MPI_Offset offset; PMPI_File_get_position_shared(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
+//@activity_attribute filePosition offset
+//@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write_ordered_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
 
