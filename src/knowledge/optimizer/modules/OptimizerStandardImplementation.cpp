@@ -10,7 +10,7 @@
 #include <knowledge/optimizer/OptimizerImplementation.hpp>
 
 #include <core/component/Component.hpp>
-#include <knowledge/optimizer/OptimizerPlugin.hpp>
+#include <knowledge/optimizer/OptimizerPluginInterface.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 
 #include <unordered_map>
@@ -24,8 +24,7 @@ namespace knowledge {
 		private:
 
 			// Map to store plugins in, indexed by attributes' IDs
-			unordered_map<OntologyAttributeID, OptimizerPlugin *> expert;
-
+			unordered_map<OntologyAttributeID, OptimizerInterface *> expert;
 
 		protected:
 
@@ -36,11 +35,11 @@ namespace knowledge {
 
 		public:
 
-			virtual void registerPlugin( const OntologyAttribute & attribute, const OptimizerPlugin * plugin ) {
+			virtual void registerPlugin( const OntologyAttribute & attribute, const OptimizerInterface * plugin ) {
 				assert( plugin != nullptr );
 				assert( expert[attribute.aID] == nullptr );
 
-				expert[attribute.aID] = ( OptimizerPlugin * ) plugin;
+				expert[attribute.aID] = ( OptimizerInterface * ) plugin;
 			}
 
 

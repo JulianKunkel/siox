@@ -131,14 +131,14 @@ namespace core {
 	{
 		ModuleInterface * instance =  static_cast<ModuleInterface *>( module_internal::module_create_instance( module_path, module_name, interface_name ) );
 		if( instance == nullptr ) {
-			throw ModuleError( module_path, module_name, interface_name, "Instance is NULL. Fatal module error!" );
+			throw ModuleError( module_path, module_name, interface_name, "module_create_instance(). Instance is NULL. Fatal module error!" );
 			// WARNING module instance may now leak memory, but this is an implementation error of the module which must be fixed there.
 		}
 
 		COMPONENTTYPE * instance_casted = dynamic_cast<COMPONENTTYPE *>( instance );
 		if( instance_casted == nullptr ) {
 			delete( instance );
-			throw ModuleError( module_path, module_name, interface_name, "Instance has an invalid type. Fatal module error!" );
+			throw ModuleError( module_path, module_name, interface_name, "module_create_instance(). Instance has an invalid type. Fatal module error!" );
 			// WARNING module instance may now leak memory, but this is an implementation error of the module which must be fixed there.
 		}
 		return instance_casted;
@@ -150,7 +150,7 @@ namespace core {
 		void * instance =  module_internal::module_create_instance( module_path, module_name, interface_name );
 		COMPONENTTYPE * instance_casted = static_cast<COMPONENTTYPE *>( instance );
 		if( instance_casted == nullptr ) {
-			throw ModuleError( module_path, module_name, interface_name, "Instance has an invalid type. Fatal module error!" );
+			throw ModuleError( module_path, module_name, interface_name, "module_unsafe_create_instance(): Instance has an invalid type. Fatal module error!" );
 			// WARNING module instance may now leak memory, but this is an implementation error of the module which must be fixed there.
 		}
 		return instance_casted;

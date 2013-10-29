@@ -15,20 +15,12 @@ OntologyAttribute att1;
 OntologyAttribute att2;
 
 
-class OptimizerTestPlugin: public OptimizerPlugin {
+class OptimizerTestPlugin: public OptimizerInterface {
 
 	private:
 		mutable uint64_t count = 0;
 		mutable uint64_t fix = 42;
 	public:
-
-		void init() {
-
-		}
-
-		ComponentOptions * AvailableOptions() {
-			return new ComponentOptions();
-		}
 
 		OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
 			if( attribute == att1 )
@@ -71,7 +63,7 @@ int main( int argc, char const * argv[] )
 	opt->init();
 
 	// Create new OptimizerPlugin instance
-	OptimizerPlugin * opt_pi = new OptimizerTestPlugin();
+	OptimizerInterface * opt_pi = new OptimizerTestPlugin();
 
 	// Register example plug-in for some attributes
 	opt->registerPlugin( att1, opt_pi );

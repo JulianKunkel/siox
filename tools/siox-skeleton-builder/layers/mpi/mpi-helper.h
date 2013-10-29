@@ -240,6 +240,7 @@ static struct known_hint_t knownHintValueInt32 [3] = {{"mpiio_concurrency", & in
 static struct known_hint_t knownHintValueInt64 [] = {  {"noncoll_read_bufsize" , & infoReadBuffSize},  {"noncoll_write_bufsize", &infoWriteBuffSize},  {"coll_read_bufsize", & infoCollReadBuffSize},  {"coll_write_bufsize", & infoCollWriteBuffSize}, {NULL, NULL}};
 static struct known_hint_t knownHintValueStr [] = {{NULL, NULL}};
 
+
 /*
 	Record the recognized default info key/value pairs.
 	Additionally, record all hints in a big string separated by "||" (hopefully no string contains ||). 
