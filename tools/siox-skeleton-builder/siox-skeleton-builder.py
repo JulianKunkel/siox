@@ -1228,6 +1228,7 @@ def main():
         outputWriter.headerFile(functions)
 
     else:
+
         commandParser = CommandParser(options)
 
         functions = commandParser.parse()
