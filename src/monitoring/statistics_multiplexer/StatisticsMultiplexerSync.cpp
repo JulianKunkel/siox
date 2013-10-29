@@ -39,7 +39,8 @@ namespace monitoring {
 					//The next time new data is available, the listener is asked for its requests, a statistics vector is allocated, and statistics that match the listeners requests are entered.
 					//As long as there are requests that cannot be satisfied, requests remains set, and each time new data becomes available, the multiplexer tries to find matches for the outstanding requests.
 					//Once all requests are satisfied (no remaining null pointers in statistics), requests is set to NULL so that no further searching needs to be done.
-					const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >* requests;
+					//const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >* requests;
+					const std::vector<std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > > >* requests;
 					std::vector<std::shared_ptr<Statistic> >* statistics;
 					ListenerData( StatisticsMultiplexerListener* listener ) : listener( listener ), requests( 0 ), statistics( 0 ) {};
 					~ListenerData() {
@@ -58,7 +59,8 @@ namespace monitoring {
 		listenersLock.lock_shared();
 		for( size_t i = listeners.size(); i--; ) {
 			StatisticsMultiplexerListener*& curListener = listeners[i].listener;
-			const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >*& curRequests = listeners[i].requests;
+			//const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >*& curRequests = listeners[i].requests;
+			const std::vector<std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > > >*& curRequests = listeners[i].requests;
 			std::vector<std::shared_ptr<Statistic> >*& curStatistics = listeners[i].statistics;
 
 			if( !curListener ) continue;
