@@ -33,33 +33,33 @@ namespace monitoring {
 			virtual ComponentOptions * AvailableOptions() {
 				return new StatisticsProviderPluginOptions();
 			}
-
-
-			virtual void init( StatisticsProviderPluginOptions & options ) {
-				// default implementation is empty.
-				// Override it to provide additional modulespecific options.
-			}
 		public:
 
 			virtual StatisticsInterval minPollInterval() {
 				return HUNDRED_MILLISECONDS;
 			}
 
+			virtual void init( StatisticsProviderPluginOptions & options ) {
+				// default implementation is empty.
+				// Override it to provide additional module-specific options.
+			}
+
 			virtual void init() {
 				StatisticsProviderPluginOptions o = getOptions<StatisticsProviderPluginOptions>();
 
-				init( o );	//TODO As far as I can see, this calls Component::init(ComponentOptions*), which in turn calls this function again, leading to an infinit call loop, crashing SIOX. I guess, this is the place where the error is, but I'm not sure.
+				init( o );	// call the plugin-specific method
 
 				// now register this plugin on the collector
 				collector = GET_INSTANCE( StatisticsCollector, o.statisticsCollector );
 
-				if( collector != nullptr )
-					collector->registerPlugin( this );
+				assert(collector != nullptr);
+				collector->registerPlugin( this );
 			}
 
 			virtual ~StatisticsProviderPlugin() {
-				if( collector != nullptr )
+				if( collector != nullptr ){
 					collector->unregisterPlugin( this );
+				}
 			}
 
 			/* For testing purpose the two methods are public, so you can use the plugin even without collector */

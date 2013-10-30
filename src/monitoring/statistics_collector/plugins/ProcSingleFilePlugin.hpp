@@ -81,18 +81,17 @@ class ProcSingleFilePlugin: public StatisticsProviderPlugin {
 		}
 	public:
 
-		void init() {
-			cout << "initiating" << endl;
+		void init( StatisticsProviderPluginOptions & options ) {
+			cout << "[SP] " << filename() << endl;
 			re = initRegex();
 			parseProcLine<1>( filename() );
 			// We need multiple filename possibility !
-			cout << "initiated with filename" << endl;
 		}
 
 		virtual void nextTimestep() {
-			cout << "Start extracting info of source on next timestep" << endl;
+			//cout << "Start extracting info of source on next timestep" << endl;
 			parseProcLine<0>( filename() );
 			// We need multiple filename possibility !
-			cout << "Parsing with filename finished successfully" << endl;
+			//cout << "Parsing with filename finished successfully" << endl;
 		}
 };

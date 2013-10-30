@@ -8,6 +8,7 @@ include_directories(
 add_library(
 	siox-monitoring-StatisticsMultiplexerSync
 	StatisticsMultiplexerSync.cpp
+	StatisticsMultiplexerSyncOptions.cpp
 )
 
 target_link_libraries(
@@ -19,5 +20,7 @@ target_link_libraries(
 
 add_subdirectory(test)
 add_subdirectory(plugins)
+
+siox_run_serializer(StatisticsMultiplexerSyncOptions.hpp StatisticsMultiplexerSyncOptions.cpp)
 
 install(TARGETS siox-monitoring-StatisticsMultiplexerSync LIBRARY DESTINATION lib)

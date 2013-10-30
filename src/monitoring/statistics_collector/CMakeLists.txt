@@ -9,14 +9,16 @@ add_library(
 	siox-monitoring-ThreadedStatisticsCollector
 	ThreadedStatisticsCollector.cpp
 	Statistic.cpp
+	ThreadedStatisticsOptions.cpp
 )
 
 target_link_libraries(
 	siox-monitoring-ThreadedStatisticsCollector
+	siox-core-AutoConfigurator
 	${Boost_LIBRARIES}
 )
 
-siox_run_serializer(ThreadedStatisticsOptions.hpp BoostXMLSerializable.cpp)
+siox_run_serializer(ThreadedStatisticsOptions.hpp ThreadedStatisticsOptions.cpp)
 
 
 add_subdirectory(plugins)

@@ -230,9 +230,10 @@ void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plu
 	assert( plugin );
 	sourcesLock.lock();
 	// Check whether this plugin is alread registered.
-	for(size_t i = plugins.size(); i--; ) {
-		assert( plugins[i] != plugin && "Statistics Collector Plugins may only be registered with a StatisticsCollector once." ), abort();
+	if(find(plugins.begin(), plugins.end(), plugin) != plugins.end()) {
+		assert( "Statistics Collector Plugins may only be registered with a StatisticsCollector once." );
 	}
+
 	// Add the plugin
 	plugins.emplace_back( plugin );
 	vector<StatisticsProviderDatatypes> metrics( plugin->availableMetrics() );

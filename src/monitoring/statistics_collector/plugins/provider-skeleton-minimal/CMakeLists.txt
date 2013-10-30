@@ -11,7 +11,7 @@ add_library(
 
 target_link_libraries(
 	siox-monitoring-statisticsPlugin-providerskel-min
-	siox-core-AutoConfigurator
+	siox-monitoring-statisticsPluginGeneric
 )
 
 add_subdirectory(test)

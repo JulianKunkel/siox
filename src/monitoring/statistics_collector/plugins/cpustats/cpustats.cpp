@@ -53,9 +53,6 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 					cpu = atoi( name.c_str() + 3 ) + 1;
 				}
 
-
-				cout << tickLen << endl;
-
 				vector<StatisticsValue> & vec = CPUValues[cpu];
 				for( unsigned i = 1; i < entries.size() ; i++ ) {
 					vec[i - 1] = ( uint64_t ) atoll( entries[i].c_str() ) * tickLen;

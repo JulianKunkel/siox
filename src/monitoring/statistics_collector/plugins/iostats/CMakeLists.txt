@@ -12,8 +12,7 @@ add_library(
 
 target_link_libraries(
 	siox-monitoring-statisticsPlugin-IOstats
-	siox-core-AutoConfigurator
-	${Boost_LIBRARIES}
+	siox-monitoring-statisticsPluginGeneric
 )
 
 add_subdirectory(test)
