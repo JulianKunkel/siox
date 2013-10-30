@@ -3,7 +3,7 @@
 CMAKEFLAGS=
 srcdir="."
 
-set -- `getopt -ul "with-boost:,prefix:,cc:,cxx:,mpicc:,mpicxx:,python:,srcdir:" hV "$@"`
+set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-mpicc:,with-mpicxx:,with-python:,srcdir:" hV "$@"`
 test $# -lt 1  && exit 1
 while test $# -gt 0 
 do
