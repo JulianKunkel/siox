@@ -20,6 +20,5 @@ siox_run_serializer(ThreadedStatisticsOptions.hpp BoostXMLSerializable.cpp)
 
 
 add_subdirectory(plugins)
-add_subdirectory(test)
 
 install(TARGETS siox-monitoring-ThreadedStatisticsCollector LIBRARY DESTINATION lib)

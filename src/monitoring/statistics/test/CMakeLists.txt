@@ -5,16 +5,16 @@ include_directories(
 )
 
 add_executable(
-	ThreadedStatisticsCollectorTest
-	ThreadedStatisticsCollectorTest.cpp
+	StatisticsTest
+	StatisticsTest.cpp
 )
 
 target_link_libraries(
-	ThreadedStatisticsCollectorTest
+	StatisticsTest
 	siox-core-ModuleLoader
 	siox-monitoring-ThreadedStatisticsCollector
 	siox-monitoring-FileOntology
 	siox-monitoring-statisticsPlugin-providerskel
 )
 
-add_test(Threaded_Statistics_Collector ThreadedStatisticsCollectorTest)
+add_test(Statistics StatisticsTest)

@@ -13,9 +13,9 @@
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
 #include <monitoring/statistics/collector/Statistic.hpp>
 #include <monitoring/ontology/Ontology.hpp>
-#include "../../../../monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp"
+#include "../../../monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp"
 
-#include "../ThreadedStatisticsOptions.hpp"
+#include "../collector/ThreadedStatisticsOptions.hpp"
 
 
 int main( int argc, char const * argv[] ) throw() {
