@@ -37,6 +37,35 @@ int main( int argc, char * argv[] )
 	buf = 'a';
 	printf( "==========MPI_File_write()==========\n" );
 	MPI_File_write( fh, &buf, 1, etype, &status );
+
+	MPI_Datatype darray;
+	int array_of_gsizes[4] = {20,20,20,20};
+	int array_of_psizes[4] = {2, 2, 2, 2};
+	int array_of_distribs[4] = {MPI_DISTRIBUTE_CYCLIC,  MPI_DISTRIBUTE_BLOCK , MPI_DISTRIBUTE_BLOCK, MPI_DISTRIBUTE_BLOCK };
+	int array_of_dargs[4] = {10, 10, 10, 10};
+	MPI_Type_create_darray(16, 1, 4, array_of_gsizes, array_of_distribs, array_of_dargs, array_of_psizes, MPI_ORDER_C, MPI_INT, & darray);
+	MPI_Type_commit(& darray);
+
+	MPI_Aint displs[3];
+	MPI_Datatype oldtypes[3];
+	int blocklens[3];
+	int i;
+	for (i=0; i < 3; i++) {
+	        blocklens[i] = 2*i;
+	        oldtypes[i] = MPI_INT;
+	        displs[i] = i * 10;
+	 }
+        oldtypes[2] = darray;
+	MPI_Datatype structType;
+    	MPI_Type_struct( 3, blocklens, displs, oldtypes, & structType );
+	MPI_Type_commit(& structType);
+
+	MPI_File_set_view( fh, 30, MPI_INT, structType, "native", MPI_INFO_NULL );
+	int data = 40;
+	MPI_File_seek(fh, 2, MPI_SEEK_CUR);
+	MPI_File_write( fh, & data, 1, MPI_INT, &status );
+
+
 	printf( "==========MPI_File_close()==========\n" );
 	MPI_File_close( &fh );
 	printf( "==========MPI_Finalize()==========\n" );

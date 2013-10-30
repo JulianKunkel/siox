@@ -10,7 +10,7 @@
 
 #include <core/component/Component.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
-#include <knowledge/optimizer/OptimizerPlugin.hpp>
+#include <knowledge/optimizer/OptimizerPluginInterface.hpp>
 #include <monitoring/datatypes/Exceptions.hpp>
 
 using namespace monitoring;
@@ -64,7 +64,7 @@ namespace knowledge {
 			 * @param plugin [in]
 			 *      The plugin that will provide suggestions
 			 */
-			virtual void registerPlugin( const OntologyAttribute & attribute, const OptimizerPlugin * plugin ) = 0;
+			virtual void registerPlugin( const OntologyAttribute & attribute, const OptimizerInterface * plugin ) = 0;
 
 			/**
 			 * Is there a plug-in registered that can provide suggestions for

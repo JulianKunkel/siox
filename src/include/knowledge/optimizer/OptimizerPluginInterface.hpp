@@ -58,33 +58,8 @@ namespace knowledge {
 	    end
 	    @enduml
 	 */
-	class OptimizerPlugin : public Component {
-
-		protected:
-			// Optimizer * parent_optimizer;
-			// OptimizerPluginDereferencing * dereferenceFacade;
-
-			// virtual void init(OptimizerPluginOptions * options, Optimizer & optimizer) = 0;
-
+	class OptimizerInterface{
 		public:
-			/*  void init(OptimizerPluginOptions * options, Optimizer * optimizer, StatisticsPluginDereferencing * dereferenceFacade){
-			        parent_optimizer = optimizer;
-			        // may be 0.
-			        this->dereferenceFacade = dereferenceFacade;
-
-			        init(options, *parent_optimizer );
-			    }
-
-			    void init(ComponentOptions * options){
-			        OptimizerPluginOptions * o = (OptimizerPluginOptions *) options;
-			        assert(options != nullptr);
-			        assert(o->multiplexer.componentID != 0);
-
-			        init(o, o->multiplexer.instance<Optimizer>(), o->dereferenceFacade.instance<StatisticsPluginDereferencing>());
-			    }
-
-			*/
-
 			/**
 			 * Ask optimizer plugin to suggest a parameter for attribute.
 			 *

@@ -13,15 +13,16 @@
 
 #include <C/siox-types.h>
 
+#include <core/autoconfigurator/AutoConfigurator.hpp>
+
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/association_mapper/AssociationMapper.hpp>
-
-#include <core/autoconfigurator/AutoConfigurator.hpp>
-
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 #include <monitoring/activity_builder/ActivityBuilder.hpp>
+
+#include <knowledge/optimizer/Optimizer.hpp>
 
 
 using namespace core;
@@ -61,6 +62,9 @@ struct process_info {
 	monitoring::SystemInformationGlobalIDManager * system_information_manager;
 	/// Loaded association mapper implementation
 	monitoring::AssociationMapper * association_mapper;
+
+	/// Optional: the optimizer.
+	knowledge::Optimizer * optimizer;
 
 	/// Loaded activity multiplexer implementation
 	ActivityMultiplexer * amux;

@@ -57,7 +57,7 @@ set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYP
 
 # Change this accordingly.
 set(NetCDF_INCLUDE_PATH /usr/local/include)
-find_package(NetCDF)
+find_package(NetCDF QUIET)
 set_package_properties(NetCDF PROPERTIES URL "http://www.unidata.ucar.edu/software/netcdf" TYPE OPTIONAL PURPOSE "SIOX NetCDF examples.")
 
 find_package(HDF5)
@@ -71,7 +71,7 @@ set_package_properties(PythonInterp PROPERTIES URL "http://www.python.org" TYPE 
 
 # siox_generate_buffers()
 
-feature_summary(WHAT PACKAGES_NOT_FOUND INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following packages couldn't be found on your system:\n") 
+feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
 
 add_subdirectory(src)
 add_subdirectory(tools)

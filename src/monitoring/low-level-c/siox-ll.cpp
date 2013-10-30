@@ -209,6 +209,8 @@ extern "C" {
 				process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>( loadedComponents );
 				process_data.amux = process_data.configurator->searchFor<ActivityMultiplexer>( loadedComponents );
 
+				process_data.optimizer = process_data.configurator->searchFor<knowledge::Optimizer>( loadedComponents );
+
 				assert( process_data.ontology );
 				assert( process_data.system_information_manager );
 				assert( process_data.association_mapper );
@@ -725,5 +727,64 @@ extern "C" {
 			return 0;
 		}
 	}
+
+	int siox_suggest_optimal_value( siox_component * component, siox_attribute * attribute, void * out_value ){
+		if ( process_data.optimizer == nullptr ){
+			return 0;
+		}
+		
+		try{
+			OntologyValue val(process_data.optimizer->optimalParameter(*attribute));
+			switch( val.type() ) {
+				case VariableDatatype::Type::INT32:
+					*((int32_t*) out_value) = val.int32();
+					break;
+				case VariableDatatype::Type::UINT32:
+					*((uint32_t*) out_value) = val.uint32();
+					break;
+				case VariableDatatype::Type::INT64:
+					*((int64_t*) out_value) = val.int64();
+					break;
+				case VariableDatatype::Type::UINT64:
+					*((uint64_t*) out_value) = val.uint64();
+					break;
+				case VariableDatatype::Type::FLOAT:
+					*((float*) out_value) = val.flt();
+					break;
+				case VariableDatatype::Type::DOUBLE:
+					*((double*) out_value) = val.dbl();
+					break;
+				case VariableDatatype::Type::STRING: {
+					*(char**) out_value = strdup(val.str());
+					break;
+				}
+				case VariableDatatype::Type::INVALID:
+				default:
+					assert(0 && "tried to optimize for a VariableDatatype of invalid type");
+					return 1;
+			}
+
+			return 1;
+		}catch ( NotFoundError & e ){
+			return 0;
+		}	
+	}
+
+int siox_suggest_optimal_value_str( siox_component * component, siox_attribute * attribute, char * target_str, int maxLength ){
+		if ( process_data.optimizer == nullptr ){
+			return 0;
+		}
+		
+		try{
+			OntologyValue val( process_data.optimizer->optimalParameter(*attribute) );
+			assert( val.type() == VariableDatatype::Type::STRING );
+			strncpy( val.str(), target_str, maxLength );
+			return 1;
+		}catch ( NotFoundError & e ){
+			return 0;
+		}				
+}
+
+
 
 } // extern "C"

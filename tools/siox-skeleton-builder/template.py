@@ -45,16 +45,27 @@ template = {
 # Attribute: Attribute type to set; must have been registered via
 #			 siox_attribute_register().
 # Value: Pointer to the real value of the attribute
-'component_attribute': {
+'component_attribute_pointer': {
 	'variables': 'Attribute Value SpliceCode=',
 	'global': '''''',
-	'init': '''
+	'after': '''
 				%(SpliceCode)s 
 				assert( %(Attribute)s != NULL );
 				siox_component_set_attribute( global_component,  %(Attribute)s, %(Value)s);
 			''',
     'before': '''''',
-	'after': '',
+	'cleanup': '',
+	'final': ''
+},
+'component_attribute': {
+	'variables': 'Attribute Value SpliceCode=',
+	'global': '''''',
+	'after': '''
+				%(SpliceCode)s 
+				assert( %(Attribute)s != NULL );
+				siox_component_set_attribute( global_component,  %(Attribute)s, &%(Value)s);
+			''',
+    'before': '''''',
 	'cleanup': '',
 	'final': ''
 },
