@@ -7,6 +7,7 @@ include_directories(
 	${SIOX_SOURCES}/tools/siox-skeleton-builder/layers/${LAYER}4
 	${CMAKE_CURRENT_BINARY_DIR}
 	${GLIB_INCLUDE_DIRS}
+	${MPI_CXX_INCLUDE_PATH}
 )
 
 siox_skeleton_builder(wrap  ${LAYER}-wrapper.h ${SKELETON_TEMPLATE} ${LAYER} siox-${LAYER}-wrap.c)
@@ -24,6 +25,8 @@ target_link_libraries(
 	siox-${LAYER}-wrap
 	siox-monitoring-siox-ll
 	${GLIB_LIBRARIES}
+	${MPI_CXX_LIBRARIES}
+	
 )
 
 set_target_properties(siox-${LAYER}-wrap PROPERTIES LD_FLAGS ${WRAP_LD_OPTS} )
@@ -38,6 +41,7 @@ target_link_libraries(
 	siox-${LAYER}-dlsym
 	siox-monitoring-siox-ll
 	${GLIB_LIBRARIES}
+	${MPI_CXX_LIBRARIES}
 )
 
 set_target_properties(siox-${LAYER}-dlsym PROPERTIES LD_FLAGS "-ldl")
