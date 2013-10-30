@@ -7,6 +7,7 @@ include_directories(
 add_library(
 	siox-knowledge-OptimizerStandardImplementation
 	OptimizerStandardImplementation.cpp
+	OptimizerOptions.cpp
 )
 
 target_link_libraries(
@@ -15,5 +16,8 @@ target_link_libraries(
 )
 
 add_subdirectory(test)
+
+siox_run_serializer(OptimizerOptions.hpp OptimizerOptions.cpp)
+
 
 install(TARGETS siox-knowledge-OptimizerStandardImplementation LIBRARY DESTINATION lib)

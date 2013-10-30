@@ -16,7 +16,8 @@ int main( int argc, char const * argv[] )
 {
 	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-OSMemUsage" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 
-	plugin->init();
+ 	StatisticsProviderPluginOptions options;
+	plugin->init(options);
 
 	auto list = plugin->availableMetrics();
 
