@@ -3,6 +3,7 @@ project(SIOX)
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${SIOX_SOURCES}
+	${Boost_INCLUDE_DIR}
 )
 
 
@@ -15,6 +16,7 @@ add_library(
 target_link_libraries(
 	siox-knowledge-optimizer-generic-history
 	siox-core-AutoConfigurator
+	${Boost_LIBRARIES}
 )
 
 siox_run_serializer(GenericHistoryOptions.hpp GenericHistoryOptions.cpp)
