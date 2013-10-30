@@ -61,20 +61,29 @@ namespace core {
 		stringstream transformed_config;
 
 		size_t current = 0;
-		do {			
+		do {
+			// ignore comments
+			if (config[current] == '#' ){
+				current = config.find('\n', current) + 1;
+				continue;
+			}
+			// find start tag
 			current = config.find( '<', current );
 			if ( current == std::string::npos ){
 				break;
 			}			
 			size_t type_end = config.find( '>', current );
-			size_t end_pos = config.find( "\n</", type_end + 1);
 
 			//cout << current << " " << type_end << " " << end_pos << endl;
 
 			// check if the Container parent is already part
 			size_t container_set_pos = config.find( "<Container></Container>", current );
-			
-			transformed_config << "<object class_id=\"1\" class_name=\"" << config.substr( current + 1, type_end - current - 1 ) << "\">" << endl;
+			string className = config.substr( current + 1, type_end - current - 1 );
+
+			// end tag
+			size_t end_pos = config.find( "</" + className + ">", type_end + 1);
+
+			transformed_config << "<object class_id=\"1\" class_name=\"" << className << "\">" << endl;
 			transformed_config << config.substr( type_end + 1, end_pos - type_end - 1 ) << endl;
 
 
@@ -86,7 +95,8 @@ namespace core {
 			}
 			transformed_config << "</object>" << endl;
 
-			current = end_pos + 2;
+			// start to search the next tag after the end of the current tag.
+			current = end_pos + 3 + className.length() + 1;
 			//cout << "  [" << config.substr(current, next - current) << "]" << endl;
 		} while( true );
 
