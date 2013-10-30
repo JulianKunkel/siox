@@ -1,1 +1,0 @@
-#include <monitoring/statistics_collector/StatisticsProviderPluginOptions.hpp>
