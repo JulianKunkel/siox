@@ -120,7 +120,7 @@ namespace monitoring {
 				std::unique_lock<std::mutex> l(lock);
 				not_full.wait(l, [=](){ return this->Full() == 0; });
 
-				printf("push %p\n", activity);
+				//printf("push %p\n", activity);
 
 				if (Overloaded() && Empty()) {
 				    // TODO notifier.Reset(lost);
@@ -166,7 +166,7 @@ namespace monitoring {
 
 				auto itr = queue.begin();
 				queue.erase(itr);
-				printf("pop %p\n", *itr);
+				//printf("pop %p\n", *itr);
 
 
 				not_full.notify_one();
@@ -175,7 +175,7 @@ namespace monitoring {
 			};
 
 			virtual void finalize() {
-				printf("Queue:  Finalizing\n");
+				//printf("Queue:  Finalizing\n");
 				terminate = true;
 
 				// this is important to wake up waiting pop/notifier
@@ -224,7 +224,7 @@ namespace monitoring {
 			}
 
 			virtual void finalize() {
-				printf("Notifier:  Finalizing\n");
+				//printf("Notifier:  Finalizing\n");
 				terminate = true;
 				queue->finalize();
 			}
@@ -296,7 +296,7 @@ namespace monitoring {
 			 * @param	work	activtiy as void pointer to support abstract notifier
 			 */
 			virtual void Dispatch(int lost, void * work) {
-				printf("dispatch: %p\n", work);
+				//printf("dispatch: %p\n", work);
 				Activity * activity = (Activity *) work;
 				assert( activity != nullptr );
 				boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
