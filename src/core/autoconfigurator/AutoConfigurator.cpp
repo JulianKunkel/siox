@@ -124,7 +124,7 @@ namespace core {
 				throw InvalidConfiguration( "Error while parsing module configuration", "");
 			}
 
-			//cout << "Parsed module description: "  << already_parsed_config.tellg() << endl;
+			cout << "[AC] Module config: "  << module->name << "-" << module->interface << endl;
 			component = module_create_instance<Component>( module->path, module->name, module->interface );
 			//cout << DumpConfiguration(component->get_options()) << endl;
 
