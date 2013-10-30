@@ -11,6 +11,7 @@
 
 #include <monitoring/statistics/collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
+
 #include <monitoring/statistics/collector/Statistic.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 #include "../../../monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp"
@@ -30,7 +31,9 @@ int main( int argc, char const * argv[] ) throw() {
 	collector->init( options );
 
 	monitoring::StatisticsProviderPlugin* plugin = module_create_instance<monitoring::StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-providerskel", MONITORING_STATISTICS_PLUGIN_INTERFACE );
-	plugin->init();
+
+ 	monitoring::StatisticsProviderPluginOptions ploptions;
+	plugin->init(ploptions);	
 	collector->registerPlugin( plugin );
 
 	cerr << "sleeping\n";
