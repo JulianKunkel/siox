@@ -25,9 +25,8 @@ namespace monitoring {
 			virtual void init() {};
 			virtual ComponentOptions* AvailableOptions();
 
-			virtual void newDataAvailable( ) throw();
 			virtual void notifyAvailableStatisticsChange( const std::vector<std::shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw();
-
+			virtual void newDataAvailable() throw();
 			virtual void registerListener( StatisticsMultiplexerListener * listener ) throw();
 			virtual void unregisterListener( StatisticsMultiplexerListener * listener ) throw();
 
@@ -37,19 +36,12 @@ namespace monitoring {
 			class ListenerData {
 				public:
 					StatisticsMultiplexerListener* listener;
-					//When the listener is registered, both requests and statistics are just set to NULL.
-					//The next time new data is available, the listener is asked for its requests, a statistics vector is allocated, and statistics that match the listeners requests are entered.
-					//As long as there are requests that cannot be satisfied, requests remains set, and each time new data becomes available, the multiplexer tries to find matches for the outstanding requests.
-					//Once all requests are satisfied (no remaining null pointers in statistics), requests is set to NULL so that no further searching needs to be done.
-					//const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >* requests;
-					const std::vector<std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > > >* requests;
-					std::vector<std::shared_ptr<Statistic> >* statistics;
-					ListenerData( StatisticsMultiplexerListener* listener ) : listener( listener ), requests( 0 ), statistics( 0 ) {};
-					~ListenerData() {
-						if(statistics) delete statistics;
-					}
+					bool isNew;
+					ListenerData( StatisticsMultiplexerListener* listener ) : listener( listener ), isNew( true ) {}
+					~ListenerData() {}
 			};
-			std::vector<ListenerData> listeners;	//When a listener is unregistered, its ListenerData is _not_ destroyed since its statistics vector may still be in use. Instead, its listener field is set to NULL so that it may be easily skipped.
+			std::vector<ListenerData> listeners;	//protected by listenersLock
+			const std::vector<std::shared_ptr<Statistic> > * lastStatistics;	//protected by listenersLock
 			boost::shared_mutex listenersLock;
 	};
 
@@ -57,23 +49,28 @@ namespace monitoring {
 		return new StatisticsMultiplexerSyncOptions();
 	}
 
-	void StatisticsMultiplexerSync::newDataAvailable( ) throw() {
-		listenersLock.lock_shared();
-		for( size_t i = listeners.size(); i--; ) {
-			StatisticsMultiplexerListener*& curListener = listeners[i].listener;			
-			//notify listener
-			curListener->newDataAvailable( );
-		}
-		listenersLock.unlock_shared();
-	}
-
-
 	void StatisticsMultiplexerSync::notifyAvailableStatisticsChange( const std::vector<std::shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw() {
 		listenersLock.lock_shared();
 		for( size_t i = listeners.size(); i--; ) {
-			StatisticsMultiplexerListener*& curListener = listeners[i].listener;			
-			//notify listener
-			curListener->notifyAvailableStatisticsChange( statistics, addedStatistics, removedStatistics );
+			ListenerData& cur = listeners[i];
+			cur.listener->notifyAvailableStatisticsChange( statistics, addedStatistics || cur.isNew, removedStatistics || cur.isNew );
+			cur.isNew = false;
+		}
+		lastStatistics = & statistics;
+		listenersLock.unlock_shared();
+	}
+
+	void StatisticsMultiplexerSync::newDataAvailable() throw() {
+		listenersLock.lock_shared();
+		for( size_t i = listeners.size(); i--; ) {
+			ListenerData& cur = listeners[i];
+			// This piece of code could be moved to the registerListener call !
+			// Also .isNew could be removed then.
+			if( cur.isNew ) {
+				cur.listener->notifyAvailableStatisticsChange( *lastStatistics, true, true );
+				cur.isNew = false;
+			}
+			cur.listener->newDataAvailable();
 		}
 		listenersLock.unlock_shared();
 	}
@@ -88,7 +85,11 @@ namespace monitoring {
 
 	void StatisticsMultiplexerSync::unregisterListener( StatisticsMultiplexerListener * listener ) throw() {
 		listenersLock.lock();
-		for( size_t i = listeners.size(); i--; ) if( listeners[i].listener == listener ) listeners[i].listener = NULL;
+		for( size_t i = listeners.size(); i--; ) {
+			if( listeners[i].listener == listener ) {
+				listeners.erase(listeners.begin() + i);
+			}
+		}
 		listenersLock.unlock();
 	}
 
