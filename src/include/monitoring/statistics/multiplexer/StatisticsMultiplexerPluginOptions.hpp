@@ -12,7 +12,7 @@ namespace monitoring {
 	class StatisticsMultiplexerPluginOptions: public ComponentOptions {
 		public:
 			ComponentReference multiplexer;
-			ComponentReference dereferenceFacade;
+//			ComponentReference dereferenceFacade;
 	};
 
 }

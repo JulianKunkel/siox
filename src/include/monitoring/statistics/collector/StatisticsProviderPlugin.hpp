@@ -12,8 +12,6 @@
 #include <monitoring/statistics/collector/StatisticsProviderPluginOptions.hpp>
 
 
-using namespace std;
-
 namespace monitoring {
 
 	/*

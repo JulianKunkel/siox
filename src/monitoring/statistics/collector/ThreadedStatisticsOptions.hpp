@@ -20,27 +20,10 @@ using namespace std;
 namespace monitoring {
 
 	//@serializable
-	class ThreadedCollectorStatistics: public Container {
-		public:
-			string entity;
-			string scope;
-
-			string metrics;
-
-			string topology;
-			string topology_instance;
-
-			uint32_t poll_interval_ms;
-	};
-
-
-	//@serializable
 	class ThreadedStatisticsOptions: public ComponentOptions {
 		public:
 			ComponentReference ontology;
 			ComponentReference smux;
-
-			list<ThreadedCollectorStatistics> statistics;
 	};
 
 }

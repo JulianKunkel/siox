@@ -5,6 +5,8 @@
  * @date 2013
  */
 
+#include <iostream>
+
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexer.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 
@@ -17,7 +19,7 @@ using namespace core;
 
 class TestListenerImplementation : public TestListener {
 	public:
-		virtual void init();
+		virtual void initPlugin() throw();
 		virtual ComponentOptions * AvailableOptions();
 
 		//virtual const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >& requiredMetrics() throw();
@@ -27,16 +29,15 @@ class TestListenerImplementation : public TestListener {
 		bool registeredValidInput();
 	private:
 		Ontology* ontology = 0;
-		StatisticsMultiplexer* smux = 0;
 		std::vector<std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > > > requests;
-		size_t curValue = 0;
+		int32_t curValue = 0;
 		bool gotInput = false, valid = true;
 };
 
-void TestListenerImplementation::init() {
+void TestListenerImplementation::initPlugin() throw() {
 	TestListenerOptions& o = getOptions<TestListenerOptions>();
 	ontology =  GET_INSTANCE(Ontology, o.ontology);
-	smux = GET_INSTANCE(StatisticsMultiplexer, o.smux);
+	assert( ontology );
 }
 
 ComponentOptions* TestListenerImplementation::AvailableOptions() {

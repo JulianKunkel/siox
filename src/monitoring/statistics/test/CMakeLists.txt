@@ -12,9 +12,12 @@ add_executable(
 target_link_libraries(
 	StatisticsTest
 	siox-core-ModuleLoader
-	siox-monitoring-ThreadedStatisticsCollector
 	siox-monitoring-FileOntology
+
 	siox-monitoring-statisticsPlugin-providerskel
+	siox-monitoring-ThreadedStatisticsCollector
+	siox-monitoring-StatisticsMultiplexerSync
+	siox-monitoring-statisticsMultiplexerPlugin-testListener
 )
 
-add_test(Statistics StatisticsTest)
+add_test(monitoring_StatisticsTest StatisticsTest)

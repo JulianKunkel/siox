@@ -75,8 +75,9 @@ namespace monitoring {
 				for( size_t i = curStatistics->size(); i--; ) {
 					if( (*curStatistics)[i] ) continue;
 					for( size_t j = statistics.size(); j--; ) {
-						#define matches(...) ( assert( 0 && "TODO" ), 0 )
-						if( matches( statistics[j], (*curRequests)[i] ) ) (*curStatistics)[i] = statistics[j];
+						if( statistics[j]->ontologyId != (*curRequests)[i].first ) continue;
+						if( statistics[j]->topology != (*curRequests)[i].second ) continue;
+						(*curStatistics)[i] = statistics[j];
 					}
 					if( !(*curStatistics)[i] ) outstandingRequests = true;
 				}

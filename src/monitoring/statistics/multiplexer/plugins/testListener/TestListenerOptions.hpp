@@ -17,7 +17,6 @@ namespace monitoring {
 		public:
 			//TODO: StatisticsMultiplexerPluginOptions already has stuff like this. Remove duplication.
 			core::ComponentReference ontology;
-			core::ComponentReference smux;
 	};
 }
 
