@@ -18,7 +18,8 @@ namespace monitoring {
 	class StatisticsMultiplexer : public core::Component {
 		public:
 
-			virtual void newDataAvailable( const std::vector<std::shared_ptr<Statistic> >& statistics ) throw() = 0;
+			virtual void notifyAvailableStatisticsChange( const std::vector<std::shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw() = 0;
+			virtual void newDataAvailable() throw() = 0;	//is never called before notifyAvailableStatisticsChange() is called at least once
 
 			/**
 			 * Register listener to multiplexer
