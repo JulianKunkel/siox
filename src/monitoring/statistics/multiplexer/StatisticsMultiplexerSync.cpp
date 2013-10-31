@@ -36,8 +36,7 @@ namespace monitoring {
 			class ListenerData {
 				public:
 					StatisticsMultiplexerListener* listener;
-					bool isNew;
-					ListenerData( StatisticsMultiplexerListener* listener ) : listener( listener ), isNew( true ) {}
+					ListenerData( StatisticsMultiplexerListener* listener ) : listener( listener ) {}
 					~ListenerData() {}
 			};
 			std::vector<ListenerData> listeners;	//protected by listenersLock
@@ -53,8 +52,7 @@ namespace monitoring {
 		listenersLock.lock_shared();
 		for( size_t i = listeners.size(); i--; ) {
 			ListenerData& cur = listeners[i];
-			cur.listener->notifyAvailableStatisticsChange( statistics, addedStatistics || cur.isNew, removedStatistics || cur.isNew );
-			cur.isNew = false;
+			cur.listener->notifyAvailableStatisticsChange( statistics, addedStatistics, removedStatistics );
 		}
 		lastStatistics = & statistics;
 		listenersLock.unlock_shared();
@@ -64,12 +62,6 @@ namespace monitoring {
 		listenersLock.lock_shared();
 		for( size_t i = listeners.size(); i--; ) {
 			ListenerData& cur = listeners[i];
-			// This piece of code could be moved to the registerListener call !
-			// Also .isNew could be removed then.
-			if( cur.isNew ) {
-				cur.listener->notifyAvailableStatisticsChange( *lastStatistics, true, true );
-				cur.isNew = false;
-			}
 			cur.listener->newDataAvailable();
 		}
 		listenersLock.unlock_shared();
@@ -79,6 +71,9 @@ namespace monitoring {
 		listenersLock.lock();
 		for( size_t i = listeners.size(); i--; ) if( listeners[i].listener == listener ) goto doUnlock;
 		listeners.emplace_back( listener );
+		if( lastStatistics != nullptr ){
+			listener->notifyAvailableStatisticsChange( *lastStatistics, true, false );
+		}
 	doUnlock:
 		listenersLock.unlock();
 	}
