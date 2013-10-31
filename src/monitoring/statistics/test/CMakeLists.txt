@@ -2,6 +2,7 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIR}
 )
 
 add_executable(
@@ -18,6 +19,7 @@ target_link_libraries(
 	siox-monitoring-ThreadedStatisticsCollector
 	siox-monitoring-StatisticsMultiplexerSync
 	siox-monitoring-statisticsMultiplexerPlugin-testListener
+	${Boost_LIBRARIES}
 )
 
 add_test(monitoring_StatisticsTest StatisticsTest)

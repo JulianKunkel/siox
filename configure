@@ -1,0 +1,67 @@
+#!/bin/sh
+
+CMAKEFLAGS=
+srcdir="."
+
+set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-mpicc:,with-mpicxx:,with-python:,srcdir:" hV "$@"`
+test $# -lt 1  && exit 1
+while test $# -gt 0 
+do
+	case "$1" in
+		-h|--help) echo "$help"; exit;;
+		-V|--version) cmake --version; exit;;
+		--srcdir) srcdir="$2"; shift;;
+		--prefix) prefix="$2"; shift;;
+		--with-boost) boostdir="$2"; shift;;
+		--with-cc) ccdir="$2"; shift;;
+		--with-cxx) cxxdir="$2"; shift;;
+		--with-mpicc) mpicc="$2"; shift;;
+		--with-mpicxx) mpicxx="$2"; shift;;
+		--with-python) python="$2"; shift;;
+		--) shift; break;;
+	esac
+	shift
+done
+
+if test -n "$prefix"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_INSTALL_PREFIX:PATH=$prefix"
+fi
+if test -n "$cc"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER:FILEPATH=$cc"
+fi
+if test -n "$cxx"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER:FILEPATH=$cxx"
+fi
+if test -n "$mpicc"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DMPI_C_COMPILER:FILEPATH=$mpicc"
+fi
+if test -n "$mpicxx"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DMPI_CXX_COMPILER:FILEPATH=$mpicxx"
+fi
+if test -n "$boostdir"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DBOOST_ROOT:PATH=$boostdir -DBOOST_INCLUDEDIR:PATH=$boostdir/include/ -DBOOST_LIBRARYDIR:PATH=$boostdir/lib/ -DBoost_NO_SYSTEM_PATHS:BOOL=ON"
+fi
+if test -n "$python"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DPYTHON_EXECUTABLE:FILEPATH=$python"
+fi
+
+echo ""
+echo "SIOX uses the CMake (http://www.cmake.org) buildsystem instead of configure."
+echo "CMake uses different options than configure, but you can use this script to "
+echo "specify them in the traditional way and get the equivalent cmake command."
+echo "Use the following options to change default paths."
+echo "<srcdir>               : path to SIOX's source code"
+echo "--prefix=<dir>         : installation prefix"
+echo "--with-boost=<dir>     : path to the boost library root directory"
+echo "--with-cc=<file>       : path to the C compiler"
+echo "--with-cxx=<file>      : path to the C++ compiler"
+echo "--with-mpicc=<file>    : path to the MPI C compiler"
+echo "--with-mpicxx=<file>   : path to the MPI C++ compiler"
+echo "--with-python=<file>   : path to the Python interpreter"
+echo "Once CMake has run successfully, you can use \"make edit_cache\" to view and modify all settings."
+echo "For more information visit \"http://www.hpc-io.org\"."
+echo ""
+echo "Your current configure options translate more or less to:"
+echo "   cmake$CMAKEFLAGS $srcdir && make && make install"
+echo ""
+

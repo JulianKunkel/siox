@@ -64,7 +64,8 @@ int main( int argc, char const * argv[] )
 
 	ps->getOptions<ProviderSkeletonOptions>().statisticsCollector.componentID = ( ComponentReferenceID ) new StatisticsCollectorTester();
 
-	ps->init();
+ 	StatisticsProviderPluginOptions options;
+	ps->init(options);
 
 	delete( ps );
 
