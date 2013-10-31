@@ -22,16 +22,17 @@ class TestListenerImplementation : public TestListener {
 		virtual void initPlugin() throw();
 		virtual ComponentOptions * AvailableOptions();
 
-		//virtual const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >& requiredMetrics() throw();
-		virtual const std::vector<std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > > >& requiredMetrics() throw();
-		virtual void notify(const std::vector<std::shared_ptr<Statistic> >& statistics) throw();
+		virtual void notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw();
+		virtual void newDataAvailable() throw();
 
 		bool registeredValidInput();
 	private:
+		shared_ptr<Statistic> testStatistic;
 		Ontology* ontology = 0;
-		std::vector<std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > > > requests;
+		vector<pair<OntologyAttributeID, vector< pair< string, string> > > > requests;
 		int32_t curValue = 0;
-		bool gotInput = false, valid = true;
+		bool gotInput = false;
+		bool valid = true;
 };
 
 void TestListenerImplementation::initPlugin() throw() {
@@ -44,20 +45,32 @@ ComponentOptions* TestListenerImplementation::AvailableOptions() {
 	return new TestListenerOptions();
 }
 
-//const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >& TestListenerImplementation::requiredMetrics() throw() {
-const std::vector<std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > > >& TestListenerImplementation::requiredMetrics() throw() {
-	if(!requests.size()) {
-		OntologyAttributeID anId = ontology->lookup_attribute_by_name( "Statistics", "test/metrics" ).aID;
-		std::vector< std::pair< std::string, std::string> > aTopology = {{"node", LOCAL_HOSTNAME}, {"semantics", "testing"}};
-		requests.push_back(std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > >( anId, aTopology));
+void TestListenerImplementation::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw(){
+
+	OntologyAttributeID anId = ontology->lookup_attribute_by_name( "Statistics", "test/metrics" ).aID;
+
+	auto topology = vector<pair<string, string> >({{"node", LOCAL_HOSTNAME}, {"semantics", "testing"}});
+	for( auto itr = statistics.begin(); itr != statistics.end(); itr++){
+		if((*itr)->ontologyId == anId){
+			// test if the vector matches.
+			if( (*itr)->topology == topology ){
+				testStatistic = *itr;
+				return;
+			}
+		}
 	}
-	return requests;
+
+	// no match
+	testStatistic = nullptr;
 }
 
-void TestListenerImplementation::notify(const std::vector<std::shared_ptr<Statistic> >& statistics) throw() {
-	if( Statistic* myStatistic = &*statistics[0] ) {
+void TestListenerImplementation::newDataAvailable() throw(){
+	if ( testStatistic != nullptr ){
 		gotInput = true;
-		if( myStatistic->curValue != ++curValue ) valid = false;
+		valid = (testStatistic->curValue == ++curValue);
+	}else{
+		gotInput = false;
+		valid = false;
 	}
 }
 

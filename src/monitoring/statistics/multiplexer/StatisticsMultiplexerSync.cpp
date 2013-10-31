@@ -25,7 +25,9 @@ namespace monitoring {
 			virtual void init() {};
 			virtual ComponentOptions* AvailableOptions();
 
-			virtual void newDataAvailable( const std::vector<std::shared_ptr<Statistic> >& statistics ) throw();
+			virtual void newDataAvailable( ) throw();
+			virtual void notifyAvailableStatisticsChange( const std::vector<std::shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw();
+
 			virtual void registerListener( StatisticsMultiplexerListener * listener ) throw();
 			virtual void unregisterListener( StatisticsMultiplexerListener * listener ) throw();
 
@@ -55,36 +57,23 @@ namespace monitoring {
 		return new StatisticsMultiplexerSyncOptions();
 	}
 
-	void StatisticsMultiplexerSync::newDataAvailable( const std::vector<std::shared_ptr<Statistic> >& statistics ) throw() {
+	void StatisticsMultiplexerSync::newDataAvailable( ) throw() {
 		listenersLock.lock_shared();
 		for( size_t i = listeners.size(); i--; ) {
-			StatisticsMultiplexerListener*& curListener = listeners[i].listener;
-			//const std::vector<std::pair<OntologyAttributeID, Topology::ObjectId> >*& curRequests = listeners[i].requests;
-			const std::vector<std::pair<OntologyAttributeID, std::vector< std::pair< std::string, std::string> > > >*& curRequests = listeners[i].requests;
-			std::vector<std::shared_ptr<Statistic> >*& curStatistics = listeners[i].statistics;
-
-			if( !curListener ) continue;
-			//get requests from listener if we didn't do that already
-			if( !curStatistics ) {
-				curRequests = &curListener->requiredMetrics();
-				curStatistics = new std::vector<std::shared_ptr<Statistic> >( curRequests->size() );
-			}
-			//check for statistics matching outstanding requests
-			if( curRequests ) {
-				bool outstandingRequests = false;
-				for( size_t i = curStatistics->size(); i--; ) {
-					if( (*curStatistics)[i] ) continue;
-					for( size_t j = statistics.size(); j--; ) {
-						if( statistics[j]->ontologyId != (*curRequests)[i].first ) continue;
-						if( statistics[j]->topology != (*curRequests)[i].second ) continue;
-						(*curStatistics)[i] = statistics[j];
-					}
-					if( !(*curStatistics)[i] ) outstandingRequests = true;
-				}
-				if( !outstandingRequests ) curRequests = NULL;
-			}
+			StatisticsMultiplexerListener*& curListener = listeners[i].listener;			
 			//notify listener
-			curListener->notify( *curStatistics );
+			curListener->newDataAvailable( );
+		}
+		listenersLock.unlock_shared();
+	}
+
+
+	void StatisticsMultiplexerSync::notifyAvailableStatisticsChange( const std::vector<std::shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw() {
+		listenersLock.lock_shared();
+		for( size_t i = listeners.size(); i--; ) {
+			StatisticsMultiplexerListener*& curListener = listeners[i].listener;			
+			//notify listener
+			curListener->notifyAvailableStatisticsChange( statistics, addedStatistics, removedStatistics );
 		}
 		listenersLock.unlock_shared();
 	}

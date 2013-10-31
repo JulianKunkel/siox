@@ -22,8 +22,10 @@ class StatisticsFileWriter : public StatisticsMultiplexerPlugin {
 
 		virtual ComponentOptions * AvailableOptions();
 
-		virtual const vector<pair<OntologyAttributeID, vector< pair< string, string> > > > requiredMetrics() throw();
-		virtual void notify(const vector<shared_ptr<Statistic> >& statistics) throw();
+		virtual void notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw();
+		virtual void newDataAvailable() throw();
+	private:
+		vector<shared_ptr<Statistic> > availableStatistics;
 };
 
 void StatisticsFileWriter::initPlugin() throw() {
@@ -35,11 +37,11 @@ ComponentOptions* StatisticsFileWriter::AvailableOptions() {
 	return new StatisticsFileWriterOptions();
 }
 
-const vector<pair<OntologyAttributeID, vector< pair< string, string> > > > StatisticsFileWriter::requiredMetrics() throw() {
-	return vector<pair<OntologyAttributeID, vector< pair< string, string> > > >();
+void StatisticsFileWriter::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw(){
+	availableStatistics = statistics;
 }
 
-void StatisticsFileWriter::notify(const vector<shared_ptr<Statistic> >& statistics) throw() {
+void StatisticsFileWriter::newDataAvailable() throw(){
 
 }
 
