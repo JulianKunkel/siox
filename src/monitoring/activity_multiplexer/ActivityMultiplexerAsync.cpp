@@ -52,7 +52,7 @@ namespace monitoring {
 
 	/**
 	 * A threadsafe queue implementation for the multiplexer to use
-	 * The Queue is also responsible for counting discarded activities.
+	 * The queue is also responsible for counting discarded activities.
 	 */
 	class ActivityMultiplexerQueue
 	{
@@ -117,28 +117,27 @@ namespace monitoring {
 			virtual void Push(Activity * activity) {
 				//std::lock_guard<std::mutex> lock( mut );
 
+				if ( Overloaded() ) {
+					lost++;
+					return;
+				}
+
 				std::unique_lock<std::mutex> l(lock);
 				not_full.wait(l, [=](){ return this->Full() == 0; });
 
 				//printf("push %p\n", activity);
 
 				if (Overloaded() && Empty()) {
-				    // TODO notifier.Reset(lost);
 				    lost = 0;
 				    overloaded = false;
 				}
 
-
-				if( Overloaded() ) {
-					lost++;
+				if( Full() ) {
+					// TODO: Move this to the checker function Full() ??
+					overloaded = true;
+					lost = 1;
 				} else {
-
-					if( Full() ) {
-						overloaded = true;
-						lost = 1;
-					} else {
-						queue.push_back( activity );
-					}
+					queue.push_back( activity );
 				}
 
 
@@ -217,7 +216,7 @@ namespace monitoring {
 					if ( activity )
 					{
 						//TODO get overloaded with pop
-						dispatcher->Dispatch(-1, (void *)activity);
+						dispatcher->Dispatch(queue->lost, (void *)activity);
 					}
 
 				}
