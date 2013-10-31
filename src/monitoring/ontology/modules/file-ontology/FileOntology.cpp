@@ -57,10 +57,10 @@ namespace monitoring {
 						auto pair = *itr;
 						AttributeWithValues * av = pair.second;
 
-						stringstream unique( av->attribute.domain );
-						unique << "|" << av->attribute.name;
+						stringstream unique;
+						unique << av->attribute.domain << "|" << av->attribute.name;
 						string fqn( unique.str() );
-
+						
 						domain_name_map[fqn] = av;
 					}
 				} catch( boost::archive::archive_exception e ) {

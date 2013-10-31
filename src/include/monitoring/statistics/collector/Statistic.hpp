@@ -25,6 +25,7 @@ namespace monitoring {
 			const static size_t kHistorySize = 10;
 
 			StatisticsValue& curValue;
+			
 			const StatisticsProviderPlugin* const provider;
 
 			Statistic( const StatisticsProviderDatatypes& source, const StatisticsProviderPlugin* provider, Ontology* ontology ) throw();

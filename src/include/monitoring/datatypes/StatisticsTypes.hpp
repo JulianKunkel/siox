@@ -112,6 +112,14 @@ namespace monitoring {
 				ontologyId(attribute.aID),
 				topology(topology)
 			{};
+			StatisticsDescription(const OntologyAttributeID & attribute, const vector<pair<string, string> > & topology) :
+				ontologyId(attribute),
+				topology(topology)
+			{};
+
+			bool operator==(StatisticsDescription const & what){
+				return this->ontologyId == what.ontologyId && this->topology == what.topology;
+			}
 	};
 
 }

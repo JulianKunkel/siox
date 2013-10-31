@@ -204,6 +204,7 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 		vector<shared_ptr<Statistic> > statistics;	//protected by sourcesLock
 		//TODO: replace the string for the topology with a topologyId
 		unordered_map<pair<OntologyAttributeID, string>, shared_ptr<Statistic> > index;	//protected by sourcesLock
+		bool statisticsAdded = true, statisticsRemoved = true;
 		boost::shared_mutex sourcesLock;
 
 		thread pollingThread;
@@ -245,6 +246,7 @@ void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plu
 		statistics.emplace_back( curStatistic );
 		index[curKey] = curStatistic;
 	}
+	statisticsAdded = true;
 	sourcesLock.unlock();
 }
 
@@ -267,6 +269,7 @@ void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * p
 			index.erase(curKey);
 		}
 	}
+	statisticsRemoved = true;
 	sourcesLock.unlock();
 }
 
@@ -346,9 +349,14 @@ void ThreadedStatisticsCollector::pollingThreadMain() throw() {
 		for( size_t i = statistics.size(); i--; ) {
 			statistics[i]->update(measurementTime);
 		}
+		//reset the change flags
+		bool hadAdditions = statisticsAdded, hadDeletions = statisticsRemoved;
+		statisticsAdded = statisticsRemoved = false;
 		sourcesLock.unlock_shared();
+
 		//notify consumers of the statistics
-		if( smux ) smux->newDataAvailable( statistics );
+		if( hadAdditions || hadDeletions ) smux->notifyAvailableStatisticsChange( statistics, hadAdditions, hadDeletions );
+		smux->newDataAvailable();
 
 		// Sleep until it's time to poll again.
 		// I have moved this from its own function, because we have to check `terminated` after every call to sleep_for.
