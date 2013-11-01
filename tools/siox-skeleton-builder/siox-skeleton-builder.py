@@ -475,7 +475,21 @@ class FunctionParser():
             # If only the blank header file should be generated pass the
             # string of parameters to the Function object.
             if self.blankHeader:
-                function.definition = "(" + parameterString + ")"
+		parameterList = parameterString.strip().split(',')
+		curParam = 1
+		parameterOutList = []
+		for parameter in parameterList:
+			if parameter in ('void', '...', ''):
+				parameterList.append(parameter)
+				continue
+			m = re.match('[a-zA-Z].*[ \t][a-zA-Z0-9]+[ \t]*$', parameter)
+			if m:
+				print(parameter)
+				parameterOutList.append(parameter)
+			else:
+				parameterOutList.append(parameter + " var" + str(curParam))
+				curParam = curParam + 1					
+                function.definition = "(" + ", ".join(parameterOutList) + ")"
             # If the C source code should be generated split the string into a
             # list of parameters and extract the type and name of the
             # parameter.
