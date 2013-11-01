@@ -192,7 +192,7 @@ extern "C" {
 	__attribute__( ( constructor ) ) void siox_ll_ctor()
 	{
 		FUNCTION_BEGIN
-		// Retrieve hostname; NodeID and PID will follow once process_data is set up		
+		// Retrieve hostname; NodeID and PID will follow once process_data is set up
 		string hostname = util::getHostname();
 		// If necessary, do actual initialisation
 		if( finalized ) {
@@ -535,7 +535,8 @@ extern "C" {
 		assert( component != nullptr );
 		// Send activity to it
 
-		component-> amux->Log( activity->activity );
+		shared_ptr<Activity> activity_shared_ptr (activity->activity);
+		component-> amux->Log( activity_shared_ptr );
 
 		delete( activity->activity );
 
@@ -732,7 +733,7 @@ extern "C" {
 		if ( process_data.optimizer == nullptr ){
 			return 0;
 		}
-		
+
 		try{
 			OntologyValue val(process_data.optimizer->optimalParameter(*attribute));
 			switch( val.type() ) {
@@ -767,14 +768,14 @@ extern "C" {
 			return 1;
 		}catch ( NotFoundError & e ){
 			return 0;
-		}	
+		}
 	}
 
 int siox_suggest_optimal_value_str( siox_component * component, siox_attribute * attribute, char * target_str, int maxLength ){
 		if ( process_data.optimizer == nullptr ){
 			return 0;
 		}
-		
+
 		try{
 			OntologyValue val( process_data.optimizer->optimalParameter(*attribute) );
 			assert( val.type() == VariableDatatype::Type::STRING );
@@ -782,7 +783,7 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 			return 1;
 		}catch ( NotFoundError & e ){
 			return 0;
-		}				
+		}
 }
 
 

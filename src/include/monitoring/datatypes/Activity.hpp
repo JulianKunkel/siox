@@ -72,6 +72,8 @@
 #include <string>
 #include <vector>
 
+#include <memory>
+
 #include <monitoring/datatypes/ids.hpp>
 
 using namespace std;

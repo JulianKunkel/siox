@@ -67,7 +67,7 @@ int main( int argc, char const * argv[] )
 
 	ActivityID aaid = {.cid = {.pid = {2, 3, 4}, .id = 1}, .id = 2};
 	// Cast the real activity to the serializable object class wrapper
-	Activity * activity = new Activity( aid, 3, 5, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 );
+	shared_ptr<Activity> activity ( new Activity( aid, 3, 5, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) );
 
 	m1->Log( activity );
 

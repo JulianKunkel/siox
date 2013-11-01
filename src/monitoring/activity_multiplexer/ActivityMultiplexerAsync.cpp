@@ -8,7 +8,6 @@
  * Possible Improvements
  * TODO global flags to discard activities
  * TODO measure response time of plugins (e.g. how fast does l->Notify() return)
- * TODO a custom shared lock that suits the use case best
  *
  *
  */
@@ -47,6 +46,7 @@ namespace monitoring {
 	{
 	public:
 		virtual void Dispatch(int lost, void * work) {	 printf("Dispatch(Dummy): %p", work); }
+		//virtual void Dispatch(int lost, shared_ptr<Activity> work) {	 /* printf("Dispatch(Dummy): %p", work); */ }
 	};
 
 
@@ -62,7 +62,7 @@ namespace monitoring {
 		std::condition_variable not_full;
 		std::condition_variable not_empty;
 
-		std::deque<Activity *> queue;
+		std::deque< shared_ptr<Activity> > queue;
 		unsigned int capacity = 1000; // TODO specify by options
 
 		bool overloaded = false;
@@ -114,7 +114,7 @@ namespace monitoring {
 			 *
 			 * @param   activity     an activity that need to be dispatched in the future
 			 */
-			virtual void Push(Activity * activity) {
+			virtual void Push(shared_ptr<Activity> activity) {
 				//std::lock_guard<std::mutex> lock( mut );
 
 				if ( Overloaded() ) {
@@ -133,7 +133,6 @@ namespace monitoring {
 				}
 
 				if( Full() ) {
-					// TODO: Move this to the checker function Full() ??
 					overloaded = true;
 					lost = 1;
 				} else {
@@ -150,7 +149,7 @@ namespace monitoring {
 			 *
 			 * @return	Activity	an activity that needs to be dispatched to async listeners
 			 */
-			virtual Activity * Pop() {
+			virtual shared_ptr<Activity> Pop() {
 
 				//std::lock_guard<std::mutex> lock( mut );
 
@@ -158,7 +157,7 @@ namespace monitoring {
 
 				not_empty.wait(l, [=](){ return (this->Empty() == 0 || terminate); });
 
-				Activity * activity = nullptr;
+				shared_ptr<Activity> activity = nullptr;
 				if (queue.empty() || terminate) {
 						return nullptr;
 				}
@@ -166,7 +165,6 @@ namespace monitoring {
 				auto itr = queue.begin();
 				queue.erase(itr);
 				//printf("pop %p\n", *itr);
-
 
 				not_full.notify_one();
 
@@ -211,12 +209,13 @@ namespace monitoring {
 
 				while( !terminate ) {
 
-					Activity * activity = queue->Pop();
+					shared_ptr<Activity> activity = queue->Pop();
 
 					if ( activity )
 					{
-						//TODO get overloaded with pop
-						dispatcher->Dispatch(queue->lost, (void *)activity);
+						// reasoning for void pointer?
+						dispatcher->Dispatch(queue->lost, (void *) &activity);
+						//dispatcher->Dispatch(queue->lost, activity);
 					}
 
 				}
@@ -273,7 +272,7 @@ namespace monitoring {
 			 *
 			 * @param	activity	logged activity
 			 */
-			virtual void Log( Activity * activity ){
+			virtual void Log( shared_ptr<Activity> activity ){
 				assert( activity != nullptr );
 				// quick sync dispatch
 				{
@@ -295,8 +294,9 @@ namespace monitoring {
 			 * @param	work	activtiy as void pointer to support abstract notifier
 			 */
 			virtual void Dispatch(int lost, void * work) {
+			//virtual void Dispatch(int lost, shared_ptr<Activity> activity) {
 				//printf("dispatch: %p\n", work);
-				Activity * activity = (Activity *) work;
+				shared_ptr<Activity> activity = *(shared_ptr<Activity>*) work;
 				assert( activity != nullptr );
 				boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
 				for(auto l = listeners.begin(); l != listeners.end() ; l++){
@@ -331,8 +331,8 @@ namespace monitoring {
 				listeners.remove(listener);
 			}
 
-			/* Satisfy Component Requirements
-			 */
+			// Satisfy Component Requirements
+
 			ComponentOptions * AvailableOptions() {
 				return new ActivityMultiplexerAsyncOptions();
 			}
@@ -346,7 +346,6 @@ namespace monitoring {
 	};
 
 }
-
 
 
 extern "C" {
