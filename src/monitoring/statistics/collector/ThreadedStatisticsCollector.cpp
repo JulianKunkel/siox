@@ -202,6 +202,7 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 
 		vector<StatisticsProviderPlugin*> plugins;	//protected by sourcesLock
 		vector<shared_ptr<Statistic> > statistics;	//protected by sourcesLock
+		vector<StatisticsProviderPlugin*> pluginPerStatistics; //protected by sourcesLock
 		//TODO: replace the string for the topology with a topologyId
 		unordered_map<pair<OntologyAttributeID, string>, shared_ptr<Statistic> > index;	//protected by sourcesLock
 		bool statisticsAdded = true, statisticsRemoved = true;
@@ -239,11 +240,14 @@ void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plu
 	plugins.emplace_back( plugin );
 	vector<StatisticsProviderDatatypes> metrics( plugin->availableMetrics() );
 	for( size_t i = metrics.size(); i--; ) {
-		shared_ptr<Statistic> curStatistic( new Statistic( metrics[i], plugin, ontology ) );
+		shared_ptr<Statistic> curStatistic( new Statistic( metrics[i].value, ontology->register_attribute( "Statistics", metrics[i].metrics , metrics[i].value.type() ).aID , metrics[i].topology ) );
+
+
 		string topology = "";
 		for( size_t j = 0; j < curStatistic->topology.size(); j++) topology += curStatistic->topology[j].first + curStatistic->topology[j].second;
 		pair<OntologyAttributeID, string> curKey(curStatistic->ontologyId, topology);
 		statistics.emplace_back( curStatistic );
+		pluginPerStatistics.emplace_back( plugin );
 		index[curKey] = curStatistic;
 	}
 	statisticsAdded = true;
@@ -256,17 +260,22 @@ void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * p
 	for( size_t i = plugins.size(); i--; ) {
 		if( plugins[i] == plugin ) {
 			plugins.erase(plugins.begin() + i);
+			break;
 		}
 	}
+
 	// Remove the dependent Statistics from the statistics list.
-	for( size_t i = statistics.size(); i--; ) {
-		if( statistics[i]->provider == plugin) {
-			Statistic* curStatistic = &*statistics[i];
+	for( int i= statistics.size() ; i >= 0 ; i-- ){
+		if( pluginPerStatistics[i] == plugin ){
+
 			string topology = "";
-			for( size_t j = 0; j < curStatistic->topology.size(); j++) topology += curStatistic->topology[j].first + curStatistic->topology[j].second;
-			pair<OntologyAttributeID, string> curKey(statistics[i]->ontologyId, topology);
-			statistics.erase(statistics.begin() + i);
-			index.erase(curKey);
+			for( size_t j = 0; j < statistics[i]->topology.size(); j++) topology += statistics[i]->topology[j].first + statistics[i]->topology[j].second;
+			pair<OntologyAttributeID, string> key( statistics[i]->ontologyId, topology);
+			index.erase(key);
+
+			pluginPerStatistics.erase( pluginPerStatistics.begin() + i );
+			statistics.erase( statistics.begin() + i );
+			break;
 		}
 	}
 	statisticsRemoved = true;

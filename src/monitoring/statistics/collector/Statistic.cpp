@@ -10,15 +10,14 @@
 #include <monitoring/statistics/collector/Statistic.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 
-monitoring::Statistic::Statistic( const StatisticsProviderDatatypes& source, const StatisticsProviderPlugin* provider, Ontology* ontology ) throw() :
-	StatisticsDescription( ontology->register_attribute( "Statistics", source.metrics, source.value.type() ), source.topology ),
-	curValue( source.value ),
-	provider( provider ),
+monitoring::Statistic::Statistic( const StatisticsValue & value, const OntologyAttributeID & attribute, const vector<pair<string, string> > & topology ) throw() :
+		StatisticValue( value, attribute, topology),
 	lastIndex( 0 ),
 	reductionOp( SUM )
 {}
 
 #define wrapIndex(index) ((index) % (kHistorySize + 1))
+
 
 void monitoring::Statistic::getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<std::chrono::high_resolution_clock::time_point, kHistorySize>* returnTimes) throw() {
 	static_assert( sizeof( history[0] )/sizeof( history[0][0] ) == kHistorySize + 1, "assumption about the history size is wrong" );

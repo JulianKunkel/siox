@@ -14,9 +14,9 @@
 
 #include <monitoring/statistics/collector/Statistic.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexer.hpp>
-#include "../multiplexer/plugins/testListener/TestListener.hpp"
 #include <monitoring/ontology/Ontology.hpp>
 
+#include "../multiplexer/plugins/testListener/TestListener.hpp"
 #include "../../../monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp"
 #include "../collector/plugins/provider-skeleton/ProviderSkeletonOptions.hpp"
 #include "../collector/ThreadedStatisticsOptions.hpp"

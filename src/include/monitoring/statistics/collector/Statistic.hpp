@@ -20,15 +20,20 @@ namespace monitoring {
 	class StatisticsProviderPlugin;
 	class Ontology;
 
-	class Statistic : public StatisticsDescription {
+	class StatisticValue : public StatisticsDescription{
+		public:
+			const StatisticsValue& curValue;
+
+			StatisticValue(const StatisticsValue & value, const OntologyAttributeID & attribute, const vector<pair<string, string> > & topology): StatisticsDescription(attribute, topology), curValue(value){};
+	};
+
+	class Statistic : public StatisticValue {
 		public:
 			const static size_t kHistorySize = 10;
 
-			StatisticsValue& curValue;
-			
-			const StatisticsProviderPlugin* const provider;
+			//const StatisticsProviderPlugin* const provider;
 
-			Statistic( const StatisticsProviderDatatypes& source, const StatisticsProviderPlugin* provider, Ontology* ontology ) throw();
+			Statistic( const StatisticsValue & value, const OntologyAttributeID & attribute, const vector<pair<string, string> > & topology ) throw();
 
 			void getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<std::chrono::high_resolution_clock::time_point, kHistorySize>* times ) throw();	//Both values and times may be null pointers, if that information is irrelevant.
 			StatisticsValue getRollingValue( StatisticsInterval interval ) throw();
