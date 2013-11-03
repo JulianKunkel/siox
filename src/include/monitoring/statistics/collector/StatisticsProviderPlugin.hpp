@@ -8,7 +8,7 @@
 
 #include <core/component/Component.hpp>
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
-#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics/StatisticsTypes.hpp>
 #include <monitoring/statistics/collector/StatisticsProviderPluginOptions.hpp>
 
 

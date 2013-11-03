@@ -5,7 +5,7 @@
 #include <utility>
 
 #include <core/math/MathematicalEquation.hpp>
-#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics/StatisticsTypes.hpp>
 
 using namespace std;
 

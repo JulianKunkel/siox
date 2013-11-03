@@ -144,7 +144,6 @@ Implementation details for the requirements of a StatisticsCollector:
 
 #include <thread> // header for threads
 #include <atomic>
-#include <chrono> // header for periodic timing
 #include <iostream> // header that defines I/O stream objects
 #include <boost/thread/shared_mutex.hpp> // defines for mutex class
 #include <condition_variable> // for conditions
@@ -163,6 +162,9 @@ Implementation details for the requirements of a StatisticsCollector:
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexer.hpp>
 #include <monitoring/datatypes/ids.hpp>
+        
+#include <util/time.h>
+
 
 #define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 
@@ -344,13 +346,12 @@ void ThreadedStatisticsCollector::microSecondSleep(int64_t microSeconds) throw()
 
 // One thread for periodic issuing
 void ThreadedStatisticsCollector::pollingThreadMain() throw() {
-	using namespace std::chrono;
 	int64_t nextPollTime = getMicroSeconds();
 	while( ! terminated ) {
 		//perform polling
 		sourcesLock.lock_shared();
 		//produce new values
-		chrono::high_resolution_clock::time_point measurementTime = chrono::high_resolution_clock::now();
+		Timestamp measurementTime = siox_gettime();
 		for( size_t i = plugins.size(); i--; ) {
 			plugins[i]->nextTimestep();
 		}

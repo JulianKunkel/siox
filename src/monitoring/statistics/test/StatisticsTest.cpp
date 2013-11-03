@@ -76,7 +76,7 @@ int main( int argc, char const * argv[] ) throw() {
 			assert( values[1][i] == expectedValue );
 		}
 
-		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ), {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}} );
+		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}} );
 		array<StatisticsValue, Statistic::kHistorySize> nameLookupValues = collector->getStatistics( HUNDRED_MILLISECONDS, description );
 		assert( values[1] == nameLookupValues );
 		StatisticsValue aggregatedValue = collector->getReducedStatistics( SECOND, *statistics[0] );

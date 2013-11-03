@@ -10,43 +10,44 @@
 #ifndef INCLUDE_GUARD_MONITORING_STATISTIC
 #define INCLUDE_GUARD_MONITORING_STATISTIC
 
-#include <chrono>
 #include <array>
 
 #include <monitoring/statistics/collector/StatisticsProviderDatatypes.hpp>
-#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics/StatisticsTypes.hpp>
 
 namespace monitoring {
 	class StatisticsProviderPlugin;
 	class Ontology;
 
-	class StatisticValue : public StatisticsDescription{
+	class StatisticsPluginDescriptionValue : public StatisticsDescription{
 		public:
-			const StatisticsValue& curValue;
+			const StatisticsValue & curValue;
 
-			StatisticValue(const StatisticsValue & value, const OntologyAttributeID & attribute, const vector<pair<string, string> > & topology): StatisticsDescription(attribute, topology), curValue(value){};
+			StatisticsPluginDescriptionValue(const StatisticsValue & value, OntologyAttributeID attribute, const vector<pair<string, string> > & topology): StatisticsDescription(attribute, topology), curValue(value){};
 	};
 
-	class Statistic : public StatisticValue {
+	class Statistic : public StatisticsPluginDescriptionValue {
 		public:
 			const static size_t kHistorySize = 10;
 
 			//const StatisticsProviderPlugin* const provider;
 
-			Statistic( const StatisticsValue & value, const OntologyAttributeID & attribute, const vector<pair<string, string> > & topology ) throw();
+			Statistic( const StatisticsValue & value, const OntologyAttributeID attribute, const vector<pair<string, string> > & topology ) throw();
 
-			void getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<std::chrono::high_resolution_clock::time_point, kHistorySize>* times ) throw();	//Both values and times may be null pointers, if that information is irrelevant.
+			void getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<Timestamp, kHistorySize>* times ) throw();	//Both values and times may be null pointers, if that information is irrelevant.
 			StatisticsValue getRollingValue( StatisticsInterval interval ) throw();
 			StatisticsValue getReducedValue( StatisticsInterval interval ) throw();
 
-			void update(std::chrono::high_resolution_clock::time_point time) throw();	//The StatisticsCollector is expected to call this ten times per second.
+			Timestamp curTimestamp();
+
+			void update(Timestamp time) throw();	//The StatisticsCollector is expected to call this ten times per second.
 			static size_t measurementIncrement( StatisticsInterval pollInterval ) throw();
 
 		private:
 			size_t lastIndex;
 			StatisticsReduceOperator reductionOp;
 			StatisticsValue history[INTERVALLS_NUMBER][kHistorySize + 1];
-			std::chrono::high_resolution_clock::time_point times[INTERVALLS_NUMBER][kHistorySize + 1];
+			Timestamp times[INTERVALLS_NUMBER][kHistorySize + 1];
 
 			StatisticsValue inferValue( StatisticsInterval interval, size_t sourceIndex ) const throw();	//Aggregates the values of (interval-1) up to the value at sourceIndex. Source index is given in terms of (interval-1).
 

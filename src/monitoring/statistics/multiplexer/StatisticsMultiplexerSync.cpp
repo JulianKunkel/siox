@@ -5,7 +5,7 @@
  * @date 2013
  */
 
-#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics/StatisticsTypes.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerImplementation.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerListener.hpp>
 #include "StatisticsMultiplexerSyncOptions.hpp"

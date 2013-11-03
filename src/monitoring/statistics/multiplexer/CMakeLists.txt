@@ -13,8 +13,9 @@ add_library(
 
 target_link_libraries(
 	siox-monitoring-StatisticsMultiplexerSync
-	siox-core-ContainerSerializer 
+	siox-core-ContainerSerializer
 	siox-core-AutoConfigurator
+	siox-util
 	${Boost_LIBRARIES}
 )
 

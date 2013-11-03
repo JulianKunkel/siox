@@ -109,7 +109,7 @@ Implementation deviations and rationales:
 
 #include <core/component/Component.hpp>
 
-#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics/StatisticsTypes.hpp>
 #include <monitoring/statistics/collector/StatisticsProviderDatatypes.hpp>
 #include <monitoring/statistics/collector/Statistic.hpp>
 

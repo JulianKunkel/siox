@@ -10,16 +10,20 @@
 #include <monitoring/statistics/collector/Statistic.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 
-monitoring::Statistic::Statistic( const StatisticsValue & value, const OntologyAttributeID & attribute, const vector<pair<string, string> > & topology ) throw() :
-		StatisticValue( value, attribute, topology),
+monitoring::Statistic::Statistic( const StatisticsValue & value, OntologyAttributeID attribute, const vector<pair<string, string> > & topology ) throw() :
+		StatisticsPluginDescriptionValue( value, attribute, topology),
 	lastIndex( 0 ),
 	reductionOp( SUM )
 {}
 
 #define wrapIndex(index) ((index) % (kHistorySize + 1))
 
+Timestamp monitoring::Statistic::curTimestamp(){
+	return times[HUNDRED_MILLISECONDS][ wrapIndex(lastIndex) ];
+}
 
-void monitoring::Statistic::getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<std::chrono::high_resolution_clock::time_point, kHistorySize>* returnTimes) throw() {
+
+void monitoring::Statistic::getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<Timestamp, kHistorySize>* returnTimes) throw() {
 	static_assert( sizeof( history[0] )/sizeof( history[0][0] ) == kHistorySize + 1, "assumption about the history size is wrong" );
 	static_assert( sizeof( times[0] )/sizeof( times[0][0] ) == kHistorySize + 1, "assumption about the history size is wrong" );
 	size_t lastIntervalIndex = lastIndex/measurementIncrement( interval );
@@ -78,7 +82,7 @@ monitoring::StatisticsValue monitoring::Statistic::getReducedValue( monitoring::
 	return inferValue( interval, lastIndex/measurementIncrement( (StatisticsInterval)( (size_t)interval - 1 ) ) );
 }
 
-void monitoring::Statistic::update( std::chrono::high_resolution_clock::time_point time ) throw() {
+void monitoring::Statistic::update( Timestamp time ) throw() {
 	//write the current value into the history
 	size_t newIndex = lastIndex + 1;
 	if( history[HUNDRED_MILLISECONDS][wrapIndex( newIndex )].type() == VariableDatatype::Type::INVALID ) {

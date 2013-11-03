@@ -11,7 +11,7 @@ These NULL pointers may subsequently be replaced by functional pointers when a c
 #ifndef INCLUDE_GUARD_STATISTICS_MULTIPLEXER_LISTENER_H
 #define INCLUDE_GUARD_STATISTICS_MULTIPLEXER_LISTENER_H
 
-#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics/StatisticsTypes.hpp>
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/topology/Topology.hpp>
 #include <monitoring/statistics/collector/Statistic.hpp>

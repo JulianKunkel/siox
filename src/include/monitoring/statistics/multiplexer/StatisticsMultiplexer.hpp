@@ -1,7 +1,7 @@
 #ifndef STATISTICS_MULTIPLEXER_H
 #define STATISTICS_MULTIPLEXER_H
 
-#include <monitoring/datatypes/StatisticsTypes.hpp>
+#include <monitoring/statistics/StatisticsTypes.hpp>
 #include <monitoring/statistics/collector/Statistic.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerListener.hpp>
 #include <core/component/Component.hpp>

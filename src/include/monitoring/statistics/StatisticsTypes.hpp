@@ -20,7 +20,7 @@
 #include <map>
 
 #include <core/datatypes/VariableDatatype.hpp>
-#include <monitoring/datatypes/ids.hpp>
+#include <monitoring/datatypes/GenericTypes.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 
 using namespace std;
@@ -103,23 +103,34 @@ namespace monitoring {
 		SUM
 	};
 
+	//@serializable
 	class StatisticsDescription {
 		public:
 			OntologyAttributeID ontologyId;
 			vector<pair<string, string> > topology;	//TODO: Create a service that can map this to an ID for faster comparison.
 
-			StatisticsDescription(const OntologyAttribute& attribute, const vector<pair<string, string> > topology) :
-				ontologyId(attribute.aID),
-				topology(topology)
-			{};
 			StatisticsDescription(const OntologyAttributeID & attribute, const vector<pair<string, string> > & topology) :
 				ontologyId(attribute),
 				topology(topology)
 			{};
 
+			StatisticsDescription(){};
+
 			bool operator==(StatisticsDescription const & what){
 				return this->ontologyId == what.ontologyId && this->topology == what.topology;
 			}
+	};
+
+	//@serializable
+	class StatisticsDescriptionAndValue {
+		public:
+			StatisticsDescription desc;
+			StatisticsValue value;
+			Timestamp time;
+
+			StatisticsDescriptionAndValue(StatisticsDescription desc, const StatisticsValue & value, Timestamp time) : desc(desc), value(value), time(time){};
+			
+			StatisticsDescriptionAndValue(){};
 	};
 
 }
