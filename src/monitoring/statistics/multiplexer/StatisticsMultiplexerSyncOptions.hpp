@@ -1,5 +1,5 @@
 /**
- * @file StatisticsMultiplexerSyncOption.hpp
+ * @file StatisticsMultiplexerSyncOptions.hpp
  *
  * @author Nathanael Hübbe
  * @date 2013
