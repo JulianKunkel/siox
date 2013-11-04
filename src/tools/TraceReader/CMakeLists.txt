@@ -14,6 +14,7 @@ add_executable(
 target_link_libraries(
 	siox-trace-reader
 	siox-tools-TraceReader
+	${Boost_LIBRARIES}
 )
 
 add_library(

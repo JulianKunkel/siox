@@ -1,8 +1,0 @@
-#ifndef SIOX_STATISTICS_MULTIPLEXER_MODULE
-#define SIOX_STATISTICS_MULTIPLEXER_MODULE
-
-#include <monitoring/statistics_multiplexer/StatisticsMultiplexer.hpp>
-
-#define MONITORING_STATISTICS_MULTIPLEXER_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_statisticsmultiplexer)
-
-#endif

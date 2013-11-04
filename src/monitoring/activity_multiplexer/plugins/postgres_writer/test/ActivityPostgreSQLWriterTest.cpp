@@ -25,9 +25,8 @@ int main(int argc, char const *argv[])
  
 	srand(time(NULL));
 	Activity *act = rnd::activity();
-	m1->Log(act);
+	m1->Log( shared_ptr<Activity>(act));
 
-	delete(act);
 	delete(ap);
 	delete(m1);
 	

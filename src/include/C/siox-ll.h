@@ -537,9 +537,12 @@ void siox_remote_call_set_attribute( siox_remote_call * remote_call, siox_attrib
 void siox_remote_call_start( siox_remote_call * remote_call );
 
 
-// if the out_value is of type string, ownership is given to the caller
+// if the out_value is of type string, a pointer of type char** must be provided. The ownership is given to the callee.
 // return true if an optimal value is found
-int siox_suggest_optimal_value( siox_attribute * attribute, void * out_value );
+int siox_suggest_optimal_value( siox_component * component, siox_attribute * attribute, void * out_value );
+
+// copy the string value into target_str with the maxLength.
+int siox_suggest_optimal_value_str( siox_component * component, siox_attribute * attribute, char * target_str, int maxLength );
 
 //////////////////////////////////////////////////////////////////////////////
 /// Report that a local activity was initiated via a remote call.

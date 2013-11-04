@@ -7,6 +7,7 @@
 #ifndef __SIOX_IDS_HPP
 #define __SIOX_IDS_HPP
 
+#include <monitoring/datatypes/GenericTypes.hpp>
 #include <core/datatypes/VariableDatatype.hpp>
 
 #include <cstdint>
@@ -120,7 +121,6 @@ namespace monitoring {
 
 	};
 
-	typedef uint64_t Timestamp;
 
 	typedef uint32_t ActivityError;
 

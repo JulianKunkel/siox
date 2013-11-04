@@ -8,7 +8,6 @@
  * Possible Improvements
  * TODO global flags to discard activities
  * TODO measure response time of plugins (e.g. how fast does l->Notify() return)
- * TODO a custom shared lock that suits the use case best
  *
  *
  */
@@ -47,12 +46,13 @@ namespace monitoring {
 	{
 	public:
 		virtual void Dispatch(int lost, void * work) {	 printf("Dispatch(Dummy): %p", work); }
+		//virtual void Dispatch(int lost, shared_ptr<Activity> work) {	 /* printf("Dispatch(Dummy): %p", work); */ }
 	};
 
 
 	/**
 	 * A threadsafe queue implementation for the multiplexer to use
-	 * The Queue is also responsible for counting discarded activities.
+	 * The queue is also responsible for counting discarded activities.
 	 */
 	class ActivityMultiplexerQueue
 	{
@@ -62,7 +62,7 @@ namespace monitoring {
 		std::condition_variable not_full;
 		std::condition_variable not_empty;
 
-		std::deque<Activity *> queue;
+		std::deque< shared_ptr<Activity> > queue;
 		unsigned int capacity = 1000; // TODO specify by options
 
 		bool overloaded = false;
@@ -114,31 +114,29 @@ namespace monitoring {
 			 *
 			 * @param   activity     an activity that need to be dispatched in the future
 			 */
-			virtual void Push(Activity * activity) {
+			virtual void Push(shared_ptr<Activity> activity) {
 				//std::lock_guard<std::mutex> lock( mut );
+
+				if ( Overloaded() ) {
+					lost++;
+					return;
+				}
 
 				std::unique_lock<std::mutex> l(lock);
 				not_full.wait(l, [=](){ return this->Full() == 0; });
 
-				printf("push %p\n", activity);
+				//printf("push %p\n", activity);
 
 				if (Overloaded() && Empty()) {
-				    // TODO notifier.Reset(lost);
 				    lost = 0;
 				    overloaded = false;
 				}
 
-
-				if( Overloaded() ) {
-					lost++;
+				if( Full() ) {
+					overloaded = true;
+					lost = 1;
 				} else {
-
-					if( Full() ) {
-						overloaded = true;
-						lost = 1;
-					} else {
-						queue.push_back( activity );
-					}
+					queue.push_back( activity );
 				}
 
 
@@ -151,7 +149,7 @@ namespace monitoring {
 			 *
 			 * @return	Activity	an activity that needs to be dispatched to async listeners
 			 */
-			virtual Activity * Pop() {
+			virtual shared_ptr<Activity> Pop() {
 
 				//std::lock_guard<std::mutex> lock( mut );
 
@@ -159,15 +157,14 @@ namespace monitoring {
 
 				not_empty.wait(l, [=](){ return (this->Empty() == 0 || terminate); });
 
-				Activity * activity = nullptr;
+				shared_ptr<Activity> activity = nullptr;
 				if (queue.empty() || terminate) {
 						return nullptr;
 				}
 
 				auto itr = queue.begin();
 				queue.erase(itr);
-				printf("pop %p\n", *itr);
-
+				//printf("pop %p\n", *itr);
 
 				not_full.notify_one();
 
@@ -175,7 +172,7 @@ namespace monitoring {
 			};
 
 			virtual void finalize() {
-				printf("Queue:  Finalizing\n");
+				//printf("Queue:  Finalizing\n");
 				terminate = true;
 
 				// this is important to wake up waiting pop/notifier
@@ -212,19 +209,20 @@ namespace monitoring {
 
 				while( !terminate ) {
 
-					Activity * activity = queue->Pop();
+					shared_ptr<Activity> activity = queue->Pop();
 
 					if ( activity )
 					{
-						//TODO get overloaded with pop
-						dispatcher->Dispatch(-1, (void *)activity);
+						// reasoning for void pointer?
+						dispatcher->Dispatch(queue->lost, (void *) &activity);
+						//dispatcher->Dispatch(queue->lost, activity);
 					}
 
 				}
 			}
 
 			virtual void finalize() {
-				printf("Notifier:  Finalizing\n");
+				//printf("Notifier:  Finalizing\n");
 				terminate = true;
 				queue->finalize();
 			}
@@ -274,7 +272,7 @@ namespace monitoring {
 			 *
 			 * @param	activity	logged activity
 			 */
-			virtual void Log( Activity * activity ){
+			virtual void Log( shared_ptr<Activity> activity ){
 				assert( activity != nullptr );
 				// quick sync dispatch
 				{
@@ -296,8 +294,9 @@ namespace monitoring {
 			 * @param	work	activtiy as void pointer to support abstract notifier
 			 */
 			virtual void Dispatch(int lost, void * work) {
-				printf("dispatch: %p\n", work);
-				Activity * activity = (Activity *) work;
+			//virtual void Dispatch(int lost, shared_ptr<Activity> activity) {
+				//printf("dispatch: %p\n", work);
+				shared_ptr<Activity> activity = *(shared_ptr<Activity>*) work;
 				assert( activity != nullptr );
 				boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
 				for(auto l = listeners.begin(); l != listeners.end() ; l++){
@@ -332,8 +331,8 @@ namespace monitoring {
 				listeners.remove(listener);
 			}
 
-			/* Satisfy Component Requirements
-			 */
+			// Satisfy Component Requirements
+
 			ComponentOptions * AvailableOptions() {
 				return new ActivityMultiplexerAsyncOptions();
 			}
@@ -347,7 +346,6 @@ namespace monitoring {
 	};
 
 }
-
 
 
 extern "C" {

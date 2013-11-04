@@ -3,7 +3,7 @@ project(SIOX)
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIR}
-	${GLIB2_INCLUDE_DIRS}
+	${GLIB_INCLUDE_DIRS}
 )
 
 # add_executable(

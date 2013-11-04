@@ -2,19 +2,13 @@
 #define OPTIMIZER_PLUGIN_OPTIONS
 
 #include <core/component/component-options.hpp>
+#include <core/component/ComponentReference.hpp>
 
-
-using namespace core;
-
-namespace knowledge {
-
-	//@serializable
-	class OptimizerPluginOptions: public ComponentOptions {
-		public:
-			ComponentReference optimizer;
-			ComponentReference dereferenceFacade;
-	};
-
-}
+//@serializable
+class OptimizerPluginOptions: public core::ComponentOptions {
+	public:
+		core::ComponentReference optimizer;
+		core::ComponentReference dereferenceFacade;
+};
 
 #endif

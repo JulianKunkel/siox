@@ -60,29 +60,45 @@ namespace core {
 
 		stringstream transformed_config;
 
-		size_t current;
-		size_t next = std::string::npos;
-		size_t container_set_pos;
+		size_t current = 0;
 		do {
-			current = next + 1;
-			next = config.find( "\n<", current );
-			size_t end_pos = config.find( ">", current );
-
-
-			if( config[current + 1] == '/' ) {
-				if( container_set_pos >= next ) {
-					transformed_config << "\t<Container></Container>" << endl;
-				}
-				transformed_config << "</object>" << endl;
-			} else {
-				container_set_pos = config.find( "<Container></Container>", current );
-				transformed_config << "<object class_id=\"1\" class_name=\"" << config.substr( current + 1, end_pos - current - 1 ) << "\">" << endl;
-				transformed_config << config.substr( end_pos + 2, next - end_pos - 2 ) << endl;
+			// ignore comments
+			if (config[current] == '#' ){
+				current = config.find('\n', current) + 1;
+				continue;
 			}
+			// find start tag
+			current = config.find( '<', current );
+			if ( current == std::string::npos ){
+				break;
+			}			
+			size_t type_end = config.find( '>', current );
 
+			//cout << current << " " << type_end << " " << end_pos << endl;
+
+			// check if the Container parent is already part
+			size_t container_set_pos = config.find( "<Container></Container>", current );
+			string className = config.substr( current + 1, type_end - current - 1 );
+
+			// end tag
+			size_t end_pos = config.find( "</" + className + ">", type_end + 1);
+
+			transformed_config << "<object class_id=\"1\" class_name=\"" << className << "\">" << endl;
+			transformed_config << config.substr( type_end + 1, end_pos - type_end - 1 ) << endl;
+
+
+			//cout << "Piece: " << config.substr( current + 1, type_end - current - 1 ) << endl;
+			//cout << "PART: " << config.substr( type_end + 1, end_pos - type_end - 1 ) << endl;
+
+			if( container_set_pos >= end_pos ) {
+				transformed_config << "\t<Container></Container>" << endl;
+			}
+			transformed_config << "</object>" << endl;
+
+			// start to search the next tag after the end of the current tag.
+			current = end_pos + 3 + className.length() + 1;
 			//cout << "  [" << config.substr(current, next - current) << "]" << endl;
-		} while( next != std::string::npos );
-
+		} while( true );
 
 		// parse string
 		vector<Component *> components;
@@ -118,7 +134,7 @@ namespace core {
 				throw InvalidConfiguration( "Error while parsing module configuration", "");
 			}
 
-			//cout << "Parsed module description: "  << already_parsed_config.tellg() << endl;
+			cout << "[AC] Module config: "  << module->name << "-" << module->interface << endl;
 			component = module_create_instance<Component>( module->path, module->name, module->interface );
 			//cout << DumpConfiguration(component->get_options()) << endl;
 

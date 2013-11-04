@@ -18,9 +18,9 @@ using namespace monitoring;
 
 class MyTargetMuxStub : public ActivityMultiplexer, public ProtectRaceConditions{
 public:
-		Activity * logged_activity = nullptr;
+		shared_ptr<Activity> logged_activity = nullptr;
 
-		virtual void Log( Activity * activity ){
+		virtual void Log( shared_ptr<Activity> activity ){
 			logged_activity = activity;
 			sthHappens();
 		}
@@ -65,9 +65,9 @@ int main(){
 	co->targetAddress = "localhost:3031";
 	((Component*) client)->init(co);
 
-	
+
 	// begin the test
-	Activity * activity = new Activity();
+	shared_ptr<Activity> activity (new Activity());
 	activity->ucaid_ = 4711;
 
 	client->NotifyAsync(0, activity);
@@ -77,7 +77,7 @@ int main(){
 
 	assert( myTargetMux.logged_activity->ucaid_ == 4711 );
 	cout << "Received activity with UCAID: " << myTargetMux.logged_activity->ucaid_ << endl;
-	
+
 	delete(server);
 	delete(client);
 	delete(comm);
