@@ -165,7 +165,7 @@ namespace monitoring {
 	/**
 	 * startRemoteCall: Indicate that the remote call will be executed.
 	 * The reference to this RemoteCall must not be used afterwards.
-	 * @param rc: RemoteCall reference obtained from setupRemoteCall().
+	 * @param erc: RemoteCall reference obtained from setupRemoteCall().
 	 * @param t:
 	 */
 	void ActivityBuilder::startRemoteCall( RemoteCall* & erc, const Timestamp * t )
