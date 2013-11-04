@@ -19,6 +19,7 @@ target_link_libraries(
 	siox-monitoring-ThreadedStatisticsCollector
 	siox-monitoring-StatisticsMultiplexerSync
 	siox-monitoring-statisticsMultiplexerPlugin-testListener
+	siox-monitoring-statisticsMultiplexerPlugin-FileWriter
 	${Boost_LIBRARIES}
 )
 

@@ -22,6 +22,7 @@
 #include "../collector/ThreadedStatisticsOptions.hpp"
 #include "../multiplexer/StatisticsMultiplexerSyncOptions.hpp"
 #include "../multiplexer/plugins/testListener/TestListenerOptions.hpp"
+#include "../multiplexer/plugins/filewriter/StatisticsFileWriterOptions.hpp"
 
 
 using namespace core;
@@ -35,6 +36,7 @@ int main( int argc, char const * argv[] ) throw() {
 	makeModule( StatisticsCollector, collector, "siox-monitoring-ThreadedStatisticsCollector", STATISTICS_COLLECTOR_INTERFACE );
 	makeModule( StatisticsMultiplexer, multiplexer, "siox-monitoring-StatisticsMultiplexerSync", STATISTICS_MULTIPLEXER_INTERFACE );
 	makeModule( TestListener, listener, "siox-monitoring-statisticsMultiplexerPlugin-testListener", STATISTICS_MULTIPLEXER_PLUGIN_INTERFACE );
+	makeModule( StatisticsMultiplexerPlugin, writer, "siox-monitoring-statisticsMultiplexerPlugin-FileWriter", STATISTICS_MULTIPLEXER_PLUGIN_INTERFACE );
 
 	#define fetchOptions(Type, ComponentVariableName) \
 		Type* ComponentVariableName##Options = &ComponentVariableName->getOptions<Type>();
@@ -43,6 +45,7 @@ int main( int argc, char const * argv[] ) throw() {
 	fetchOptions( ThreadedStatisticsOptions, collector );
 	fetchOptions( StatisticsMultiplexerSyncOptions, multiplexer );
 	fetchOptions( TestListenerOptions, listener );
+	fetchOptions( StatisticsFileWriterOptions, writer );
 
 	ontologyOptions->filename = "optimizer-ontology-example.dat";
 	providerOptions->statisticsCollector.componentPointer = collector;
@@ -50,12 +53,15 @@ int main( int argc, char const * argv[] ) throw() {
 	collectorOptions->smux.componentPointer = multiplexer;
 	listenerOptions->multiplexer.componentPointer = multiplexer;
 	listenerOptions->ontology.componentPointer = ontology;
+	writerOptions->multiplexer.componentPointer = multiplexer;
+	writerOptions->filename = "statistics.dat";
 
 	ontology->init();
 	multiplexer->init();
 	collector->init();
 	provider->init();
 	listener->init();
+	writer->init();
 
 	cerr << "sleeping\n";
 	sleep( 1 );
@@ -92,6 +98,7 @@ int main( int argc, char const * argv[] ) throw() {
 
 	delete provider;
 	delete listener;
+	delete writer;
 	delete collector;
 	delete multiplexer;
 	delete ontology;
