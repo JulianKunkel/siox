@@ -14,6 +14,8 @@
 	/opt/gperftools/2.1/bin/pprof --text ./a.out file.prof 
   For a callgraph analysis:
 	/opt/gperftools/2.1/bin/pprof --web ./a.out file.prof 
+  To annotate the code with samples in OProfile fashion: (for example on the Log method)
+	/opt/gperftools/2.1/bin/pprof --list=Log ./a.out file.prof 
  */
 
 

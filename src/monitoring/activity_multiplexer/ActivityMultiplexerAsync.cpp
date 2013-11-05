@@ -59,7 +59,6 @@ namespace monitoring {
 		friend class ActivityMultiplexerNotifier;
 
 		std::mutex lock;
-		std::condition_variable not_full;
 		std::condition_variable not_empty;
 
 		std::deque< shared_ptr<Activity> > queue;
@@ -95,8 +94,7 @@ namespace monitoring {
 			 * @return bool     true = queue is empty, false = not empty
 			 */
 			virtual bool Empty() {
-				bool result = ( queue.size() == 0 );
-				return result;
+				return queue.empty();
 			};
 
 
@@ -117,30 +115,26 @@ namespace monitoring {
 			virtual void Push(shared_ptr<Activity> activity) {
 				//std::lock_guard<std::mutex> lock( mut );
 
+				std::unique_lock<std::mutex> l(lock);
+
 				if ( Overloaded() ) {
 					lost++;
 					return;
 				}
 
-				std::unique_lock<std::mutex> l(lock);
-				not_full.wait(l, [=](){ return this->Full() == 0; });
-
 				//printf("push %p\n", activity);
 
-				if (Overloaded() && Empty()) {
-				    lost = 0;
-				    overloaded = false;
-				}
-
-				if( Full() ) {
+				if( ! Full() ) {
+					queue.push_back( activity );
+					if( queue.size() == 1 ){
+						//cout << "NOTIFYING" << endl;
+						not_empty.notify_one();
+					}
+				}else{
+					//cout << "OVERLOADED!" << endl;
 					overloaded = true;
 					lost = 1;
-				} else {
-					queue.push_back( activity );
-				}
-
-
-				not_empty.notify_one();
+				}				
 			};
 
 
@@ -155,7 +149,9 @@ namespace monitoring {
 
 				std::unique_lock<std::mutex> l(lock);
 
-				not_empty.wait(l, [=](){ return (this->Empty() == 0 || terminate); });
+				if ( Empty() ){
+					not_empty.wait(l, [=](){ return (this->Empty() == 0 || terminate); });
+				}
 
 				if (queue.empty() || terminate) {
 						return nullptr;
@@ -166,8 +162,6 @@ namespace monitoring {
 				queue.erase(itr);
 				// printf("pop %p\n", & *activity);
 
-				not_full.notify_one();
-
 				return activity;
 			};
 
@@ -175,6 +169,7 @@ namespace monitoring {
 				//printf("Queue:  Finalizing\n");
 				terminate = true;
 
+				std::unique_lock<std::mutex> l(lock);
 				// this is important to wake up waiting pop/notifier
 				not_empty.notify_one();
 			}
@@ -205,7 +200,9 @@ namespace monitoring {
 			virtual void Run() {
 				assert(queue);
 				// call dispatch of Dispatcher
+				static uint64_t events = 0;
 
+				// sleep(8); // for testing of overloading mode!
 
 				while( !terminate ) {
 
@@ -213,12 +210,24 @@ namespace monitoring {
 
 					if ( activity )
 					{
+						int lost = 0;
+
+						if( queue->overloaded && queue->Empty() ){
+						   //	cout << "Overloading finished lost: " << queue->lost << endl;
+							lost = queue->lost;
+							// TODO small race condition here
+					    	queue->lost = 0;
+					    	queue->overloaded = false;
+					   }
+
+					   events++;
+
 						// reasoning for void pointer?
-						dispatcher->Dispatch(queue->lost, (void *) &activity);
+						dispatcher->Dispatch( lost, (void *) &activity );
 						//dispatcher->Dispatch(queue->lost, activity);
 					}
-
 				}
+				//cout << "Caught: " << events << endl;
 			}
 
 			virtual void finalize() {
