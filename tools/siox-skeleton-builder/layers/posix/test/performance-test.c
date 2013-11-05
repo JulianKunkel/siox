@@ -23,6 +23,13 @@ uint64_t gettime()
 
 int main( int argc, char ** argv )
 {
+	int count = 10;
+
+	// parse command line
+	if ( argc > 1 ){
+		count = atoi(argv[1]);
+	}
+
 	printf("SIOX performance test, please run it with and without SIOX instrumentation !\n");
 	int i, o;
 	FILE * pFile;
@@ -34,9 +41,9 @@ int main( int argc, char ** argv )
 	uint64_t startT = gettime();
 	double deltaT = 0;
 	uint64_t iterations = 100;
-	while( deltaT < 1000000000ull ){	
+	while( deltaT < 1000000000ull ){
 		for(i=0; i < iterations; i++){
-			fwrite( buffer, 0 , 0, pFile );			
+			fwrite( buffer, 0 , 0, pFile );
 		}
 
 		uint64_t endT = gettime();
@@ -53,15 +60,25 @@ int main( int argc, char ** argv )
 
 	printf("Using %lld iterations for %fs\n", (long long int) iterations, deltaT / 1000000000ull);
 
-	printf("Time Events/s\n");
-	for(o=0; o < 100; o++){
+	uint64_t t0 = gettime();
+
+	printf("\nTime Events/s TimePerEvent\n");
+	for(o=0; o < count; o++){
 		uint64_t startT = gettime();
 		for(i=0; i < iterations; i++){
-			fwrite( buffer, 0 , 0, pFile );			
+			fwrite( buffer, 0 , 0, pFile );
 		}
 		double deltaT = gettime() - startT;
-		printf( "%.2f %.3f\n", deltaT/ 1000000000.0 , iterations / (deltaT / 1000000000ull));
+		printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, iterations / (deltaT / 1000000000ull), deltaT / 1000000000ull / iterations);
 	}
+
+	{
+	printf("\nTotal and averages\n");
+	double deltaT = gettime() - t0;
+	printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, iterations * count / (deltaT / 1000000000ull), deltaT / count / 1000000000ull / iterations);
+	}
+
+
 	fclose( pFile );
 	return 0;
 }
