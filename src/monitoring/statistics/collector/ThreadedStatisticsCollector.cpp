@@ -156,7 +156,7 @@ Implementation details for the requirements of a StatisticsCollector:
 #include <workarounds.hpp>
 
 #include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
-#include <monitoring/statistics/collector/Statistic.hpp>
+#include <monitoring/statistics/Statistic.hpp>
 #include <monitoring/statistics/collector/StatisticsProviderDatatypes.hpp>
 #include <monitoring/statistics/collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/ontology/Ontology.hpp>

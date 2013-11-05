@@ -12,7 +12,7 @@
 #include <monitoring/statistics/collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
 
-#include <monitoring/statistics/collector/Statistic.hpp>
+#include <monitoring/statistics/Statistic.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexer.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 

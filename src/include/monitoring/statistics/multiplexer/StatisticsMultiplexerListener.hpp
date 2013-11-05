@@ -14,7 +14,7 @@ These NULL pointers may subsequently be replaced by functional pointers when a c
 #include <monitoring/statistics/StatisticsTypes.hpp>
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/topology/Topology.hpp>
-#include <monitoring/statistics/collector/Statistic.hpp>
+#include <monitoring/statistics/Statistic.hpp>
 
 #include <memory>
 
