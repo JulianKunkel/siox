@@ -6,19 +6,19 @@ This document describes, what Statistics in SIOX are, and how they are collected
 A Statistic is any software or hardware metric that is expected to constantly change value.
 Typical examples are processor load, memory utilization, and the total amount of data sent/recieved over a specific network interface.
 
-In the code, @ref monitoring::Statistic "Statistic" is a class that not only contains the last value of its metric,
+In the code, @scoperef{monitoring,Statistic} is a class that not only contains the last value of its metric,
 but also historic information about the last 100 minutes.
 These are recorded in a cascade of intervals, each interval serving as the basis to compute the aggregated values on the next level.
 This significantly reduces the amout of data that needs to be stored (from 60000 values down to 50).
-Code that needs statistics information will want to retrieve the @ref monitoring::Statistics "Statistic" objects that it is interested in,
+Code that needs statistics information will want to retrieve the @scoperef{monitoring,Statistics} objects that it is interested in,
 and then talk to that object to obtain the information the user code needs.
 
 
 
 @section Statistics_Structure Code Structure
 
-Apart from the class @ref monitoring::Statistic "Statistic", the following four SIOX components are involved in the handling of statistics information:
-The @ref monitoring::StatisticsProviderPlugin "StatisticsProviderPlugin", the @ref monitoring::StatisticsCollector "StatisticsCollector", the @ref monitoring::StatisticsMultiplexer "StatisticsMultiplexer", and the @ref monitoring::StatisticsMultiplexerPlugin "StatisticsMultiplexerPlugin".
+Apart from the class @scoperef{monitoring,Statistic}, the following four SIOX components are involved in the handling of statistics information:
+The @scoperef{monitoring,StatisticsProviderPlugin}, the @scoperef{monitoring,StatisticsCollector}, the @scoperef{monitoring,StatisticsMultiplexer}, and the @scoperef{monitoring,StatisticsMultiplexerPlugin}.
 
 @dot
 digraph StatisticsComponents {
@@ -47,12 +47,12 @@ digraph StatisticsComponents {
 @subsection Statistics_Provider StatisticsProviderPlugin
 
 Statistics provider plugins have the job of actually querrying the system for the different metrics.
-They do this whenever @ref monitoring::StatisticsProviderPlugin::nextTimestep() "nextTimestep()" is called by the statistics collector.
-The metrics are made accessible via the @ref monitoring::StatisticsProviderPlugin::availableMetrics() "availableMetrics()" method,
-which returns a vector of @ref monitoring::StatisticsProviderDatatypes "StatisticsProviderDatatypes".
-Each @ref monitoring::StatisticsProviderDatatypes "StatisticsProviderDatatypes" contains a reference to the variable that the statistics provider updates each time nextTimestep() is called.
+They do this whenever @scoperef{monitoring::StatisticsProviderPlugin,nextTimestep()} is called by the statistics collector.
+The metrics are made accessible via the @scoperef{monitoring::StatisticsProviderPlugin,availableMetrics()} method,
+which returns a vector of @scoperef{monitoring,StatisticsProviderDatatypes}.
+Each @scoperef{monitoring,StatisticsProviderDatatypes} contains a reference to the variable that the statistics provider updates each time nextTimestep() is called.
 
-The statistics provider plugins are the only components which do not work with @ref monitoring::Statistic "Statistic" objects.
+The statistics provider plugins are the only components which do not work with @scoperef{monitoring,Statistic} objects.
 
 
 
@@ -60,27 +60,27 @@ The statistics provider plugins are the only components which do not work with @
 
 Currently, there is only one implementation of a statistics collector, the ThreadedStatisticsCollector.
 Its job is to keep track of registered statistics provider plugins and the metrics they provide,
-and to call their @ref monitoring::StatisticsProviderPlugin::nextTimestep() "nextTimestep()" method every 100 ms.
-After polling all registered plugins and updating the histories in the @ref monitoring::Statistic "Statistic" objects,
-the statistics collector notifies the @ref monitoring::StatisticsMultiplexer "StatisticsMultiplexer" that new data is available.
+and to call their @scoperef{monitoring::StatisticsProviderPlugin,nextTimestep()} method every 100 ms.
+After polling all registered plugins and updating the histories in the @scoperef{monitoring,Statistic} objects,
+the statistics collector notifies the @scoperef{monitoring,StatisticsMultiplexer} that new data is available.
 Also, whenever the set of available statistics changes (because a provider plugin was [un]registered),
-the @ref monitoring::StatisticsMultiplexer "StatisticsMultiplexer" is informed by a call to @ref monitoring::StatisticsMultiplexer::notifyAvailableStatisticsChange() "notifyAvailableStatisticsChange".
+the @scoperef{monitoring,StatisticsMultiplexer} is informed by a call to @scoperef{monitoring::StatisticsMultiplexer,notifyAvailableStatisticsChange()}.
 
 With the ThreadedStatisticsCollector,
-all calls to @ref @ref monitoring::StatisticsProviderPlugin::nextTimestep() "nextTimestep()" and @ref monitoring::StatisticsMultiplexer::newDataAvailable() "newDataAvailable()"
+all calls to @scoperef{@ref monitoring::StatisticsProviderPlugin,nextTimestep()} and @scoperef{monitoring::StatisticsMultiplexer,newDataAvailable()}
 are executed within a special thread spawned within the ThreadedStatisticsCollector.
 
 
 
 @subsection Statistics_Multiplexer StatisticsMultiplexer
 
-The @ref monitoring::StatisticsMultiplexer "StatisticsMultiplexer" has the job of forwarding calls to @ref monitoring::StatisticsMultiplexer::newDataAvailable() "newDataAvailable()" and @ref monitoring::StatisticsMultiplexer::notifyAvailableStatisticsChange() "notifyAvailableStatisticsChange" to all @ref monitoring::StatisticsMultiplexerListener "StatisticsMultiplexerListener"s (a base class of @ref monitoring::StatisticsMultiplexerPlugin "StatisticsMultiplexerPlugin") registered with it.
+The @scoperef{monitoring,StatisticsMultiplexer} has the job of forwarding calls to @scoperef{monitoring::StatisticsMultiplexer,newDataAvailable()} and @scoperef{monitoring::StatisticsMultiplexer,notifyAvailableStatisticsChange()} to all @scoperef{monitoring,StatisticsMultiplexerListener}s (a base class of @scoperef{monitoring,StatisticsMultiplexerPlugin}) registered with it.
 
 
 
 @subsection Statistics_Listener StatisticsMultiplexerPlugin
 
-@ref monitoring::StatisticsMultiplexerPlugin "StatisticsMultiplexerPlugin"s implement the @ref monitoring::StatisticsMultiplexerListener "StatisticsMultiplexerListener" interface to be informed whenever new statistics data becomes available.
-They recieve a vector of pointers to @ref monitoring::Statistic "Statistic" objects, which they can use for whatever purposes they please.
+@scoperef{monitoring,StatisticsMultiplexerPlugin}s implement the @scoperef{monitoring,StatisticsMultiplexerListener} interface to be informed whenever new statistics data becomes available.
+They recieve a vector of pointers to @scoperef{monitoring,Statistic} objects, which they can use for whatever purposes they please.
 
 */
