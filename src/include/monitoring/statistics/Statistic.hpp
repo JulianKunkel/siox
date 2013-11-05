@@ -34,9 +34,11 @@ namespace monitoring {
 
 			Statistic( const StatisticsValue & value, const OntologyAttributeID attribute, const vector<pair<string, string> > & topology ) throw();
 
-			void getHistoricValues( StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<Timestamp, kHistorySize>* times ) throw();	//Both values and times may be null pointers, if that information is irrelevant.
-			StatisticsValue getRollingValue( StatisticsInterval interval ) throw();
-			StatisticsValue getReducedValue( StatisticsInterval interval ) throw();
+			void requestReduction( StatisticsReduceOperator reductionOp ) throw();	///< Tell the Statistic object that it should calculate the given reductionOp. Each call must be matched with a call to cancelReductionRequest().
+			void cancelReductionRequest( StatisticsReduceOperator reductionOp ) throw();	///< Tell the Statistic object that the caller does not need the given reductionOp anymore.
+			void getHistoricValues( StatisticsReduceOperator reductionOp, StatisticsInterval interval, std::array<StatisticsValue, kHistorySize>* values, std::array<Timestamp, kHistorySize>* times ) throw();	///<Both values and times may be null pointers, if that information is irrelevant. Behaviour is undefined if the caller did not first request the given reductionOp. Also, within the first 100 minutes after a reduction request, the history is not necessarily filled with valid values; it is up to the caller to gracefully handle this situation.
+			StatisticsValue getRollingValue( StatisticsReduceOperator reductionOp, StatisticsInterval interval ) throw();	///< As with getHistoricValues(), the reductionOp must be requested.
+			StatisticsValue getReducedValue( StatisticsReduceOperator reductionOp, StatisticsInterval interval ) throw();	///< As with getHistoricValues(), the reductionOp must be requested.
 
 			Timestamp curTimestamp();
 
@@ -45,11 +47,12 @@ namespace monitoring {
 
 		private:
 			size_t lastIndex;
-			StatisticsReduceOperator reductionOp;
-			StatisticsValue history[INTERVALLS_NUMBER][kHistorySize + 1];
-			Timestamp times[INTERVALLS_NUMBER][kHistorySize + 1];
+			size_t requestCounts[STATISTICS_REDUCE_OPERATOR_COUNT];	//Keeps track of how many objects have requested each reduction operator.
+			StatisticsValue history[STATISTICS_REDUCE_OPERATOR_COUNT][INTERVALLS_NUMBER][kHistorySize + 1];
+			Timestamp times[STATISTICS_REDUCE_OPERATOR_COUNT][INTERVALLS_NUMBER][kHistorySize + 1];
+			Timestamp lastTimestamp;
 
-			StatisticsValue inferValue( StatisticsInterval interval, size_t sourceIndex ) const throw();	//Aggregates the values of (interval-1) up to the value at sourceIndex. Source index is given in terms of (interval-1).
+			StatisticsValue inferValue( StatisticsReduceOperator reductionOp, StatisticsInterval interval, size_t sourceIndex ) const throw();	//Aggregates the values of (interval-1) up to the value at sourceIndex. Source index is given in terms of (interval-1).
 
 			Statistic() = delete;
 			Statistic(const Statistic&) = delete;
