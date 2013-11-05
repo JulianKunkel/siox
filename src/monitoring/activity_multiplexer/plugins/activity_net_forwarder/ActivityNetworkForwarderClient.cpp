@@ -19,8 +19,8 @@ class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, MessageC
 	/**
 	 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 	 */
-	virtual void NotifyAsync( int lostActivitiesCount, Activity * element ) {
-		client->isend(element);
+	virtual void NotifyAsync( int lostActivitiesCount, shared_ptr<Activity> element ) {
+		client->isend(&*element);
 	}
 
 	/**

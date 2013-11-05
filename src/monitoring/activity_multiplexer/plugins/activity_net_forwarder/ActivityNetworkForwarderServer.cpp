@@ -42,8 +42,6 @@ class ActivityNetworkServerForwarder: public NetworkService, public ServerCallba
 	virtual void messageReceivedCB(std::shared_ptr<ServerClientMessage> msg, const char * message_data, uint64_t buffer_size){
 		shared_ptr<Activity> activity ( new Activity() );
 
-
-
 		uint64_t pos = 0;
 		j_serialization::deserialize(*activity, message_data, pos, buffer_size);
 		target->Log(activity);

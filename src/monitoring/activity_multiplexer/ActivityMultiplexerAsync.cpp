@@ -157,18 +157,18 @@ namespace monitoring {
 
 				not_empty.wait(l, [=](){ return (this->Empty() == 0 || terminate); });
 
-				shared_ptr<Activity> activity = nullptr;
 				if (queue.empty() || terminate) {
 						return nullptr;
 				}
 
 				auto itr = queue.begin();
+				shared_ptr<Activity> activity = *itr;
 				queue.erase(itr);
-				//printf("pop %p\n", *itr);
+				// printf("pop %p\n", & *activity);
 
 				not_full.notify_one();
 
-				return *itr;
+				return activity;
 			};
 
 			virtual void finalize() {
