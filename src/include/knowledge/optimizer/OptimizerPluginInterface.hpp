@@ -1,8 +1,8 @@
 /**
-* @file OptimizerPlugin.hpp
-* Abstract OptimizerPlugin class
+* @file OptimizerPluginInterface.hpp
+* Abstract OptimizerPluginInterface class
 * @author Julian Kunkel, Michaela Zimmer
-* @date 2013-07-31
+* @date 2013-11-04
 */
 
 #ifndef KNOWLEDGE_OPTIMIZER_PLUGIN_HPP

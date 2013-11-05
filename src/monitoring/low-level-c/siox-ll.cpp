@@ -538,10 +538,6 @@ extern "C" {
 		shared_ptr<Activity> activity_shared_ptr (activity->activity);
 		component-> amux->Log( activity_shared_ptr );
 
-		delete( activity->activity );
-
-		// prevent double free
-		activity->activity = nullptr;
 		delete( activity );
 
 		FUNCTION_END

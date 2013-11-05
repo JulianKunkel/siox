@@ -7,7 +7,7 @@
 
 #include <atomic>
 
-#include <monitoring/statistics/collector/Statistic.hpp>
+#include <monitoring/statistics/Statistic.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 
 monitoring::Statistic::Statistic( const StatisticsValue & value, OntologyAttributeID attribute, const vector<pair<string, string> > & topology ) throw() :

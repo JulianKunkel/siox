@@ -29,9 +29,10 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin {
 		mutex motify_mutex;
 	public:
 
-		void Notify( Activity * activity ) {
+		void Notify( shared_ptr<Activity> activity ) {
 			lock_guard<mutex> lock( motify_mutex );
-			*oa << activity;
+			Activity * act = &* activity;
+			*oa << act;
 			if( synchronize )
 				file.flush();
 		}

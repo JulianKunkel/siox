@@ -616,9 +616,12 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  = doc-source
-INPUT                 += ../include
-INPUT 				  += ../core ../knowledge ../monitoring ../daemon ../tools ../util
-# tools
+INPUT                 += ../src/include
+INPUT                 += ../src/core
+INPUT                 += ../src/knowledge
+INPUT                 += ../src/monitoring
+INPUT                 += ../src/tools
+INPUT                 += ../src/util
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is
@@ -648,11 +651,11 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = core/build
-EXCLUDE               += core/config
-EXCLUDE               += core/logger
-EXCLUDE               += core/test
-EXCLUDE               += knowledge/knowledge_base
+#EXCLUDE                = core/build
+#EXCLUDE               += core/config
+#EXCLUDE               += core/logger
+#EXCLUDE               += core/test
+#EXCLUDE               += knowledge/knowledge_base
 
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
@@ -703,7 +706,7 @@ EXAMPLE_RECURSIVE      = YES
 # the \image command).
 
 IMAGE_PATH             = "doc-source/images"
-IMAGE_PATH            += "doc/images"
+#IMAGE_PATH            += "doc-created/images"
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
