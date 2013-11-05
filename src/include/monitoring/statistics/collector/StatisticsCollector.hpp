@@ -111,7 +111,7 @@ Implementation deviations and rationales:
 
 #include <monitoring/statistics/StatisticsTypes.hpp>
 #include <monitoring/statistics/collector/StatisticsProviderDatatypes.hpp>
-#include <monitoring/statistics/collector/Statistic.hpp>
+#include <monitoring/statistics/Statistic.hpp>
 
 namespace monitoring {
 
