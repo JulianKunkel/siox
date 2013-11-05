@@ -36,15 +36,15 @@ class StatisticsCollectorTester : public StatisticsCollector {
 		virtual vector<shared_ptr<Statistic> > availableMetrics() throw() {
 			return vector<shared_ptr<Statistic> >();
 		}
-		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() {
+		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw() {
 			return array<StatisticsValue, Statistic::kHistorySize>();
 		}
 
-		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() {
+		virtual StatisticsValue getRollingStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw() {
 			return StatisticsValue( 1 );
 		}
 
-		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() {
+		virtual StatisticsValue getReducedStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw() {
 			return StatisticsValue( 1 );
 		}
 

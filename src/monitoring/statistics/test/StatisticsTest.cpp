@@ -51,6 +51,7 @@ int main( int argc, char const * argv[] ) throw() {
 	providerOptions->statisticsCollector.componentPointer = collector;
 	collectorOptions->ontology.componentPointer = ontology;
 	collectorOptions->smux.componentPointer = multiplexer;
+	(void)multiplexerOptions;	//avoid warning about unused variable
 	listenerOptions->multiplexer.componentPointer = multiplexer;
 	listenerOptions->ontology.componentPointer = ontology;
 	writerOptions->multiplexer.componentPointer = multiplexer;
@@ -63,17 +64,24 @@ int main( int argc, char const * argv[] ) throw() {
 	listener->init();
 	writer->init();
 
+	{
+		vector<shared_ptr<Statistic> > statistics = collector->availableMetrics();
+		statistics[0]->requestReduction( SUM );
+		statistics[1]->requestReduction( SUM );
+		statistics[2]->requestReduction( SUM );
+	}
+
 	cerr << "sleeping\n";
-	sleep( 1 );
+	sleep( 2 );
 	cerr << "waking up\n";
 
 	{
 		vector<shared_ptr<Statistic> > statistics = collector->availableMetrics();
 		assert( statistics.size() == 3 );
 		array<StatisticsValue, Statistic::kHistorySize> values[3];
-		statistics[0]->getHistoricValues( HUNDRED_MILLISECONDS, &values[0], NULL );
-		statistics[1]->getHistoricValues( HUNDRED_MILLISECONDS, &values[1], NULL );
-		statistics[2]->getHistoricValues( HUNDRED_MILLISECONDS, &values[2], NULL );
+		statistics[0]->getHistoricValues( SUM, HUNDRED_MILLISECONDS, &values[0], NULL );
+		statistics[1]->getHistoricValues( SUM, HUNDRED_MILLISECONDS, &values[1], NULL );
+		statistics[2]->getHistoricValues( SUM, HUNDRED_MILLISECONDS, &values[2], NULL );
 		double expectedSum = 0;
 		for(size_t i = 0; i < Statistic::kHistorySize; i++) {
 			double expectedValue = 0.8*(1 << values[2][i].int32())/2;
@@ -83,14 +91,14 @@ int main( int argc, char const * argv[] ) throw() {
 		}
 
 		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}} );
-		array<StatisticsValue, Statistic::kHistorySize> nameLookupValues = collector->getStatistics( HUNDRED_MILLISECONDS, description );
+		array<StatisticsValue, Statistic::kHistorySize> nameLookupValues = collector->getStatistics( SUM, HUNDRED_MILLISECONDS, description );
 		assert( values[1] == nameLookupValues );
-		StatisticsValue aggregatedValue = collector->getReducedStatistics( SECOND, *statistics[0] );
+		StatisticsValue aggregatedValue = collector->getReducedStatistics( SUM, SECOND, *statistics[0] );
 		assert( aggregatedValue == expectedSum );
 
-		StatisticsValue rollingValue = collector->getRollingStatistics( SECOND, *statistics[0] );
+		StatisticsValue rollingValue = collector->getRollingStatistics( SUM, SECOND, *statistics[0] );
 		expectedSum = 0;
-		for(size_t i = 10; i--; ) expectedSum += 0.8*(1 << i);
+		for(size_t i = 20; i --> 10; ) expectedSum += 0.8*(1 << i);
 		assert( rollingValue == expectedSum );
 
 		assert( listener->registeredValidInput() );

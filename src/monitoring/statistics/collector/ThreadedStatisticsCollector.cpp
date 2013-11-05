@@ -187,9 +187,10 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 		virtual void unregisterPlugin( StatisticsProviderPlugin * plugin ) throw();
 
 		virtual vector<shared_ptr<Statistic> > availableMetrics() throw();
-		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
-		virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
-		virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw();
+
+		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw();
+		virtual StatisticsValue getRollingStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw();
+		virtual StatisticsValue getReducedStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw();
 
 		virtual ~ThreadedStatisticsCollector() throw();
 
@@ -288,33 +289,33 @@ vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::availableMetrics() t
 	return statistics;
 }
 
-array<StatisticsValue, Statistic::kHistorySize> ThreadedStatisticsCollector::getStatistics( StatisticsInterval interval, const StatisticsDescription & description ) throw() {
+array<StatisticsValue, Statistic::kHistorySize> ThreadedStatisticsCollector::getStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
 	array<StatisticsValue, Statistic::kHistorySize> result;
 	string topology = "";
 	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
 	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
 	if(Statistic* statistic = &*index[key]) {
-		statistic->getHistoricValues( interval, &result, NULL );
+		statistic->getHistoricValues( reductionOp, interval, &result, NULL );
 	}
 	return result;
 }
 
-StatisticsValue ThreadedStatisticsCollector::getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & description ) throw() {
+StatisticsValue ThreadedStatisticsCollector::getRollingStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
 	string topology = "";
 	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
 	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
 	Statistic* statistic = NULL;
 	IGNORE_EXCEPTIONS( statistic = &*index.at(key); );
-	return (statistic) ? statistic->getRollingValue( interval ) : StatisticsValue();
+	return (statistic) ? statistic->getRollingValue( reductionOp, interval ) : StatisticsValue();
 }
 
-StatisticsValue ThreadedStatisticsCollector::getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & description ) throw() {
+StatisticsValue ThreadedStatisticsCollector::getReducedStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
 	string topology = "";
 	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
 	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
 	Statistic* statistic = NULL;
 	IGNORE_EXCEPTIONS( statistic = &*index.at(key); );
-	return (statistic) ? statistic->getReducedValue( interval ) : StatisticsValue();
+	return (statistic) ? statistic->getReducedValue( reductionOp, interval ) : StatisticsValue();
 }
 
 ThreadedStatisticsCollector::~ThreadedStatisticsCollector() throw() {
