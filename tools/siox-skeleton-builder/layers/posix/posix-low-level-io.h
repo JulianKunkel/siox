@@ -87,7 +87,7 @@ int open( const char * pathname, int flags, ... );
 //@guardEnd
 int creat( const char * pathname, mode_t mode );
 
-//@guard
+//@guard_advanced
 //@activity
 //@activity_link_int fd
 //@horizontal_map_remove_int fd
