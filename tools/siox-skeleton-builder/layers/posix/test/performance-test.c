@@ -53,9 +53,9 @@ int main( int argc, char ** argv )
 
 	printf("SIOX performance test, please run it with and without SIOX instrumentation !\n");
 	int i, o;
-	FILE * pFile;
+	int pFile;
 	char buffer[] = {'a', 'b'};
-	pFile = fopen( "testfile.bin", "wb" );	
+	pFile = open( "testfile.bin", "wb" );	
 
 	printf("Determining the number of iterations for 1s\n");
 	// determine an experiment which takes about 1s.
@@ -64,7 +64,7 @@ int main( int argc, char ** argv )
 	uint64_t iterations = 100;
 	while( deltaT < 1000000000ull ){
 		for(i=0; i < iterations; i++){
-			fwrite( buffer, 0 , 0, pFile );
+			write(pFile, buffer, 1 );
 		}
 
 		uint64_t endT = gettime();
@@ -87,7 +87,7 @@ int main( int argc, char ** argv )
 	for(o=0; o < count; o++){
 		uint64_t startT = gettime();
 		for(i=0; i < iterations; i++){
-			fwrite( buffer, 0 , 0, pFile );
+			write(pFile, buffer, 1 );
 		}
 		double deltaT = gettime() - startT;
 		printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, iterations / (deltaT / 1000000000ull), deltaT / 1000000000ull / iterations);
@@ -100,7 +100,7 @@ int main( int argc, char ** argv )
 	}
 
 
-	fclose( pFile );
+	close( pFile );
 #ifdef GOOGLEPROF
         ProfilerStop("test.prof");
 #endif

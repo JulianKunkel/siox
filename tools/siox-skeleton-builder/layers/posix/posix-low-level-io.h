@@ -68,7 +68,7 @@ End of global part
 
 
 //@splice_before mode_t mode = va_arg(valist,mode_t);
-//@guard
+//@guard_advanced
 //@activity
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret
@@ -87,7 +87,7 @@ int open( const char * pathname, int flags, ... );
 //@guardEnd
 int creat( const char * pathname, mode_t mode );
 
-//@guard
+//@guard_advanced
 //@activity
 //@activity_link_int fd
 //@horizontal_map_remove_int fd
@@ -126,7 +126,7 @@ int dup2( int oldfd, int newfd );
 //@guardEnd
 int dup3( int oldfd, int newfd, int flags );
 
-//@guard
+//@guard_advanced
 //@activity
 //@activity_attribute bytesToWrite count
 //@activity_attribute bytesWritten ret
@@ -138,7 +138,7 @@ int dup3( int oldfd, int newfd, int flags );
 //@guardEnd
 ssize_t write( int fd, const void * buf, size_t count );
 
-//@guard
+//@guard_advanced
 //@activity
 //@activity_attribute bytesRead ret
 //@activity_attribute_u32 fileHandle fd
