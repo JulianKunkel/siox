@@ -1,3 +1,6 @@
+SET(CMAKE_C_COMPILER /usr/bin/gcc-4.7)
+SET(CMAKE_CXX_COMPILER /usr/bin/g++-4.7)
+
 project(SIOX)
 
 cmake_minimum_required(VERSION 2.8)
@@ -11,7 +14,11 @@ set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/src/include)
 set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/src)
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC")
+#SET (CMAKE_C_FLAGS_DEBUG          "-pg")
+#SET (CMAKE_CXX_FLAGS_DEBUG        "-pg")
+#SET (CMAKE_LINKER  "/usr/bin/ld")
+
+set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC -g")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-as-needed")
@@ -22,7 +29,7 @@ set(BUILD_SHARED_LIBS ON)
 
 # you can adjust the installation path here
 # IF we set it here we cannot change it using for example ccmake
-# set(CMAKE_INSTALL_PREFIX /usr/local)
+ set(CMAKE_INSTALL_PREFIX /opt/siox/Inst)
 
 # this is for self-compiled libraries that are not in the system's ld-path
 set(CMAKE_LIBRARY_PATH

@@ -1,4 +1,4 @@
 project(SIOX)
 
-# add_subdirectory(siox-skeleton-builder)
+ add_subdirectory(siox-skeleton-builder)
 
