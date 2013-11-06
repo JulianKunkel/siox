@@ -132,6 +132,7 @@ namespace monitoring {
 			 */
 			virtual std::vector<std::shared_ptr<Statistic> > availableMetrics() throw()  = 0;
 
+			//TODO: I think, we should replace the following three methods by one method to look up a statistic from a given StatisticsDescription.
 			/*
 			 * The return value may be updated in the background?
 			 * Double buffering of values
@@ -141,13 +142,13 @@ namespace monitoring {
 			 * - 100 seconds in 10 second increments
 			 * - 10 minutes in 1 minute increments
 			 */
-			virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsInterval interval, const StatisticsDescription & description ) throw() = 0;
+			virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() = 0;
 
 			/*
 			 */
-			virtual StatisticsValue getRollingStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() = 0;
+			virtual StatisticsValue getRollingStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw() = 0;
 
-			virtual StatisticsValue getReducedStatistics( StatisticsInterval interval, const StatisticsDescription & stat ) throw() = 0;
+			virtual StatisticsValue getReducedStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw() = 0;
 
 	};
 

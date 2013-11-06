@@ -22,6 +22,7 @@
 #include <core/datatypes/VariableDatatype.hpp>
 #include <monitoring/datatypes/GenericTypes.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
+#include <workarounds.hpp>
 
 using namespace std;
 
@@ -87,21 +88,24 @@ namespace monitoring {
 	};
 
 	typedef enum StatisticsInterval {
-		HUNDRED_MILLISECONDS,
+		HUNDRED_MILLISECONDS = 0,
 		SECOND,
 		TEN_SECONDS,
 		MINUTE,
 		TEN_MINUTES,
 		INTERVALLS_NUMBER
 	} StatisticsInterval;
+	ADD_ENUM_OPERATORS(StatisticsInterval)	//overloads arithmetic operators to work with this enum
 
 	enum StatisticsReduceOperator {
-		MIN,
+		MIN = 0,
 		MAX,
-		COUNT,
+//		COUNT,	XXX: What is this reduction op supposed to do? Always return the latest value?
 		AVERAGE,
-		SUM
+		SUM,
+		STATISTICS_REDUCE_OPERATOR_COUNT
 	};
+	ADD_ENUM_OPERATORS(StatisticsReduceOperator)	//overloads arithmetic operators to work with this enum
 
 	//@serializable
 	class StatisticsDescription {

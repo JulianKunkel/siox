@@ -4,7 +4,25 @@
 	siox-inst posix ./a.out
   To validate the result run without SIOX instrumentation which should create 100 million OPs/s.
 	On my laptop: 204190398 ops/s without SIOX instrumentation.
+
+  Compile with Google Profiling (for shared libraries, low overhead, nice):
+	/usr/local/siox/bin/siox-inst posix wrap gcc performance-test.c -L /opt/gperftools/2.1/lib/ -lprofiler  -I /opt/gperftools/2.1/include/ -DGOOGLEPROF
+	see: http://google-perftools.googlecode.com/svn/trunk/doc/cpuprofile.html
+  To increase the sampling frequency use:
+	export CPUPROFILE_FREQUENCY=1000
+  After running the app call:
+	/opt/gperftools/2.1/bin/pprof --text ./a.out file.prof 
+  For a callgraph analysis:
+	/opt/gperftools/2.1/bin/pprof --web ./a.out file.prof 
+  To annotate the code with samples in OProfile fashion: (for example on the Log method)
+	/opt/gperftools/2.1/bin/pprof --list=Log ./a.out file.prof 
  */
+
+
+
+#ifdef GOOGLEPROF
+#include <google/profiler.h>
+#endif
 
 #include <stdio.h>
 #include <stdint.h>
@@ -24,6 +42,9 @@ uint64_t gettime()
 int main( int argc, char ** argv )
 {
 	int count = 10;
+#ifdef GOOGLEPROF
+	ProfilerStart("test.prof");
+#endif
 
 	// parse command line
 	if ( argc > 1 ){
@@ -80,5 +101,8 @@ int main( int argc, char ** argv )
 
 
 	fclose( pFile );
+#ifdef GOOGLEPROF
+        ProfilerStop("test.prof");
+#endif
 	return 0;
 }

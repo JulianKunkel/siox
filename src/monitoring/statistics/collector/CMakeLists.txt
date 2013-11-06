@@ -8,7 +8,7 @@ include_directories(
 add_library(
 	siox-monitoring-ThreadedStatisticsCollector
 	ThreadedStatisticsCollector.cpp
-	../Statistic.cpp
+	Statistic.cpp
 	ThreadedStatisticsOptions.cpp
 )
 
