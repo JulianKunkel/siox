@@ -74,11 +74,13 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 			}
 			*/
 
-			TokenType type = UNKNOWN;
+/*			TokenType type = UNKNOWN;
 			try {
 				type = types.at(activity->ucaid());
 			}
 			catch(...) {}
+*/
+			cout << "Generic History saw activity of type " << activity->ucaid() <<"\n";
 
 /*			switch (type)
 			{
@@ -89,7 +91,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 				default: ;
 			}
 */
-			nTypes[type]++;
+			// nTypes[type]++;
 		}
 
 		void initPlugin(){
@@ -104,7 +106,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 			// Find Interface ID for MPI
 			UniqueInterfaceID uiid;
-			try{
+/*			try{
 				uiid = sys->lookup_interfaceID("MPI","2.1");
 				/// @todo Look up MPI implementation; either from module, or by inspecting incoming activities
 				/// until an MPI-specific one is found.
@@ -141,7 +143,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 				cerr << "UniqueComponentActivityID for one or more MPI activities not found - aborting!\n";
 				abort();
 			}
-		}
+*/		}
 
 		virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
 
@@ -150,7 +152,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 			cout << "\t" << nTypes[ACCESS] << " ACCESSs\n";
 			cout << "\t" << nTypes[CLOSE] << " CLOSEs\n";
 			cout << "\t" << nTypes[HINT] << " HINTs\n";
-			
+
 			return OntologyValue( 42 );
 		}
 };

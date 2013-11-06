@@ -47,3 +47,5 @@ set_target_properties(siox-${LAYER}-dlsym PROPERTIES LD_FLAGS "-ldl")
 
 install(TARGETS siox-${LAYER}-wrap LIBRARY DESTINATION lib)
 install(TARGETS siox-${LAYER}-dlsym LIBRARY DESTINATION lib)
+
+add_subdirectory(test)
