@@ -1,5 +1,5 @@
-#ifndef SIOX_DATATYPE_HELPER_HDF5_
-#define SIOX_DATATYPE_HELPER_HDF5_
+#ifndef SIOX_DATATYPE_HELPER_MPI_
+#define SIOX_DATATYPE_HELPER_MPI_
 
 // Generic flags for file open modes
 enum MPIFileFlags {
