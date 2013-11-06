@@ -11,7 +11,7 @@
 //@register_attribute bytesToWrite "MPI" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute filePosition "MPI" "file/position" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute fileExtent "MPI" "file/extent" SIOX_STORAGE_64_BIT_UINTEGER
-//@register_attribute fileHandle "POSIX" "descriptor/filehandle" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute fileHandle "MPI" "descriptor/filehandle" SIOX_STORAGE_64_BIT_UINTEGER
 
 //@register_attribute fileDatarepresentation "MPI" "hints/datarepresentation" SIOX_STORAGE_STRING
 
