@@ -1,4 +1,5 @@
 /*
+  MW. Threads
   JK. This simple performance test calls fwrite with 0 bytes to fetch which will complete ASAP.
   To measure SIOX overhead run:
 	siox-inst posix ./a.out
@@ -29,6 +30,32 @@
 
 #include <time.h>
 
+#include <string.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+pthread_t tid[2];
+
+void* CreateThreads(void *arg)
+{
+    unsigned long i = 0;
+    pthread_t id = pthread_self();
+
+    if(pthread_equal(id,tid[0]))
+    {
+        printf("\n First thread processing\n");
+    }
+    else
+    {
+        printf("\n Second thread processing\n");
+    }
+
+    for(i=0; i<(0xFFFFFFFF);i++);
+
+    return NULL;
+}
+
 uint64_t gettime()
 {
 	struct timespec tp;
@@ -40,6 +67,9 @@ uint64_t gettime()
 }
 
 int main( int argc, char ** argv )
+{
+
+int main(void)
 {
 	int count = 10;
 #ifdef GOOGLEPROF
@@ -53,6 +83,8 @@ int main( int argc, char ** argv )
 
 	printf("SIOX performance test, please run it with and without SIOX instrumentation !\n");
 	int i, o;
+	int err;
+
 	int pFile;
 	char buffer[] = {'a', 'b'};
 	pFile = open( "testfile.bin", "wb" );	
@@ -64,7 +96,18 @@ int main( int argc, char ** argv )
 	uint64_t iterations = 100;
 	while( deltaT < 1000000000ull ){
 		for(i=0; i < iterations; i++){
-			write(pFile, buffer, 1 );
+			int j = 0;
+			    while(j < 2)
+			    {
+			        err = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
+			        if (err != 0)
+			            printf("\ncan't create thread :[%s]", strerror(err));
+			        else
+			            printf("\n Thread created successfully\n");
+			        j++;
+			    }
+
+    		sleep(5);
 		}
 
 		uint64_t endT = gettime();
