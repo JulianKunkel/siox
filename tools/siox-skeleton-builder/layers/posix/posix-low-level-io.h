@@ -87,6 +87,25 @@ int open( const char * pathname, int flags, ... );
 //@guardEnd
 int creat( const char * pathname, mode_t mode );
 
+//@splice_before mode_t mode = va_arg(valist,mode_t);
+//@guard_advanced
+//@activity
+//@splice_before SET_FILENAME(pathname)
+//@activity_attribute_u32 fileHandle ret
+//@horizontal_map_put_int ret
+//@error ''ret<0'' errnosave
+//@guardEnd
+//@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
+int open64( const char * pathname, int flags, ... );
+
+//@guard
+//@activity
+//@horizontal_map_put_int ret
+//@splice_before SET_FILENAME(pathname)
+//@activity_attribute_u32 fileHandle ret
+//@error ''ret<0'' errnosave
+//@guardEnd
+int creat64( const char * pathname, mode_t mode );
 //@guard_advanced
 //@activity
 //@activity_link_int fd
@@ -196,6 +215,27 @@ ssize_t pwrite( int fd, const void * buf, size_t count, off_t offset );
 //@guardEnd
 ssize_t pread( int fd, void * buf, size_t count, off_t offset );
 
+//@guard
+//@activity
+//@activity_attribute bytesToWrite count
+//@activity_attribute bytesWritten ret
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret==(size_t)-1'' errnosave
+//@guardEnd
+ssize_t pwrite64( int fd, const void * buf, size_t count, off_t offset );
+
+//@guard
+//@activity
+//@activity_attribute bytesToRead count
+//@activity_attribute bytesRead ret
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret==(size_t)-1'' errnosave
+//@guardEnd
+ssize_t pread64( int fd, void * buf, size_t count, off_t offset );
 
 
 //@guard
@@ -220,6 +260,27 @@ ssize_t pwritev( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 //@guardEnd
 ssize_t preadv( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
+//@guard
+//@activity
+//@activity_attribute bytesWritten ret
+//@activity_attribute_u32 fileMemoryRegions iovcnt
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret==(size_t)-1'' errnosave
+//@guardEnd
+ssize_t pwritev64( int fd, const struct iovec * iov, int iovcnt, off_t offset );
+
+//@guard
+//@activity
+//@activity_attribute bytesRead ret
+//@activity_attribute_u32 fileMemoryRegions iovcnt
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret==(size_t)-1'' errnosave
+//@guardEnd
+ssize_t preadv64( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 
 //@guard
@@ -374,6 +435,39 @@ On most library implementations, the errno variable is also set to a system-spec
 //@guardEnd
 FILE * fopen( const char * filename, const char * mode );
 
+//@guard
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileExtent length
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@error ''ret<0'' errnosave
+//@guardEnd
+void * mmap64( void * address, size_t length, int protect, int flags, int fd, off_t offset );
+
+//void * mremap (void *address, size_t length, size_t new_length, int flag);
+//int munmap (void *addr, size_t length);
+//int madvise (void *addr, size_t length, int advice);
+
+
+//On success, the function returns zero.
+//Errno is set to a platform-specific positive value.
+
+/*
+Opens the file whose name is specified in the parameter filename and associates it with a stream that can be identified in future operations by the FILE pointer returned.
+
+If the file is successfully opened, the function returns a pointer to a FILE object that can be used to identify the stream on future operations.
+Otherwise, a null pointer is returned.
+On most library implementations, the errnosave variable is also set to a system-specific error code on failure.
+ */
+//@guard_advanced
+//@activity
+//@splice_before SET_FILENAME(filename)
+//@activity_attribute_pointer fileFopenFlags mode
+//@horizontal_map_put_size ret
+//@error ''ret<0'' errnosave
+//@guardEnd
+FILE * fopen64( const char * filename, const char * mode );
 /*
 The  fdopen()  function  associates a stream with the existing file descriptor, fd.  The mode of the stream (one of the
 values "r", "r+", "w", "w+", "a", "a+") must be compatible with the mode of the file  descriptor.   The  file  position
