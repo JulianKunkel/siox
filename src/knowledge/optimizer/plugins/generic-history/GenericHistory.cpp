@@ -51,13 +51,16 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		ComponentOptions * AvailableOptions() override;
 
 		void Notify( shared_ptr<Activity> activity ) override;
+
 		virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
 
 	private:
 		Optimizer * optimizer;
-		SystemInformationGlobalIDManager * sys;
+		SystemInformationGlobalIDManager * sysinfo;
 
-		// bool tokensInitialized = false;
+		string 	interface;
+		string 	implementation;
+		UniqueInterfaceID 	uiid;
 
 		unordered_map<UniqueComponentActivityID, TokenType>	types;
 
@@ -70,22 +73,16 @@ ComponentOptions * GenericHistoryPlugin::AvailableOptions() {
   return new GenericHistoryOptions();
 }
 
+
 void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
-	cout << "GenericHistoryPlugin received " << activity << endl;
-	if( !types.size() ) initTypes( activity );
-	/*
-	OntologyAttribute & attribute;
-	if( ! optimizer->isPluginRegistered( attribute ) ){
-		optimizer->registerPlugin(attribute, & this);
-	}
-	*/
+	//cout << "GenericHistoryPlugin received " << activity << endl;
 
 	TokenType type = UNKNOWN;
 	IGNORE_EXCEPTIONS( type = types.at( activity->ucaid() ); );
 
-	cout << "Generic History saw activity of type " << activity->ucaid() <<"\n";
-
 	nTypes[type]++;
+
+	cout << "Generic History saw activity of type " << activity->ucaid() << " => ";
 	for(size_t i = 0; i < TOKEN_TYPE_COUNT; i++) cerr << nTypes[i] << " ";
 	cerr << "\n";
 
@@ -96,76 +93,58 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 		case HINT: break;
 		default: break;
 	}
-
 }
 
-void GenericHistoryPlugin::initTypes(const shared_ptr<Activity>& activity) {
-	// Find Interface ID for MPI
-//	TokenType type = UNKNOWN;
-//	IGNORE_EXCEPTIONS( type = types.at( activity->ucaid() ); );
-	cerr << "Initializing types\n";
-	UniqueInterfaceID uiid;
-	try{
-		uiid = sys->lookup_interfaceID("MPI", "2.1");
-		/// @todo Look up MPI implementation; either from module, or by inspecting incoming activities
-		/// until an MPI-specific one is found.
-	}
-	catch(NotFoundError)
-	{
-		cerr << "No UniqueInterfaceID for Interface MPI found - aborting!\n";
-		abort();
-	}
-
-	// Fill token map with MPI UCAIDs and their type
-	try{
-		types[sys->lookup_activityID(uiid,"MPI_File_open")] = OPEN;
-
-		types[sys->lookup_activityID(uiid,"MPI_File_read")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_read_all")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_read_at")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_read_at_all")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_read_ordered")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_read_shared")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_write")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_write_all")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_write_at")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_write_at_all")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_write_ordered")] = ACCESS;
-		types[sys->lookup_activityID(uiid,"MPI_File_write_shared")] = ACCESS;
-
-		types[sys->lookup_activityID(uiid,"MPI_File_close")] = CLOSE;
-
-		types[sys->lookup_activityID(uiid,"MPI_File_set_info")] = HINT;
-	}
-	catch(NotFoundError)
-	{
-		cerr << "UniqueComponentActivityID for one or more MPI activities not found - aborting!\n";
-		abort();
-	}
-}
 
 void GenericHistoryPlugin::initPlugin() {
 	fprintf(stderr, "GenericHistoryPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
-	GenericHistoryOptions & o = getOptions<GenericHistoryOptions>();
-	optimizer = GET_INSTANCE(Optimizer, o.optimizer);
 
-	for( auto itr = o.accessTokens.begin(); itr != o.accessTokens.end(); itr++ ){
-		cout << "ACCESS TOKENS: " << *itr << endl;
+	// Retrieve options
+	GenericHistoryOptions & o = getOptions<GenericHistoryOptions>();
+
+	// Retrieve pointers to required modules
+	assert(optimizer = GET_INSTANCE(Optimizer, o.optimizer));
+	assert(sysinfo = facade->get_system_information());
+
+	// Retrieve interface, implementation and uiid
+	interface = o.interface;
+	implementation = o.implementation;
+	try{
+		uiid = sysinfo->lookup_interfaceID(interface, implementation);
+	}
+	catch(NotFoundError)
+	{
+		cerr << "No UniqueInterfaceID for Interface \"" << interface << "\" and implementation \"" << implementation << "\" found - aborting!" << endl;
+		abort();
 	}
 
-	sys = facade->get_system_information();
-	assert(sys != nullptr);
+	// Fill token map with known activities' UCAIDs and their type
+	try{
+		for( auto itr = o.openTokens.begin(); itr != o.openTokens.end(); itr++ )
+			types[sysinfo->lookup_activityID(uiid,*itr)] = OPEN;
 
-	// filesize = dereferenceFacade->lookup_attribute_by_name("test", "filesize");
-	// assert(filesize != nullptr); generally true but not for the first run.
+		for( auto itr = o.accessTokens.begin(); itr != o.accessTokens.end(); itr++ )
+			types[sysinfo->lookup_activityID(uiid,*itr)] = ACCESS;
 
+		for( auto itr = o.closeTokens.begin(); itr != o.closeTokens.end(); itr++ )
+			types[sysinfo->lookup_activityID(uiid,*itr)] = CLOSE;
+
+		for( auto itr = o.hintTokens.begin(); itr != o.hintTokens.end(); itr++ )
+			types[sysinfo->lookup_activityID(uiid,*itr)] = HINT;
+	}
+	catch(NotFoundError)
+	{
+		cerr << "No UniqueComponentActivityID for one or more activities of Interface \"" << interface << "\" and implementation \"" << implementation << "\" found - aborting!" << endl;
+		abort();
+	}
 }
+
 
 OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
 
 	cout << "Up to now, GenericHistoryPlugin saw\n";
 	cout << "\t" << nTypes[OPEN] << " OPENs\n";
-	cout << "\t" << nTypes[ACCESS] << " ACCESSs\n";
+	cout << "\t" << nTypes[ACCESS] << " ACCESSes\n";
 	cout << "\t" << nTypes[CLOSE] << " CLOSEs\n";
 	cout << "\t" << nTypes[HINT] << " HINTs\n";
 
