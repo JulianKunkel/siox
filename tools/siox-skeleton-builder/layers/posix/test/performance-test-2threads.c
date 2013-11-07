@@ -19,6 +19,9 @@
 	/opt/gperftools/2.1/bin/pprof --list=Log ./a.out file.prof 
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
 #ifdef GOOGLEPROF
@@ -86,7 +89,7 @@ int main( int argc, char ** argv )
 
 	int pFile;
 	char buffer[] = {'a', 'b'};
-	pFile = open( "testfile.bin", "wb" );	
+	pFile = open( "testfile.bin", O_TRUNC | O_CREAT );	
 
 	printf("Determining the number of iterations for 1s\n");
 	// determine an experiment which takes about 1s.
@@ -102,12 +105,10 @@ int main( int argc, char ** argv )
 			        if (err != 0)
 			            printf("\ncan't create thread :[%s]", strerror(err));
 			        else
-				    write(pFile, buffer, 1 );
-			            printf("\n Thread created successfully\n");
+				    	write(pFile, buffer, 1 );
+		            printf("\n Thread created successfully\n");
 			        j++;
 			    }
-
-    		sleep(5);
 		}
 
 		uint64_t endT = gettime();
@@ -134,10 +135,11 @@ int main( int argc, char ** argv )
                             while(j < 1)
                             {
                                 err = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
-                                if (err != 0)
+                                if (err != 0){
                                     printf("\ncan't create thread :[%s]", strerror(err));
-                                else
-				    write(pFile, buffer, 1 );
+                                }else{
+				   							write(pFile, buffer, 1 );
+				   					  }
                                     printf("\n Thread created successfully\n");
                                 j++;
                             }
