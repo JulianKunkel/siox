@@ -19,6 +19,9 @@
 	/opt/gperftools/2.1/bin/pprof --list=Log ./a.out file.prof 
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
 #ifdef GOOGLEPROF
@@ -39,7 +42,7 @@ pthread_t tid[2];
 
 void* CreateThreads(void *arg)
 {
-    unsigned long i = 0;
+    unsigned long m = 0;
     pthread_t id = pthread_self();
 
     if(pthread_equal(id,tid[0]))
@@ -51,7 +54,7 @@ void* CreateThreads(void *arg)
         printf("\n Second thread processing\n");
     }
 
-    for(i=0; i<(0xFFFFFFFF);i++);
+    //for(m=0; m<(0xFFFFFFFF);m++);
 
     return NULL;
 }
@@ -86,7 +89,7 @@ int main( int argc, char ** argv )
 
 	int pFile;
 	char buffer[] = {'a', 'b'};
-	pFile = open( "testfile.bin", "wb" );	
+	pFile = open( "testfile.bin", O_TRUNC | O_CREAT );	
 
 	printf("Determining the number of iterations for 1s\n");
 	// determine an experiment which takes about 1s.
@@ -102,12 +105,10 @@ int main( int argc, char ** argv )
 			        if (err != 0)
 			            printf("\ncan't create thread :[%s]", strerror(err));
 			        else
-				    write(pFile, buffer, 1 );
-			            printf("\n Thread created successfully\n");
+				    	//write(pFile, buffer, 1 );
+	  		            printf("\n Thread created successfully\n");
 			        j++;
 			    }
-
-    		sleep(5);
 		}
 
 		uint64_t endT = gettime();
@@ -134,11 +135,12 @@ int main( int argc, char ** argv )
                             while(j < 1)
                             {
                                 err = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
-                                if (err != 0)
+                                if (err != 0){
                                     printf("\ncan't create thread :[%s]", strerror(err));
-                                else
-				    write(pFile, buffer, 1 );
-                                    printf("\n Thread created successfully\n");
+                                }else{
+				   	//write(pFile, buffer, 1 );
+				   					  }
+                                    	printf("\n Thread created successfully\n");
                                 j++;
                             }
 
