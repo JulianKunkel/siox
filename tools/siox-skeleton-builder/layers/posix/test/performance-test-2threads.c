@@ -69,8 +69,7 @@ uint64_t gettime()
 int main( int argc, char ** argv )
 {
 
-int main(void)
-{
+
 	int count = 10;
 #ifdef GOOGLEPROF
 	ProfilerStart("test.prof");
