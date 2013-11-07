@@ -973,6 +973,8 @@ class Writer():
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
 
+            print('\t', 'int', ' errnosave;', end='\n', sep='', file=output)
+
             # write the before-template for this function
             for templ in function.usedTemplateList:
                 outputString = templ.output('before').strip()
@@ -1188,6 +1190,8 @@ class Writer():
             if returnType != "void":
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
+
+            print('\t', 'int', ' errnosave;', end='\n', sep='', file=output)            
 
             # write the before-template for this function
             for templ in function.usedTemplateList:

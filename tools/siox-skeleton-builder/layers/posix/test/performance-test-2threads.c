@@ -96,12 +96,13 @@ int main( int argc, char ** argv )
 	while( deltaT < 1000000000ull ){
 		for(i=0; i < iterations; i++){
 			int j = 0;
-			    while(j < 2)
+			    while(j < 1)
 			    {
 			        err = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
 			        if (err != 0)
 			            printf("\ncan't create thread :[%s]", strerror(err));
 			        else
+				    write(pFile, buffer, 1 );
 			            printf("\n Thread created successfully\n");
 			        j++;
 			    }
@@ -129,7 +130,18 @@ int main( int argc, char ** argv )
 	for(o=0; o < count; o++){
 		uint64_t startT = gettime();
 		for(i=0; i < iterations; i++){
-			write(pFile, buffer, 1 );
+			int j = 0;
+                            while(j < 1)
+                            {
+                                err = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
+                                if (err != 0)
+                                    printf("\ncan't create thread :[%s]", strerror(err));
+                                else
+				    write(pFile, buffer, 1 );
+                                    printf("\n Thread created successfully\n");
+                                j++;
+                            }
+
 		}
 		double deltaT = gettime() - startT;
 		printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, iterations / (deltaT / 1000000000ull), deltaT / 1000000000ull / iterations);
