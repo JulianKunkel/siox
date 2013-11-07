@@ -537,7 +537,7 @@ If either size or count is zero, the function returns zero and both the stream s
 //@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
 //@activity_attribute bytesRead posDelta
 //@activity_attribute filePosition posB
-//@error ''ret == count'' errnosave
+//@error ''ret != count'' errnosave
 //@guardEnd
 size_t fread( void * ptr, size_t size, size_t count, FILE * stream );
 
@@ -555,7 +555,7 @@ If either size or count is zero, the function returns zero and the error indicat
 //@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
 //@activity_attribute bytesWritten posDelta
 //@activity_attribute filePosition posB
-//@error ''ret == count'' errnosave
+//@error ''ret != count'' errnosave
 //@guardEnd
 size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
 
