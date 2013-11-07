@@ -42,7 +42,7 @@ pthread_t tid[2];
 
 void* CreateThreads(void *arg)
 {
-    unsigned long i = 0;
+    unsigned long m = 0;
     pthread_t id = pthread_self();
 
     if(pthread_equal(id,tid[0]))
@@ -54,7 +54,7 @@ void* CreateThreads(void *arg)
         printf("\n Second thread processing\n");
     }
 
-    for(i=0; i<(0xFFFFFFFF);i++);
+    //for(m=0; m<(0xFFFFFFFF);m++);
 
     return NULL;
 }
@@ -105,8 +105,8 @@ int main( int argc, char ** argv )
 			        if (err != 0)
 			            printf("\ncan't create thread :[%s]", strerror(err));
 			        else
-				    	write(pFile, buffer, 1 );
-		            printf("\n Thread created successfully\n");
+				    	//write(pFile, buffer, 1 );
+	  		            printf("\n Thread created successfully\n");
 			        j++;
 			    }
 		}
@@ -138,9 +138,9 @@ int main( int argc, char ** argv )
                                 if (err != 0){
                                     printf("\ncan't create thread :[%s]", strerror(err));
                                 }else{
-				   							write(pFile, buffer, 1 );
+				   	//write(pFile, buffer, 1 );
 				   					  }
-                                    printf("\n Thread created successfully\n");
+                                    	printf("\n Thread created successfully\n");
                                 j++;
                             }
 
