@@ -129,7 +129,9 @@ template = {
     	assert(global_component);
     	assert(%(ComponentVariable)s);
     	siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
-	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
+	'after': '''
+			errnosave = errno;
+			siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
 },
