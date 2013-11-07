@@ -61,11 +61,11 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		GenericHistoryPlugin() : nTypes{} {
 		}
 
-		ComponentOptions * AvailableOptions(){
+		ComponentOptions * AvailableOptions() override {
 		  return new GenericHistoryOptions();
 		}
 
-		void Notify( Activity * activity ) {
+		void Notify( std::shared_ptr<Activity> activity ) override {
 			cout << "GenericHistoryPlugin received " << activity << endl;
 			/*
 			OntologyAttribute & attribute;
@@ -94,7 +94,8 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 			// nTypes[type]++;
 		}
 
-		void initPlugin(){
+		void initPlugin() override {
+			fprintf(stderr, "GenericHistoryPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
 			GenericHistoryOptions & o = getOptions<GenericHistoryOptions>();
 			optimizer = GET_INSTANCE(Optimizer, o.optimizer);
 
@@ -145,7 +146,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 			}
 */		}
 
-		virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
+		virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override {
 
 			cout << "Up to now, GenericHistoryPlugin saw\n";
 			cout << "\t" << nTypes[OPEN] << " OPENs\n";
