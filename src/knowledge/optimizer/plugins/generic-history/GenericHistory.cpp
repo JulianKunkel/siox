@@ -106,7 +106,7 @@ void GenericHistoryPlugin::initTypes(const shared_ptr<Activity>& activity) {
 	cerr << "Initializing types\n";
 	UniqueInterfaceID uiid;
 	try{
-		uiid = sys->lookup_interfaceID("MPI", "2.2");
+		uiid = sys->lookup_interfaceID("MPI", "2.1");
 		/// @todo Look up MPI implementation; either from module, or by inspecting incoming activities
 		/// until an MPI-specific one is found.
 	}

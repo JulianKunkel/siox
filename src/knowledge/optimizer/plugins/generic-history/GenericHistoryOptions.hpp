@@ -21,6 +21,21 @@ struct GenericHistoryOptions : public ActivityMultiplexerPluginOptions{
 	vector<string> accessTokens;
 	// where are the hints stored: activity name and vector of attribute names.
 	//vector<pair<string, vector<pair<string,string>>>> hintAttributes;
-	vector<pair<string,string>> accessRelevantOntologyAttributes; // e.g. MPI descriptor/fileHandle
+	
+	//vector<pair<string,string>> accessRelevantOntologyAttributes; // e.g. MPI descriptor/fileHandle
+	// Plug this into siox.conf to comply with new format:
+/*		<accessRelevantOntologyAttributes>
+			<count>2</count>
+			<item_version>0</item_version>
+		        <item>
+	        	        <first>MPI</first>
+		                <second>quantity/BytesToRead</second>
+		        </item>
+		        <item>
+	        	        <first>MPI</first>
+		                <second>quantity/BytesToWrite</second>
+		        </item>
+		</accessRelevantOntologyAttributes>
+*/
 };
 
