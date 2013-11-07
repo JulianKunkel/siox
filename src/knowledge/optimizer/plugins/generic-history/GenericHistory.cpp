@@ -98,6 +98,10 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 			GenericHistoryOptions & o = getOptions<GenericHistoryOptions>();
 			optimizer = GET_INSTANCE(Optimizer, o.optimizer);
 
+			for( auto itr = o.accessTokens.begin(); itr != o.accessTokens.end(); itr++ ){
+				cout << "ACCESS TOKENS: " << *itr << endl;
+			}
+
 			sys = facade->get_system_information();
 			assert(sys != nullptr);
 
