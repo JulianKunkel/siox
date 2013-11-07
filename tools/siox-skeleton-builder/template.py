@@ -32,7 +32,7 @@ template = {
 'register_attribute': {
 	'variables': 'AttributeVariable Domain Name StorageType',
 	'global': '''static siox_attribute * %(AttributeVariable)s;''',
-	'init': '''%(AttributeVariable)s = siox_ontology_register_attribute( %(Domain)s, %(Name)s, %(StorageType)s );''',
+	'init': '''%(AttributeVariable)s = siox_ontology_register_attribute( %(Domain)s, %(Name)s, %(StorageType)s ); assert(%(AttributeVariable)s != NULL);''',
     'before': '''''',
 	'after': '',
 	'cleanup': '',
@@ -202,7 +202,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'assert( %(Attribute)s != NULL );siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -212,7 +212,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'assert( %(Attribute)s != NULL );siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -222,7 +222,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'assert( %(Attribute)s != NULL ); {uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
+	'after': ' {uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
 	'cleanup': '',
 	'final': ''
 },

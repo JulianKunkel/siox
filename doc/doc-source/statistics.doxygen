@@ -10,7 +10,7 @@ In the code, @scoperef{monitoring,Statistic} is a class that not only contains t
 but also historic information about the last 100 minutes.
 These are recorded in a cascade of intervals, each interval serving as the basis to compute the aggregated values on the next level.
 This significantly reduces the amout of data that needs to be stored (from 60000 values down to 50).
-Code that needs statistics information will want to retrieve the @scoperef{monitoring,Statistics} objects that it is interested in,
+Code that needs statistics information will want to retrieve the @scoperef{monitoring,Statistic} objects that it is interested in,
 and then talk to that object to obtain the information the user code needs.
 
 
@@ -67,7 +67,7 @@ Also, whenever the set of available statistics changes (because a provider plugi
 the @scoperef{monitoring,StatisticsMultiplexer} is informed by a call to @scoperef{monitoring::StatisticsMultiplexer,notifyAvailableStatisticsChange()}.
 
 With the ThreadedStatisticsCollector,
-all calls to @scoperef{@ref monitoring::StatisticsProviderPlugin,nextTimestep()} and @scoperef{monitoring::StatisticsMultiplexer,newDataAvailable()}
+all calls to @scoperef{monitoring::StatisticsProviderPlugin,nextTimestep()} and @scoperef{monitoring::StatisticsMultiplexer,newDataAvailable()}
 are executed within a special thread spawned within the ThreadedStatisticsCollector.
 
 
