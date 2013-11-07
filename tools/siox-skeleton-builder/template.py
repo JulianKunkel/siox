@@ -125,12 +125,11 @@ template = {
 	'variables': 'Name=%(FUNCTION_NAME)s ComponentVariable=cv%(FUNCTION_NAME)s ActivityVariable=sioxActivity',
 	'global': '''static siox_component_activity * %(ComponentVariable)s;''',
 	'init': '''%(ComponentVariable)s = siox_component_register_activity( global_uid, "%(Name)s" );''',
-    'before': '''
-    	assert(global_component);
-    	assert(%(ComponentVariable)s);
-    	siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
+    	'before': '''
+    		assert(global_component);
+	    	assert(%(ComponentVariable)s);
+	    	siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
 	'after': '''
-			errnosave = errno;
 			siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
