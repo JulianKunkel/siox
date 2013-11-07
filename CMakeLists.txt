@@ -1,6 +1,3 @@
-SET(CMAKE_C_COMPILER /usr/bin/gcc-4.7)
-SET(CMAKE_CXX_COMPILER /usr/bin/g++-4.7)
-
 project(SIOX)
 
 cmake_minimum_required(VERSION 2.8)
