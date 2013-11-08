@@ -17,4 +17,4 @@ target_link_libraries(
 
 add_subdirectory(test)
 
-install(TARGETS siox-core-ContainerSerializer LIBRARY DESTINATION lib)
+install(TARGETS siox-core-ContainerSerializer LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

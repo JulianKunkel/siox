@@ -19,4 +19,4 @@ target_link_libraries(
 
 siox_run_serializer(DereferencingFacadeOptions.hpp BoostXMLSerializable.cpp)
 
-install(TARGETS siox-knowledge-DereferencingFacade LIBRARY DESTINATION lib)
+install(TARGETS siox-knowledge-DereferencingFacade LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

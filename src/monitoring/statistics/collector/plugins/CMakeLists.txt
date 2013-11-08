@@ -18,7 +18,7 @@ target_link_libraries(
 
 siox_run_serializer(StatisticsProviderGeneric.hpp StatisticsProviderGeneric.cpp)
 
-install(TARGETS siox-monitoring-statisticsPluginGeneric LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-statisticsPluginGeneric LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
 
 add_subdirectory(OSMemUsage)
 add_subdirectory(cpustats)

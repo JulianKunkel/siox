@@ -19,7 +19,7 @@ target_link_libraries(
 siox_run_serializer(StatisticsFileWriterOptions.hpp StatisticsFileWriterOptions.cpp)
 
 
-install(TARGETS siox-monitoring-statisticsMultiplexerPlugin-FileWriter LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-statisticsMultiplexerPlugin-FileWriter LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
 
 
 add_subdirectory(test)

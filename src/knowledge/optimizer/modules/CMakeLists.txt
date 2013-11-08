@@ -22,4 +22,4 @@ add_subdirectory(test)
 siox_run_serializer(OptimizerOptions.hpp OptimizerOptions.cpp)
 
 
-install(TARGETS siox-knowledge-OptimizerStandardImplementation LIBRARY DESTINATION lib)
+install(TARGETS siox-knowledge-OptimizerStandardImplementation LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

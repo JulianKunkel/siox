@@ -27,4 +27,4 @@ siox_run_serializer(ActivityPostgreSQLWriterOptions.hpp ActivityPostgreSQLWriter
 
 add_subdirectory(test)
 
-install(TARGETS siox-monitoring-activityPlugin-ActivityPostgreSQLWriter LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-activityPlugin-ActivityPostgreSQLWriter LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

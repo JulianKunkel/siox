@@ -29,5 +29,5 @@ siox_run_serializer(HighLevelCommunicationModuleOptions.hpp HighLevelCommunicati
 
 add_subdirectory(test)
 
-install(TARGETS siox-core-hcomm-multiMessageService LIBRARY DESTINATION lib)
-install(TARGETS siox-core-hcomm LIBRARY DESTINATION lib)
+install(TARGETS siox-core-hcomm-multiMessageService LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
+install(TARGETS siox-core-hcomm LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

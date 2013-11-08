@@ -21,4 +21,4 @@ siox_run_serializer(AnomalySkeletonOptions.hpp BoostXMLSerializable.cpp)
 
 add_subdirectory(test)
 
-install(TARGETS siox-monitoring-activityPlugin-AnomalySkeleton LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-activityPlugin-AnomalySkeleton LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

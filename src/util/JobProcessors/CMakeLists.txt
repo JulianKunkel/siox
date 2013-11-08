@@ -14,4 +14,4 @@ target_link_libraries(
 	siox-util-jobProcessors
 )
 
-install(TARGETS siox-util-jobProcessors LIBRARY DESTINATION lib)
+install(TARGETS siox-util-jobProcessors LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

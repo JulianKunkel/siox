@@ -17,4 +17,4 @@ target_link_libraries(
 
 add_subdirectory(test)
 
-install(TARGETS siox-monitoring-statisticsPlugin-CPUstats LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-statisticsPlugin-CPUstats LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

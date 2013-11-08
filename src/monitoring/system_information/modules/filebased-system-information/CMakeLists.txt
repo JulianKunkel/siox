@@ -21,4 +21,4 @@ siox_run_serializer(FileBasedSystemInformationOptions.hpp BoostXMLSerializable.c
 
 add_subdirectory(test)
 
-install(TARGETS siox-monitoring-FileBasedSystemInformation LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-FileBasedSystemInformation LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
