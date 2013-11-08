@@ -1,5 +1,5 @@
 /*
-  MW. Threads
+  MW. Threads that do write()
   JK. This simple performance test calls fwrite with 0 bytes to fetch which will complete ASAP.
   To measure SIOX overhead run:
 	siox-inst posix ./a.out
@@ -43,25 +43,28 @@ pthread_t tid[2];
 void* CreateThreads(void *arg)
 {
     unsigned long m = 0;
-    int pFile;
+    int pf1;
+    int pf2;
     char buffer[] = {'a','b'};
-    pFile = open( "testf.bin", O_TRUNC | O_CREAT );
     pthread_t id = pthread_self();
 
     if(pthread_equal(id,tid[0]))
     {
+        pf1 = open( "testf.bin", O_TRUNC | O_CREAT );
         printf("\n First thread processing\n");
-	write(pFile, buffer, 1 );
+	write(pf1, buffer, 1 );
     }
     else
     {
+        pf2 = open( "testf.bin", O_TRUNC | O_CREAT );
         printf("\n Second thread processing\n");
-        write(pFile, buffer, 1 );
+        write(pf2, buffer, 1 );
     }
 
     //for(m=0; m<(0xFFFFFFFF);m++);
 
-    close( pFile );
+    close( pf1 );
+    close( pf2 );
 
     return NULL;
 }
