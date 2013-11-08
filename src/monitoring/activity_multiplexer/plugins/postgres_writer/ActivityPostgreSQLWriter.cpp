@@ -5,8 +5,6 @@
 
 #include "libpq-fe.h"
 
-#include <boost/archive/text_oarchive.hpp>
-
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
@@ -27,7 +25,7 @@ private:
 	PGconn *dbconn_;
 public:
 
-	void Notify(Activity *activity) 
+	void Notify(shared_ptr<Activity> activity) 
 	{
 		querier_->insert_activity(*activity);
 	}
@@ -46,6 +44,7 @@ public:
 		if (PQstatus(dbconn_) != CONNECTION_OK) {
 			
 			std::cerr << "Connection to database failed: " << PQerrorMessage(dbconn_) << std::endl;
+			
 		}
 		
 		querier_ = new PostgreSQLQuerier(*dbconn_);
