@@ -43,18 +43,25 @@ pthread_t tid[2];
 void* CreateThreads(void *arg)
 {
     unsigned long m = 0;
+    int pFile;
+    char buffer[] = {'a','b'};
+    pFile = open( "testf.bin", O_TRUNC | O_CREAT );
     pthread_t id = pthread_self();
 
     if(pthread_equal(id,tid[0]))
     {
         printf("\n First thread processing\n");
+	write(pFile, buffer, 1 );
     }
     else
     {
         printf("\n Second thread processing\n");
+        write(pFile, buffer, 1 );
     }
 
     //for(m=0; m<(0xFFFFFFFF);m++);
+
+    close( pFile );
 
     return NULL;
 }
@@ -87,9 +94,9 @@ int main( int argc, char ** argv )
 	int i, o;
 	int err;
 
-	int pFile;
-	char buffer[] = {'a', 'b'};
-	pFile = open( "testfile.bin", O_TRUNC | O_CREAT );	
+	//int pFile;
+	//char buffer[] = {'a', 'b'};
+	//pFile = open( "testfile.bin", O_TRUNC | O_CREAT );	
 
 	printf("Determining the number of iterations for 1s\n");
 	// determine an experiment which takes about 1s.
@@ -102,11 +109,10 @@ int main( int argc, char ** argv )
 			    while(j < 1)
 			    {
 			        err = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
-			        if (err != 0)
+			        if (err != 0){
 			            printf("\ncan't create thread :[%s]", strerror(err));
-			        else
-				    	//write(pFile, buffer, 1 );
-	  		            printf("\n Thread created successfully\n");
+			        }else{
+	  		            printf("\n Thread created successfully\n");}
 			        j++;
 			    }
 		}
@@ -138,9 +144,7 @@ int main( int argc, char ** argv )
                                 if (err != 0){
                                     printf("\ncan't create thread :[%s]", strerror(err));
                                 }else{
-				   	//write(pFile, buffer, 1 );
-				   					  }
-                                    	printf("\n Thread created successfully\n");
+                                    	printf("\n Thread created successfully\n");}
                                 j++;
                             }
 
@@ -156,7 +160,7 @@ int main( int argc, char ** argv )
 	}
 
 
-	close( pFile );
+	//close( pFile );
 #ifdef GOOGLEPROF
         ProfilerStop("test.prof");
 #endif
