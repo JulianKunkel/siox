@@ -17,5 +17,7 @@ target_link_libraries(
 	${MPI_CXX_LIBRARIES}
 )
 
-add_test(tools-skeleton_builder-layers-mpi-mpi-test MPIWrapperTest)
+symlink(siox.conf siox.conf)
+
+add_test(tools-skeleton_builder-layers-mpi-MPIWrapperTest MPIWrapperTest)
 
