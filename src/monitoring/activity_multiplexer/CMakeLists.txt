@@ -23,4 +23,4 @@ target_link_libraries(
 add_subdirectory(plugins)
 #add_subdirectory(test)
 
-install(TARGETS siox-monitoring-ActivityMultiplexerAsync LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-ActivityMultiplexerAsync LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

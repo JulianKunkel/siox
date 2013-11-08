@@ -35,5 +35,5 @@ target_link_libraries(
 
 add_subdirectory(test)
 
-install(TARGETS siox-tools-TraceReader siox-trace-reader LIBRARY DESTINATION lib RUNTIME DESTINATION bin ARCHIVE DESTINATION lib)
+install(TARGETS siox-tools-TraceReader siox-trace-reader LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR} RUNTIME DESTINATION bin ARCHIVE DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
 

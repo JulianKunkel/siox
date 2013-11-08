@@ -13,9 +13,14 @@ function ABORT(){
 	exit 1
 }
 
-INSTALL_DIR=$(dirname $(dirname $0))
+INSTALL_DIR=$(dirname $(dirname $(which $0)))
 
-pushd $INSTALL_DIR/lib >/dev/null
+LIBDIR=$INSTALL_DIR/lib
+if [ -d "$INSTALL_DIR/lib64" ]; then
+	LIBDIR=$INSTALL_DIR/lib64
+fi
+
+pushd $LIBDIR >/dev/null
 AVAILABLE_WRAPPERS=$(ls libsiox-*dlsym* | sed "s/libsiox-//g" | sed "s/-dlsym.*//" )
 popd >/dev/null
 
@@ -59,14 +64,14 @@ LAYERS_TO_INSTRUMENT=(${LAYERS//,/ })
 
 LDSTRING=""
 WRAPSTRING=""
-WRAPLIBS="-L $INSTALL_DIR/lib/ -Wl,-rpath $INSTALL_DIR/lib/"
+WRAPLIBS="-L $LIBDIR -Wl,-rpath $LIBDIR"
 for l in "${LAYERS_TO_INSTRUMENT[@]}";do
 	if [[ $AVAILABLE_WRAPPERS != *$l* ]]; then
 		echo "Invalid layer: $l"
 		ABORT
 	fi
-	LDSTRING="$INSTALL_DIR/lib/libsiox-$l-dlsym.so $LDSTRING"
-	WRAPSTRING="$(cat $INSTALL_DIR/lib/$l.wrap) $WRAPSTRING"
+	LDSTRING="$LIBDIR/libsiox-$l-dlsym.so $LDSTRING"
+	WRAPSTRING="$(cat $LIBDIR/libsiox-$l.wrap) $WRAPSTRING"
 	WRAPLIBS="$WRAPLIBS -l siox-$l-wrap"
 done
 
@@ -77,7 +82,7 @@ if [[ $TYPE == "dlsym" ]] ; then
 	fi
 
 	echo "[EXE] $LAYERS \"$@\" "
-	export LD_LIBRARY_PATH=$INSTALL_DIR/lib:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$LIBDIR:$LD_LIBRARY_PATH
 
 	LD_PRELOAD="$LDSTRING" $@
 else

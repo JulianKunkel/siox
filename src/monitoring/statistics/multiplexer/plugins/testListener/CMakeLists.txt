@@ -14,4 +14,4 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 )
 
-# install(TARGETS  LIBRARY DESTINATION lib)
+# install(TARGETS  LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

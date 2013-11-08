@@ -23,4 +23,4 @@ siox_run_serializer(GenericHistoryOptions.hpp GenericHistoryOptions.cpp)
 
 # add_subdirectory(test)
 
-install(TARGETS siox-knowledge-optimizer-generic-history LIBRARY DESTINATION lib)
+install(TARGETS siox-knowledge-optimizer-generic-history LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

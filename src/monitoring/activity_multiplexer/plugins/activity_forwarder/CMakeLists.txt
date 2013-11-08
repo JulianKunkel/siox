@@ -20,4 +20,4 @@ target_link_libraries(
 
 add_subdirectory(test)
 
-install(TARGETS siox-monitoring-activityPlugin-ActivityForwarder LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-activityPlugin-ActivityForwarder LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

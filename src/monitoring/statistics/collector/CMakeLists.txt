@@ -21,7 +21,6 @@ target_link_libraries(
 
 siox_run_serializer(ThreadedStatisticsOptions.hpp ThreadedStatisticsOptions.cpp)
 
-
 add_subdirectory(plugins)
 
-install(TARGETS siox-monitoring-ThreadedStatisticsCollector LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-ThreadedStatisticsCollector LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

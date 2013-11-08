@@ -1,14 +1,9 @@
-SET(CMAKE_C_COMPILER /usr/bin/gcc-4.7)
-SET(CMAKE_CXX_COMPILER /usr/bin/g++-4.7)
-
 project(SIOX)
 
 cmake_minimum_required(VERSION 2.8)
 
 include(CTest)
 include(FeatureSummary)
-
-cmake_minimum_required(VERSION 2.8)
 
 set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/src/include)
@@ -43,10 +38,14 @@ set(CMAKE_INCLUDE_PATH
 #    /opt/boost-1.53/include
 )
 
+
 include(CTest)
 include(FeatureSummary)
 
 include(SIOXMacros)
+
+set_library_install_suffix()
+set(SIOX_INSTALL_LIBRARY_DIR lib${LIBRARY_INSTALL_SUFFIX})
 
 # find_package(Protobuf REQUIRED)
 # set_package_properties(Protobuf PROPERTIES URL "http://code.google.com/p/protobuf" TYPE REQUIRED PURPOSE "Serialization using Google Protocol Buffers.")
@@ -79,8 +78,6 @@ set_package_properties(MPI PROPERTIES URL "http://www.open-mpi.org" TYPE OPTIONA
 
 find_package(PythonInterp 2.7 REQUIRED)
 set_package_properties(PythonInterp PROPERTIES URL "http://www.python.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
-
-# siox_generate_buffers()
 
 feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
 
