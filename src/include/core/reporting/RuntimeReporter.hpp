@@ -2,10 +2,12 @@
 #define CORE_COMPONENT_RUNTIME_REPORT_HPP
 
 #include <list>
-#include <memory>
+#include <utility>
 
 #include <core/reporting/ComponentReportInterface.hpp>
 #include <core/component/Component.hpp>
+#include <core/component/ComponentRegistrar.hpp>
+
 
 namespace core{
 
@@ -14,7 +16,7 @@ namespace core{
  */
 class RuntimeReporter : public core::Component {
 	public:
-		virtual void processFinalReport(const std::list<std::shared_ptr<ComponentReport>> & reports) = 0;
+		virtual void processFinalReport(const std::list< pair<RegisteredComponent*, ComponentReport> > & reports) = 0;
 };
 
 }

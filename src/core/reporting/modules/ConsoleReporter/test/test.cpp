@@ -6,14 +6,20 @@ using namespace std;
 
 using namespace core;
 
-class CRI_TestClass : public ComponentReportInterface{
+class CRI_TestClass : public ComponentReportInterface, public Component{
 	public:
-		shared_ptr<ComponentReport> prepareReport(){
-			ComponentReport * rep = new ComponentReport("TestClassInterface", "Impl1");
-			rep->data["Stat1"] = {ReportEntry::Type::SIOX_INTERNAL_P1, 4};
-			rep->data["Stat2"] = {ReportEntry::Type::APPLICATION, 8};
+		ComponentReport prepareReport(){
+			ComponentReport rep;
+			rep.data["Stat1"] = {ReportEntry::Type::SIOX_INTERNAL_DEBUG, 4};
+			rep.data["Stat2"] = {ReportEntry::Type::APPLICATION_PERFORMANCE, 8};
 
-			return shared_ptr<ComponentReport>(rep);
+			return rep;
+		}
+
+		void init(){}
+
+		ComponentOptions* AvailableOptions(){ 
+			return nullptr; 
 		}
 };
 
@@ -25,8 +31,9 @@ int main( int argc, char const * argv[] )
 
 	CRI_TestClass c1; 
 
-	std::list<std::shared_ptr<ComponentReport>> reports;
-	reports.push_back( c1.prepareReport() ) ;
+	std::list< pair<RegisteredComponent*, ComponentReport> > reports;
+	RegisteredComponent rc(1, "test", "t1", & c1);
+	reports.push_back( { & rc, c1.prepareReport() } ) ;
 
 	m1->processFinalReport(reports);
 

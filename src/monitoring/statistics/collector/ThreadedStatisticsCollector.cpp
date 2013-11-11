@@ -155,6 +155,8 @@ Implementation details for the requirements of a StatisticsCollector:
 
 #include <workarounds.hpp>
 
+#include <core/reporting/ComponentReportInterface.hpp>
+
 #include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
 #include <monitoring/statistics/Statistic.hpp>
 #include <monitoring/statistics/collector/StatisticsProviderDatatypes.hpp>
@@ -172,7 +174,7 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 
-class ThreadedStatisticsCollector : StatisticsCollector {
+class ThreadedStatisticsCollector : public StatisticsCollector, public ComponentReportInterface {
 	public:
 
 		virtual void init() throw();
@@ -194,6 +196,8 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 
 		virtual ~ThreadedStatisticsCollector() throw();
 
+		virtual ComponentReport prepareReport();
+
 		/**
 		 * get Available ThreadedStatisticsOptions
 		 */
@@ -212,15 +216,29 @@ class ThreadedStatisticsCollector : StatisticsCollector {
 		boost::shared_mutex sourcesLock;
 
 		thread pollingThread;
-		size_t pollCount;
+		size_t pollCount;		
 		volatile bool terminated = false;	//This flag is only raised once to signal the polling thread to terminate.
 
-		int64_t getMicroSeconds() throw();
-		void microSecondSleep(int64_t microSeconds) throw();
+		void nanoSecondSleep(Timestamp nanoSeconds) throw();
 		void pollingThreadMain() throw();	// One thread for periodic issuing
+
+		// statistic counters for component reports
+		uint64_t run_timesteps = 0; // number of performed iterations
+		uint64_t process_time = 0;
 };
 
 
+
+ComponentReport ThreadedStatisticsCollector::prepareReport(){
+	ComponentReport rep;
+
+	rep.data["AVAILABLE_STATISTICS"] = {ReportEntry::Type::SIOX_INTERNAL_INFO, statistics.size() };
+	rep.data["PROCESSED_TIMESTEPS"] = {ReportEntry::Type::SIOX_INTERNAL_INFO, run_timesteps};
+	rep.data["WAITING_TIME"] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, (run_timesteps * 100 * 1000 * 1000ull - process_time) / 1000000000.0 };
+	rep.data["PROCESSING_TIME"] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, process_time / 1000000000.0 };
+
+	return rep;
+}
 
 void ThreadedStatisticsCollector::init() throw() {
 	//XXX I've taken out reading a polling interval from the options, because that should be determined from the StatisticsProviderPlugins.
@@ -332,27 +350,25 @@ ComponentOptions * ThreadedStatisticsCollector::AvailableOptions() throw() {
 	return new ThreadedStatisticsOptions();
 }
 
-int64_t ThreadedStatisticsCollector::getMicroSeconds() throw() {
-	struct timeval curTime;
-	gettimeofday(&curTime, NULL);
-	return 1000*1000ll*curTime.tv_sec + curTime.tv_usec;
-}
-
-void ThreadedStatisticsCollector::microSecondSleep(int64_t microSeconds) throw() {
+void ThreadedStatisticsCollector::nanoSecondSleep(Timestamp nanoSeconds) throw() {
 	struct timespec sleepTime;
-	sleepTime.tv_sec = microSeconds/1000/1000;
-	sleepTime.tv_nsec = (microSeconds - 1000*1000*sleepTime.tv_sec)*1000;
+	sleepTime.tv_sec = nanoSeconds/1000/1000/1000;
+	sleepTime.tv_nsec = (nanoSeconds - 1000*1000*1000ull * sleepTime.tv_sec);
 	nanosleep(&sleepTime, NULL);
 }
 
 // One thread for periodic issuing
 void ThreadedStatisticsCollector::pollingThreadMain() throw() {
-	int64_t nextPollTime = getMicroSeconds();
+	Timestamp nextPollTime = siox_gettime();
 	while( ! terminated ) {
 		//perform polling
 		sourcesLock.lock_shared();
 		//produce new values
 		Timestamp measurementTime = siox_gettime();
+
+		// update global statistics
+		run_timesteps++;
+
 		for( size_t i = plugins.size(); i--; ) {
 			plugins[i]->nextTimestep();
 		}
@@ -371,15 +387,20 @@ void ThreadedStatisticsCollector::pollingThreadMain() throw() {
 
 		// Sleep until it's time to poll again.
 		// I have moved this from its own function, because we have to check `terminated` after every call to sleep_for.
-		nextPollTime += 100*1000;
-		int64_t curTime = getMicroSeconds();
-		while(nextPollTime - curTime >= 0) {
-			microSecondSleep(nextPollTime - curTime);
-			curTime = getMicroSeconds();
+		nextPollTime += 100*1000*1000ull;
+		Timestamp curTime = siox_gettime();
+
+		// update global statistics
+		process_time += curTime - measurementTime;
+
+		while( nextPollTime >= curTime ) {
+			nanoSecondSleep(nextPollTime - curTime);
+			curTime = siox_gettime();
+
 			// Check whether we were awoken to terminate.
 			atomic_thread_fence( memory_order_acquire );	//Make sure that the value of terminated is up to date.
 			if( terminated ) return;
-		}
+		}		
 	}
 }
 

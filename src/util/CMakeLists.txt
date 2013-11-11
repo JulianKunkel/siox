@@ -7,6 +7,7 @@ include_directories(
 add_library(
 	siox-util
 	autoLoadModules.cpp
+	ReporterHelper.cpp
 	time.c
 )
 

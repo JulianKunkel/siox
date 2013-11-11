@@ -16,11 +16,18 @@ namespace core{
  */
 struct ReportEntry{
 	enum class Type : int8_t {
-		APPLICATION, // some information about the application
-		SYSTEM, 
-		SIOX_INTERNAL_P1, // SIOX internal information, highest priority (critical)
-		SIOX_INTERNAL_P2, // SIOX internal information
-		SIOX_INTERNAL_P3, // SIOX internal information
+		APPLICATION_CRITICAL, // some information about the application
+		APPLICATION_INFO,
+		APPLICATION_DEBUG,
+		APPLICATION_PERFORMANCE,
+		SYSTEM_CRITICAL, 
+		SYSTEM_INFO, 
+		SYSTEM_DEBUG,
+		SYSTEM_PERFORMANCE,
+		SIOX_INTERNAL_CRITICAL, // SIOX internal information, highest priority (critical)
+		SIOX_INTERNAL_INFO,
+		SIOX_INTERNAL_DEBUG,
+		SIOX_INTERNAL_PERFORMANCE,
 	};
 
 	Type type;
@@ -32,13 +39,8 @@ struct ReportEntry{
 };
 
 struct ComponentReport{
-	string componentType;
-	string componentIdentification;
-
 	// relevant data to report
 	unordered_map<string, ReportEntry> data;
-
-	ComponentReport(const string & cType, const string & cID): componentType(cType), componentIdentification(cID) {}
 };
 
 /**
@@ -46,7 +48,7 @@ struct ComponentReport{
  */
 class ComponentReportInterface{
 	public:
-		virtual shared_ptr<ComponentReport> prepareReport() = 0;
+		virtual ComponentReport prepareReport() = 0;
 };
 
 }

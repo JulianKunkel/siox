@@ -26,11 +26,10 @@
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
+#include <core/reporting/ComponentReportInterface.hpp>
+
 
 #include "ActivityMultiplexerAsyncOptions.hpp"
-
-
-
 
 
 using namespace core;
@@ -254,7 +253,7 @@ namespace monitoring {
 	 * Forwards logged activities to registered listeners (e.g. Plugins) either
 	 * in an syncronised or asyncronous manner.
 	 */
-	class ActivityMultiplexerAsync : public ActivityMultiplexer, public Dispatcher {
+	class ActivityMultiplexerAsync : public ActivityMultiplexer, public Dispatcher, public ComponentReportInterface {
 
 	private:
 			list<ActivityMultiplexerListener *> 		listeners;
@@ -263,6 +262,10 @@ namespace monitoring {
 			ActivityMultiplexerNotifier * notifier = nullptr;
 
 			boost::shared_mutex  listener_change_mutex;
+
+			// statistics about operation:
+			uint64_t lost_events = 0;
+			uint64_t processed_activities = 0;
 	public:
 
 			~ActivityMultiplexerAsync() {
@@ -276,12 +279,23 @@ namespace monitoring {
 
 			}
 
+		ComponentReport prepareReport(){
+			ComponentReport rep;
+
+			rep.data["ASYNC_DROPPED_ACTIVITIES"] = {ReportEntry::Type::SIOX_INTERNAL_CRITICAL, lost_events};
+			rep.data["PROCESSED_ACTIVITIES"] = {ReportEntry::Type::SIOX_INTERNAL_INFO, processed_activities};
+
+			return rep;
+		}
+
 			/**
 			 * hand over activity to registered listeners
 			 *
 			 * @param	activity	logged activity
 			 */
 			virtual void Log( shared_ptr<Activity> activity ){
+				processed_activities++;
+
 				assert( activity != nullptr );
 				// quick sync dispatch
 				{
