@@ -87,6 +87,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 		double recordPerformance( const shared_ptr<Activity>& activity );
 		vector<Attribute>* findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId );	//outParentId may be NULL
+		static void rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity );
 };
 
 
@@ -111,7 +112,7 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 	switch (type) {
 
 		case OPEN:
-			openFileHints[activity->aid()] = activity->attributeArray();
+			rememberHints( &openFileHints[activity->aid()], activity );
 			break;
 
 		case ACCESS:
@@ -129,7 +130,7 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 
 		case HINT:
 			if( vector<Attribute>* curHints = findCurrentHints( activity, 0 ) ) {
-				*curHints = activity->attributeArray();
+				rememberHints( curHints, activity );
 			}
 			break;
 
@@ -256,6 +257,17 @@ vector<Attribute>* GenericHistoryPlugin::findCurrentHints( const shared_ptr<Acti
 		}
 	}
 	return 0;
+}
+
+
+void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity ) {
+	outHintVector->clear();
+	const vector<Attribute>& attributes = activity.attributeArray();
+	for( size_t i = attributes->size(); i--; ) {
+		bool isHint = false;
+		IGNORE_EXCEPTIONS( hintTypes.at( attributes[i].id ); isHint = true; );
+		if( isHint ) outHintVector->push_back( attributes[i] );
+	}
 }
 
 
