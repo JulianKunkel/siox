@@ -58,18 +58,18 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		Optimizer * optimizer;
 		SystemInformationGlobalIDManager * sysinfo;
 
-		string 	interface;
-		string 	implementation;
-		UniqueInterfaceID 	uiid;
+		string interface;
+		string implementation;
+		UniqueInterfaceID uiid;
 
 		// Map ucaid to type of activity (Open/Access/Close/Hint)
-		unordered_map<UniqueComponentActivityID, TokenType>	types;
+		unordered_map<UniqueComponentActivityID, TokenType> types;
 		// Map ucaid to ID of attribute used in computing activity performance
-		unordered_map<UniqueComponentActivityID, OntologyAttributeID>	performanceAttIDs;
+		unordered_map<UniqueComponentActivityID, OntologyAttributeID> performanceAttIDs;
 
 		int nTypes[TOKEN_TYPE_COUNT];
 
-		double recordPerformance( const shared_ptr<Activity> activity );
+		double recordPerformance( const shared_ptr<Activity>& activity );
 };
 
 
@@ -149,8 +149,8 @@ void GenericHistoryPlugin::initPlugin() {
 			UniqueComponentActivityID ucaid = sysinfo->lookup_activityID(uiid,*itr);
 			types[ucaid] = ACCESS;
 			performanceAttIDs[ucaid] = facade->lookup_attribute_by_name(atr->first, atr->second).aID;
-		  	itr++;
-		  	atr++;
+			itr++;
+			atr++;
 		}
 
 		for( auto itr = o.closeTokens.begin(); itr != o.closeTokens.end(); itr++ )
@@ -179,34 +179,27 @@ OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & 
 }
 
 
-double GenericHistoryPlugin::recordPerformance( const shared_ptr<Activity> activity ){
-	double result = 0.0;
-
-	Timestamp 	t_start = activity->time_start();
-	Timestamp 	t_stop = activity->time_stop();
-	OntologyAttributeID 	oaid;
+double GenericHistoryPlugin::recordPerformance( const shared_ptr<Activity>& activity ){
+	Timestamp t_start = activity->time_start();
+	Timestamp t_stop = activity->time_stop();
+	OntologyAttributeID oaid = 0;	//According to datatypes/ids.hpp this is an illegal value. I hope that information is still up to date.
 
 	cout << t_start << "-" << t_stop << "@";
 
-	if (t_stop == t_start)
-		return 0.0;
+	if (t_stop == t_start) return 1/0.0;	//Infinite performance is sematically closer to an almost zero time operation than zero performance.
 
 	// Find performance-relevant attribute's value for activity
 	IGNORE_EXCEPTIONS(oaid = performanceAttIDs.at(activity->ucaid()););
-	const vector<Attribute> & 	attributes = activity->attributeArray();
-	for(auto itr=attributes.begin(); itr != attributes.end(); itr++)
-	{
-		if (itr->id == oaid)
-		{
+	const vector<Attribute> & attributes = activity->attributeArray();
+	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
+		if (itr->id == oaid) {
 			uint64_t value = itr->value.uint64();
 			cout << value << " => ";
-			result = ((double) value) / (t_stop - t_start) ;
-			return result;
+			return ((double) value) / (t_stop - t_start) ;
 		}
 	}
 
-	// Attribute not found - report this somehow!
-	return 0.0;
+	return 0/0.0;	//return a NAN if the attribute was not found
 }
 
 
