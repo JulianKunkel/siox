@@ -129,7 +129,7 @@ namespace monitoring {
 // NodeID lookup_node_id(const char * hostname);
 // See @TODO
 
-	/* Software ID, identifying the application programm, may be a server as well */	
+	/* Software ID, identifying the application programm, may be a server as well */
 	//@serializable
 	struct ProcessID {
 
@@ -303,5 +303,29 @@ namespace monitoring {
 	}
 
 }
+
+namespace std {
+	template <> struct hash<monitoring::ProcessID> {
+		size_t operator()(const monitoring::ProcessID& me) const {
+			size_t temp = me.nid*(31*31) + 31*(size_t)me.pid + me.time;
+			return temp ^ (temp >> 32);
+		}
+	};
+
+	template <> struct hash<monitoring::ComponentID> {
+		size_t operator()(const monitoring::ComponentID& me) const {
+			size_t temp = 31*hash<monitoring::ProcessID>()(me.pid) + me.id;
+			return temp ^ (temp >> 32);
+		}
+	};
+
+	template <> struct hash<monitoring::ActivityID> {
+		size_t operator()(const monitoring::ActivityID& me) const {
+			size_t temp = hash<monitoring::ComponentID>()(me.cid)*(31*31) + 31*(size_t)me.id + me.thread;
+			return temp ^ (temp >> 32);
+		}
+	};
+}
+
 
 #endif
