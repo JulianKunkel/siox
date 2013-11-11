@@ -74,6 +74,9 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		// Map ucaid to ID of attribute used in computing activity performance
 		unordered_map<UniqueComponentActivityID, OntologyAttributeID> performanceAttIDs;
 
+		// Array holding the attribute descriptions of attributes to be used as hints
+		vector<OntologyAttribute> hintAttributes;
+
 		int nTypes[TOKEN_TYPE_COUNT];
 
 		unordered_map<ActivityID, vector<Attribute> > openFileHints;
@@ -182,8 +185,26 @@ void GenericHistoryPlugin::initPlugin() {
 			types[sysinfo->lookup_activityID(uiid,*itr)] = HINT;
 	}
 	catch(NotFoundError) {
-		cerr << "No UniqueComponentActivityID for one or more activities of Interface \"" << interface << "\" and implementation \"" << implementation << "\" found - aborting!" << endl;
+		cerr << "No UniqueComponentActivityID for one or more activities of interface \"" << interface << "\" and implementation \"" << implementation << "\" found - aborting!" << endl;
 		abort();
+	}
+
+	// Find Attribute descriptions for attributes used as hints and remember them
+	for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ )
+	{
+		string domain = itr->first;
+		string attribute = itr->second;
+
+		try{
+			OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
+			hintAttributes.push_back(ontatt);
+		}
+		catch(NotFoundError)
+		{
+			cerr << "No OntologyAttribute for interface \"" << domain << "\" and attribute \"" << attribute << "\" found - aborting!" << endl;
+			abort();
+		}
+
 	}
 }
 
