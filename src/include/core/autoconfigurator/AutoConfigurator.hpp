@@ -7,6 +7,7 @@
 #include <exception>
 
 #include <vector>
+#include <list>
 #include <string>
 
 using namespace std;
@@ -70,6 +71,20 @@ namespace core {
 						return ret;
 				}
 				return nullptr;
+			}
+
+
+			template<class TYPE>
+			list<TYPE *> searchForAll( vector<Component *> vector ) {
+				list<TYPE *> lst;
+
+				for( auto itr = vector.begin(); itr != vector.end(); itr++ ) {
+					TYPE * ret = dynamic_cast<TYPE *>( *itr );
+					if( ret != nullptr ){
+						lst.push_back(ret);
+					}
+				}
+				return lst;
 			}
 
 			/*
