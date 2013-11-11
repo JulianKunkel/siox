@@ -171,15 +171,15 @@ void GenericHistoryPlugin::initPlugin() {
 	// Find Attribute descriptions for attributes used as hints and remember them
 	for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ )
 	{
-		string interface = itr->first;
+		string domain = itr->first;
 		string attribute = itr->second;
 
 		try{
-			OntologyAttribute ontatt = facade->lookup_attribute_by_name(interface, attribute);
+			OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
 		}
 		catch(NotFoundError)
 		{
-			cerr << "No OntologyAttribute for interface \"" << interface << "\" and attribute \"" << attribute << "\" found - aborting!" << endl;
+			cerr << "No OntologyAttribute for interface \"" << domain << "\" and attribute \"" << attribute << "\" found - aborting!" << endl;
 			abort();
 		}
 
