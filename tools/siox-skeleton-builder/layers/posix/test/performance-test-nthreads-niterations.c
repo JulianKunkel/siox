@@ -1,6 +1,5 @@
 /*
   MW. Threads that do write()
-  JK. This simple performance test calls fwrite with 0 bytes to fetch which will complete ASAP.
   To measure SIOX overhead run:
 	siox-inst posix ./a.out
   To validate the result run without SIOX instrumentation which should create 100 million OPs/s.
@@ -36,28 +35,18 @@
 #include <string.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include <unistd.h>
-
-pthread_t tid[2];
-
-//n threads 1 file pro thread ohne open
-int n_threads = 4;
-
-
-// for how many tests: testcount
-
-// for n threads
-// create threads
-
-// EXEC pthread barrier
-
-
-// join
-// unlink
+#include <unistd.h> //unlink() etc.
 
 
 
-//Übergabe der Iterationen
+pthread_t tid[1];
+
+
+#define FILEP1 "~/testf1.bin"
+#define FILEP2 "~/testf2.bin"
+
+
+//Funktion mit Übergabe der Iterationen
 void* CreateThreads(void *arg)
 {
     unsigned long m = 0;
@@ -68,17 +57,17 @@ void* CreateThreads(void *arg)
 
     if(pthread_equal(id,tid[0]))
     {
-        pf1 = open( "testf.bin", O_TRUNC | O_CREAT );
+        //pf1 = open( "testf1.bin", O_TRUNC | O_CREAT );
         printf("\n First thread processing\n");
-	write(pf1, buffer, 1 );
-        close ( pf1 );
+	//write(pf1, buffer, 1 );
+        //close ( pf1 );
     }
     else
     {
-        pf2 = open( "testf2.bin", O_TRUNC | O_CREAT );
+        //pf2 = open( "testf2.bin", O_TRUNC | O_CREAT );
         printf("\n Second thread processing\n");
-        write(pf2, buffer, 1 );
-        close ( pf2 );
+        //write(pf2, buffer, 1 );
+        //close ( pf2 );
     }
 
     //for(m=0; m<(0xFFFFFFFF);m++);
@@ -96,13 +85,29 @@ uint64_t gettime()
 	}
 }
 
+
+
+//MAIN
+
+// for how many tests: testcount
+
+// for n threads
+// create threads
+
+// optional EXEC pthread barrier
+
+
+// join
+// unlink
+
+
+
 int main( int argc, char ** argv )
 {
 
-
-	int test_count = 10;
-        int thread_count = 100;
-	uint64_t iterations = 4;
+	int test_count      =  1;
+        int thread_count    =  8;
+	uint64_t iterations =  2;
 #ifdef GOOGLEPROF
 	ProfilerStart("test.prof");
 #endif
@@ -112,28 +117,39 @@ int main( int argc, char ** argv )
 		test_count = atoi(argv[1]);
 	}
 
+
 	printf("SIOX performance test, please run it with and without SIOX instrumentation !\n");
-	int i,j,o,s;
-	int err;
+	int i,j,o,s,z,tc;
+	int err_tcreat,err_tjoin;
 
 	//int pFile;
 	//char buffer[] = {'a', 'b'};
 	//pFile = open( "testfile.bin", O_TRUNC | O_CREAT );	
 
+
+        for (z=0; z < test_count; z++ ){
+
+
 	printf("Determining the number of iterations for 1s\n");
 	// determine an experiment which takes about 1s.
 	uint64_t startT = gettime();
 	double deltaT = 0;
+	
 	while( deltaT < 1000000000ull ){
 		for(i=0; i < iterations; i++){
 			
 			    for(j=0; j < 1; j++)
 			    {
-			        err = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
-			        if (err != 0){
-			            printf("\ncan't create thread :[%s]", strerror(err));
-			        }else{
-	  		            printf("\n Thread created successfully\n");}
+			        err_tcreat = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
+			        if (err_tcreat != 0){
+			            printf("\nCan't create thread :[%s]", strerror(err_tcreat));
+			        }else{printf("\n Thread created successfully\n");}
+				err_tjoin = pthread_join (tid[j], NULL);
+				
+			        if (err_tjoin != 0){
+                                    printf("\nJoin error", strerror(err_tjoin));
+				}else{printf("\n Thread joined successfully\n");}
+				     
 			    }
 		}
 
@@ -154,22 +170,33 @@ int main( int argc, char ** argv )
 	uint64_t t0 = gettime();
 
 	printf("\nTime Events/s TimePerEvent\n");
-	for(o=0; o < test_count; o++){
+	for (tc=0; tc < thread_count; tc++ ){
+
 		uint64_t startT = gettime();
 		for(i=0; i < iterations; i++){
                             for(s=0; s < 1; s++)
                             {
-                                err = pthread_create(&(tid[s]), NULL, &CreateThreads, NULL);
-                                if (err != 0){
-                                    printf("\ncan't create thread :[%s]", strerror(err));
+                                err_tcreat = pthread_create(&(tid[s]), NULL, &CreateThreads, NULL);
+                                if (err_tcreat != 0){
+                                    printf("\ncan't create thread :[%s]", strerror(err_tcreat));
                                 }else{
                                     	printf("\n Thread created successfully\n");}
+				err_tjoin = pthread_join(tid[s], NULL);
+                                if (err_tjoin != 0){
+                                    printf("\nJoin error", strerror(err_tjoin));
+                                }else{printf("\n Thread joined successfully\n");}
+
                             }
 
 		}
 		double deltaT = gettime() - startT;
 		printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, iterations / (deltaT / 1000000000ull), deltaT / 1000000000ull / iterations);
+	  
 	}
+
+
+	//unlink(FILEP1);
+	//unlink(FILEP2);
 
 	{
 	printf("\nTotal and averages\n");
@@ -178,7 +205,9 @@ int main( int argc, char ** argv )
 	}
 
 
-	//close( pFile );
+	} // test_count End
+
+
 #ifdef GOOGLEPROF
         ProfilerStop("test.prof");
 #endif
