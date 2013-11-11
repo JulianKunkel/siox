@@ -91,7 +91,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 		double recordPerformance( const shared_ptr<Activity>& activity );
 		vector<Attribute>* findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId );	//outParentId may be NULL
-		static void rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity );
+		void rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity );
 };
 
 
@@ -214,7 +214,7 @@ void GenericHistoryPlugin::initPlugin() {
 
 	// Find and remember various other OAIDs
 	try{
-		uidAttID = facade->lookup_attribute_by_name("program","description/user-id")
+		uidAttID = facade->lookup_attribute_by_name("program","description/user-id").aID;
 	}
 	catch(NotFoundError)
 	{
@@ -276,8 +276,8 @@ vector<Attribute>* GenericHistoryPlugin::findCurrentHints( const shared_ptr<Acti
 
 void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity ) {
 	outHintVector->clear();
-	const vector<Attribute>& attributes = activity.attributeArray();
-	for( size_t i = attributes->size(); i--; ) {
+	const vector<Attribute>& attributes = activity->attributeArray();
+	for( size_t i = attributes.size(); i--; ) {
 		bool isHint = false;
 		IGNORE_EXCEPTIONS( hintTypes.at( attributes[i].id ); isHint = true; );
 		if( isHint ) outHintVector->push_back( attributes[i] );
