@@ -5,6 +5,7 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
+#include <monitoring/datatypes/Activity.hpp>
 #include <knowledge/optimizer/OptimizerPluginInterface.hpp>
 #include <knowledge/optimizer/Optimizer.hpp>
 
@@ -30,6 +31,12 @@ enum TokenType {
 	TOKEN_TYPE_COUNT
 };
 ADD_ENUM_OPERATORS(TokenType)
+
+class HintPerformance {
+	vector<Attribute> hints;
+	int measurementCount;
+	double averagePerformance;
+};
 
 /*
  Some thoughts for an abstract plugin.
@@ -58,13 +65,32 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		Optimizer * optimizer;
 		SystemInformationGlobalIDManager * sysinfo;
 
-		string 	interface;
-		string 	implementation;
-		UniqueInterfaceID 	uiid;
+		string interface;
+		string implementation;
+		UniqueInterfaceID uiid;
 
-		unordered_map<UniqueComponentActivityID, TokenType>	types;
+		// AttID of the attribute user-id
+		OntologyAttributeID uidAttID; 
 
+		// Map ucaid to type of activity (Open/Access/Close/Hint)
+		unordered_map<UniqueComponentActivityID, TokenType> types;
+		// Map ucaid to ID of attribute used in computing activity performance
+		unordered_map<UniqueComponentActivityID, OntologyAttributeID> performanceAttIDs;
+
+		// Map oaid of attribute to be used as hint to type of its value
+		unordered_map<OntologyAttributeID,VariableDatatype::Type> hintTypes;
+
+		// Number of activities with the respective token type seen up to now
 		int nTypes[TOKEN_TYPE_COUNT];
+
+		unordered_map<ActivityID, vector<Attribute> > openFileHints;
+//		unordered_map<string, vector<HintPerformance> > userHints;
+//		unordered_map<string, vector<HintPerformance> > appHints;
+//		unordered_map<pair<string, string>, vector<HintPerformance> > userAppHints;
+		vector<HintPerformance> hints;
+
+		double recordPerformance( const shared_ptr<Activity>& activity );
+		vector<Attribute>* findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId );	//outParentId may be NULL
 };
 
 
@@ -84,14 +110,35 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 
 	cout << "Generic History saw activity of type " << activity->ucaid() << " => ";
 	for(size_t i = 0; i < TOKEN_TYPE_COUNT; i++) cerr << nTypes[i] << " ";
-	cerr << "\n";
+	cout << "\n";
 
 	switch (type) {
-		case OPEN: break;
-		case ACCESS: break;
-		case CLOSE: optimalParameter( *(OntologyAttribute*)NULL ); break;
-		case HINT: break;
-		default: break;
+
+		case OPEN:
+			openFileHints[activity->aid()] = activity->attributeArray();
+			break;
+
+		case ACCESS:
+			cout << "\t(Performance: " << recordPerformance(activity) << ")" << endl;
+			break;
+
+		case CLOSE: {
+			ActivityID openFileHintsKey;
+			if( findCurrentHints( activity, &openFileHintsKey ) ) {
+				openFileHints.erase( openFileHintsKey );
+			}
+			optimalParameter( *(OntologyAttribute*)NULL );
+			break;
+		}
+
+		case HINT:
+			if( vector<Attribute>* curHints = findCurrentHints( activity, 0 ) ) {
+				*curHints = activity->attributeArray();
+			}
+			break;
+
+		default:
+			break;
 	}
 }
 
@@ -103,8 +150,9 @@ void GenericHistoryPlugin::initPlugin() {
 	GenericHistoryOptions & o = getOptions<GenericHistoryOptions>();
 
 	// Retrieve pointers to required modules
-	assert(optimizer = GET_INSTANCE(Optimizer, o.optimizer));
-	assert(sysinfo = facade->get_system_information());
+	optimizer = GET_INSTANCE(Optimizer, o.optimizer);
+	sysinfo = facade->get_system_information();
+	assert(optimizer && sysinfo);
 
 	// Retrieve interface, implementation and uiid
 	interface = o.interface;
@@ -112,19 +160,27 @@ void GenericHistoryPlugin::initPlugin() {
 	try{
 		uiid = sysinfo->lookup_interfaceID(interface, implementation);
 	}
-	catch(NotFoundError)
-	{
+	catch(NotFoundError) {
 		cerr << "No UniqueInterfaceID for Interface \"" << interface << "\" and implementation \"" << implementation << "\" found - aborting!" << endl;
 		abort();
 	}
 
-	// Fill token map with known activities' UCAIDs and their type
+	// Fill token maps with every known activity's UCAID, type and perfomance-relevant attribute's OAID
 	try{
 		for( auto itr = o.openTokens.begin(); itr != o.openTokens.end(); itr++ )
 			types[sysinfo->lookup_activityID(uiid,*itr)] = OPEN;
 
-		for( auto itr = o.accessTokens.begin(); itr != o.accessTokens.end(); itr++ )
-			types[sysinfo->lookup_activityID(uiid,*itr)] = ACCESS;
+		// Special care has to be taken that both arrays used are of identical size
+		assert(o.accessTokens.size() == o.accessRelevantOntologyAttributes.size());
+		auto itr = o.accessTokens.begin();
+		auto atr = o.accessRelevantOntologyAttributes.begin();
+		while (itr != o.accessTokens.end()) {
+			UniqueComponentActivityID ucaid = sysinfo->lookup_activityID(uiid,*itr);
+			types[ucaid] = ACCESS;
+			performanceAttIDs[ucaid] = facade->lookup_attribute_by_name(atr->first, atr->second).aID;
+			itr++;
+			atr++;
+		}
 
 		for( auto itr = o.closeTokens.begin(); itr != o.closeTokens.end(); itr++ )
 			types[sysinfo->lookup_activityID(uiid,*itr)] = CLOSE;
@@ -132,9 +188,36 @@ void GenericHistoryPlugin::initPlugin() {
 		for( auto itr = o.hintTokens.begin(); itr != o.hintTokens.end(); itr++ )
 			types[sysinfo->lookup_activityID(uiid,*itr)] = HINT;
 	}
+	catch(NotFoundError) {
+		cerr << "No UniqueComponentActivityID for one or more activities of interface \"" << interface << "\" and implementation \"" << implementation << "\" found - aborting!" << endl;
+		abort();
+	}
+
+	// Find oaids and value types for attributes used as hints and remember them
+	for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ )
+	{
+		string domain = itr->first;
+		string attribute = itr->second;
+
+		try{
+			OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
+			hintTypes[ontatt.aID]=ontatt.storage_type;
+		}
+		catch(NotFoundError)
+		{
+			cerr << "No OntologyAttribute for interface \"" << domain << "\" and attribute \"" << attribute << "\" found - aborting!" << endl;
+			abort();
+		}
+
+	}
+
+	// Find and remember various other OAIDs
+	try{
+		uidAttID = facade->lookup_attribute_by_name("program","description/user-id")
+	}
 	catch(NotFoundError)
 	{
-		cerr << "No UniqueComponentActivityID for one or more activities of Interface \"" << interface << "\" and implementation \"" << implementation << "\" found - aborting!" << endl;
+		cerr << "No OntologyAttributeID for interface \"program\" and attribute \"description/user-id\" found - aborting!" << endl;
 		abort();
 	}
 }
@@ -149,6 +232,44 @@ OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & 
 	cout << "\t" << nTypes[HINT] << " HINTs\n";
 
 	return OntologyValue( 42 );
+}
+
+
+double GenericHistoryPlugin::recordPerformance( const shared_ptr<Activity>& activity ){
+	Timestamp t_start = activity->time_start();
+	Timestamp t_stop = activity->time_stop();
+	OntologyAttributeID oaid = 0;	//According to datatypes/ids.hpp this is an illegal value. I hope that information is still up to date.
+
+	cout << t_start << "-" << t_stop << "@";
+
+	if (t_stop == t_start) return 1/0.0;	//Infinite performance is sematically closer to an almost zero time operation than zero performance.
+
+	// Find performance-relevant attribute's value for activity
+	IGNORE_EXCEPTIONS(oaid = performanceAttIDs.at(activity->ucaid()););
+	const vector<Attribute> & attributes = activity->attributeArray();
+	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
+		if (itr->id == oaid) {
+			uint64_t value = itr->value.uint64();
+			cout << value << " => ";
+			return ((double) value) / (t_stop - t_start) ;
+		}
+	}
+
+	return 0/0.0;	//return a NAN if the attribute was not found
+}
+
+
+vector<Attribute>* GenericHistoryPlugin::findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId ) {
+	const vector<ActivityID>& parents = activity->parentArray();
+	for( size_t i = parents.size(); i--; ) {
+		vector<Attribute>* savedHints = 0;
+		IGNORE_EXCEPTIONS( savedHints = &openFileHints.at( parents[i] ); );
+		if( savedHints ) {
+			if(outParentId) *outParentId = parents[i];
+			return savedHints;
+		}
+	}
+	return 0;
 }
 
 
