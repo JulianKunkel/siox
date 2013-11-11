@@ -69,14 +69,18 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		string implementation;
 		UniqueInterfaceID uiid;
 
+		// AttID of the attribute user-id
+		OntologyAttributeID uidAttID; 
+
 		// Map ucaid to type of activity (Open/Access/Close/Hint)
 		unordered_map<UniqueComponentActivityID, TokenType> types;
 		// Map ucaid to ID of attribute used in computing activity performance
 		unordered_map<UniqueComponentActivityID, OntologyAttributeID> performanceAttIDs;
 
-		// Array holding the attribute descriptions of attributes to be used as hints
-		vector<OntologyAttribute> hintAttributes;
+		// Map oaid of attribute to be used as hint to type of its value
+		unordered_map<OntologyAttributeID,VariableDatatype::Type> hintTypes;
 
+		// Number of activities with the respective token type seen up to now
 		int nTypes[TOKEN_TYPE_COUNT];
 
 		unordered_map<ActivityID, vector<Attribute> > openFileHints;
@@ -190,7 +194,7 @@ void GenericHistoryPlugin::initPlugin() {
 		abort();
 	}
 
-	// Find Attribute descriptions for attributes used as hints and remember them
+	// Find oaids and value types for attributes used as hints and remember them
 	for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ )
 	{
 		string domain = itr->first;
@@ -198,7 +202,7 @@ void GenericHistoryPlugin::initPlugin() {
 
 		try{
 			OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-			hintAttributes.push_back(ontatt);
+			hintTypes[ontatt.aID]=ontatt.storage_type;
 		}
 		catch(NotFoundError)
 		{
@@ -206,6 +210,16 @@ void GenericHistoryPlugin::initPlugin() {
 			abort();
 		}
 
+	}
+
+	// Find and remember various other OAIDs
+	try{
+		uidAttID = facade->lookup_attribute_by_name("program","description/user-id")
+	}
+	catch(NotFoundError)
+	{
+		cerr << "No OntologyAttributeID for interface \"program\" and attribute \"description/user-id\" found - aborting!" << endl;
+		abort();
 	}
 }
 

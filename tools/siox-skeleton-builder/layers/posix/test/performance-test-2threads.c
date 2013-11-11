@@ -40,6 +40,24 @@
 
 pthread_t tid[2];
 
+//n threads 1 file pro thread ohne open
+int n_threads = 4;
+
+
+// for how many tests: testcount
+
+// for n threads
+// create threads
+
+// EXEC pthread barrier
+
+
+// join
+// unlink
+
+
+
+//Übergabe der Iterationen
 void* CreateThreads(void *arg)
 {
     unsigned long m = 0;
@@ -53,20 +71,19 @@ void* CreateThreads(void *arg)
         pf1 = open( "testf.bin", O_TRUNC | O_CREAT );
         printf("\n First thread processing\n");
 	write(pf1, buffer, 1 );
+        close ( pf1 );
     }
     else
     {
-        pf2 = open( "testf.bin", O_TRUNC | O_CREAT );
+        pf2 = open( "testf2.bin", O_TRUNC | O_CREAT );
         printf("\n Second thread processing\n");
         write(pf2, buffer, 1 );
+        close ( pf2 );
     }
 
     //for(m=0; m<(0xFFFFFFFF);m++);
 
-    close( pf1 );
-    close( pf2 );
-
-    return NULL;
+   return NULL;
 }
 
 uint64_t gettime()
@@ -83,18 +100,20 @@ int main( int argc, char ** argv )
 {
 
 
-	int count = 10;
+	int test_count = 10;
+        int thread_count = 100;
+	uint64_t iterations = 4;
 #ifdef GOOGLEPROF
 	ProfilerStart("test.prof");
 #endif
 
 	// parse command line
 	if ( argc > 1 ){
-		count = atoi(argv[1]);
+		test_count = atoi(argv[1]);
 	}
 
 	printf("SIOX performance test, please run it with and without SIOX instrumentation !\n");
-	int i, o;
+	int i,j,o,s;
 	int err;
 
 	//int pFile;
@@ -105,18 +124,16 @@ int main( int argc, char ** argv )
 	// determine an experiment which takes about 1s.
 	uint64_t startT = gettime();
 	double deltaT = 0;
-	uint64_t iterations = 100;
 	while( deltaT < 1000000000ull ){
 		for(i=0; i < iterations; i++){
-			int j = 0;
-			    while(j < 1)
+			
+			    for(j=0; j < 1; j++)
 			    {
 			        err = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
 			        if (err != 0){
 			            printf("\ncan't create thread :[%s]", strerror(err));
 			        }else{
 	  		            printf("\n Thread created successfully\n");}
-			        j++;
 			    }
 		}
 
@@ -126,9 +143,9 @@ int main( int argc, char ** argv )
 		printf("Testing: %lld %f\n", (long long int) iterations, deltaT / 1000000000ull);
 
 		if(deltaT == 0){
-			iterations *= 100;
+			iterations *= 2;
 		}else{
-			iterations = iterations / (deltaT  / 1010000000ull);
+			iterations = iterations / (deltaT  / 1000000000ull);
 		}
 	}
 
@@ -137,18 +154,16 @@ int main( int argc, char ** argv )
 	uint64_t t0 = gettime();
 
 	printf("\nTime Events/s TimePerEvent\n");
-	for(o=0; o < count; o++){
+	for(o=0; o < test_count; o++){
 		uint64_t startT = gettime();
 		for(i=0; i < iterations; i++){
-			int j = 0;
-                            while(j < 1)
+                            for(s=0; s < 1; s++)
                             {
-                                err = pthread_create(&(tid[j]), NULL, &CreateThreads, NULL);
+                                err = pthread_create(&(tid[s]), NULL, &CreateThreads, NULL);
                                 if (err != 0){
                                     printf("\ncan't create thread :[%s]", strerror(err));
                                 }else{
                                     	printf("\n Thread created successfully\n");}
-                                j++;
                             }
 
 		}
@@ -159,7 +174,7 @@ int main( int argc, char ** argv )
 	{
 	printf("\nTotal and averages\n");
 	double deltaT = gettime() - t0;
-	printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, iterations * count / (deltaT / 1000000000ull), deltaT / count / 1000000000ull / iterations);
+	printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, iterations * test_count / (deltaT / 1000000000ull), deltaT / test_count / 1000000000ull / iterations);
 	}
 
 
