@@ -1,6 +1,7 @@
 #include <iostream>
 #include <list>
 #include <unordered_map>
+#include <algorithm>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
@@ -33,9 +34,10 @@ enum TokenType {
 ADD_ENUM_OPERATORS(TokenType)
 
 class HintPerformance {
-	vector<Attribute> hints;
-	int measurementCount;
-	double averagePerformance;
+	public:
+		vector<Attribute> hints;
+		int measurementCount;
+		double averagePerformance;
 };
 
 /*
@@ -70,7 +72,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		UniqueInterfaceID uiid;
 
 		// AttID of the attribute user-id
-		OntologyAttributeID uidAttID; 
+		OntologyAttributeID uidAttID;
 
 		// Map ucaid to type of activity (Open/Access/Close/Hint)
 		unordered_map<UniqueComponentActivityID, TokenType> types;
@@ -91,6 +93,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 		double recordPerformance( const shared_ptr<Activity>& activity );
 		vector<Attribute>* findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId );	//outParentId may be NULL
+		void rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity );
 };
 
 
@@ -115,12 +118,33 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 	switch (type) {
 
 		case OPEN:
-			openFileHints[activity->aid()] = activity->attributeArray();
+			rememberHints( &openFileHints[activity->aid()], activity );
 			break;
 
-		case ACCESS:
-			cout << "\t(Performance: " << recordPerformance(activity) << ")" << endl;
+		case ACCESS: {
+			if( vector<Attribute>* curHints = findCurrentHints( activity, 0 ) ) {
+				double curPerformance = recordPerformance( activity );
+				cout << "\t(Performance: " << curPerformance << ")" << endl;
+				bool foundHints = false;
+				for( size_t i = hints.size(); i--; ) {
+					HintPerformance& temp = hints[i];
+					if( temp.hints == *curHints ) {
+						temp.averagePerformance = ( temp.averagePerformance*( temp.measurementCount ) + curPerformance )/( temp.measurementCount + 1 );
+						temp.measurementCount++;
+						foundHints = true;
+						break;
+					}
+				}
+				if( !foundHints ) {
+					hints.emplace_back((HintPerformance){
+						.hints = *curHints,
+						.measurementCount = 1,
+						.averagePerformance = curPerformance
+					});
+				}
+			}
 			break;
+		}
 
 		case CLOSE: {
 			ActivityID openFileHintsKey;
@@ -133,7 +157,7 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 
 		case HINT:
 			if( vector<Attribute>* curHints = findCurrentHints( activity, 0 ) ) {
-				*curHints = activity->attributeArray();
+				rememberHints( curHints, activity );
 			}
 			break;
 
@@ -213,7 +237,7 @@ void GenericHistoryPlugin::initPlugin() {
 
 	// Find and remember various other OAIDs
 	try{
-		uidAttID = facade->lookup_attribute_by_name("program","description/user-id")
+		uidAttID = facade->lookup_attribute_by_name("program","description/user-id").aID;
 	}
 	catch(NotFoundError)
 	{
@@ -270,6 +294,18 @@ vector<Attribute>* GenericHistoryPlugin::findCurrentHints( const shared_ptr<Acti
 		}
 	}
 	return 0;
+}
+
+
+void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity ) {
+	outHintVector->clear();
+	const vector<Attribute>& attributes = activity->attributeArray();
+	for( size_t i = attributes.size(); i--; ) {
+		bool isHint = false;
+		IGNORE_EXCEPTIONS( hintTypes.at( attributes[i].id ); isHint = true; );
+		if( isHint ) outHintVector->emplace_back( attributes[i] );
+	}
+	sort( outHintVector->begin(), outHintVector->end(), [](const Attribute& a, const Attribute& b){ return a.id < b.id; } );
 }
 
 
