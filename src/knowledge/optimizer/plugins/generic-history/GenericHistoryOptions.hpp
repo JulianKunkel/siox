@@ -38,5 +38,6 @@ struct GenericHistoryOptions : public ActivityMultiplexerPluginOptions{
 		        </item>
 		</accessRelevantOntologyAttributes>
 */
+	vector<pair<string,string> hintAttributes;	// attributes containing hints, e.g. ('MPI','hint/noncollReadBuffSize')
 };
 
