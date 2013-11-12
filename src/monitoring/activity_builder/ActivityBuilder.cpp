@@ -21,12 +21,10 @@ namespace monitoring {
 	ActivityBuilder::ActivityBuilder() : thread_id( ++current_thread_ID )
 	{
 		next_activity_id = 1;
-		printf( "ActivityBuilder %p ready.\n", this );
 	}
 
 	ActivityBuilder::~ActivityBuilder()
 	{
-		printf( "ActivityBuilder %p has been shut down.\n", this );
 	}
 
 	/**
