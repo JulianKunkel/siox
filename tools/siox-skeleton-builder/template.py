@@ -7,17 +7,17 @@ template = {
 # SWID: The name (software id) for this component
 'component': {
 	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" SpliceCode=',
-	'global': '''static siox_component * global_component;
-		     static siox_unique_interface * global_uid;
+	'global': '''static siox_component * global_component = NULL;
+		     static siox_unique_interface * global_uid = NULL;
 				''',
-    'init': '''
+    'init': ''' if( global_component != NULL ) return;
     		  %(SpliceCode)s
     		  global_uid = siox_system_information_lookup_interface_id(%(InterfaceName)s, %(ImplementationIdentifier)s);
               global_component = siox_component_register(global_uid, %(InstanceName)s);''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
-	'final': 'siox_component_unregister(global_component);'
+	'final': 'if (global_component) { siox_component_unregister(global_component); }'
 },
 # register_attribute
 #
@@ -135,20 +135,11 @@ template = {
 	'final': ''
 },
 
-'guard_advanced': {
-	'variables': 'Name=guard',
-	'global': '''''',
-	'init': '''''',
-	'before': '''\tif(siox_namespace == 0 && global_component != NULL ){ ''',
-	'after': '''''',
-	'cleanup': '',
-	'final': ''
-},
 'guard': {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': '''\tif(siox_namespace == 0 ){ ''',
+	'before': '''\tif(siox_namespace == 0 && global_component != NULL ){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''

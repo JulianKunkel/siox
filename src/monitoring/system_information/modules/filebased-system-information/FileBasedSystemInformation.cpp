@@ -90,7 +90,7 @@ namespace monitoring {
 				return new FileBasedSystemInformationOptions();
 			}
 
-			~FileBasedSystemInformation() {
+			~FileBasedSystemInformation() {				
 				FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
 				string filename = o.filename;
 
@@ -253,6 +253,7 @@ namespace monitoring {
 
 
 			UniqueInterfaceID           lookup_interfaceID( const string & interface, const string & implementation )  const throw( NotFoundError ) {
+
 				// check if the interface and implementation combination exists
 				auto pair_str = pair<string, string>( interface, implementation );
 
