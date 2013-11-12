@@ -1,8 +1,8 @@
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIR}
 )
 
 add_library(
