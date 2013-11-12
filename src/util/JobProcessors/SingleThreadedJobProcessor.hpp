@@ -30,9 +30,7 @@ public:
 
 	virtual void iCancelJob(void * job);
 
-	virtual void shutdown();
-
-	virtual void terminate();
+	virtual void shutdown( bool terminate = false );
 
 	virtual void startProcessing();
 

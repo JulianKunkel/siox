@@ -228,7 +228,7 @@ inline char * readSocketMessage(GInputStream * istream, uint64_t & msgLength, ui
 }
 
 inline bool sendSocketMessage(BareMessage * msg, GOutputStream * ostream){
-	gboolean ret = FALSE;
+	 gboolean ret = FALSE;
     gsize bytes_written;
 
     ret =  g_output_stream_write_all(ostream, msg->payload, msg->size, & bytes_written, NULL, NULL);   
@@ -257,7 +257,7 @@ protected:
 	}
 
 
-	void processJob(void * job){
+	void processJob(void * job){		
 		BareMessage* msg = (BareMessage*) job;
 
 		if ( ! sendSocketMessage(msg, ostream) ) {
@@ -295,6 +295,7 @@ public:
 	void connect(GOutputStream * ostream, GCancellable * cancelable){
 		m.lock();
 		assert(! connected);
+		assert ( G_IS_OUTPUT_STREAM (ostream) );		
 
 		this->cancelable = cancelable;
 		connected = true;
@@ -318,7 +319,7 @@ public:
 	}
 
 	void terminate(){
-		SingleThreadedJobProcessor::terminate();
+		SingleThreadedJobProcessor::shutdown(true);
 	}
 
 	void shutdown(){
