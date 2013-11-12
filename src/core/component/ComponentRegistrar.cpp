@@ -28,6 +28,7 @@ namespace core {
 	void ComponentRegistrar::shutdown()
 	{
 		for( auto it = list.rbegin(); it != list.rend(); it++ ) {
+			delete( (*it)->component );
 			delete( *it );
 		}
 	}
