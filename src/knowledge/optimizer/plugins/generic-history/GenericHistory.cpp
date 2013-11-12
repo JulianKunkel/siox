@@ -64,6 +64,8 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
 
 	private:
+		bool initialized;
+
 		Optimizer * optimizer;
 		SystemInformationGlobalIDManager * sysinfo;
 
@@ -105,6 +107,10 @@ ComponentOptions * GenericHistoryPlugin::AvailableOptions() {
 
 void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 	//cout << "GenericHistoryPlugin received " << activity << endl;
+
+	if (! initialized ){
+		return;
+	}
 
 	TokenType type = UNKNOWN;
 	IGNORE_EXCEPTIONS( type = types.at( activity->ucaid() ); );
@@ -185,9 +191,11 @@ void GenericHistoryPlugin::initPlugin() {
 		uiid = sysinfo->lookup_interfaceID(interface, implementation);
 	}
 	catch(NotFoundError) {
-		cerr << "No UniqueInterfaceID for Interface \"" << interface << "\" and implementation \"" << implementation << "\" found - aborting!" << endl;
-		abort();
+		cerr << "No UniqueInterfaceID for Interface \"" << interface << "\" and implementation \"" << implementation << "\" found, stopping operation!" << endl;
+		initialized = false;
+		return;
 	}
+
 
 	// Fill token maps with every known activity's UCAID, type and perfomance-relevant attribute's OAID
 	try{
@@ -213,8 +221,9 @@ void GenericHistoryPlugin::initPlugin() {
 			types[sysinfo->lookup_activityID(uiid,*itr)] = HINT;
 	}
 	catch(NotFoundError) {
-		cerr << "No UniqueComponentActivityID for one or more activities of interface \"" << interface << "\" and implementation \"" << implementation << "\" found - aborting!" << endl;
-		abort();
+		cerr << "No UniqueComponentActivityID for one or more activities of interface \"" << interface << "\" and implementation \"" << implementation << "\" found - stopping operation!" << endl;
+		initialized = false;
+		return;
 	}
 
 	// Find oaids and value types for attributes used as hints and remember them
@@ -229,8 +238,9 @@ void GenericHistoryPlugin::initPlugin() {
 		}
 		catch(NotFoundError)
 		{
-			cerr << "No OntologyAttribute for interface \"" << domain << "\" and attribute \"" << attribute << "\" found - aborting!" << endl;
-			abort();
+			cerr << "No OntologyAttribute for interface \"" << domain << "\" and attribute \"" << attribute << "\" found - stopping operation!" << endl;
+			initialized = false;
+			return;
 		}
 
 	}
@@ -241,9 +251,12 @@ void GenericHistoryPlugin::initPlugin() {
 	}
 	catch(NotFoundError)
 	{
-		cerr << "No OntologyAttributeID for interface \"program\" and attribute \"description/user-id\" found - aborting!" << endl;
-		abort();
+		cerr << "No OntologyAttributeID for interface \"program\" and attribute \"description/user-id\" found - stopping operation!" << endl;
+		initialized = false;
+		return;
 	}
+
+	initialized = true;
 }
 
 

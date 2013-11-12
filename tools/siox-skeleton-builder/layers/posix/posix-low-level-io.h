@@ -68,7 +68,7 @@ End of global part
 
 
 //@splice_before mode_t mode = va_arg(valist,mode_t);
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity
 //@splice_before SET_FILENAME(pathname)
@@ -88,7 +88,7 @@ int open( const char * pathname, int flags, ... );
 int creat( const char * pathname, mode_t mode );
 
 //@splice_before mode_t mode = va_arg(valist,mode_t);
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity
 //@splice_before SET_FILENAME(pathname)
@@ -106,7 +106,7 @@ int open64( const char * pathname, int flags, ... );
 //@activity_attribute_u32 fileHandle ret
 //@guardEnd
 int creat64( const char * pathname, mode_t mode );
-//@guard_advanced
+//@guard
 /*@error 'ret < 0' ret*/
 //@activity
 //@activity_link_int fd
@@ -145,7 +145,7 @@ int dup2( int oldfd, int newfd );
 //@guardEnd
 int dup3( int oldfd, int newfd, int flags );
 
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity
 //@activity_attribute bytesToWrite count
@@ -157,7 +157,7 @@ int dup3( int oldfd, int newfd, int flags );
 //@guardEnd
 ssize_t write( int fd, const void * buf, size_t count );
 
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity
 //@activity_attribute bytesRead ret
@@ -350,7 +350,7 @@ int rename( const char * oldname, const char * newname );
 // stat() symbols do not exist, a macro rewrites them, problem stat64 types.
 // Be aware this might lead to problems.
 //@splice_once ''int stat(const char *path, struct stat *buf){ return __xstat64(1, path, buf); }''
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity Name=stat
 //@splice_before SET_FILENAME(path)
@@ -358,7 +358,7 @@ int rename( const char * oldname, const char * newname );
 int __xstat64( int __ver, const char * path, struct stat64 * buf );
 
 //@splice_once ''int lstat(const char *path, struct stat *buf){ return __lxstat64(1, path, buf); }''
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity Name=lstat
 //@splice_before SET_FILENAME(path)
@@ -366,7 +366,7 @@ int __xstat64( int __ver, const char * path, struct stat64 * buf );
 int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 
 //@splice_once ''int fstat(int fd, struct stat *buf){ return __fxstat64(1, fd, buf); }''
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity Name=fstat
 //@activity_attribute_u32 fileHandle fd
@@ -374,21 +374,21 @@ int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 //@guardEnd
 int __fxstat64( int __ver, int fd, struct stat64 * buf );
 
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity Name=stat
 //@splice_before SET_FILENAME(path)
 //@guardEnd
 int __xstat( int __ver, const char * path, struct stat * buf );
 
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity Name=lstat
 //@splice_before SET_FILENAME(path)
 //@guardEnd
 int __lxstat( int __ver, const char * path, struct stat * buf );
 
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity Name=fstat
 //@activity_attribute_u32 fileHandle fd
@@ -426,7 +426,7 @@ If the file is successfully opened, the function returns a pointer to a FILE obj
 Otherwise, a null pointer is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
  */
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity
 //@splice_before SET_FILENAME(filename)
@@ -460,7 +460,7 @@ If the file is successfully opened, the function returns a pointer to a FILE obj
 Otherwise, a null pointer is returned.
 On most library implementations, the errnosave variable is also set to a system-specific ercode on failure.
  */
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity
 //@splice_before SET_FILENAME(filename)
@@ -523,7 +523,7 @@ FILE * freopen( const char * filename, const char * mode, FILE * stream );
 //@guardEnd
 FILE * tmpfile( void );
 
-//@guard_advanced
+//@guard
 //@error ''ret<0'' errno
 //@activity
 //@activity_link_size stream
