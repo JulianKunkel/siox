@@ -230,9 +230,11 @@ inline char * readSocketMessage(GInputStream * istream, uint64_t & msgLength, ui
 inline bool sendSocketMessage(BareMessage * msg, GOutputStream * ostream){
 	 gboolean ret = FALSE;
     gsize bytes_written;
+    gsize msg_size = msg->size; // must be stored here because the msg might be freed after it has been send...
 
-    ret =  g_output_stream_write_all(ostream, msg->payload, msg->size, & bytes_written, NULL, NULL);   
-    if(!ret || bytes_written != msg->size) { 
+    ret =  g_output_stream_write_all(ostream, msg->payload, msg->size, & bytes_written, NULL, NULL); 
+    
+    if(!ret || bytes_written != msg_size ) { 
     	return false;
     }
 
@@ -257,7 +259,7 @@ protected:
 	}
 
 
-	void processJob(void * job){		
+	void processJob(void * job){
 		BareMessage* msg = (BareMessage*) job;
 
 		if ( ! sendSocketMessage(msg, ostream) ) {
@@ -294,6 +296,11 @@ public:
 
 	void connect(GOutputStream * ostream, GCancellable * cancelable){
 		m.lock();
+		if(connected){
+			m.unlock();
+    		return;
+    	}
+
 		assert(! connected);
 		assert ( G_IS_OUTPUT_STREAM (ostream) );		
 
@@ -306,16 +313,16 @@ public:
 	}
 
 	void disconnect(){
-   		// terminate response thread
-    	m.lock();
+   	// terminate response thread
+		m.lock();
     	if(! connected){
     		m.unlock();
     		return;
     	}
     	connected = false;
+    	m.unlock();
 
     	stopProcessing();
-    	m.unlock();
 	}
 
 	void terminate(){

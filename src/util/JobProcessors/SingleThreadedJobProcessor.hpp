@@ -32,6 +32,8 @@ public:
 
 	virtual void shutdown( bool terminate = false );
 
+	virtual void stopProcessing();
+
 	virtual void startProcessing();
 
 	~SingleThreadedJobProcessor();

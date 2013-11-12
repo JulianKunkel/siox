@@ -145,8 +145,6 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 		// we expect the server terminated the connection for some reason.
 		connectionCallback->connectionErrorCB(*this, comm_error);
 	}
-
-	cout << "connectionThreadFunc End" << endl;
 }
 
 

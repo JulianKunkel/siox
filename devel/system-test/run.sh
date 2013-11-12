@@ -5,8 +5,9 @@ export PATH=/usr/local/siox/bin:$PATH
 
 echo "Running daemon"
 rm *.dat /tmp/daemon.socket 2>/dev/null || true
-killall siox-daemon -9 || true
-siox-daemon --d --configEntry=daemon.conf
+killall siox-daemon || true
+
+siox-daemon --configEntry=daemon.conf &
 
 echo "Compiling"
 gcc -g -Wall fwrite.c -o fwrite
@@ -26,3 +27,6 @@ echo
 echo "Trace output"
 
 siox-trace-reader
+
+
+killall siox-daemon || true
