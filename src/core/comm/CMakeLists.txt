@@ -15,6 +15,8 @@ target_link_libraries(
 	siox-util-jobProcessors
 )
 
+install(TARGETS siox-core-comm LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
+
 
 add_subdirectory(modules)
 add_subdirectory(test)
