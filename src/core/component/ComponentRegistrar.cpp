@@ -25,6 +25,21 @@ namespace core {
 		map[nr] = rc;
 	}
 
+
+	void ComponentRegistrar::unregisterComponent( ComponentReferenceID nr )
+	{
+		assert( nr != 0 ); // 0 is an invalid / none component
+		assert( map[nr] != nullptr );
+		for( auto itr = list.begin(); itr != list.end(); itr++ ){
+			if( (*itr)->id == nr ){
+				list.erase( itr );
+				map.erase(map.find(nr));
+				delete( *itr );
+				break;
+			}
+		}
+	}	
+
 	void ComponentRegistrar::shutdown()
 	{
 		for( auto it = list.rbegin(); it != list.rend(); it++ ) {
