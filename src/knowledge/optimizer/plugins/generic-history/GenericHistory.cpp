@@ -131,7 +131,11 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 			break;
 
 		case ACCESS: {
-			if( vector<Attribute>* curHints = findCurrentHints( activity, 0 ) ) {
+			cerr << "Checkpoint ACCESS-case...\t";
+			vector<Attribute>* curHints = findCurrentHints( activity, 0 );
+			cerr << curHints << endl;
+			if( curHints ) {
+				cerr << "Checkpoint ACCESS-if\n";
 				double curPerformance = recordPerformance( activity );
 				cout << "\t(Performance: " << curPerformance << ")" << endl;
 				bool foundHints = false;
@@ -248,7 +252,7 @@ void GenericHistoryPlugin::initPlugin() {
 
 					cerr << "looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-					cerr << "recieved attribute ID " << ontatt.aID << "\n";
+					cerr << "received attribute ID " << ontatt.aID << "\n";
 					hintTypes[ontatt.aID]=ontatt.storage_type;
 				}
 			);
