@@ -44,8 +44,8 @@ class ActivityNetworkServerForwarder: public NetworkService, public ServerCallba
 
 		uint64_t pos = 0;
 		j_serialization::deserialize(*activity, message_data, pos, buffer_size);
-		target->Log(activity);
 
+		target->Log(activity);
 		msg->isendResponse(nullptr);
 	}
 
