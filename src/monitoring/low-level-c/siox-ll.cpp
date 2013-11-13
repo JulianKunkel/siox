@@ -17,6 +17,8 @@
 #include <pwd.h>
 #include <typeinfo>
 
+#include <util/threadSafety.h>
+
 #include <core/module/ModuleLoader.hpp>
 #include <core/datatypes/VariableDatatype.hpp>
 
@@ -35,14 +37,8 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 
-// Are we currently working in the siox namespace?
-// Needed for the instrumentation with DL_SYM to avoid circular dependencies.
-extern "C" {
-	__thread int siox_namespace = 0;
-}
-
-#define FUNCTION_BEGIN siox_namespace++;
-#define FUNCTION_END siox_namespace--;
+#define FUNCTION_BEGIN monitoring_namespace_inc();
+#define FUNCTION_END monitoring_namespace_dec();
 
 #define U32_TO_P(i) ((void*)((size_t)(i)))
 #define P_TO_U32(p) ((uint32_t)((size_t)(p)))
