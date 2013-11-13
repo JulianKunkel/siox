@@ -52,22 +52,28 @@ void* CreateThreads(void *arg)
     unsigned long m = 0;
     int pf1;
     int pf2;
-    char buffer[] = {'a','b'};
+    //FILE * pf1;
+    //FILE * pf2;
+    //char buffer[] = {'a','b'};
     pthread_t id = pthread_self();
 
     if(pthread_equal(id,tid[0]))
     {
-        //pf1 = open( "testf1.bin", O_TRUNC | O_CREAT );
+        pf1 = open( "testf1.bin", O_TRUNC | O_CREAT );
+        //pf1 = fopen("testf1.bin","wb");
         printf("\n First thread processing\n");
 	//write(pf1, buffer, 1 );
-        //close ( pf1 );
+        close ( pf1 );
+	//fclose ( pf1 );
     }
     else
     {
-        //pf2 = open( "testf2.bin", O_TRUNC | O_CREAT );
-        printf("\n Second thread processing\n");
+        pf2 = open( "testf2.bin", O_TRUNC | O_CREAT );
+        //pf1 = fopen("testf2.bin","wb");
+	printf("\n Second thread processing\n");
         //write(pf2, buffer, 1 );
-        //close ( pf2 );
+        close ( pf2 );
+	//fclose ( pf2 );
     }
 
     //for(m=0; m<(0xFFFFFFFF);m++);
@@ -104,7 +110,7 @@ int main( int argc, char ** argv )
 {
 
 	uint64_t test_count     =  10;
-        int thread_count    	=  8;
+        int thread_count    	=  1;
 
 #ifdef GOOGLEPROF
 	ProfilerStart("test.prof");
@@ -181,7 +187,7 @@ int main( int argc, char ** argv )
                             }
 
 		double deltaT = gettime() - startT;
-		printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, test_count / (deltaT / 1000000000ull), deltaT / 1000000000ull / test_count);
+		printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, test_count / (deltaT / 1000000000ull), deltaT / 1000000000ull / test_count, thread_count);
 
                 //unlink(FILEP1)
                 //unlink/FILEP2)
