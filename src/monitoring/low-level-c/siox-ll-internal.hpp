@@ -14,6 +14,7 @@
 #include <C/siox-types.h>
 
 #include <core/autoconfigurator/AutoConfigurator.hpp>
+#include <util/OverheadStatistics.hpp>
 
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/ontology/Ontology.hpp>
@@ -27,6 +28,7 @@
 
 using namespace core;
 using namespace monitoring;
+using namespace util;
 
 // define all types for CPP
 typedef const OntologyAttribute siox_attribute;
@@ -74,6 +76,9 @@ struct process_info {
 
 	/// Loads all component modules
 	core::AutoConfigurator * configurator;
+
+	/// Overhead statistics
+	util::OverheadStatistics * overhead;
 
 	/// Protect critical datastructures
 	boost::shared_mutex  critical_mutex;

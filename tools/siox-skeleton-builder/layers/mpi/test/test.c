@@ -9,9 +9,9 @@ int main( int argc, char * argv[] )
 {
 	int rank, size;
 	MPI_File fh;
-	MPI_Datatype etype; 
+	MPI_Datatype etype;
 	MPI_Status status;
-	char buf;
+	char* buf;
 	MPI_Info info;
 
 	pid_t pid = getpid();
@@ -31,12 +31,24 @@ int main( int argc, char * argv[] )
 	MPI_Info_create( &info );
 	MPI_Info_set( info, "testhint1", "test.txt" );
 	MPI_Info_set( info, "testhint2", "2" );
-	MPI_Info_set( info, "noncoll_read_bufsize", "4096" );
+	MPI_Info_set( info, "cb_buffer_size", "1024" );
 
 	MPI_File_open( MPI_COMM_WORLD, "mpi_wrapper_test_file", MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh );
-	buf = 'a';
 	printf( "==========MPI_File_write()==========\n" );
-	MPI_File_write( fh, &buf, 1, etype, &status );
+	for(size_t i = 1024; i <= 1024*1024; i *= 2) {
+		buf = malloc(i);
+		for(size_t j = i; j--; ) buf[j] = j;
+
+//		MPI_Info_set( info, "cb_buffer_size", "1024" );
+//		MPI_File_set_info( fh, info );
+		for(size_t j = 1; j--; ) MPI_File_write( fh, buf, i, etype, &status );
+
+//		MPI_Info_set( info, "cb_buffer_size", "1048576" );
+//		MPI_File_set_info( fh, info );
+		for(size_t j = 1; j--; ) MPI_File_write( fh, buf, i, etype, &status );
+
+		free(buf);
+	}
 
 	MPI_Datatype darray;
 	int array_of_gsizes[4] = {20,20,20,20};
@@ -51,13 +63,13 @@ int main( int argc, char * argv[] )
 	int blocklens[3];
 	int i;
 	for (i=0; i < 3; i++) {
-	        blocklens[i] = 2*i;
-	        oldtypes[i] = MPI_INT;
-	        displs[i] = i * 10;
-	 }
-        oldtypes[2] = darray;
+		blocklens[i] = 2*i;
+		oldtypes[i] = MPI_INT;
+		displs[i] = i * 10;
+	}
+	oldtypes[2] = darray;
 	MPI_Datatype structType;
-    	MPI_Type_struct( 3, blocklens, displs, oldtypes, & structType );
+	MPI_Type_struct( 3, blocklens, displs, oldtypes, & structType );
 	MPI_Type_commit(& structType);
 
 	MPI_File_set_view( fh, 30, MPI_INT, structType, "native", MPI_INFO_NULL );

@@ -10,6 +10,7 @@ add_library(
 	ReporterHelper.cpp
 	time.c
 	threadSafety.c
+	OverheadStatistics.cpp
 )
 
 target_link_libraries(
