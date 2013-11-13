@@ -24,7 +24,7 @@ set(BUILD_SHARED_LIBS ON)
 
 # you can adjust the installation path here
 # IF we set it here we cannot change it using for example ccmake
-set(CMAKE_INSTALL_PREFIX /usr/local/siox)
+set(CMAKE_INSTALL_PREFIX /opt/siox/Inst)
 
 # this is for self-compiled libraries that are not in the system's ld-path
 set(CMAKE_LIBRARY_PATH
