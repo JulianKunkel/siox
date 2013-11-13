@@ -389,6 +389,7 @@ int MPI_File_read_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype
 //@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
 //@activity_attribute filePosition offset
 //@splice_before ''int size; MPI_Type_size(datatype, & size); size *= count;''
+//@splice_before ''MPI_Info schuh; char senkel[1024]; MPI_Info_create( &schuh ); if( siox_suggest_optimal_value_str( global_component, infoBuffSize, senkel, 1024 ) ) MPI_Info_set( schuh, "cb_buffer_size", senkel ); MPI_File_set_info( fh, schuh );''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
