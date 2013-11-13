@@ -374,19 +374,19 @@ int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 //@guardEnd
 int __fxstat64( int __ver, int fd, struct stat64 * buf );
 
-//@guard
-//@error ''ret<0'' errno
-//@activity Name=stat
-//@splice_before SET_FILENAME(path)
-//@guardEnd
-int __xstat( int __ver, const char * path, struct stat * buf );
+//guard
+//error ''ret<0'' errno
+//activity Name=stat
+//splice_before SET_FILENAME(path)
+//guardEnd
+//int __xstat( int __ver, const char * path, struct stat * buf );
 
-//@guard
-//@error ''ret<0'' errno
-//@activity Name=lstat
-//@splice_before SET_FILENAME(path)
-//@guardEnd
-int __lxstat( int __ver, const char * path, struct stat * buf );
+//guard
+//error ''ret<0'' errno
+//activity Name=lstat
+//splice_before SET_FILENAME(path)
+//guardEnd
+//int __lxstat( int __ver, const char * path, struct stat * buf );
 
 //@guard
 //@error ''ret<0'' errno

@@ -180,9 +180,6 @@ void GIOServiceServer::listen() throw(CommunicationModuleException){
 		throw CommunicationModuleException("Could not instantiate listener");
 	}
 
-	//cout << "listen on " << address << endl;
-
-
 	SocketType type;	
 	GSocketAddress * gsocketAddr = getSocket(address, type);
 

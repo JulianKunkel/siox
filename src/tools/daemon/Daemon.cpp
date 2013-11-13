@@ -26,10 +26,7 @@ static bool terminated = false;
 
 
 void signalHandler(int sig){
-	cout << "Shutting down daemon" << endl;
-
-	util::invokeAllReporters( registrar );
-	registrar->shutdown();
+	cout << "Received signal " << sig << endl;
 
 	lock_guard<mutex> lock(finish_mutex);
 	terminated = true;
@@ -104,6 +101,10 @@ int main( int argc, char ** argv )
 			unique_lock<mutex> lock(finish_mutex);
 			finish_condition.wait(lock);
 		}
+
+		// shutdown operation
+		util::invokeAllReporters( registrar );
+		registrar->shutdown();
 	} catch( std::exception & e ) {
 		cerr << e.what() << endl;
 		return 1;

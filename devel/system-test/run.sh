@@ -10,8 +10,10 @@ killall siox-daemon || true
 siox-daemon --configEntry=daemon.conf &
 
 echo "Compiling"
+siox-inst posix wrap gcc -g -Wall fwrite.c -o fwrite-wrapped
 gcc -g -Wall fwrite.c -o fwrite
-mpicc.mpich2 test.c -Wall -g -o test
+mpicc test.c -Wall -g -o test
+siox-inst posix,mpi wrap mpicc test.c -Wall -g -o test-wrapped
 
 echo "Running the APP with SIOX instrumentation to create ontology etc."
 siox-inst posix ./fwrite
