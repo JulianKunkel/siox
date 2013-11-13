@@ -26,6 +26,8 @@ public:
  Then it serves as reading thread.
  */
 void GIOClient::connectionThreadFunc(thread * lastThread){
+	monitoring_namespace_protect_thread();
+	
 	//cout << "Client connecting to " << address << endl;
 
 	// we start with a locked connection_ready_mutex

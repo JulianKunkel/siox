@@ -44,7 +44,8 @@ def configure(conf):
 
         # locate mpi.h and mpicc
 	if conf.options.MPI:
-		conf.env.append_value('INCLUDES', conf.options.MPI + "/include")
+		conf.env.append_value('INCLUDES', [conf.options.MPI + '/include'])
+		conf.env.append_value('LIBPATH', [conf.options.MPI + '/lib'])
 		conf.find_program(conf.options.MPICC, var='MPICC', path_list=[conf.options.MPI+os.path.sep+'bin'].append(os.environ["PATH"].split(":"))) 
 	else:
 		conf.find_program(conf.options.MPICC, var='MPICC')

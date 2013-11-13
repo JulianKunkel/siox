@@ -14,6 +14,8 @@
 #include <boost/regex.hpp>
 
 #include <util/JobProcessors/SingleThreadedJobProcessor.hpp>
+#include <util/threadSafety.h>
+
 
 // this two magic keys indicate the message type
 #define MAGIC_KEY 14099

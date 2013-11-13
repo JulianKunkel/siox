@@ -139,7 +139,7 @@ template = {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': '''\tif(siox_namespace == 0 && global_component != NULL ){ ''',
+	'before': '''\tif( monitoring_namespace_deactivated() && global_component != NULL ){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''
@@ -554,10 +554,10 @@ template = {
 }
 
 # Insert global once
-globalOnce = "extern __thread int siox_namespace;"
+globalOnce = ""
 
 # Regexes for functions to throw away
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']
+includes = ['<stdlib.h>', '<util/threadSafety.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']

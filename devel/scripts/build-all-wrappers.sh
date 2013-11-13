@@ -1,11 +1,11 @@
 #!/bin/bash
 
-SIOX=/usr/local/siox
+SIOX=/opt/siox/Inst/
 CLEAN="$1"
 
 (
 ERROR=""
-for L in tools/siox-skeleton-builder/layers/*; do
+for L in /opt/siox/siox/src/tools/siox-skeleton-builder/layers/*; do
 	pushd $L
 	if [[ $CLEAN != "" ]] ; then
 		rm -rf build

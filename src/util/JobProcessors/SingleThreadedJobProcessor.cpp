@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include <util/threadSafety.h>
 #include "SingleThreadedJobProcessor.hpp"
 
 using namespace std;
@@ -65,6 +66,8 @@ SingleThreadedJobProcessor::~SingleThreadedJobProcessor(){
 }
 
 void SingleThreadedJobProcessor::process(){
+	monitoring_namespace_protect_thread();
+
 	while(true){
 		void * job;
 		{

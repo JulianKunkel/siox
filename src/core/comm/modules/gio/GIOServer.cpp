@@ -106,6 +106,8 @@ void GIOServiceServer::cleanTerminatedThread(){
 }
 
 void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_thread_error_cancelable){
+	monitoring_namespace_protect_thread();
+	
 	GSocketConnection * connection;
 
 	while( (connection =  g_socket_listener_accept(listener, nullptr, cancelable, nullptr)) == nullptr ){
