@@ -68,6 +68,8 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 		virtual ComponentReport prepareReport() override;
 
+		~GenericHistoryPlugin() { assert(0 && "TODO: unregister hint attributes with optimizer"), abort(); }
+
 	private:
 		int initLevel;
 		const int initializedLevel = ~0;
@@ -127,22 +129,20 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 	switch (type) {
 
 		case OPEN:
+			cerr << "openFileHints[" << activity->aid() << "]\n";
 			rememberHints( &openFileHints[activity->aid()], activity );
 			break;
 
 		case ACCESS: {
-			cerr << "Checkpoint ACCESS-case...\t";
 			vector<Attribute>* curHints = findCurrentHints( activity, 0 );
 			cerr << curHints << endl;
 			if( curHints ) {
-				cerr << "Checkpoint ACCESS-if\n";
 				double curPerformance = recordPerformance( activity );
 				cout << "\t(Performance: " << curPerformance << ")" << endl;
 				bool foundHints = false;
 				for( size_t i = hints.size(); i--; ) {
 					HintPerformance& temp = hints[i];
 					if( temp.hints == *curHints ) {
-						cerr << "Checkpoint 3\n";
 						temp.averagePerformance = ( temp.averagePerformance*( temp.measurementCount ) + curPerformance )/( temp.measurementCount + 1 );
 						temp.measurementCount++;
 						foundHints = true;
@@ -150,7 +150,6 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 					}
 				}
 				if( !foundHints ) {
-					cerr << "Checkpoint 1\n";
 					hints.emplace_back((HintPerformance){
 						.hints = *curHints,
 						.measurementCount = 1,
@@ -166,7 +165,6 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 			if( findCurrentHints( activity, &openFileHintsKey ) ) {
 				openFileHints.erase( openFileHintsKey );
 			}
-			optimalParameter( *(OntologyAttribute*)NULL );
 			break;
 		}
 
@@ -254,6 +252,7 @@ void GenericHistoryPlugin::initPlugin() {
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
 					cerr << "received attribute ID " << ontatt.aID << "\n";
 					hintTypes[ontatt.aID]=ontatt.storage_type;
+					optimizer->registerPlugin( ontatt, this );	// Tell the optimizer to ask us for this attribute
 				}
 			);
 			initLevel = 7;
@@ -275,16 +274,15 @@ OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & 
 	cout << "\t" << nTypes[ACCESS] << " ACCESSes\n";
 	cout << "\t" << nTypes[CLOSE] << " CLOSEs\n";
 	cout << "\t" << nTypes[HINT] << " HINTs\n";
+	throw( NotFoundError() );
 
-	return OntologyValue( 42 );
+	return OntologyValue( "42" );
 }
 
 
 ComponentReport GenericHistoryPlugin::prepareReport() {
 	if( !tryEnsureInitialization() ) return ComponentReport();
-	cerr << "Checkpoint 2\n";
 	ostringstream reportText;
-	cerr << "hints.size() = " << hints.size() << "\n";
 	for( size_t i = hints.size(); i--; ) {
 		HintPerformance& curStatistic = hints[i];
 		reportText << "avrg performance = " << curStatistic.averagePerformance << " (" << curStatistic.measurementCount << " measurements), hints = { ";
@@ -295,7 +293,6 @@ ComponentReport GenericHistoryPlugin::prepareReport() {
 		reportText << "}\n";
 	}
 	ComponentReport result;
-	cerr << reportText.str();
 	result.data["Hint Statistics"] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_CRITICAL, VariableDatatype( reportText.str() ) );
 	return result;
 }
@@ -343,7 +340,6 @@ vector<Attribute>* GenericHistoryPlugin::findCurrentHints( const shared_ptr<Acti
 			break;
 		}
 	}
-	cerr << "findCurrentHints() = " << (intmax_t)savedHints << "\n";
 	return savedHints;
 }
 
