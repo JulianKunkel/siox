@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <glib.h>
+#include <stdio.h>
 
 
 static inline unsigned translateMPIOpenFlagsToSIOX( unsigned flags )
@@ -108,7 +109,7 @@ static inline void datatypeToString(char ** str, int * pos, int * length, int * 
 
 	APPEND_STR(getCombinerName(combiner), 20);
 	APPEND_STR("(", 1);
-	if(combiner == MPI_COMBINER_NAMED) 	// cannot call get_contents on this
+	if(combiner == MPI_COMBINER_NAMED)	// cannot call get_contents on this
 	{
 		int resultlen;
 		char typename[MPI_MAX_OBJECT_NAME];
@@ -146,7 +147,7 @@ static inline void datatypeToString(char ** str, int * pos, int * length, int * 
 			APPEND_STR("D=", 5);
 			for(; i < dims * 2 + 3; ++i){
 				APPEND_STR( getDistributeConstantName(integers[i]), 20 );
-				APPEND_COMMA				
+				APPEND_COMMA
 			}
 			APPEND_STR("A=", 5);
 			for(; i < dims * 3 + 3; ++i){
@@ -192,7 +193,7 @@ static inline void datatypeToString(char ** str, int * pos, int * length, int * 
 		}
 		*pos = *pos -1;
 
-		APPEND_STR(",TYPES=", 10);			
+		APPEND_STR(",TYPES=", 10);
 		for(int i = 0; i < max_datatypes; ++i)
 		{
 			datatypeToString(str, pos, length, malloced, datatypes[i]);
@@ -227,7 +228,7 @@ static inline void recordDatatype(siox_activity * sioxActivity, siox_attribute *
 	}
 }
 
-/* 
+/*
  The list of known MPI Hints and the corresponding SIOX attribute.
  */
 struct known_hint_t{
@@ -236,14 +237,14 @@ struct known_hint_t{
 };
 
 // Three different types are supported, int32, int63 and strings.
-static struct known_hint_t knownHintValueInt32 [3] = {{"mpiio_concurrency", & infoConcurrency}, {"mpiio_coll_contiguous", & infoCollContiguous}, {NULL, NULL}};
-static struct known_hint_t knownHintValueInt64 [] = {  {"noncoll_read_bufsize" , & infoReadBuffSize},  {"noncoll_write_bufsize", &infoWriteBuffSize},  {"coll_read_bufsize", & infoCollReadBuffSize},  {"coll_write_bufsize", & infoCollWriteBuffSize}, {NULL, NULL}};
+static struct known_hint_t knownHintValueInt32 [] = {{"mpiio_concurrency", & infoConcurrency}, {"mpiio_coll_contiguous", & infoCollContiguous}, {NULL, NULL}};
+static struct known_hint_t knownHintValueInt64 [] = { {"cb_buffer_size" , & infoBuffSize}, {"noncoll_read_bufsize" , & infoReadBuffSize}, {"noncoll_write_bufsize", &infoWriteBuffSize},  {"coll_read_bufsize", & infoCollReadBuffSize},  {"coll_write_bufsize", & infoCollWriteBuffSize}, {NULL, NULL}};
 static struct known_hint_t knownHintValueStr [] = {{NULL, NULL}};
 
 
 /*
 	Record the recognized default info key/value pairs.
-	Additionally, record all hints in a big string separated by "||" (hopefully no string contains ||). 
+	Additionally, record all hints in a big string separated by "||" (hopefully no string contains ||).
 	Note that this string may contain not recognized hints.
  */
 static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
@@ -274,7 +275,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 		}
 		stringLength += strlen(key) + strlen(value) + 4;
 
-		printf("[MPI] Hint: %s, %s\n", key, value);
+		printf("[MPI] Hint: \"%s\", \"%s\"\n", key, value);
 	}
 
 	if	(stringLength > 0){
@@ -293,7 +294,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 
 			if ( ! isDefined || ret != MPI_SUCCESS ){
 				continue;
-			}		
+			}
 
 			curPos += sprintf(curPos, "%s||%s||", key, value);
 		}

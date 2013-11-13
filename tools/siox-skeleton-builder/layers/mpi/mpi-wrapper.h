@@ -25,6 +25,7 @@
 //@register_attribute attribute_filetype "MPI" "description/filetype" SIOX_STORAGE_STRING
 
 
+//@register_attribute infoBuffSize "MPI" "hints/cbBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute infoReadBuffSize "MPI" "hints/noncollReadBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute infoWriteBuffSize "MPI" "hints/noncollWriteBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute infoCollReadBuffSize "MPI" "hints/collReadBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
@@ -116,7 +117,6 @@ int MPI_Finalize( void );
     - filename: Access this hint to get the name of the file.
 */
 //@activity
-//@activity_attribute_pointer fileName filename
 //@splice_before uint32_t translatedFlags = translateMPIOpenFlagsToSIOX(amode);
 //@activity_attribute fileOpenFlags translatedFlags
 //@activity_attribute fileHandle fh
