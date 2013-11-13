@@ -7,11 +7,10 @@ using namespace std;
 
 namespace util{
 
-
 void SingleThreadedJobProcessor::iStartJob(void * job){
 	unique_lock<mutex> lk(m);
-	
 	if( queue->mayEnqueue() ){
+
 		queue->enqueueJob(job);
 		// wakeup a pending threads
 		if( status == OperationalStatus::OPERATIONAL ){
@@ -33,12 +32,16 @@ void SingleThreadedJobProcessor::startProcessing(){
 	if ( myThread != nullptr ){
 		return;
 	}
+	status = OperationalStatus::OPERATIONAL;
 	cv.notify_one();
 	myThread = new thread( & SingleThreadedJobProcessor::process, this );
 }
 
+// can be called from the processing thread or another thread.
 void SingleThreadedJobProcessor::stopProcessing(){
-	shutdown(false);
+		unique_lock<mutex> lk(m);
+		status = OperationalStatus::STOPPING;
+		cv.notify_one();
 }
 
 void SingleThreadedJobProcessor::shutdown(bool terminate){	
@@ -60,7 +63,7 @@ void SingleThreadedJobProcessor::shutdown(bool terminate){
 }
 
 SingleThreadedJobProcessor::~SingleThreadedJobProcessor(){
-	if ( status == OperationalStatus::OPERATIONAL ){
+	if ( status != OperationalStatus::SHUTTING_DOWN ){
 		shutdown(true);
 	}
 }
@@ -68,7 +71,7 @@ SingleThreadedJobProcessor::~SingleThreadedJobProcessor(){
 void SingleThreadedJobProcessor::process(){
 	monitoring_namespace_protect_thread();
 
-	while(true){
+	while( status != OperationalStatus::STOPPING ){
 		void * job;
 		{
 			unique_lock<mutex> lk(m);

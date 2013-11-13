@@ -137,7 +137,7 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 	}
 
 	// the receiving connection has been closed, so we should join the writer thread.
-	sendProcessor->disconnect();
+	sendProcessor->shutdown();
 
 	g_io_stream_close(G_IO_STREAM (conn), shutdown_cancelable, NULL);
 

@@ -139,7 +139,7 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
 	 addAcceptorThread();
 
 	 // this thread now will receive messages.
-    while(1) {
+    while( ! g_cancellable_is_cancelled(one_thread_error_cancelable) ) {
 		uint64_t msgLength;
 		uint32_t clientSidedID;
 		CommunicationError error;
@@ -148,7 +148,7 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
 
         if ( payload == nullptr ){
         	if (msgLength > 0){ 
-        		// cout << "Received broken message" << endl;
+        		//cout << "Received broken message" << endl;
 
         		messageCallback->invalidMessageReceivedCB(error);
         		TCPClientMessage errMsg(this, clientSidedID, & messageSendQueueInstance, nullptr, 0);
@@ -157,8 +157,6 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
 
         	break;
         }
-
-        // cout << "Received message" << endl;
 
         auto msg = shared_ptr<TCPClientMessage>(new TCPClientMessage(this, clientSidedID, & messageSendQueueInstance, payload, msgLength));
 

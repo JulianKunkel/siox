@@ -22,6 +22,7 @@ protected:
 	enum class OperationalStatus : uint8_t{
 		OPERATIONAL = 0,
 		SHUTTING_DOWN = 1,
+		STOPPING = 2,
 	};
 
 	OperationalStatus status = OperationalStatus::OPERATIONAL;
