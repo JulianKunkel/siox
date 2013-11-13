@@ -788,7 +788,6 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 
 		try{
 			OntologyValue val( process_data.optimizer->optimalParameter(*attribute) );
-			assert( val.type() == VariableDatatype::Type::STRING );
 			strncpy( target_str, val.str(), maxLength );
 			return 1;
 		}catch ( NotFoundError & e ){

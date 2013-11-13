@@ -35,18 +35,30 @@ int main( int argc, char * argv[] )
 
 	MPI_File_open( MPI_COMM_WORLD, "mpi_wrapper_test_file", MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh );
 	printf( "==========MPI_File_write()==========\n" );
+	{
+		//Tell the GenericHistory what hint combinations it should evaluate.
+		buf = malloc(1);
+		buf[0] = 0;
+
+		MPI_Info_set( info, "cb_buffer_size", "1048576" );
+		MPI_File_set_info( fh, info );
+		MPI_File_write( fh, buf, 1, etype, &status );
+
+		MPI_Info_set( info, "cb_buffer_size", "1024" );
+		MPI_File_set_info( fh, info );
+		MPI_File_write( fh, buf, 1, etype, &status );
+
+		MPI_Info_set( info, "cb_buffer_size", "111" );
+		MPI_File_set_info( fh, info );
+		MPI_File_write( fh, buf, 1, etype, &status );
+
+		free(buf);
+	}
+	//Do some "sensible" writing.
 	for(size_t i = 1024; i <= 1024*1024; i *= 2) {
 		buf = malloc(i);
 		for(size_t j = i; j--; ) buf[j] = j;
-
-//		MPI_Info_set( info, "cb_buffer_size", "1024" );
-//		MPI_File_set_info( fh, info );
-		for(size_t j = 1; j--; ) MPI_File_write( fh, buf, i, etype, &status );
-
-//		MPI_Info_set( info, "cb_buffer_size", "1048576" );
-//		MPI_File_set_info( fh, info );
-		for(size_t j = 1; j--; ) MPI_File_write( fh, buf, i, etype, &status );
-
+		for(size_t j = 5; j--; ) MPI_File_write( fh, buf, i, etype, &status );
 		free(buf);
 	}
 

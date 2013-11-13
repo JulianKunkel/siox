@@ -23,6 +23,8 @@ using namespace core;
 using namespace knowledge;
 
 
+const int kMinTrialCount = 5;
+
 #define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 
 enum TokenType {
@@ -57,7 +59,7 @@ class HintPerformance {
 /// @todo TODO: This code smells; we have 13 data members and an initPlugin() of 83 lines. Redesign.
 class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerInterface, public ComponentReportInterface {
 	public:
-		GenericHistoryPlugin() : nTypes{}, initLevel(0) { }
+		GenericHistoryPlugin() : nTypes{} { }
 		void initPlugin() override;
 		void initTypes(const shared_ptr<Activity>& activity);
 		ComponentOptions * AvailableOptions() override;
@@ -71,8 +73,8 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		~GenericHistoryPlugin() { assert(0 && "TODO: unregister hint attributes with optimizer"), abort(); }
 
 	private:
-		int initLevel;
-		const int initializedLevel = ~0;
+		int initLevel = 0;
+		const int initializedLevel = -1;
 
 		Optimizer * optimizer;
 		SystemInformationGlobalIDManager * sysinfo;
@@ -94,6 +96,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 		// Number of activities with the respective token type seen up to now
 		int nTypes[TOKEN_TYPE_COUNT];
+		TokenType lastActionType = UNKNOWN;
 
 		unordered_map<ActivityID, vector<Attribute> > openFileHints;
 //		unordered_map<string, vector<HintPerformance> > userHints;
@@ -122,20 +125,19 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 
 	nTypes[type]++;
 
-	cerr << "Generic History saw activity of type " << activity->ucaid() << " => ";
-	for(size_t i = 0; i < TOKEN_TYPE_COUNT; i++) cerr << nTypes[i] << " ";
-	cerr << "\n";
+//	cerr << "Generic History saw activity of type " << activity->ucaid() << " => ";
+//	for(size_t i = 0; i < TOKEN_TYPE_COUNT; i++) cerr << nTypes[i] << " ";
+//	cerr << "\n";
 
 	switch (type) {
 
 		case OPEN:
-			cerr << "openFileHints[" << activity->aid() << "]\n";
+//			cerr << "openFileHints[" << activity->aid() << "]\n";
 			rememberHints( &openFileHints[activity->aid()], activity );
 			break;
 
 		case ACCESS: {
 			vector<Attribute>* curHints = findCurrentHints( activity, 0 );
-			cerr << curHints << endl;
 			if( curHints ) {
 				double curPerformance = recordPerformance( activity );
 				cout << "\t(Performance: " << curPerformance << ")" << endl;
@@ -177,6 +179,7 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 		default:
 			break;
 	}
+	lastActionType = type;
 }
 
 
@@ -248,9 +251,9 @@ void GenericHistoryPlugin::initPlugin() {
 					string domain = itr->first;
 					string attribute = itr->second;
 
-					cerr << "looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
+//					cerr << "looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-					cerr << "received attribute ID " << ontatt.aID << "\n";
+//					cerr << "received attribute ID " << ontatt.aID << "\n";
 					hintTypes[ontatt.aID]=ontatt.storage_type;
 					optimizer->registerPlugin( ontatt, this );	// Tell the optimizer to ask us for this attribute
 				}
@@ -267,16 +270,30 @@ void GenericHistoryPlugin::initPlugin() {
 
 
 OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
-	if( initLevel != initializedLevel ) return OntologyValue();
+	if( initLevel != initializedLevel ) throw( NotFoundError() );
 
-	cout << "Up to now, GenericHistoryPlugin saw\n";
-	cout << "\t" << nTypes[OPEN] << " OPENs\n";
-	cout << "\t" << nTypes[ACCESS] << " ACCESSes\n";
-	cout << "\t" << nTypes[CLOSE] << " CLOSEs\n";
-	cout << "\t" << nTypes[HINT] << " HINTs\n";
+	const HintPerformance* result = 0;
+	if( hints.size() && lastActionType != HINT ) {
+		const HintPerformance* leastMeasurements = &hints[0];
+		const HintPerformance* maxPerformance = &hints[0];
+		for( size_t i = hints.size(); i --> 1; ) {
+			if( hints[i].measurementCount < leastMeasurements->measurementCount ) leastMeasurements = &hints[i];
+			if( hints[i].averagePerformance > maxPerformance->averagePerformance ) maxPerformance = &hints[i];
+		}
+		result = maxPerformance;
+		if( leastMeasurements->measurementCount < kMinTrialCount ) result = leastMeasurements;
+	}
+	if( result && result->hints.size() ) {
+		///@todo TODO: search for the right attribute
+		return result->hints[0].value;
+	}
 	throw( NotFoundError() );
 
-	return OntologyValue( "42" );
+//	cout << "Up to now, GenericHistoryPlugin saw\n";
+//	cout << "\t" << nTypes[OPEN] << " OPENs\n";
+//	cout << "\t" << nTypes[ACCESS] << " ACCESSes\n";
+//	cout << "\t" << nTypes[CLOSE] << " CLOSEs\n";
+//	cout << "\t" << nTypes[HINT] << " HINTs\n";
 }
 
 
@@ -350,14 +367,14 @@ void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, cons
 	size_t hintCount = 0;
 	for( size_t i = attributes.size(); i--; ) {
 		OntologyAttribute curAttribute = facade->lookup_attribute_by_ID( attributes[i].id );
-		cerr << "Attribute " << attributes[i].id << " " << curAttribute.domain << "/" << curAttribute.name << " = " << attributes[i].value << "\n";
+//		cerr << "Attribute " << attributes[i].id << " " << curAttribute.domain << "/" << curAttribute.name << " = " << attributes[i].value << "\n";
 		IGNORE_EXCEPTIONS(
 			hintTypes.at( attributes[i].id );
 			outHintVector->emplace_back( attributes[i] );
 			hintCount++;
 		);
 	}
-	cerr << "remembered " << hintCount << " hints from " << attributes.size() << " attributes\n";
+//	cerr << "remembered " << hintCount << " hints from " << attributes.size() << " attributes\n";
 	sort( outHintVector->begin(), outHintVector->end(), [](const Attribute& a, const Attribute& b){ return a.id < b.id; } );
 }
 
