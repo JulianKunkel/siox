@@ -3,8 +3,10 @@
 
 #include <map>
 #include <list>
+#include <string>
 #include <exception>
 #include <sstream>
+#include <utility>
 
 #include <core/component/ComponentReference.hpp>
 #include <core/component/Component.hpp>
@@ -26,18 +28,58 @@ namespace core {
 			ComponentReferenceID invalidNr;
 	};
 
+	struct RegisteredComponent{
+		const ComponentReferenceID id;
+		const std::string section;
+		const std::string moduleName;
+		const Component * component;		
+
+		RegisteredComponent( ComponentReferenceID nr, const std::string & section, const std::string & moduleName, Component * component ) : id(nr), section(section), moduleName(moduleName), component(component) {}
+	};
+
 
 	class ComponentRegistrar {
 		public:
-			Component * lookup_component( ComponentReferenceID which ) throw( InvalidComponentException );
-			void register_component( ComponentReferenceID nr, Component * component );
+			Component * lookupComponent( ComponentReferenceID which ) throw( InvalidComponentException );
+			void registerComponent( ComponentReferenceID nr, const std::string & section, const std::string & moduleName, Component * component );
 
 			// do not tamper with the list, otherwise you get what you deserve...
-			std::list<Component *> & list_registered_components() {
+			std::list<RegisteredComponent *> & listRegisteredComponents() {
 				return list;
 			}
 
-			const int number_of_registered_components() {
+			template<class TYPE>
+			std::list<std::pair<TYPE *, RegisteredComponent*>> listAllComponentsOfATypeFull( ) {
+				std::list<std::pair<TYPE *, RegisteredComponent*> > lst;
+
+				std::list<RegisteredComponent *> & vector = listRegisteredComponents();
+
+				for( auto itr = vector.begin(); itr != vector.end(); itr++ ) {
+					TYPE * ret = dynamic_cast<TYPE *>( const_cast<Component*>((*itr)->component) );
+					if( ret != nullptr ){
+						lst.push_back( { ret, *itr });
+					}
+				}
+				return lst;
+			}
+
+			template<class TYPE>
+			std::list<TYPE *> listAllComponentsOfAType( ) {
+				std::list<TYPE *> lst;
+
+				std::list<RegisteredComponent *> & vector = listRegisteredComponents();
+
+				for( auto itr = vector.begin(); itr != vector.end(); itr++ ) {
+					TYPE * ret = dynamic_cast<TYPE *>( const_cast<Component*>((*itr)->component) );
+					if( ret != nullptr ){
+						lst.push_back( ret );
+					}
+				}
+				return lst;
+			}
+
+
+			const int numberOfRegisteredComponents() {
 				return list.size();
 			}
 
@@ -47,8 +89,8 @@ namespace core {
 			void shutdown();
 
 		private:
-			std::map<ComponentReferenceID, Component *> map;
-			std::list<Component *> list;
+			std::map<ComponentReferenceID, RegisteredComponent*> map;
+			std::list<RegisteredComponent*> list;
 	};
 
 }

@@ -23,4 +23,4 @@ add_subdirectory(plugins)
 
 siox_run_serializer(StatisticsMultiplexerSyncOptions.hpp StatisticsMultiplexerSyncOptions.cpp)
 
-install(TARGETS siox-monitoring-StatisticsMultiplexerSync LIBRARY DESTINATION lib)
+install(TARGETS siox-monitoring-StatisticsMultiplexerSync LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

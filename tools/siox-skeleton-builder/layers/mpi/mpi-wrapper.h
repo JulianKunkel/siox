@@ -1,5 +1,7 @@
 /* Set the interface name for the library*/
-//@component "MPI" implVersion "" int major, minor; char implVersion[151]; int v_ret = MPI_Get_version(& major, & minor); if (v_ret >= 0) snprintf(implVersion, 150, "%d.%d", major, minor); else sprintf(implVersion, "0");
+//@component "MPI" "Generic" 
+// To record the version append:
+// implVersion "" int major, minor; char implVersion[151]; int v_ret = MPI_Get_version(& major, & minor); if (v_ret >= 0) snprintf(implVersion, 150, "%d.%d", major, minor); else sprintf(implVersion, "0");
 
 //@register_attribute commSize "MPI" "description/commSize" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute commRank "MPI" "description/commRank" SIOX_STORAGE_32_BIT_UINTEGER
@@ -11,7 +13,7 @@
 //@register_attribute bytesToWrite "MPI" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute filePosition "MPI" "file/position" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute fileExtent "MPI" "file/extent" SIOX_STORAGE_64_BIT_UINTEGER
-//@register_attribute fileHandle "POSIX" "descriptor/filehandle" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute fileHandle "MPI" "descriptor/filehandle" SIOX_STORAGE_64_BIT_UINTEGER
 
 //@register_attribute fileDatarepresentation "MPI" "hints/datarepresentation" SIOX_STORAGE_STRING
 

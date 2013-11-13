@@ -127,7 +127,11 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
     ServerMessageSendProcessor messageSendQueueInstance(this);
     messageSendQueueInstance.setProcessorQueue(new FIFOProcessorQueue());
 
-    messageSendQueueInstance.connect(g_io_stream_get_output_stream(G_IO_STREAM(connection)), one_thread_error_cancelable);
+    {
+    GOutputStream * ostream = g_io_stream_get_output_stream(G_IO_STREAM(connection));	 
+    assert ( G_IS_OUTPUT_STREAM (ostream) );
+    messageSendQueueInstance.connect( ostream , one_thread_error_cancelable);    
+ 	 }
 
 	 // spawn another thread to accept the next connection
 	 addAcceptorThread();
@@ -159,9 +163,9 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
         messageCallback->messageReceivedCB(msg, payload + clientMsgHeaderLen(), msgLength - clientMsgHeaderLen());
     }
 
-    messageSendQueueInstance.terminate();
+    messageSendQueueInstance.shutdown();
 
-    g_object_unref(connection);
+	 g_object_unref(connection);
 
     removeAcceptorThread(threadID);
 }

@@ -18,13 +18,12 @@ target_link_libraries(
 	${Boost_LIBRARIES}
 )
 
-install(TARGETS siox-monitoring-Statistic LIBRARY DESTINATION lib)
-
 
 siox_run_serializer(StatisticsFileWriterOptions.hpp StatisticsFileWriterOptions.cpp)
-
 siox_run_text_serializer(StatisticTypesSerializable.hpp StatisticTypesSerializableText.cpp)
 
 add_subdirectory(collector)
 add_subdirectory(multiplexer)
 add_subdirectory(test)
+
+install(TARGETS siox-monitoring-Statistic LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

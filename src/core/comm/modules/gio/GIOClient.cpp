@@ -145,8 +145,6 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 		// we expect the server terminated the connection for some reason.
 		connectionCallback->connectionErrorCB(*this, comm_error);
 	}
-
-	cout << "connectionThreadFunc End" << endl;
 }
 
 
@@ -204,7 +202,7 @@ void GIOClient::serializeHeader(char * buffer, uint64_t & pos, uint64_t size){
 }
 
 GIOClient::~GIOClient(){
-	cout << "Shutting down client \"" << getAddress() << "\"" << endl;
+	//cout << "Shutting down client \"" << getAddress() << "\"" << endl;
 
 	g_cancellable_cancel(shutdown_cancelable);	
 
@@ -226,5 +224,5 @@ GIOClient::~GIOClient(){
 
 	delete(sendProcessor);
 
-	cout << "Done client" << endl;
+	//cout << "Done client" << endl;
 }

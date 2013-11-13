@@ -7,10 +7,12 @@
 
 #include <monitoring/statistics/StatisticsTypes.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerImplementation.hpp>
+#include <boost/thread/shared_mutex.hpp>
+
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerListener.hpp>
+
 #include "StatisticsMultiplexerSyncOptions.hpp"
 
-#include <boost/thread/shared_mutex.hpp>
 
 using namespace core;
 
@@ -43,6 +45,7 @@ namespace monitoring {
 			const std::vector<std::shared_ptr<Statistic> > * lastStatistics;	//protected by listenersLock
 			boost::shared_mutex listenersLock;
 	};
+
 
 	ComponentOptions* StatisticsMultiplexerSync::AvailableOptions() {
 		return new StatisticsMultiplexerSyncOptions();

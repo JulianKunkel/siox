@@ -22,4 +22,4 @@ siox_run_serializer(CommInMemoryOptions.hpp BoostXMLSerializable.cpp)
 
 
 add_subdirectory(test)
-install(TARGETS siox-core-comm-inmemory LIBRARY DESTINATION lib)
+install(TARGETS siox-core-comm-inmemory LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

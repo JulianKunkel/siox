@@ -1,18 +1,11 @@
+#include <assert.h>
+
 #include "SingleThreadedJobProcessor.hpp"
 
 using namespace std;
 
 namespace util{
 
-void SingleThreadedJobProcessor::startProcessing(){
-	unique_lock<mutex> lk(m);
-	enabledProcessing = true;
-	cv.notify_one();
-
-	if(myThread == nullptr){
-		myThread = new thread( & SingleThreadedJobProcessor::process, this );
-	}
-}
 
 void SingleThreadedJobProcessor::iStartJob(void * job){
 	unique_lock<mutex> lk(m);
@@ -20,7 +13,7 @@ void SingleThreadedJobProcessor::iStartJob(void * job){
 	if( queue->mayEnqueue() ){
 		queue->enqueueJob(job);
 		// wakeup a pending threads
-		if(enabledProcessing){
+		if( status == OperationalStatus::OPERATIONAL ){
 			cv.notify_one();
 		}
 	}else{
@@ -33,27 +26,41 @@ void SingleThreadedJobProcessor::iCancelJob(void * job){
 	queue->removeJob(job);
 }
 
-void SingleThreadedJobProcessor::shutdown(){
+
+void SingleThreadedJobProcessor::startProcessing(){
 	unique_lock<mutex> lk(m);
-	status = OperationalStatus::SHUTTING_DOWN;
+	if ( myThread != nullptr ){
+		return;
+	}
 	cv.notify_one();
+	myThread = new thread( & SingleThreadedJobProcessor::process, this );
 }
 
-void SingleThreadedJobProcessor::terminate(){
-	unique_lock<mutex> lk(m);
-	status = OperationalStatus::SHUTTING_DOWN;
-	abortPendingJobs();
-	cv.notify_one();		
+void SingleThreadedJobProcessor::stopProcessing(){
+	shutdown(false);
+}
+
+void SingleThreadedJobProcessor::shutdown(bool terminate){	
+	{
+		unique_lock<mutex> lk(m);
+		status = OperationalStatus::SHUTTING_DOWN;
+		if (terminate){
+				abortPendingJobs();
+		}
+
+		cv.notify_one();		
+	}
+	if(myThread != nullptr){
+		// maybe the thread has never been started.
+		myThread->join();
+		delete(myThread);
+		myThread = nullptr;
+	}
 }
 
 SingleThreadedJobProcessor::~SingleThreadedJobProcessor(){
 	if ( status == OperationalStatus::OPERATIONAL ){
-		terminate();
-	}
-	if(myThread != nullptr){
-		// maybe the thread has never been started.
-		myThread->join();		
-		delete(myThread);
+		shutdown(true);
 	}
 }
 
@@ -62,7 +69,7 @@ void SingleThreadedJobProcessor::process(){
 		void * job;
 		{
 			unique_lock<mutex> lk(m);
-			while( queue->empty() || ! enabledProcessing ){
+			while( queue->empty() ){
 				if ( status == OperationalStatus::SHUTTING_DOWN ){
 					return;
 				}

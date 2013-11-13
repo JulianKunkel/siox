@@ -104,7 +104,7 @@ namespace core {
 		vector<Component *> components;
 
 		registrarMutex.lock();
-		autoConfiguratorOffset = registrar->number_of_registered_components();
+		autoConfiguratorOffset = registrar->numberOfRegisteredComponents();
 		autoConfiguratorRegistrar = registrar;
 
 		ContainerSerializer cs = ContainerSerializer();
@@ -160,7 +160,7 @@ namespace core {
 				cerr << "Configuration values: " << str << endl;
 				throw InvalidConfiguration( string( "Error during initialization: " ) + e.what(), module->name );
 			}
-			registrar->register_component( module->componentID + autoConfiguratorOffset, component );
+			registrar->registerComponent( module->componentID + autoConfiguratorOffset, type + " " + matchingRules, module->name, component );
 
 			components.push_back( component );
 

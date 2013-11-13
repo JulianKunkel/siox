@@ -18,7 +18,9 @@
 	/opt/gperftools/2.1/bin/pprof --list=Log ./a.out file.prof 
  */
 
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef GOOGLEPROF
 #include <google/profiler.h>
@@ -26,6 +28,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <time.h>
 
@@ -64,7 +67,7 @@ int main( int argc, char ** argv )
 	uint64_t iterations = 100;
 	while( deltaT < 1000000000ull ){
 		for(i=0; i < iterations; i++){
-			fwrite( buffer, 0 , 0, pFile );
+			fwrite(buffer, 0, 0, pFile );
 		}
 
 		uint64_t endT = gettime();
@@ -87,7 +90,7 @@ int main( int argc, char ** argv )
 	for(o=0; o < count; o++){
 		uint64_t startT = gettime();
 		for(i=0; i < iterations; i++){
-			fwrite( buffer, 0 , 0, pFile );
+			fwrite(buffer, 0, 0, pFile );
 		}
 		double deltaT = gettime() - startT;
 		printf( "%.2f %.3f %.9f\n", deltaT/ 1000000000.0, iterations / (deltaT / 1000000000ull), deltaT / 1000000000ull / iterations);

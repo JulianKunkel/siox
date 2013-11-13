@@ -24,4 +24,4 @@ siox_run_serializer(ModuleOptions.hpp BoostXMLSerializable.cpp)
 
 add_subdirectory(ConfigurationProviderPlugins)
 
-install(TARGETS siox-core-AutoConfigurator LIBRARY DESTINATION lib)
+install(TARGETS siox-core-AutoConfigurator LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

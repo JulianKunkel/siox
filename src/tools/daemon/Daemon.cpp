@@ -10,6 +10,8 @@
 #include <boost/program_options/parsers.hpp>
 
 #include <util/autoLoadModules.hpp>
+#include <util/ReporterHelper.hpp>
+
 
 using namespace boost;
 using namespace std;
@@ -25,6 +27,8 @@ static bool terminated = false;
 
 void signalHandler(int sig){
 	cout << "Shutting down daemon" << endl;
+
+	util::invokeAllReporters( registrar );
 	registrar->shutdown();
 
 	lock_guard<mutex> lock(finish_mutex);

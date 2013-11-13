@@ -30,4 +30,4 @@ siox_run_serializer(GIOOptions.hpp GIOOptions.cpp)
 
 add_subdirectory(test)
 
-install(TARGETS siox-core-comm-gio LIBRARY DESTINATION lib)
+install(TARGETS siox-core-comm-gio LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

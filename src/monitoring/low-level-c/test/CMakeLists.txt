@@ -21,6 +21,7 @@ target_link_libraries(
 	siox-knowledge-DereferencingFacade
 	siox-monitoring-ActivityMultiplexerAsync	
 	siox-monitoring-activityPlugin-ActivityForwarder
+	siox-knowledge-OptimizerStandardImplementation
 )
 
 symlink(siox.conf siox.conf)

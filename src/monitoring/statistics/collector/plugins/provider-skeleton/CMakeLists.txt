@@ -20,4 +20,4 @@ siox_run_serializer(ProviderSkeletonOptions.hpp ProviderSkeletonOptions.cpp)
 
 add_subdirectory(test)
 
-# install(TARGETS  LIBRARY DESTINATION lib)
+# install(TARGETS  LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

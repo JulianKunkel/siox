@@ -28,7 +28,7 @@ target_link_libraries(
 	${MPI_CXX_LIBRARIES}
 )
 
-set_target_properties(siox-${LAYER}-wrap PROPERTIES LD_FLAGS ${WRAP_LD_OPTS} )
+set_target_properties(siox-${LAYER}-wrap PROPERTIES LD_FLAGS ${WRAP_LD_OPTS})
 
 
 add_library(
@@ -45,5 +45,8 @@ target_link_libraries(
 
 set_target_properties(siox-${LAYER}-dlsym PROPERTIES LD_FLAGS "-ldl")
 
-install(TARGETS siox-${LAYER}-wrap LIBRARY DESTINATION lib)
-install(TARGETS siox-${LAYER}-dlsym LIBRARY DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LAYER}.wrap DESTINATION ${SIOX_INSTALL_LIBRARY_DIR} RENAME libsiox-${LAYER}.wrap)
+install(TARGETS siox-${LAYER}-wrap LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
+install(TARGETS siox-${LAYER}-dlsym LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
+
+add_subdirectory(test)

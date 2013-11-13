@@ -21,6 +21,7 @@
 #include <core/datatypes/VariableDatatype.hpp>
 
 #include <util/autoLoadModules.hpp>
+#include <util/ReporterHelper.hpp>
 
 
 #include "siox-ll-internal.hpp"
@@ -182,10 +183,6 @@ static void add_program_information()
 	process_data.association_mapper->set_process_attribute( process_data.pid, description, read );
 }
 
-static void add_program_statistics()
-{
-}
-
 extern "C" {
 
 // Constructor for the shared library
@@ -239,7 +236,7 @@ extern "C" {
 		// Never enter any siox function after it has been stopped.
 		FUNCTION_BEGIN
 
-		add_program_statistics();
+		util::invokeAllReporters( process_data.registrar );
 
 		// cleanup datastructures by using the component registrar:
 		process_data.registrar->shutdown();

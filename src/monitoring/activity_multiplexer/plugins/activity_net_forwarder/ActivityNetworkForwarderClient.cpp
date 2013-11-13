@@ -58,6 +58,10 @@ class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, MessageC
 		j_serialization::serialize(* (Activity*) msgObject, buffer, pos);
 	}
 
+	~ActivityNetworkForwarderClient(){
+		delete(client);
+	}
+
 	private:
 		ServiceClient * client;
 		ConnectionCallback connCallback;

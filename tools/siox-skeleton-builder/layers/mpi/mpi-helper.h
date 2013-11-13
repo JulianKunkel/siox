@@ -279,7 +279,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 
 	if	(stringLength > 0){
 		// store all hints into one string
-		char * allHints = malloc(stringLength);
+		char * allHints = malloc(stringLength + 2);
 		char * curPos = allHints;
 
 		for(int i=0; i < number_of_keys; i++){

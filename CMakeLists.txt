@@ -5,13 +5,15 @@ cmake_minimum_required(VERSION 2.8)
 include(CTest)
 include(FeatureSummary)
 
-cmake_minimum_required(VERSION 2.8)
-
 set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/src/include)
 set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/src)
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC")
+#SET (CMAKE_C_FLAGS_DEBUG          "-pg")
+#SET (CMAKE_CXX_FLAGS_DEBUG        "-pg")
+#SET (CMAKE_LINKER  "/usr/bin/ld")
+
+set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC -g -O2")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-as-needed")
@@ -22,7 +24,7 @@ set(BUILD_SHARED_LIBS ON)
 
 # you can adjust the installation path here
 # IF we set it here we cannot change it using for example ccmake
-# set(CMAKE_INSTALL_PREFIX /usr/local)
+set(CMAKE_INSTALL_PREFIX /usr/local/siox)
 
 # this is for self-compiled libraries that are not in the system's ld-path
 set(CMAKE_LIBRARY_PATH
@@ -36,10 +38,14 @@ set(CMAKE_INCLUDE_PATH
 #    /opt/boost-1.53/include
 )
 
+
 include(CTest)
 include(FeatureSummary)
 
 include(SIOXMacros)
+
+set_library_install_suffix()
+set(SIOX_INSTALL_LIBRARY_DIR lib${LIBRARY_INSTALL_SUFFIX})
 
 # find_package(Protobuf REQUIRED)
 # set_package_properties(Protobuf PROPERTIES URL "http://code.google.com/p/protobuf" TYPE REQUIRED PURPOSE "Serialization using Google Protocol Buffers.")
@@ -72,8 +78,6 @@ set_package_properties(MPI PROPERTIES URL "http://www.open-mpi.org" TYPE OPTIONA
 
 find_package(PythonInterp 2.7 REQUIRED)
 set_package_properties(PythonInterp PROPERTIES URL "http://www.python.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
-
-# siox_generate_buffers()
 
 feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
 

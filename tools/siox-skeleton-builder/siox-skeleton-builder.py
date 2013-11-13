@@ -316,13 +316,13 @@ class Function():
                                    for parameter in self.parameterList)
 
 
-            return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");\n assert(__real_%s != NULL);' %
-                   (self.name, self.type, parameters, functionName, self.name))
+            return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
+                   (self.name, self.type, parameters, functionName))
 
         else:
 
-            return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s"); \n assert(__real_%s != NULL);' %
-                   (self.name, self.type, self.definition, functionName, self.name))
+            return ('__real_%s = (%s (*) (%s)) dlsym(dllib, (const char*) "%s");' %
+                   (self.name, self.type, self.definition, functionName))
 
     #
     # @brief Generate an identifier of the function.

@@ -7,17 +7,17 @@ template = {
 # SWID: The name (software id) for this component
 'component': {
 	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" SpliceCode=',
-	'global': '''static siox_component * global_component;
-		     static siox_unique_interface * global_uid;
+	'global': '''static siox_component * global_component = NULL;
+		     static siox_unique_interface * global_uid = NULL;
 				''',
-    'init': '''
+    'init': ''' if( global_component != NULL ) return;
     		  %(SpliceCode)s
     		  global_uid = siox_system_information_lookup_interface_id(%(InterfaceName)s, %(ImplementationIdentifier)s);
               global_component = siox_component_register(global_uid, %(InstanceName)s);''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
-	'final': 'siox_component_unregister(global_component);'
+	'final': 'if (global_component) { siox_component_unregister(global_component); }'
 },
 # register_attribute
 #
@@ -32,7 +32,7 @@ template = {
 'register_attribute': {
 	'variables': 'AttributeVariable Domain Name StorageType',
 	'global': '''static siox_attribute * %(AttributeVariable)s;''',
-	'init': '''%(AttributeVariable)s = siox_ontology_register_attribute( %(Domain)s, %(Name)s, %(StorageType)s );''',
+	'init': '''%(AttributeVariable)s = siox_ontology_register_attribute( %(Domain)s, %(Name)s, %(StorageType)s ); assert(%(AttributeVariable)s != NULL);''',
     'before': '''''',
 	'after': '',
 	'cleanup': '',
@@ -125,29 +125,21 @@ template = {
 	'variables': 'Name=%(FUNCTION_NAME)s ComponentVariable=cv%(FUNCTION_NAME)s ActivityVariable=sioxActivity',
 	'global': '''static siox_component_activity * %(ComponentVariable)s;''',
 	'init': '''%(ComponentVariable)s = siox_component_register_activity( global_uid, "%(Name)s" );''',
-    'before': '''
-    	assert(global_component);
-    	assert(%(ComponentVariable)s);
-    	siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
-	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
+    	'before': '''
+    		assert(global_component);
+	    	assert(%(ComponentVariable)s);
+	    	siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
+	'after': '''
+			siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
 },
 
-'guard_advanced': {
-	'variables': 'Name=guard',
-	'global': '''''',
-	'init': '''''',
-	'before': '''\tif(siox_namespace == 0 && global_component != NULL ){ ''',
-	'after': '''''',
-	'cleanup': '',
-	'final': ''
-},
 'guard': {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': '''\tif(siox_namespace == 0 ){ ''',
+	'before': '''\tif(siox_namespace == 0 && global_component != NULL ){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''
@@ -202,7 +194,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'assert( %(Attribute)s != NULL );siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -212,7 +204,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'assert( %(Attribute)s != NULL );siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
 	'cleanup': '',
 	'final': ''
 },
@@ -222,7 +214,7 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': 'assert( %(Attribute)s != NULL ); {uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
+	'after': ' {uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
 	'cleanup': '',
 	'final': ''
 },

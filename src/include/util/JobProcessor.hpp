@@ -14,7 +14,6 @@ namespace util{
 	class JobProcessor : public ProcessorCallback {
 	protected:
 		ProcessorQueue * queue = nullptr;
-		bool enabledProcessing = true;
 	public:
 		void setProcessorQueue(ProcessorQueue * queue){
 			this->queue = queue;
@@ -24,9 +23,7 @@ namespace util{
 			return queue->mayEnqueue();
 		}
 
-		inline void stopProcessing(){
-			enabledProcessing = false;
-		}
+		virtual void stopProcessing() = 0;
 
 		// sets enabledProcessing = true and restart internal processing.
 		virtual void startProcessing() = 0;
@@ -37,11 +34,8 @@ namespace util{
 		/* Stop a job, if possible -- best-effort */
 		virtual void iCancelJob(void * job) = 0;
 
-		/* Try to complete all pending jobs */
-		virtual void shutdown() = 0;
-
-		/* Destroys all pending jobs immediately */
-		virtual void terminate() = 0;
+		/* Try to complete all pending jobs or abort them if terminate = true */
+		virtual void shutdown(bool terminate = false) = 0;
 
 		/* Should destroy all pending jobs immediately */
 		virtual ~JobProcessor(){ 

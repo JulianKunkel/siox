@@ -69,64 +69,84 @@ End of global part
 
 //@splice_before mode_t mode = va_arg(valist,mode_t);
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret
 //@horizontal_map_put_int ret
-//@error ''ret<0'' errno
 //@guardEnd
 //@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
 int open( const char * pathname, int flags, ... );
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@horizontal_map_put_int ret
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret
-//@error ''ret<0'' errno
 //@guardEnd
 int creat( const char * pathname, mode_t mode );
 
+//@splice_before mode_t mode = va_arg(valist,mode_t);
 //@guard
+//@error ''ret<0'' errno
+//@activity
+//@splice_before SET_FILENAME(pathname)
+//@activity_attribute_u32 fileHandle ret
+//@horizontal_map_put_int ret
+//@guardEnd
+//@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
+int open64( const char * pathname, int flags, ... );
+
+//@guard
+//@error ''ret<0'' errno
+//@activity
+//@horizontal_map_put_int ret
+//@splice_before SET_FILENAME(pathname)
+//@activity_attribute_u32 fileHandle ret
+//@guardEnd
+int creat64( const char * pathname, mode_t mode );
+//@guard
+/*@error 'ret < 0' ret*/
 //@activity
 //@activity_link_int fd
 //@horizontal_map_remove_int fd
 //@activity_attribute_u32 fileHandle fd
-/*@error 'ret < 0' ret*/
 //@guardEnd
 int close( int fd );
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute_u32 fileHandle fd
 //@activity_lookup_ID_int fd ActivityID=ParentID
 //@horizontal_map_put_int_ID ret ActivityID=ParentID
-//@error ''ret<0'' errno
 //@guardEnd
 int dup( int fd );
 
 //This code is actually not completely correct, dup2 may close newfd:
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute_u32 fileHandle oldfd
 //@activity_lookup_ID_int oldfd ActivityID=ParentID
 //@horizontal_map_put_int_ID newfd ActivityID=ParentID
-//@error ''ret<0'' errno
 //@guardEnd
 int dup2( int oldfd, int newfd );
 
 
 //This code is actually not completely correct, dup3 may close newfd:
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute_u32 fileHandle oldfd
 //@activity_lookup_ID_int oldfd ActivityID=ParentID
 //@horizontal_map_put_int_ID newfd ActivityID=ParentID
-//@error ''ret<0'' errno
 //@guardEnd
 int dup3( int oldfd, int newfd, int flags );
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute bytesToWrite count
 //@activity_attribute bytesWritten ret
@@ -134,22 +154,22 @@ int dup3( int oldfd, int newfd, int flags );
 //@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 ssize_t write( int fd, const void * buf, size_t count );
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute bytesRead ret
 //@activity_attribute_u32 fileHandle fd
 //@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 ssize_t read( int fd, void * buf, size_t count );
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute bytesWritten ret
 //@activity_attribute_u32 fileHandle fd
@@ -157,11 +177,11 @@ ssize_t read( int fd, void * buf, size_t count );
 //@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 ssize_t writev( int fd, const struct iovec * iov, int iovcnt );
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute bytesRead ret
 //@activity_attribute_u32 fileMemoryRegions iovcnt
@@ -169,57 +189,98 @@ ssize_t writev( int fd, const struct iovec * iov, int iovcnt );
 //@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 ssize_t readv( int fd, const struct iovec * iov, int iovcnt );
 
 
 //@guard
+//@error ''ret==(size_t)-1'' errno
 //@activity
 //@activity_attribute bytesToWrite count
 //@activity_attribute bytesWritten ret
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t pwrite( int fd, const void * buf, size_t count, off_t offset );
 
 //@guard
+//@error ''ret==(size_t)-1'' errno
 //@activity
 //@activity_attribute bytesToRead count
 //@activity_attribute bytesRead ret
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t pread( int fd, void * buf, size_t count, off_t offset );
 
+//@guard
+//@error ''ret==(size_t)-1'' errno
+//@activity
+//@activity_attribute bytesToWrite count
+//@activity_attribute bytesWritten ret
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@guardEnd
+ssize_t pwrite64( int fd, const void * buf, size_t count, off_t offset );
+
+//@guard
+//@error ''ret==(size_t)-1'' errno
+//@activity
+//@activity_attribute bytesToRead count
+//@activity_attribute bytesRead ret
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@guardEnd
+ssize_t pread64( int fd, void * buf, size_t count, off_t offset );
 
 
 //@guard
+//@error ''ret==(size_t)-1'' errno
 //@activity
 //@activity_attribute bytesWritten ret
 //@activity_attribute_u32 fileMemoryRegions iovcnt
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t pwritev( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 //@guard
+//@error ''ret==(size_t)-1'' errno
 //@activity
 //@activity_attribute bytesRead ret
 //@activity_attribute_u32 fileMemoryRegions iovcnt
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret==(size_t)-1'' errno
 //@guardEnd
 ssize_t preadv( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
+//@guard
+//@error ''ret==(size_t)-1'' errno
+//@activity
+//@activity_attribute bytesWritten ret
+//@activity_attribute_u32 fileMemoryRegions iovcnt
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@guardEnd
+ssize_t pwritev64( int fd, const struct iovec * iov, int iovcnt, off_t offset );
+
+//@guard
+//@error ''ret==(size_t)-1'' errno
+//@activity
+//@activity_attribute bytesRead ret
+//@activity_attribute_u32 fileMemoryRegions iovcnt
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@guardEnd
+ssize_t preadv64( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 
 //@guard
@@ -228,18 +289,18 @@ ssize_t preadv( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 void sync( void );
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute_u32 fileHandle fd
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 int fsync( int fd );
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute_u32 fileHandle fd
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 int fdatasync( int fd );
 
@@ -248,13 +309,13 @@ int fdatasync( int fd );
 /* See also: http://insights.oetiker.ch/linux/fadvise.html */
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_attribute fileAdviseExtent len
 //@activity_attribute fileAdvise advise
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 int posix_fadvise( int fd, off_t offset, off_t len, int advise );
 
@@ -267,9 +328,9 @@ On failure, a nonzero value is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
  */
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@splice_before SET_FILENAME(filename)
-//@error ''ret<0'' errno
 //@guardEnd
 int remove( const char * filename );
 
@@ -279,9 +340,9 @@ On failure, a nonzero value is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
  */
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@splice_before SET_FILENAME(oldname)
-//@error ''ret<0'' errno
 //@guardEnd
 int rename( const char * oldname, const char * newname );
 
@@ -289,49 +350,49 @@ int rename( const char * oldname, const char * newname );
 // stat() symbols do not exist, a macro rewrites them, problem stat64 types.
 // Be aware this might lead to problems.
 //@splice_once ''int stat(const char *path, struct stat *buf){ return __xstat64(1, path, buf); }''
-//@guard_advanced
+//@guard
+//@error ''ret<0'' errno
 //@activity Name=stat
 //@splice_before SET_FILENAME(path)
-//@error ''ret<0'' errno
 //@guardEnd
 int __xstat64( int __ver, const char * path, struct stat64 * buf );
 
 //@splice_once ''int lstat(const char *path, struct stat *buf){ return __lxstat64(1, path, buf); }''
-//@guard_advanced
+//@guard
+//@error ''ret<0'' errno
 //@activity Name=lstat
 //@splice_before SET_FILENAME(path)
-//@error ''ret<0'' errno
 //@guardEnd
 int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 
 //@splice_once ''int fstat(int fd, struct stat *buf){ return __fxstat64(1, fd, buf); }''
-//@guard_advanced
+//@guard
+//@error ''ret<0'' errno
 //@activity Name=fstat
 //@activity_attribute_u32 fileHandle fd
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 int __fxstat64( int __ver, int fd, struct stat64 * buf );
 
-//@guard_advanced
+//@guard
+//@error ''ret<0'' errno
 //@activity Name=stat
 //@splice_before SET_FILENAME(path)
-//@error ''ret<0'' errno
 //@guardEnd
 int __xstat( int __ver, const char * path, struct stat * buf );
 
-//@guard_advanced
+//@guard
+//@error ''ret<0'' errno
 //@activity Name=lstat
 //@splice_before SET_FILENAME(path)
-//@error ''ret<0'' errno
 //@guardEnd
 int __lxstat( int __ver, const char * path, struct stat * buf );
 
-//@guard_advanced
+//@guard
+//@error ''ret<0'' errno
 //@activity Name=fstat
 //@activity_attribute_u32 fileHandle fd
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 int __fxstat( int __ver, int fd, struct stat * buf );
 
@@ -341,12 +402,12 @@ int __fxstat( int __ver, int fd, struct stat * buf );
 
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute fileExtent length
 //@activity_attribute filePosition offset
 //@activity_link_int fd
-//@error ''ret<0'' errno
 //@guardEnd
 void * mmap( void * address, size_t length, int protect, int flags, int fd, off_t offset );
 
@@ -365,15 +426,48 @@ If the file is successfully opened, the function returns a pointer to a FILE obj
 Otherwise, a null pointer is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
  */
-//@guard_advanced
+//@guard
+//@error ''ret<0'' errno
 //@activity
 //@splice_before SET_FILENAME(filename)
 //@activity_attribute_pointer fileFopenFlags mode
 //@horizontal_map_put_size ret
-//@error ''ret<0'' errno
 //@guardEnd
 FILE * fopen( const char * filename, const char * mode );
 
+//@guard
+//@error ''ret<0'' errno
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileExtent length
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+//@guardEnd
+void * mmap64( void * address, size_t length, int protect, int flags, int fd, off_t offset );
+
+//void * mremap (void *address, size_t length, size_t new_length, int flag);
+//int munmap (void *addr, size_t length);
+//int madvise (void *addr, size_t length, int advice);
+
+
+//On success, the function returns zero.
+//Errno is set to a platform-specific positive value.
+
+/*
+Opens the file whose name is specified in the parameter filename and associates it with a stream that can be identified in future operations by the FILE pointer returned.
+
+If the file is successfully opened, the function returns a pointer to a FILE object that can be used to identify the stream on future operations.
+Otherwise, a null pointer is returned.
+On most library implementations, the errnosave variable is also set to a system-specific ercode on failure.
+ */
+//@guard
+//@error ''ret<0'' errno
+//@activity
+//@splice_before SET_FILENAME(filename)
+//@activity_attribute_pointer fileFopenFlags mode
+//@horizontal_map_put_size ret
+//@guardEnd
+FILE * fopen64( const char * filename, const char * mode );
 /*
 The  fdopen()  function  associates a stream with the existing file descriptor, fd.  The mode of the stream (one of the
 values "r", "r+", "w", "w+", "a", "a+") must be compatible with the mode of the file  descriptor.   The  file  position
@@ -382,11 +476,11 @@ Modes "w" or "w+" do not cause truncation of the file.  The file descriptor is n
 stream created by fdopen() is closed.
  */
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_link_int fd
 //@activity_attribute_pointer fileFopenFlags mode
 //@horizontal_map_put_size ret
-//@error ''ret<0'' errno
 //@guardEnd
 FILE * fdopen( int fd, const char * mode );
 
@@ -394,10 +488,10 @@ FILE * fdopen( int fd, const char * mode );
 // Function does not fail, only if stream is invalid.
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_link_size stream
 //@horizontal_map_put_int ret
-//@error ''ret<0'' errno
 //@guardEnd
 int fileno( FILE * stream );
 
@@ -412,36 +506,36 @@ Otherwise, a null pointer is returned.
 On most library implementations, the errno variable is also set to a system-specific error code on failure.
  */
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@splice_before SET_FILENAME(filename)
 //@activity_attribute_pointer fileFopenFlags mode
 //@horizontal_map_remove_size stream
 //@horizontal_map_put_size ret
 //@activity_link_size stream
-//@error ''ret<0'' errno
 //@guardEnd
 FILE * freopen( const char * filename, const char * mode, FILE * stream );
 
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@horizontal_map_put_size ret
-//@error ''ret<0'' errno
 //@guardEnd
 FILE * tmpfile( void );
 
-//@guard_advanced
+//@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_link_size stream
 //@horizontal_map_remove_size stream
-//@error ''ret<0'' errno
 //@guardEnd
 int fclose( FILE * stream );
 
 //  If an error occurs, EOF is returned and the error indicator is set (see ferror).
 //@guard
+//@error ''ret<0'' errno
 //@activity
 //@activity_link_size stream
-//@error ''ret<0'' errno
 //@guardEnd
 int fflush( FILE * stream );
 
@@ -449,9 +543,9 @@ int fflush( FILE * stream );
 //The return type is int to accommodate for the special value EOF, which indicates failure:
 
 //@guard
+//@error ''ret == EOF'' errno
 //@activity
 //@activity_link_size stream
-//@error ''ret == EOF'' errno
 //@guardEnd
 int fgetc( FILE * stream );
 
@@ -462,9 +556,9 @@ If the position indicator was at the end-of-file, the function returns EOF and s
 If some other reading error happens, the function also returns EOF, but sets its error indicator (ferror) instead.
  */
 //@guard
+//@error ''ret == EOF'' errno
 //@activity
 //@activity_link_size stream
-//@error ''ret == EOF'' errno
 //@guardEnd
 int getc( FILE * stream );
 
@@ -475,16 +569,16 @@ int getc( FILE * stream );
  If a writing error occurs, EOF is returned and the error indicator (ferror) is set.
  */
 //@guard
+//@error ''ret == EOF'' errno
 //@activity
 //@activity_link_size stream
-//@error ''ret == EOF'' errno
 //@guardEnd
 int fputc( int character, FILE * stream );
 
 //@guard
+//@error ''ret == EOF'' errno
 //@activity
 //@activity_link_size stream
-//@error ''ret == EOF'' errno
 //@guardEnd
 int putc( int character, FILE * stream );
 
@@ -497,13 +591,13 @@ If a read error occurs, the error indicator (ferror) is set and a null pointer i
 */
 
 //@guard
+//@error ''ret == NULL'' errno
 //@activity
 //@activity_link_size stream
 //@splice_before ''size_t posB = ftell (stream );''
 //@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
 //@activity_attribute bytesRead posDelta
 //@activity_attribute filePosition posB
-//@error ''ret == NULL'' errno
 //@guardEnd
 char * fgets( char * str, int num, FILE * stream );
 
@@ -513,13 +607,13 @@ On success, a non-negative value is returned.
 On error, the function returns EOF and sets the error indicator (ferror).
  */
 //@guard
+//@error ''ret == EOF'' errno
 //@activity
 //@activity_link_size stream
 //@splice_before ''size_t posB = ftell (stream );''
 //@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
 //@activity_attribute bytesWritten posDelta
 //@activity_attribute filePosition posB
-//@error ''ret == EOF'' errno
 //@guardEnd
 int fputs( const char * str, FILE * stream );
 
@@ -531,13 +625,11 @@ If this number differs from the count parameter, either a reading error occurred
 If either size or count is zero, the function returns zero and both the stream state and the content pointed by ptr remain unchanged.
  */
 //@guard
+//@error ''ret != count'' errno
 //@activity
 //@activity_link_size stream
-//@splice_before ''size_t posB = ftell (stream );''
-//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@splice_after ''uint64_t posDelta = ret*size;''
 //@activity_attribute bytesRead posDelta
-//@activity_attribute filePosition posB
-//@error ''ret == count'' errno
 //@guardEnd
 size_t fread( void * ptr, size_t size, size_t count, FILE * stream );
 
@@ -549,13 +641,11 @@ If this number differs from the count parameter, a writing error prevented the f
 If either size or count is zero, the function returns zero and the error indicator remains unchanged.
  */
 //@guard
+//@error ''ret != count'' errno
 //@activity
 //@activity_link_size stream
-//@splice_before ''size_t posB = ftell (stream );''
-//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
+//@splice_after ''uint64_t posDelta = ret*size;''
 //@activity_attribute bytesWritten posDelta
-//@activity_attribute filePosition posB
-//@error ''ret == count'' errno
 //@guardEnd
 size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
 
@@ -592,13 +682,13 @@ If a writing error occurs, the error indicator (ferror) is set and a negative nu
 If a multibyte character encoding error occurs while writing wide characters, errno is set to EILSEQ and a negative number is returned.
  */
 //@guard
+//@error ''ret < 0'' errno
 //@activity
 //@activity_link_size stream
 //@splice_before ''size_t posB = ftell (stream );''
 //@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
 //@activity_attribute bytesWritten posDelta
 //@activity_attribute filePosition posB
-//@error ''ret < 0'' errno
 //@guardEnd
 int vfprintf( FILE * stream, const char * format, va_list arg );
 
@@ -608,13 +698,13 @@ If a reading error happens or the end-of-file is reached while reading, the prop
 If an encoding error happens interpreting wide characters, the function sets errno to EILSEQ.
  */
 //@guard
+//@error ''ret < 0'' errno
 //@activity
 //@activity_link_size stream
 //@splice_before ''size_t posB = ftell (stream );''
 //@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
 //@activity_attribute bytesRead posDelta
 //@activity_attribute filePosition posB
-//@error ''ret < 0'' errno
 //@guardEnd
 int vfscanf( FILE * stream, const char * format, va_list arg );
 
@@ -626,13 +716,13 @@ If an encoding error happens interpreting wide characters, the function sets err
  */
 
 //@guard
+//@error ''ret < 0'' errno
 //@activity
 //@activity_link_size stream
 //@splice_before ''size_t posB = ftell (stream );''
 //@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
 //@activity_attribute bytesRead posDelta
 //@activity_attribute filePosition posB
-//@error ''ret < 0'' errno
 //@guardEnd
 //@rewriteCall vfscanf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
 int fscanf( FILE * stream, const char * format, ... );
@@ -640,13 +730,13 @@ int fscanf( FILE * stream, const char * format, ... );
 /*
  */
 //@guard
+//@error ''ret < 0'' errno
 //@activity
 //@activity_link_size stream
 //@splice_before ''size_t posB = ftell (stream );''
 //@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
 //@activity_attribute bytesWritten posDelta
 //@activity_attribute filePosition posB
-//@error ''ret < 0'' errno
 //@guardEnd
 //@rewriteCall vfprintf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
 int fprintf( FILE * stream, const char * format, ... );
@@ -668,32 +758,32 @@ lio_listio  Initiate a list of I/O operations
 
 
 //@guard
-//@activity
 //@error ''ret < 0'' errno
+//@activity
 //@guardEnd
 int aio_read( struct aiocb * cb );
 
 //@guard
-//@activity
 //@error ''ret < 0'' errno
+//@activity
 //@guardEnd
 int aio_write( struct aiocb * cb );
 
 //@guard
-//@activity
 //@error ''ret < 0'' errno
+//@activity
 //@guardEnd
 int lio_listio( int mode, struct aiocb * const aiocb_list[], int nitems, struct sigevent * sevp );
 
 //@guard
-//@activity
 //@error ''ret < 0'' errno
+//@activity
 //@guardEnd
 int aio_suspend( const struct aiocb * const aiocb_list[], int nitems, const struct timespec * timeout );
 
 //@guard
-//@activity
 //@error ''ret < 0'' errno
+//@activity
 //@guardEnd
 int aio_cancel( int fd, struct aiocb * aiocbp );
 
