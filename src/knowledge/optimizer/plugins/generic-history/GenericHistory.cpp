@@ -70,7 +70,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 		virtual ComponentReport prepareReport() override;
 
-		~GenericHistoryPlugin() { assert(0 && "TODO: unregister hint attributes with optimizer"), abort(); }
+		~GenericHistoryPlugin();
 
 	private:
 		int initLevel = 0;
@@ -266,6 +266,22 @@ void GenericHistoryPlugin::initPlugin() {
 			initLevel = 8;
 	}
 	initLevel = initializedLevel;
+}
+
+
+GenericHistoryPlugin::~GenericHistoryPlugin() {
+	// Unregister all attributes we claimed as optimizable with the optimizer
+	for( auto itr = hintTypes.begin(); itr != hintTypes.end(); itr++ ) {
+		OntologyAttribute ontatt;
+		try {
+			ontatt = facade->lookup_attribute_by_ID(itr->first);
+		}
+		catch( NotFoundError ) {
+			cerr << "Could not find attribute # \"" << itr->first << "\" - continuing." << endl;
+			continue; // As we're closing down at any rate, this is not too dramatic
+		}
+		optimizer->unregisterPlugin( ontatt );	// Tell the optimizer not to ask us for this attribute any more
+	}
 }
 
 
