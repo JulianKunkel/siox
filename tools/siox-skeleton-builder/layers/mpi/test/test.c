@@ -59,7 +59,7 @@ int main( int argc, char * argv[] )
 	for(size_t i = 1024; i <= 1024*1024; i *= 2) {
 		buf = malloc(i);
 		for(size_t j = i; j--; ) buf[j] = j;
-		for(size_t j = 1; j--; ) MPI_File_write( fh, buf, i, etype, &status );
+		for(size_t j = 10; j--; ) MPI_File_write( fh, buf, i, etype, &status );
 		free(buf);
 	}
 

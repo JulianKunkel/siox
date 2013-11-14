@@ -249,19 +249,38 @@ void GenericHistoryPlugin::initPlugin() {
 					string domain = itr->first;
 					string attribute = itr->second;
 
-//					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
+					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-//					cerr << "received attribute ID " << ontatt.aID << "\n";
+					cerr << "received attribute ID " << ontatt.aID << "\n";
 					hintTypes[ontatt.aID]=ontatt.storage_type;
-					optimizer->registerPlugin( ontatt, this );	// Tell the optimizer to ask us for this attribute
 				}
 			);
 			initLevel = 7;
 
 		case 7:
+			// Walk through the attributes again and register this as an optimizer for them.
+			// This is done in a separate step, because the previous loop may exit with an exception,
+			// and the optimizer does not tollerate us registering ourselves twice for the same attribute.
+			// This time we should not get any exceptions since we were already able to lookup the attributes once.
+			try{
+				for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ ) {
+					string domain = itr->first;
+					string attribute = itr->second;
+
+					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
+					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
+					cerr << "received attribute ID " << ontatt.aID << "\n";
+					optimizer->registerPlugin( ontatt, this );
+				}
+			} catch(...) {
+				assert(0 && "Fatal error, cannot look up an attribute that could be looked up previously. Please report this bug."), abort();
+			}
+			initLevel = 8;
+
+		case 8:
 			// Find and remember various other OAIDs
 			RETURN_ON_EXCEPTION( uidAttID = facade->lookup_attribute_by_name("program","description/user-id").aID; );
-			initLevel = 8;
+			initLevel = 9;
 	}
 	initLevel = initializedLevel;
 }
