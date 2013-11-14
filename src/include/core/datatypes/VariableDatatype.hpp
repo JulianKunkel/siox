@@ -96,25 +96,12 @@ class VariableDatatype {
 		}
 
 		VariableDatatype & operator=( const VariableDatatype & d ) {
-			//cout << (int) type_ << " " << (int) d.type_ << endl;
-			//At the moment we do not allow to change the datatype during assignments because this is errorprone.
-			assert( type_ == d.type_ || type_ == Type::INVALID );
-			if( type_ != Type::INVALID ) {
-				if( type_ != Type::STRING ) {
-					data.i64 = d.data.i64;
-				} else {
-					free( d.data.str );
-					data.str = strdup( d.data.str );
-				}
-			} else {
-				type_ = d.type_;
-				if( type_ != Type::STRING ) {
-					data.i64 = d.data.i64;
-				} else {
-					data.str = strdup( d.data.str );
-				}
-			}
-
+			cout << (int) type_ << " " << (int) d.type_ << endl;
+			if( this == &d ) return *this;
+			if( type_ == Type::STRING ) free( data.str );
+			type_ = d.type_;
+			data = d.data;
+			if( type_ == Type::STRING ) data.str = strdup( data.str );
 			return *this;
 		}
 

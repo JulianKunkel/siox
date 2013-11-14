@@ -27,6 +27,23 @@ const int kMinTrialCount = 5;
 
 #define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 
+#if 0
+	class FunctionCallTracker {
+		public:
+			FunctionCallTracker(const char* functionName) : functionName(functionName){
+				cerr << "[GenericHistoryPlugin]: " << functionName << "\n";
+			}
+			~FunctionCallTracker() {
+				cerr << "[GenericHistoryPlugin]: leaving " << functionName << "\n";
+			}
+		private:
+			const char* functionName;
+	};
+	#define TRACK_FUNCTION_CALLS FunctionCallTracker functionCallTrackerInstance(__PRETTY_FUNCTION__);
+#else
+	#define TRACK_FUNCTION_CALLS
+#endif
+
 enum TokenType {
 	OPEN = 0,
 	ACCESS,
@@ -112,10 +129,12 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 
 ComponentOptions * GenericHistoryPlugin::AvailableOptions() {
+	TRACK_FUNCTION_CALLS
   return new GenericHistoryOptions();
 }
 
 void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
+	TRACK_FUNCTION_CALLS
 	//cout <<"[GenericHistory]: " << "received " << activity << endl;
 	if( !tryEnsureInitialization() ) return;
 
@@ -183,7 +202,7 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 
 void GenericHistoryPlugin::initPlugin() {
 	#define RETURN_ON_EXCEPTION(...) do { try { __VA_ARGS__ } catch(...) { cerr << "[GenericHistory]: " << "initialization failed at initLevel = " << initLevel << "\n"; return; } } while(0)
-	fprintf(stderr, "GenericHistoryPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
+	TRACK_FUNCTION_CALLS
 
 	// Retrieve options
 	GenericHistoryOptions & o = getOptions<GenericHistoryOptions>();
@@ -249,9 +268,9 @@ void GenericHistoryPlugin::initPlugin() {
 					string domain = itr->first;
 					string attribute = itr->second;
 
-					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
+//					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-					cerr << "received attribute ID " << ontatt.aID << "\n";
+//					cerr << "received attribute ID " << ontatt.aID << "\n";
 					hintTypes[ontatt.aID]=ontatt.storage_type;
 				}
 			);
@@ -267,9 +286,9 @@ void GenericHistoryPlugin::initPlugin() {
 					string domain = itr->first;
 					string attribute = itr->second;
 
-					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
+//					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-					cerr << "received attribute ID " << ontatt.aID << "\n";
+//					cerr << "received attribute ID " << ontatt.aID << "\n";
 					optimizer->registerPlugin( ontatt, this );
 				}
 			} catch(...) {
@@ -287,6 +306,7 @@ void GenericHistoryPlugin::initPlugin() {
 
 
 GenericHistoryPlugin::~GenericHistoryPlugin() {
+	TRACK_FUNCTION_CALLS
 	// Unregister all attributes we claimed as optimizable with the optimizer
 	for( auto itr = hintTypes.begin(); itr != hintTypes.end(); itr++ ) {
 		OntologyAttribute ontatt;
@@ -303,6 +323,7 @@ GenericHistoryPlugin::~GenericHistoryPlugin() {
 
 
 OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
+	TRACK_FUNCTION_CALLS
 	if( initLevel != initializedLevel ) throw( NotFoundError() );
 
 	const HintPerformance* result = 0;
@@ -322,16 +343,11 @@ OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & 
 		}
 	}
 	throw( NotFoundError() );
-
-//	cout << "[GenericHistory]: " << "Up to now, GenericHistoryPlugin saw\n";
-//	cout << "\t" << nTypes[OPEN] << " OPENs\n";
-//	cout << "\t" << nTypes[ACCESS] << " ACCESSes\n";
-//	cout << "\t" << nTypes[CLOSE] << " CLOSEs\n";
-//	cout << "\t" << nTypes[HINT] << " HINTs\n";
 }
 
 
 ComponentReport GenericHistoryPlugin::prepareReport() {
+	TRACK_FUNCTION_CALLS
 	if( !tryEnsureInitialization() ) return ComponentReport();
 	ostringstream reportText;
 	for( size_t i = hints.size(); i--; ) {
@@ -350,6 +366,7 @@ ComponentReport GenericHistoryPlugin::prepareReport() {
 
 
 bool GenericHistoryPlugin::tryEnsureInitialization() {
+	TRACK_FUNCTION_CALLS
 	if( initLevel == initializedLevel ) return true;
 	if( !initLevel ) return false;	//initPlugin() must be called from outside first!
 	initPlugin();	//retry once we have our options
@@ -358,6 +375,7 @@ bool GenericHistoryPlugin::tryEnsureInitialization() {
 
 
 double GenericHistoryPlugin::recordPerformance( const shared_ptr<Activity>& activity ){
+	TRACK_FUNCTION_CALLS
 	Timestamp t_start = activity->time_start();
 	Timestamp t_stop = activity->time_stop();
 	OntologyAttributeID oaid = 0;	//According to datatypes/ids.hpp this is an illegal value. I hope that information is still up to date.
@@ -385,6 +403,7 @@ double GenericHistoryPlugin::recordPerformance( const shared_ptr<Activity>& acti
 
 
 vector<Attribute>* GenericHistoryPlugin::findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId ) {
+	TRACK_FUNCTION_CALLS
 	const vector<ActivityID>& parents = activity->parentArray();
 	vector<Attribute>* savedHints = 0;
 	for( size_t i = parents.size(); i--; ) {
@@ -399,6 +418,7 @@ vector<Attribute>* GenericHistoryPlugin::findCurrentHints( const shared_ptr<Acti
 
 
 void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity ) {
+	TRACK_FUNCTION_CALLS
 	outHintVector->clear();
 	const vector<Attribute>& attributes = activity->attributeArray();
 	size_t hintCount = 0;
