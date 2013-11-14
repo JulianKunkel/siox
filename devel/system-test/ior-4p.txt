@@ -1,0 +1,434 @@
+> config file: siox.conf
+> config file: siox.conf
+siox-core-autoconfigurator-FileConfigurationProvider path  siox.conf:/usr/local/etc/siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf ConfigName: "thunder"
+siox-core-autoconfigurator-FileConfigurationProvider path  siox.conf:/usr/local/etc/siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf ConfigName: "thunder"
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-FileOntology-monitoring_ontology
+[AC] Module config: siox-monitoring-FileOntology-monitoring_ontology
+Initializing file ontology using ontology.dat
+Initializing file ontology using ontology.dat
+> config file: siox.conf
+> config file: siox.conf
+siox-core-autoconfigurator-FileConfigurationProvider path  siox.conf:/usr/local/etc/siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf ConfigName: "thunder"
+siox-core-autoconfigurator-FileConfigurationProvider path  siox.conf:/usr/local/etc/siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf ConfigName: "thunder"
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-FileAssociationMapper-monitoring_association_mapper
+[AC] Module config: siox-monitoring-FileAssociationMapper-monitoring_association_mapper
+[AC] Module config: siox-monitoring-FileOntology-monitoring_ontology
+[AC] Module config: siox-monitoring-FileOntology-monitoring_ontology
+file association.dat
+file association.dat
+Initializing file ontology using ontology.dat
+Initializing file ontology using ontology.dat
+Error while loading association information from file: association.dat
+[AC] Module config: siox-monitoring-FileBasedSystemInformation-monitoring_systeminformation_global_id
+[AC] Module config: siox-monitoring-FileAssociationMapper-monitoring_association_mapper
+[AC] Module config: siox-monitoring-FileAssociationMapper-monitoring_association_mapper
+[AC] Module config: siox-monitoring-FileBasedSystemInformation-monitoring_systeminformation_global_id
+Error while loading association information from file: association.dat
+Initializing ID-mapper from file using system-info.dat
+Initializing ID-mapper from file using system-info.dat
+file association.dat
+file association.dat
+[AC] Module config: siox-knowledge-DereferencingFacade-monitoring_activity_plugin_dereferencing
+[AC] Module config: siox-knowledge-DereferencingFacade-monitoring_activity_plugin_dereferencing
+[AC] Module config: siox-core-comm-gio-core_comm
+[AC] Module config: siox-core-comm-gio-core_comm
+[AC] Module config: siox-monitoring-activityPlugin-ActivityNetworkForwarder-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-monitoring-activityPlugin-ActivityNetworkForwarder-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-knowledge-OptimizerStandardImplementation-knowledge_optimizer
+[AC] Module config: siox-knowledge-OptimizerStandardImplementation-knowledge_optimizer
+Error while loading association information from file: Error while loading association information from file: association.dat
+[AC] Module config: siox-core-reporting-ConsoleReporter-core_reporter
+[AC] Module config: siox-core-reporting-ConsoleReporter-core_reporter
+[AC] Module config: siox-monitoring-FileBasedSystemInformation-monitoring_systeminformation_global_id
+association.dat
+[AC] Module config: siox-monitoring-FileBasedSystemInformation-monitoring_systeminformation_global_id
+siox_component_register: MPI Generic
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-activityPlugin-ActivityForwarder-monitoring_activitymultiplexer_plugin
+siox_component_register: MPI Generic
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-activityPlugin-ActivityForwarder-monitoring_activitymultiplexer_plugin
+Initializing ID-mapper from file using system-info.dat
+Initializing ID-mapper from file using system-info.dat
+[AC] Module config: siox-knowledge-optimizer-generic-history-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-knowledge-optimizer-generic-history-monitoring_activitymultiplexer_plugin
+siox_component_register: POSIX
+siox_component_register: POSIX
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-activityPlugin-ActivityForwarder-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-monitoring-activityPlugin-ActivityForwarder-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-knowledge-DereferencingFacade-monitoring_activity_plugin_dereferencing
+[AC] Module config: siox-knowledge-DereferencingFacade-monitoring_activity_plugin_dereferencing
+[AC] Module config: siox-core-comm-gio-core_comm
+[AC] Module config: siox-core-comm-gio-core_comm
+[AC] Module config: siox-monitoring-activityPlugin-ActivityNetworkForwarder-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-monitoring-activityPlugin-ActivityNetworkForwarder-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-knowledge-OptimizerStandardImplementation-knowledge_optimizer
+[AC] Module config: siox-knowledge-OptimizerStandardImplementation-knowledge_optimizer
+[AC] Module config: siox-core-reporting-ConsoleReporter-core_reporter
+[AC] Module config: siox-core-reporting-ConsoleReporter-core_reporter
+siox_component_register: MPI Generic
+siox_component_register: MPI Generic
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-activityPlugin-ActivityForwarder-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-monitoring-activityPlugin-ActivityForwarder-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-knowledge-optimizer-generic-history-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-knowledge-optimizer-generic-history-monitoring_activitymultiplexer_plugin
+siox_component_register: POSIX
+siox_component_register: POSIX
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-ActivityMultiplexerAsync-monitoring_activitymultiplexer
+[AC] Module config: siox-monitoring-activityPlugin-ActivityForwarder-monitoring_activitymultiplexer_plugin
+[AC] Module config: siox-monitoring-activityPlugin-ActivityForwarder-monitoring_activitymultiplexer_plugin
+IOR-3.0.1: MPI Coordinated Test of Parallel I/O
+
+Began: Thu Nov 14 18:33:17 2013
+Command line used: ./ior.wrapped -v -o testfile -s 10 -i 1 -f ior.conf
+Machine: Linux thunder
+Start time skew across all tasks: 0.00 sec
+
+Test 0 started: Thu Nov 14 18:33:17 2013
+Path: /home/julian/Dokumente/DKRZ/wr-git/siox/devel/system-test
+FS: 162.7 GiB   Used FS: 94.7%   Inodes: 10.3 Mi   Used Inodes: 6.9%
+Participating tasks: 4
+Using reorderTasks '-C' (expecting block, not cyclic, task assignment)
+Summary:
+	api                = MPIIO (version=2, subversion=2)
+	test filename      = testfile
+	access             = single-shared-file, collective
+	pattern            = strided (10 segments)
+	ordering in a file = sequential offsets
+	ordering inter file= constant task offsets = 1
+	clients            = 4 (4 per node)
+	repetitions        = 1
+	xfersize           = 262144 bytes
+	blocksize          = 1 MiB
+	aggregate filesize = 40 MiB
+
+access    bw(MiB/s)  block(KiB) xfer(KiB)  open(s)    wr/rd(s)   close(s)   total(s)   iter
+------    ---------  ---------- ---------  --------   --------   --------   --------   ----
+
+hints passed to MPI_File_open() {
+	cb_buffer_size = 16777216
+	romio_cb_read = disable
+	romio_cb_write = disable
+}
+
+hints returned from opened file {
+	cb_buffer_size = 16777216
+	romio_cb_read = disable
+	romio_cb_write = disable
+	cb_nodes = 1
+	romio_no_indep_rw = false
+	romio_cb_pfr = disable
+	romio_cb_fr_types = aar
+	romio_cb_fr_alignment = 1
+	romio_cb_ds_threshold = 0
+	romio_cb_alltoall = automatic
+	ind_rd_buffer_size = 4194304
+	ind_wr_buffer_size = 524288
+	romio_ds_read = automatic
+	romio_ds_write = automatic
+	cb_config_list = *:1
+}
+Commencing write performance test: Thu Nov 14 18:33:17 2013
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET romio_cb_write disable
+write     1713.73    1024.00    256.00     0.001403   0.022456   0.009366   0.023341   0   
+
+hints passed to MPI_File_open() {
+	cb_buffer_size = 16777216
+	romio_cb_read = disable
+	romio_cb_write = disable
+}
+
+hints returned from opened file {
+	cb_buffer_size = 16777216
+	romio_cb_read = disable
+	romio_cb_write = disable
+	cb_nodes = 1
+	romio_no_indep_rw = false
+	romio_cb_pfr = disable
+	romio_cb_fr_types = aar
+	romio_cb_fr_alignment = 1
+	romio_cb_ds_threshold = 0
+	romio_cb_alltoall = automatic
+	ind_rd_buffer_size = 4194304
+	ind_wr_buffer_size = 524288
+	romio_ds_read = automatic
+	romio_ds_write = automatic
+	cb_config_list = *:1
+}
+Commencing read performance test: Thu Nov 14 18:33:17 2013
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+read      5243       1024.00    256.00     0.000896   0.006966   0.001995   0.007630   0   
+remove    -          -          -          -          -          -          0.009323   0   
+
+Max Write: 1713.73 MiB/sec (1796.97 MB/sec)
+Max Read:  5242.55 MiB/sec (5497.21 MB/sec)
+
+Test 1 started: Thu Nov 14 18:33:17 2013
+Path: /home/julian/Dokumente/DKRZ/wr-git/siox/devel/system-test
+FS: 162.7 GiB   Used FS: 94.7%   Inodes: 10.3 Mi   Used Inodes: 6.9%
+Participating tasks: 4
+Using reorderTasks '-C' (expecting block, not cyclic, task assignment)
+Summary:
+	api                = MPIIO (version=2, subversion=2)
+	test filename      = testfile
+	access             = single-shared-file, collective
+	pattern            = strided (10 segments)
+	ordering in a file = sequential offsets
+	ordering inter file= constant task offsets = 1
+	clients            = 4 (4 per node)
+	repetitions        = 1
+	xfersize           = 262144 bytes
+	blocksize          = 1 MiB
+	aggregate filesize = 40 MiB
+
+access    bw(MiB/s)  block(KiB) xfer(KiB)  open(s)    wr/rd(s)   close(s)   total(s)   iter
+------    ---------  ---------- ---------  --------   --------   --------   --------   ----
+
+hints passed to MPI_File_open() {
+	cb_buffer_size = 200
+	romio_cb_read = enable
+	romio_cb_write = enable
+}
+
+hints returned from opened file {
+	cb_buffer_size = 200
+	romio_cb_read = enable
+	romio_cb_write = enable
+	cb_nodes = 1
+	romio_no_indep_rw = false
+	romio_cb_pfr = disable
+	romio_cb_fr_types = aar
+	romio_cb_fr_alignment = 1
+	romio_cb_ds_threshold = 0
+	romio_cb_alltoall = automatic
+	ind_rd_buffer_size = 4194304
+	ind_wr_buffer_size = 524288
+	romio_ds_read = automatic
+	romio_ds_write = automatic
+	cb_config_list = *:1
+}
+Commencing write performance test: Thu Nov 14 18:33:17 2013
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+write     19.87      1024.00    256.00     0.000725   2.01       0.000049   2.01       0   
+
+hints passed to MPI_File_open() {
+	cb_buffer_size = 200
+	romio_cb_read = enable
+	romio_cb_write = enable
+}
+
+hints returned from opened file {
+	cb_buffer_size = 200
+	romio_cb_read = enable
+	romio_cb_write = enable
+	cb_nodes = 1
+	romio_no_indep_rw = false
+	romio_cb_pfr = disable
+	romio_cb_fr_types = aar
+	romio_cb_fr_alignment = 1
+	romio_cb_ds_threshold = 0
+	romio_cb_alltoall = automatic
+	ind_rd_buffer_size = 4194304
+	ind_wr_buffer_size = 524288
+	romio_ds_read = automatic
+	romio_ds_write = automatic
+	cb_config_list = *:1
+}
+Commencing read performance test: Thu Nov 14 18:33:19 2013
+WILL SET cb_buffer_size 16777216
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+read      25.32      1024.00    256.00     0.001211   1.58       0.000034   1.58       0   
+remove    -          -          -          -          -          -          0.006712   0   
+
+Max Write: 19.87 MiB/sec (20.83 MB/sec)
+Max Read:  25.32 MiB/sec (26.55 MB/sec)
+
+Test 2 started: Thu Nov 14 18:33:20 2013
+Path: /home/julian/Dokumente/DKRZ/wr-git/siox/devel/system-test
+FS: 162.7 GiB   Used FS: 94.7%   Inodes: 10.3 Mi   Used Inodes: 6.9%
+Participating tasks: 4
+Using reorderTasks '-C' (expecting block, not cyclic, task assignment)
+Summary:
+	api                = MPIIO (version=2, subversion=2)
+	test filename      = testfile
+	access             = single-shared-file, collective
+	pattern            = strided (10 segments)
+	ordering in a file = sequential offsets
+	ordering inter file= constant task offsets = 1
+	clients            = 4 (4 per node)
+	repetitions        = 1
+	xfersize           = 262144 bytes
+	blocksize          = 1 MiB
+	aggregate filesize = 40 MiB
+
+access    bw(MiB/s)  block(KiB) xfer(KiB)  open(s)    wr/rd(s)   close(s)   total(s)   iter
+------    ---------  ---------- ---------  --------   --------   --------   --------   ----
+ior WARNING: cannot open hints file.
+ior WARNING: cannot open hints file.
+ior WARNING: cannot open hints file.
+
+hints passed to MPI_File_open() {
+ior WARNING: cannot open hints file.
+}
+WILL SET cb_buffer_size 16777216
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+
+hints returned from opened file {
+	cb_buffer_size = 16777216
+	romio_cb_read = disable
+	romio_cb_write = disable
+	cb_nodes = 1
+	romio_no_indep_rw = false
+	romio_cb_pfr = disable
+	romio_cb_fr_types = aar
+	romio_cb_fr_alignment = 1
+	romio_cb_ds_threshold = 0
+	romio_cb_alltoall = automatic
+	ind_rd_buffer_size = 4194304
+	ind_wr_buffer_size = 524288
+	romio_ds_read = automatic
+	romio_ds_write = automatic
+	cb_config_list = *:1
+}
+Commencing write performance test: Thu Nov 14 18:33:20 2013
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+write     1792.84    1024.00    256.00     0.000682   0.021932   0.009123   0.022311   0   
+ior WARNING: cannot open hints file.
+ior WARNING: cannot open hints file.
+
+hints passed to MPI_File_open() {
+ior WARNING: cannot open hints file.
+}
+ior WARNING: cannot open hints file.
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_write disable
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+
+hints returned from opened file {
+	cb_buffer_size = 16777216
+	romio_cb_read = disable
+	romio_cb_write = disable
+	cb_nodes = 1
+	romio_no_indep_rw = false
+	romio_cb_pfr = disable
+	romio_cb_fr_types = aar
+	romio_cb_fr_alignment = 1
+	romio_cb_ds_threshold = 0
+	romio_cb_alltoall = automatic
+	ind_rd_buffer_size = 4194304
+	ind_wr_buffer_size = 524288
+	romio_ds_read = automatic
+	romio_ds_write = automatic
+	cb_config_list = *:1
+}
+Commencing read performance test: Thu Nov 14 18:33:20 2013
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET cb_buffer_size 16777216
+WILL SET cb_buffer_size 16777216
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+WILL SET romio_cb_read disable
+WILL SET romio_cb_write disable
+read      6045       1024.00    256.00     0.000510   0.006270   0.000921   0.006617   0   
+remove    -          -          -          -          -          -          0.006764   0   
+
+Max Write: 1792.84 MiB/sec (1879.93 MB/sec)
+Max Read:  6044.97 MiB/sec (6338.61 MB/sec)
+
+Summary of all tests:
+Operation   Max(MiB)   Min(MiB)  Mean(MiB)     StdDev    Mean(s) Test# #Tasks tPN reps fPP reord reordoff reordrand seed segcnt blksiz xsize aggsize API RefNum
+write        1713.73    1713.73    1713.73       0.00    0.02334 0 4 4 1 0 1 1 0 0 10 1048576 262144 41943040 MPIIO 0
+read         5242.55    5242.55    5242.55       0.00    0.00763 0 4 4 1 0 1 1 0 0 10 1048576 262144 41943040 MPIIO 0
+write          19.87      19.87      19.87       0.00    2.01326 1 4 4 1 0 1 1 0 0 10 1048576 262144 41943040 MPIIO 0
+read           25.32      25.32      25.32       0.00    1.57968 1 4 4 1 0 1 1 0 0 10 1048576 262144 41943040 MPIIO 0
+write        1792.84    1792.84    1792.84       0.00    0.02231 2 4 4 1 0 1 1 0 0 10 1048576 262144 41943040 MPIIO 0
+read         6044.97    6044.97    6044.97       0.00    0.00662 2 4 4 1 0 1 1 0 0 10 1048576 262144 41943040 MPIIO 0
+
+Finished: Thu Nov 14 18:33:21 2013
