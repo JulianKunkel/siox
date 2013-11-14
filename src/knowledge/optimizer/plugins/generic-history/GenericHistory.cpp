@@ -299,7 +299,7 @@ OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & 
 	}
 	if( result && result->hints.size() ) {
 		for( size_t i = result->hints.size(); i--; ) {
-			if( result->hints[i].id == aID) return result->hints[i].value;
+			if( result->hints[i].id == attribute.aID) return result->hints[i].value;
 		}
 	}
 	throw( NotFoundError() );
