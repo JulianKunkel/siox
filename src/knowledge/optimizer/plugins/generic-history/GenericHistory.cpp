@@ -298,8 +298,9 @@ OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & 
 		if( leastMeasurements->measurementCount < kMinTrialCount ) result = leastMeasurements;
 	}
 	if( result && result->hints.size() ) {
-		///@todo TODO: search for the right attribute
-		return result->hints[0].value;
+		for( size_t i = result->hints.size(); i--; ) {
+			if( result->hints[i].id == aID) return result->hints[i].value;
+		}
 	}
 	throw( NotFoundError() );
 
