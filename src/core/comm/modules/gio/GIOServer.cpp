@@ -164,6 +164,7 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
     }
 
     messageSendQueueInstance.shutdown();
+    messageSendQueueInstance.terminate();
 
 	 g_object_unref(connection);
 

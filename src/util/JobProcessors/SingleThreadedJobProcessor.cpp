@@ -62,12 +62,6 @@ void SingleThreadedJobProcessor::shutdown(bool terminate){
 	}
 }
 
-SingleThreadedJobProcessor::~SingleThreadedJobProcessor(){
-	if ( status != OperationalStatus::SHUTTING_DOWN ){
-		shutdown(true);
-	}
-}
-
 void SingleThreadedJobProcessor::process(){
 	monitoring_namespace_protect_thread();
 
