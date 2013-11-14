@@ -27,7 +27,7 @@ using namespace knowledge;
 //const int kMinTrialCount = 5;
 
 #define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
-#define OUTPUT(...) do { cout << "[File Surveyor] " << __VA_ARGS__ << "\n" } while(0)
+#define OUTPUT(...) do { cout << "[File Surveyor] " << __VA_ARGS__ << "\n"; } while(0)
 
 enum TokenType {
 	OPEN = 0,
