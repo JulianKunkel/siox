@@ -279,7 +279,6 @@ template = {
 	'init': '''''',
 	'before': '',
     'after': '''
-
     	g_rw_lock_writer_lock(& lock_%(MapName)s);
     	g_hash_table_insert( %(MapName)s, %(Key)s, siox_activity_get_ID(%(Activity)s) );
     	g_rw_lock_writer_unlock(& lock_%(MapName)s);
@@ -358,7 +357,8 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); 
+	'after': '''
+		g_rw_lock_reader_lock(& lock_%(MapName)s); 
 		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);
         siox_activity_link_to_parent( %(Activity)s, Parent ); 
@@ -373,7 +373,9 @@ template = {
 	'global': '''''',
 	'init': '''''',
     'before': '''''',
-	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
+	'after': '''
+		g_rw_lock_reader_lock(& lock_%(MapName)s);
+		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);
         siox_activity_link_to_parent( %(Activity)s, Parent ); 
 			  ''',

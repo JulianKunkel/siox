@@ -127,7 +127,8 @@ int MPI_Finalize( void );
 int MPI_File_open( MPI_Comm comm, char * filename, int amode, MPI_Info info, MPI_File * fh );
 
 //@activity
-//@horizontal_map_remove_size fh
+//@activity_link_size *fh
+//@horizontal_map_remove_size *fh
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_close( MPI_File * fh );
 

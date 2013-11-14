@@ -61,7 +61,6 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 	public:
 		GenericHistoryPlugin() : nTypes{} { }
 		void initPlugin() override;
-		void initTypes(const shared_ptr<Activity>& activity);
 		ComponentOptions * AvailableOptions() override;
 
 		void Notify( shared_ptr<Activity> activity ) override;
@@ -117,7 +116,7 @@ ComponentOptions * GenericHistoryPlugin::AvailableOptions() {
 }
 
 void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
-	//cout << "GenericHistoryPlugin received " << activity << endl;
+	//cout <<"[GenericHistory]: " << "received " << activity << endl;
 	if( !tryEnsureInitialization() ) return;
 
 	TokenType type = UNKNOWN;
@@ -125,14 +124,14 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 
 	nTypes[type]++;
 
-//	cerr << "Generic History saw activity of type " << activity->ucaid() << " => ";
+//	cerr <<"[GenericHistory]: " << "saw activity of type " << activity->ucaid() << " => ";
 //	for(size_t i = 0; i < TOKEN_TYPE_COUNT; i++) cerr << nTypes[i] << " ";
 //	cerr << "\n";
 
 	switch (type) {
 
 		case OPEN:
-//			cerr << "openFileHints[" << activity->aid() << "]\n";
+//			cerr <<"[GenericHistory]: " << "openFileHints[" << activity->aid() << "]\n";
 			rememberHints( &openFileHints[activity->aid()], activity );
 			break;
 
@@ -140,7 +139,6 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 			vector<Attribute>* curHints = findCurrentHints( activity, 0 );
 			if( curHints ) {
 				double curPerformance = recordPerformance( activity );
-				cout << "\t(Performance: " << curPerformance << ")" << endl;
 				bool foundHints = false;
 				for( size_t i = hints.size(); i--; ) {
 					HintPerformance& temp = hints[i];
@@ -184,7 +182,7 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 
 
 void GenericHistoryPlugin::initPlugin() {
-	#define RETURN_ON_EXCEPTION(...) do { try { __VA_ARGS__ } catch(...) { cerr << "initialization failed at initLevel = " << initLevel << "\n"; return; } } while(0)
+	#define RETURN_ON_EXCEPTION(...) do { try { __VA_ARGS__ } catch(...) { cerr << "[GenericHistory]: " << "initialization failed at initLevel = " << initLevel << "\n"; return; } } while(0)
 	fprintf(stderr, "GenericHistoryPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
 
 	// Retrieve options
@@ -251,7 +249,7 @@ void GenericHistoryPlugin::initPlugin() {
 					string domain = itr->first;
 					string attribute = itr->second;
 
-//					cerr << "looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
+//					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
 //					cerr << "received attribute ID " << ontatt.aID << "\n";
 					hintTypes[ontatt.aID]=ontatt.storage_type;
@@ -277,7 +275,7 @@ GenericHistoryPlugin::~GenericHistoryPlugin() {
 			ontatt = facade->lookup_attribute_by_ID(itr->first);
 		}
 		catch( NotFoundError ) {
-			cerr << "Could not find attribute # \"" << itr->first << "\" - continuing." << endl;
+			cerr << "[GenericHistory]: " << "Could not find attribute # \"" << itr->first << "\" - continuing." << endl;
 			continue; // As we're closing down at any rate, this is not too dramatic
 		}
 		optimizer->unregisterPlugin( ontatt );	// Tell the optimizer not to ask us for this attribute any more
@@ -305,7 +303,7 @@ OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & 
 	}
 	throw( NotFoundError() );
 
-//	cout << "Up to now, GenericHistoryPlugin saw\n";
+//	cout << "[GenericHistory]: " << "Up to now, GenericHistoryPlugin saw\n";
 //	cout << "\t" << nTypes[OPEN] << " OPENs\n";
 //	cout << "\t" << nTypes[ACCESS] << " ACCESSes\n";
 //	cout << "\t" << nTypes[CLOSE] << " CLOSEs\n";
@@ -344,7 +342,7 @@ double GenericHistoryPlugin::recordPerformance( const shared_ptr<Activity>& acti
 	Timestamp t_stop = activity->time_stop();
 	OntologyAttributeID oaid = 0;	//According to datatypes/ids.hpp this is an illegal value. I hope that information is still up to date.
 
-	cout << t_start << "-" << t_stop << "@";
+	cout << "[GenericHistory]: " << t_start << " - " << t_stop << " @ ";
 
 	if (t_stop == t_start) return 1/0.0;	//Infinite performance is sematically closer to an almost zero time operation than zero performance.
 
@@ -354,11 +352,14 @@ double GenericHistoryPlugin::recordPerformance( const shared_ptr<Activity>& acti
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
 		if (itr->id == oaid) {
 			uint64_t value = itr->value.uint64();
-			cout << value << " => ";
-			return ((double) value) / (t_stop - t_start) ;
+			double result = ((double) value) / (t_stop - t_start);
+			cout << value << " => \t(Performance: " << result << ")" << endl;
+
+			return result;
 		}
 	}
 
+	cout << "\t(Performance: NAN!)" << endl;
 	return 0/0.0;	//return a NAN if the attribute was not found
 }
 
@@ -383,14 +384,14 @@ void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, cons
 	size_t hintCount = 0;
 	for( size_t i = attributes.size(); i--; ) {
 		OntologyAttribute curAttribute = facade->lookup_attribute_by_ID( attributes[i].id );
-//		cerr << "Attribute " << attributes[i].id << " " << curAttribute.domain << "/" << curAttribute.name << " = " << attributes[i].value << "\n";
+//		cerr <<"[GenericHistory]: " << "Attribute " << attributes[i].id << " " << curAttribute.domain << "/" << curAttribute.name << " = " << attributes[i].value << "\n";
 		IGNORE_EXCEPTIONS(
 			hintTypes.at( attributes[i].id );
 			outHintVector->emplace_back( attributes[i] );
 			hintCount++;
 		);
 	}
-//	cerr << "remembered " << hintCount << " hints from " << attributes.size() << " attributes\n";
+//	cerr <<"[GenericHistory]: " << "remembered " << hintCount << " hints from " << attributes.size() << " attributes\n";
 	sort( outHintVector->begin(), outHintVector->end(), [](const Attribute& a, const Attribute& b){ return a.id < b.id; } );
 }
 
