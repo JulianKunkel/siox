@@ -261,33 +261,48 @@ static struct known_hint_t optimizeHints [] = {
 	{"romio_cb_write", & infoROMIOCollWriteEnabled}, 
 	{NULL, NULL}};
 
-
-static inline void setFileInfo(MPI_File fh, MPI_Info user_info){
-	MPI_Info newInfo; 
+static inline int setOptimalInfo(MPI_Info write, MPI_Info read){
 	char value[MPI_MAX_INFO_VAL];
 	int setHint = 0;
-
-	PMPI_Info_create( & newInfo ); 
-
-	int isDefined;
 
 	struct known_hint_t * cur;
 	
 	for( cur = optimizeHints; cur->name != NULL; cur ++){
 		int isDefined, ret;
-		char value[MPI_MAX_INFO_VAL];
-		ret = PMPI_Info_get(user_info, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
 
-		if ( isDefined ){
-			continue;
+		if ( read != MPI_INFO_NULL ){
+			ret = PMPI_Info_get(read, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
+
+			if ( isDefined ){
+				continue;
+			}
 		}
 		if( siox_suggest_optimal_value_str( global_component, infoBuffSize, value, MPI_MAX_INFO_VAL ) ){
-			PMPI_Info_set( newInfo, cur->name, value );
+			PMPI_Info_set( write, cur->name, value );
 			setHint = 1;
 		}
 	}
+
+	return setHint;
+}
+
+static inline void setFileInfo(MPI_File fh, MPI_Info user_info){
+	MPI_Info newInfo;
+	int setHint;
+	if ( user_info == MPI_INFO_NULL ){
+		PMPI_Info_create( & newInfo ); 
+		setHint = setOptimalInfo( newInfo, user_info );
+	}else{
+		setHint = setOptimalInfo( user_info, user_info );
+	}
+
 	if(setHint){
-		PMPI_File_set_info( fh, newInfo );
+		if ( user_info == MPI_INFO_NULL ){
+			PMPI_File_set_info( fh, newInfo );
+			PMPI_Info_free(& newInfo);
+		}else{
+			PMPI_File_set_info( fh, user_info );
+		}
 	}
 }
 
