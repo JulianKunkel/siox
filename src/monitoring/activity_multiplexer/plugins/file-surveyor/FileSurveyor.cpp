@@ -27,7 +27,7 @@ using namespace knowledge;
 //const int kMinTrialCount = 5;
 
 #define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
-#define OUTPUT(...) cout << "[File Surveyor] " << __VA_ARGS__
+#define OUTPUT(...) do { cout << "[File Surveyor] " << __VA_ARGS__ << "\n" } while(0)
 
 enum TokenType {
 	OPEN = 0,
@@ -231,7 +231,7 @@ void FileSurveyorPlugin::initPlugin() {
 
 
 void FileSurveyorPlugin::Notify( shared_ptr<Activity> activity ) {
-	//OUTPUT( "received " << activity << endl )
+	//OUTPUT( "received " << activity );
 	if( !tryEnsureInitialization() ) return;
 
 	TokenType type = UNKNOWN;
@@ -271,16 +271,16 @@ void FileSurveyorPlugin::Notify( shared_ptr<Activity> activity ) {
  */
 void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 {
-	OUTPUT( "openSurvey() received " << activity->aid() << endl );
+	OUTPUT( "openSurvey() received " << activity->aid() );
 	
 	FileSurvey	survey;
 
 	survey.timeOpened = activity->time_start();
-	//survey.fileName = 
+	//survey.fileName =
 
 	openFileSurveys[ activity->aid() ] = survey;
 
-	OUTPUT( "openSurveys size = " << openFileSurveys.size() << endl );
+	OUTPUT( "openSurveys size = " << openFileSurveys.size() );
 }
 
 
@@ -289,23 +289,23 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
  */
 void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 {
-	OUTPUT( "updateSurvey() received " << activity->aid() << endl );
+	OUTPUT( "updateSurvey() received " << activity->aid() );
 
 	const ActivityID *	parentAID = findParentAID( activity );
 	
 	if( parentAID != NULL )
 	{
-		//FileSurvey * 	survey;
+		//FileSurvey * survey;
 
 		//IGNORE_EXCEPTIONS( survey =  & openFileSurveys.at( *parentAID ); );
-		//OUTPUT( "survey pointer = " << survey << endl );
+		//OUTPUT( "survey pointer = " << survey );
 
-		//OUTPUT( "nAccesses (before) = " << survey->nAccesses << endl );
+		//OUTPUT( "nAccesses (before) = " << survey->nAccesses );
 		openFileSurveys.at( *parentAID ).nAccesses++;
 		//survey->nAccesses++;
-		//OUTPUT( "nAccesses  (after) = " << survey->nAccesses << endl );
-		OUTPUT( "openSurveys size = " << openFileSurveys.size() << endl );
-		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() << endl );
+		//OUTPUT( "nAccesses  (after) = " << survey->nAccesses );
+		OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
 	}
 }
 
@@ -334,7 +334,7 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 					});
 				}
 			}
-*/			
+*/
 
 
 /*
@@ -342,22 +342,22 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
  */
 void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 {
-	OUTPUT( "closeSurvey() received " << activity->aid() << endl );
+	OUTPUT( "closeSurvey() received " << activity->aid() );
 
 	const ActivityID *	parentAID = findParentAID( activity );
-	OUTPUT( "Parent Array Size = " << activity->parentArray().size() << endl );
-	//OUTPUT( "Parent AID * = " << parentAID << endl );
+	OUTPUT( "Parent Array Size = " << activity->parentArray().size() );
+	//OUTPUT( "Parent AID * = " << parentAID );
 
 	if( parentAID != NULL )
 	{
-		FileSurvey 	survey = openFileSurveys.at( *parentAID );
+		FileSurvey survey = openFileSurveys.at( *parentAID );
 	
 		survey.timeClosed = activity->time_stop();
 
 		openFileSurveys.erase( *parentAID );
 		closedFileSurveys.push_back( survey );
-		OUTPUT( "openSurveys size = " << openFileSurveys.size() << endl );
-		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() << endl );
+		OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
 	}
 /*			ActivityID openFileHintsKey;
 			if( findCurrentHints( activity, &openFileHintsKey ) ) {
