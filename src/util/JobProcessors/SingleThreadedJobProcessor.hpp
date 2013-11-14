@@ -37,8 +37,7 @@ public:
 
 	virtual void startProcessing();
 
-	~SingleThreadedJobProcessor();
-	
+	// you must call the shutdown method in the parent class, for example in its destructor!
 protected:
 	void process();
 };

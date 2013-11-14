@@ -223,6 +223,9 @@ GIOClient::~GIOClient(){
 	g_object_unref(shutdown_cancelable);
 
 	sendProcessor->shutdown();
+	// there could be messages which are not transferred, if the connection breaks.
+	// Free all pending messages.
+	sendProcessor->terminate();
 
 	delete(sendProcessor);
 
