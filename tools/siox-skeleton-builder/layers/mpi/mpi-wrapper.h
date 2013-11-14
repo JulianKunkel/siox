@@ -123,7 +123,7 @@ int MPI_Finalize( void );
 //@activity_attribute fileOpenFlags translatedFlags
 //@activity_attribute fileHandle *fh
 //@activity_attribute_pointer fileName filename
-//@splice_after setFileInfo(*fh);
+//@splice_after setFileInfo(*fh, info);
 //@horizontal_map_put_size *fh
 //@splice_after recordFileInfo(sioxActivity, *fh);
 //@error ''ret != MPI_SUCCESS '' ret
