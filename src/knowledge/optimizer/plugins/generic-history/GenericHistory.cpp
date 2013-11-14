@@ -343,7 +343,7 @@ double GenericHistoryPlugin::recordPerformance( const shared_ptr<Activity>& acti
 	Timestamp t_stop = activity->time_stop();
 	OntologyAttributeID oaid = 0;	//According to datatypes/ids.hpp this is an illegal value. I hope that information is still up to date.
 
-	cout << "[GenericHistory]: " << t_start << " - " << t_stop << " @ ";
+	// cout << "[GenericHistory]: " << t_start << " - " << t_stop << " @ ";
 
 	if (t_stop == t_start) return 1/0.0;	//Infinite performance is sematically closer to an almost zero time operation than zero performance.
 
@@ -354,13 +354,13 @@ double GenericHistoryPlugin::recordPerformance( const shared_ptr<Activity>& acti
 		if (itr->id == oaid) {
 			uint64_t value = itr->value.uint64();
 			double result = ((double) value) / (t_stop - t_start);
-			cout << value << " => \t(Performance: " << result << ")" << endl;
+			// cout << value << " => \t(Performance: " << result << ")" << endl;
 
 			return result;
 		}
 	}
 
-	cout << "\t(Performance: NAN!)" << endl;
+	// cout << "\t(Performance: NAN!)" << endl;
 	return 0/0.0;	//return a NAN if the attribute was not found
 }
 

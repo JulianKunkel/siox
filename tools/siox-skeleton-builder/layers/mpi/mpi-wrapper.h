@@ -30,6 +30,8 @@
 //@register_attribute infoWriteBuffSize "MPI" "hints/noncollWriteBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute infoCollReadBuffSize "MPI" "hints/collReadBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute infoCollWriteBuffSize "MPI" "hints/collWriteBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute infoROMIOCollReadEnabled "ROMIO" "hints/collRead" SIOX_STORAGE_STRING
+//@register_attribute infoROMIOCollWriteEnabled "ROMIO" "hints/collWrite" SIOX_STORAGE_STRING
 //@register_attribute infoConcurrency "MPI" "hints/ioconcurrency" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute infoCollContiguous "MPI" "hints/collContiguous" SIOX_STORAGE_32_BIT_UINTEGER
 
@@ -121,6 +123,7 @@ int MPI_Finalize( void );
 //@activity_attribute fileOpenFlags translatedFlags
 //@activity_attribute fileHandle *fh
 //@activity_attribute_pointer fileName filename
+//@splice_after setFileInfo(*fh);
 //@horizontal_map_put_size *fh
 //@splice_after recordFileInfo(sioxActivity, *fh);
 //@error ''ret != MPI_SUCCESS '' ret
@@ -390,7 +393,6 @@ int MPI_File_read_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype
 //@splice_before ''MPI_Offset offset; PMPI_File_get_position(fh, & offset); PMPI_File_get_byte_offset(fh, offset, & offset);''
 //@activity_attribute filePosition offset
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
-//@splice_before ''MPI_Info schuh; char senkel[1024]; MPI_Info_create( &schuh ); if( siox_suggest_optimal_value_str( global_component, infoBuffSize, senkel, 1024 ) ) MPI_Info_set( schuh, "cb_buffer_size", senkel ); MPI_File_set_info( fh, schuh );''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_write( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );

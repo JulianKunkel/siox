@@ -236,11 +236,48 @@ struct known_hint_t{
 	siox_attribute ** attribute;
 };
 
-// Three different types are supported, int32, int63 and strings.
-static struct known_hint_t knownHintValueInt32 [] = {{"mpiio_concurrency", & infoConcurrency}, {"mpiio_coll_contiguous", & infoCollContiguous}, {NULL, NULL}};
-static struct known_hint_t knownHintValueInt64 [] = { {"cb_buffer_size" , & infoBuffSize}, {"noncoll_read_bufsize" , & infoReadBuffSize}, {"noncoll_write_bufsize", &infoWriteBuffSize},  {"coll_read_bufsize", & infoCollReadBuffSize},  {"coll_write_bufsize", & infoCollWriteBuffSize}, {NULL, NULL}};
-static struct known_hint_t knownHintValueStr [] = {{NULL, NULL}};
+// Three different types are supported, int32, int64 and strings.
+static struct known_hint_t knownHintValueInt32 [] = {
+	{"mpiio_concurrency", & infoConcurrency}, 
+	{"mpiio_coll_contiguous", & infoCollContiguous}, 
+	{NULL, NULL}};
 
+static struct known_hint_t knownHintValueInt64 [] = { 
+	{"cb_buffer_size" , & infoBuffSize}, 
+	{"noncoll_read_bufsize" , & infoReadBuffSize}, 
+	{"noncoll_write_bufsize", &infoWriteBuffSize},  
+	{"coll_read_bufsize", & infoCollReadBuffSize}, 
+	{"coll_write_bufsize", & infoCollWriteBuffSize},  
+	{NULL, NULL}};
+
+static struct known_hint_t knownHintValueStr [] = { 
+	{"romio_cb_read", & infoROMIOCollReadEnabled}, 
+	{"romio_cb_write", & infoROMIOCollWriteEnabled}, 
+	{NULL, NULL}};
+
+
+static inline void setFileInfo(MPI_File fh){
+	MPI_Info schuh; 
+	char senkel[MPI_MAX_INFO_VAL]; 
+	int setHint = 0;
+
+	PMPI_Info_create( &schuh ); 
+	if( siox_suggest_optimal_value_str( global_component, infoBuffSize, senkel, MPI_MAX_INFO_VAL ) ){
+		PMPI_Info_set( schuh, "cb_buffer_size", senkel );
+		setHint = 1;
+	}
+	if ( siox_suggest_optimal_value_str( global_component, infoROMIOCollReadEnabled, senkel, MPI_MAX_INFO_VAL ) ){
+		PMPI_Info_set( schuh, "romio_cb_read", senkel );
+		setHint = 1;
+	}
+	if ( siox_suggest_optimal_value_str( global_component, infoROMIOCollWriteEnabled, senkel, MPI_MAX_INFO_VAL ) ){
+		PMPI_Info_set( schuh, "romio_cb_write", senkel );
+		setHint = 1;
+	}  	
+	if(setHint){
+		PMPI_File_set_info( fh, schuh );
+	}
+}
 
 /*
 	Record the recognized default info key/value pairs.
@@ -257,7 +294,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 	int number_of_keys = 0;
 	PMPI_Info_get_nkeys(info, & number_of_keys);
 
-	printf("[MPI] hint count: %d\n", number_of_keys);
+	// printf("[MPI] hint count: %d\n", number_of_keys);
 
 	// iterate over all hints, determine their size.
 	unsigned stringLength = -1;
@@ -275,7 +312,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 		}
 		stringLength += strlen(key) + strlen(value) + 4;
 
-		printf("[MPI] Hint: \"%s\", \"%s\"\n", key, value);
+		// printf("[MPI] Hint: \"%s\", \"%s\"\n", key, value);
 	}
 
 	if	(stringLength > 0){
@@ -309,27 +346,24 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 
 	// check for known hints and record them:
 	struct known_hint_t * cur;
-	cur = knownHintValueInt32;
-	while(cur->name != NULL){
+	
+	for( cur = knownHintValueInt32; cur->name != NULL; cur ++){
 		int isDefined, ret;
 		char value[MPI_MAX_INFO_VAL];
 		ret = PMPI_Info_get(info, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
 
-		cur++;
 		if ( ! isDefined || ret != MPI_SUCCESS ){
 			continue;
 		}
 		int32_t val = (int32_t) atoi(value);
-		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );
+		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );	
 	}
 
-	cur = knownHintValueInt64;
-	while(cur->name != NULL){
+	for( cur = knownHintValueInt64; cur->name != NULL; cur ++){
 		int isDefined, ret;
 		char value[MPI_MAX_INFO_VAL];
 		ret = PMPI_Info_get(info, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
 
-		cur++;
 		if ( ! isDefined || ret != MPI_SUCCESS ){
 			continue;
 		}
@@ -337,13 +371,11 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );
 	}
 
-	cur = knownHintValueStr;
-	while(cur->name != NULL){
+	for( cur = knownHintValueStr; cur->name != NULL; cur ++){
 		int isDefined, ret;
 		char value[MPI_MAX_INFO_VAL];
 		ret = PMPI_Info_get(info, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
 
-		cur++;
 		if ( ! isDefined || ret != MPI_SUCCESS ){
 			continue;
 		}
