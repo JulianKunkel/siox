@@ -272,12 +272,13 @@ static inline int setOptimalInfo(MPI_Info write, MPI_Info read){
 
 		if ( read != MPI_INFO_NULL ){
 			ret = PMPI_Info_get(read, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
+			//printf( "GET %s %s %d\n", cur->name, value, isDefined );
 
 			if ( isDefined ){
 				continue;
 			}
 		}
-		if( siox_suggest_optimal_value_str( global_component, infoBuffSize, value, MPI_MAX_INFO_VAL ) ){
+		if( siox_suggest_optimal_value_str( global_component, *cur->attribute, value, MPI_MAX_INFO_VAL ) ){
 			PMPI_Info_set( write, cur->name, value );
 			setHint = 1;
 		}
@@ -291,7 +292,7 @@ static inline void setFileInfo(MPI_File fh, MPI_Info user_info){
 	int setHint;
 	if ( user_info == MPI_INFO_NULL ){
 		PMPI_Info_create( & newInfo ); 
-		setHint = setOptimalInfo( newInfo, user_info );
+		setHint = setOptimalInfo( newInfo, MPI_INFO_NULL );
 	}else{
 		setHint = setOptimalInfo( user_info, user_info );
 	}

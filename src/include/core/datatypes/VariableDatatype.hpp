@@ -96,7 +96,6 @@ class VariableDatatype {
 		}
 
 		VariableDatatype & operator=( const VariableDatatype & d ) {
-			cout << (int) type_ << " " << (int) d.type_ << endl;
 			if( this == &d ) return *this;
 			if( type_ == Type::STRING ) free( data.str );
 			type_ = d.type_;

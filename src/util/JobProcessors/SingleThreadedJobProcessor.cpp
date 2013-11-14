@@ -52,7 +52,7 @@ void SingleThreadedJobProcessor::shutdown(bool terminate){
 				abortPendingJobs();
 		}
 
-		cv.notify_one();		
+		cv.notify_one();
 	}
 	if(myThread != nullptr){
 		// maybe the thread has never been started.

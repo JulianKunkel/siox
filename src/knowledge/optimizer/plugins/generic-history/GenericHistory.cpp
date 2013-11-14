@@ -432,6 +432,7 @@ void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, cons
 		);
 	}
 //	cerr <<"[GenericHistory]: " << "remembered " << hintCount << " hints from " << attributes.size() << " attributes\n";
+	// TODO this is costly if Attributes contain strings since every assignment requires a free() and strdup()
 	sort( outHintVector->begin(), outHintVector->end(), [](const Attribute& a, const Attribute& b){ return a.id < b.id; } );
 }
 
