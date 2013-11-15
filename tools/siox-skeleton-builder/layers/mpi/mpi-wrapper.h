@@ -129,9 +129,11 @@ int MPI_Finalize( void );
 //@error ''ret != MPI_SUCCESS '' ret
 int MPI_File_open( MPI_Comm comm, char * filename, int amode, MPI_Info info, MPI_File * fh );
 
+//It is required to save the value of *fh prior to calling MPI_File_close, because some MPI implementations will set it to zero, so that we cannot use *fh afterwards to lookup the parent in the hash table or to link the close activity to its parent.
 //@activity
-//@activity_link_size *fh
-//@horizontal_map_remove_size *fh
+//@splice_before MPI_File savedFh = *fh;
+//@activity_link_size savedFh
+//@horizontal_map_remove_size savedFh
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_close( MPI_File * fh );
 
