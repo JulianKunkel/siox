@@ -8,6 +8,7 @@ def options(opt):
 	opt.load('compiler_c waf_unit_test')
         gr = opt.get_option_group('configure options')
 	gr.add_option('--siox', action='store', dest="SIOX", help='Directory to the SIOX installation')
+	gr.add_option('--label', action='store', dest="LABEL", default="", help='Add a label to the library, e.g. for multiple versions')
 	gr.add_option('--siox-test-implementation', action='store', dest="SIOX_LL_IMPLEMENTATION", help='Directory to a testing SIOX low-level API to use')
 	gr.add_option('--mpi', action='store', dest="MPI", default=False, help='Directory to MPI')
 	gr.add_option('--mpicc', action='store', dest="MPICC", default="mpicc", help='MPI compiler script')
@@ -30,8 +31,10 @@ def configure(conf):
 	if conf.options.SIOX:
 		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
 		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
+		conf.env.append_value('LINKFLAGS', ["-Wl,-rpath-link=" + conf.options.SIOX + "/lib"])	
+
 		conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
-   	else:
+	else:
 		conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)   	
 
 	conf.env.append_value('INCLUDES', ['.' ])
@@ -61,12 +64,18 @@ def configure(conf):
 	conf.env.COMPILER_CC = conf.env.MPICC
 	conf.env.CC = conf.env.MPICC
 	conf.env.LINK_CC = conf.env.MPICC
+	conf.env.append_value("LABEL", conf.options.LABEL )
 
 	# conf.env.LIBDIR = conf.env.PREFIX
 
 def build(bld):
 	LAYER="mpi"
 	HEADER=LAYER + "-wrapper.h"
+
+	LAYERPLAIN=LAYER
+	label = bld.env.LABEL[0]
+	if label != "":
+		LAYER=LAYER + "-" + bld.env.LABEL[0]	
 
         def wrap(task): 
 		return wrapper(task, "wrap")
@@ -77,7 +86,7 @@ def build(bld):
         def wrapper(task, typ): 
                 src = task.inputs[0].abspath()
                 tgt = task.outputs[0].abspath()
-                cmd = bld.path.abspath() + '/../../siox-skeleton-builder.py -o %s -t %s -s %s -W %s.wrap %s' % (tgt, bld.path.abspath() + "/../../template.py", typ, LAYER, src)
+                cmd = bld.path.abspath() + '/../../siox-skeleton-builder.py -o %s -t %s -s %s -W libsiox-%s.wrap %s' % (tgt, bld.path.abspath() + "/../../template.py", typ, LAYER, src)
                 return task.exec_command(cmd)
 
         def dummy(task): 
@@ -111,7 +120,7 @@ def build(bld):
 	except OSError, e:
    		pass
 
-        bld.install_files("${PREFIX}/include", "siox-datatypes-helper-" + LAYER +".h")
+        bld.install_files("${PREFIX}/include", "siox-datatypes-helper-" + LAYERPLAIN +".h")
 
 	from waflib.Tools import waf_unit_test
 	bld.add_post_fun(waf_unit_test.summary)
