@@ -1,3 +1,12 @@
+/**
+ * An ActivityMultiplexerPlugin to watch the stream of incoming activites,
+ * group information on the ones pertaining to the same files and report them
+ * upon component shutdown.
+ * 
+ * @author Nathanael Hübbe, Michaela Zimmer
+ * @date 2013-11-15
+ */
+
 #include <iostream>
 #include <sstream>
 //#include <list>
@@ -41,7 +50,7 @@ ADD_ENUM_OPERATORS(TokenType)
 
 class FileSurvey {
 	public:
-		string fileName = "Kaiserin Sissi";
+		string fileName = "[NO VALID FILENAME]";
 		Timestamp timeOpened = 0;
 		Timestamp timeClosed = 0;
 		//uint64_t fileHandle = 0;
@@ -126,6 +135,7 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		void closeSurvey( shared_ptr<Activity> activity );
 
 		const ActivityID * findParentAID( const shared_ptr<Activity>& activity );
+ 		const Attribute * findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid );
 
 /*		double recordPerformance( const shared_ptr<Activity>& activity );
 		vector<Attribute>* findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId );	//outParentId may be NULL
@@ -237,30 +247,29 @@ void FileSurveyorPlugin::Notify( shared_ptr<Activity> activity ) {
 	TokenType type = UNKNOWN;
 	IGNORE_EXCEPTIONS( type = types.at( activity->ucaid() ); );
 
-	cerr << "[File Surveyor] saw activity of type " << activity->ucaid() << ":\t";
+	//cerr << "[File Surveyor] saw activity of type " << activity->ucaid() << ":\t";
 
 	switch (type) {
 
-	
 		case OPEN:
-			cerr << "open[" << activity->aid() << "]\n";
+			//cerr << "open[" << activity->aid() << "]\n";
 			openSurvey( activity );
 			break;
 
 		case ACCESS: {
-			cerr << "access[" << activity->aid() << "]\n";
+			//cerr << "access[" << activity->aid() << "]\n";
 			updateSurvey( activity );
 			break;
 		}
 
 		case CLOSE: {
-			cerr << "close[" << activity->aid() << "]\n";
+			//cerr << "close[" << activity->aid() << "]\n";
 			closeSurvey( activity );
 			break;
 		}
 
 		default:
-			cerr << "(unknown)\n";
+			//cerr << "(unknown)\n";
 			break;
 	}
 }
@@ -275,8 +284,12 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 	
 	FileSurvey	survey;
 
+	// Start time
 	survey.timeOpened = activity->time_start();
-	//survey.fileName =
+	// File name
+	const Attribute * attName = findAttributeByID( activity, fnAttID );
+	if (attName)
+		survey.fileName = attName->value.str();
 
 	openFileSurveys[ activity->aid() ] = survey;
 
@@ -295,17 +308,54 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 	
 	if( parentAID != NULL )
 	{
-		//FileSurvey * survey;
+		FileSurvey * survey;
 
-		//IGNORE_EXCEPTIONS( survey =  & openFileSurveys.at( *parentAID ); );
-		//OUTPUT( "survey pointer = " << survey );
+		try {
+			survey = & openFileSurveys.at( *parentAID );
+		}
+		catch( NotFoundError ) {
+			// This may well happen whenever SIOX "inherits" open files, e.g., ones
+			// whose open() calls were lost to SIOX. For now, disregard all following
+			// activities on those files until closed and re-opened.
+			cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+			return;
+		}
 
-		//OUTPUT( "nAccesses (before) = " << survey->nAccesses );
-		openFileSurveys.at( *parentAID ).nAccesses++;
-		//survey->nAccesses++;
-		//OUTPUT( "nAccesses  (after) = " << survey->nAccesses );
-		OUTPUT( "openSurveys size = " << openFileSurveys.size() );
-		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
+		// Process file position to distinguish between random and sequential accesses
+		const Attribute * attFilePointer = findAttributeByID( activity, fpAttID );
+		if( attFilePointer != NULL )
+		{
+			uint64_t fp = attFilePointer->value.uint64();
+			if( fp != survey->filePosition )
+			{
+				survey->filePosition = fp;
+				survey->nAccessesRandom++;
+			}
+			else
+				survey->nAccessesSequential++;
+			OUTPUT( "file pointer = " << fp );
+		}
+		else
+		{
+			survey->nAccessesSequential++;
+		}
+
+		// Process BytesToRead or BytesToWrite, assuming only one of both is set
+		const Attribute * attBytesProcessed = findAttributeByID( activity, btrAttID );
+		if( attBytesProcessed == NULL )
+		{
+			attBytesProcessed = findAttributeByID( activity, btwAttID );
+			if (attBytesProcessed != NULL )
+			{
+				// One of both was valid; move memorized file pointer accordingly
+				survey->filePosition += attBytesProcessed->value.uint64();
+				OUTPUT( "new file position = " << survey-> filePosition << endl );
+			}
+		}
+
+		survey->nAccesses++;
+		//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+		//OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
 	}
 }
 
@@ -350,7 +400,19 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 
 	if( parentAID != NULL )
 	{
-		FileSurvey survey = openFileSurveys.at( *parentAID );
+		FileSurvey survey;
+
+		try {
+			survey = openFileSurveys.at( *parentAID );
+		}
+		catch( NotFoundError ) {
+			// This may well happen whenever SIOX "inherits" open files, e.g., ones
+			// whose open() calls were lost to SIOX. For now, disregard all following
+			// activities on those files until closed and re-opened.
+			cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+			return;
+		}
+
 	
 		survey.timeClosed = activity->time_stop();
 
@@ -406,18 +468,17 @@ ComponentReport FileSurveyorPlugin::prepareReport() {
 		result.data[ itr->fileName ] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) );
 	}
 */
-	for( auto itr = openFileSurveys.begin(); itr != openFileSurveys.end(); itr++ )
+	for( auto itr = closedFileSurveys.begin(); itr != closedFileSurveys.end(); itr++ )
 	{
 		reportText << endl;
-		reportText << "\"" << itr->second.fileName << "\":" << endl;
-		reportText << "\tTime Opened:\t" << itr->second.timeOpened << endl;
-		reportText << "\tTime Closed:\t" << itr->second.timeClosed << endl;
-		reportText << "\tnAccesses:\t" << itr->second.nAccesses << endl;
-
+		reportText << "\t\"" << itr->fileName << "\":" << endl;
+		reportText << "\t\tTime Opened:\t" << itr->timeOpened << endl;
+		reportText << "\t\tTime Closed:\t" << itr->timeClosed << endl;
+		reportText << "\t\tnAccesses:\t" << itr->nAccesses << endl;
+		reportText << "\t\t\tRandom:    \t" << itr->nAccessesRandom << endl;
+		reportText << "\t\t\tSequential:\t" << itr->nAccessesSequential << endl;
 	}
 	result.data[ "File Survey Report" ] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) );
-
-	//result.data["File Surveyor"] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_CRITICAL, VariableDatatype( "Alles bella! ;)" ) );
 
 	return result;
 }
@@ -472,6 +533,26 @@ const ActivityID * FileSurveyorPlugin::findParentAID( const shared_ptr<Activity>
 
 	return NULL;
 }
+
+/**
+ * @brief Find the value of the given attribute for the given activity.
+ * @details Search the activity's attributes for one matching the given AID.
+ * If found, return its value; otherwise, return @c NULL.
+ * 
+ * @param activity The activity to be investigated
+ * @param oaid The OAID of the attribute to look for
+ * @return A constant pointer to the attribute in the activity's data, or @c NULL if not found.
+ */
+ const Attribute * FileSurveyorPlugin::findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid )
+ {
+ 	const vector<Attribute> & attributes = activity->attributeArray();
+ 	
+	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
+		if( itr->id == oaid )
+			return &( *itr );
+	}
+	return NULL;
+ }
 
 
 /*void FileSurveyorPlugin::rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity ) {
