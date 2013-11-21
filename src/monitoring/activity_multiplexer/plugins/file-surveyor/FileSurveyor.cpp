@@ -33,10 +33,9 @@ using namespace core;
 using namespace knowledge;
 
 
-//const int kMinTrialCount = 5;
-
 #define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 #define OUTPUT(...) do { cout << "[File Surveyor] " << __VA_ARGS__ << "\n"; } while(0)
+
 
 enum TokenType {
 	OPEN = 0,
@@ -51,6 +50,7 @@ ADD_ENUM_OPERATORS(TokenType)
 class FileSurvey {
 	public:
 		string fileName = "[NO VALID FILENAME]";
+		string userID = "[NO VALID UID]";
 		Timestamp timeOpened = 0;
 		Timestamp timeClosed = 0;
 		//uint64_t fileHandle = 0;
@@ -76,13 +76,12 @@ class FileSurvey {
  */
 class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentReportInterface {
 	public:
-		//FileSurveyorPlugin() : nTypes{} { }
+		//FileSurveyorPlugin() { }
+
 		void initPlugin() override;
 		ComponentOptions * AvailableOptions() override;
 
 		void Notify( shared_ptr<Activity> activity ) override;
-
-		//virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
 
 		virtual ComponentReport prepareReport() override;
 
@@ -101,7 +100,6 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		// OAIDs of various attributes
 		OntologyAttributeID uidAttID;	// user-id
 		OntologyAttributeID fnAttID;	// file name
-		//OntologyAttributeID fhAttID;	// file handle
 		OntologyAttributeID fpAttID;	// file position
 		OntologyAttributeID btrAttID;	// bytes to read
 		OntologyAttributeID btwAttID;	// bytes to write
@@ -109,21 +107,8 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		// Map ucaid to type of activity (Open/Access/Close)
 		unordered_map<UniqueComponentActivityID, TokenType> types;
 
-/*		// Map ucaid to ID of attribute used in computing activity performance
-		unordered_map<UniqueComponentActivityID, OntologyAttributeID> performanceAttIDs;
-*/
-/*		// Map oaid of attribute to be used as hint to type of its value
-		unordered_map<OntologyAttributeID,VariableDatatype::Type> hintTypes;
-*/
-//		TokenType lastActionType = UNKNOWN;
-
 		unordered_map<ActivityID, FileSurvey > openFileSurveys;
 		vector<FileSurvey> closedFileSurveys;
-
-//		unordered_map<string, vector<HintPerformance> > userHints;
-//		unordered_map<string, vector<HintPerformance> > appHints;
-//		unordered_map<pair<string, string>, vector<HintPerformance> > userAppHints;
-//		vector<HintPerformance> hints;
 
 		// The set of file extensions we are to watch; we will ignore all others
 		unordered_set<string> fileExtensionsToWatch;
@@ -136,11 +121,7 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 
 		const ActivityID * findParentAID( const shared_ptr<Activity>& activity );
  		const Attribute * findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid );
-
-/*		double recordPerformance( const shared_ptr<Activity>& activity );
-		vector<Attribute>* findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId );	//outParentId may be NULL
-		void rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity );
-*/
+ 		const string findFileNameExtension( const string & fileName );
 };
 
 
@@ -212,25 +193,13 @@ void FileSurveyorPlugin::initPlugin() {
 
 		case 6:
 			// Find oaids and value types for attributes used as hints and remember them
-			RETURN_ON_EXCEPTION(
-				for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ ) {
-					string domain = itr->first;
-					string attribute = itr->second;
-
-//					cerr << "[File Surveyor] looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
-					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-//					cerr << "received attribute ID " << ontatt.aID << "\n";
-					hintTypes[ontatt.aID]=ontatt.storage_type;
-					optimizer->registerPlugin( ontatt, this );	// Tell the optimizer to ask us for this attribute
-				}
-			);
+			RETURN_ON_EXCEPTION( );
 */			initLevel = 7;
 
 		case 7:
 			// Find and remember various other OAIDs
 			RETURN_ON_EXCEPTION( uidAttID = facade->lookup_attribute_by_name("program","description/user-id").aID; );
 			RETURN_ON_EXCEPTION( fnAttID = facade->lookup_attribute_by_name(interface,"descriptor/filename").aID; );
-			//RETURN_ON_EXCEPTION( fhAttID = facade->lookup_attribute_by_name(interface,"descriptor/filehandle").aID; );
 			RETURN_ON_EXCEPTION( fpAttID = facade->lookup_attribute_by_name(interface,"file/position").aID; );
 			RETURN_ON_EXCEPTION( btrAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesToRead").aID; );
 			RETURN_ON_EXCEPTION( btwAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesToWrite").aID; );
@@ -280,20 +249,37 @@ void FileSurveyorPlugin::Notify( shared_ptr<Activity> activity ) {
  */
 void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 {
-	OUTPUT( "openSurvey() received " << activity->aid() );
+	//OUTPUT( "openSurvey() received activity " << activity->aid() );
 	
-	FileSurvey	survey;
+	// Find file name and check whether extension matches pattern given in configuration
+	const Attribute * attFileName = findAttributeByID( activity, fnAttID );
+	if( attFileName == NULL )
+	{
+		// This should not happen; it is, however, no serious problem.
+		cerr << "[FileSurvey] No valid file name in activity " << activity->aid() << "!" << endl;
+		return;
+	}
+	const string fileExtension = findFileNameExtension(attFileName->value.str());
+	//OUTPUT( "File extension found: " << fileExtension );
+	if( fileExtensionsToWatch.count( fileExtension ) > 0 )
+	{
+		// Create and fill new survey for the file just opened
 
-	// Start time
-	survey.timeOpened = activity->time_start();
-	// File name
-	const Attribute * attName = findAttributeByID( activity, fnAttID );
-	if (attName)
-		survey.fileName = attName->value.str();
+		FileSurvey	survey;
 
-	openFileSurveys[ activity->aid() ] = survey;
+		// Start time
+		survey.timeOpened = activity->time_start();
+		// File name
+		survey.fileName = attFileName->value.str();
+		// User ID
+		const Attribute * attUserID = findAttributeByID( activity, uidAttID );
+		if ( attUserID != NULL )
+			survey.userID = attUserID->value.str();
 
-	OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+		openFileSurveys[ activity->aid() ] = survey;
+
+	}
+	//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
 }
 
 
@@ -302,7 +288,7 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
  */
 void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 {
-	OUTPUT( "updateSurvey() received " << activity->aid() );
+	//OUTPUT( "updateSurvey() received activity " << activity->aid() );
 
 	const ActivityID *	parentAID = findParentAID( activity );
 	
@@ -314,10 +300,9 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 			survey = & openFileSurveys.at( *parentAID );
 		}
 		catch( NotFoundError ) {
-			// This may well happen whenever SIOX "inherits" open files, e.g., ones
-			// whose open() calls were lost to SIOX. For now, disregard all following
-			// activities on those files until closed and re-opened.
-			cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+			// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost to // SIOX, or when the file name did not match the pattern given in the configuration.
+			// Therefore, disregard all following activities on those files until closed and re-opened.
+			// cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
 			return;
 		}
 
@@ -333,14 +318,14 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 			}
 			else
 				survey->nAccessesSequential++;
-			OUTPUT( "file pointer = " << fp );
+			//OUTPUT( "file pointer = " << fp );
 		}
 		else
 		{
 			survey->nAccessesSequential++;
 		}
 
-		// Process BytesToRead or BytesToWrite, assuming only one of both is set
+		// Process BytesToRead or BytesToWrite, assuming exactly one of both is set
 		const Attribute * attBytesProcessed = findAttributeByID( activity, btrAttID );
 		if( attBytesProcessed == NULL )
 		{
@@ -349,8 +334,10 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 			{
 				// One of both was valid; move memorized file pointer accordingly
 				survey->filePosition += attBytesProcessed->value.uint64();
-				OUTPUT( "new file position = " << survey-> filePosition << endl );
+				//OUTPUT( "new file position = " << survey-> filePosition << endl );
 			}
+			else
+				cerr << "[FileSurvey] No size of payload data attribute found in activity " << activity->aid() << "!" << endl;
 		}
 
 		survey->nAccesses++;
@@ -360,42 +347,15 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 }
 
 
-
-
-/*			vector<Attribute>* curHints = findCurrentHints( activity, 0 );
-			if( curHints ) {
-				double curPerformance = recordPerformance( activity );
-				cout << "\t(Performance: " << curPerformance << ")" << endl;
-				bool foundHints = false;
-				for( size_t i = hints.size(); i--; ) {
-					HintPerformance& temp = hints[i];
-					if( temp.hints == *curHints ) {
-						temp.averagePerformance = ( temp.averagePerformance*( temp.measurementCount ) + curPerformance )/( temp.measurementCount + 1 );
-						temp.measurementCount++;
-						foundHints = true;
-						break;
-					}
-				}
-				if( !foundHints ) {
-					hints.emplace_back((HintPerformance){
-						.hints = *curHints,
-						.measurementCount = 1,
-						.averagePerformance = curPerformance
-					});
-				}
-			}
-*/
-
-
 /*
  * Close survey object, finalize its statistics and move it to list of closed surveys
  */
 void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 {
-	OUTPUT( "closeSurvey() received " << activity->aid() );
+	//OUTPUT( "closeSurvey() received activity " << activity->aid() );
 
 	const ActivityID *	parentAID = findParentAID( activity );
-	OUTPUT( "Parent Array Size = " << activity->parentArray().size() );
+	//OUTPUT( "Parent Array Size = " << activity->parentArray().size() );
 	//OUTPUT( "Parent AID * = " << parentAID );
 
 	if( parentAID != NULL )
@@ -406,72 +366,34 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 			survey = openFileSurveys.at( *parentAID );
 		}
 		catch( NotFoundError ) {
-			// This may well happen whenever SIOX "inherits" open files, e.g., ones
-			// whose open() calls were lost to SIOX. For now, disregard all following
-			// activities on those files until closed and re-opened.
-			cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+			// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost to // SIOX, or when the file name did not match the pattern given in the configuration.
+			// Therefore, disregard all following activities on those files until closed and re-opened.
+			//cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
 			return;
 		}
-
 	
 		survey.timeClosed = activity->time_stop();
 
 		openFileSurveys.erase( *parentAID );
 		closedFileSurveys.push_back( survey );
-		OUTPUT( "openSurveys size = " << openFileSurveys.size() );
-		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
+		//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+		//OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
 	}
-/*			ActivityID openFileHintsKey;
-			if( findCurrentHints( activity, &openFileHintsKey ) ) {
-				openFileHints.erase( openFileHintsKey );
-			}
-*/
 }
 
 
-/*OntologyValue FileSurveyorPlugin::optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
-	if( initLevel != initializedLevel ) throw( NotFoundError() );
-
-	const HintPerformance* result = 0;
-	if( hints.size() && lastActionType != HINT ) {
-		const HintPerformance* leastMeasurements = &hints[0];
-		const HintPerformance* maxPerformance = &hints[0];
-		for( size_t i = hints.size(); i --> 1; ) {
-			if( hints[i].measurementCount < leastMeasurements->measurementCount ) leastMeasurements = &hints[i];
-			if( hints[i].averagePerformance > maxPerformance->averagePerformance ) maxPerformance = &hints[i];
-		}
-		result = maxPerformance;
-		if( leastMeasurements->measurementCount < kMinTrialCount ) result = leastMeasurements;
-	}
-	if( result && result->hints.size() ) {
-		///@todo TODO: search for the right attribute
-		return result->hints[0].value;
-	}
-	throw( NotFoundError() );
-}
-*/
-
-ComponentReport FileSurveyorPlugin::prepareReport() {
+ComponentReport FileSurveyorPlugin::prepareReport()
+{
 	ComponentReport result;
 	ostringstream reportText;
 
 	if( !tryEnsureInitialization() ) return ComponentReport();
 
-/*	for( auto itr = closedFileSurveys.begin(); itr != closedFileSurveys.end(); itr++ )
-	{
-		reportText << endl;
-		reportText << "\"" << itr->fileName << "\"" << endl;
-		reportText << "\n\tTime Opened:\t" << itr->timeOpened << endl;
-		reportText << "\n\tTime Closed:\t" << itr->timeClosed << endl;
-		reportText << "\n\tnAccesses:\t" << itr->nAccesses << endl;
-
-		result.data[ itr->fileName ] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) );
-	}
-*/
 	for( auto itr = closedFileSurveys.begin(); itr != closedFileSurveys.end(); itr++ )
 	{
 		reportText << endl;
 		reportText << "\t\"" << itr->fileName << "\":" << endl;
+		reportText << "\t\tUser ID:    \t" << itr->userID << endl;
 		reportText << "\t\tTime Opened:\t" << itr->timeOpened << endl;
 		reportText << "\t\tTime Closed:\t" << itr->timeClosed << endl;
 		reportText << "\t\tnAccesses:\t" << itr->nAccesses << endl;
@@ -484,37 +406,13 @@ ComponentReport FileSurveyorPlugin::prepareReport() {
 }
 
 
-bool FileSurveyorPlugin::tryEnsureInitialization() {
+bool FileSurveyorPlugin::tryEnsureInitialization()
+{
 	if( initLevel == initializedLevel ) return true;
 	if( !initLevel ) return false;	//initPlugin() must be called from outside first!
 	initPlugin();	//retry once we have our options
 	return initLevel == initializedLevel;
 }
-
-
-/*double FileSurveyorPlugin::recordPerformance( const shared_ptr<Activity>& activity ){
-	Timestamp t_start = activity->time_start();
-	Timestamp t_stop = activity->time_stop();
-	OntologyAttributeID oaid = 0;	//According to datatypes/ids.hpp this is an illegal value. I hope that information is still up to date.
-
-	cout << t_start << "-" << t_stop << "@";
-
-	if (t_stop == t_start) return 1/0.0;	//Infinite performance is sematically closer to an almost zero time operation than zero performance.
-
-	// Find performance-relevant attribute's value for activity
-	IGNORE_EXCEPTIONS(oaid = performanceAttIDs.at(activity->ucaid()););
-	const vector<Attribute> & attributes = activity->attributeArray();
-	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
-		if (itr->id == oaid) {
-			uint64_t value = itr->value.uint64();
-			cout << value << " => ";
-			return ((double) value) / (t_stop - t_start) ;
-		}
-	}
-
-	return 0/0.0;	//return a NAN if the attribute was not found
-}
-*/
 
 
 /*
@@ -534,9 +432,11 @@ const ActivityID * FileSurveyorPlugin::findParentAID( const shared_ptr<Activity>
 	return NULL;
 }
 
+
 /**
- * @brief Find the value of the given attribute for the given activity.
- * @details Search the activity's attributes for one matching the given AID.
+ * Find the value of the given attribute for the given activity.
+ * 
+ * Search the activity's attributes for one matching the given AID.
  * If found, return its value; otherwise, return @c NULL.
  * 
  * @param activity The activity to be investigated
@@ -555,23 +455,21 @@ const ActivityID * FileSurveyorPlugin::findParentAID( const shared_ptr<Activity>
  }
 
 
-/*void FileSurveyorPlugin::rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity ) {
-	outHintVector->clear();
-	const vector<Attribute>& attributes = activity->attributeArray();
-	size_t hintCount = 0;
-	for( size_t i = attributes.size(); i--; ) {
-		OntologyAttribute curAttribute = facade->lookup_attribute_by_ID( attributes[i].id );
-//		cerr << "Attribute " << attributes[i].id << " " << curAttribute.domain << "/" << curAttribute.name << " = " << attributes[i].value << "\n";
-		IGNORE_EXCEPTIONS(
-			hintTypes.at( attributes[i].id );
-			outHintVector->emplace_back( attributes[i] );
-			hintCount++;
-		);
-	}
-//	cerr << "remembered " << hintCount << " hints from " << attributes.size() << " attributes\n";
-	sort( outHintVector->begin(), outHintVector->end(), [](const Attribute& a, const Attribute& b){ return a.id < b.id; } );
+/*
+ * Find the extension of the file name given.
+ */
+const string FileSurveyorPlugin::findFileNameExtension( const string & fileName )
+{
+	string::size_type	position;
+
+	position = fileName.rfind( '.' );
+
+	if( position != string::npos )
+	    return fileName.substr( position + 1 );
+	else
+		return "";
 }
-*/
+
 
 extern "C" {
 	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME()
