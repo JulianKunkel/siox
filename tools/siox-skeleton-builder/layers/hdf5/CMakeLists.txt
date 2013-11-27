@@ -29,7 +29,7 @@ target_link_libraries(
 	${MPI_CXX_LIBRARIES}
 )
 
-get_target_property(OLD_LD_OPTS siox-${LAYER}-wrap LD_FLAGS)
+get_target_property(OLD_LD_OPTS siox-${LAYER}-wrap LINK_FLAGS)
 set_target_properties(siox-${LAYER}-wrap PROPERTIES LINK_FLAGS "${OLD_LD_OPTS} ${WRAP_LD_OPTS}")
 
 add_library(
