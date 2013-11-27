@@ -5,8 +5,10 @@
 
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/datatypes/Activity.hpp>
+#include <monitoring/system_information/SysteminfoDatatypes.hpp>
 
 using namespace monitoring;
+using namespace system_information;
 
 namespace rnd {
 
@@ -172,6 +174,50 @@ namespace rnd {
 		Activity *act = new Activity(ucaid, time_start, time_stop, *aid, parents, attributes, remote_calls, invoker, error_value);
 		
 		return act;
+	}
+	
+	
+	inline Node *node()
+	{
+		Node *n = new Node();
+		n->node_id = node_id();
+		n->hw_id = randr_string(10);
+		
+		return n;
+	}
+	
+	
+	inline DeviceID device_id()
+	{
+		return (DeviceID) randr();
+	}
+	
+	
+	inline StorageDevice *storage_device()
+	{
+		StorageDevice *sd = new StorageDevice();
+		
+		sd->device_id = device_id();
+		sd->node_id = node_id();
+		sd->model_name = randr_string(10);
+		sd->local_address = randr_string(10);
+		return sd;
+	}
+	
+	
+	inline FilesystemID file_system_id()
+	{
+		return (FilesystemID) randr();
+	}
+	
+	
+	inline Filesystem *file_system()
+	{
+		Filesystem *fs = new Filesystem();
+		fs->filesystem_id = file_system_id();
+		fs->unique_id = randr_string(10);
+		
+		return fs;
 	}
 	
 };
