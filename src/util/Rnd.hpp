@@ -216,7 +216,7 @@ namespace rnd {
 	{
 		Filesystem *fs = new Filesystem();
 		fs->filesystem_id = file_system_id();
-		fs->name = randr_string(5, "fs-");
+		fs->unique_id = randr_string(5, "fs-");
 		
 		return fs;
 	}
@@ -227,15 +227,15 @@ namespace rnd {
 		return (UniqueInterfaceID) randr();
 	}
 	
-	inline Interface *interface()
-	{
-		Interface *i = new Interface();
-		i->id = unique_interface_id();
-		i->name = randr_string(5, "interface-");
-		i->implementation = randr_string(5, "implementation-");
-		
-		return i;
-	}
+// 	inline Interface *interface()
+// 	{
+// 		Interface *i = new Interface();
+// 		i->id = unique_interface_id();
+// 		i->name = randr_string(5, "interface-");
+// 		i->implementation = randr_string(5, "implementation-");
+// 		
+// 		return i;
+// 	}
 	
 };
 
