@@ -2,11 +2,16 @@
 
 class Activity {
 
-static function get_list()
+static function get_list($full = false)
 {
 	global $dbcon;
 
-	$sql = "SELECT * FROM activity.activities AS a, activity.activity_ids AS b WHERE a.unique_id = b.unique_id";
+	$sql_join = "LEFT JOIN activity.activity_ids AS b ON a.unique_id = b.unique_id";
+
+	if ($full)
+		$sql_join .= " LEFT JOIN sysinfo.activities AS c ON a.ucaid = c.ucaid";
+
+	$sql = "SELECT * FROM activity.activities AS a $sql_join";
 	$stmt = $dbcon->prepare($sql);
 	if (!$stmt->execute())
 		die("Error querying activity list.");
@@ -21,11 +26,16 @@ static function get_list()
 }
 
 
-static function get_activity($unique_id)
+static function get_activity($unique_id, $full = false)
 {
 	global $dbcon;
 
-	$sql = "SELECT * FROM activity.activities AS a, activity.activity_ids AS b WHERE a.unique_id = b.unique_id AND a.unique_id = :unique_id";
+	$sql_join = "LEFT JOIN activity.activity_ids AS b ON a.unique_id = b.unique_id";
+
+	if ($full)
+		$sql_join .= " LEFT JOIN sysinfo.activities AS c ON a.ucaid = c.ucaid";
+
+	$sql = "SELECT * FROM activity.activities AS a $sql_join WHERE a.unique_id = :unique_id";
 	$stmt = $dbcon->prepare($sql);
 	$stmt->bindParam(':unique_id', $unique_id);
 
@@ -90,6 +100,24 @@ static function get_activity_id($unique_id, $recursive = 0)
 }
 
 
+static function get_activity_name($unique_id)
+{
+	global $dbcon;
+
+	$sql = "SELECT activity_name FROM sysinfo.activities AS a, activity.activities AS b WHERE a.ucaid = b.ucaid AND b.unique_id = :unique_id";
+	$stmt = $dbcon->prepare($sql);
+	$stmt->bindParam(':unique_id', $unique_id);
+
+	if (!$stmt->execute())
+		die("Error querying activity name.");
+
+	$name = $stmt->fetch(PDO::FETCH_OBJ)->activity_name;
+
+	return $name;
+
+
+}
+
 static function get_parent_ids($unique_id)
 {
 	global $dbcon;
@@ -135,7 +163,8 @@ static function get_child_ids($unique_id)
 static function add_child_edges(&$gv, $children, $parent)
 {
 	foreach ($children as $child) {
-		$gv->addNode($child->unique_id, array('style' => 'filled','URL' => "activity.php?unique_id=$child->unique_id"));
+		$cname = self::get_activity_name($child->unique_id);
+		$gv->addNode($child->unique_id, array('style' => 'filled','URL' => "activity.php?unique_id=$child->unique_id", 'label' => "#$child->unique_id: $cname()"));
 		$gv->addEdge(array($parent->unique_id => $child->unique_id));
 		if (!empty($child->children))
 			self::add_child_edges($gv, $child->children, $child);
@@ -146,7 +175,8 @@ static function add_child_edges(&$gv, $children, $parent)
 static function add_parent_edges(&$gv, $parents, $child)
 {
 	foreach ($parents as $parent) {
-		$gv->addNode($parent->unique_id, array('style' => 'filled','URL' => "activity.php?unique_id=$parent->unique_id"));
+		$pname = self::get_activity_name($parent->unique_id);
+		$gv->addNode($parent->unique_id, array('style' => 'filled','URL' => "activity.php?unique_id=$parent->unique_id", 'label' => "#$parent->unique_id: $pname()"));
 		$gv->addEdge(array($parent->unique_id => $child->unique_id));
 		if (!empty($parent->parents))
 			self::add_parent_edges($gv, $parent->parents, $parent);
@@ -158,14 +188,15 @@ static function print_dot($unique_id)
 {
 	require_once "Image/GraphViz.php";
 
-	$act = Activity::get_activity_id($unique_id, 3);
-
+	$act = self::get_activity($unique_id, true);
+	$aid = self::get_activity_id($unique_id, 3);
+	
 	$gv = new Image_GraphViz();
 
-	$gv->addNode($unique_id, array('style' => 'filled', 'fillcolor' => 'greenyellow', 'label' => "**Function name**\nID: $unique_id\nTimestamps: (x, y)"));
+	$gv->addNode($unique_id, array('style' => 'filled', 'fillcolor' => 'greenyellow', 'label' => "#$aid->unique_id: $act->activity_name()"));
 
-	self::add_parent_edges($gv, $act->parents, $act);
-	self::add_child_edges($gv, $act->children, $act);
+	self::add_parent_edges($gv, $aid->parents, $aid);
+	self::add_child_edges($gv, $aid->children, $aid);
 	
 	$gv->image();
 }

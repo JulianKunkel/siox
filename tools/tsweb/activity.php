@@ -16,11 +16,14 @@ require_once "header.php";
 
 <img src="causal_chain.php?unique_id=<?=$_GET["unique_id"]?>" />
 
-<?php $act = Activity::get_activity($_GET["unique_id"]);?>
+<?php $act = Activity::get_activity($_GET["unique_id"], true);?>
 
 <h2>Attribute List</h2>
 
 <table cellspacing="0" cellpadding="0">
+	<tr>
+		<th>name</th><td class="odd"><?=$act->activity_name?>()</td>
+	</tr>
 	<tr>
 		<th>unique_id</th><td class="even"><?=$act->unique_id?></td>
 	</tr>
