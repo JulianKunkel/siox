@@ -11,7 +11,7 @@ static function get_list($full = false)
 	if ($full)
 		$sql_join .= " LEFT JOIN sysinfo.activities AS c ON a.ucaid = c.ucaid";
 
-	$sql = "SELECT * FROM activity.activities AS a $sql_join";
+	$sql = "SELECT a.*, b.*, c.activity_name FROM activity.activities AS a $sql_join ORDER BY a.time_start ASC";
 	$stmt = $dbcon->prepare($sql);
 	if (!$stmt->execute())
 		die("Error querying activity list.");

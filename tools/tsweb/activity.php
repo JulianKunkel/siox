@@ -46,22 +46,25 @@ require_once "header.php";
 		<th>cid_id</th><td class="even"><?=$act->cid_id?></td>
 	</tr>
 	<tr>
-		<th>time_start</th><td class="odd"><?=$act->time_start?></td>
+		<th>time_start</th><td class="odd"><?=date("d.m.Y H:i:s", floor($act->time_start / 1000000000)).round($act->time_start / 1000000000 - floor($act->time_start / 1000000000), 3)?></td>
 	</tr>
 	<tr>
-		<th>time_stop</th><td class="even"><?=$act->time_stop?></td>
+		<th>time_stop</th><td class="even"><?=date("d.m.Y H:i:s", floor($act->time_stop / 1000000000)).round($act->time_stop / 1000000000 - floor($act->time_stop / 1000000000), 3)?></td>
 	</tr>
 	<tr>
-		<th>attributes</th><td class="odd"><?=$act->attributes?></td>
+		<th>duration</th><td class="odd"><?=round(($act->time_stop - $act->time_start) / 1000, 1)?>ms</td>
 	</tr>
 	<tr>
-		<th>remote_calls</th><td class="even"><?=implode(', ', hyperlink_ids('remote_call.php?unique_id=', $act->remote_calls));?></td>
+		<th>attributes</th><td class="even"><?=$act->attributes?></td>
 	</tr>
 	<tr>
-		<th>parents</th><td class="odd"><?=implode(', ', hyperlink_ids('activity.php?unique_id=', $act->parents));?></td>
+		<th>remote_calls</th><td class="odd"><?=implode(', ', hyperlink_ids('remote_call.php?unique_id=', $act->remote_calls));?></td>
 	</tr>
 	<tr>
-		<th>error_value</th><td class="even"><?=$act->error_value?></td>
+		<th>parents</th><td class="even"><?=implode(', ', hyperlink_ids('activity.php?unique_id=', $act->parents));?></td>
+	</tr>
+	<tr>
+		<th>error_value</th><td class="odd"><?=$act->error_value?></td>
 	</tr>
 
 </tbody>
