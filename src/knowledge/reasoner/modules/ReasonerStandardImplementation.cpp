@@ -87,7 +87,7 @@ namespace knowledge {
 						anomalyDetected = true;
 					}
 					if( utilization != nullptr ) {
-						StatisticObservation so = utilization->lastObservation( 4711 );
+//						StatisticObservation so = utilization->lastObservation( 4711 );
 					}
 
 					// Save recentIssues

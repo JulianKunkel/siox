@@ -64,6 +64,7 @@ int main( int argc, char const * argv[] )
 
 	try {
 		const OntologyValue & vp = o->lookup_process_attribute( pid, a2 );
+		cerr << "vp = " << vp << "\n";
 		assert( false );
 	} catch( NotFoundError & e ) {
 

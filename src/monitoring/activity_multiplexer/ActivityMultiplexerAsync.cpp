@@ -361,7 +361,7 @@ namespace monitoring {
 			}
 
 			void init() {
-				ActivityMultiplexerAsyncOptions & options = getOptions<ActivityMultiplexerAsyncOptions>();
+//				ActivityMultiplexerAsyncOptions & options = getOptions<ActivityMultiplexerAsyncOptions>();
 
 				queue = new ActivityMultiplexerQueue();
 				notifier = new ActivityMultiplexerNotifier(dynamic_cast<Dispatcher *>(this), queue);

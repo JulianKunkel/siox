@@ -552,7 +552,6 @@ extern "C" {
 		ab->endActivity( activity->activity );
 
 		// Find component's amux
-		ComponentID cid = activity->activity->aid().cid;
 		siox_component * component = activity->component;
 		assert( component != nullptr );
 		// Send activity to it
