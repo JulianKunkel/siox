@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include <util/ExceptionHandling.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
@@ -24,8 +25,6 @@ using namespace knowledge;
 
 
 const int kMinTrialCount = 5;
-
-#define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 
 #if 0
 	class FunctionCallTracker {
@@ -194,7 +193,6 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 
 
 void GenericHistoryPlugin::initPlugin() {
-	#define RETURN_ON_EXCEPTION(...) do { try { __VA_ARGS__ } catch(...) { cerr << "[GenericHistory]: " << "initialization failed at initLevel = " << initLevel << "\n"; return; } } while(0)
 	TRACK_FUNCTION_CALLS
 
 	// Retrieve options

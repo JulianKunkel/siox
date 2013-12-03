@@ -155,6 +155,7 @@ Implementation details for the requirements of a StatisticsCollector:
 
 #include <workarounds.hpp>
 
+#include <util/ExceptionHandling.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 
 #include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
@@ -167,8 +168,6 @@ Implementation details for the requirements of a StatisticsCollector:
         
 #include <util/time.h>
 
-
-#define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 
 using namespace std;
 using namespace core;
@@ -216,7 +215,7 @@ class ThreadedStatisticsCollector : public StatisticsCollector, public Component
 		boost::shared_mutex sourcesLock;
 
 		thread pollingThread;
-		size_t pollCount;		
+		size_t pollCount;
 		volatile bool terminated = false;	//This flag is only raised once to signal the polling thread to terminate.
 
 		void nanoSecondSleep(Timestamp nanoSeconds) throw();
@@ -400,7 +399,7 @@ void ThreadedStatisticsCollector::pollingThreadMain() throw() {
 			// Check whether we were awoken to terminate.
 			atomic_thread_fence( memory_order_acquire );	//Make sure that the value of terminated is up to date.
 			if( terminated ) return;
-		}		
+		}
 	}
 }
 
