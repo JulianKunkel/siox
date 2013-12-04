@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <glib.h>
+#include <stdio.h>
 
 
 static inline unsigned translateMPIOpenFlagsToSIOX( unsigned flags )
@@ -108,7 +109,7 @@ static inline void datatypeToString(char ** str, int * pos, int * length, int * 
 
 	APPEND_STR(getCombinerName(combiner), 20);
 	APPEND_STR("(", 1);
-	if(combiner == MPI_COMBINER_NAMED) 	// cannot call get_contents on this
+	if(combiner == MPI_COMBINER_NAMED)	// cannot call get_contents on this
 	{
 		int resultlen;
 		char typename[MPI_MAX_OBJECT_NAME];
@@ -146,7 +147,7 @@ static inline void datatypeToString(char ** str, int * pos, int * length, int * 
 			APPEND_STR("D=", 5);
 			for(; i < dims * 2 + 3; ++i){
 				APPEND_STR( getDistributeConstantName(integers[i]), 20 );
-				APPEND_COMMA				
+				APPEND_COMMA
 			}
 			APPEND_STR("A=", 5);
 			for(; i < dims * 3 + 3; ++i){
@@ -192,7 +193,7 @@ static inline void datatypeToString(char ** str, int * pos, int * length, int * 
 		}
 		*pos = *pos -1;
 
-		APPEND_STR(",TYPES=", 10);			
+		APPEND_STR(",TYPES=", 10);
 		for(int i = 0; i < max_datatypes; ++i)
 		{
 			datatypeToString(str, pos, length, malloced, datatypes[i]);
@@ -227,7 +228,7 @@ static inline void recordDatatype(siox_activity * sioxActivity, siox_attribute *
 	}
 }
 
-/* 
+/*
  The list of known MPI Hints and the corresponding SIOX attribute.
  */
 struct known_hint_t{
@@ -235,15 +236,80 @@ struct known_hint_t{
 	siox_attribute ** attribute;
 };
 
-// Three different types are supported, int32, int63 and strings.
-static struct known_hint_t knownHintValueInt32 [3] = {{"mpiio_concurrency", & infoConcurrency}, {"mpiio_coll_contiguous", & infoCollContiguous}, {NULL, NULL}};
-static struct known_hint_t knownHintValueInt64 [] = {  {"noncoll_read_bufsize" , & infoReadBuffSize},  {"noncoll_write_bufsize", &infoWriteBuffSize},  {"coll_read_bufsize", & infoCollReadBuffSize},  {"coll_write_bufsize", & infoCollWriteBuffSize}, {NULL, NULL}};
-static struct known_hint_t knownHintValueStr [] = {{NULL, NULL}};
+// Three different types are supported, int32, int64 and strings.
+static struct known_hint_t knownHintValueInt32 [] = {
+	{"mpiio_concurrency", & infoConcurrency}, 
+	{"mpiio_coll_contiguous", & infoCollContiguous}, 
+	{NULL, NULL}};
 
+static struct known_hint_t knownHintValueInt64 [] = { 
+	{"cb_buffer_size" , & infoBuffSize}, 
+	{"noncoll_read_bufsize" , & infoReadBuffSize}, 
+	{"noncoll_write_bufsize", &infoWriteBuffSize},  
+	{"coll_read_bufsize", & infoCollReadBuffSize}, 
+	{"coll_write_bufsize", & infoCollWriteBuffSize},  
+	{NULL, NULL}};
+
+static struct known_hint_t knownHintValueStr [] = { 
+	{"romio_cb_read", & infoROMIOCollReadEnabled}, 
+	{"romio_cb_write", & infoROMIOCollWriteEnabled}, 
+	{NULL, NULL}};
+
+static struct known_hint_t optimizeHints [] = { 
+	{"cb_buffer_size" , & infoBuffSize}, 
+	{"romio_cb_read", & infoROMIOCollReadEnabled}, 
+	{"romio_cb_write", & infoROMIOCollWriteEnabled}, 
+	{NULL, NULL}};
+
+static inline int setOptimalInfo(MPI_Info write, MPI_Info read){
+	char value[MPI_MAX_INFO_VAL];
+	int setHint = 0;
+
+	struct known_hint_t * cur;
+	
+	for( cur = optimizeHints; cur->name != NULL; cur ++){
+		int isDefined, ret;
+
+		if ( read != MPI_INFO_NULL ){
+			ret = PMPI_Info_get(read, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
+			//printf( "GET %s %s %d\n", cur->name, value, isDefined );
+
+			if ( isDefined ){
+				continue;
+			}
+		}
+		if( siox_suggest_optimal_value_str( global_component, *cur->attribute, value, MPI_MAX_INFO_VAL ) ){
+			PMPI_Info_set( write, cur->name, value );
+			setHint = 1;
+		}
+	}
+
+	return setHint;
+}
+
+static inline void setFileInfo(MPI_File fh, MPI_Info user_info){
+	MPI_Info newInfo;
+	int setHint;
+	if ( user_info == MPI_INFO_NULL ){
+		PMPI_Info_create( & newInfo ); 
+		setHint = setOptimalInfo( newInfo, MPI_INFO_NULL );
+	}else{
+		setHint = setOptimalInfo( user_info, user_info );
+	}
+
+	if(setHint){
+		if ( user_info == MPI_INFO_NULL ){
+			PMPI_File_set_info( fh, newInfo );
+			PMPI_Info_free(& newInfo);
+		}else{
+			PMPI_File_set_info( fh, user_info );
+		}
+	}
+}
 
 /*
 	Record the recognized default info key/value pairs.
-	Additionally, record all hints in a big string separated by "||" (hopefully no string contains ||). 
+	Additionally, record all hints in a big string separated by "||" (hopefully no string contains ||).
 	Note that this string may contain not recognized hints.
  */
 static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
@@ -256,7 +322,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 	int number_of_keys = 0;
 	PMPI_Info_get_nkeys(info, & number_of_keys);
 
-	printf("[MPI] hint count: %d\n", number_of_keys);
+	// printf("[MPI] hint count: %d\n", number_of_keys);
 
 	// iterate over all hints, determine their size.
 	unsigned stringLength = -1;
@@ -274,7 +340,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 		}
 		stringLength += strlen(key) + strlen(value) + 4;
 
-		printf("[MPI] Hint: %s, %s\n", key, value);
+		// printf("[MPI] Hint: \"%s\", \"%s\"\n", key, value);
 	}
 
 	if	(stringLength > 0){
@@ -293,7 +359,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 
 			if ( ! isDefined || ret != MPI_SUCCESS ){
 				continue;
-			}		
+			}
 
 			curPos += sprintf(curPos, "%s||%s||", key, value);
 		}
@@ -308,27 +374,24 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 
 	// check for known hints and record them:
 	struct known_hint_t * cur;
-	cur = knownHintValueInt32;
-	while(cur->name != NULL){
+	
+	for( cur = knownHintValueInt32; cur->name != NULL; cur ++){
 		int isDefined, ret;
 		char value[MPI_MAX_INFO_VAL];
 		ret = PMPI_Info_get(info, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
 
-		cur++;
 		if ( ! isDefined || ret != MPI_SUCCESS ){
 			continue;
 		}
 		int32_t val = (int32_t) atoi(value);
-		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );
+		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );	
 	}
 
-	cur = knownHintValueInt64;
-	while(cur->name != NULL){
+	for( cur = knownHintValueInt64; cur->name != NULL; cur ++){
 		int isDefined, ret;
 		char value[MPI_MAX_INFO_VAL];
 		ret = PMPI_Info_get(info, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
 
-		cur++;
 		if ( ! isDefined || ret != MPI_SUCCESS ){
 			continue;
 		}
@@ -336,13 +399,11 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );
 	}
 
-	cur = knownHintValueStr;
-	while(cur->name != NULL){
+	for( cur = knownHintValueStr; cur->name != NULL; cur ++){
 		int isDefined, ret;
 		char value[MPI_MAX_INFO_VAL];
 		ret = PMPI_Info_get(info, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
 
-		cur++;
 		if ( ! isDefined || ret != MPI_SUCCESS ){
 			continue;
 		}

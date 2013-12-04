@@ -16,11 +16,10 @@ During development the following versions were used:
 Additional requirements for the wrappers are found under tools/siox-skeleton-builder/layers
 
 
-Ubuntu 13.04
-===========
-To build the SIOX core system:
-apt-get install libboost-all-dev ninja-boost cmake libglib2.0-dev libpqxx3-dev
-
+Ubuntu 13.04/13.10
+==================
+To install the SIOX dependencies call:
+apt-get install libboost-dev libboost-program-options-dev libboost-serialization-dev libboost-regex-dev libboost-system-dev libboost-random-dev libboost-thread-dev ninja-build cmake libglib2.0-dev libpqxx3-dev
 
 
 Compilation
@@ -39,6 +38,8 @@ sudo make install
 To use ninja instead of make run:
 cmake -GNinja ../
 ninja
+
+Note that C++ takes a considerable amount of memory to compile, parallel builds might exhaust machines with less than 2 GByte of memory.
 
 ccmake is a graphical frontend to cmake which allows easy configuration of the project.
 
@@ -122,6 +123,18 @@ If that is not the case, you might end up in a situation where the linker silent
 	$ gcc -o myCoolApp ... -L$INSTALL/lib -lsiox-netcdf-dlsym -lnetcdf ...
 	$ ./myCoolApp
 
+4.3 siox-inst
+This tool is provided to simplify the task of setting the appropriate flags.
+You can invoke it like:
+siox-inst [LIST of LAYERS] [wrap|dlsym] [Command]
+
+Specification of dlsym is optional.
+
+For example to achieve LD_PRELOAD linking:
+siox-inst posix,mpi dlsym ./testbinary [options]
+
+To achieve compilation at link-time (especially useful for debugging sessions):
+siox-inst posix,mpi wrap mpicc -Wall [FILES] -o ./testbinary
 
 
 5 Reading a trace

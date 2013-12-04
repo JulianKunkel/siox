@@ -24,8 +24,12 @@ public:
  This thread function connects to the server.
  Once created it spawns a sender thread.
  Then it serves as reading thread.
+
+ @todo TODO: This function has 123 lines...
  */
 void GIOClient::connectionThreadFunc(thread * lastThread){
+	monitoring_namespace_protect_thread();
+	
 	//cout << "Client connecting to " << address << endl;
 
 	// we start with a locked connection_ready_mutex
@@ -84,7 +88,7 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 	GInputStream * istream = g_io_stream_get_input_stream (G_IO_STREAM (conn));
 
 	sendProcessor->connect(g_io_stream_get_output_stream (G_IO_STREAM (conn)), one_thread_error_cancelable);
-	CommunicationError comm_error;
+	CommunicationError comm_error = CommunicationError::UNKNOWN;
 
 	// start receiving responses
 	while(! g_cancellable_is_cancelled (one_thread_error_cancelable)){
@@ -135,7 +139,7 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 	}
 
 	// the receiving connection has been closed, so we should join the writer thread.
-	sendProcessor->disconnect();
+	sendProcessor->shutdown();
 
 	g_io_stream_close(G_IO_STREAM (conn), shutdown_cancelable, NULL);
 
@@ -221,6 +225,9 @@ GIOClient::~GIOClient(){
 	g_object_unref(shutdown_cancelable);
 
 	sendProcessor->shutdown();
+	// there could be messages which are not transferred, if the connection breaks.
+	// Free all pending messages.
+	sendProcessor->terminate();
 
 	delete(sendProcessor);
 

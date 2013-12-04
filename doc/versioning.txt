@@ -1,0 +1,4 @@
+We will use semantic versioning for the SIOX core and components.
+Versions are enumerated as MAJOR.MINOR.PATCH
+
+See http://semver.org/ for more details

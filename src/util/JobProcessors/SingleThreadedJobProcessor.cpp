@@ -1,16 +1,16 @@
 #include <assert.h>
 
+#include <util/threadSafety.h>
 #include "SingleThreadedJobProcessor.hpp"
 
 using namespace std;
 
 namespace util{
 
-
 void SingleThreadedJobProcessor::iStartJob(void * job){
 	unique_lock<mutex> lk(m);
-	
 	if( queue->mayEnqueue() ){
+
 		queue->enqueueJob(job);
 		// wakeup a pending threads
 		if( status == OperationalStatus::OPERATIONAL ){
@@ -32,12 +32,16 @@ void SingleThreadedJobProcessor::startProcessing(){
 	if ( myThread != nullptr ){
 		return;
 	}
+	status = OperationalStatus::OPERATIONAL;
 	cv.notify_one();
 	myThread = new thread( & SingleThreadedJobProcessor::process, this );
 }
 
+// can be called from the processing thread or another thread.
 void SingleThreadedJobProcessor::stopProcessing(){
-	shutdown(false);
+		unique_lock<mutex> lk(m);
+		status = OperationalStatus::STOPPING;
+		cv.notify_one();
 }
 
 void SingleThreadedJobProcessor::shutdown(bool terminate){	
@@ -48,7 +52,7 @@ void SingleThreadedJobProcessor::shutdown(bool terminate){
 				abortPendingJobs();
 		}
 
-		cv.notify_one();		
+		cv.notify_one();
 	}
 	if(myThread != nullptr){
 		// maybe the thread has never been started.
@@ -58,14 +62,10 @@ void SingleThreadedJobProcessor::shutdown(bool terminate){
 	}
 }
 
-SingleThreadedJobProcessor::~SingleThreadedJobProcessor(){
-	if ( status == OperationalStatus::OPERATIONAL ){
-		shutdown(true);
-	}
-}
-
 void SingleThreadedJobProcessor::process(){
-	while(true){
+	monitoring_namespace_protect_thread();
+
+	while( status != OperationalStatus::STOPPING ){
 		void * job;
 		{
 			unique_lock<mutex> lk(m);

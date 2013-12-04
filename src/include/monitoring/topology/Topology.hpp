@@ -92,8 +92,10 @@ Requirements:
 #define INCLUDE_GUARD_MONITORING_TOPOLOGY_HPP
 
 #include <core/component/Component.hpp>
+#include <core/datatypes/VariableDatatype.hpp>
 #include <monitoring/datatypes/Exceptions.hpp>
 
+#include <vector>
 #include <string>
 
 namespace monitoring {
@@ -147,8 +149,8 @@ namespace monitoring {
 			virtual const Relation& lookupRelation( ObjectId parent, const string& childName ) throw( NotFoundError ) = 0;
 
 			// RelationType may be 0 which indicates any parent/child.
-			virtual vector<const Relation&> enumerateChildren( ObjectId parent, TypeId relationType ) throw() = 0;
-			virtual vector<const Relation&> enumerateParents( ObjectId child, TypeId relationType ) throw() = 0;
+			virtual std::vector<const Relation&> enumerateChildren( ObjectId parent, TypeId relationType ) throw() = 0;
+			virtual std::vector<const Relation&> enumerateParents( ObjectId child, TypeId relationType ) throw() = 0;
 
 
 			virtual const Attribute& registerAttribute( TypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
@@ -156,7 +158,7 @@ namespace monitoring {
 			virtual const Attribute& lookupAttributeById( AttributeId attributeId ) throw( NotFoundError ) = 0;
 			virtual void setAttribute( ObjectId object, AttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) = 0;
 			virtual const TopologyValue& getAttribute( ObjectId object, AttributeId attribute ) throw( NotFoundError ) = 0;
-			virtual vector<const Value&> enumerateAttributes( ObjectId object ) throw() = 0;
+			virtual std::vector<const Value&> enumerateAttributes( ObjectId object ) throw() = 0;
 	};
 }
 

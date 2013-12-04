@@ -17,11 +17,14 @@
 #include <pwd.h>
 #include <typeinfo>
 
+#include <util/threadSafety.h>
+
 #include <core/module/ModuleLoader.hpp>
 #include <core/datatypes/VariableDatatype.hpp>
 
 #include <util/autoLoadModules.hpp>
 #include <util/ReporterHelper.hpp>
+
 
 
 #include "siox-ll-internal.hpp"
@@ -35,14 +38,7 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 
-// Are we currently working in the siox namespace?
-// Needed for the instrumentation with DL_SYM to avoid circular dependencies.
-extern "C" {
-	__thread int siox_namespace = 0;
-}
 
-#define FUNCTION_BEGIN siox_namespace++;
-#define FUNCTION_END siox_namespace--;
 
 #define U32_TO_P(i) ((void*)((size_t)(i)))
 #define P_TO_U32(p) ((uint32_t)((size_t)(p)))
@@ -59,6 +55,34 @@ bool finalized = true;
 struct process_info process_data;
 
 
+struct FUNCTION_CLASS{
+	FUNCTION_CLASS(){
+		monitoring_namespace_inc();
+	}
+
+	~FUNCTION_CLASS(){
+		monitoring_namespace_dec();
+	}
+};
+
+struct FUNCTION_PERF_CLASS : FUNCTION_CLASS{
+	const char * name; 
+	Timestamp eventStartTime;
+
+	FUNCTION_PERF_CLASS(const char * name) : name(name){
+		eventStartTime = process_data.overhead->startMeasurement();
+	}
+
+	~FUNCTION_PERF_CLASS(){
+		process_data.overhead->stopMeasurement(name, eventStartTime);
+	}
+};
+
+
+#define PERF_MEASURE_START(name) FUNCTION_PERF_CLASS _class_inst_(name);
+#define FUNCTION_BEGIN FUNCTION_PERF_CLASS _class_inst_(__FUNCTION__);
+#define NO_PERFMEASURE_FUNCTION_BEGIN FUNCTION_CLASS _class_inst_x;
+
 
 //////////////////////////////////////////////////////////
 
@@ -74,7 +98,7 @@ NodeID lookup_node_id( const string & hostname )
 {
 	FUNCTION_BEGIN
 	auto ret = process_data.system_information_manager->register_nodeID( hostname );
-	FUNCTION_END
+	
 	return ret;
 }
 
@@ -188,11 +212,13 @@ extern "C" {
 // Constructor for the shared library
 	__attribute__( ( constructor ) ) void siox_ll_ctor()
 	{
-		FUNCTION_BEGIN
+		NO_PERFMEASURE_FUNCTION_BEGIN
 		// Retrieve hostname; NodeID and PID will follow once process_data is set up
-		string hostname = util::getHostname();
 		// If necessary, do actual initialisation
 		if( finalized ) {
+			process_data.overhead = new OverheadStatistics();
+			PERF_MEASURE_START("INIT")
+			string hostname = util::getHostname();
 			try {
 				// Load required modules and pull the interfaces into global datastructures
 				// Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
@@ -215,6 +241,7 @@ extern "C" {
 				// Retrieve NodeID and PID now that we have a valid SystemInformationManager
 				process_data.nid = lookup_node_id( hostname );
 				process_data.pid = create_process_id( process_data.nid );
+			
 			} catch( exception & e ) {
 				cerr << "Received exception of type " << typeid( e ).name() << " message: " << e.what() << endl;
 				exit( 1 );
@@ -224,7 +251,6 @@ extern "C" {
 		}
 
 		finalized = false;
-		FUNCTION_END
 	}
 
 // Destructor for the shared library
@@ -233,16 +259,27 @@ extern "C" {
 		if( finalized ) {
 			return;
 		}
-		// Never enter any siox function after it has been stopped.
-		FUNCTION_BEGIN
+		// Never enter any SIOX function after siox-ll has been stopped.
+		// This is done by incrementing the counter.
+		monitoring_namespace_inc();
 
-		util::invokeAllReporters( process_data.registrar );
+		{
+			PERF_MEASURE_START("FINALIZE")
 
-		// cleanup datastructures by using the component registrar:
-		process_data.registrar->shutdown();
+			OverheadStatisticsDummy dummyComponent( *process_data.overhead );
+			process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", & dummyComponent );
+			util::invokeAllReporters( process_data.registrar );
+			process_data.registrar->unregisterComponent( -1 );
 
-		delete( process_data.registrar );
-		delete( process_data.configurator );
+
+			// cleanup data structures by using the component registrar:
+			process_data.registrar->shutdown();
+
+			delete( process_data.registrar );
+			delete( process_data.configurator );
+		}
+
+		delete( process_data.overhead );
 
 		finalized = true;
 	}
@@ -301,7 +338,6 @@ extern "C" {
 		FUNCTION_BEGIN
 		AttributeValue val = convert_attribute( attribute, value );
 		process_data.association_mapper->set_process_attribute( process_data.pid, *attribute, val );
-		FUNCTION_END
 	}
 
 
@@ -309,7 +345,6 @@ extern "C" {
 	{
 		FUNCTION_BEGIN
 		auto ret = U32_TO_P( process_data.association_mapper->create_instance_mapping( instance_information ) );
-		FUNCTION_END
 		return ret;
 	}
 
@@ -326,7 +361,6 @@ extern "C" {
 		}
 
 		auto ret = U32_TO_P( lookup_node_id( hostname ) );
-		FUNCTION_END
 		return ret;
 	}
 
@@ -390,7 +424,6 @@ extern "C" {
 			assert( result->amux != nullptr );
 		}
 
-		FUNCTION_END
 
 		assert( result != nullptr );
 
@@ -407,7 +440,6 @@ extern "C" {
 
 		OntologyValue val = convert_attribute( attribute, value );
 		process_data.association_mapper->set_component_attribute( ( component->cid ), *attribute, val );
-		FUNCTION_END
 	}
 
 
@@ -418,7 +450,6 @@ extern "C" {
 
 		FUNCTION_BEGIN
 		auto ret = U32_TO_P( process_data.system_information_manager->register_activityID( P_TO_U32( uiid ), activity_name ) );
-		FUNCTION_END
 		return ret;
 	}
 
@@ -429,7 +460,6 @@ extern "C" {
 		assert( component != nullptr );
 		// Simple implementation: rely on ComponentRegistrar for shutdown.
 		delete( component );
-		FUNCTION_END
 	}
 
 
@@ -440,7 +470,6 @@ extern "C" {
 		// MZ: Das reicht eigentlich bloß an den SMux weiter, oder?
 		// Vorher: Statistik zusammenbauen!
 		// TODO
-		FUNCTION_END
 	}
 
 //############################################################################
@@ -463,7 +492,6 @@ extern "C" {
 		//cout << "START: " << ab << endl;
 
 		a = ab->startActivity( component->cid, P_TO_U32( activity ), nullptr );
-		FUNCTION_END
 
 		return new siox_activity( a, component );
 	}
@@ -476,7 +504,6 @@ extern "C" {
 		FUNCTION_BEGIN
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
 		ab->stopActivity( activity->activity, nullptr );
-		FUNCTION_END
 	}
 
 
@@ -496,7 +523,6 @@ extern "C" {
 
 		ab->setActivityAttribute( activity->activity, attr );
 
-		FUNCTION_END
 	}
 
 
@@ -510,7 +536,6 @@ extern "C" {
 
 		ab->reportActivityError( activity->activity, error );
 
-		FUNCTION_END
 	}
 
 
@@ -527,7 +552,6 @@ extern "C" {
 		ab->endActivity( activity->activity );
 
 		// Find component's amux
-		ComponentID cid = activity->activity->aid().cid;
 		siox_component * component = activity->component;
 		assert( component != nullptr );
 		// Send activity to it
@@ -537,7 +561,6 @@ extern "C" {
 
 		delete( activity );
 
-		FUNCTION_END
 	}
 
 	siox_activity_ID * siox_activity_get_ID( const siox_activity * activity )
@@ -563,7 +586,6 @@ extern "C" {
 
 		ab->linkActivities( activity_child->activity, *( ( ActivityID * ) aid ) );
 
-		FUNCTION_END
 	}
 
 //############################################################################
@@ -580,7 +602,6 @@ extern "C" {
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
 
 		rc = ab->setupRemoteCall( activity->activity, P_TO_U32( target_node ), P_TO_U32( target_unique_interface ), P_TO_U32( target_associate ) );
-		FUNCTION_END
 
 		return rc;
 	}
@@ -597,7 +618,6 @@ extern "C" {
 
 		ab->setRemoteCallAttribute( remote_call, attr );
 
-		FUNCTION_END
 	}
 
 
@@ -608,7 +628,6 @@ extern "C" {
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
 
 		ab->startRemoteCall( remote_call, nullptr );
-		FUNCTION_END
 	}
 
 
@@ -623,7 +642,6 @@ extern "C" {
 
 		a = ab->startActivity( component->cid, P_TO_U32( activity ), P_TO_U32( caller_node ), P_TO_U32( caller_unique_interface ), P_TO_U32( caller_associate ), nullptr );
 
-		FUNCTION_END
 		return new siox_activity( a, component );
 	}
 
@@ -637,13 +655,11 @@ extern "C" {
 		assert( domain != nullptr );
 		assert( name != nullptr );
 
+		FUNCTION_BEGIN
 		try {
-			FUNCTION_BEGIN
 			auto ret = & process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
-			FUNCTION_END
 			return ret;
 		} catch( IllegalStateError & e ) {
-			FUNCTION_END
 			return nullptr;
 		}
 	}
@@ -656,13 +672,11 @@ extern "C" {
 		assert( meta_attribute != nullptr );
 		assert( value != nullptr );
 
+		FUNCTION_BEGIN
 		AttributeValue val = convert_attribute( meta_attribute, value );
-		try {
-			FUNCTION_BEGIN
+		try {			
 			process_data.ontology->attribute_set_meta_attribute( *parent_attribute, *meta_attribute, val );
-			FUNCTION_END
 		} catch( IllegalStateError & e ) {
-			FUNCTION_END
 			return 0;
 		}
 		return 1;
@@ -675,17 +689,14 @@ extern "C" {
 		assert( name != nullptr );
 		assert( unit != nullptr );
 
-		// MZ: Hier besser statt einer eigenen Domain für Units d verwenden?!
+		FUNCTION_BEGIN
 		try {
-			FUNCTION_BEGIN
 			const OntologyAttribute & meta = process_data.ontology->register_attribute( "Meta", "Unit", VariableDatatype::Type::STRING );
 			// OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
 			const OntologyAttribute & attribute = process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
 			process_data.ontology->attribute_set_meta_attribute( attribute, meta, unit );
-			FUNCTION_END
 			return & attribute;
 		} catch( IllegalStateError & e ) {
-			FUNCTION_END
 			return nullptr;
 		}
 	}
@@ -693,14 +704,12 @@ extern "C" {
 
 	siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name )
 	{
+		FUNCTION_BEGIN
 		assert( name != nullptr );
-		try {
-			FUNCTION_BEGIN
+		try {			
 			auto ret = & process_data.ontology->lookup_attribute_by_name( domain, name );
-			FUNCTION_END
 			return ret;
 		} catch( NotFoundError & e ) {
-			FUNCTION_END
 			return nullptr;
 		}
 	}
@@ -708,16 +717,14 @@ extern "C" {
 
 	siox_unique_interface * siox_system_information_lookup_interface_id( const char * interface_name, const char * implementation_identifier )
 	{
+		FUNCTION_BEGIN
 		assert( interface_name != nullptr );
 		assert( implementation_identifier != nullptr );
 
 		try {
-			FUNCTION_BEGIN
 			auto ret = U32_TO_P( process_data.system_information_manager->register_interfaceID( interface_name, implementation_identifier ) );
-			FUNCTION_END
 			return ret;
 		} catch( IllegalStateError & e ) {
-			FUNCTION_END
 			return 0;
 		}
 	}
@@ -726,6 +733,7 @@ extern "C" {
 		if ( process_data.optimizer == nullptr ){
 			return 0;
 		}
+		FUNCTION_BEGIN
 
 		try{
 			OntologyValue val(process_data.optimizer->optimalParameter(*attribute));
@@ -757,22 +765,22 @@ extern "C" {
 					assert(0 && "tried to optimize for a VariableDatatype of invalid type");
 					return 1;
 			}
-
 			return 1;
 		}catch ( NotFoundError & e ){
 			return 0;
-		}
+		}		
 	}
 
 int siox_suggest_optimal_value_str( siox_component * component, siox_attribute * attribute, char * target_str, int maxLength ){
 		if ( process_data.optimizer == nullptr ){
 			return 0;
 		}
+		string what("siox_suggest_optimal_value_str(" + attribute->domain + "," + attribute->name + ")");
+		PERF_MEASURE_START( what.c_str() )
 
 		try{
 			OntologyValue val( process_data.optimizer->optimalParameter(*attribute) );
-			assert( val.type() == VariableDatatype::Type::STRING );
-			strncpy( val.str(), target_str, maxLength );
+			strncpy( target_str, val.str(), maxLength );
 			return 1;
 		}catch ( NotFoundError & e ){
 			return 0;

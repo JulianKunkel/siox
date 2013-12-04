@@ -9,6 +9,8 @@ add_library(
 	autoLoadModules.cpp
 	ReporterHelper.cpp
 	time.c
+	threadSafety.c
+	OverheadStatistics.cpp
 )
 
 target_link_libraries(
@@ -17,5 +19,9 @@ target_link_libraries(
 )
 
 install(TARGETS siox-util LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
+
+FILE(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/*.h*")
+INSTALL(FILES ${files} DESTINATION include/util)
+
 
 add_subdirectory(JobProcessors)

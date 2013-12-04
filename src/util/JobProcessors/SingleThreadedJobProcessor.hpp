@@ -22,6 +22,7 @@ protected:
 	enum class OperationalStatus : uint8_t{
 		OPERATIONAL = 0,
 		SHUTTING_DOWN = 1,
+		STOPPING = 2,
 	};
 
 	OperationalStatus status = OperationalStatus::OPERATIONAL;
@@ -36,8 +37,7 @@ public:
 
 	virtual void startProcessing();
 
-	~SingleThreadedJobProcessor();
-	
+	// you must call the shutdown method in the parent class, for example in its destructor!
 protected:
 	void process();
 };

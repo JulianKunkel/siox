@@ -31,10 +31,11 @@ struct ReportEntry{
 	};
 
 	Type type;
+	uint8_t priority;
 
 	VariableDatatype value;
 
-	ReportEntry(const Type type, const VariableDatatype & value) : type(type), value(value) {}
+	ReportEntry(const Type type, const VariableDatatype & value, uint8_t priority = 1) : type(type), priority(priority), value(value) {}
 	ReportEntry(){}
 };
 

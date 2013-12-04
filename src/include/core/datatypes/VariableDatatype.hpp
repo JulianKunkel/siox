@@ -96,25 +96,11 @@ class VariableDatatype {
 		}
 
 		VariableDatatype & operator=( const VariableDatatype & d ) {
-			//cout << (int) type_ << " " << (int) d.type_ << endl;
-			//At the moment we do not allow to change the datatype during assignments because this is errorprone.
-			assert( type_ == d.type_ || type_ == Type::INVALID );
-			if( type_ != Type::INVALID ) {
-				if( type_ != Type::STRING ) {
-					data.i64 = d.data.i64;
-				} else {
-					free( d.data.str );
-					data.str = strdup( d.data.str );
-				}
-			} else {
-				type_ = d.type_;
-				if( type_ != Type::STRING ) {
-					data.i64 = d.data.i64;
-				} else {
-					data.str = strdup( d.data.str );
-				}
-			}
-
+			if( this == &d ) return *this;
+			if( type_ == Type::STRING ) free( data.str );
+			type_ = d.type_;
+			data = d.data;
+			if( type_ == Type::STRING ) data.str = strdup( data.str );
 			return *this;
 		}
 
@@ -146,8 +132,30 @@ class VariableDatatype {
 		}
 
 		inline char * str() const {
-			assert( type_ == Type::STRING );
-			return data.str;
+			unsigned long long iValue = 0;
+			double fValue = 0;
+			bool isSigned = false, isFloat = false;
+			switch( type_ ) {
+				case Type::INT32:  iValue = data.i32; isSigned = true; break;
+				case Type::INT64:  iValue = data.i64; isSigned = true; break;
+				case Type::UINT32: iValue = data.ui32; break;
+				case Type::UINT64: iValue = data.ui32; break;
+				case Type::FLOAT:  fValue = data.f; isFloat = true; break;
+				case Type::DOUBLE: fValue = data.d; isFloat = true; break;
+				case Type::STRING: return data.str;
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to stringify a VariableDatatypes of invalid type"), abort();
+			}
+			static char resultString[100];
+			if(isSigned) {
+				snprintf(resultString, sizeof(resultString) - 1, "%lld", (long long)iValue);
+			} else if(isFloat) {
+				snprintf(resultString, sizeof(resultString) - 1, "%g", fValue);
+			} else {
+				snprintf(resultString, sizeof(resultString) - 1, "%llu", iValue);
+			}
+			return resultString;
 		}
 
 		inline float flt() const {

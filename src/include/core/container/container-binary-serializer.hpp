@@ -183,7 +183,7 @@ inline uint64_t serializeLen(const char * str){
 }
 
 inline void serialize(const char * obj, char * buffer, uint64_t & pos){
-	uint32_t len = strlen(obj);
+	uint32_t len = strlen(obj);	
 	serialize(len, buffer, pos);
 	memcpy(buffer + pos, obj, len);
 	pos += len;	
@@ -195,7 +195,7 @@ inline void deserialize(char *& obj, const char * buffer, uint64_t & pos, uint64
 	deserialize(len, buffer, pos, length);
 
 	CHECK_LENGTH(len)
-	obj = strdup(& buffer[pos]);
+	obj = strndup(& buffer[pos], len);
 	pos += len;
 }
 

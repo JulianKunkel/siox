@@ -106,6 +106,8 @@ void GIOServiceServer::cleanTerminatedThread(){
 }
 
 void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_thread_error_cancelable){
+	monitoring_namespace_protect_thread();
+	
 	GSocketConnection * connection;
 
 	while( (connection =  g_socket_listener_accept(listener, nullptr, cancelable, nullptr)) == nullptr ){
@@ -137,16 +139,16 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
 	 addAcceptorThread();
 
 	 // this thread now will receive messages.
-    while(1) {
-		uint64_t msgLength;
-		uint32_t clientSidedID;
-		CommunicationError error;
+    while( ! g_cancellable_is_cancelled(one_thread_error_cancelable) ) {
+		uint64_t msgLength = 0;
+		uint32_t clientSidedID = 0;
+		CommunicationError error = CommunicationError::UNKNOWN;
 
 		char * payload = readSocketMessage(istream, msgLength, clientSidedID, error, one_thread_error_cancelable);
 
         if ( payload == nullptr ){
         	if (msgLength > 0){ 
-        		// cout << "Received broken message" << endl;
+        		//cout << "Received broken message" << endl;
 
         		messageCallback->invalidMessageReceivedCB(error);
         		TCPClientMessage errMsg(this, clientSidedID, & messageSendQueueInstance, nullptr, 0);
@@ -156,14 +158,13 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
         	break;
         }
 
-        // cout << "Received message" << endl;
-
         auto msg = shared_ptr<TCPClientMessage>(new TCPClientMessage(this, clientSidedID, & messageSendQueueInstance, payload, msgLength));
 
         messageCallback->messageReceivedCB(msg, payload + clientMsgHeaderLen(), msgLength - clientMsgHeaderLen());
     }
 
     messageSendQueueInstance.shutdown();
+    messageSendQueueInstance.terminate();
 
 	 g_object_unref(connection);
 
@@ -177,9 +178,6 @@ void GIOServiceServer::listen() throw(CommunicationModuleException){
 	if(listener == nullptr ){		
 		throw CommunicationModuleException("Could not instantiate listener");
 	}
-
-	//cout << "listen on " << address << endl;
-
 
 	SocketType type;	
 	GSocketAddress * gsocketAddr = getSocket(address, type);

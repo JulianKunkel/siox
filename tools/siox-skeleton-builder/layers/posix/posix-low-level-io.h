@@ -60,7 +60,7 @@
 
 
 //TODO we have to determine the filesystem based on the mountpoint, this is a SIOX helper function.
-//@splice_once ''#define SET_FILENAME(ARG) char fileNamebuffer[1024]; realpath(ARG, fileNamebuffer); siox_activity_set_attribute( sioxActivity, fileName, fileNamebuffer );''
+//@splice_once ''#define SET_FILENAME(ARG) char fileNamebuffer[PATH_MAX]; char * resPath = realpath(ARG, fileNamebuffer); if ( resPath == NULL ) fileNamebuffer[0] = 0;  siox_activity_set_attribute( sioxActivity, fileName, fileNamebuffer );''
 
 /*------------------------------------------------------------------------------
 End of global part
@@ -374,19 +374,19 @@ int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 //@guardEnd
 int __fxstat64( int __ver, int fd, struct stat64 * buf );
 
-//@guard
-//@error ''ret<0'' errno
-//@activity Name=stat
-//@splice_before SET_FILENAME(path)
-//@guardEnd
-int __xstat( int __ver, const char * path, struct stat * buf );
+//guard
+//error ''ret<0'' errno
+//activity Name=stat
+//splice_before SET_FILENAME(path)
+//guardEnd
+//int __xstat( int __ver, const char * path, struct stat * buf );
 
-//@guard
-//@error ''ret<0'' errno
-//@activity Name=lstat
-//@splice_before SET_FILENAME(path)
-//@guardEnd
-int __lxstat( int __ver, const char * path, struct stat * buf );
+//guard
+//error ''ret<0'' errno
+//activity Name=lstat
+//splice_before SET_FILENAME(path)
+//guardEnd
+//int __lxstat( int __ver, const char * path, struct stat * buf );
 
 //@guard
 //@error ''ret<0'' errno

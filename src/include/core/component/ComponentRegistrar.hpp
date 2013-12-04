@@ -42,6 +42,8 @@ namespace core {
 		public:
 			Component * lookupComponent( ComponentReferenceID which ) throw( InvalidComponentException );
 			void registerComponent( ComponentReferenceID nr, const std::string & section, const std::string & moduleName, Component * component );
+			void unregisterComponent( ComponentReferenceID nr );
+
 
 			// do not tamper with the list, otherwise you get what you deserve...
 			std::list<RegisteredComponent *> & listRegisteredComponents() {

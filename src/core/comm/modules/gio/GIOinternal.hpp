@@ -14,6 +14,8 @@
 #include <boost/regex.hpp>
 
 #include <util/JobProcessors/SingleThreadedJobProcessor.hpp>
+#include <util/threadSafety.h>
+
 
 // this two magic keys indicate the message type
 #define MAGIC_KEY 14099
@@ -263,12 +265,11 @@ protected:
 		BareMessage* msg = (BareMessage*) job;
 
 		if ( ! sendSocketMessage(msg, ostream) ) {
-			// the connection broke
-			unique_lock<mutex> lk(m);
-	
+			// the connection broke, so stop your own processing
 			stopProcessing();
 
-			// insert the job in the start of the queue
+			unique_lock<mutex> lk(m);
+			// inject the job into the front of the queue
 			queue->enqueueFront(job);
 
 	    	g_cancellable_cancel(cancelable);

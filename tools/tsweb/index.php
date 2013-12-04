@@ -8,7 +8,7 @@ require_once("header.php");
 
 <h1>Activity List</h1>
 
-<?php $activities = Activity::get_list(); ?>
+<?php $activities = Activity::get_list(true); ?>
 
 <table cellspacing="0" cellpadding="0">
 <thead>
@@ -17,6 +17,7 @@ require_once("header.php");
 		<th>Function</th>
 		<th>Time start</th>
 		<th>Time stop</th>
+		<th>Duration [ms]</th>
 		<th>Error code</th>
 	</tr>
 </thead>
@@ -25,9 +26,10 @@ require_once("header.php");
 <?php foreach ($activities as $a): ?>
 	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>" onclick="window.location='activity.php?unique_id=<?=$a->unique_id?>'">
 		<td><?=$a->unique_id?></td>
-		<td>no name</td>
-		<td><?=$a->time_start?></td>
-		<td><?=$a->time_stop?></td>
+		<td><?=$a->activity_name?></td>
+		<td><?=date("d.m.Y H:i:s", floor($a->time_start / 1000000000)).round($a->time_start / 1000000000 - floor($a->time_start / 1000000000), 3)?></td>
+		<td><?=date("d.m.Y H:i:s", floor($a->time_stop / 1000000000)).round($a->time_stop / 1000000000 - floor($a->time_stop / 1000000000), 3)?></td>
+		<td align="center"><?=round(($a->time_stop - $a->time_start) / 1000, 1)?></td>
 		<td><?=$a->error_value?></td>
 	</tr>
 <?php endforeach ?>

@@ -2,16 +2,17 @@
 #define __SIOX_STDEXCEPTION_HPP
 
 #include <exception>
+#include <string>
 
-class NotFoundError: public exception {
+class NotFoundError: public std::exception {
 	public:
-		string msg;
+		std::string msg;
 
 		NotFoundError() {
 			msg = "Error Attribute/Value NotFound";
 		}
 
-		NotFoundError( const string & msg ) {
+		NotFoundError( const std::string & msg ) {
 			this->msg = msg;
 		}
 
@@ -21,11 +22,11 @@ class NotFoundError: public exception {
 };
 
 
-class IllegalStateError: public exception {
+class IllegalStateError: public std::exception {
 	public:
-		string msg;
+		std::string msg;
 
-		IllegalStateError( const string & msg ) {
+		IllegalStateError( const std::string & msg ) {
 			this->msg = msg;
 		}
 
@@ -35,11 +36,11 @@ class IllegalStateError: public exception {
 };
 
 
-class IllegalArgumentError: public exception {
+class IllegalArgumentError: public std::exception {
 	public:
-		string msg;
+		std::string msg;
 
-		IllegalArgumentError( const string & msg ) {
+		IllegalArgumentError( const std::string & msg ) {
 			this->msg = msg;
 		}
 

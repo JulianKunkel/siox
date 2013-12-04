@@ -5,8 +5,10 @@
 
 #include <monitoring/datatypes/ids.hpp>
 #include <monitoring/datatypes/Activity.hpp>
+#include <monitoring/system_information/SysteminfoDatatypes.hpp>
 
 using namespace monitoring;
+using namespace system_information;
 
 namespace rnd {
 
@@ -14,7 +16,7 @@ namespace rnd {
 	{
 		double scaled = (double) rand() / RAND_MAX;
 		return (max - min +1)*scaled + min;
-	}	
+	}
 
 	inline NodeID node_id()
 	{
@@ -63,7 +65,7 @@ namespace rnd {
 	}
 	
 	
-	inline std::string randr_string(size_t length)
+	inline std::string randr_string(size_t length, string prefix = "")
 	{
 		auto randchar = []() -> char {
 			const char charset[] =
@@ -76,7 +78,7 @@ namespace rnd {
 		
 		std::string str(length, 0);
 		std::generate_n(str.begin(), length, randchar);
-		return str;
+		return prefix + str;
 	}
 	
 	
@@ -173,6 +175,67 @@ namespace rnd {
 		
 		return act;
 	}
+	
+	
+	inline Node *node()
+	{
+		Node *n = new Node();
+		n->node_id = node_id();
+		n->hw_id = randr_string(5, "node-");
+		
+		return n;
+	}
+	
+	
+	inline DeviceID device_id()
+	{
+		return (DeviceID) randr();
+	}
+	
+	
+	inline StorageDevice *storage_device()
+	{
+		StorageDevice *sd = new StorageDevice();
+		
+		sd->device_id = device_id();
+		sd->node_id = node_id();
+		sd->model_name = randr_string(5, "sd-model-");
+		sd->local_address = randr_string(5, "sd-address-");
+		
+		return sd;
+	}
+	
+	
+	inline FilesystemID file_system_id()
+	{
+		return (FilesystemID) randr();
+	}
+	
+	
+	inline Filesystem *file_system()
+	{
+		Filesystem *fs = new Filesystem();
+		fs->filesystem_id = file_system_id();
+		fs->unique_id = randr_string(5, "fs-");
+		
+		return fs;
+	}
+	
+	
+	inline UniqueInterfaceID unique_interface_id()
+	{
+		return (UniqueInterfaceID) randr();
+	}
+	
+// 	inline Interface *interface()
+// 	{
+// 		Interface *i = new Interface();
+// 		i->id = unique_interface_id();
+// 		i->name = randr_string(5, "interface-");
+// 		i->implementation = randr_string(5, "implementation-");
+// 		
+// 		return i;
+// 	}
 	
 };
 

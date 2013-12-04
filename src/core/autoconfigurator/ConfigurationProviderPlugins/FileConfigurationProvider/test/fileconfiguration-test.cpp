@@ -13,7 +13,7 @@ int main()
 	ComponentRegistrar * registrar = new ComponentRegistrar();
 	// make test runable using waf
 	if( chdir( "../../../../../../monitoring" ) == 0 ) {
-		chdir( "../" );
+		if( chdir( "../" ) ) assert(0 && "error while changing directory"), abort();
 	}
 
 	AutoConfigurator * a = new AutoConfigurator( registrar, "siox-core-autoconfigurator-FileConfigurationProvider", "", "core/autoconfigurator/ConfigurationProviderPlugins/FileConfigurationProvider/test/test.config:test.config" );
@@ -50,7 +50,7 @@ int main()
 
 	ComponentReference chi = parent->getOptions<MyParentModuleOptions>().childInterface;
 	void * instance = GET_INSTANCE( MyChildModule, chi );
-	assert( instance );	
+	assert( instance );
 	assert( instance == child );
 
 	delete( registrar );
