@@ -231,10 +231,11 @@ class ThreadedStatisticsCollector : public StatisticsCollector, public Component
 ComponentReport ThreadedStatisticsCollector::prepareReport(){
 	ComponentReport rep;
 
-	rep.data["AVAILABLE_STATISTICS"] = {ReportEntry::Type::SIOX_INTERNAL_INFO, statistics.size() };
-	rep.data["PROCESSED_TIMESTEPS"] = {ReportEntry::Type::SIOX_INTERNAL_INFO, run_timesteps};
-	rep.data["WAITING_TIME"] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, (run_timesteps * 100 * 1000 * 1000ull - process_time) / 1000000000.0 };
-	rep.data["PROCESSING_TIME"] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, process_time / 1000000000.0 };
+
+	rep.addEntry("AVAILABLE_STATISTICS", {ReportEntry::Type::SIOX_INTERNAL_INFO, statistics.size() });
+	rep.addEntry("PROCESSED_TIMESTEPS", {ReportEntry::Type::SIOX_INTERNAL_INFO, run_timesteps});
+	rep.addEntry("WAITING_TIME", {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, (run_timesteps * 100 * 1000 * 1000ull - process_time) / 1000000000.0 });
+	rep.addEntry("PROCESSING_TIME", {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, process_time / 1000000000.0 });
 
 	return rep;
 }

@@ -399,7 +399,7 @@ ComponentReport FileSurveyorPlugin::prepareReport()
 		reportText << "\t\t\tRandom:    \t" << itr->nAccessesRandom << endl;
 		reportText << "\t\t\tSequential:\t" << itr->nAccessesSequential << endl;
 	}
-	result.data[ "File Survey Report" ] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) );
+	result.addEntry("File Survey Report", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) ));
 
 	return result;
 }
