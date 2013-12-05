@@ -25,23 +25,36 @@ apt-get install libboost-dev libboost-program-options-dev libboost-serialization
 Compilation
 ===========
 By utilizing CMake we can either use the traditional make tool or ninja which has a faster build process (Ubuntu package ninja-build).
+
 To compile create a "build" directory and run cmake to create the required files:
 
-mkdir build
-cd build
-cmake -DBOOST_ROOT=/opt/siox/boost/1.54 -DBOOST_INCLUDEDIR=/opt/siox/boost/1.54/include -DBOOST_LIBRARYDIR=/opt/siox/boost/1.54/lib -DBoost_NO_SYSTEM_PATHS=ON ..
+$ mkdir build
+$ cd build
+$ cmake -DBOOST_ROOT=/opt/siox/boost/1.54 -DBOOST_INCLUDEDIR=/opt/siox/boost/1.54/include -DBOOST_LIBRARYDIR=/opt/siox/boost/1.54/lib -DBoost_NO_SYSTEM_PATHS=ON ..
 
 Then you can compile SIOX:
-make -j 4
-make install
+$ make -j 4
+$ make install
 
 To use ninja instead of make run:
-cmake -GNinja ../
-ninja
+$ cmake -GNinja ../
+$ ninja
 
 Note that C++ takes a considerable amount of memory to compile, parallel builds might exhaust machines with less than 2 GByte of memory.
 
 ccmake is a graphical frontend to cmake which allows easy configuration of the project.
+
+Configure convenient script
+===========================
+
+We also provide a configure script for convenient setting of important CMake variables. So instead of using the options above you may use:
+$ ./configure --prefix=/usr/local/siox
+
+The script outputs the command line to execute.
+
+After the installation you must adjust the environment variables LD_LIBRARY_PATH and if you like PATH to allow convenient access, for example for bash do:
+$ export LD_LIBRARY_PATH=/usr/local/siox/lib:$LD_LIBRARY_PATH
+$ export PATH=/usr/local/siox/bin:$PATH
 
 
 Testing

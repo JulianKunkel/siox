@@ -24,8 +24,11 @@ do
 	shift
 done
 
+TARGET_DIR="/usr/local"
+
 if test -n "$prefix"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_INSTALL_PREFIX:PATH=$prefix"
+	TARGET_DIR="$prefix"
 fi
 if test -n "$cc"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER:FILEPATH=$cc"
@@ -84,6 +87,13 @@ if [ "$NINJA" != "" ]; then
 	echo "This usually speedups compilation. If you want you can use:"
 	echo "	mkdir build; cd build; cmake -GNinja $CMAKEFLAGS $srcdir && ninja && ninja install"
 fi
+
+echo ""
+echo "After the installation you could adjust the environment variables LD_LIBRARY_PATH and PATH -- for bash like this:"
+
+echo "export LD_LIBRARY_PATH=$TARGET_DIR/lib:$LD_LIBRARY_PATH"
+echo "export PATH=$TARGET_DIR/bin:$PATH"
+
 echo ""
 
 
