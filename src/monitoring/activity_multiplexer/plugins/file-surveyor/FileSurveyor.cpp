@@ -236,29 +236,29 @@ void FileSurveyorPlugin::Notify( shared_ptr<Activity> activity ) {
 	TokenType type = UNKNOWN;
 	IGNORE_EXCEPTIONS( type = types.at( activity->ucaid() ); );
 
-	cerr << "[File Surveyor] saw activity of type " << activity->ucaid() << ":\t";
+	//OUTPUT( "[File Surveyor] saw activity of type " << activity->ucaid() << ":\t" );
 
 	switch (type) {
 
 		case OPEN:
-			cerr << "open[" << activity->aid() << "]\n";
+			//OUTPUT( "open[" << activity->aid() << "]\n" );
 			openSurvey( activity );
 			break;
 
 		case ACCESS: {
-			cerr << "access[" << activity->aid() << "]\n";
+			//OUTPUT( "access[" << activity->aid() << "]\n" );
 			updateSurvey( activity );
 			break;
 		}
 
 		case CLOSE: {
-			cerr << "close[" << activity->aid() << "]\n";
+			//OUTPUT( "close[" << activity->aid() << "]\n" );
 			closeSurvey( activity );
 			break;
 		}
 
 		default:
-			cerr << "(unknown)\n";
+			//OUTPUT( "(unknown)\n" );
 			break;
 	}
 }
@@ -280,7 +280,7 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 		return;
 	}
 	const string fileExtension = findFileNameExtension(attFileName->value.str());
-	OUTPUT( "File extension found: " << fileExtension );
+	//OUTPUT( "File extension found: " << fileExtension );
 	if( fileExtensionsToWatch.count( fileExtension ) > 0 )
 	{
 		// Create and fill new survey for the file just opened
@@ -292,14 +292,20 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 		// File name
 		survey.fileName = attFileName->value.str();
 		// User ID
+		// @todo TODO: Retrieve correct UID for OPEN activities.
 		const Attribute * attUserID = findAttributeByID( activity, uidAttID );
 		if ( attUserID != NULL )
+		{
 			survey.userID = attUserID->value.str();
+			OUTPUT( "UserID: " << attUserID->value.str() );
+		}
+		else
+			OUTPUT( "No valid user ID in activity" << activity->aid() << "!" << endl );
 
 		openFileSurveys[ activity->aid() ] = survey;
 
 	}
-	OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+	//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
 }
 
 
@@ -405,8 +411,8 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 		// Report that neither was found
 		cerr << "[FileSurvey] No size of payload data attribute found in activity " << activity->aid() << "!" << endl;
 
-		OUTPUT( "openSurveys size = " << openFileSurveys.size() );
-		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
+		//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+		//OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
 	}
 }
 
@@ -440,8 +446,8 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 
 		openFileSurveys.erase( *parentAID );
 		closedFileSurveys.push_back( survey );
-		OUTPUT( "openSurveys size = " << openFileSurveys.size() );
-		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
+		//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+		//OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
 	}
 }
 
@@ -449,6 +455,8 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 ComponentReport FileSurveyorPlugin::prepareReport()
 {
 	ComponentReport result;
+
+	GroupEntry * gePlugin = new GroupEntry("FileSurveyorPlugin");
 	ostringstream reportText;
 
 	if( !tryEnsureInitialization() ) return ComponentReport();
@@ -461,32 +469,69 @@ ComponentReport FileSurveyorPlugin::prepareReport()
 		uint64_t nAccessesWrite = nAccessesWriteRandom + itr->nAccessesWriteSequential;
 		uint64_t nAccesses = nAccessesRead + nAccessesWrite;
 		uint64_t nBytes = itr->nBytesRead + itr->nBytesWrite;
-		double nBytesReadAverage = (nAccessesRead > 0) ? (itr->nBytesRead / nAccessesRead) : 0.0;
-		double nBytesWriteAverage = (nAccessesWrite > 0) ? (itr->nBytesWrite / nAccessesWrite) : 0.0;
 
-		reportText << endl;
-		reportText << "\t\"" << itr->fileName << "\":" << endl;
-		reportText << "\t\tUser ID:    \t" << itr->userID << endl;
-		reportText << "\t\tTime Opened:\t" << itr->timeOpened << endl;
-		reportText << "\t\tTime Closed:\t" << itr->timeClosed << endl;
-		reportText << "\t\tnAccesses:\t" << nAccesses << endl;
-		reportText << "\t\t\tReading:\t" << nAccessesRead << endl;
-		reportText << "\t\t\t\tSequential:\t" << itr->nAccessesReadSequential << endl;
-		reportText << "\t\t\t\tRandom:    \t" << nAccessesReadRandom << endl;
-		reportText << "\t\t\t\t\tshort jump:\t" << itr->nAccessesReadRandomShort << endl;
-		reportText << "\t\t\t\t\tlong jump: \t" << itr->nAccessesReadRandomLong << endl;
-		reportText << "\t\t\tWriting:\t" << nAccessesWrite << endl;
-		reportText << "\t\t\t\tSequential:\t" << itr->nAccessesWriteSequential << endl;
-		reportText << "\t\t\t\tRandom:    \t" << nAccessesWriteRandom << endl;
-		reportText << "\t\t\t\t\tshort jump:\t" << itr->nAccessesWriteRandomShort << endl;
-		reportText << "\t\t\t\t\tlong jump: \t" << itr->nAccessesWriteRandomLong << endl;
-		reportText << "\t\tnBytes:\t" << nBytes << endl;
-		reportText << "\t\t\tRead:   \t" << itr->nBytesRead << endl;
-		reportText << "\t\t\t\tper Access:\t" << nBytesReadAverage << endl;
-		reportText << "\t\t\tWritten:\t" << itr->nBytesWrite << endl;
-		reportText << "\t\t\t\tper Access:\t" << nBytesWriteAverage << endl;
+		double nBytesReadAverage = 0.0;
+		if( nAccessesRead > 0 )
+			nBytesReadAverage = itr->nBytesRead / ((double) nAccessesRead);
+		double nBytesWriteAverage = 0.0;
+		if( nAccessesWrite > 0 )
+			nBytesWriteAverage = ((double) itr->nBytesWrite) / ((double) nAccessesWrite);
+
+
+		GroupEntry * geFile = new GroupEntry( itr->fileName, gePlugin );
+
+		// General
+		result.addEntry( new GroupEntry( "User ID", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->userID ) ));
+		result.addEntry( new GroupEntry( "Time opened", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeOpened ) ));
+		result.addEntry( new GroupEntry( "Time closed", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeClosed ) ));
+
+		// # Accesses
+		GroupEntry * geAccesses = new GroupEntry( "Accesses", geFile );
+		result.addEntry( geAccesses, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nAccesses ) ));
+		// Reading
+		GroupEntry * geReading = new GroupEntry( "Reading", geAccesses );
+		result.addEntry( geReading, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesRead ) ));
+		result.addEntry( new GroupEntry( "Sequential", geReading ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesReadSequential ) ));
+		result.addEntry( new GroupEntry( "Random, short seek", geReading ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesReadRandomShort ) ));
+		result.addEntry( new GroupEntry( "Random, long seek", geReading ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesReadRandomLong ) ));
+		// Writing
+		GroupEntry * geWriting = new GroupEntry( "Writing", geAccesses );
+		result.addEntry( geWriting, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesWrite ) ));
+		result.addEntry( new GroupEntry( "Sequential", geWriting ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesWriteSequential ) ));
+		result.addEntry( new GroupEntry( "Random, short seek", geWriting ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesWriteRandomShort ) ));
+		result.addEntry( new GroupEntry( "Random, long seek", geWriting ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesWriteRandomLong ) ));
+
+		// # Bytes
+		GroupEntry * geBytes = new GroupEntry( "Bytes", geFile );
+		result.addEntry( geBytes, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytes ) ));
+		result.addEntry( new GroupEntry( "Total read", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nBytesRead ) ));
+		result.addEntry( new GroupEntry( "Read per access", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytesReadAverage ) ));
+		result.addEntry( new GroupEntry( "Total written", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nBytesWrite ) ));
+		result.addEntry( new GroupEntry( "Written per access", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytesWriteAverage ) ));
+
+		//reportText << endl;
+		//reportText << "\t\"" << itr->fileName << "\":" << endl;
+		//reportText << "\t\tUser ID:    \t" << itr->userID << endl;
+		//reportText << "\t\tTime opened:\t" << itr->timeOpened << endl;
+		//reportText << "\t\tTime closed:\t" << itr->timeClosed << endl;
+		//reportText << "\t\tnAccesses:\t" << nAccesses << endl;
+		//reportText << "\t\t\tReading:\t" << nAccessesRead << endl;
+		//reportText << "\t\t\t\tSequential:\t" << itr->nAccessesReadSequential << endl;
+		//reportText << "\t\t\t\tRandom:    \t" << nAccessesReadRandom << endl;
+		//reportText << "\t\t\t\t\tshort seek:\t" << itr->nAccessesReadRandomShort << endl;
+		//reportText << "\t\t\t\t\tlong seek: \t" << itr->nAccessesReadRandomLong << endl;
+		//reportText << "\t\t\tWriting:\t" << nAccessesWrite << endl;
+		//reportText << "\t\t\t\tSequential:\t" << itr->nAccessesWriteSequential << endl;
+		//reportText << "\t\t\t\tRandom:    \t" << nAccessesWriteRandom << endl;
+		//reportText << "\t\t\t\t\tshort seek:\t" << itr->nAccessesWriteRandomShort << endl;
+		//reportText << "\t\t\t\t\tlong seek: \t" << itr->nAccessesWriteRandomLong << endl;
+		//reportText << "\t\tnBytes:\t" << nBytes << endl;
+		//reportText << "\t\t\tTotal read:        \t" << itr->nBytesRead << endl;
+		//reportText << "\t\t\tRead per access:   \t" << nBytesReadAverage << endl;
+		//reportText << "\t\t\tTotal written:     \t" << itr->nBytesWrite << endl;
+		//reportText << "\t\t\tWritten per access:\t" << nBytesWriteAverage << endl;
 	}
-	result.addEntry("File Survey Report", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) ));
+	//result.addEntry( gePlugin, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) ));
 
 	return result;
 }
