@@ -14,16 +14,13 @@
 #include <core/component/component-options.hpp>
 
 
-using namespace core;
-using namespace std;
-
 namespace monitoring {
 
 	//@serializable
-	class ThreadedStatisticsOptions: public ComponentOptions {
+	class ThreadedStatisticsOptions: public core::ComponentOptions {
 		public:
-			ComponentReference ontology;
-			ComponentReference smux;
+			core::ComponentReference ontology;
+			core::ComponentReference smux;
 	};
 
 }

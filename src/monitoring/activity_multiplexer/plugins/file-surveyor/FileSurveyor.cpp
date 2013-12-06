@@ -14,6 +14,7 @@
 #include <unordered_set>
 //#include <algorithm>
 
+#include <util/ExceptionHandling.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
@@ -31,7 +32,6 @@ using namespace core;
 using namespace knowledge;
 
 
-#define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 #define OUTPUT(...) do { cout << "[File Surveyor] " << __VA_ARGS__ << "\n"; } while(0)
 
 
@@ -140,8 +140,8 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		void closeSurvey( shared_ptr<Activity> activity );
 
 		const ActivityID * findParentAID( const shared_ptr<Activity>& activity );
- 		const Attribute * findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid );
- 		const string findFileNameExtension( const string & fileName );
+		const Attribute * findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid );
+		const string findFileNameExtension( const string & fileName );
 };
 
 
@@ -152,7 +152,6 @@ ComponentOptions * FileSurveyorPlugin::AvailableOptions() {
 
 
 void FileSurveyorPlugin::initPlugin() {
-	#define RETURN_ON_EXCEPTION(...) do { try { __VA_ARGS__ } catch(...) { cerr << "[File Surveyor] initialization failed at initLevel = " << initLevel << "\n"; return; } } while(0)
 	fprintf(stderr, "FileSurveyorPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
 
 	// Retrieve options
@@ -487,7 +486,7 @@ ComponentReport FileSurveyorPlugin::prepareReport()
 		reportText << "\t\t\tWritten:\t" << itr->nBytesWrite << endl;
 		reportText << "\t\t\t\tper Access:\t" << nBytesWriteAverage << endl;
 	}
-	result.data[ "File Survey Report" ] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) );
+	result.addEntry("File Survey Report", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) ));
 
 	return result;
 }

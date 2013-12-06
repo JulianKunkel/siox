@@ -10,8 +10,8 @@ class CRI_TestClass : public ComponentReportInterface, public Component{
 	public:
 		ComponentReport prepareReport(){
 			ComponentReport rep;
-			rep.data["Stat1"] = {ReportEntry::Type::SIOX_INTERNAL_DEBUG, 4};
-			rep.data["Stat2"] = {ReportEntry::Type::APPLICATION_PERFORMANCE, 8};
+			rep.addEntry("Stat1", {ReportEntry::Type::SIOX_INTERNAL_DEBUG, 4});
+			rep.addEntry("Stat2", {ReportEntry::Type::APPLICATION_PERFORMANCE, 8});
 
 			return rep;
 		}
