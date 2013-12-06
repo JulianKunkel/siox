@@ -1,11 +1,11 @@
 <?php
 
-function hyperlink_ids($action_url, $id_array)
+function hyperlink_ids($action_url, $item_array)
 {
 	$retval = array();
 
-	foreach ($id_array as $id) 
-		$retval[] = "<a href=\"$action_url$id\">$id</a>";
+	foreach ($item_array as $item) 
+		$retval[] = "<a href=\"$action_url$item->id\">$item->name()</a>";
 
 	return $retval;
 }

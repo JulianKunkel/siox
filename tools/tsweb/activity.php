@@ -16,7 +16,7 @@ require_once "header.php";
 
 <img src="causal_chain.php?unique_id=<?=$_GET["unique_id"]?>" />
 
-<?php $act = Activity::get_activity($_GET["unique_id"], true);?>
+<?php $act = Activity::get_activity($_GET["unique_id"]);?>
 
 <h2>Attribute List</h2>
 
@@ -40,19 +40,28 @@ require_once "header.php";
 		<th>cid_pid_nid</th><td class="even"><?=$act->cid_pid_nid?></td>
 	</tr>
 	<tr>
-		<th>cid_pid_time</th><td class="odd"><?=$act->cid_pid_time?></td>
+<?php 
+$pid_secs  = $act->cid_pid_time;
+$pid_days  = floor($pid_secs / (60*60*24));
+$pid_secs %= 60*60*24;
+$pid_hours = floor($pid_secs / (60*60));
+$pid_secs %= 60*60;
+$pid_mins  = floor($pid_secs / 60);
+$pid_secs %= 60;
+?>
+		<th>cid_pid_time</th><td class="odd"><?=$pid_days?> d <?=$pid_hours?> h <?=$pid_mins?> m <?=$pid_secs?> s</td>
 	</tr>
 	<tr>
 		<th>cid_id</th><td class="even"><?=$act->cid_id?></td>
 	</tr>
 	<tr>
-		<th>time_start</th><td class="odd"><?=date("d.m.Y H:i:s", floor($act->time_start / 1000000000)).round($act->time_start / 1000000000 - floor($act->time_start / 1000000000), 3)?></td>
+		<th>time_start</th><td class="odd"><?=date("d.m.Y H:i:s", floor($act->time_start / 1000000000)).".<b>".($act->time_start % 1000000000)."</b>"?></td>
 	</tr>
 	<tr>
-		<th>time_stop</th><td class="even"><?=date("d.m.Y H:i:s", floor($act->time_stop / 1000000000)).round($act->time_stop / 1000000000 - floor($act->time_stop / 1000000000), 3)?></td>
+		<th>time_stop</th><td class="even"><?=date("d.m.Y H:i:s", floor($act->time_stop / 1000000000)).".<b>".($act->time_stop % 1000000000)."</b>"?></td>
 	</tr>
 	<tr>
-		<th>duration</th><td class="odd"><?=round(($act->time_stop - $act->time_start) / 1000, 1)?>ms</td>
+		<th>duration</th><td class="odd"><?=round(($act->time_stop - $act->time_start) / 1000, 3)?> µs</td>
 	</tr>
 	<tr>
 		<th>attributes</th><td class="even"><?=$act->attributes?></td>
