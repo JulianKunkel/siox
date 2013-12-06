@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include <util/ExceptionHandling.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
@@ -24,8 +25,6 @@ using namespace knowledge;
 
 
 const int kMinTrialCount = 5;
-
-#define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 
 #if 0
 	class FunctionCallTracker {
@@ -89,48 +88,41 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		~GenericHistoryPlugin();
 
 	private:
+		bool tryEnsureInitialization();	//If we are not initialized yet, try to do it. Returns true if initialization could be ensured.
+		double recordPerformance( const shared_ptr<Activity>& activity );
+		vector<Attribute>* findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId );	//outParentId may be NULL
+		void rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity );
+
+		///////////////////////////
+
 		int initLevel = 0;
 		const int initializedLevel = -1;
 
-		Optimizer * optimizer;
-		SystemInformationGlobalIDManager * sysinfo;
-
-		string interface;
-		string implementation;
 		UniqueInterfaceID uiid;
-
 		// AttID of the attribute user-id
-		OntologyAttributeID uidAttID;
+		OntologyAttributeID uidAttID;	///@todo TODO: This variable is currently dead code. Remove it or use it.
 
-		// Map ucaid to type of activity (Open/Access/Close/Hint)
+		// maps to quickly lookup the type (open/access/close/hint), ontology attribute ID and datatype of an activity
 		unordered_map<UniqueComponentActivityID, TokenType> types;
-		// Map ucaid to ID of attribute used in computing activity performance
 		unordered_map<UniqueComponentActivityID, OntologyAttributeID> performanceAttIDs;
-
-		// Map oaid of attribute to be used as hint to type of its value
 		unordered_map<OntologyAttributeID,VariableDatatype::Type> hintTypes;
 
 		// Number of activities with the respective token type seen up to now
-		int nTypes[TOKEN_TYPE_COUNT];
+		int nTypes[TOKEN_TYPE_COUNT];	///@todo TODO: This variable is currently dead code. Remove it or use it.
 		TokenType lastActionType = UNKNOWN;
 
 		unordered_map<ActivityID, vector<Attribute> > openFileHints;
 //		unordered_map<string, vector<HintPerformance> > userHints;
 //		unordered_map<string, vector<HintPerformance> > appHints;
 //		unordered_map<pair<string, string>, vector<HintPerformance> > userAppHints;
-		vector<HintPerformance> hints;
-
-		bool tryEnsureInitialization();	//If we are not initialized yet, try to do it. Returns true if initialization could be ensured.
-		double recordPerformance( const shared_ptr<Activity>& activity );
-		vector<Attribute>* findCurrentHints( const shared_ptr<Activity>& activity, ActivityID* outParentId );	//outParentId may be NULL
-		void rememberHints( vector<Attribute>* outHintVector, const shared_ptr<Activity>& activity );
+		vector<HintPerformance> performanceHistory;
 };
 
 
 
 ComponentOptions * GenericHistoryPlugin::AvailableOptions() {
 	TRACK_FUNCTION_CALLS
-  return new GenericHistoryOptions();
+	return new GenericHistoryOptions();
 }
 
 void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
@@ -159,8 +151,8 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 			if( curHints ) {
 				double curPerformance = recordPerformance( activity );
 				bool foundHints = false;
-				for( size_t i = hints.size(); i--; ) {
-					HintPerformance& temp = hints[i];
+				for( size_t i = performanceHistory.size(); i--; ) {
+					HintPerformance& temp = performanceHistory[i];
 					if( temp.hints == *curHints ) {
 						temp.averagePerformance = ( temp.averagePerformance*( temp.measurementCount ) + curPerformance )/( temp.measurementCount + 1 );
 						temp.measurementCount++;
@@ -169,7 +161,7 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 					}
 				}
 				if( !foundHints ) {
-					hints.emplace_back((HintPerformance){
+					performanceHistory.emplace_back((HintPerformance){
 						.hints = *curHints,
 						.measurementCount = 1,
 						.averagePerformance = curPerformance
@@ -201,26 +193,20 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 
 
 void GenericHistoryPlugin::initPlugin() {
-	#define RETURN_ON_EXCEPTION(...) do { try { __VA_ARGS__ } catch(...) { cerr << "[GenericHistory]: " << "initialization failed at initLevel = " << initLevel << "\n"; return; } } while(0)
 	TRACK_FUNCTION_CALLS
 
 	// Retrieve options
 	GenericHistoryOptions & o = getOptions<GenericHistoryOptions>();
+	SystemInformationGlobalIDManager * sysinfo = facade->get_system_information();
+	assert(sysinfo);
 
 	switch(initLevel) {
 		case 0:
 			initLevel = 1;	//Once we are called from outside, we must have sensible options, so if initialization fails now, we can simply retry.
 
 		case 1:
-			// Retrieve pointers to required modules
-			optimizer = GET_INSTANCE(Optimizer, o.optimizer);
-			sysinfo = facade->get_system_information();
-			assert(optimizer && sysinfo);
-
-			// Retrieve interface, implementation and uiid
-			interface = o.interface;
-			implementation = o.implementation;
-			RETURN_ON_EXCEPTION( uiid = sysinfo->lookup_interfaceID(interface, implementation); );
+			// Retrieve uiid
+			RETURN_ON_EXCEPTION( uiid = sysinfo->lookup_interfaceID(o.interface, o.implementation); );
 			initLevel = 2;
 
 		case 2:
@@ -268,9 +254,7 @@ void GenericHistoryPlugin::initPlugin() {
 					string domain = itr->first;
 					string attribute = itr->second;
 
-//					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-//					cerr << "received attribute ID " << ontatt.aID << "\n";
 					hintTypes[ontatt.aID]=ontatt.storage_type;
 				}
 			);
@@ -282,13 +266,13 @@ void GenericHistoryPlugin::initPlugin() {
 			// and the optimizer does not tollerate us registering ourselves twice for the same attribute.
 			// This time we should not get any exceptions since we were already able to lookup the attributes once.
 			try{
+				Optimizer * optimizer = GET_INSTANCE(Optimizer, o.optimizer);
+				assert(optimizer);
 				for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ ) {
 					string domain = itr->first;
 					string attribute = itr->second;
 
-//					cerr << "[GenericHistory]: " <<"looking up attribute with domain \"" << domain << "\" and name \"" << attribute << "\", ";
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-//					cerr << "received attribute ID " << ontatt.aID << "\n";
 					optimizer->registerPlugin( ontatt, this );
 				}
 			} catch(...) {
@@ -307,6 +291,8 @@ void GenericHistoryPlugin::initPlugin() {
 
 GenericHistoryPlugin::~GenericHistoryPlugin() {
 	TRACK_FUNCTION_CALLS
+	GenericHistoryOptions & o = getOptions<GenericHistoryOptions>();
+	Optimizer * optimizer = GET_INSTANCE(Optimizer, o.optimizer);
 	// Unregister all attributes we claimed as optimizable with the optimizer
 	for( auto itr = hintTypes.begin(); itr != hintTypes.end(); itr++ ) {
 		OntologyAttribute ontatt;
@@ -324,19 +310,21 @@ GenericHistoryPlugin::~GenericHistoryPlugin() {
 
 OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
 	TRACK_FUNCTION_CALLS
-	if( initLevel != initializedLevel ) throw( NotFoundError() );
+	if( initLevel != initializedLevel ) throw( NotFoundError() );	// Need to be initialized
+	if( lastActionType == HINT ) throw( NotFoundError() );	// The user is king => don't override his choices
+	if( !performanceHistory.size() ) throw( NotFoundError() );	// No past experience => nothing to suggest
 
-	const HintPerformance* result = 0;
-	if( hints.size() && lastActionType != HINT ) {
-		const HintPerformance* leastMeasurements = &hints[0];
-		const HintPerformance* maxPerformance = &hints[0];
-		for( size_t i = hints.size(); i --> 1; ) {
-			if( hints[i].measurementCount < leastMeasurements->measurementCount ) leastMeasurements = &hints[i];
-			if( hints[i].averagePerformance > maxPerformance->averagePerformance ) maxPerformance = &hints[i];
-		}
-		result = maxPerformance;
-		if( leastMeasurements->measurementCount < kMinTrialCount ) result = leastMeasurements;
+	// Retrieve the hintset with the best performance and with the least measurements from the history.
+	const HintPerformance* leastMeasurements = &performanceHistory[0];
+	const HintPerformance* maxPerformance = &performanceHistory[0];
+	for( size_t i = performanceHistory.size(); i --> 1; ) {
+		if( performanceHistory[i].measurementCount < leastMeasurements->measurementCount ) leastMeasurements = &performanceHistory[i];
+		if( performanceHistory[i].averagePerformance > maxPerformance->averagePerformance ) maxPerformance = &performanceHistory[i];
 	}
+	// Choose which hintset to use.
+	const HintPerformance* result = maxPerformance;
+	if( leastMeasurements->measurementCount < kMinTrialCount ) result = leastMeasurements;
+	// Find the parameter for the requested hint.
 	if( result && result->hints.size() ) {
 		for( size_t i = result->hints.size(); i--; ) {
 			if( result->hints[i].id == attribute.aID) return result->hints[i].value;
@@ -350,17 +338,20 @@ ComponentReport GenericHistoryPlugin::prepareReport() {
 	TRACK_FUNCTION_CALLS
 	if( !tryEnsureInitialization() ) return ComponentReport();
 	ostringstream reportText;
-	for( size_t i = hints.size(); i--; ) {
-		HintPerformance& curStatistic = hints[i];
-		reportText << "avrg performance = " << curStatistic.averagePerformance << " (" << curStatistic.measurementCount << " measurements), hints = { ";
+	reportText << "{\n";
+	for( size_t i = performanceHistory.size(); i--; ) {
+		HintPerformance& curStatistic = performanceHistory[i];
+		reportText << "\tavrg performance = " << curStatistic.averagePerformance << " (" << curStatistic.measurementCount << " measurements), hints = { ";
 		for( size_t j = curStatistic.hints.size(); j--; ) {
 			Attribute& curHint = curStatistic.hints[j];
 			reportText << "(" << curHint.id << ", " << curHint.value << ((j) ? "), " : ")");
 		}
 		reportText << "}\n";
 	}
+	reportText << "}\n";
 	ComponentReport result;
-	result.data["Hint Statistics"] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_CRITICAL, VariableDatatype( reportText.str() ) );
+
+	result.addEntry("Hint Statistics", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_CRITICAL, VariableDatatype( reportText.str() ) ));
 	return result;
 }
 
@@ -424,15 +415,13 @@ void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, cons
 	size_t hintCount = 0;
 	for( size_t i = attributes.size(); i--; ) {
 		OntologyAttribute curAttribute = facade->lookup_attribute_by_ID( attributes[i].id );
-//		cerr <<"[GenericHistory]: " << "Attribute " << attributes[i].id << " " << curAttribute.domain << "/" << curAttribute.name << " = " << attributes[i].value << "\n";
 		IGNORE_EXCEPTIONS(
 			hintTypes.at( attributes[i].id );
 			outHintVector->emplace_back( attributes[i] );
 			hintCount++;
 		);
 	}
-//	cerr <<"[GenericHistory]: " << "remembered " << hintCount << " hints from " << attributes.size() << " attributes\n";
-	// TODO this is costly if Attributes contain strings since every assignment requires a free() and strdup()
+	///@todo TODO: this is costly if Attributes contain strings since every assignment requires a free() and strdup()
 	sort( outHintVector->begin(), outHintVector->end(), [](const Attribute& a, const Attribute& b){ return a.id < b.id; } );
 }
 

@@ -24,6 +24,8 @@ public:
  This thread function connects to the server.
  Once created it spawns a sender thread.
  Then it serves as reading thread.
+
+ @todo TODO: This function has 123 lines...
  */
 void GIOClient::connectionThreadFunc(thread * lastThread){
 	monitoring_namespace_protect_thread();
@@ -86,7 +88,7 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 	GInputStream * istream = g_io_stream_get_input_stream (G_IO_STREAM (conn));
 
 	sendProcessor->connect(g_io_stream_get_output_stream (G_IO_STREAM (conn)), one_thread_error_cancelable);
-	CommunicationError comm_error;
+	CommunicationError comm_error = CommunicationError::UNKNOWN;
 
 	// start receiving responses
 	while(! g_cancellable_is_cancelled (one_thread_error_cancelable)){

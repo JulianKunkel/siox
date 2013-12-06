@@ -44,7 +44,6 @@ namespace core {
 				return *options;
 			}
 
-			//TODO The return type of this template breaks with the convention that references must not be NULL. Change this to return a pointer.
 			template<class TYPE>
 			inline TYPE & getOptions() {
 				if( options == nullptr ) {

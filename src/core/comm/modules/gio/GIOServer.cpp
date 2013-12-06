@@ -140,9 +140,9 @@ void GIOServiceServer::acceptThreadFunc(uint64_t threadID, GCancellable * one_th
 
 	 // this thread now will receive messages.
     while( ! g_cancellable_is_cancelled(one_thread_error_cancelable) ) {
-		uint64_t msgLength;
-		uint32_t clientSidedID;
-		CommunicationError error;
+		uint64_t msgLength = 0;
+		uint32_t clientSidedID = 0;
+		CommunicationError error = CommunicationError::UNKNOWN;
 
 		char * payload = readSocketMessage(istream, msgLength, clientSidedID, error, one_thread_error_cancelable);
 

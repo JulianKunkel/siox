@@ -109,33 +109,33 @@ namespace monitoring {
 			typedef uint32_t ValueId;
 			typedef uint32_t AttributeId;
 
-			class Type {
+			typedef struct Type {
 				string name;
 				TypeId id;	//SQL key
-			};
-			class Object {
+			} Type;
+			typedef struct Object {
 				ObjectId id;	//SQL key
 				TypeId typeId;
-			};
-			class Relation {
+			} Object;
+			typedef struct Relation {
 				//The combination of childName and parentId is unique and used as the SQL key.
 				string childName;	//SQL key
 				ObjectId parentId;	//SQL key
 				ObjectId childId;
 				TypeId typeId;
-			};
-			class Attribute {
+			} Relation;
+			typedef struct Attribute {
 				string name;
 				AttributeId id;	//SQL key
 				TypeId domainId;	//XXX Maybe, we should change this to a string.
 				VariableDatatype::Type dataType;
-			};
-			class Value {
+			} Attribute;
+			typedef struct Value {
 				//The combination of object and attribute is unique and used as the SQL key.
 				TopologyValue value;
 				ObjectId object;	//SQL key
 				AttributeId attribute;	//SQL key
-			};
+			} Value;
 
 			virtual const Type& registerType( const string& name ) throw() = 0;
 			virtual const Type& lookupTypeByName( const string& name ) throw( NotFoundError ) = 0;
@@ -149,8 +149,8 @@ namespace monitoring {
 			virtual const Relation& lookupRelation( ObjectId parent, const string& childName ) throw( NotFoundError ) = 0;
 
 			// RelationType may be 0 which indicates any parent/child.
-			virtual std::vector<const Relation&> enumerateChildren( ObjectId parent, TypeId relationType ) throw() = 0;
-			virtual std::vector<const Relation&> enumerateParents( ObjectId child, TypeId relationType ) throw() = 0;
+			virtual std::vector<const Relation*> enumerateChildren( ObjectId parent, TypeId relationType ) throw() = 0;
+			virtual std::vector<const Relation*> enumerateParents( ObjectId child, TypeId relationType ) throw() = 0;
 
 
 			virtual const Attribute& registerAttribute( TypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
@@ -158,10 +158,10 @@ namespace monitoring {
 			virtual const Attribute& lookupAttributeById( AttributeId attributeId ) throw( NotFoundError ) = 0;
 			virtual void setAttribute( ObjectId object, AttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) = 0;
 			virtual const TopologyValue& getAttribute( ObjectId object, AttributeId attribute ) throw( NotFoundError ) = 0;
-			virtual std::vector<const Value&> enumerateAttributes( ObjectId object ) throw() = 0;
+			virtual std::vector<const Value*> enumerateAttributes( ObjectId object ) throw() = 0;
 	};
 }
 
-#define TOPOLOGY_INTERFACE "monitoring_topology"
+#define MONITORING_TOPOLOGY_INTERFACE "monitoring_topology"
 
 #endif

@@ -22,7 +22,7 @@ int main( int argc, char const * argv[] )
 	ComponentRegistrar registrar = ComponentRegistrar();
 	// make test runable using waf which is a different directory.
 	if( chdir( "../../../../../../monitoring" ) == 0 ) {
-		chdir( "../" );
+		if( chdir( "../" ) ) assert(0 && "error while changing directory"), abort();
 	}
 
 	AutoConfigurator * a = new AutoConfigurator( & registrar, "siox-core-autoconfigurator-FileConfigurationProvider", "", "monitoring/activity_multiplexer/plugins/anomaly-skeleton/test/siox.conf:siox.conf" );

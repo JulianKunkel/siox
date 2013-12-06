@@ -2,6 +2,7 @@
 #define CORE_OVERHEAD_STATISTICS_HPP
 
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 #include <core/reporting/ComponentReportInterface.hpp>
@@ -24,7 +25,7 @@ struct OverheadEntry{
 
 class OverheadStatistics{
 public:
-	void appendReport(std::unordered_map<std::string, core::ReportEntry> & map);
+	void appendReport(std::unordered_map<core::GroupEntry* , core::ReportEntry> & map);
 
 	Timestamp startMeasurement();
 	void stopMeasurement(const std::string & what, const Timestamp & start);
@@ -32,7 +33,7 @@ public:
 
 	OverheadEntry & getOverheadFor(const std::string & what);	
 private:	
-	std::unordered_map<std::string, OverheadEntry> entries;
+	std::unordered_map< std::string, OverheadEntry> entries;
 	OverheadEntry all;
 };
 

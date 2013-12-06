@@ -36,6 +36,7 @@ int main( int argc, char const * argv[] )
 	assert( a3 == a1 );
 	try {
 		const OntologyAttribute & a4 = o->register_attribute( domain, s_a1, VariableDatatype::Type::UINT64 );
+		cerr << "a4.aID = " << a4.aID << "\n";
 		assert( false );
 	} catch( IllegalStateError & e ) {
 	}

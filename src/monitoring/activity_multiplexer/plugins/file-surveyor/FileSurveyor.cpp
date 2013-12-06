@@ -2,7 +2,7 @@
  * An ActivityMultiplexerPlugin to watch the stream of incoming activites,
  * group information on the ones pertaining to the same files and report them
  * upon component shutdown.
- * 
+ *
  * @author Nathanael Hübbe, Michaela Zimmer
  * @date 2013-11-15
  */
@@ -14,6 +14,7 @@
 #include <unordered_set>
 //#include <algorithm>
 
+#include <util/ExceptionHandling.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
@@ -33,7 +34,6 @@ using namespace core;
 using namespace knowledge;
 
 
-#define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 #define OUTPUT(...) do { cout << "[File Surveyor] " << __VA_ARGS__ << "\n"; } while(0)
 
 
@@ -120,8 +120,8 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		void closeSurvey( shared_ptr<Activity> activity );
 
 		const ActivityID * findParentAID( const shared_ptr<Activity>& activity );
- 		const Attribute * findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid );
- 		const string findFileNameExtension( const string & fileName );
+		const Attribute * findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid );
+		const string findFileNameExtension( const string & fileName );
 };
 
 
@@ -132,7 +132,6 @@ ComponentOptions * FileSurveyorPlugin::AvailableOptions() {
 
 
 void FileSurveyorPlugin::initPlugin() {
-	#define RETURN_ON_EXCEPTION(...) do { try { __VA_ARGS__ } catch(...) { cerr << "[File Surveyor] initialization failed at initLevel = " << initLevel << "\n"; return; } } while(0)
 	fprintf(stderr, "FileSurveyorPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
 
 	// Retrieve options
@@ -400,7 +399,7 @@ ComponentReport FileSurveyorPlugin::prepareReport()
 		reportText << "\t\t\tRandom:    \t" << itr->nAccessesRandom << endl;
 		reportText << "\t\t\tSequential:\t" << itr->nAccessesSequential << endl;
 	}
-	result.data[ "File Survey Report" ] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) );
+	result.addEntry("File Survey Report", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) ));
 
 	return result;
 }
@@ -435,18 +434,18 @@ const ActivityID * FileSurveyorPlugin::findParentAID( const shared_ptr<Activity>
 
 /**
  * Find the value of the given attribute for the given activity.
- * 
+ *
  * Search the activity's attributes for one matching the given AID.
  * If found, return its value; otherwise, return @c NULL.
- * 
+ *
  * @param activity The activity to be investigated
  * @param oaid The OAID of the attribute to look for
  * @return A constant pointer to the attribute in the activity's data, or @c NULL if not found.
  */
  const Attribute * FileSurveyorPlugin::findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid )
  {
- 	const vector<Attribute> & attributes = activity->attributeArray();
- 	
+	const vector<Attribute> & attributes = activity->attributeArray();
+	
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
 		if( itr->id == oaid )
 			return &( *itr );

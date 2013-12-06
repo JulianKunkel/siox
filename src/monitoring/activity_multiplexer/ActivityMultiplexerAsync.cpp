@@ -282,8 +282,8 @@ namespace monitoring {
 		ComponentReport prepareReport(){
 			ComponentReport rep;
 
-			rep.data["ASYNC_DROPPED_ACTIVITIES"] = {ReportEntry::Type::SIOX_INTERNAL_CRITICAL, lost_events};
-			rep.data["PROCESSED_ACTIVITIES"] = {ReportEntry::Type::SIOX_INTERNAL_INFO, processed_activities};
+			rep.addEntry("ASYNC_DROPPED_ACTIVITIES", {ReportEntry::Type::SIOX_INTERNAL_CRITICAL, lost_events});
+			rep.addEntry("PROCESSED_ACTIVITIES", {ReportEntry::Type::SIOX_INTERNAL_INFO, processed_activities});
 
 			return rep;
 		}
@@ -361,7 +361,7 @@ namespace monitoring {
 			}
 
 			void init() {
-				ActivityMultiplexerAsyncOptions & options = getOptions<ActivityMultiplexerAsyncOptions>();
+//				ActivityMultiplexerAsyncOptions & options = getOptions<ActivityMultiplexerAsyncOptions>();
 
 				queue = new ActivityMultiplexerQueue();
 				notifier = new ActivityMultiplexerNotifier(dynamic_cast<Dispatcher *>(this), queue);
