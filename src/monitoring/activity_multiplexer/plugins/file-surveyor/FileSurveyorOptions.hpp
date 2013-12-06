@@ -24,7 +24,11 @@ struct FileSurveyorOptions : public ActivityMultiplexerPluginOptions{
 	vector<string> openTokens;
 	vector<string> accessTokens;
 	vector<string> closeTokens;
-	
+
+	// The highest number of bytes that will still be classified as a "short jump";
+	// anything above will be deemed a "long jump".
+	uint64_t jumpSizeLimit;
+
 	//vector<string> hintTokens;
 	// where are the hints stored: activity name and vector of attribute names.
 	//vector<pair<string, vector<pair<string,string>>>> hintAttributes;

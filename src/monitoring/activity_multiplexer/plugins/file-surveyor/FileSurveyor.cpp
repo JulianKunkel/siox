@@ -2,9 +2,9 @@
  * An ActivityMultiplexerPlugin to watch the stream of incoming activites,
  * group information on the ones pertaining to the same files and report them
  * upon component shutdown.
- * 
- * @author Nathanael Hübbe, Michaela Zimmer
- * @date 2013-11-15
+ *
+ * @author Michaela Zimmer, Nathanael Hübbe
+ * @date 2013-12-06
  */
 
 #include <iostream>
@@ -19,8 +19,6 @@
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 #include <monitoring/datatypes/Activity.hpp>
-//#include <knowledge/optimizer/OptimizerPluginInterface.hpp>
-//#include <knowledge/optimizer/Optimizer.hpp>
 
 #include <workarounds.hpp>
 
@@ -35,6 +33,19 @@ using namespace knowledge;
 
 #define IGNORE_EXCEPTIONS(...) do { try { __VA_ARGS__ } catch(...) { } } while(0)
 #define OUTPUT(...) do { cout << "[File Surveyor] " << __VA_ARGS__ << "\n"; } while(0)
+
+
+
+/*
+ * Find difference between two uint64_t
+ */
+static inline const uint64_t absu64( uint64_t a, uint64_t b )
+{
+	if( a > b )
+		return ( a - b );
+	else
+		return ( b - a );
+}
 
 
 enum TokenType {
@@ -53,11 +64,17 @@ class FileSurvey {
 		string userID = "[NO VALID UID]";
 		Timestamp timeOpened = 0;
 		Timestamp timeClosed = 0;
-		//uint64_t fileHandle = 0;
 		uint64_t filePosition = 0;
-		uint64_t nAccesses = 0;
-		uint64_t nAccessesSequential = 0;
-		uint64_t nAccessesRandom = 0;
+		uint64_t nAccessesRead = 0;
+		uint64_t nAccessesReadSequential = 0;
+		uint64_t nAccessesReadRandomShort = 0;
+		uint64_t nAccessesReadRandomLong = 0;
+		uint64_t nAccessesWrite = 0;
+		uint64_t nAccessesWriteSequential = 0;
+		uint64_t nAccessesWriteRandomShort = 0;
+		uint64_t nAccessesWriteRandomLong = 0;
+		uint64_t nBytesRead = 0;
+		uint64_t nBytesWrite = 0;
 };
 
 
@@ -72,7 +89,6 @@ class FileSurvey {
  The time needed for the ACCESS semantics may depend on the abstract attributes: "size", offset (which defines some sort of regularity), and the set of supported HINTS.
  A hint may be set either on OPEN, during ACCESS.
  File extension, user and program are considered to behave similar as a hint.
- 
  */
 class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentReportInterface {
 	public:
@@ -113,6 +129,10 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		// The set of file extensions we are to watch; we will ignore all others
 		unordered_set<string> fileExtensionsToWatch;
 
+		// The highest number of bytes that will still be classified as a "short jump";
+		// anything above will be deemed a "long jump".
+		uint64_t jumpSizeLimit;
+
 		bool tryEnsureInitialization();	//If we are not initialized yet, try to do it. Returns true if initialization could be ensured.
 
 		void openSurvey( shared_ptr<Activity> activity );
@@ -151,6 +171,7 @@ void FileSurveyorPlugin::initPlugin() {
 			// Retrieve interface, implementation and uiid
 			interface = o.interface;
 			implementation = o.implementation;
+			jumpSizeLimit = o.jumpSizeLimit;
 			RETURN_ON_EXCEPTION( uiid = sysinfo->lookup_interfaceID(interface, implementation); );
 			initLevel = 2;
 
@@ -216,29 +237,29 @@ void FileSurveyorPlugin::Notify( shared_ptr<Activity> activity ) {
 	TokenType type = UNKNOWN;
 	IGNORE_EXCEPTIONS( type = types.at( activity->ucaid() ); );
 
-	//cerr << "[File Surveyor] saw activity of type " << activity->ucaid() << ":\t";
+	cerr << "[File Surveyor] saw activity of type " << activity->ucaid() << ":\t";
 
 	switch (type) {
 
 		case OPEN:
-			//cerr << "open[" << activity->aid() << "]\n";
+			cerr << "open[" << activity->aid() << "]\n";
 			openSurvey( activity );
 			break;
 
 		case ACCESS: {
-			//cerr << "access[" << activity->aid() << "]\n";
+			cerr << "access[" << activity->aid() << "]\n";
 			updateSurvey( activity );
 			break;
 		}
 
 		case CLOSE: {
-			//cerr << "close[" << activity->aid() << "]\n";
+			cerr << "close[" << activity->aid() << "]\n";
 			closeSurvey( activity );
 			break;
 		}
 
 		default:
-			//cerr << "(unknown)\n";
+			cerr << "(unknown)\n";
 			break;
 	}
 }
@@ -250,7 +271,7 @@ void FileSurveyorPlugin::Notify( shared_ptr<Activity> activity ) {
 void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 {
 	//OUTPUT( "openSurvey() received activity " << activity->aid() );
-	
+
 	// Find file name and check whether extension matches pattern given in configuration
 	const Attribute * attFileName = findAttributeByID( activity, fnAttID );
 	if( attFileName == NULL )
@@ -260,7 +281,7 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 		return;
 	}
 	const string fileExtension = findFileNameExtension(attFileName->value.str());
-	//OUTPUT( "File extension found: " << fileExtension );
+	OUTPUT( "File extension found: " << fileExtension );
 	if( fileExtensionsToWatch.count( fileExtension ) > 0 )
 	{
 		// Create and fill new survey for the file just opened
@@ -279,7 +300,7 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 		openFileSurveys[ activity->aid() ] = survey;
 
 	}
-	//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+	OUTPUT( "openSurveys size = " << openFileSurveys.size() );
 }
 
 
@@ -291,7 +312,7 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 	//OUTPUT( "updateSurvey() received activity " << activity->aid() );
 
 	const ActivityID *	parentAID = findParentAID( activity );
-	
+
 	if( parentAID != NULL )
 	{
 		FileSurvey * survey;
@@ -306,43 +327,87 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 			return;
 		}
 
-		// Process file position to distinguish between random and sequential accesses
+		// Find file position to distinguish between random (short or long jump) and sequential accesses
 		const Attribute * attFilePointer = findAttributeByID( activity, fpAttID );
-		if( attFilePointer != NULL )
-		{
-			uint64_t fp = attFilePointer->value.uint64();
-			if( fp != survey->filePosition )
-			{
-				survey->filePosition = fp;
-				survey->nAccessesRandom++;
-			}
-			else
-				survey->nAccessesSequential++;
-			//OUTPUT( "file pointer = " << fp );
-		}
-		else
-		{
-			survey->nAccessesSequential++;
-		}
 
 		// Process BytesToRead or BytesToWrite, assuming exactly one of both is set
+		// First try: BytesToRead
 		const Attribute * attBytesProcessed = findAttributeByID( activity, btrAttID );
-		if( attBytesProcessed == NULL )
+		if( attBytesProcessed != NULL )
 		{
-			attBytesProcessed = findAttributeByID( activity, btwAttID );
-			if (attBytesProcessed != NULL )
+			uint64_t nBytesProcessed = attBytesProcessed->value.uint64();
+
+			// Update byte count
+			survey->nBytesRead += nBytesProcessed;
+			// Move memorized file pointer accordingly
+			survey->filePosition += attBytesProcessed->value.uint64();
+			// Update access counts according to file pointer position
+			if( attFilePointer != NULL )
 			{
-				// One of both was valid; move memorized file pointer accordingly
-				survey->filePosition += attBytesProcessed->value.uint64();
-				//OUTPUT( "new file position = " << survey-> filePosition << endl );
+				uint64_t fp = attFilePointer->value.uint64();
+				uint64_t fpJump = absu64(fp, survey->filePosition);
+
+				if( fpJump > 0 )
+				{
+					survey->filePosition = fp;
+					if ( fpJump > jumpSizeLimit )
+						survey->nAccessesReadRandomLong++;
+					else
+						survey->nAccessesReadRandomShort++;
+				}
+				else
+					survey->nAccessesReadSequential++;
+				//OUTPUT( "file pointer = " << fp );
 			}
 			else
-				cerr << "[FileSurvey] No size of payload data attribute found in activity " << activity->aid() << "!" << endl;
+			{
+				survey->nAccessesReadSequential++;
+			}
+
+			return;
 		}
 
-		survey->nAccesses++;
-		//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
-		//OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
+		// Second try: BytesToWrite
+		attBytesProcessed = findAttributeByID( activity, btwAttID );
+		if (attBytesProcessed != NULL )
+		{
+			uint64_t nBytesProcessed = attBytesProcessed->value.uint64();
+
+			// Update byte count
+			survey->nBytesWrite += nBytesProcessed;
+			// Move memorized file pointer accordingly
+			survey->filePosition += nBytesProcessed;
+			// Update access counts according to file pointer position
+			if( attFilePointer != NULL )
+			{
+				uint64_t fp = attFilePointer->value.uint64();
+				uint64_t fpJump = absu64(fp, survey->filePosition);
+
+				if( fpJump > 0 )
+				{
+					survey->filePosition = fp;
+					if ( fpJump > jumpSizeLimit )
+						survey->nAccessesWriteRandomLong++;
+					else
+						survey->nAccessesWriteRandomShort++;
+				}
+				else
+					survey->nAccessesWriteSequential++;
+				//OUTPUT( "file pointer = " << fp );
+			}
+			else
+			{
+				survey->nAccessesWriteSequential++;
+			}
+
+			return;
+		}
+
+		// Report that neither was found
+		cerr << "[FileSurvey] No size of payload data attribute found in activity " << activity->aid() << "!" << endl;
+
+		OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
 	}
 }
 
@@ -371,13 +436,13 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 			//cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
 			return;
 		}
-	
+
 		survey.timeClosed = activity->time_stop();
 
 		openFileSurveys.erase( *parentAID );
 		closedFileSurveys.push_back( survey );
-		//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
-		//OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
+		OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+		OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
 	}
 }
 
@@ -391,14 +456,36 @@ ComponentReport FileSurveyorPlugin::prepareReport()
 
 	for( auto itr = closedFileSurveys.begin(); itr != closedFileSurveys.end(); itr++ )
 	{
+		uint64_t nAccessesReadRandom = itr->nAccessesReadRandomShort + itr->nAccessesReadRandomLong;
+		uint64_t nAccessesRead = nAccessesReadRandom + itr->nAccessesReadSequential;
+		uint64_t nAccessesWriteRandom = itr->nAccessesWriteRandomShort + itr->nAccessesWriteRandomLong;
+		uint64_t nAccessesWrite = nAccessesWriteRandom + itr->nAccessesWriteSequential;
+		uint64_t nAccesses = nAccessesRead + nAccessesWrite;
+		uint64_t nBytes = itr->nBytesRead + itr->nBytesWrite;
+		double nBytesReadAverage = (nAccessesRead > 0) ? (itr->nBytesRead / nAccessesRead) : 0.0;
+		double nBytesWriteAverage = (nAccessesWrite > 0) ? (itr->nBytesWrite / nAccessesWrite) : 0.0;
+
 		reportText << endl;
 		reportText << "\t\"" << itr->fileName << "\":" << endl;
 		reportText << "\t\tUser ID:    \t" << itr->userID << endl;
 		reportText << "\t\tTime Opened:\t" << itr->timeOpened << endl;
 		reportText << "\t\tTime Closed:\t" << itr->timeClosed << endl;
-		reportText << "\t\tnAccesses:\t" << itr->nAccesses << endl;
-		reportText << "\t\t\tRandom:    \t" << itr->nAccessesRandom << endl;
-		reportText << "\t\t\tSequential:\t" << itr->nAccessesSequential << endl;
+		reportText << "\t\tnAccesses:\t" << nAccesses << endl;
+		reportText << "\t\t\tReading:\t" << nAccessesRead << endl;
+		reportText << "\t\t\t\tSequential:\t" << itr->nAccessesReadSequential << endl;
+		reportText << "\t\t\t\tRandom:    \t" << nAccessesReadRandom << endl;
+		reportText << "\t\t\t\t\tshort jump:\t" << itr->nAccessesReadRandomShort << endl;
+		reportText << "\t\t\t\t\tlong jump: \t" << itr->nAccessesReadRandomLong << endl;
+		reportText << "\t\t\tWriting:\t" << nAccessesWrite << endl;
+		reportText << "\t\t\t\tSequential:\t" << itr->nAccessesWriteSequential << endl;
+		reportText << "\t\t\t\tRandom:    \t" << nAccessesWriteRandom << endl;
+		reportText << "\t\t\t\t\tshort jump:\t" << itr->nAccessesWriteRandomShort << endl;
+		reportText << "\t\t\t\t\tlong jump: \t" << itr->nAccessesWriteRandomLong << endl;
+		reportText << "\t\tnBytes:\t" << nBytes << endl;
+		reportText << "\t\t\tRead:   \t" << itr->nBytesRead << endl;
+		reportText << "\t\t\t\tper Access:\t" << nBytesReadAverage << endl;
+		reportText << "\t\t\tWritten:\t" << itr->nBytesWrite << endl;
+		reportText << "\t\t\t\tper Access:\t" << nBytesWriteAverage << endl;
 	}
 	result.data[ "File Survey Report" ] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) );
 
@@ -435,10 +522,10 @@ const ActivityID * FileSurveyorPlugin::findParentAID( const shared_ptr<Activity>
 
 /**
  * Find the value of the given attribute for the given activity.
- * 
+ *
  * Search the activity's attributes for one matching the given AID.
  * If found, return its value; otherwise, return @c NULL.
- * 
+ *
  * @param activity The activity to be investigated
  * @param oaid The OAID of the attribute to look for
  * @return A constant pointer to the attribute in the activity's data, or @c NULL if not found.
@@ -446,7 +533,7 @@ const ActivityID * FileSurveyorPlugin::findParentAID( const shared_ptr<Activity>
  const Attribute * FileSurveyorPlugin::findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid )
  {
  	const vector<Attribute> & attributes = activity->attributeArray();
- 	
+
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
 		if( itr->id == oaid )
 			return &( *itr );
