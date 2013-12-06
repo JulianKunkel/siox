@@ -380,7 +380,6 @@ class VariableDatatype {
 		}
 };
 
-
 inline ostream & operator<<( ostream & os, const VariableDatatype & v )
 {
 	switch( v.type() ) {
