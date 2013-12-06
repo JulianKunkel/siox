@@ -10,6 +10,7 @@
 
 /**
  * A time stamp, as represented in SIOX.
+ * This is a count of nano-seconds.
  */
 typedef uint64_t siox_timestamp;
 
