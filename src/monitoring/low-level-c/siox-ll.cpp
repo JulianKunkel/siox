@@ -424,7 +424,6 @@ extern "C" {
 			assert( result->amux != nullptr );
 		}
 
-
 		assert( result != nullptr );
 
 		return result;

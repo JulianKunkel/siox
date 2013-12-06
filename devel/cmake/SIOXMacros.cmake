@@ -3,7 +3,7 @@ macro(SIOX_RUN_SERIALIZER IN OUT)
 		OUTPUT ${OUT}
 		COMMENT "Generating boost serialization ${IN}"
 		COMMAND ${CMAKE_SOURCE_DIR}/devel/scripts/serialization-code-generator.py
-		ARGS -I ${CMAKE_SOURCE_DIR}/src/include -i ${CMAKE_CURRENT_SOURCE_DIR}/${IN} -o ${OUT} 
+		ARGS -I ${CMAKE_SOURCE_DIR}/src/include ${CMAKE_SOURCE_DIR}/src -i ${CMAKE_CURRENT_SOURCE_DIR}/${IN} -o ${OUT} 
 	)
 endmacro(SIOX_RUN_SERIALIZER)
 

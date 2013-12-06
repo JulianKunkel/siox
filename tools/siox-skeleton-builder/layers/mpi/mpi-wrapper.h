@@ -74,6 +74,8 @@ int MPI_Init( int * argc, char ** *argv );
 int MPI_Init_thread( int *argc, char ** *argv, int required, int *provided );
 
 //@activity
+//@splice_before return MPI_SUCCESS; // we do not execute MPI_Finalize()!
+//@splice_final MPI_Finalize();
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_Finalize( void );
 
