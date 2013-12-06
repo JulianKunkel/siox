@@ -1,6 +1,8 @@
 #ifndef __SIOX_GENERICTYPES_HPP
 #define __SIOX_GENERICTYPES_HPP
 
-typedef uint64_t Timestamp;
+#include <C/siox-types.h>
+
+typedef siox_timestamp Timestamp;
 
 #endif

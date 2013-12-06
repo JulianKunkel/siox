@@ -5,10 +5,9 @@
 #include <unordered_set>
 #include <string>
 
+#include <monitoring/datatypes/GenericTypes.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 #include <core/component/Component.hpp>
-
-typedef uint64_t Timestamp;
 
 /*
  This generic component can be used to capture and report the overhead of SIOX.
@@ -31,8 +30,8 @@ public:
 	void stopMeasurement(const std::string & what, const Timestamp & start);
 	void stopMeasurement(OverheadEntry & entry, const Timestamp & start);
 
-	OverheadEntry & getOverheadFor(const std::string & what);	
-private:	
+	OverheadEntry & getOverheadFor(const std::string & what);
+private:
 	std::unordered_map< std::string, OverheadEntry> entries;
 	OverheadEntry all;
 };
