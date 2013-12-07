@@ -562,5 +562,6 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 //@test ''%p,%p,%p,%p,%p'' component,activity,caller_node,caller_unique_interface,caller_associate
 siox_activity * siox_activity_start_from_remote_call( siox_component * component, siox_component_activity * activity, siox_node * caller_node, siox_unique_interface * caller_unique_interface, siox_associate * caller_associate );
 
+void siox_register_termination_signal( void (*func)(void) );
 
 #endif
