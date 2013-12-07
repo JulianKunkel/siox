@@ -168,6 +168,47 @@ class VariableDatatype {
 			return data.d;
 		}
 
+		// convert to double
+		inline double toDouble() const{
+
+			switch( type_ ) {
+				case Type::INT32:
+					return (double) this->data.i32;
+				case Type::UINT32:
+					return (double) this->data.ui32;
+				case Type::INT64:
+					return (double) this->data.i64;
+				case Type::UINT64:
+					return (double) this->data.ui64;
+				case Type::FLOAT:
+					return (double) this->data.f;
+				case Type::DOUBLE:
+					return (double) this->data.d;
+				case Type::STRING:
+					assert(0 && "tried to convert VariableDatatype of string type"), abort();
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to convert VariableDatatype of invalid type"), abort();
+			}
+		}
+
+		inline bool isNumeric() const{
+
+			switch( type_ ) {
+				case Type::INT32:
+				case Type::UINT32:
+				case Type::INT64:
+				case Type::UINT64:
+				case Type::FLOAT:
+				case Type::DOUBLE:
+					return true;
+				case Type::STRING:					
+				case Type::INVALID:
+				default:
+					return false;
+			}
+		}		
+
 		//inline long double ldbl() const {
 		//  assert(type_ == LONG_DOUBLE);
 		//  return data.dd;
