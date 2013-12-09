@@ -68,7 +68,7 @@ def configure(conf):
 	conf.env.append_value("RPATH", conf.env.PREFIX + "/lib")
 
 	workDir = conf.path.abspath()
-	conf.env.append_value('INCLUDES', [workDir + '/../../include' ])
+	conf.env.append_value('INCLUDES', [workDir + '/../../src/include' ])
         if conf.options.debug:
 	        conf.env.CXXFLAGS = ['-std=c++11', '-O3', '-Wall']
 		conf.env.append_value("CFLAGS", ['-std=c99', '-O3', '-Wall'])
@@ -119,7 +119,7 @@ def build(bld):
 	#bld.recurse(['core'], mandatory=True)
 	# build test interfaces
 	test_interface_re = re.compile("BUILD_TEST_INTERFACE\s+([^ \n]+)",  re.M)
-	for root, dirnames, filenames in os.walk('../../include'):
+	for root, dirnames, filenames in os.walk('../../src/include'):
 		for filename in fnmatch.filter(filenames, '*.hpp'):
 		  fqfilename = os.path.join(root, filename)
 		  lastlines = tail(fqfilename)
