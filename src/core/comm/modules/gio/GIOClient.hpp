@@ -67,9 +67,15 @@ public:
 		return this->address;
 	}
 
+	bool isConnected(){
+		return connection_established;
+	}
+
 	void ireconnect();
 
 	void isend( BareMessage * msg );
+
+	void dropPendingMessages();
 
 	uint32_t headerSize();
 

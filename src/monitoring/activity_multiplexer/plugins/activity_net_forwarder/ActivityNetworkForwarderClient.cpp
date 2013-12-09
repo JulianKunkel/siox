@@ -16,6 +16,7 @@ using namespace monitoring;
  */
 class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, MessageCallback{
 	public:
+
 	/**
 	 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 	 */
@@ -26,7 +27,7 @@ class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, MessageC
 	/**
 	 * Dummy implementation for ActivityNetworkForwarder Options.
 	 */
-	ComponentOptions * AvailableOptions() {
+	ComponentOptions * AvailableOptions(){
 		return new ActivityNetworkForwarderClientOptions();
 	}
 

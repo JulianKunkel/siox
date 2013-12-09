@@ -13,7 +13,7 @@ class TimeoutException : public exception{
 
 class ProtectRaceConditions{
 public:
-	void waitUntilSthHappened(){
+	void waitUntilSthHappened() throw(TimeoutException) {
         unique_lock<mutex> lk(m);
         if (sth_happened){
         	sth_happened = false;

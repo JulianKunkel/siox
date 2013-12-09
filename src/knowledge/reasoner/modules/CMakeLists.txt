@@ -8,15 +8,16 @@ include_directories(
 add_library(
 	siox-knowledge-ReasonerStandardImplementation
 	ReasonerStandardImplementation.cpp
-	BoostXMLSerializable.cpp
+	ReasonerStandardImplementationOptions.cpp
 )
 
 target_link_libraries(
 	siox-knowledge-ReasonerStandardImplementation
 	siox-core-AutoConfigurator
+	siox-core-comm
 )
 
-siox_run_serializer(ReasonerStandardImplementationOptions.hpp BoostXMLSerializable.cpp)
+siox_run_serializer(ReasonerStandardImplementationOptions.hpp ReasonerStandardImplementationOptions.cpp)
 
 add_subdirectory(test)
 

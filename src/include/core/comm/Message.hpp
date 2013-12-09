@@ -15,6 +15,7 @@ enum class CommunicationError : uint8_t{
 	MESSAGE_TYPE_NOT_AVAILABLE = 3,
 	MESSAGE_INCOMPATIBLE = 4,
 	MESSAGE_DAMAGED = 5,
+	INVALID_ADDRESS = 6,
 	UNKNOWN = 255
 };
 
