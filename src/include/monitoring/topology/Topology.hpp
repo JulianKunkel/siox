@@ -108,23 +108,23 @@ namespace monitoring {
 			virtual TopologyType lookupTypeByName( const string& name ) throw( NotFoundError ) = 0;
 			virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw( NotFoundError ) = 0;
 
-			virtual const TopologyObject& registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError ) = 0;
-			virtual const TopologyObject& lookupObjectByPath( const string& Path ) throw( NotFoundError ) = 0;
-			virtual const TopologyObject& lookupObjectById( TopologyObject anId ) throw( NotFoundError ) = 0;	//Passing 0 yields a reference to the root object.
+			virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError ) = 0;
+			virtual TopologyObject lookupObjectByPath( const string& Path ) throw( NotFoundError ) = 0;
+			virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw( NotFoundError ) = 0;
 
-			virtual const TopologyRelation& registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError ) = 0;
-			virtual const TopologyRelation& lookupRelation( TopologyObjectId parent, const string& childName ) throw( NotFoundError ) = 0;
+			virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError ) = 0;
+			virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw( NotFoundError ) = 0;
 
 			// TopologyRelationType may be 0 which indicates any parent/child.
 			virtual TopologyRelationList enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() = 0;
 			virtual TopologyRelationList enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() = 0;
 
 
-			virtual const TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
-			virtual const TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError ) = 0;
-			virtual const TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError ) = 0;
+			virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
+			virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError ) = 0;
+			virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError ) = 0;
 			virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) = 0;
-			virtual const TopologyValue& getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError ) = 0;
+			virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError ) = 0;
 			virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw() = 0;
 	};
 }
