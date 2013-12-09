@@ -39,9 +39,27 @@ struct ReportEntry{
 	ReportEntry(){}
 };
 
+struct GroupEntry {
+	string name; 
+	GroupEntry * parent;
+
+	GroupEntry(const string & name, GroupEntry * parent) : name(name), parent(parent) {}
+
+	GroupEntry(const string & name) : name(name), parent(nullptr) {}
+};
+
 struct ComponentReport{
 	// relevant data to report
-	unordered_map<string, ReportEntry> data;
+	unordered_map< GroupEntry *, ReportEntry > data;
+
+	void addEntry( GroupEntry * groupEntry, const ReportEntry & entry ){ 
+		data[groupEntry] = entry;
+	};
+	void addEntry( const string & name, const ReportEntry & entry ){ 
+		auto group = new GroupEntry(name);
+		data[group] = entry;
+	};
+
 };
 
 /**

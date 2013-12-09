@@ -499,6 +499,15 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+'splice_final': {
+	'variables': 'PROGRAMCODE',
+	'global': '',
+	'init': '',
+	'before': '',
+	'after': '',
+	'cleanup': '',
+	'final': '%(PROGRAMCODE)s'
+},
 # splice_after
 #
 # Used to insert custom code after the call

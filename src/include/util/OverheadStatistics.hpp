@@ -2,12 +2,12 @@
 #define CORE_OVERHEAD_STATISTICS_HPP
 
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 
+#include <monitoring/datatypes/GenericTypes.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 #include <core/component/Component.hpp>
-
-typedef uint64_t Timestamp;
 
 /*
  This generic component can be used to capture and report the overhead of SIOX.
@@ -24,15 +24,15 @@ struct OverheadEntry{
 
 class OverheadStatistics{
 public:
-	void appendReport(std::unordered_map<std::string, core::ReportEntry> & map);
+	void appendReport(std::unordered_map<core::GroupEntry* , core::ReportEntry> & map);
 
 	Timestamp startMeasurement();
 	void stopMeasurement(const std::string & what, const Timestamp & start);
 	void stopMeasurement(OverheadEntry & entry, const Timestamp & start);
 
-	OverheadEntry & getOverheadFor(const std::string & what);	
-private:	
-	std::unordered_map<std::string, OverheadEntry> entries;
+	OverheadEntry & getOverheadFor(const std::string & what);
+private:
+	std::unordered_map< std::string, OverheadEntry> entries;
 	OverheadEntry all;
 };
 

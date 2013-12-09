@@ -49,10 +49,12 @@ using namespace monitoring;
 //############################################################################
 
 /// Flag indiciating whether SIOX is finalized and needing initalization.
-bool finalized = true;
+static bool finalized = true;
 
 /// Struct to hold references to global objects needed.
-struct process_info process_data;
+static struct process_info process_data;
+
+static list<void (*)(void)> terminate_cbs;
 
 
 struct FUNCTION_CLASS{
@@ -102,6 +104,9 @@ NodeID lookup_node_id( const string & hostname )
 	return ret;
 }
 
+void siox_register_termination_signal( void (*func)(void) ){
+	terminate_cbs.push_back(func);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 /// Create a process id object .
@@ -266,11 +271,10 @@ extern "C" {
 		{
 			PERF_MEASURE_START("FINALIZE")
 
-			OverheadStatisticsDummy dummyComponent( *process_data.overhead );
-			process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", & dummyComponent );
+			OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
+			process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
 			util::invokeAllReporters( process_data.registrar );
-			process_data.registrar->unregisterComponent( -1 );
-
+			//process_data.registrar->unregisterComponent( -1 );
 
 			// cleanup data structures by using the component registrar:
 			process_data.registrar->shutdown();
@@ -280,6 +284,11 @@ extern "C" {
 		}
 
 		delete( process_data.overhead );
+
+		// invoke terminate callbacks
+		for( auto itr = terminate_cbs.begin() ; itr != terminate_cbs.end(); itr++ ){
+			(*itr)();
+		}
 
 		finalized = true;
 	}
@@ -423,7 +432,6 @@ extern "C" {
 			result->amux = process_data.amux;
 			assert( result->amux != nullptr );
 		}
-
 
 		assert( result != nullptr );
 

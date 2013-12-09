@@ -21,24 +21,24 @@ int main( int argc, char const * argv[] ) throw() {
 	topology->getOptions<RamTopologyOptions>();
 	topology->init();
 
-	const Topology::Type* myType = NULL, *myType2 = NULL;
-	IGNORE_EXCEPTIONS( myType = &topology->lookupTypeByName( "foo" ); );
+	TopologyType myType, myType2;
+	IGNORE_EXCEPTIONS( myType = topology->lookupTypeByName( "foo" ); );
 	assert( !myType );
-	IGNORE_EXCEPTIONS( myType = &topology->lookupTypeById( 0 ); );
+	IGNORE_EXCEPTIONS( myType = topology->lookupTypeById( 0 ); );
 	assert( !myType );
-	IGNORE_EXCEPTIONS( myType = &topology->lookupTypeById( 1 ); );
+	IGNORE_EXCEPTIONS( myType = topology->lookupTypeById( 1 ); );
 	assert( !myType );
 
-	myType = &topology->registerType( "foo" );
-	assert( myType->name == "foo" );
-	assert( myType->id == 1 );
+	myType = topology->registerType( "foo" );
+	assert( myType.name() == "foo" );
+	assert( myType.id() == 1 );
 
-	IGNORE_EXCEPTIONS( myType2 = &topology->lookupTypeById( 0 ); );
+	IGNORE_EXCEPTIONS( myType2 = topology->lookupTypeById( 0 ); );
 	assert( !myType2 );
-	myType2 = &topology->lookupTypeById( 1 );
-	assert( myType2 == myType );
-	myType2 = &topology->lookupTypeByName( "foo" );
-	assert( myType2 == myType );
+	myType2 = topology->lookupTypeById( 1 );
+	assert( myType2.name() == "foo" );
+	myType2 = topology->lookupTypeByName( "foo" );
+	assert( myType2.id() == 1 );
 
 	delete topology;
 

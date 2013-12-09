@@ -350,7 +350,8 @@ ComponentReport GenericHistoryPlugin::prepareReport() {
 	}
 	reportText << "}\n";
 	ComponentReport result;
-	result.data["Hint Statistics"] = ReportEntry( ReportEntry::Type::SIOX_INTERNAL_CRITICAL, VariableDatatype( reportText.str() ) );
+
+	result.addEntry("Hint Statistics", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_CRITICAL, VariableDatatype( reportText.str() ) ));
 	return result;
 }
 

@@ -73,6 +73,8 @@ int MPI_Init( int * argc, char ** *argv );
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); PMPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 int MPI_Init_thread( int *argc, char ** *argv, int required, int *provided );
 
+//@splice_before return MPI_SUCCESS; // we do not execute MPI_Finalize()!
+//@splice_final siox_register_termination_signal( (void (*)(void)) PMPI_Finalize);
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_Finalize( void );
