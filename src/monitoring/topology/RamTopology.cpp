@@ -7,6 +7,7 @@
 
 #include <util/ExceptionHandling.hpp>
 #include <monitoring/topology/TopologyImplementation.hpp>
+#include <workarounds.hpp>
 
 #include <unordered_map>
 #include <boost/thread/shared_mutex.hpp>
@@ -39,9 +40,9 @@ class RamTopology : public Topology {
 		virtual TopologyRelationList enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw();
 
 
-		virtual const TopologyAttribute& registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError );
-		virtual const TopologyAttribute& lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError );
-		virtual const TopologyAttribute& lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError );
+		virtual const TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError );
+		virtual const TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError );
+		virtual const TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError );
 		virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError );
 		virtual const TopologyValue& getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError );
 		virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
@@ -52,10 +53,8 @@ class RamTopology : public Topology {
 		unordered_map<string, TopologyType> typesByName;	//Protected by typesLock.
 		vector<TopologyType> typesById;	//Protected by typesLock. The IDs are 1 based, the index into this vector is not!
 
-//		vector<const TopologyObject*> objectsById;	//Protected by objectsLock.
-//		vector<
-//
-//		unordered_map<pair<string, TopologyObjectId>, TopologyRelation*> relationsByHeritage;	//Protected by relationsLock.
+		unordered_map<pair<TopologyTypeId, string>, TopologyAttribute> attributesByName;	//Protected by attributesLock.
+		vector<TopologyAttribute> attributesById;	//Protected by attributesLock.
 };
 
 
@@ -95,6 +94,7 @@ TopologyType RamTopology::lookupTypeByName( const string& name ) throw( NotFound
 	typesLock.lock_shared();
 	IGNORE_EXCEPTIONS( result = typesByName.at( name ); );
 	typesLock.unlock_shared();
+	if( !result ) throw NotFoundError();
 	return result;
 }
 
@@ -105,57 +105,101 @@ TopologyType RamTopology::lookupTypeById( TopologyTypeId anId ) throw( NotFoundE
 	typesLock.lock_shared();
 	if( anId - 1 < typesById.size() ) result = typesById[anId - 1];
 	typesLock.unlock_shared();
+	if( !result ) throw NotFoundError();
 	return result;
 }
 
+
 const TopologyObject& RamTopology::registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError ) {
 	assert(0 && "TODO"), abort();
 }
 
+
 const TopologyObject& RamTopology::lookupObjectByPath( const string& Path ) throw( NotFoundError ) {
 	assert(0 && "TODO"), abort();
 }
 
+
 const TopologyObject& RamTopology::lookupObjectById( TopologyObject anId ) throw( NotFoundError ) {
 	assert(0 && "TODO"), abort();
 }
 
+
 const TopologyRelation& RamTopology::registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError ) {
 	assert(0 && "TODO"), abort();
 }
 
+
 const TopologyRelation& RamTopology::lookupRelation( TopologyObjectId parent, const string& childName ) throw( NotFoundError ) {
 	assert(0 && "TODO"), abort();
 }
 
+
 Topology::TopologyRelationList RamTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
 	assert(0 && "TODO"), abort();
 }
 
+
 Topology::TopologyRelationList RamTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
 	assert(0 && "TODO"), abort();
 }
 
-const TopologyAttribute& RamTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) {
-	assert(0 && "TODO"), abort();
+
+const TopologyAttribute RamTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) {
+	TopologyAttribute result;
+	pair<TopologyTypeId, string> key( domain, name );
+	attributesLock.lock_shared();
+	IGNORE_EXCEPTIONS( result = attributesByName.at( key ); );
+	attributesLock.unlock_shared();
+	if( !result ) {
+		Release<TopologyAttributeImplementation> newAttribute( new TopologyAttributeImplementation( name, domain, datatype ) );	//Don't let other processes wait for this.
+		attributesLock.lock();
+		IGNORE_EXCEPTIONS( result = attributesByName.at( key ); );	//Someone else might have registered it in the mean time.
+		if( !result ) {
+			attributesById.resize( newAttribute->id = attributesById.size() + 1 );
+			attributesById.back().setObject( newAttribute );
+			attributesByName[key].setObject( newAttribute );
+			result.setObject( newAttribute );
+		}
+		attributesLock.unlock();
+	}
+	if( result.dataType() != datatype ) throw IllegalStateError( "RamTopology::registerAttribute(): requested attribute datatype does not match previously registered one." );
+	return result;
 }
 
-const TopologyAttribute& RamTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError ) {
-	assert(0 && "TODO"), abort();
+
+const TopologyAttribute RamTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError ) {
+	TopologyAttribute result;
+	pair<TopologyTypeId, string> key( domain, name );
+	attributesLock.lock_shared();
+	IGNORE_EXCEPTIONS( result = attributesByName.at( key ); );
+	attributesLock.unlock_shared();
+	if( !result ) throw NotFoundError();
+	return result;
 }
 
-const TopologyAttribute& RamTopology::lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError ) {
-	assert(0 && "TODO"), abort();
+
+const TopologyAttribute RamTopology::lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError ) {
+	if( !attributeId ) throw NotFoundError();
+	TopologyAttribute result;
+	attributesLock.lock_shared();
+	if( attributeId - 1 < attributesById.size() ) result = attributesById[attributeId - 1];
+	attributesLock.unlock_shared();
+	if( !result ) throw NotFoundError();
+	return result;
 }
 
+
 void RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) {
 	assert(0 && "TODO"), abort();
 }
 
+
 const TopologyValue& RamTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError ) {
 	assert(0 && "TODO"), abort();
 }
 
+
 Topology::TopologyValueList RamTopology::enumerateAttributes( TopologyObjectId object ) throw() {
 	assert(0 && "TODO"), abort();
 }

@@ -120,9 +120,9 @@ namespace monitoring {
 			virtual TopologyRelationList enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() = 0;
 
 
-			virtual const TopologyAttribute& registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
-			virtual const TopologyAttribute& lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError ) = 0;
-			virtual const TopologyAttribute& lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError ) = 0;
+			virtual const TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
+			virtual const TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError ) = 0;
+			virtual const TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError ) = 0;
 			virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) = 0;
 			virtual const TopologyValue& getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError ) = 0;
 			virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw() = 0;
