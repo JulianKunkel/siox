@@ -455,8 +455,6 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 ComponentReport FileSurveyorPlugin::prepareReport()
 {
 	ComponentReport result;
-
-	GroupEntry * gePlugin = new GroupEntry("FileSurveyorPlugin");
 	ostringstream reportText;
 
 	if( !tryEnsureInitialization() ) return ComponentReport();
@@ -478,12 +476,12 @@ ComponentReport FileSurveyorPlugin::prepareReport()
 			nBytesWriteAverage = ((double) itr->nBytesWrite) / ((double) nAccessesWrite);
 
 
-		GroupEntry * geFile = new GroupEntry( itr->fileName, gePlugin );
+		GroupEntry * geFile = new GroupEntry( itr->fileName );
 
 		// General
 		result.addEntry( new GroupEntry( "User ID", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->userID ) ));
-		result.addEntry( new GroupEntry( "Time opened", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeOpened ) ));
-		result.addEntry( new GroupEntry( "Time closed", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeClosed ) ));
+		//result.addEntry( new GroupEntry( "Time opened", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeOpened ) ));
+		//result.addEntry( new GroupEntry( "Time closed", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeClosed ) ));
 
 		// # Accesses
 		GroupEntry * geAccesses = new GroupEntry( "Accesses", geFile );
