@@ -10,6 +10,11 @@ class ActivityNetworkForwarderClientOptions: public ActivityMultiplexerPluginOpt
 	public:
 		ComponentReference comm;
 		string targetAddress;
+
+		bool forwardAllActivities;
+		ComponentReference reasoner;
+
+		uint ringBufferSize = 0;
 };
 
 
