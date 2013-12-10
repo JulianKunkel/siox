@@ -5,14 +5,15 @@ include_directories(
 )
 
 add_executable(
-	reasoner-test
+	knowledge-reasoner-modules-reasoner
 	reasoner-test.cpp
 )
 
 target_link_libraries(
-	reasoner-test
+	knowledge-reasoner-modules-reasoner
 	siox-core-ModuleLoader 
 	siox-knowledge-ReasonerStandardImplementation
+	siox-core-comm-gio
 )
 
-add_test(Reasoner reasoner-test)
+add_test(knowledge-reasoner-modules-reasoner knowledge-reasoner-modules-reasoner)

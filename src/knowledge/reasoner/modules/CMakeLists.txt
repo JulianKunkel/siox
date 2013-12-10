@@ -9,6 +9,7 @@ add_library(
 	siox-knowledge-ReasonerStandardImplementation
 	ReasonerStandardImplementation.cpp
 	ReasonerStandardImplementationOptions.cpp
+	ReasoningDatatypesSerializable.hpp
 )
 
 target_link_libraries(
@@ -16,6 +17,9 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	siox-core-comm
 )
+
+siox_run_binary_serializer( ReasonerCommunicationMessage.hpp ReasoningDatatypesSerializable.hpp )
+
 
 siox_run_serializer(ReasonerStandardImplementationOptions.hpp ReasonerStandardImplementationOptions.cpp)
 

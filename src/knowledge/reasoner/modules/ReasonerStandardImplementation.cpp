@@ -13,7 +13,8 @@
 
 #include <knowledge/reasoner/ReasonerImplementation.hpp>
 
-#include "ReasonerStandardImplementationOptions.hpp"
+#include <knowledge/reasoner/modules/ReasonerStandardImplementationOptions.hpp>
+#include <knowledge/reasoner/modules/ReasoningDatatypesSerializable.hpp>
 
 using namespace std;
 using namespace core;
@@ -23,6 +24,14 @@ namespace knowledge {
 /*
  Data is pushed into a set of recent PerformanceIssues.
  A background thread fetches these issues and abstracts/refines them into knownIssues.
+
+ The reasoner deduces the local state from local issues taking remote issues into account.
+ The deduced information is communicated with remote reasoners.
+ There are four roles:
+ - process: this reasoner will only aggregate information for the process and forward them.
+ - node: this reasoner will aggreagte all informations from process reasoners. It forwards the node state upstream and the global information downstream.
+ - system: this reasoner will aggreate all node informations and deduct the system state e.g. for file-systems and forward this information to all connected reasoners.
+
  */
 class ReasonerStandardImplementation : public Reasoner, ServerCallback, MessageCallback, ConnectionCallback {
 	private:
@@ -50,11 +59,13 @@ class ReasonerStandardImplementation : public Reasoner, ServerCallback, MessageC
 		condition_variable      running_condition;
 
 		ServiceServer * server = nullptr;
-		vector<ServiceClient*> upstreamReasoners;
+		vector<ServiceClient*> downstreamReasoners;
+		ServiceClient * upstreamReasoner = nullptr;
 
 		bool terminated = false;
 
 		uint32_t update_intervall_ms = -1;
+		
 	protected:
 		ComponentOptions * AvailableOptions() {
 			return new ReasonerStandardImplementationOptions();
@@ -118,10 +129,10 @@ class ReasonerStandardImplementation : public Reasoner, ServerCallback, MessageC
 				}
 
 				// Forward detected performance issues to remote reasoners
-				for( auto itr = upstreamReasoners.begin(); itr != upstreamReasoners.end(); itr++ ){
+				for( auto itr = downstreamReasoners.begin(); itr != downstreamReasoners.end(); itr++ ){
 					if( (*itr)->isConnected() ){
 						// send the current status to the client.
-						// itr->isend();
+						//itr->isend();
 					}
 				}
 
@@ -228,9 +239,12 @@ public:
 		}
 
 		// shutdown all client connections
-		for( auto itr = upstreamReasoners.begin(); itr != upstreamReasoners.end(); itr++ ){
+		for( auto itr = downstreamReasoners.begin(); itr != downstreamReasoners.end(); itr++ ){
 			delete(*itr);
 		}		
+		if ( upstreamReasoner != nullptr ){
+			delete(upstreamReasoner);
+		}
 	}
 
 	virtual void init() {
@@ -245,11 +259,15 @@ public:
 		server = comm->startServerService(options.serviceAddress, this);
 
 
-		upstreamReasoners.reserve(options.remoteReasoners.size());
+		downstreamReasoners.reserve(options.downstreamReasoners.size());
 		// try to connect to all clients
-		for(auto itr = options.remoteReasoners.begin(); itr != options.remoteReasoners.end(); itr++){
+		for(auto itr = options.downstreamReasoners.begin(); itr != options.downstreamReasoners.end(); itr++){
 			ServiceClient * client = comm->startClientService( *itr, this, this );
-			upstreamReasoners.push_back( client );
+			downstreamReasoners.push_back( client );
+		}
+
+		if ( options.upstreamReasoner != "" ){
+			upstreamReasoner = comm->startClientService( options.upstreamReasoner, this, this );
 		}
 
 		periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );

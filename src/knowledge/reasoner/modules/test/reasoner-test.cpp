@@ -4,12 +4,16 @@
 #include <condition_variable>
 
 #include <core/module/ModuleLoader.hpp>
+#include <core/comm/CommunicationModule.hpp>
 
 #include <knowledge/reasoner/Reasoner.hpp>
 #include <knowledge/reasoner/AnomalyPlugin.hpp>
 
+#include <knowledge/reasoner/modules/ReasonerStandardImplementationOptions.hpp>
 
 using namespace std;
+
+using namespace core;
 using namespace knowledge;
 
 /*
@@ -79,6 +83,14 @@ int main( int argc, char const * argv[] )
 
 	// Obtain a FileOntology instance from module loader
 	Reasoner * r = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+
+	Reasoner * r2 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+
+	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", "siox-core-comm-gio", CORE_COMM_INTERFACE );
+
+	assert(comm != nullptr);
+	comm->init();
+
 	assert( r != nullptr );
 
 	TestAnomalyTrigger at1;
@@ -87,7 +99,13 @@ int main( int argc, char const * argv[] )
 
 	TestAnomalyPlugin adpi1;
 
+	{
+	ReasonerStandardImplementationOptions & r_options = r->getOptions<ReasonerStandardImplementationOptions>();
+	r_options.comm.componentPointer = comm;
+	r_options.serviceAddress = "ipc://reasoner1";
 	r->init();
+	}
+
 	r->connectTrigger( & at1 );
 	r->connectTrigger( & at2 );
 
@@ -97,6 +115,19 @@ int main( int argc, char const * argv[] )
 	// in this initial test we have no anomaly:
 	assert( at1.waitForAnomalyCount( 0 ) );
 	assert( at2.waitForAnomalyCount( 0 ) );
+
+
+	// init the second reasoner.
+	{
+	ReasonerStandardImplementationOptions & r_options = r2->getOptions<ReasonerStandardImplementationOptions>();
+	r_options.comm.componentPointer = comm;
+	r_options.serviceAddress = "ipc://reasoner2";
+	r_options.downstreamReasoners.push_back( "ipc://reasoner1" );
+	r2->init();
+	}
+
+	
+
 
 	// Now we inject an observation which will trigger an reaction:
 	adpi1.injectObservation( AnomalyPluginObservation( ActivityObservation::UNEXPECTED_FAST, "", 1, 2, {2, 3, 4}, 5, 30 ) );
@@ -111,8 +142,10 @@ int main( int argc, char const * argv[] )
 	cout << "Anomalies: " << at1.anomaliesTriggered << endl;
 	cout << "sizeof(PerformanceIssue): " << sizeof( PerformanceIssue ) << endl;
 
+	delete(r);
+	delete(r2);
+	delete(comm);
 
-	delete( r );
 
 	return 0;
 }

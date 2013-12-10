@@ -26,6 +26,7 @@ namespace knowledge {
 // All statistics can be reported, they are identified by the name in the ontology.
 // This means context switches as well as network throughput could be identified.
 // So we could theoretically identify the correlations between high/low statistics and observed activities.
+//@serializable	
 enum class StatisticObservation: int8_t  {
 	    VERY_LOW,
 	    LOW,
@@ -41,6 +42,7 @@ enum class StatisticObservation: int8_t  {
 
 
 // How do we judge the observed behavior for anomalies?
+//@serializable
 enum class ActivityObservation : int8_t {
 	    // regular behavior
 	    VERY_FAST,
@@ -64,8 +66,10 @@ enum class ActivityObservation : int8_t {
 
 // Where is the slow/fast performance?
 // Also: Where is the issue located behind the slow/fast performance?
+//@serializable
 	class IssueLocation {
 		public:
+		//@serializable
 		enum class Entity : uint8_t {
 			    COMPONENT,
 			    PROCESS,
@@ -107,8 +111,10 @@ enum class ActivityObservation : int8_t {
 
 
 // We may provide the reason if we know already.
+//@serializable	
 	class IssueCause {
 		public:
+		//@serializable
 		enum class Type : uint8_t {
 			    RESSOURCE_UTILIZATION, // We will specify which statistics using the ontology ID or domain/name.
 			    // The folloging values will be made available by statistics plugins and therefore are already covered by the LOW/HIGH Utilization.
@@ -131,11 +137,11 @@ enum class ActivityObservation : int8_t {
 			Type type;
 
 			OntologyAttributeID statistics_aid; // statistics which causes the issue. May be 0.
-			const char     *    str_qualifier; // an arbitrary string defining the cause further
+			string str_qualifier; // an arbitrary string defining the cause further
 
 			inline bool operator==( IssueCause const & b ) const {
 				return type == b.type && statistics_aid == b.statistics_aid &&
-				       strcmp( str_qualifier, b.str_qualifier );
+				       str_qualifier == b.str_qualifier;
 			}
 
 			inline bool operator!=( IssueCause const & b ) const {
@@ -143,13 +149,15 @@ enum class ActivityObservation : int8_t {
 			}
 
 			inline bool operator<( IssueCause const & b ) const {
-				return type < b.type || statistics_aid < b.statistics_aid || strcmp( str_qualifier, b.str_qualifier ) < 0;
+				return type < b.type || statistics_aid < b.statistics_aid ||  str_qualifier < b.str_qualifier ;
 			}
 
 	};
 
+//@serializable
 	class PerformanceIssue {
 		public:
+		//@serializable
 		enum class Quality: uint8_t {
 			    GOOD_PERFORMANCE,
 			    BAD_PERFORMANCE,

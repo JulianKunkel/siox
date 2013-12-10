@@ -18,6 +18,21 @@ using namespace std;
 
 namespace j_serialization{
 
+inline void serialize(const bool & obj, char * buffer, uint64_t & pos){
+	buffer[pos] = (uint8_t) obj;
+	pos++;
+}
+
+inline void deserialize(bool & obj, const char * buffer, uint64_t & pos, uint64_t length){
+	CHECK_LENGTH(1)
+	obj = buffer[pos];
+	pos++;	
+}
+
+inline uint64_t serializeLen(const bool & obj){
+	return 1;
+}
+
 inline void serialize(const uint8_t & obj, char * buffer, uint64_t & pos){
 	buffer[pos] = obj;
 	pos++;
