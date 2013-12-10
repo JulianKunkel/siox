@@ -73,6 +73,8 @@ RamTopology::RamTopology() {
 	typesById.resize( 1 );
 	objectsById.resize( 1 );
 	attributesById.resize( 1 );
+	childMapsById.push_back( new ChildMap() );
+	parentVectorsById.push_back( 0 );
 }
 
 
@@ -133,7 +135,9 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 	//First look up the child map in which the requested relation should be stored.
 	ChildMap* childMap = NULL;
 	objectsLock.lock_shared();
-	if( parentId < objectsById.size() ) childMap = childMapsById[parentId];
+	if( parentId < objectsById.size() ) {
+		childMap = childMapsById[parentId];
+	}
 	objectsLock.unlock_shared();
 	if( !childMap ) throw IllegalStateError( "RamTopology::registerObject(): the requested parent does not exist" );
 
@@ -144,7 +148,7 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 	IGNORE_EXCEPTIONS( resultRelation = childMap->at( childName ); );
 	childMap->unlock_shared();
 	if( !resultRelation ) {
-		//Looks like we have to allocate something
+		//Looks like we have to allocate something.
 		Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parentId, 0, relationType ) );
 		Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation( objectType ) );
 		ChildMap* newChildMap( new ChildMap() );
@@ -195,8 +199,19 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 }
 
 
-TopologyObject RamTopology::lookupObjectByPath( const string& Path ) throw( NotFoundError ) {
-	assert(0 && "TODO"), abort();
+TopologyObject RamTopology::lookupObjectByPath( const string& path ) throw( NotFoundError ) {
+	size_t pathSize = path.size(), curPosition, curEnd;
+	TopologyObjectId resultId = 0;
+	for( curPosition = 0; curPosition < pathSize; curPosition = curEnd + 1 ) {
+		curEnd = path.find( '/', curPosition );
+		if( curEnd == string::npos ) curEnd = pathSize;
+		TopologyRelation relation;
+		IGNORE_EXCEPTIONS( relation = lookupRelation( resultId, path.substr( curPosition, curEnd - curPosition ) ); );
+		if( !relation ) throw NotFoundError();
+		resultId = relation.child();
+	}
+	if( curPosition == pathSize ) throw NotFoundError();	//This happens when the path ends in a slash (always a malformed path).
+	return lookupObjectById( resultId );
 }
 
 
@@ -211,7 +226,43 @@ TopologyObject RamTopology::lookupObjectById( TopologyObjectId anId ) throw( Not
 
 
 TopologyRelation RamTopology::registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError ) {
-	assert(0 && "TODO"), abort();
+	if( !child ) throw IllegalStateError( "RamTopology::registerRelation(): can't register the root object as a child." );
+	ChildMap* childMap = NULL;
+	ParentVector* parentVector = NULL;
+	objectsLock.lock_shared();
+	if( parent < objectsById.size() ) childMap = childMapsById[parent];
+	if( child < objectsById.size() ) parentVector = parentVectorsById[child];
+	objectsLock.unlock_shared();
+	if( !childMap ) throw IllegalStateError( "RamTopology::registerRelation(): parent does not exist." );
+	if( !parentVector ) throw IllegalStateError( "RamTopology::registerRelation(): child does not exist." );
+
+	TopologyRelation result;
+	bool preexistingRelation = true;
+	childMap->lock_shared();
+	IGNORE_EXCEPTIONS( result = childMap->at( childName ); );
+	childMap->unlock_shared();
+	if( !result ) {
+		//Looks like we have to add this relation.
+		Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
+		childMap->lock();
+		IGNORE_EXCEPTIONS( result = childMap->at( childName ); );
+		if( !result ) {
+			preexistingRelation = false;
+			(*childMap)[childName].setObject( newRelation );
+			//It is important to retain the childMap lock at this point to ensure that no inconsistent state becomes visible.
+			parentVector->lock();
+			parentVector->resize( parentVector->size() + 1 );
+			parentVector->back().setObject( newRelation );
+			parentVector->unlock();
+			result.setObject( newRelation );
+		}
+		childMap->unlock();
+	}
+	if( preexistingRelation ) {
+		if( result.child() != child ) throw IllegalStateError( "RamTopology::registerRelation(): given child does not match previously registered one." );
+		if( result.type() != relationType ) throw IllegalStateError( "RamTopology::registerRelation(): given relation type does not match previously registered one." );
+	}
+	return result;
 }
 
 
