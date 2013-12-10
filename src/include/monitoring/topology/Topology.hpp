@@ -101,8 +101,8 @@ namespace monitoring {
 	class Topology : public core::Component {
 		public:
 
-			typedef std::vector<const TopologyRelation*> TopologyRelationList;
-			typedef std::vector<const TopologyValue*> TopologyValueList;
+			typedef std::vector<TopologyRelation> TopologyRelationList;
+			typedef std::vector<TopologyValue> TopologyValueList;
 
 			virtual TopologyType registerType( const string& name ) throw() = 0;
 			virtual TopologyType lookupTypeByName( const string& name ) throw( NotFoundError ) = 0;

@@ -99,23 +99,52 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( relation4.child() == object1.id() );
 	assert( relation4.type() == type2.id() );
 
-	TopologyObject temp;
-	IGNORE_EXCEPTIONS( temp = topology->lookupObjectByPath( "" ); );
-	assert( !temp );
-	IGNORE_EXCEPTIONS( temp = topology->lookupObjectByPath( "/object1" ); );
-	assert( !temp );
-	IGNORE_EXCEPTIONS( temp = topology->lookupObjectByPath( "object1/" ); );
-	assert( !temp );
-	IGNORE_EXCEPTIONS( temp = topology->lookupObjectByPath( "object1//object2" ); );
-	assert( !temp );
-	temp = topology->lookupObjectByPath( "object1" );
-	assert( &*temp == &*object1 );
-	temp = topology->lookupObjectByPath( "object2/object1" );
-	assert( &*temp == &*object1 );
-	temp = topology->lookupObjectByPath( "object2" );
-	assert( &*temp == &*object2 );
-	temp = topology->lookupObjectByPath( "object1/object2" );
-	assert( &*temp == &*object2 );
+	{
+		TopologyObject temp;
+		IGNORE_EXCEPTIONS( temp = topology->lookupObjectByPath( "" ); );
+		assert( !temp );
+		IGNORE_EXCEPTIONS( temp = topology->lookupObjectByPath( "/object1" ); );
+		assert( !temp );
+		IGNORE_EXCEPTIONS( temp = topology->lookupObjectByPath( "object1/" ); );
+		assert( !temp );
+		IGNORE_EXCEPTIONS( temp = topology->lookupObjectByPath( "object1//object2" ); );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( "object1" );
+		assert( &*temp == &*object1 );
+		temp = topology->lookupObjectByPath( "object2/object1" );
+		assert( &*temp == &*object1 );
+		temp = topology->lookupObjectByPath( "object2" );
+		assert( &*temp == &*object2 );
+		temp = topology->lookupObjectByPath( "object1/object2" );
+		assert( &*temp == &*object2 );
+	}
+
+	{
+		Topology::TopologyRelationList list;
+		list = topology->enumerateChildren( 0, 0 );
+		assert( list.size() == 2 );
+		assert( &*list[0] == &*relation1 || &*list[0] == &*relation3 );
+		assert( &*list[1] == &*relation1 || &*list[1] == &*relation3 );
+		list = topology->enumerateChildren( 0, type1.id() );
+		assert( list.size() == 1 );
+		assert( &*list[0] == &*relation3 );
+		list = topology->enumerateChildren( object1.id(), 0 );
+		assert( list.size() == 1 );
+		assert( &*list[0] == &*relation2 );
+		list = topology->enumerateChildren( object1.id(), type2.id() );
+		assert( !list.size() );
+
+		list = topology->enumerateParents( 0, 0 );
+		assert( !list.size() );
+		list = topology->enumerateParents( 0, type1.id() );
+		assert( !list.size() );
+		list = topology->enumerateParents( object1.id(), 0 );
+		assert( list.size() == 2 );
+		assert( &*list[0] == &*relation1 || &*list[0] == &*relation4 );
+		assert( &*list[1] == &*relation1 || &*list[1] == &*relation4 );
+		list = topology->enumerateParents( object1.id(), type1.id() );
+		assert( !list.size() );
+	}
 
 	//Test attributes
 	TopologyAttribute attribute1, attribute2;

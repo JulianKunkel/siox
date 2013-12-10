@@ -283,12 +283,36 @@ TopologyRelation RamTopology::lookupRelation( TopologyObjectId parent, const str
 
 
 Topology::TopologyRelationList RamTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
-	assert(0 && "TODO"), abort();
+	ChildMap* childMap = NULL;
+	objectsLock.lock_shared();
+	if( parent < objectsById.size() ) childMap = childMapsById[parent];
+	objectsLock.unlock_shared();
+	if( !childMap ) return TopologyRelationList();
+
+	TopologyRelationList result;
+	childMap->lock_shared();
+	for( ChildMap::iterator it = childMap->begin(), end = childMap->end(); it != end; ++it ) {
+		if( !relationType || it->second.type() == relationType ) result.emplace_back( it->second );
+	}
+	childMap->unlock_shared();
+	return result;
 }
 
 
 Topology::TopologyRelationList RamTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
-	assert(0 && "TODO"), abort();
+	ParentVector* parentVector = NULL;
+	objectsLock.lock_shared();
+	if( child < objectsById.size() ) parentVector = parentVectorsById[child];
+	objectsLock.unlock_shared();
+	if( !parentVector ) return TopologyRelationList();
+
+	TopologyRelationList result;
+	parentVector->lock_shared();
+	for( size_t i = parentVector->size(); i--; ) {
+		if( !relationType || (*parentVector)[i].type() == relationType ) result.emplace_back( (*parentVector)[i] );
+	}
+	parentVector->unlock_shared();
+	return result;
 }
 
 
