@@ -123,7 +123,7 @@ namespace monitoring {
 			virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
 			virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError ) = 0;
 			virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError ) = 0;
-			virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) = 0;
+			virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw( IllegalStateError ) = 0;
 			virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError ) = 0;
 			virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw() = 0;
 	};

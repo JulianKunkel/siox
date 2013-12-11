@@ -16,6 +16,19 @@
 using namespace core;
 using namespace monitoring;
 
+#define EXPECT_EXCEPTION(...) do { \
+	bool success = false; \
+	try { \
+		__VA_ARGS__ \
+	} catch(...) { \
+		success = true; \
+	} \
+	if( !success ) { \
+		cerr << "Couldn't catch expected exception in\n\t" #__VA_ARGS__ "\n"; \
+		abort(); \
+	} \
+} while( 0 )
+
 int main( int argc, char const * argv[] ) throw() {
 	Topology* topology = module_create_instance<Topology>( "", "siox-monitoring-RamTopology", MONITORING_TOPOLOGY_INTERFACE );
 	topology->getOptions<RamTopologyOptions>();
@@ -148,31 +161,56 @@ int main( int argc, char const * argv[] ) throw() {
 
 	//Test attributes
 	TopologyAttribute attribute1, attribute2;
-	IGNORE_EXCEPTIONS( attribute1 = topology->lookupAttributeByName( type1, "foo" ); );
+	IGNORE_EXCEPTIONS( attribute1 = topology->lookupAttributeByName( type1, "attribute1" ); );
 	assert( !attribute1 );
 	IGNORE_EXCEPTIONS( attribute1 = topology->lookupAttributeById( 0 ); );
 	assert( !attribute1 );
 	IGNORE_EXCEPTIONS( attribute1 = topology->lookupAttributeById( 1 ); );
 	assert( !attribute1 );
 
-	attribute1 = topology->registerAttribute( type1.id(), "foo", TopologyVariable::Type::FLOAT );
-	assert( attribute1.name() == "foo" );
+	attribute1 = topology->registerAttribute( type1.id(), "attribute1", TopologyVariable::Type::FLOAT );
+	assert( attribute1.name() == "attribute1" );
 	assert( attribute1.id() == 1 );
 	assert( attribute1.domainId() == type1.id() );
 	assert( attribute1.dataType() == TopologyVariable::Type::FLOAT );
-	IGNORE_EXCEPTIONS( attribute2 = topology->registerAttribute( type1.id(), "foo", TopologyVariable::Type::DOUBLE ); );
+	IGNORE_EXCEPTIONS( attribute2 = topology->registerAttribute( type1.id(), "attribute1", TopologyVariable::Type::DOUBLE ); );
 	assert( !attribute2 );
 
 	IGNORE_EXCEPTIONS( attribute2 = topology->lookupAttributeById( 0 ); );
 	assert( !attribute2 );
 	attribute2 = topology->lookupAttributeById( 1 );
-	assert( attribute2.name() == "foo" );
+	assert( attribute2.name() == "attribute1" );
 	assert( attribute2.domainId() == type1.id() );
 	assert( attribute2.dataType() == TopologyVariable::Type::FLOAT );
-	attribute2 = topology->lookupAttributeByName( type1.id(), "foo" );
+	attribute2 = topology->lookupAttributeByName( type1.id(), "attribute1" );
 	assert( attribute2.domainId() == type1.id() );
 	assert( attribute2.dataType() == TopologyVariable::Type::FLOAT );
-	topology->registerAttribute( type1.id(), "bar", TopologyVariable::Type::DOUBLE );
+	attribute2 = topology->registerAttribute( type1.id(), "attribute2", TopologyVariable::Type::DOUBLE );
+
+	TopologyValue value1, value2;
+	EXPECT_EXCEPTION( topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1 ) ); );
+	topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1.0f ) );
+	IGNORE_EXCEPTIONS( value1 = topology->getAttribute( object2.id(), attribute1.id() ); );
+	assert( !value1 );
+	IGNORE_EXCEPTIONS( value1 = topology->getAttribute( object1.id(), attribute2.id() ); );
+	assert( !value1 );
+	value1 = topology->getAttribute( object1.id(), attribute1.id() );
+	assert( value1.object() == object1.id() );
+	assert( value1.attribute() == attribute1.id() );
+	assert( value1.value() == 1.0f );
+	topology->setAttribute( object1.id(), attribute2.id(), TopologyVariable( 1.0 ) );
+	value2 = topology->getAttribute( object1.id(), attribute2.id() );
+	assert( value2.object() == object1.id() );
+	assert( value2.attribute() == attribute2.id() );
+	assert( value2.value() == 1.0 );
+
+	Topology::TopologyValueList valueList;
+	valueList = topology->enumerateAttributes( object2.id() );
+	assert( !valueList.size() );
+	valueList = topology->enumerateAttributes( object1.id() );
+	assert( valueList.size() == 2 );
+	assert( &*valueList[0] == &*value1 || &*valueList[0] == &*value2 );
+	assert( &*valueList[1] == &*value1 || &*valueList[1] == &*value2 );
 
 	delete topology;
 

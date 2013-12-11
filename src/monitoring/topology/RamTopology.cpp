@@ -45,7 +45,7 @@ class RamTopology : public Topology {
 		virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError );
 		virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError );
 		virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError );
-		virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError );
+		virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw( IllegalStateError );
 		virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError );
 		virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
@@ -53,8 +53,9 @@ class RamTopology : public Topology {
 		//These classes are just combinations of a container and a lock that protects it.
 		class ChildMap : public unordered_map<string, TopologyRelation>, public boost::shared_mutex {};
 		class ParentVector : public vector<TopologyRelation>, public boost::shared_mutex {};
+		class AttributeMap : public unordered_map<TopologyAttributeId, TopologyValue>, public boost::shared_mutex {};
 
-		boost::shared_mutex typesLock, objectsLock, relationsLock, valuesLock, attributesLock, childsLock;
+		boost::shared_mutex typesLock, objectsLock, valuesLock, attributesLock, childsLock;
 
 		unordered_map<string, TopologyType> typesByName;	//Protected by typesLock.
 		vector<TopologyType> typesById;	//Protected by typesLock.
@@ -62,6 +63,7 @@ class RamTopology : public Topology {
 		vector<TopologyObject> objectsById;	//Protected by objectsLock.
 		vector<ChildMap*> childMapsById;	//Protected by objectsLock.
 		vector<ParentVector*> parentVectorsById;	//Protected by objectsLock.
+		vector<AttributeMap*> attributeMapsById;	//Protected by objectsLock.
 
 		unordered_map<pair<TopologyTypeId, string>, TopologyAttribute> attributesByName;	//Protected by attributesLock.
 		vector<TopologyAttribute> attributesById;	//Protected by attributesLock.
@@ -75,6 +77,7 @@ RamTopology::RamTopology() {
 	attributesById.resize( 1 );
 	childMapsById.push_back( new ChildMap() );
 	parentVectorsById.push_back( 0 );
+	attributeMapsById.push_back( 0 );
 }
 
 
@@ -153,6 +156,7 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 		Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation( objectType ) );
 		ChildMap* newChildMap( new ChildMap() );
 		ParentVector* newParentVector( new ParentVector() );
+		AttributeMap* newAttributeMap( new AttributeMap() );
 		newParentVector->resize( 1 );
 		(*newParentVector)[0].setObject( newRelation );
 
@@ -172,6 +176,8 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 			childMapsById.back() = newChildMap;
 			parentVectorsById.resize( objectCount );
 			parentVectorsById.back() = newParentVector;
+			attributeMapsById.resize( objectCount );
+			attributeMapsById.back() = newAttributeMap;
 			(*childMap)[childName].setObject( newRelation );
 
 			//Stuff for our personal cleanup.
@@ -179,12 +185,14 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 			result.setObject( newObject );
 			newChildMap = NULL;
 			newParentVector = NULL;
+			newAttributeMap = NULL;
 		}
 		childMap->unlock();
 		objectsLock.unlock();
 
 		delete newChildMap;
 		delete newParentVector;
+		delete newAttributeMap;
 	}
 
 	//In case we succeeded in looking up the object, actually lookup the TopologyObject itself, and check consistency.
@@ -362,18 +370,64 @@ TopologyAttribute RamTopology::lookupAttributeById( TopologyAttributeId attribut
 }
 
 
-void RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) {
-	assert(0 && "TODO"), abort();
+void RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw( IllegalStateError ) {
+	AttributeMap* attributeMap = NULL;
+	objectsLock.lock_shared();
+	if( object < objectsById.size() ) attributeMap = attributeMapsById[object];
+	objectsLock.unlock_shared();
+	if( !attributeMap ) throw IllegalStateError( "RamTopology::setAttribute(): object does not exist" );
+
+	TopologyAttribute attribute = lookupAttributeById( attributeId );
+	if( attribute.dataType() != value.type() ) throw IllegalStateError( "RamTopology::setAttribute(): given variable type does not match type of attribute" );
+
+	TopologyValue result;
+	attributeMap->lock_shared();
+	IGNORE_EXCEPTIONS( result = attributeMap->at( attributeId ); );
+	attributeMap->unlock_shared();
+	if( !result ) {
+		Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( value, object, attributeId ) );
+		attributeMap->lock();
+		IGNORE_EXCEPTIONS( result = attributeMap->at( attributeId ); );
+		if( !result ) {
+			(*attributeMap)[attributeId].setObject( newValue );
+		}
+		attributeMap->unlock();
+	}
+	if( result ) {	//Consistency check if we found a preexisting attributeId value.
+		if( value != result.value() ) throw IllegalStateError( "RamTopology::setAttribute(): given value does not match previously registered value" );
+	}
 }
 
 
 TopologyValue RamTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError ) {
-	assert(0 && "TODO"), abort();
+	AttributeMap* attributeMap = NULL;
+	objectsLock.lock_shared();
+	if( object < objectsById.size() ) attributeMap = attributeMapsById[object];
+	objectsLock.unlock_shared();
+	if( !attributeMap ) throw IllegalStateError( "RamTopology::setAttribute(): object does not exist" );
+
+	TopologyValue result;
+	attributeMap->lock_shared();
+	IGNORE_EXCEPTIONS( result = attributeMap->at( attribute ); );
+	attributeMap->unlock_shared();
+	return result;
 }
 
 
 Topology::TopologyValueList RamTopology::enumerateAttributes( TopologyObjectId object ) throw() {
-	assert(0 && "TODO"), abort();
+	AttributeMap* attributeMap = NULL;
+	objectsLock.lock_shared();
+	if( object < objectsById.size() ) attributeMap = attributeMapsById[object];
+	objectsLock.unlock_shared();
+	if( !attributeMap ) return TopologyValueList();
+
+	TopologyValueList result;
+	attributeMap->lock_shared();
+	for( AttributeMap::iterator it = attributeMap->begin(), end = attributeMap->end(); it != end; ++it ) {
+		result.emplace_back( it->second );
+	}
+	attributeMap->unlock_shared();
+	return result;
 }
 
 
