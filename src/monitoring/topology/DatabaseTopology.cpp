@@ -23,25 +23,25 @@ class DatabaseTopology : public Topology {
         virtual void init();
 
         virtual TopologyType registerType( const string& name ) throw();
-        virtual TopologyType lookupTypeByName( const string& name ) throw( NotFoundError );
-        virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw( NotFoundError );
+        virtual TopologyType lookupTypeByName( const string& name ) throw();
+        virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw();
 
         virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError );
-        virtual TopologyObject lookupObjectByPath( const string& Path ) throw( NotFoundError );
-        virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw( NotFoundError );
+        virtual TopologyObject lookupObjectByPath( const string& Path ) throw();
+        virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw();
 
         virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError );
-        virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw( NotFoundError );
+        virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw();
 
         virtual TopologyRelationList enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw();
         virtual TopologyRelationList enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw();
 
 
         virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError );
-        virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError );
-        virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError );
+        virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw();
+        virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw();
         virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError );
-        virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError );
+        virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw();
         virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
     private:
@@ -95,7 +95,7 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
     return tmpType;
 }
 
-TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw( NotFoundError ) {
+TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw() {
     TopologyType tmpType;
     Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name));
 
@@ -122,7 +122,7 @@ TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw( Not
     return tmpType;
 }
 
-TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw( NotFoundError ) {
+TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
     TopologyType tmpType;
     string tmpName;
 
@@ -191,12 +191,12 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
     return tmpObject;
 }
 
-TopologyObject DatabaseTopology::lookupObjectByPath( const string& path ) throw( NotFoundError ) {
+TopologyObject DatabaseTopology::lookupObjectByPath( const string& path ) throw() {
     // TODO: Old logic completly broken. Rethink.
     assert(0 && "TODO"), abort();
 }
 
-TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw( NotFoundError ) {
+TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw() {
     TopologyObject tmpObject;
     TopologyObjectId tmpId;
 
@@ -240,7 +240,7 @@ TopologyRelation DatabaseTopology::registerRelation( TopologyTypeId relationType
     return tmpRelation;
 }
 
-TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, const string& childName ) throw( NotFoundError ) {
+TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, const string& childName ) throw() {
     TopologyRelation tmpRelation;
 
     TopologyTypeId tmpRelationType;
@@ -373,7 +373,7 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
     return tmpAttribute;
 }
 
-TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError ) {
+TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
     TopologyAttribute tmpAttribute;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
@@ -407,7 +407,7 @@ TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain
     return tmpAttribute;
 }
 
-TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError ) {
+TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId attributeId ) throw() {
     TopologyAttribute tmpAttribute;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
@@ -447,7 +447,7 @@ void DatabaseTopology::setAttribute( TopologyObjectId object, TopologyAttributeI
     assert(0 && "TODO"), abort();
 }
 
-TopologyValue DatabaseTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError ) {
+TopologyValue DatabaseTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
     assert(0 && "TODO"), abort();
 }
 
