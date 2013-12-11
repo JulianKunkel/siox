@@ -95,6 +95,9 @@ class OutputGenerator():
     def __init__(self):
         pass
 
+    def registerEnumClass(self, className, type):
+        pass
+
     def registerAnnotatedHeader(self, className, parentClasses):
         print(className)
         print(parentClasses)
@@ -172,6 +175,7 @@ class JBinaryOutputGenerator(OutputGenerator):
     def __init__(self):
         self.nestingDepth = 0
         self.mapping = {}
+        self.enumMap = {}
         self.parents = ""
         self.namespace = {}
         self.className = None
@@ -231,20 +235,26 @@ class JBinaryOutputGenerator(OutputGenerator):
         #if type in self.typeMap:
         #    return self.map_memberType(self.typeMap[type])        
         #return "ERROR invalid type: " + type + " for " + name
+        if type in self.enumMap:
+            return self.map_type_length(self.enumMap[type], name);
+
         return "count += serializeLen(" + name + ")"
 
     def map_type_serializer(self, type, name):
-        if type.startswith("vector") or type.startswith("list") or type.startswith("std::vector") or type.startswith("std::list"):
+        if type.startswith("vector") or type.startswith("list") or type.startswith("set")  or type.startswith("std::vector") or type.startswith("std::list") or type.startswith("std::set"):
             childType = type[ type.find("<") + 1 : -1];
             return "\n\t{ uint32_t vlen = %(NAME)s.size(); \n\tserialize(vlen, buffer, pos); \n\tfor(auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++){\n\t\t%(CHILD)s; \n\t}}"  % {"NAME" : name, "CHILD": self.map_type_serializer(childType, "*itr")}
 
         if type.endswith("*"):
             return "if (" + name + " == nullptr ) { serialize((uint8_t) 0, buffer, pos); } else{\n\t\tserialize((uint8_t) 1, buffer, pos); \n\t\t" + self.map_type_serializer(type[0:len(type)-2].strip(), "*" + name) + "; \n\t}"
 
+        if type in self.enumMap:
+            return "serialize( (" + self.enumMap[type] + " &)"  + name + ", buffer, pos )";
+
         return "serialize(" + name + ", buffer, pos)";
 
     def map_type_deserializer(self, type, name):
-        if type.startswith("vector") or type.startswith("list") or type.startswith("std::vector") or type.startswith("std::list"):
+        if type.startswith("vector") or type.startswith("list") or type.startswith("set")  or type.startswith("std::vector") or type.startswith("std::list") or type.startswith("std::set"):
             childType = type[ type.find("<") + 1 : -1];
             return "{ uint32_t vlen;  deserialize(vlen, buffer, pos, length);\n\t%(NAME)s.resize(0);\n\tfor(uint32_t i=0; i < vlen; i++){\n\t\t%(CHILDTYPE)s var;\n\t\t%(CHILD)s;\n\t\t%(NAME)s.push_back(var);\n\t}}"  % {"NAME" : name, "TYPE" : type, "CHILD": self.map_type_deserializer(childType, "var"), "CHILDTYPE": childType}
 
@@ -252,12 +262,19 @@ class JBinaryOutputGenerator(OutputGenerator):
             childType = type[0:len(type)-2].strip()
             return "\n\t{\n\tint8_t ptr; deserialize(ptr, buffer, pos, length);\n\tif ( ptr == 0 ) { %(NAME)s = nullptr; } else{\n\t\t%(NAME)s = (%(TYPE)s) malloc(sizeof(%(CHILDTYPE)s));\n\t\tdeserialize(*%(NAME)s, buffer, pos, length);\n\t}}" % { "NAME" : name, "TYPE" : type, "CHILDTYPE" : childType, "CHILD" : self.map_type_deserializer(childType, "* " + name) }
 
+        if type in self.enumMap:
+            return "deserialize( (" + self.enumMap[type] + " &)"  + name + ", buffer, pos, length)"; 
+
         return "deserialize(" + name + ", buffer, pos, length)";
 
 
     def forceInclude(self, filename):
         self.createFileIfNeeded()
         print("#include <" + filename + "JBinarySerialization.hpp>", file = self.fh)
+
+    def registerEnumClass(self, className, type):
+        self.enumMap[className] = type
+        
 
     def registerAnnotatedHeaderEnd(self):
         if self.options.debug:
@@ -562,7 +579,7 @@ def parseFile(file, options, output_generator):
     # Remove all comments which provide no annotations
     string = re.sub('//[^@].*', '', string)
 
-    commandRegex = re.compile("//@(.*)\s*")
+    commandRegex = re.compile("//@([^\s]*)\s*")
 
     # A valid include must contain at least one /
     includeRegex = re.compile('\s*#include [<"]((?!boost).*/.*)[>"]\s*');
@@ -576,6 +593,7 @@ def parseFile(file, options, output_generator):
     annotations = []
 
     foundAnnotation = False
+    curClass = ""
 
     for lineNR in range(0, len(lines)-1):
         line = lines[lineNR]
@@ -588,14 +606,34 @@ def parseFile(file, options, output_generator):
 
         # Check for commands
         commandMatch = commandRegex.search(line)
-        if commandMatch:
+        
+        if options.debug:
+            print ( str(containerNesting) + " " + line )
+
+        if commandMatch:            
             command = commandMatch.group(1).lower()
+    
             if command == "serializable":
                 foundAnnotation = True
+
+                # enum class Quality: uint8_t {
+                m = re.search("enum\s+class\s+([a-zA-Z0-9_]+)[\s]*:\s+([a-zA-Z_0-9]+)\s*{", lines[lineNR+1])
+                if m != None :
+                    #print ("HERE " + m.group(1) + " " + m.group(2))
+                    if  curClass != "" : # curClass + "::" +
+                        output_generator.registerEnumClass( m.group(1), m.group(2))
+                    else:
+                        output_generator.registerEnumClass( m.group(1), m.group(2))
+                    
+                    lineNR = lineNR + 1
+                    continue;
+
                 assert(containerMode == False)
                 containerMode = True
+
                 # The next line is expected to be the class definition
                 m = re.search("(class|struct) ([a-zA-Z_0-9]+)\s*(:\s*([^{]*))?\s*({?)", lines[lineNR+1])
+                curClass = m.group(2).strip()
 
                 assert(m)
 
@@ -604,7 +642,7 @@ def parseFile(file, options, output_generator):
                 else:
                     parentClasses = []
 
-                output_generator.registerAnnotatedHeader(m.group(2).strip(), parentClasses)
+                output_generator.registerAnnotatedHeader(curClass, parentClasses)
 
                 lineNR = lineNR + 1
 
@@ -629,16 +667,17 @@ def parseFile(file, options, output_generator):
             #print (str(containerNesting) + " " + line )
 
             # Count "{"
+
+            if line.find("{") > -1:
+                containerNesting = containerNesting + 1
+
             if line.find("}") > -1:
                 containerNesting = containerNesting - 1
 
                 if containerNesting == 0:
                     output_generator.registerAnnotatedHeaderEnd()
                     containerMode = False
-                    continue
-
-            if line.find("{") > -1:
-                containerNesting = containerNesting + 1
+                    curClass = ""
 
             if containerNesting == 1:
                 # Parse a member

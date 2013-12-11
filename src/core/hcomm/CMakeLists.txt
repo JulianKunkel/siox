@@ -15,9 +15,9 @@ target_link_libraries(
 )
 
 add_library(
-	siox-core-hcomm
-	HighLevelCommunicationModule.cpp
+	siox-core-hcomm	
 	HighLevelCommunicationModuleOptions.cpp
+	HighLevelCommunicationModule.cpp
 )
 
 target_link_libraries(

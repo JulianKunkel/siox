@@ -65,11 +65,18 @@ public:
 			return messageCallback;
 		}
 
+		virtual bool isConnected() = 0;
 
 		/**
-	  	 * Try to reconnect asynchronously and resend all currently pending messages. 
+	  	 * Try to reconnect asynchronously and resend all currently pending messages.
+	  	 * Should be called from within connectionErrorCB()
 	  	 */
 		virtual void ireconnect() = 0;
+
+		/**
+		 * Drop all currently pending messages.
+		 */
+		virtual void dropPendingMessages() = 0;
 
 		/**
 		 * Return the address of the target communication endpoint.

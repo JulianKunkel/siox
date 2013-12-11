@@ -8,38 +8,13 @@
 #include <core/comm/CommunicationModule.hpp>
 #include <core/module/ModuleLoader.hpp>
 #include <util/DefaultProcessorQueues.hpp>
-
+#include <util/TestHelper.hpp>
 
 #include <core/container/container-binary-serializer.hpp>
 
 using namespace core;
 using namespace std;
 
-class ProtectRaceConditions{
-public:
-	void waitUntilSthHappened(){
-        unique_lock<mutex> lk(m);
-        if (sth_happened){
-        	sth_happened = false;
-        	return;
-        }
-        cv.wait(lk);
-        sth_happened = false;
-	}
-
-protected:
-
-	bool sth_happened = false;
-
-	mutex m;
-	condition_variable cv;
-
-	void sthHappens(){
-		unique_lock<mutex> lk(m);
-		sth_happened = true;
-		cv.notify_one();
-	}
-};
 
 class MyConnectionCallback: public ConnectionCallback, public ProtectRaceConditions{
 public:

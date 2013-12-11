@@ -10,131 +10,111 @@
  	Name1:8080#service2
 
  	Name2:8080#service1
-
  Then the first two service endpoints can be reached by a shared connection.
+
+ Multiple alternative endpoints are in the form:
+ 	Name1:8080,Name2:8080#service1
+ In this case both endpoints are alternatives (both support the #service channel @ port 8080), if one becomes unreachable the other one will be used for the connection.
  */
+
+#include <mutex>
+#include <utility>
+#include <unordered_map>
+#include <list>
+#include <vector>
+
 
 #include <core/comm/CommunicationModuleImplementation.hpp>
 
 #include <core/comm/ServiceServer.hpp>
 #include <core/comm/ServiceClient.hpp>
 
-#include <mutex>
-#include <utility>
-#include <unordered_map>
-#include <list>
-
-#include <core/hcomm/HighLevelCommunicationModule.hpp>
+#include <core/hcomm/HighLevelCommunicationServer.hpp>
+#include <core/container/container-binary-serializer.hpp>
 
 using namespace core;
 using namespace std;
 
-class MultiplexerServiceClient;
-class MultiplexerServiceServer;
+static inline uint32_t headerLen(){
+	const uint16_t type = 0;
+	return j_serialization::serializeLen(type) * 2;
+}
 
-class HLCommunicationModuleImpl : public HLCommunicationModule {
+/*
+ Wire protocol:
+ 	ChannelID uint16_t
+	messageTypeID uint16_t
+
+ The handler does not need to manage overflows as all flow control is done on the client side.
+ */
+
+class HLCommunicationModuleServerHandler : public ServerCallback{
 public:
-	virtual HLCommServiceServer * startServerService(const string & address) throw(CommunicationModuleException);
+	virtual void messageReceivedCB(std::shared_ptr<ServerClientMessage> msg, const char * message_data, uint64_t buffer_size)
+	{
+		uint16_t mtype;
+		uint16_t channelID;
+		uint64_t pos = parentServer->headerSizeClientMessage();
 
-	virtual HLCommServiceClient * startClientService(const string & server_address) throw(CommunicationModuleException);
+		j_serialization::deserialize(channelID, msg->payload, pos, msg->size);
+		j_serialization::deserialize(mtype, msg->payload, pos, msg->size);
 
-	virtual void init(){
-		MultiplexerOptions & o = getOptions<MultiplexerOptions>();
-		parentComm =  GET_INSTANCE(CommunicationModule, o.parentComm);
-		assert(parentComm);
+		if ( channelID < channels.size() && channels[channelID] != nullptr ){
+			// seems to be a valid channel specifier
+		}
 	}
 
-	virtual ComponentOptions* AvailableOptions(){
-		return new MultiplexerOptions();
+	virtual void responseSendCB(BareMessage * response){	};
+
+	virtual void invalidMessageReceivedCB(CommunicationError error){  };
+
+	virtual uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType)
+	{
+
 	}
 
-	void hasStopped(MultiplexerServiceClient * client){
-		unique_lock<mutex> lk(parentListMutex);
-		// TODO remove from the unordered map and list
-		// Delete the client if all virtual connections are completed
+	virtual void serializeResponseMessage(const ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos){
+
 	}
 
-	void hasStopped(MultiplexerServiceServer * client){
-		unique_lock<mutex> lk(parentListMutex);
-		// TODO remove from the unordered map and list
-		// Delete the server if all virtual connections are completed
-	}
-
-private:
-	CommunicationModule * parentComm;
-
-	// the mutex protects createdServers and createdClientConnections
-	mutex parentListMutex;
-
-	// map the real address to only one server
-	unordered_map<string, pair<ServiceServer*, list<MultiplexerServiceServer*> > > createdServers;
-
-	unordered_map<string, pair<ServiceClient*, list<MultiplexerServiceClient*> > > createdClientConnections;
+	unordered_map<string, uint16_t> channelRegistry;
+	vector<HighLevelServiceServer*> channels;
+	ServiceServer * parentServer;
 };
 
 
-
-class MultiplexerServiceClient : public ServiceClient{
+class HighLevelServiceClient : public HLCommServiceClient{
 public:
-	virtual const string & getAddress() const {
-		return address;
-	}
-
-
-	MultiplexerServiceClient(MultiplexerModule & parent, ServiceClient * client, const string & address) : parent(parent), address(address), client(client){
+	HighLevelServiceClient(HLCommunicationModuleImpl & parent, ServiceClient * client, const vector<string> & addressList, const string & channelName) : parent(parent), serverAddresses(addressList), channelName(channelName), client(client){
 
 	}
 
-	virtual void ireconnect(){
-
-	}
-
-	virtual void isend( BareMessage * msg ){
-
-	}
-
-	virtual uint32_t headerSize(){
-
-	}
-
-	virtual void serializeHeader(char * buffer, uint64_t & pos, uint64_t size){
-
-	}
-
-	~MultiplexerServiceClient(){
+	~HighLevelServiceClient(){
 		parent.hasStopped(this);
 	}
 
 private:
-	MultiplexerModule & parent;
-	string address;
+	HLCommunicationModuleImpl & parent;
+	const vector<string> serverAddresses;
+	const string channelName;
+
 	ServiceClient * client;
 };
 
-class MultiplexerServiceServer : public ServiceServer{
-public:
-	virtual void listen() throw(CommunicationModuleException){
-
-	}
-	
-	virtual void ipublish( void * object ){
+class HighLevelServiceServer : public HLCommServiceServer{
+public:	
+	HighLevelServiceServer(HLCommunicationModuleImpl & parent, ServiceServer * server) : parent(parent), server(server){
 
 	}
 
-	virtual uint32_t headerSizeClientMessage(){
-
-	}
-
-	MultiplexerServiceServer(MultiplexerModule & parent, ServiceServer * server) : parent(parent), server(server){
-
-	}
-
-	~MultiplexerServiceServer(){
+	~HighLevelServiceServer(){
 		parent.hasStopped(this);
 	}
 
 private:
-	MultiplexerModule & parent;
+	map<uint32_t, HLServerCallbackUnidirectional*> callbacks;
+
+	HLCommunicationModuleImpl & parent;
 	ServiceServer * server;
 };
 
@@ -147,34 +127,36 @@ static pair<string, string> splitAddress(const string & address) throw(Communica
 }
 
 
-ServiceServer * MultiplexerModule::startServerService(const string & address) throw(CommunicationModuleException){
+HLCommServiceServer * HLCommunicationModuleImpl::startServerService(const string & address) throw(CommunicationModuleException){
 
 	pair<string, string> addressPair = splitAddress(address);
 
 	unique_lock<mutex> lk(parentListMutex);
 
-	auto itr = createdServers.find(addressPair.first);
+	auto itr = createdServers.find( addressPair.first );
 	ServiceServer * parentServer;
-	if(itr == createdServers.end() ){
-
+	if( itr == createdServers.end() ){
+		HighLevelCommunicationModuleOptions & o = getOptions<HighLevelCommunicationModuleOptions>();		
+		CommunicationModule * parentComm =  GET_INSTANCE(CommunicationModule, o.parentComm);
+		assert(parentComm);
 		// create a new server to listen
 		parentServer = parentComm->startServerService(addressPair.first, ServerCallback * msg_rcvd_callback);
 
 		// add the server to the existing servers
-		pair<ServiceServer*, list<MultiplexerServiceServer*> > mypair;
+		pair<ServiceServer*, list<HighLevelServiceServer*> > mypair;
 		mypair.first = parentServer;
 		createdServers[addressPair.first] = mypair;
 	}else{
 		parentServer = itr->second.first;
 	}
 
-	MultiplexerServiceServer * server = new MultiplexerServiceServer(*this, parentServer);
+	HighLevelServiceServer * server = new HighLevelServiceServer(*this, parentServer);
 
 	createdServers[addressPair.first].second.push_back(server);
 	return server;
 }
 
-ServiceClient * MultiplexerModule::startClientService(const string & server_address) throw(CommunicationModuleException){
+HLCommServiceClient * HLCommunicationModuleImpl::startClientService(const string & server_address) throw(CommunicationModuleException){
 	pair<string, string> addressPair = splitAddress(server_address);
 
 	unique_lock<mutex> lk(parentListMutex);
@@ -182,18 +164,22 @@ ServiceClient * MultiplexerModule::startClientService(const string & server_addr
 	auto itr = createdClientConnections.find(addressPair.first);
 	ServiceClient * parentClient;
 	if(itr == createdClientConnections.end() ){
+		HighLevelCommunicationModuleOptions & o = getOptions<HighLevelCommunicationModuleOptions>();		
+		CommunicationModule * parentComm =  GET_INSTANCE(CommunicationModule, o.parentComm);
+		assert(parentComm);
+
 		// create a new client to connect to the target
 		parentClient = parentComm->startClientService(addressPair.first, ConnectionCallback * ccb, MessageCallback * messageCallback);
 
 		// add the client to the existing clients
-		pair<ServiceClient*, list<MultiplexerServiceClient*> > mypair;
+		pair<ServiceClient*, list<HighLevelServiceClient*> > mypair;
 		mypair.first = parentClient;
 		createdClientConnections[addressPair.first] = mypair;
 	}else{
 		parentClient = itr->second.first;
 	}
 
-	MultiplexerServiceClient * client = new MultiplexerServiceClient(*this, parentClient, server_address);
+	HighLevelServiceClient * client = new HighLevelServiceClient(*this, parentClient, server_address);
 
 	createdClientConnections[addressPair.first].second.push_back(client);
 	return client;
@@ -201,8 +187,8 @@ ServiceClient * MultiplexerModule::startClientService(const string & server_addr
 
 
 extern "C" {
-	void * CORE_COMM_INSTANCIATOR_NAME()
+	void * CORE_HCOMM_INSTANCIATOR_NAME()
 	{
-		return new MultiplexerModule();
+		return new HLCommunicationModuleImpl();
 	}
 }

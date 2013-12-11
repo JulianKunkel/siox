@@ -13,16 +13,20 @@ class TimeoutException : public exception{
 
 class ProtectRaceConditions{
 public:
-	void waitUntilSthHappened(){
+	void waitUntilSthHappened() throw(TimeoutException) {
         unique_lock<mutex> lk(m);
         if (sth_happened){
         	sth_happened = false;
         	return;
         }
-        if ( cv.wait_for(lk, std::chrono::milliseconds(100)) == cv_status::timeout){
+        if ( cv.wait_for(lk, std::chrono::milliseconds(1000)) == cv_status::timeout){
         		throw TimeoutException();
         }
         sth_happened = false;
+	}
+
+	bool hasSthHappened(){
+		return sth_happened;
 	}
 
 protected:

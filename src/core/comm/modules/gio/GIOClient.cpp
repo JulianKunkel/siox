@@ -151,6 +151,10 @@ void GIOClient::connectionThreadFunc(thread * lastThread){
 	}
 }
 
+void GIOClient::dropPendingMessages(){
+	sendProcessor->terminate();
+}
+
 
 GIOClient::GIOClient(const string & address, util::ProcessorQueue * sendQueue){
 	this->address = address;

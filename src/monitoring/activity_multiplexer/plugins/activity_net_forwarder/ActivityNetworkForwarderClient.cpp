@@ -1,32 +1,93 @@
+#include <mutex>
+
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
+
 #include <core/comm/CommunicationModule.hpp>
 #include <monitoring/activity_multiplexer/plugins/activity_net_forwarder/ActivityBinarySerializable.hpp>
+
+#include <knowledge/reasoner/AnomalyTrigger.hpp>
+#include <knowledge/reasoner/Reasoner.hpp>
 
 #include "ActivityNetworkForwarderOptions.hpp"
 
 using namespace core;
 using namespace monitoring;
+using namespace knowledge;
 
 /**
  * Forward an activity from one ActivityMultiplexer to another.
- *
+ * Data is only forwarded if this client is triggered.
  */
-class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, MessageCallback{
-	public:
+class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, public MessageCallback, public AnomalyTrigger{
+private:
+	// the ringBuffer
+	vector<shared_ptr<Activity>> ringBuffer;
+	uint curPos = 0;
+	uint sendPos = 0;
+	uint ringBufferSize;
+	bool forwardAllActivities;
+
+	mutex ringBuffMutex;
+
+public:
+
 	/**
 	 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 	 */
 	virtual void NotifyAsync( int lostActivitiesCount, shared_ptr<Activity> element ) {
-		client->isend(&*element);
+		if (forwardAllActivities){
+			client->isend(&*element);
+		}else{
+			lock_guard<mutex> lock(ringBuffMutex);
+
+			//cout << "Adding " << curPos << " " << element->ucaid_ << " " << sendPos << endl;		
+
+			if ( curPos == sendPos && ringBuffer[curPos] != nullptr ) {
+				sendPos = (sendPos + 1) % ringBufferSize;
+			}
+
+			ringBuffer[ curPos ] = element;
+			curPos = (curPos + 1) % ringBufferSize;
+		}
+	}
+
+	// It is expected that this function is not called concurrently.
+	void triggerResponseForAnomaly(){
+		// if we overtook the buffer, then everything must be send...		
+		// Send the current ringbuffer away iff the activities have not been send so far.
+		
+		lock_guard<mutex> lock(ringBuffMutex);		
+
+		//cout << sendPos << " " << curPos << endl;
+
+		for(uint pos = sendPos ; pos < (ringBufferSize + sendPos) ; pos ++){
+			const int realPos = pos % ringBufferSize;
+
+			//cout << realPos << " " << ringBuffer.size() << endl;
+
+			// small opportunity for a race condition if the buffer is full now...
+			shared_ptr<Activity> data = ringBuffer[realPos];
+			ringBuffer[realPos] = nullptr;
+
+			if ( data == nullptr ){
+				this->sendPos = realPos;
+				return;
+			}
+
+			//cout << "sending " << realPos << " " << data->ucaid_ << endl;
+
+			client->isend( &*data );			
+		}
+		this->sendPos = curPos;
 	}
 
 	/**
 	 * Dummy implementation for ActivityNetworkForwarder Options.
 	 */
-	ComponentOptions * AvailableOptions() {
+	ComponentOptions * AvailableOptions(){
 		return new ActivityNetworkForwarderClientOptions();
 	}
 
@@ -41,6 +102,16 @@ class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, MessageC
 		ActivityNetworkForwarderClientOptions & options = getOptions<ActivityNetworkForwarderClientOptions>();
 		CommunicationModule * comm =  GET_INSTANCE(CommunicationModule, options.comm);
 		client = comm->startClientService(options.targetAddress, & connCallback, this);
+
+		Reasoner * reasoner =  GET_INSTANCE(Reasoner, options.reasoner);
+		this->ringBufferSize = options.ringBufferSize;
+		this->forwardAllActivities = options.forwardAllActivities;
+
+		this->ringBuffer.resize(ringBufferSize);
+
+		if ( reasoner != nullptr ){
+			reasoner->connectTrigger(this);
+		}		
 	}
 
 	virtual void messageSendCB(BareMessage * msg){ /* do nothing */ }
