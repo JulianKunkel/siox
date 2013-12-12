@@ -86,17 +86,17 @@ public:
 	void isend( uint32_t mtype, void * object);
 
 	/* Returns the created response object, this messageType must be a messageWithResponse.
-		Ownership of the created object is given to the user.
+		Ownership of the created response object is given to the user.
 		If an error occurs during transmission which cannot be fixed it throws an exception. 
 	 */
-	void * performRPC( uint32_t mtype, void * object ) throw (CommunicationModuleException);
+	//void * performRPC( uint32_t mtype, void * object ) throw (CommunicationModuleException);
 
-	void registerRPCMessage(uint32_t mtype, HLRPCMessageHandler * handler);
+	//void registerRPCMessage(uint32_t mtype, HLRPCMessageHandler * handler);
 	void registerUnidirectionalMessage(uint32_t mtype, HLUnidirectionalMessageHandler * handler);
 };
 
 
-class HLCommunicationModule{
+class HLCommunicationModule : public core::Component{
 public:
 	virtual HLCommServiceServer * startServerService(const string & address) throw(CommunicationModuleException) = 0;
 

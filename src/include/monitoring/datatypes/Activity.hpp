@@ -118,9 +118,9 @@ namespace monitoring {
 				remoteInvoker_( remoteInvoker ), errorValue_( errorValue ) {}
 
 			Activity() {
-				//memset(this, 0, sizeof(Activity));
-				remoteInvoker_ = nullptr;
-				errorValue_ = 0;
+				memset(this, 0, sizeof(Activity));
+				//remoteInvoker_ = nullptr;
+				//errorValue_ = 0;
 			}
 
 			void print() {

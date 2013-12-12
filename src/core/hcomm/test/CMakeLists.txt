@@ -17,18 +17,18 @@ target_link_libraries(
 	siox-core-comm
 )
 
-add_test(core-comm-mmts-in-memory core-comm-mmts-in-memory)
+add_test(core-hcomm-mmts-in-memory core-hcomm-mmts-in-memory)
 
 
-# add_executable(
-# 	core-comm-multi-endpoint-client-test
-# 	multi-endpoint-client-test.cpp
-# )
+add_executable(
+	core-hcomm-high-level-test
+	high-level-client-test.cpp
+)
+target_link_libraries(
+	core-hcomm-high-level-test
+	siox-core-ModuleLoader
+	siox-core-comm-gio
+	siox-core-hcomm
+)
 
-# target_link_libraries(
-# 	core-comm-multi-endpoint-client-test
-# 	siox-core-ModuleLoader
-# 	siox-core-comm-gio
-# )
-
-# add_test(core-comm-multi-endpoint-client-test core-comm-multi-endpoint-client-test)
+ add_test(core-hcomm-high-level-test core-hcomm-high-level-test)

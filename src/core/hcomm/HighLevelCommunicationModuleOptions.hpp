@@ -4,7 +4,7 @@
 using namespace core;
 
 //@serializable
-class MultiplexerOptions: public ComponentOptions {
+class HighLevelCommunicationModuleOptions: public ComponentOptions {
 	public:
 		ComponentReference parentComm;
 };

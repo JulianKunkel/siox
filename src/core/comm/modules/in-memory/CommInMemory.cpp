@@ -68,12 +68,14 @@ public:
 
 	void isendResponse(const void * object);
 	void isendErrorResponse(CommunicationError error);
+
 };
 
 class InMemoryServiceClient : public ServiceClient{
 public:	
 	string address;
 	bool available = true;
+	bool connected = false;
 
 	uint32_t headerSize(){
 		return 0;
@@ -87,20 +89,28 @@ public:
 		this->address = address;
 	}
 
+	bool isConnected(){
+		return connected;
+	}
+
 	void ireconnect(){
 		InMemoryServiceServer * server = servers[address];
 		if (server == nullptr){
+			connected = false;
 			// we have an error here!
 			connectionCallback->connectionErrorCB(*this, CommunicationError::SERVER_NOT_ACCESSABLE);
 			return;
 		}
 
+		connected = true;
 		connectionCallback->connectionSuccessfullCB(*this);
 	}
 
 	const string & getAddress() const{
 		return this->address;
 	}
+
+	void dropPendingMessages(){}
 
 	BareMessage * isend( const void * object ){
 		// we have to serialize the object

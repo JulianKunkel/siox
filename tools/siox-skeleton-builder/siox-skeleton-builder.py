@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # encoding: utf-8
 from __future__ import print_function
@@ -440,10 +439,10 @@ class FunctionParser():
         functionList = []
 
         string = re.sub('/\*.*?\*/', '', string, flags=re.M | re.S)
-	string = re.sub('//.*', '', string)
-	string = re.sub('#.*', '', string)
+        string = re.sub('//.*', '', string)
+        string = re.sub('#.*', '', string)
         
-	# Match all function definitions
+        # Match all function definitions
         iterateFunctionDefinition = self.regexFunctionDefinition.finditer(
             string)
 
@@ -475,20 +474,20 @@ class FunctionParser():
             # If only the blank header file should be generated pass the
             # string of parameters to the Function object.
             if self.blankHeader:
-		parameterList = parameterString.strip().split(',')
-		curParam = 1
-		parameterOutList = []
-		for parameter in parameterList:
-			if parameter in ('void', '...', ''):
-				parameterList.append(parameter)
-				continue
-			m = re.match('[a-zA-Z].*[ \t][a-zA-Z0-9]+[ \t]*$', parameter)
-			if m:
-				print(parameter)
-				parameterOutList.append(parameter)
-			else:
-				parameterOutList.append(parameter + " var" + str(curParam))
-				curParam = curParam + 1					
+                parameterList = parameterString.strip().split(',')
+                curParam = 1
+                parameterOutList = []
+                for parameter in parameterList:
+                    if parameter in ('void', '...', ''):
+                        parameterList.append(parameter)
+                        continue
+                    m = re.match('[a-zA-Z].*[ \t][a-zA-Z0-9]+[ \t]*$', parameter)
+                    if m:
+                        print(parameter)
+                        parameterOutList.append(parameter)
+                    else:
+                        parameterOutList.append(parameter + " var" + str(curParam))
+                        curParam = curParam + 1
                 function.definition = "(" + ", ".join(parameterOutList) + ")"
             # If the C source code should be generated split the string into a
             # list of parameters and extract the type and name of the
@@ -600,8 +599,8 @@ class CommandParser():
         # Strip commentsq
         inputString = re.sub('/\*.*?\*/', '', inputString, flags=re.M | re.S)
 
-	    #inputString = re.sub('#(?!include ).*', '', inputString)
-	
+        #inputString = re.sub('#(?!include ).*', '', inputString)
+
         inputLineList = inputString.split('\n')
         # Iterate over every line and search for instrumentation instructions.
         i = 0
@@ -819,7 +818,7 @@ class Template():
     # @param type What part of the template should be given
     #
     # @return The requested string from the template
-    def output(self, type):	
+    def output(self, type):
         if (type == 'global'):
             return self.cleanOutput(self.world)
         elif (type == 'init'):
@@ -842,7 +841,7 @@ class Template():
 def prepareGenericVariablesForTemplates(function, call=""):
   global genericVariablesForTemplates
   genericVariablesForTemplates = {"FUNCTION_NAME" : function.name,
-				  "FUNCTION_CALL" : call}
+                                  "FUNCTION_CALL" : call}
 
 #
 # @brief The output class (write a file to disk)
@@ -1130,7 +1129,7 @@ class Writer():
             print(function.getDefinitionPointer(), file=output)
         print("\tstatic int initialized_dlsym = 0;\n", file=output)
 
-        print("\nstatic void sioxSymbolInit() {\ninitialized_dlsym = 1;", file=output)	
+        print("\nstatic void sioxSymbolInit() {\ninitialized_dlsym = 1;", file=output)
         for function in functionList:
             print(function.getDlsym(), file=output)
 
@@ -1170,7 +1169,7 @@ class Writer():
                 functionCall = '\t' + function.getCallPointer() + ';\n'
 
             prepareGenericVariablesForTemplates(function, "if(initialized_dlsym == 0) sioxSymbolInit();\n" + functionCall + "\n")
-	
+
             # write function signature
             print(function.getDefinition(), end='\n{\n', sep=' ',
                   file=output)
