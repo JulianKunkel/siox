@@ -126,21 +126,26 @@ Example:
 
 namespace monitoring {
 	class Topology : public core::Component {
+		//lookupXXX() members generally indicate failure by returning a false object, i. e. you are free to write
+		//    if( TopologyObject myObject = topology->lookupObjectByPath( "foo/bar" ) ) {
+		//        //do stuff with myObject
+		//    }
+		//without fearing any exceptions...
 		public:
 
 			typedef std::vector<TopologyRelation> TopologyRelationList;
 			typedef std::vector<TopologyValue> TopologyValueList;
 
 			virtual TopologyType registerType( const string& name ) throw() = 0;
-			virtual TopologyType lookupTypeByName( const string& name ) throw( NotFoundError ) = 0;
-			virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw( NotFoundError ) = 0;
+			virtual TopologyType lookupTypeByName( const string& name ) throw() = 0;
+			virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw() = 0;
 
 			virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError ) = 0;
-			virtual TopologyObject lookupObjectByPath( const string& Path ) throw( NotFoundError ) = 0;
-			virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw( NotFoundError ) = 0;
+			virtual TopologyObject lookupObjectByPath( const string& Path ) throw() = 0;
+			virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw() = 0;
 
 			virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError ) = 0;
-			virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw( NotFoundError ) = 0;
+			virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw() = 0;
 
 			// TopologyRelationType may be 0 which indicates any parent/child.
 			virtual TopologyRelationList enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() = 0;
@@ -148,10 +153,10 @@ namespace monitoring {
 
 
 			virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
-			virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw( NotFoundError ) = 0;
-			virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw( NotFoundError ) = 0;
-			virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) = 0;
-			virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw( NotFoundError ) = 0;
+			virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() = 0;
+			virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw() = 0;
+			virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw( IllegalStateError ) = 0;
+			virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() = 0;
 			virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw() = 0;
 	};
 }
