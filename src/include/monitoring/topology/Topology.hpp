@@ -85,6 +85,33 @@ Requirements:
 	TopologyValue "attribute" --> TopologyAttribute
 
 @enduml
+
+Example:
+	TopologyType
+	N "Node"
+	D "Device"
+	S "Steckdose"
+	P "Plug"
+	R "Rack"
+	H "Hostname"
+	s "SerialNumber"
+
+	TopologyObject
+	3 (Typ N)
+	4 (Typ D)
+	5 (Typ S)
+	6 (Typ R)
+	7 (Typ S)
+
+	TopologyRelation
+	0 "West1"     3 H
+	3 "/dev/sda1" 4 D
+	0 "(Rack) 0" 6 R
+	6 "S 0" 5 S
+	6 "S 1" 7 S
+	5 "Plug 0" 3 P
+	6 "West1" 3 H
+	0 "SCHUH4711" 3 s
 */
 
 

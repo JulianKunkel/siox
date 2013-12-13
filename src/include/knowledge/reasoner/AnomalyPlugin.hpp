@@ -1,8 +1,8 @@
 #ifndef KNOWLEDGE_REASONER_ANOMALY_PLUGIN_HPP
 #define KNOWLEDGE_REASONER_ANOMALY_PLUGIN_HPP
 
-#include <set>
 #include <memory>
+#include <unordered_map>
 
 #include <knowledge/reasoner/ReasoningDatatypes.hpp>
 
@@ -13,52 +13,79 @@ using namespace std;
  */
 namespace knowledge {
 
-	struct AnomalyPluginObservation {
-		const ActivityObservation observation;
-		const char * issue_cause; // optional: if known. May not be null.
-
-		const UniqueInterfaceID cid;
-		const FilesystemID      fid; // optional: if known...
-		const ProcessID         pid; // contains the NodeID as well.
-
-		uint32_t occurences;
-		int32_t delta_time_ms;
-		// maybe we'll add relative delta.
-
-		AnomalyPluginObservation( const ActivityObservation observation, const char * issue_cause, const UniqueInterfaceID cid, const FilesystemID fid, const ProcessID pid, uint32_t occurences, int32_t delta_time_ms ) : observation( observation ), issue_cause( issue_cause ), cid( cid ), fid( fid ), pid( pid ), occurences( occurences ), delta_time_ms( delta_time_ms ) {}
-
-
-		inline bool operator==( AnomalyPluginObservation const & b ) const {
-			return observation == b.observation && strcmp( issue_cause, b.issue_cause ) && cid == b.cid && fid == b.fid && pid == b.pid;
-		}
-
-		inline bool operator!=( AnomalyPluginObservation const & b ) const {
-			return !( *this == b );
-		}
-
-		inline bool operator<( AnomalyPluginObservation const & b ) const {
-			return observation < b.observation ||  strcmp( issue_cause, b.issue_cause ) < 0 || cid < b.cid || fid < b.fid || pid < b.pid;
-		}
-
-	};
-
 // Plugins are registered on three levels.
-// Right now all levels are treaded identically, therefore, cid, fid and pid are part of the observation.
+// Right now all levels are treaded identically, theoretically, cid, fid and pid could be part of the observation.
 // enum class AnomalyPluginLevel : uint8_t{
 //  COMPONENT,
 //  PROCESS,
 //  NODE
 // };
-//struct AnomalyPluginObservations{
-//};
 
 
-	class AnomalyPlugin {
-		public:
-			// After executing this call, the plugin iterates to the next timestep.
-			// Ownership of the pointer is transferred to the caller.
-			virtual unique_ptr<set<AnomalyPluginObservation>> queryRecentObservations() = 0;
-	};
+struct AnomalyPluginHealthStatistic{
+	ComponentID cid;
+	UniqueInterfaceID ucid; // can be mapped to the name later
+	
+	array<uint32_t, HEALTH_STATE_COUNT> occurrences;
+
+	unordered_map<string, HealthIssue> positiveIssues;
+	unordered_map<string, HealthIssue> negativeIssues;
+};
+
+
+
+class AnomalyPlugin {
+	public:
+		// After executing this call, the plugin iterates to the next timestep.
+		// Ownership of the pointer is transferred to the caller.
+		virtual unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> queryRecentObservations()
+		{
+			unordered_map<ComponentID, AnomalyPluginHealthStatistic> * tmp = recentObservations;
+			recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
+			return unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>(tmp);
+		}
+
+		AnomalyPlugin() {
+			recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
+		}
+
+	private:
+		unordered_map<ComponentID, AnomalyPluginHealthStatistic> * recentObservations;
+
+	protected:
+
+		void addObservation( ComponentID cid, UniqueInterfaceID uid, HealthState state,  const string & issue, int32_t delta_time_ms ) {
+			unordered_map<ComponentID, AnomalyPluginHealthStatistic>::iterator find = recentObservations->find( cid );
+
+			if( find == recentObservations->end() ) {
+				// append an empty health state
+				(*recentObservations)[cid] = { cid, uid };
+				find = recentObservations->find( cid );		
+			}
+
+			AnomalyPluginHealthStatistic & stat = find->second;
+			stat.occurrences[state]++;
+			if ( issue != "" ){
+				if ( state < HealthState::OK ){
+					addIssue( stat.positiveIssues, issue, delta_time_ms );
+				}
+				if ( state > HealthState::OK ){
+					addIssue( stat.negativeIssues, issue, delta_time_ms );
+				}
+			}
+		}
+
+		void addIssue( unordered_map<string, HealthIssue> & map, const string & issue, int32_t delta_time_ms ){
+			auto find = map.find( issue );
+			if ( find == map.end() ){
+				map[issue] = { issue, 1, delta_time_ms };				
+			}else{
+				HealthIssue & health = find->second;
+				health.occurrences++;
+				health.delta_time_ms += delta_time_ms;
+			}
+		}
+};
 
 }
 

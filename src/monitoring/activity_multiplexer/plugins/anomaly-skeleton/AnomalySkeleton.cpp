@@ -32,21 +32,6 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public AnomalyPlugin {
 		OntologyAttribute filesystem;
 		OntologyAttribute filename;
 
-		set<AnomalyPluginObservation> * recentObservations = new set<AnomalyPluginObservation>();
-
-
-		void addObservation( set<AnomalyPluginObservation> & issues, AnomalyPluginObservation & newIssue ) {
-			set<AnomalyPluginObservation>::iterator find = issues.find( newIssue );
-			// should be the default case.
-			if( find == issues.end() ) {
-				// append the item
-				issues.insert( newIssue );
-			} else {
-				AnomalyPluginObservation & existingIssue = ( AnomalyPluginObservation & )( *find );
-				existingIssue.occurences += newIssue.occurences;
-				existingIssue.delta_time_ms += newIssue.delta_time_ms;
-			}
-		}
 	public:
 		void Notify( Activity * activity ) {
 			cout << "Notified: type: " ;// << sys->activity_name(activity->aid())   << endl;
@@ -64,13 +49,6 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public AnomalyPlugin {
 
 		void NotifyAsync( int lost_count, Activity * activity ) {
 		}
-
-		unique_ptr<set<AnomalyPluginObservation>> queryRecentObservations() {
-			auto ptr = unique_ptr<set<AnomalyPluginObservation>>( recentObservations );
-			recentObservations = new set<AnomalyPluginObservation>();
-			return ptr;
-		}
-
 
 		ComponentOptions * AvailableOptions() {
 			return new AnomalySkeletonOptions();
