@@ -67,8 +67,8 @@ class TestQualitativeUtilization : public QualitativeUtilization {
 
 class TestAnomalyPlugin : public AnomalyPlugin {
 	public:
-		void injectObservation( ComponentID cid, UniqueInterfaceID uid, HealthState state,  const string & issue, int32_t delta_time_ms ) {
-			addObservation(cid, uid, state, issue, delta_time_ms);
+		void injectObservation( ComponentID cid, HealthState state,  const string & issue, int32_t delta_time_ms ) {
+			addObservation(cid, state, issue, delta_time_ms);
 		}
 };
 
@@ -315,7 +315,7 @@ void testReasoner(){
 	}
 
 	// Now we inject an observation which will trigger an reaction:
-	adpi1.injectObservation( ComponentID{{1}}, 2, HealthState::SLOW, "", 10 );
+	adpi1.injectObservation( ComponentID{{1}}, HealthState::SLOW, "", 10 );
 
 	assert( at1.waitForAnomalyCount( 1 ) );
 	assert( at2.waitForAnomalyCount( 1 ) );

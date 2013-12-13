@@ -31,6 +31,11 @@ namespace core {
 
 			ComponentReference(){}
 			ComponentReference(Component * component) : componentPointer(component){}
+
+			ComponentReference & operator= ( const Component * component ){
+				this->componentPointer = const_cast<Component *>(component);
+				return *this;
+			}
 	};
 
 #define GET_INSTANCE(TYPE, Y) (dynamic_cast<TYPE *>(Y.componentPointer))

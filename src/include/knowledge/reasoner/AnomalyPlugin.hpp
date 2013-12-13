@@ -24,7 +24,6 @@ namespace knowledge {
 
 struct AnomalyPluginHealthStatistic{
 	ComponentID cid;
-	UniqueInterfaceID ucid; // can be mapped to the name later
 	
 	array<uint32_t, HEALTH_STATE_COUNT> occurrences;
 
@@ -54,12 +53,12 @@ class AnomalyPlugin {
 
 	protected:
 
-		void addObservation( ComponentID cid, UniqueInterfaceID uid, HealthState state,  const string & issue, int32_t delta_time_ms ) {
+		void addObservation( ComponentID cid, HealthState state,  const string & issue, int32_t delta_time_ms ) {
 			unordered_map<ComponentID, AnomalyPluginHealthStatistic>::iterator find = recentObservations->find( cid );
 
 			if( find == recentObservations->end() ) {
 				// append an empty health state
-				(*recentObservations)[cid] = { cid, uid };
+				(*recentObservations)[cid] = { cid };
 				find = recentObservations->find( cid );		
 			}
 

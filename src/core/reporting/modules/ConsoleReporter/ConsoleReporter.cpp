@@ -60,8 +60,8 @@ void ConsoleReporter::processReports(ostream & out, const std::list< pair<Regist
 				curStack.push_back(cur);
 			}
 			// output all parents (outputPos would be the missing parents)
-			for( uint curPos = 0; curPos < curStack.size(); curPos++ ){
-				cout << curStack[curPos]->name << "/"; 
+			for( auto parentItr = curStack.rbegin(); parentItr != curStack.rend(); parentItr++ ){
+				cout << (*parentItr)->name << "/"; 
 			}
 
 			parGroupStack = curStack;
