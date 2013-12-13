@@ -479,7 +479,7 @@ class FunctionParser():
                 parameterOutList = []
                 for parameter in parameterList:
                     if parameter in ('void', '...', ''):
-                        parameterList.append(parameter)
+                        parameterOutList.append(parameter)
                         continue
                     m = re.match('[a-zA-Z].*[ \t][a-zA-Z0-9]+[ \t]*$', parameter)
                     if m:
