@@ -13,7 +13,7 @@ set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ $
 #SET (CMAKE_CXX_FLAGS_DEBUG        "-pg")
 #SET (CMAKE_LINKER  "/usr/bin/ld")
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC -g -O2")
+set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC -g")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-as-needed")

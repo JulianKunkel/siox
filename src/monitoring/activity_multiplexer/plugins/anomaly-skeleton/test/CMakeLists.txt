@@ -5,12 +5,12 @@ include_directories(
 )
 
 add_executable(
-	AnomalySkeletonTest
+	core-activity_multiplexer-anomaly-skeleton-AnomalySkeletonTest
 	AnomalySkeletonTest.cpp
 )
 
 target_link_libraries(
-	AnomalySkeletonTest
+	core-activity_multiplexer-anomaly-skeleton-AnomalySkeletonTest
 	siox-monitoring-activityPlugin-AnomalySkeleton
 	siox-core-autoconfigurator-FileConfigurationProvider
 	siox-monitoring-FileOntology
@@ -23,5 +23,5 @@ target_link_libraries(
 
 symlink(siox.conf siox.conf)
 
-add_test(core-activity_multiplexer-anomaly-skeleton-AnomalySkeletonTest AnomalySkeletonTest)
+add_test(core-activity_multiplexer-anomaly-skeleton-AnomalySkeletonTest core-activity_multiplexer-anomaly-skeleton-AnomalySkeletonTest)
 

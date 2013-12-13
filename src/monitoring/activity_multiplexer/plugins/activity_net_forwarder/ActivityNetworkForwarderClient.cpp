@@ -28,7 +28,9 @@ private:
 	uint curPos = 0;
 	uint sendPos = 0;
 	uint ringBufferSize;
+
 	bool forwardAllActivities;
+	bool anomalyStatus = false;
 
 	mutex ringBuffMutex;
 
@@ -38,7 +40,7 @@ public:
 	 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 	 */
 	virtual void NotifyAsync( int lostActivitiesCount, shared_ptr<Activity> element ) {
-		if (forwardAllActivities){
+		if (forwardAllActivities || anomalyStatus){
 			client->isend(&*element);
 		}else{
 			lock_guard<mutex> lock(ringBuffMutex);
@@ -53,13 +55,18 @@ public:
 			curPos = (curPos + 1) % ringBufferSize;
 		}
 	}
+	
+	void clearAnomalyStatus(){
+		anomalyStatus = false;
+	}
 
 	// It is expected that this function is not called concurrently.
-	void triggerResponseForAnomaly(){
+	void triggerResponseForAnomaly(bool anomalyStillOngoing){
 		// if we overtook the buffer, then everything must be send...		
 		// Send the current ringbuffer away iff the activities have not been send so far.
 		
-		lock_guard<mutex> lock(ringBuffMutex);		
+		lock_guard<mutex> lock(ringBuffMutex);
+		anomalyStatus = anomalyStillOngoing;
 
 		//cout << sendPos << " " << curPos << endl;
 

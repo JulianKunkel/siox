@@ -89,7 +89,7 @@ void test2(){
 
 	AnomalyTrigger * atrigger = dynamic_cast<AnomalyTrigger*>(client);
 	assert( atrigger );
-	atrigger->triggerResponseForAnomaly();
+	atrigger->triggerResponseForAnomaly(false);
 
 	int count = 0;
 	while(myTargetMux.receivedActivities != 4){
@@ -100,7 +100,7 @@ void test2(){
 	assert( myTargetMux.logged_activity->ucaid_ == activity2->ucaid_ );	
 	
 	client->NotifyAsync(0, activity);
-	atrigger->triggerResponseForAnomaly();
+	atrigger->triggerResponseForAnomaly(false);
 
 	myTargetMux.waitUntilSthHappened();
 

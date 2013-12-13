@@ -148,6 +148,14 @@ namespace monitoring {
 				cout << "RemoteCalls (" << remoteCallsArray_.size() << " items):" << endl;
 			}
 
+			inline Timestamp duration() const{
+				return time_stop_ - time_start_;
+			}
+
+			inline double durationInS() const{
+				return duration() * 0.001 * 0.001 * 0.001;
+			}
+
 			inline Timestamp time_start() const {
 				return time_start_;
 			}
