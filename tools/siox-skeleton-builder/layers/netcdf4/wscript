@@ -97,7 +97,7 @@ def build(bld):
 		print "Could not read wrapper flags, this is critical!"
 		sys.exit(1)		
 
-	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = LAYER + ".wrap", install_path = "${LIBDIR}")
+	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target =  "libsiox-" + LAYER + ".wrap", install_path = "${LIBDIR}")
 
 	bld.shlib(includes="",  use = "GLIB SIOX_LL NETCDF" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
 	bld.shlib(includes="",  use = "GLIB DL SIOX_LL NETCDF",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
