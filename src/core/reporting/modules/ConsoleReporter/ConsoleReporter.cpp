@@ -42,7 +42,7 @@ void ConsoleReporter::processReports(ostream & out, const std::list< pair<Regist
 		sort( sortedStr.begin(), sortedStr.end(), sortGroups);
 
 
-		vector<GroupEntry *> parGroupStack;
+		//vector<GroupEntry *> parGroupStack;
 		for ( auto key = sortedStr.begin(); key != sortedStr.end() ; key++ ){
 			auto elem = r.data.find(*key);
 			int id = rc.id > 1000000 ? 0 : rc.id ;
@@ -50,21 +50,21 @@ void ConsoleReporter::processReports(ostream & out, const std::list< pair<Regist
 			// walk through the parent group and try to merge as many parents as possible.
 			// the stack of the current group
 			vector<GroupEntry *> curStack;
-			int outputPos = -1;
-			uint stackPos = 0;
+			//int outputPos = -1;
+			//uint stackPos = 0;
 
-			for( GroupEntry * cur = (*key)->parent; cur != nullptr; cur = cur->parent, stackPos++ ) {
-				if ( outputPos == -1 && (parGroupStack.size() <= stackPos || parGroupStack[stackPos] != cur ) ){
-					outputPos = stackPos;
-				}
+			for( GroupEntry * cur = (*key)->parent; cur != nullptr; cur = cur->parent ) { //stackPos++ 
+				//if ( outputPos == -1 && (parGroupStack.size() <= stackPos || parGroupStack[stackPos] != cur ) ){
+				//	outputPos = stackPos;
+				//}
 				curStack.push_back(cur);
 			}
 			// output all parents (outputPos would be the missing parents)
 			for( auto parentItr = curStack.rbegin(); parentItr != curStack.rend(); parentItr++ ){
-				cout << (*parentItr)->name << "/"; 
+				out << (*parentItr)->name << "/"; 
 			}
 
-			parGroupStack = curStack;
+			//parGroupStack = curStack;
 
 			out << (*key)->name << " = " << elem->second.value << " [" << rc.moduleName << ":" << id << ":\"" << rc.section << "\"]" << endl;
 			// r.componentType << ":" << 
@@ -108,7 +108,34 @@ bool ConsoleReporter::sortGroups(const GroupEntry * a, const GroupEntry * b){
 	// empty groups come first
 	// sort by group hierarchy
 	// sort by name
-	return ( a->parent == b->parent && a->name < b->name) || ( a->parent == nullptr && b->parent != nullptr ) || ( a->parent != nullptr && b->parent != nullptr && sortGroups(a->parent, b->parent) ) ;
+	if( a->parent == b->parent && a->name < b->name ){
+		return true;
+	}else if  ( a->parent == nullptr && b->parent != nullptr ){
+		return true;
+	}else if  ( b->parent == nullptr && a->parent != nullptr ){
+		return false;
+	}else{
+		return comparator(a->parent, b->parent) > 0;
+	}
+}
+
+int ConsoleReporter::comparator(const GroupEntry * a, const GroupEntry * b){
+	if ( a->name == b->name ){
+		return 0;
+	}else if ( a->parent == b->parent ){
+		return a->name < b->name ? 1 : -1;
+	}else if ( a->parent == nullptr ){
+		return 1;
+	}else if ( b->parent == nullptr ){
+		return -1;
+	}else{
+		int ret = comparator (a->parent, b->parent);
+		if (ret != 0){
+			return ret;
+		}else{
+			return a->name < b->name ? 1 : -1;
+		}
+	}
 }
 
 
