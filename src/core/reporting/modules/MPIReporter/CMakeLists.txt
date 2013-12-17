@@ -12,6 +12,7 @@ if (MPI_FOUND)
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${MPI_CXX_INCLUDE_PATH}
+	${Boost_INCLUDE_DIR}
 )
 
 add_library(
