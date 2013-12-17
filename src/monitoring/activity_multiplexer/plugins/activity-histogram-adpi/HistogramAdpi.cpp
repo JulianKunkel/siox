@@ -170,7 +170,20 @@ ComponentReport HistogramAdpiPlugin::prepareReport()
 		result.addEntry( new GroupEntry( "MinTime", ge ), ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE, VariableDatatype( ats.minTimeS ) ));
 		result.addEntry( new GroupEntry( "MaxTime", ge ), ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE, VariableDatatype( ats.maxTimeS ) ));
 
-		// NOTE the MPI aggregation does not make any sense as the buckets intervals are likely to be different for each process...		
+		// NOTE the MPI aggregation does not make any sense as the buckets intervals are likely to be different for each process. But we will output them as string.
+
+		if ( ats.histogram.size() > 0 ){
+			stringstream stream;
+
+			uint64_t cur = 0;
+			for ( uint i = 0 ; i < ats.histogram.size(); i++ ){
+				stream << cur << "=" << ats.histogram[i] << " ";
+				cur = (ats.histogramBucketWidth * i + ats.minTimeS);
+			}
+			stream << cur;
+
+			result.addEntry( new GroupEntry( "Buckets", ge ), ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE, VariableDatatype( stream.str() ) ));
+		}
 	}
 
 	return result;
