@@ -8,6 +8,7 @@ include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 	${GLIB_INCLUDE_DIRS}
 	${MPI_CXX_INCLUDE_PATH}
+    ${NetCDF_INCLUDE_DIR}
 )
 
 siox_skeleton_builder(wrap  ${CMAKE_CURRENT_SOURCE_DIR}/${LAYER}-wrapper.h ${SKELETON_TEMPLATE} ${LAYER} siox-${LAYER}-wrap.c)
