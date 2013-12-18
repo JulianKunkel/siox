@@ -801,8 +801,11 @@ class Template():
                values = self.valueRegex.sub('', values, 1)
 
         # All further text belongs to the last parameter.
-        lastName = nameList[-1]
-        self.parameterList[lastName] += " " + values.strip()
+        # Test if there is any text left over
+        leftover = values.strip()
+        if leftover != "":
+            lastName = nameList[-1]
+            self.parameterList[lastName] += " " + leftover
 
 
     def cleanOutput(self, output):
