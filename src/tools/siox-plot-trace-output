@@ -55,12 +55,15 @@ def main(argv):
 
     tstart = time.time()
 
-    plt.title( data.title )
+    plt.title( data.title + "\nopen@" + data.tOpenString )
+
+    if data.tClose > 0 and data.tOpen > 0:
+        ax.set_xlim(0, (data.tClose - data.tOpen) / 1000.0 / 1000 / 1000 )
 
     plt.plot( data.readX, data.readY, color='blue') 
     plt.plot( data.writeX, data.writeY, color='green') 
+    plt.plot( data.syncX, [ ax.get_ylim()[1] / 2, ax.get_ylim()[1] / 2], marker = "D" , color='red') 
 
-    #ax.set_xlim(-1,3)
     #ax.set_ylim(0,5)
 
     print 'Time for plotting ', (time.time() - tstart), " s"

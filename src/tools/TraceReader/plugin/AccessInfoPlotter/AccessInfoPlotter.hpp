@@ -8,6 +8,11 @@
 
 using namespace tools;
 
+struct Operation{
+	Timestamp startTime;
+	Timestamp endTime;
+};
+
 struct Access{
 	Timestamp startTime;
 	Timestamp endTime;
@@ -24,6 +29,7 @@ struct OpenFiles{
 
 	vector<Access> readAccesses;
 	vector<Access> writeAccesses;
+	vector<Operation> syncOperations;
 };
 
 class AccessInfoPlotter: public TraceReaderPlugin{
@@ -36,10 +42,14 @@ class AccessInfoPlotter: public TraceReaderPlugin{
 
 		void finalize() override;
 	private:
+		Ontology * o;
+		
 		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (AccessInfoPlotter::* handler)(Activity*));
 
 		void plotFileAccess(const OpenFiles & file);
-		void plotSingleFile(const string & type, const vector<Access> & accessVector, ofstream & f, const OpenFiles & file);
+		void plotSingleFileAccess(const string & type, const vector<Access> & accessVector, ofstream & f, const OpenFiles & file);
+
+		void plotSingleFileOperation(const string & type, const vector<Operation> & ops, ofstream & f, const OpenFiles & file);
 
 		unordered_map<ActivityID, OpenFiles> openFiles;
 		unordered_map<int, OpenFiles> unnamedFiles;
@@ -47,9 +57,11 @@ class AccessInfoPlotter: public TraceReaderPlugin{
 		unordered_map<UniqueComponentActivityID, void (AccessInfoPlotter::*)(Activity*)> activityHandlers;
 
 		OpenFiles * findParentFile( const Activity * activity );
+		OpenFiles * findParentFileByFh( const Activity * activity );
 
 
 		void handlePOSIXOpen(Activity * activity);
+		void handlePOSIXSync(Activity * activity);
 		void handlePOSIXWrite(Activity * activity);
 		void handlePOSIXRead(Activity * activity);
 		void handlePOSIXClose(Activity * activity);

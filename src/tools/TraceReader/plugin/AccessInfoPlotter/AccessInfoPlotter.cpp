@@ -7,6 +7,7 @@
 // for mkdir()
 #include <sys/stat.h> 
 #include <sys/types.h>
+#include <time.h>
 
 #include <monitoring/ontology/Ontology.hpp>
 #include <tools/TraceReader/plugin/AccessInfoPlotter/AccessInfoPlotter.hpp>
@@ -27,10 +28,14 @@ void AccessInfoPlotter::init(program_options::variables_map * vm, TraceReader * 
 	//vector<string> supportedClose("MPI_File_close", "close");
 	//vector<string> supportedAccess("read", "write", "pread", "pwrite");
 
+	o = tr->getOntology();
+
 	addActivityHandler("POSIX", "", "open", & AccessInfoPlotter::handlePOSIXOpen);
 	addActivityHandler("POSIX", "", "write", & AccessInfoPlotter::handlePOSIXWrite);
 	addActivityHandler("POSIX", "", "read", & AccessInfoPlotter::handlePOSIXRead);
 	addActivityHandler("POSIX", "", "close", & AccessInfoPlotter::handlePOSIXClose);
+	addActivityHandler("POSIX", "", "sync", & AccessInfoPlotter::handlePOSIXSync);
+	addActivityHandler("POSIX", "", "fdatasync", & AccessInfoPlotter::handlePOSIXSync);
 }
 
 void AccessInfoPlotter::addActivityHandler(const string & interface, const string & impl, const string & a, void (AccessInfoPlotter::* handler)(Activity*) )
@@ -60,7 +65,7 @@ static double convertTime(Timestamp time){
 	return time * 0.001 * 0.001 * 0.001;
 }
 
-void AccessInfoPlotter::plotSingleFile(const string & type, const vector<Access> & accessVector, ofstream & f, const OpenFiles & file){
+void AccessInfoPlotter::plotSingleFileAccess(const string & type, const vector<Access> & accessVector, ofstream & f, const OpenFiles & file){
 	if ( accessVector.size() == 0 ){
 		f << type << "X = []" << endl;
 		f << type << "Y = []" << endl;
@@ -100,6 +105,27 @@ void AccessInfoPlotter::plotSingleFile(const string & type, const vector<Access>
 	f << "]]" << endl;
 }
 
+void AccessInfoPlotter::plotSingleFileOperation(const string & type, const vector<Operation> & ops, ofstream & f, const OpenFiles & file){	
+	
+	if ( ops.size() == 0 ){
+		f << type << "X = []" << endl;
+		f << type << "Y = []" << endl;
+		return;
+	}
+
+	f << type << "X = [[" ;
+	f << convertTime(ops.begin()->startTime - file.openTime);
+	for( auto tupel = ++ops.begin(); tupel != ops.end(); tupel++ ){
+		f  << "," << convertTime(tupel->startTime - file.openTime);
+	}
+	f << "],[";
+	f << convertTime(ops.begin()->endTime - file.openTime);
+	for( auto tupel = ++ops.begin(); tupel != ops.end(); tupel++ ){
+		f  << "," << convertTime(tupel->endTime - file.openTime);
+	}	
+	f << "]]" << endl;
+}
+
 void AccessInfoPlotter::plotFileAccess(const OpenFiles & file){
 	if (file.readAccesses.size() == 0 && file.writeAccesses.size() == 0){
 		cout << "No accesses for file: " << file.name << endl;
@@ -117,8 +143,19 @@ void AccessInfoPlotter::plotFileAccess(const OpenFiles & file){
 	f.open ("plot/" + cleanedName + ".py");
 	f << "title = \"" << file.name << '"' << endl;
 	f << "filename = \"" << cleanedName << '"' << endl;
-	plotSingleFile("read", file.readAccesses, f, file);
-	plotSingleFile("write", file.writeAccesses, f, file);
+	f << "tOpen =  " << file.openTime << endl;
+	f << "tClose =  " << file.closeTime << endl;
+	
+	// convert open time into a readable format
+	time_t t = file.openTime / 1000 / 1000 / 1000;
+	struct tm *tm = localtime(&t);
+	char date[40];
+	strftime(date, sizeof(date), "%Y-%m-%d %k:%M:%S", tm);
+	f << "tOpenString = \"" << date << '"' << endl;
+
+	plotSingleFileAccess("read", file.readAccesses, f, file);
+	plotSingleFileAccess("write", file.writeAccesses, f, file);
+	plotSingleFileOperation("sync", file.syncOperations, f, file);
 	f.close();
 
 	cout << "Run: siox-plot-trace-output plot/" + cleanedName << ".py"  << endl;
@@ -161,16 +198,7 @@ OpenFiles * AccessInfoPlotter::findParentFile( const Activity * a )
 	return nullptr;
 }
 
-
-
-void AccessInfoPlotter::handlePOSIXWrite(Activity * a){
-	Ontology * o = tr->getOntology();
-	OntologyAttributeID bytesID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;
-	OntologyAttributeID positionID = o->lookup_attribute_by_name( "POSIX", "file/position" ).aID;
-
-	uint64_t bytes = findAttributeByID(a, bytesID).uint64();
-	uint64_t position = findAttributeByID(a, positionID).uint64();
-
+OpenFiles * AccessInfoPlotter::findParentFileByFh( const Activity * a ){
 	OpenFiles * parent = findParentFile(a);
 	if ( parent == nullptr ){
 		// add a dummy for the file handle since we do not know the filename
@@ -185,22 +213,43 @@ void AccessInfoPlotter::handlePOSIXWrite(Activity * a){
 			parent = & unnamedFiles[fhID];
 		}
 	}
+	return parent;
+}
 
+void AccessInfoPlotter::handlePOSIXSync(Activity * a){
+	OpenFiles * parent = findParentFileByFh(a);
+	parent->syncOperations.push_back( {a->time_start_, a->time_stop_} );
+}
+
+void AccessInfoPlotter::handlePOSIXWrite(Activity * a){	
+	OntologyAttributeID bytesID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;
+	OntologyAttributeID positionID = o->lookup_attribute_by_name( "POSIX", "file/position" ).aID;
+
+	uint64_t bytes = findAttributeByID(a, bytesID).uint64();
+	uint64_t position = findAttributeByID(a, positionID).uint64();
+	OpenFiles * parent = findParentFileByFh(a);
 	parent->writeAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
 
-void AccessInfoPlotter::handlePOSIXRead(Activity * a){
+void AccessInfoPlotter::handlePOSIXRead(Activity * a){	
+	OntologyAttributeID bytesID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesRead" ).aID;
+	OntologyAttributeID positionID = o->lookup_attribute_by_name( "POSIX", "file/position" ).aID;
 
+	uint64_t bytes = findAttributeByID(a, bytesID).uint64();
+	uint64_t position = findAttributeByID(a, positionID).uint64();
+	OpenFiles * parent = findParentFileByFh(a);
+	parent->readAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
 
 void AccessInfoPlotter::handlePOSIXOpen(Activity * a){
-	Ontology * o = tr->getOntology();
 	OntologyAttributeID fname = o->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;
 
 	openFiles[ a->aid() ] = { findAttributeByID(a, fname).str(), a->time_start_, 0, a->aid_.id };
 }
 
 void AccessInfoPlotter::handlePOSIXClose(Activity * a){
+	OpenFiles * parent = findParentFileByFh(a);
+	parent->closeTime = a->time_stop_;
 }
 
 
