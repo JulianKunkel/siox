@@ -117,6 +117,7 @@ typedef struct {
 /// @return A node id, which is system-wide unique
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s'' hostname
+//@null
 siox_node * siox_lookup_node_id( const char * hostname );
 
 
@@ -152,6 +153,7 @@ void siox_process_set_attribute( siox_attribute * attribute, const void * value 
 ///     different storage types and/or attributes with the same attribute.
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s,%s,%d'' domain,name,storage_type
+//@null
 siox_attribute * siox_ontology_register_attribute( const char * domain, const char * name, enum siox_ont_storage_type storage_type );
 
 /**@}*/
@@ -176,6 +178,7 @@ siox_attribute * siox_ontology_register_attribute( const char * domain, const ch
 ///     type SIOX_STORAGE_STRING, domain "Meta" and name "Unit".
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s,%s,%s,%d'' domain,name,unit,storage_type
+//@null
 siox_attribute * siox_ontology_register_attribute_with_unit( const char * domain, const char * name, const char * unit, enum siox_ont_storage_type storage_type );
 
 
@@ -191,6 +194,7 @@ siox_attribute * siox_ontology_register_attribute_with_unit( const char * domain
 /// @return @c true if everything went well; otherwise, @c false.
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p,%p'' parent_attribute,meta_attribute,value
+//@null 0
 int siox_ontology_set_meta_attribute( siox_attribute * parent_attribute, siox_attribute * meta_attribute, const void * value );
 
 /*
@@ -214,6 +218,7 @@ int siox_ontology_set_meta_attribute( siox_attribute * parent_attribute, siox_at
 /// @return
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s,%s'' domain,name
+//@null
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name );
 
 /*
@@ -232,6 +237,7 @@ siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, co
 /// @return An ID that will be unique system-wide.
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s,%s'' interface_name,implementation_identifier
+//@null
 siox_unique_interface * siox_system_information_lookup_interface_id( const char * interface_name, const char * implementation_identifier );
 
 /**
@@ -281,6 +287,7 @@ siox_unique_interface * siox_system_information_lookup_interface_id( const char 
 /// @return
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%s'' instance_information
+//@null
 siox_associate * siox_associate_instance( const char * instance_information );
 
 /*
@@ -314,6 +321,7 @@ siox_associate * siox_associate_instance( const char * instance_information );
 //////////////////////////////////////////////////////////////////////////////
 
 //@test ''%p,%s'' uiid,instance_name
+//@null
 siox_component * siox_component_register( siox_unique_interface * uiid, const char * instance_name );
 
 /**
@@ -340,6 +348,7 @@ void siox_component_set_attribute( siox_component * component, siox_attribute * 
 /// @return
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%s'' uiid,activity_name
+//@null
 siox_component_activity * siox_component_register_activity( siox_unique_interface * uiid, const char * activity_name );
 
 /**
@@ -395,6 +404,7 @@ void siox_component_unregister( siox_component * component );
  *                          further dealings with SIOX.
  */
 //@test ''%p,%p'' component,activity
+//@null
 siox_activity * siox_activity_start( siox_component * component, siox_component_activity * activity );
 
 /**
@@ -462,6 +472,8 @@ void siox_activity_link_to_parent( siox_activity * activity_child, siox_activity
 /*
  The ownership of the returned datastructure is given to the caller.
  */
+//@test ''%p'' activity
+//@null
 siox_activity_ID * siox_activity_get_ID( const siox_activity * activity );
 
 // TODO maybe just using ID?
@@ -515,6 +527,7 @@ siox_activity_ID * siox_activity_get_ID( const siox_activity * activity );
  *                            future communications with SIOX.
  */
 //@test ''%p,%p-%p-%p'' activity,target_node,target_unique_interface,target_associate
+//@null
 siox_remote_call * siox_remote_call_setup( siox_activity * activity, siox_node * target_node, siox_unique_interface * target_unique_interface, siox_associate * target_associate );
 
 /**
@@ -539,9 +552,13 @@ void siox_remote_call_start( siox_remote_call * remote_call );
 
 // if the out_value is of type string, a pointer of type char** must be provided. The ownership is given to the callee.
 // return true if an optimal value is found
+//@test ''%p,%p,%p'' component,attribute,out_value
+//@null 0
 int siox_suggest_optimal_value( siox_component * component, siox_attribute * attribute, void * out_value );
 
 // copy the string value into target_str with the maxLength.
+//@test ''%p,%p,%s,%d'' component,attribute,value,target_str,maxLength
+//@null 0
 int siox_suggest_optimal_value_str( siox_component * component, siox_attribute * attribute, char * target_str, int maxLength );
 
 //////////////////////////////////////////////////////////////////////////////
@@ -560,8 +577,10 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 /// @param [in] caller_associate May be @c NULL
 //////////////////////////////////////////////////////////////////////////////
 //@test ''%p,%p,%p,%p,%p'' component,activity,caller_node,caller_unique_interface,caller_associate
+//@null
 siox_activity * siox_activity_start_from_remote_call( siox_component * component, siox_component_activity * activity, siox_node * caller_node, siox_unique_interface * caller_unique_interface, siox_associate * caller_associate );
 
+//@test ''%p'' func
 void siox_register_termination_signal( void (*func)(void) );
 
 #endif
