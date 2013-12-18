@@ -33,6 +33,7 @@ siox_skeleton_builder(plain ${CMAKE_SOURCE_DIR}/src/include/C/siox-ll.h ${CMAKE_
 
 add_library(
 	siox-monitoring-siox-ll-null
+	STATIC
 	siox-ll-null.c
 )
 
