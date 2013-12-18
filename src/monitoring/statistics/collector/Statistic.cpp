@@ -10,8 +10,8 @@
 #include <monitoring/statistics/Statistic.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 
-monitoring::Statistic::Statistic( const StatisticsValue & value, OntologyAttributeID attribute, const vector<pair<string, string> > & topology ) throw() :
-		StatisticsPluginDescriptionValue( value, attribute, topology),
+monitoring::Statistic::Statistic( const StatisticsValue & value, OntologyAttributeID attribute, TopologyObjectId topologyId ) throw() :
+		StatisticsPluginDescriptionValue( value, attribute, topologyId),
 	lastIndex( 0 ),
 	requestCounts{0}
 {}

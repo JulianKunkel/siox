@@ -14,7 +14,10 @@
 
 #include <monitoring/statistics/Statistic.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexer.hpp>
+#include <monitoring/topology/Topology.hpp>
 #include <monitoring/ontology/Ontology.hpp>
+#include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
+#include <knowledge/activity_plugin/DereferencingFacadeOptions.hpp>
 
 #include "../multiplexer/plugins/testListener/TestListener.hpp"
 #include "../../../monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp"
@@ -31,6 +34,8 @@ using namespace monitoring;
 int main( int argc, char const * argv[] ) throw() {
 	#define makeModule(Type, PointerName, ModuleName, InterfaceName) \
 		Type* PointerName = module_create_instance<Type>( "", ModuleName, InterfaceName)
+	makeModule( Topology, topology, "siox-monitoring-RamTopology", MONITORING_TOPOLOGY_INTERFACE );
+	makeModule( ActivityPluginDereferencing, facade, "siox-knowledge-DereferencingFacade", ACTIVITY_DEREFERENCING_FACADE_INTERFACE );
 	makeModule( Ontology, ontology, "siox-monitoring-FileOntology", ONTOLOGY_INTERFACE );
 	makeModule( StatisticsProviderPlugin, provider, "siox-monitoring-statisticsPlugin-providerskel", MONITORING_STATISTICS_PLUGIN_INTERFACE );
 	makeModule( StatisticsCollector, collector, "siox-monitoring-ThreadedStatisticsCollector", STATISTICS_COLLECTOR_INTERFACE );
@@ -40,6 +45,8 @@ int main( int argc, char const * argv[] ) throw() {
 
 	#define fetchOptions(Type, ComponentVariableName) \
 		Type* ComponentVariableName##Options = &ComponentVariableName->getOptions<Type>();
+	fetchOptions( ComponentOptions, topology );
+	fetchOptions( DereferencingFacadeOptions, facade );
 	fetchOptions( FileOntologyOptions, ontology );
 	fetchOptions( ProviderSkeletonOptions, provider );
 	fetchOptions( ThreadedStatisticsOptions, collector );
@@ -47,17 +54,23 @@ int main( int argc, char const * argv[] ) throw() {
 	fetchOptions( TestListenerOptions, listener );
 	fetchOptions( StatisticsFileWriterOptions, writer );
 
+	(void)topologyOptions;	//avoid warning about unused variable
+	facadeOptions->topology.componentPointer = topology;
 	ontologyOptions->filename = "optimizer-ontology-example.dat";
 	providerOptions->statisticsCollector.componentPointer = collector;
+	collectorOptions->dereferencingFacade.componentPointer = facade;
 	collectorOptions->ontology.componentPointer = ontology;
 	collectorOptions->smux.componentPointer = multiplexer;
 	(void)multiplexerOptions;	//avoid warning about unused variable
 	listenerOptions->multiplexer.componentPointer = multiplexer;
 	listenerOptions->ontology.componentPointer = ontology;
+	listenerOptions->dereferencingFacade.componentPointer = facade;
 	writerOptions->multiplexer.componentPointer = multiplexer;
 	writerOptions->filename = "statistics.dat";
 
+	topology->init();
 	ontology->init();
+	facade->init();
 	multiplexer->init();
 	collector->init();
 	provider->init();
@@ -66,6 +79,7 @@ int main( int argc, char const * argv[] ) throw() {
 
 	{
 		vector<shared_ptr<Statistic> > statistics = collector->availableMetrics();
+		assert( statistics.size() == 3 );
 		statistics[0]->requestReduction( SUM );
 		statistics[1]->requestReduction( SUM );
 		statistics[2]->requestReduction( SUM );
@@ -90,7 +104,8 @@ int main( int argc, char const * argv[] ) throw() {
 			assert( values[1][i] == expectedValue );
 		}
 
-		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}} );
+//		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}} );
+		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, topology->lookupObjectByPath( "localHost/ws1" ).id() );
 		array<StatisticsValue, Statistic::kHistorySize> nameLookupValues = collector->getStatistics( SUM, HUNDRED_MILLISECONDS, description );
 		assert( values[1] == nameLookupValues );
 		StatisticsValue aggregatedValue = collector->getReducedStatistics( SUM, SECOND, *statistics[0] );

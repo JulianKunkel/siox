@@ -139,16 +139,16 @@ Implementation details for the requirements of a StatisticsCollector:
 
 #include <core/component/Component.hpp>
 #include <monitoring/statistics/collector/StatisticsCollectorImplementation.hpp>
-#include <monitoring/statistics/collector/StatisticsCollector.hpp> // own definitions of classes functions used in this implementation
-#include "ThreadedStatisticsOptions.hpp" // own options of this implementation
+#include <monitoring/statistics/collector/StatisticsCollector.hpp>
+#include "ThreadedStatisticsOptions.hpp"
 
-#include <thread> // header for threads
+#include <thread>
 #include <atomic>
-#include <iostream> // header that defines I/O stream objects
-#include <boost/thread/shared_mutex.hpp> // defines for mutex class
-#include <condition_variable> // for conditions
-#include <cstdlib> //(stdlib.h) get C header stdlib
-#include <ctime> //(time.h) get C header time
+#include <iostream>
+#include <boost/thread/shared_mutex.hpp>
+#include <condition_variable>
+#include <cstdlib>
+#include <ctime>
 #include <unordered_map>
 #include <string>
 #include <utility>
@@ -203,14 +203,14 @@ class ThreadedStatisticsCollector : public StatisticsCollector, public Component
 		virtual ComponentOptions * AvailableOptions() throw();
 
 	private:
+		ActivityPluginDereferencing* facade = 0;
 		Ontology* ontology = 0;
 		StatisticsMultiplexer* smux = 0;
 
 		vector<StatisticsProviderPlugin*> plugins;	//protected by sourcesLock
 		vector<shared_ptr<Statistic> > statistics;	//protected by sourcesLock
 		vector<StatisticsProviderPlugin*> pluginPerStatistics; //protected by sourcesLock
-		//TODO: replace the string for the topology with a topologyId
-		unordered_map<pair<OntologyAttributeID, string>, shared_ptr<Statistic> > index;	//protected by sourcesLock
+		unordered_map<pair<OntologyAttributeID, TopologyObjectId>, shared_ptr<Statistic> > index;	//protected by sourcesLock
 		bool statisticsAdded = true, statisticsRemoved = true;
 		boost::shared_mutex sourcesLock;
 
@@ -241,35 +241,49 @@ ComponentReport ThreadedStatisticsCollector::prepareReport(){
 }
 
 void ThreadedStatisticsCollector::init() throw() {
-	//XXX I've taken out reading a polling interval from the options, because that should be determined from the StatisticsProviderPlugins.
 	ThreadedStatisticsOptions& o = getOptions<ThreadedStatisticsOptions>();
+	facade = GET_INSTANCE(ActivityPluginDereferencing, o.dereferencingFacade);
 	ontology =  GET_INSTANCE(Ontology, o.ontology);
 	smux = GET_INSTANCE(StatisticsMultiplexer, o.smux);
+	{
+		//Setup the alias for the localhost in the topology.
+		///@fixme FIXME: Currently, no alias is used, instead an object called @localhost is created.
+		Topology* topology = facade->topology();
+		TopologyTypeId typeNodeId = topology->registerType( "node" ).id();
+		TopologyObject localhost = topology->registerObject( 0, typeNodeId, typeNodeId, "@localhost" );
+		if( !localhost ) {
+			cerr << "SIOX internal error: Inconsistent definitions of \"@localhost\" topology entry. Aborting.\n";
+			abort();
+		}
+	}
 	pollCount = 0;
 	pollingThread = thread( &ThreadedStatisticsCollector::pollingThreadMain, this );
 }
 
 void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plugin ) throw() {
 	assert( plugin );
+	Topology* topology = facade->topology();
 	sourcesLock.lock();
 	// Check whether this plugin is alread registered.
 	if(find(plugins.begin(), plugins.end(), plugin) != plugins.end()) {
-		assert( "Statistics Collector Plugins may only be registered with a StatisticsCollector once." );
+		assert( 0 && "Statistics Collector Plugins may only be registered with a StatisticsCollector once." ), abort();
 	}
 
 	// Add the plugin
 	plugins.emplace_back( plugin );
 	vector<StatisticsProviderDatatypes> metrics( plugin->availableMetrics() );
 	for( size_t i = metrics.size(); i--; ) {
-		shared_ptr<Statistic> curStatistic( new Statistic( metrics[i].value, ontology->register_attribute( "Statistics", metrics[i].metrics , metrics[i].value.type() ).aID , metrics[i].topology ) );
-
-
-		string topology = "";
-		for( size_t j = 0; j < curStatistic->topology.size(); j++) topology += curStatistic->topology[j].first + curStatistic->topology[j].second;
-		pair<OntologyAttributeID, string> curKey(curStatistic->ontologyId, topology);
-		statistics.emplace_back( curStatistic );
-		pluginPerStatistics.emplace_back( plugin );
-		index[curKey] = curStatistic;
+		OntologyAttributeID ontologyId = ontology->register_attribute( "Statistics", metrics[i].metrics , metrics[i].value.type() ).aID;
+		if( TopologyObject device = topology->registerObjectByPath( metrics[i].topologyPath ) ) {
+			TopologyObjectId topologyId = device.id();
+			shared_ptr<Statistic> curStatistic( new Statistic( metrics[i].value, ontologyId, topologyId ) );
+			pair<OntologyAttributeID, TopologyObjectId> curKey( ontologyId, topologyId );
+			statistics.emplace_back( curStatistic );
+			pluginPerStatistics.emplace_back( plugin );
+			index[curKey] = curStatistic;
+		} else {
+			cerr << "SIOX error: Error registering topology path \"" << metrics[i].topologyPath << "\"\n";
+		}
 	}
 	statisticsAdded = true;
 	sourcesLock.unlock();
@@ -288,10 +302,7 @@ void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * p
 	// Remove the dependent Statistics from the statistics list.
 	for( int i= statistics.size() ; i >= 0 ; i-- ){
 		if( pluginPerStatistics[i] == plugin ){
-
-			string topology = "";
-			for( size_t j = 0; j < statistics[i]->topology.size(); j++) topology += statistics[i]->topology[j].first + statistics[i]->topology[j].second;
-			pair<OntologyAttributeID, string> key( statistics[i]->ontologyId, topology);
+			pair<OntologyAttributeID, TopologyObjectId> key( statistics[i]->ontologyId, statistics[i]->topologyId);
 			index.erase(key);
 
 			pluginPerStatistics.erase( pluginPerStatistics.begin() + i );
@@ -309,9 +320,7 @@ vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::availableMetrics() t
 
 array<StatisticsValue, Statistic::kHistorySize> ThreadedStatisticsCollector::getStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
 	array<StatisticsValue, Statistic::kHistorySize> result;
-	string topology = "";
-	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
-	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
+	pair<OntologyAttributeID, TopologyObjectId> key(description.ontologyId, description.topologyId);
 	if(Statistic* statistic = &*index[key]) {
 		statistic->getHistoricValues( reductionOp, interval, &result, NULL );
 	}
@@ -319,18 +328,14 @@ array<StatisticsValue, Statistic::kHistorySize> ThreadedStatisticsCollector::get
 }
 
 StatisticsValue ThreadedStatisticsCollector::getRollingStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
-	string topology = "";
-	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
-	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
+	pair<OntologyAttributeID, TopologyObjectId> key(description.ontologyId, description.topologyId);
 	Statistic* statistic = NULL;
 	IGNORE_EXCEPTIONS( statistic = &*index.at(key); );
 	return (statistic) ? statistic->getRollingValue( reductionOp, interval ) : StatisticsValue();
 }
 
 StatisticsValue ThreadedStatisticsCollector::getReducedStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
-	string topology = "";
-	for( size_t j = 0; j < description.topology.size(); j++) topology += description.topology[j].first + description.topology[j].second;
-	pair<OntologyAttributeID, string> key(description.ontologyId, topology);
+	pair<OntologyAttributeID, TopologyObjectId> key(description.ontologyId, description.topologyId);
 	Statistic* statistic = NULL;
 	IGNORE_EXCEPTIONS( statistic = &*index.at(key); );
 	return (statistic) ? statistic->getReducedValue( reductionOp, interval ) : StatisticsValue();

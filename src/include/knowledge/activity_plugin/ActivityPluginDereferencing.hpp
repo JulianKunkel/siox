@@ -18,9 +18,12 @@ using namespace monitoring;
  This class provides a facade for quering details for activities.
  */
 namespace monitoring {
+	class Topology;
 
 	class ActivityPluginDereferencing : public Component {
 		public:
+			virtual Topology* topology() = 0;
+
 			virtual const OntologyAttribute & lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0;
 
 			virtual const OntologyAttribute & lookup_attribute_by_ID( const OntologyAttributeID aID ) const throw( NotFoundError ) = 0;

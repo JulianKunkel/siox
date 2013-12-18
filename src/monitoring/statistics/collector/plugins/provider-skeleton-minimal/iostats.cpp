@@ -10,7 +10,7 @@ class IOstats: public StatisticsProviderPlugin {
 		StatisticsValue i = ( int32_t ) 0;
 		StatisticsValue f = ( double ) 0.4;
 
-		virtual void nextTimestep() {
+		virtual void nextTimestep() override {
 			int32_t cur = i.int32();
 			i = cur + 1;
 
@@ -18,14 +18,14 @@ class IOstats: public StatisticsProviderPlugin {
 			f = f2 * 2;
 		}
 
-		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
-			vector<StatisticsProviderDatatypes> lst;
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() override {
+			vector<StatisticsProviderDatatypes> result;
 
-			lst.push_back( {SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", {{"node", LOCAL_HOSTNAME}, {"semantics", "testing"}}, i, GAUGE, "%", "test desc", 0, 0} );
-			lst.push_back( {HARDWARE_SPECIFIC, NODE, "test/weather", {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}}, f, INCREMENTAL, "uhh", "desc2",  0, 0} );
-			lst.push_back( {HARDWARE_SPECIFIC, DEVICE, "test/metric", {{"node", LOCAL_HOSTNAME}, {"sda", "test3"}}, f, INCREMENTAL, "GB/s", "Throughput", 0, 0} );
+			result.push_back( {SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", "@localhost", i, GAUGE, "%", "test desc", 0, 0} );
+			result.push_back( {HARDWARE_SPECIFIC, NODE, "test/weather", "@localhost/ws1", f, INCREMENTAL, "uhh", "desc2",  0, 0} );
+			result.push_back( {HARDWARE_SPECIFIC, DEVICE, "test/metric", "@localhost/sda1", f, INCREMENTAL, "GB/s", "Throughput", 0, 0} );
 
-			return lst;
+			return result;
 		}
 };
 

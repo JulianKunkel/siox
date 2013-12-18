@@ -20,6 +20,8 @@ target_link_libraries(
 	siox-monitoring-StatisticsMultiplexerSync
 	siox-monitoring-statisticsMultiplexerPlugin-testListener
 	siox-monitoring-statisticsMultiplexerPlugin-FileWriter
+	siox-monitoring-RamTopology
+	siox-knowledge-DereferencingFacade
 	${Boost_LIBRARIES}
 )
 

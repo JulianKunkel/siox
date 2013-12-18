@@ -22,9 +22,8 @@
 #include <core/datatypes/VariableDatatype.hpp>
 #include <monitoring/datatypes/GenericTypes.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
+#include <monitoring/datatypes/Topology.hpp>
 #include <workarounds.hpp>
-
-using namespace std;
 
 namespace monitoring {
 
@@ -111,17 +110,17 @@ namespace monitoring {
 	class StatisticsDescription {
 		public:
 			OntologyAttributeID ontologyId;
-			vector<pair<string, string> > topology;	//TODO: Create a service that can map this to an ID for faster comparison.
+			TopologyObjectId topologyId;
 
-			StatisticsDescription(const OntologyAttributeID & attribute, const vector<pair<string, string> > & topology) :
+			StatisticsDescription(const OntologyAttributeID & attribute, TopologyObjectId topologyId) :
 				ontologyId(attribute),
-				topology(topology)
+				topologyId(topologyId)
 			{};
 
 			StatisticsDescription(){};
 
 			bool operator==(StatisticsDescription const & what){
-				return this->ontologyId == what.ontologyId && this->topology == what.topology;
+				return this->ontologyId == what.ontologyId && this->topologyId == what.topologyId;
 			}
 	};
 

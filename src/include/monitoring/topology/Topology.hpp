@@ -14,6 +14,13 @@ This root object may be retrieved by calling `lookupObjectById(0)`.
 The parent/child relationships may be used to lookup an object by a given path, specifying a sequence of child names starting from the root object.
 Since objects may have multiple parents, it is possible to look up the same object from different paths.
 XXX: Do we need to add a facility to generate paths? I. e. something like `enumeratePaths( TopologyObjectId )`? I hesitate, because then we would need to ensure that this method would not explode when an object is its own grandfather. And that's a very common use case.
+@todo TODO: As it turns out, specifying childs by a unique (parent, childName) combination is insufficient, we should change the specification so that just the tupel (parent, relationType, childName) is unique. This will also change the format of the topology paths.
+@todo TODO: Change the format of the path components from "childName" to "relationType:childName", "relationType:childName:childType", or "@alias". Here are the envisioned rules:
+	Lookup of "relationType:childName": The returned object may have any type.
+	Lookup of "relationType:childName:childType": The returned object must have the given type.
+	Register of "relationType:childName": Equivalent to register of "relationType:childName:relationType".
+	Register of "relationType:childName:childType", no preexisting object: Just register with the given types and child name.
+	Register of "relationType:childName:childType", preexisting object: Fail if preexisting childType does not match the given childType.
 
 All objects and relations have a type, which is simply a string describing the kind of object/relation.
 Example types for objects would be: node, block device, NIC, Network-Switch, etc.
@@ -114,7 +121,11 @@ namespace monitoring {
 			virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw() = 0;
 
 			virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError ) = 0;
-			virtual TopologyObject lookupObjectByPath( const string& Path ) throw() = 0;
+			virtual TopologyObject registerObjectByPath( const string& path ) throw() {
+				// actually do what this is supposed to do.
+				return lookupObjectByPath( path );
+			}
+			virtual TopologyObject lookupObjectByPath( const string& path ) throw() = 0;
 			virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw() = 0;
 
 			virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError ) = 0;
