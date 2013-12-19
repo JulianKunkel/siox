@@ -16,19 +16,6 @@
 using namespace core;
 using namespace monitoring;
 
-#define EXPECT_EXCEPTION(...) do { \
-	bool success = false; \
-	try { \
-		__VA_ARGS__ \
-	} catch(...) { \
-		success = true; \
-	} \
-	if( !success ) { \
-		cerr << "Couldn't catch expected exception in\n\t" #__VA_ARGS__ "\n"; \
-		abort(); \
-	} \
-} while( 0 )
-
 int main( int argc, char const * argv[] ) throw() {
 	Topology* topology = module_create_instance<Topology>( "", "siox-monitoring-RamTopology", MONITORING_TOPOLOGY_INTERFACE );
 	topology->getOptions<RamTopologyOptions>();
@@ -78,35 +65,37 @@ int main( int argc, char const * argv[] ) throw() {
 
 	//Test relations
 	TopologyRelation relation1, relation2, relation3, relation4;
-	relation1 = topology->lookupRelation( 0, "foo" );
+	relation1 = topology->lookupRelation( 0, type1.id(), "foo" );
 	assert( !relation1 );
-	relation1 = topology->lookupRelation( object2.id(), "object1" );
+	relation1 = topology->lookupRelation( object2.id(), type2.id(), "object1" );
 	assert( !relation1 );
-	relation1 = topology->lookupRelation( object1.id(), "object1" );
+	relation1 = topology->lookupRelation( object1.id(), type2.id(), "object1" );
 	assert( !relation1 );
-	relation1 = topology->lookupRelation( 0, "object2" );
+	relation1 = topology->lookupRelation( 0, type1.id(), "object2" );
 	assert( !relation1 );
-	relation1 = topology->lookupRelation( 0, "object1" );
+//	relation1 = topology->lookupRelation( 0, type1.id(), "object1" );
+	assert( !relation1 );
+	relation1 = topology->lookupRelation( 0, type2.id(), "object1" );
 	assert( relation1.childName() == "object1" );
 	assert( relation1.parent() == 0 );
 	assert( relation1.child() == object1.id() );
 	assert( relation1.type() == type2.id() );
-	relation2 = topology->lookupRelation( object1.id(), "object2" );
+	relation2 = topology->lookupRelation( object1.id(), type1.id(), "object2" );
 	assert( relation2.childName() == "object2" );
 	assert( relation2.parent() == object1.id() );
 	assert( relation2.child() == object2.id() );
 	assert( relation2.type() == type1.id() );
 
-	IGNORE_EXCEPTIONS( relation3 = topology->registerRelation( type1.id(), 0, object1.id(), "object1" ); );
+	relation3 = topology->registerRelation( type1.id(), 0, object1.id(), "object1" );
 	assert( !relation3 );
-	IGNORE_EXCEPTIONS( relation3 = topology->registerRelation( type2.id(), 0, object2.id(), "object1" ); );
+	relation3 = topology->registerRelation( type2.id(), 0, object2.id(), "object1" );
 	assert( !relation3 );
 	relation3 = topology->registerRelation( type2.id(), 0, object1.id(), "object1" );
 	assert( &*relation3 == &*relation1 );
 	relation3 = topology->registerRelation( type1.id(), 0, object2.id(), "object2" );
 	assert( relation3.child() == object2.id() );
 	assert( relation3.type() == type1.id() );
-	IGNORE_EXCEPTIONS( relation4 = topology->registerRelation( type2.id(), object2.id(), 0, "object1" ); );
+	relation4 = topology->registerRelation( type2.id(), object2.id(), 0, "object1" );
 	assert( !relation4 );
 	relation4 = topology->registerRelation( type2.id(), object2.id(), object1.id(), "object1" );
 	assert( relation4.child() == object1.id() );
@@ -122,13 +111,15 @@ int main( int argc, char const * argv[] ) throw() {
 		assert( !temp );
 		temp = topology->lookupObjectByPath( "object1//object2" );
 		assert( !temp );
-		temp = topology->lookupObjectByPath( "object1" );
+		temp = topology->lookupObjectByPath( "type2:object1" );
+//		assert( !temp );
+		temp = topology->lookupObjectByPath( "type1:object1" );
 		assert( &*temp == &*object1 );
-		temp = topology->lookupObjectByPath( "object2/object1" );
+		temp = topology->lookupObjectByPath( "type2:object2/type1:object1" );
 		assert( &*temp == &*object1 );
-		temp = topology->lookupObjectByPath( "object2" );
+		temp = topology->lookupObjectByPath( "type2:object2" );
 		assert( &*temp == &*object2 );
-		temp = topology->lookupObjectByPath( "object1/object2" );
+		temp = topology->lookupObjectByPath( "type1:object1/type2:object2" );
 		assert( &*temp == &*object2 );
 	}
 
@@ -173,7 +164,7 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( attribute1.id() == 1 );
 	assert( attribute1.domainId() == type1.id() );
 	assert( attribute1.dataType() == TopologyVariable::Type::FLOAT );
-	IGNORE_EXCEPTIONS( attribute2 = topology->registerAttribute( type1.id(), "attribute1", TopologyVariable::Type::DOUBLE ); );
+	attribute2 = topology->registerAttribute( type1.id(), "attribute1", TopologyVariable::Type::DOUBLE );
 	assert( !attribute2 );
 
 	attribute2 = topology->lookupAttributeById( 0 );
@@ -188,16 +179,18 @@ int main( int argc, char const * argv[] ) throw() {
 	attribute2 = topology->registerAttribute( type1.id(), "attribute2", TopologyVariable::Type::DOUBLE );
 
 	TopologyValue value1, value2;
-	EXPECT_EXCEPTION( topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1 ) ); );
-	topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1.0f ) );
-	IGNORE_EXCEPTIONS( value1 = topology->getAttribute( object2.id(), attribute1.id() ); );
+	value1 = topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1 ) );
 	assert( !value1 );
-	IGNORE_EXCEPTIONS( value1 = topology->getAttribute( object1.id(), attribute2.id() ); );
-	assert( !value1 );
-	value1 = topology->getAttribute( object1.id(), attribute1.id() );
+	value1 = topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1.0f ) );
 	assert( value1.object() == object1.id() );
 	assert( value1.attribute() == attribute1.id() );
 	assert( value1.value() == 1.0f );
+	value2 = topology->getAttribute( object2.id(), attribute1.id() );
+	assert( !value2 );
+	value2 = topology->getAttribute( object1.id(), attribute2.id() );
+	assert( !value2 );
+	value2 = topology->getAttribute( object1.id(), attribute1.id() );
+	assert( &*value1 == &*value2 );
 	topology->setAttribute( object1.id(), attribute2.id(), TopologyVariable( 1.0 ) );
 	value2 = topology->getAttribute( object1.id(), attribute2.id() );
 	assert( value2.object() == object1.id() );

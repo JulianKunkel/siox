@@ -9,13 +9,16 @@
 The topology is used to locate any node/device/software component within a cluster.
 
 These objects are connected via parent/child relations, each child has a unique name in the context of its parent.
-All objects must have at least one parent, the only exception is the root object which has none.
-This root object may be retrieved by calling `lookupObjectById(0)`.
-The parent/child relationships may be used to lookup an object by a given path, specifying a sequence of child names starting from the root object.
+All objects must have at least one parent, the only exception is the (implicit) root object which has none.
+The parent/child relationships may be used to lookup an object by a given path, specifying a sequence of relation type and child name pairs starting from the root object.
 Since objects may have multiple parents, it is possible to look up the same object from different paths.
 XXX: Do we need to add a facility to generate paths? I. e. something like `enumeratePaths( TopologyObjectId )`? I hesitate, because then we would need to ensure that this method would not explode when an object is its own grandfather. And that's a very common use case.
-@todo TODO: As it turns out, specifying childs by a unique (parent, childName) combination is insufficient, we should change the specification so that just the tupel (parent, relationType, childName) is unique. This will also change the format of the topology paths.
-@todo TODO: Change the format of the path components from "childName" to "relationType:childName", "relationType:childName:childType", or "@alias". Here are the envisioned rules:
+@todo TODO: As it turns out, specifying childs by a unique (parent, childName) combination is insufficient, we should change the specification so that just the tupel (parent, relationType, childName) is unique. The topology path format has already been changed accordingly.
+
+The format of the topology paths is this:
+	path ::= pathComponent [ /pathComponent ...]
+	pathComponent ::= relationType:childName [ :objectType ]
+The semantics for each path component are as follows:
 	Lookup of "relationType:childName": The returned object may have any type.
 	Lookup of "relationType:childName:childType": The returned object must have the given type.
 	Register of "relationType:childName": Equivalent to register of "relationType:childName:relationType".
@@ -120,29 +123,81 @@ namespace monitoring {
 			virtual TopologyType lookupTypeByName( const string& name ) throw() = 0;
 			virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw() = 0;
 
-			virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError ) = 0;
-			virtual TopologyObject registerObjectByPath( const string& path ) throw() {
-				// actually do what this is supposed to do.
-				return lookupObjectByPath( path );
-			}
-			virtual TopologyObject lookupObjectByPath( const string& path ) throw() = 0;
+			virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw() = 0;
+			virtual TopologyObject registerObjectByPath( const string& path ) throw();
+			virtual TopologyObject lookupObjectByPath( const string& path ) throw();
 			virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw() = 0;
 
-			virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError ) = 0;
-			virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw() = 0;
+			virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw() = 0;
+			virtual TopologyRelation lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() = 0;
 
 			// TopologyRelationType may be 0 which indicates any parent/child.
 			virtual TopologyRelationList enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() = 0;
 			virtual TopologyRelationList enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() = 0;
 
 
-			virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) = 0;
+			virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() = 0;
 			virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() = 0;
 			virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw() = 0;
-			virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw( IllegalStateError ) = 0;
+			virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw() = 0;
 			virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() = 0;
 			virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw() = 0;
 	};
+
+	TopologyObject Topology::registerObjectByPath( const string& path ) throw() {
+		//TODO: actually do what this is supposed to do.
+		return lookupObjectByPath( path );
+	}
+
+	TopologyObject Topology::lookupObjectByPath( const string& path ) throw() {
+		size_t pathSize = path.size(), curPosition;
+		TopologyObjectId resultId = 0;
+		TopologyObject result;
+		for( curPosition = 0; curPosition < pathSize; ) {
+			//Get the elements of the current path component.
+			size_t firstColon = pathSize, secondColon = pathSize, slash = pathSize;
+			for( size_t i = curPosition; i < firstColon; i++ ) {
+				switch( path[i] ) {
+					case ':': firstColon = i; break;
+					case '/': return TopologyObject();
+				}
+			}
+			for( size_t i = firstColon + 1; i < secondColon; i++ ) {
+				switch( path[i] ) {
+					case ':': secondColon = i;
+					case '/': secondColon = slash = i;
+				}
+			}
+			for( size_t i = secondColon + 1; i < slash; i++ ) if( path[i] == '/' ) slash = i;
+			//Check for empty components.
+			if( firstColon >= pathSize ) return TopologyObject();
+			if( secondColon == firstColon + 1 ) return TopologyObject();
+			if( slash == secondColon + 1 ) return TopologyObject();
+			bool haveObjectType = secondColon != slash;
+			if( pathSize == slash + 1 ) return TopologyObject();
+			//Get the strings.
+			string relationTypeName = path.substr( curPosition, firstColon - curPosition );
+			string childName = path.substr( firstColon + 1, secondColon - firstColon - 1 );
+			//Lookup the corresponding relation and update resultId.
+			TopologyType relationType = lookupTypeByName( relationTypeName );
+			if( !relationType ) return TopologyObject();
+			TopologyRelation relation = lookupRelation( resultId, relationType.id(), childName );
+			if( !relation ) return TopologyObject();
+			resultId = relation.child();
+			if( haveObjectType ) {	//Does the user want a type check?
+				string objectTypeName = path.substr( secondColon + 1, slash - secondColon - 1 );
+				result = lookupObjectById( resultId );
+				TopologyType expectedType = lookupTypeByName( objectTypeName );
+				if( !result || !expectedType || result.type() != expectedType.id() ) return TopologyObject();
+			}
+			//Setup for the next component.
+			curPosition = slash + 1;
+		}
+		if( !result ) {
+			result = lookupObjectById( resultId );
+		}
+		return result;
+	}
 }
 
 #define MONITORING_TOPOLOGY_INTERFACE "monitoring_topology"
