@@ -47,7 +47,7 @@ void AccessInfoPlotter::addActivityHandler(const string & interface, const strin
 	activityHandlers[ucaid] = handler;
 }
 
-void AccessInfoPlotter::nextActivity(Activity * a){
+Activity * AccessInfoPlotter::processNextActivity(Activity * a){
 	auto both = activityHandlers.find(a->ucaid_);
 
 	if ( both != activityHandlers.end() ){
@@ -59,6 +59,8 @@ void AccessInfoPlotter::nextActivity(Activity * a){
 
 		(this->*fkt)(a);
 	}
+
+	return a;
 }
 
 static double convertTime(Timestamp time){

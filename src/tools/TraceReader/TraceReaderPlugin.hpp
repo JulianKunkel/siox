@@ -21,10 +21,13 @@ using namespace core;
 #define DEBUG( ... ) do { if ( this->verbosity > 3 ) cerr << __VA_ARGS__ << endl; } while(0);
 
 namespace tools {
+	class TraceReaderPlugin;
+
 	struct TraceReaderOptions: public ComponentOptions{
 		TraceReader * traceReader;
 		program_options::variables_map * vm;
 		int verbosity;
+		TraceReaderPlugin * nextPlugin;
 	};
 
 	class TraceReaderPlugin: public Component {
@@ -34,6 +37,16 @@ namespace tools {
 		int verbosity;
 
 		virtual void init(program_options::variables_map * vm, TraceReader * tr) = 0;
+
+		TraceReaderPlugin * nextInChain = nullptr;
+
+		void forwardActivity(Activity * a){
+			if ( nextInChain != nullptr ){
+				nextInChain->nextActivity(a);
+			}
+		}
+
+		virtual Activity * processNextActivity(Activity * activity) = 0;		
 	public:
 
 		ComponentOptions * AvailableOptions() override{
@@ -45,6 +58,7 @@ namespace tools {
 			this->tr = o.traceReader;
 			this->vm = o.vm;
 			this->verbosity = o.verbosity;
+			this->nextInChain = o.nextPlugin;
 
 			assert( this->vm );
 			assert( this->tr );
@@ -54,7 +68,17 @@ namespace tools {
 
 		virtual void finalize(){};
 
-		virtual void nextActivity(Activity * activity) = 0;
+		void nextActivity(Activity * activity){
+			Activity * a = processNextActivity(activity);
+			if ( a != activity ){ 
+				// the original activity is not thrown again
+				delete(activity);
+			}
+			if( a != nullptr ){
+				forwardActivity ( a ); 
+			}
+		}
+
 
 		virtual void moduleOptions(program_options::options_description & od) = 0;
 	};

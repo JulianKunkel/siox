@@ -16,8 +16,9 @@ void PrintPlugin::init(program_options::variables_map * vm, TraceReader * tr){
 
 }
 
-void PrintPlugin::nextActivity(Activity * a){
+Activity * PrintPlugin::processNextActivity(Activity * a){
 	tr->printActivity( a );
+	return a;
 }
 
 extern "C" {

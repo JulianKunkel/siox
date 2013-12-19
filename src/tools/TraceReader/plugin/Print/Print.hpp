@@ -12,7 +12,7 @@ class PrintPlugin: public TraceReaderPlugin{
 	protected:
 		void init(program_options::variables_map * vm, TraceReader * tr) override;
 	public:
-		void nextActivity(Activity * activity) override;
+		Activity * processNextActivity(Activity * activity) override;
 
 		void moduleOptions(program_options::options_description & od) override;
 };
