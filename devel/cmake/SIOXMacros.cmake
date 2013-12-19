@@ -38,7 +38,7 @@ endmacro(SYMLINK)
 macro(SIOX_SKELETON_BUILDER TYPE INPUT TEMPLATE LAYER OUTPUT)
 	message("Generating ${TYPE} skeleton for ${INPUT}.")
 	execute_process(
-		COMMAND ${CMAKE_SOURCE_DIR}/tools/siox-skeleton-builder/siox-skeleton-builder.py -s ${TYPE} -t ${TEMPLATE} -W ${LAYER}.wrap -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT} ${CMAKE_CURRENT_SOURCE_DIR}/${INPUT}
+		COMMAND ${CMAKE_SOURCE_DIR}/tools/siox-skeleton-builder/siox-skeleton-builder -s ${TYPE} -t ${TEMPLATE} -W ${LAYER}.wrap -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT} ${INPUT}
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	)
 endmacro(SIOX_SKELETON_BUILDER)

@@ -24,4 +24,6 @@ protected:
 	virtual void processReports(ostream & out, const std::list< pair<RegisteredComponent*, ComponentReport> > & reports);
 
 	static bool sortGroups(const GroupEntry * a, const GroupEntry * b);
+
+	static int comparator(const GroupEntry * a, const GroupEntry * b);
 };

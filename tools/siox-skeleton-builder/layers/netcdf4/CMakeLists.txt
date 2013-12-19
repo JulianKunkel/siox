@@ -8,10 +8,11 @@ include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 	${GLIB_INCLUDE_DIRS}
 	${MPI_CXX_INCLUDE_PATH}
+    ${NetCDF_INCLUDE_DIR}
 )
 
-siox_skeleton_builder(wrap  ${LAYER}-wrapper.h ${SKELETON_TEMPLATE} ${LAYER} siox-${LAYER}-wrap.c)
-siox_skeleton_builder(dlsym ${LAYER}-wrapper.h ${SKELETON_TEMPLATE} ${LAYER} siox-${LAYER}-dlsym.c)
+siox_skeleton_builder(wrap  ${CMAKE_CURRENT_SOURCE_DIR}/${LAYER}-wrapper.h ${SKELETON_TEMPLATE} ${LAYER} siox-${LAYER}-wrap.c)
+siox_skeleton_builder(dlsym ${CMAKE_CURRENT_SOURCE_DIR}/${LAYER}-wrapper.h ${SKELETON_TEMPLATE} ${LAYER} siox-${LAYER}-dlsym.c)
 
 file(READ ${CMAKE_CURRENT_BINARY_DIR}/${LAYER}.wrap WRAP_LD_OPTS)
 string(REPLACE "\n" " " WRAP_LD_OPTS ${WRAP_LD_OPTS})
