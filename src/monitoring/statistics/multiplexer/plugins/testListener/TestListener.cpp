@@ -9,6 +9,8 @@
 
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexer.hpp>
 #include <monitoring/ontology/Ontology.hpp>
+#include <monitoring/topology/Topology.hpp>
+#include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
 
 #include "TestListener.hpp"
 #include "TestListenerOptions.hpp"
@@ -29,6 +31,7 @@ class TestListenerImplementation : public TestListener {
 	private:
 		shared_ptr<Statistic> testStatistic;
 		Ontology* ontology = 0;
+		Topology* topology = 0;
 		vector<pair<OntologyAttributeID, vector< pair< string, string> > > > requests;
 		int32_t curValue = 0;
 		bool gotInput = false;
@@ -39,6 +42,7 @@ void TestListenerImplementation::initPlugin() throw() {
 	TestListenerOptions& o = getOptions<TestListenerOptions>();
 	ontology =  GET_INSTANCE(Ontology, o.ontology);
 	assert( ontology );
+	topology = GET_INSTANCE(ActivityPluginDereferencing, o.dereferencingFacade)->topology();
 }
 
 ComponentOptions* TestListenerImplementation::AvailableOptions() {
@@ -48,12 +52,12 @@ ComponentOptions* TestListenerImplementation::AvailableOptions() {
 void TestListenerImplementation::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw(){
 
 	OntologyAttributeID anId = ontology->lookup_attribute_by_name( "Statistics", "test/metrics" ).aID;
+	TopologyObject localHost = topology->lookupObjectByPath( "@localhost" );
 
-	auto topology = vector<pair<string, string> >({{"node", LOCAL_HOSTNAME}, {"semantics", "testing"}});
 	for( auto itr = statistics.begin(); itr != statistics.end(); itr++){
 		if((*itr)->ontologyId == anId){
 			// test if the vector matches.
-			if( (*itr)->topology == topology ){
+			if( (*itr)->topologyId == localHost.id() ){
 				testStatistic = *itr;
 				return;
 			}

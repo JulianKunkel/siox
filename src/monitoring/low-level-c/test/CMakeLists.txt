@@ -11,15 +11,16 @@ add_executable(
 
 target_link_libraries(
 	monitoring-low-level-c-test
-	siox-monitoring-siox-ll 
+	siox-monitoring-siox-ll
 	siox-monitoring-activityPlugin-AnomalySkeleton
 	siox-core-autoconfigurator-FileConfigurationProvider
+	siox-monitoring-RamTopology
 	siox-monitoring-FileOntology
 	siox-monitoring-FileAssociationMapper
 	siox-monitoring-FileBasedSystemInformation
 	siox-knowledge-ReasonerStandardImplementation
 	siox-knowledge-DereferencingFacade
-	siox-monitoring-ActivityMultiplexerAsync	
+	siox-monitoring-ActivityMultiplexerAsync
 	siox-monitoring-activityPlugin-ActivityForwarder
 	siox-knowledge-OptimizerStandardImplementation
 )

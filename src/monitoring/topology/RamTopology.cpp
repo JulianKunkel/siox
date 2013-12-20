@@ -30,28 +30,27 @@ class RamTopology : public Topology {
 		virtual TopologyType lookupTypeByName( const string& name ) throw();
 		virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw();
 
-		virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError );
-		virtual TopologyObject lookupObjectByPath( const string& Path ) throw();
+		virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw();
 		virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw();
 
-		virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError );
-		virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw();
+		virtual TopologyRelation registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw();
+		virtual TopologyRelation lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw();
 
 		// TopologyRelationType may be 0 which indicates any parent/child.
 		virtual TopologyRelationList enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw();
 		virtual TopologyRelationList enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw();
 
 
-		virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError );
+		virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw();
 		virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw();
 		virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw();
-		virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw( IllegalStateError );
+		virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw();
 		virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw();
 		virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
 	private:
 		//These classes are just combinations of a container and a lock that protects it.
-		class ChildMap : public unordered_map<string, TopologyRelation>, public boost::shared_mutex {};
+		class ChildMap : public unordered_map<pair<string, TopologyTypeId>, TopologyRelation>, public boost::shared_mutex {};
 		class ParentVector : public vector<TopologyRelation>, public boost::shared_mutex {};
 		class AttributeMap : public unordered_map<TopologyAttributeId, TopologyValue>, public boost::shared_mutex {};
 
@@ -132,7 +131,10 @@ TopologyType RamTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 }
 
 
-TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError ) {
+TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
+	TopologyObject result;
+	pair<string, TopologyTypeId> childKey( childName, relationType );
+
 	//First look up the child map in which the requested relation should be stored.
 	ChildMap* childMap = NULL;
 	objectsLock.lock_shared();
@@ -140,13 +142,12 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 		childMap = childMapsById[parentId];
 	}
 	objectsLock.unlock_shared();
-	if( !childMap ) throw IllegalStateError( "RamTopology::registerObject(): the requested parent does not exist" );
+	if( !childMap ) return result;
 
 	//Look up the relation, and create it if it doesn't exist.
 	TopologyRelation resultRelation;
-	TopologyObject result;
 	childMap->lock_shared();
-	IGNORE_EXCEPTIONS( resultRelation = childMap->at( childName ); );
+	IGNORE_EXCEPTIONS( resultRelation = childMap->at( childKey ); );
 	childMap->unlock_shared();
 	if( !resultRelation ) {
 		//Looks like we have to allocate something.
@@ -161,7 +162,7 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 		//Regrap the locks for writing, and check if someone else was quicker in registering this object.
 		objectsLock.lock();
 		childMap->lock();
-		IGNORE_EXCEPTIONS( resultRelation = childMap->at( childName ); );
+		IGNORE_EXCEPTIONS( resultRelation = childMap->at( childKey ); );
 		if( !resultRelation ) {
 			//Finalize the object description.
 			newRelation->childId = newObject->id = objectsById.size();
@@ -176,7 +177,7 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 			parentVectorsById.back() = newParentVector;
 			attributeMapsById.resize( objectCount );
 			attributeMapsById.back() = newAttributeMap;
-			(*childMap)[childName].setObject( newRelation );
+			(*childMap)[childKey].setObject( newRelation );
 
 			//Stuff for our personal cleanup.
 			resultRelation.setObject( newRelation );
@@ -195,29 +196,13 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 
 	//In case we succeeded in looking up the object, actually lookup the TopologyObject itself, and check consistency.
 	if( !result ) {
-		if( resultRelation.type() != relationType ) throw IllegalStateError( "RamTopology::registerObject(): The requested relation type does not match with what is already registered." );
+		if( resultRelation.type() != relationType ) return result;
 		objectsLock.lock_shared();
 		result = objectsById[resultRelation.child()];
 		objectsLock.unlock_shared();
-		if( result.type() != objectType ) throw IllegalStateError( "RamTopology::registerObject(): The requested object type does not match with what is already registered." );
+		if( result.type() != objectType ) result.setObject( 0 );
 	}
 	return result;
-}
-
-
-TopologyObject RamTopology::lookupObjectByPath( const string& path ) throw() {
-	size_t pathSize = path.size(), curPosition, curEnd;
-	TopologyObjectId resultId = 0;
-	for( curPosition = 0; curPosition < pathSize; curPosition = curEnd + 1 ) {
-		curEnd = path.find( '/', curPosition );
-		if( curEnd == string::npos ) curEnd = pathSize;
-		TopologyRelation relation;
-		IGNORE_EXCEPTIONS( relation = lookupRelation( resultId, path.substr( curPosition, curEnd - curPosition ) ); );
-		if( !relation ) return TopologyObject();
-		resultId = relation.child();
-	}
-	if( curPosition == pathSize ) return TopologyObject();	//This happens when the path ends in a slash (always a malformed path).
-	return lookupObjectById( resultId );
 }
 
 
@@ -230,30 +215,32 @@ TopologyObject RamTopology::lookupObjectById( TopologyObjectId anId ) throw() {
 }
 
 
-TopologyRelation RamTopology::registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError ) {
-	if( !child ) throw IllegalStateError( "RamTopology::registerRelation(): can't register the root object as a child." );
+TopologyRelation RamTopology::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
+	TopologyRelation result;
+	pair<string, TopologyTypeId> childKey( childName, relationType );
+
+	if( !child ) return result;
 	ChildMap* childMap = NULL;
 	ParentVector* parentVector = NULL;
 	objectsLock.lock_shared();
 	if( parent < objectsById.size() ) childMap = childMapsById[parent];
 	if( child < objectsById.size() ) parentVector = parentVectorsById[child];
 	objectsLock.unlock_shared();
-	if( !childMap ) throw IllegalStateError( "RamTopology::registerRelation(): parent does not exist." );
-	if( !parentVector ) throw IllegalStateError( "RamTopology::registerRelation(): child does not exist." );
+	if( !childMap ) return result;
+	if( !parentVector ) return result;
 
-	TopologyRelation result;
 	bool preexistingRelation = true;
 	childMap->lock_shared();
-	IGNORE_EXCEPTIONS( result = childMap->at( childName ); );
+	IGNORE_EXCEPTIONS( result = childMap->at( childKey ); );
 	childMap->unlock_shared();
 	if( !result ) {
 		//Looks like we have to add this relation.
 		Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
 		childMap->lock();
-		IGNORE_EXCEPTIONS( result = childMap->at( childName ); );
+		IGNORE_EXCEPTIONS( result = childMap->at( childKey ); );
 		if( !result ) {
 			preexistingRelation = false;
-			(*childMap)[childName].setObject( newRelation );
+			(*childMap)[childKey].setObject( newRelation );
 			//It is important to retain the childMap lock at this point to ensure that no inconsistent state becomes visible.
 			parentVector->lock();
 			parentVector->resize( parentVector->size() + 1 );
@@ -264,22 +251,23 @@ TopologyRelation RamTopology::registerRelation( TopologyTypeId relationType, Top
 		childMap->unlock();
 	}
 	if( preexistingRelation ) {
-		if( result.child() != child ) throw IllegalStateError( "RamTopology::registerRelation(): given child does not match previously registered one." );
-		if( result.type() != relationType ) throw IllegalStateError( "RamTopology::registerRelation(): given relation type does not match previously registered one." );
+		//Check consistency with previously registered relation.
+		if( result.child() != child || result.type() != relationType ) result.setObject( 0 );
 	}
 	return result;
 }
 
 
-TopologyRelation RamTopology::lookupRelation( TopologyObjectId parent, const string& childName ) throw() {
+TopologyRelation RamTopology::lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() {
 	TopologyRelation result;
+	pair<string, TopologyTypeId> childKey( childName, relationType );
 	ChildMap* childMap = NULL;
 	objectsLock.lock_shared();
 	if( parent < objectsById.size() ) childMap = childMapsById[parent];
 	objectsLock.unlock_shared();
 	if( childMap ) {
 		childMap->lock_shared();
-		IGNORE_EXCEPTIONS( result = childMap->at( childName ); );
+		IGNORE_EXCEPTIONS( result = childMap->at( childKey ); );
 		childMap->unlock_shared();
 	}
 	return result;
@@ -320,7 +308,7 @@ Topology::TopologyRelationList RamTopology::enumerateParents( TopologyObjectId c
 }
 
 
-TopologyAttribute RamTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) {
+TopologyAttribute RamTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
 	TopologyAttribute result;
 	pair<TopologyTypeId, string> key( domain, name );
 	attributesLock.lock_shared();
@@ -339,7 +327,7 @@ TopologyAttribute RamTopology::registerAttribute( TopologyTypeId domain, const s
 		}
 		attributesLock.unlock();
 	}
-	if( result.dataType() != datatype ) throw IllegalStateError( "RamTopology::registerAttribute(): requested attribute datatype does not match previously registered one." );
+	if( result.dataType() != datatype ) result.setObject( 0 );	//Consistency check.
 	return result;
 }
 
@@ -364,17 +352,18 @@ TopologyAttribute RamTopology::lookupAttributeById( TopologyAttributeId attribut
 }
 
 
-void RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw( IllegalStateError ) {
+TopologyValue RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
+	TopologyValue result;
+
 	AttributeMap* attributeMap = NULL;
 	objectsLock.lock_shared();
 	if( object < objectsById.size() ) attributeMap = attributeMapsById[object];
 	objectsLock.unlock_shared();
-	if( !attributeMap ) throw IllegalStateError( "RamTopology::setAttribute(): object does not exist" );
+	if( !attributeMap ) return result;
 
 	TopologyAttribute attribute = lookupAttributeById( attributeId );
-	if( attribute.dataType() != value.type() ) throw IllegalStateError( "RamTopology::setAttribute(): given variable type does not match type of attribute" );
+	if( attribute.dataType() != value.type() ) return result;
 
-	TopologyValue result;
 	attributeMap->lock_shared();
 	IGNORE_EXCEPTIONS( result = attributeMap->at( attributeId ); );
 	attributeMap->unlock_shared();
@@ -384,12 +373,12 @@ void RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId att
 		IGNORE_EXCEPTIONS( result = attributeMap->at( attributeId ); );
 		if( !result ) {
 			(*attributeMap)[attributeId].setObject( newValue );
+			result.setObject( newValue );
 		}
 		attributeMap->unlock();
 	}
-	if( result ) {	//Consistency check if we found a preexisting attributeId value.
-		if( value != result.value() ) throw IllegalStateError( "RamTopology::setAttribute(): given value does not match previously registered value" );
-	}
+	if( value != result.value() ) result.setObject( 0 );	//Consistency check if we found a preexisting attributeId value.
+	return result;
 }
 
 

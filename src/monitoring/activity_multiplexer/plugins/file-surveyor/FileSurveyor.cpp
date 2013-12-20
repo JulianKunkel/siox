@@ -3,6 +3,8 @@
  * group information on the ones pertaining to the same files and report them
  * upon component shutdown.
  *
+ * XXX: Should work correctly if the same file is opened several times, however, it is not thread safe.
+ *
  * @author Michaela Zimmer, Nathanael Hübbe
  * @date 2013-12-06
  */

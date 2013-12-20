@@ -11,9 +11,10 @@ add_executable(
 
 target_link_libraries(
 	core-monitoring-activity_multiplexer-activity-histogram-adpi-test
-	siox-monitoring-activityPlugin-histogramAdpi	
+	siox-monitoring-activityPlugin-histogramAdpi
 	siox-monitoring-FileBasedSystemInformation
-	siox-knowledge-DereferencingFacade	
+	siox-knowledge-DereferencingFacade
+	siox-core-reporting-ConsoleReporter
 )
 
 add_test(core-monitoring-activity_multiplexer-activity-histogram-adpi-test core-monitoring-activity_multiplexer-activity-histogram-adpi-test)

@@ -12,11 +12,11 @@ class ProviderSkeleton: public StatisticsProviderPlugin {
 		StatisticsValue i = ( int32_t ) 0;
 		StatisticsValue f = ( double ) 0.4;
 
-		virtual ComponentOptions * AvailableOptions() {
+		virtual ComponentOptions * AvailableOptions() override {
 			return new ProviderSkeletonOptions();
 		}
 
-		virtual void nextTimestep() {
+		virtual void nextTimestep() override {
 			int32_t cur = i.int32();
 			i = cur + 1;
 
@@ -24,14 +24,14 @@ class ProviderSkeleton: public StatisticsProviderPlugin {
 			f = f2 * 2;
 		}
 
-		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
-			vector<StatisticsProviderDatatypes> lst;
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() override {
+			vector<StatisticsProviderDatatypes> result;
 
-			lst.push_back( {SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", {{"node", LOCAL_HOSTNAME}, {"semantics", "testing"}}, i, GAUGE, "%", "test desc", 0, 0} );
-			lst.push_back( {HARDWARE_SPECIFIC, NODE, "test/weather", {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}}, f, INCREMENTAL, "unit", "desc2", 0, 0} );
-			lst.push_back( {HARDWARE_SPECIFIC, DEVICE, "test/hdd", {{"node", LOCAL_HOSTNAME}, {"sda", "test3"}}, f, INCREMENTAL, "GB/s", "Throughput", 0, 0} );
+			result.push_back( {SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", "@localhost", i, GAUGE, "%", "test desc", 0, 0} );
+			result.push_back( {HARDWARE_SPECIFIC, NODE, "test/weather", "@localhost/weather-station:0", f, INCREMENTAL, "unit", "desc2", 0, 0} );
+			result.push_back( {HARDWARE_SPECIFIC, DEVICE, "test/hdd", "@localhost/sda:1", f, INCREMENTAL, "GB/s", "Throughput", 0, 0} );
 
-			return lst;
+			return result;
 		}
 
 		virtual void init( StatisticsProviderPluginOptions * options ) {

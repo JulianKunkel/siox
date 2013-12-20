@@ -70,6 +70,8 @@ class HintPerformance {
  The time needed for the ACCESS semantics may depend on the abstract attributes: "size", offset (which defines some sort of regularity), and the set of supported HINTS.
  A hint may be set either on OPEN, during ACCESS.
  File extension, user and program are considered to behave similar as a hint.
+
+ XXX: Should work if the same file is opened several times, but the code is not thread safe.
  
  */
 /// @todo TODO: This code smells; we have 13 data members and an initPlugin() of 83 lines. Redesign.

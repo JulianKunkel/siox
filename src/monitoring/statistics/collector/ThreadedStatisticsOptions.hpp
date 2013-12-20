@@ -19,7 +19,8 @@ namespace monitoring {
 	//@serializable
 	class ThreadedStatisticsOptions: public core::ComponentOptions {
 		public:
-			core::ComponentReference ontology;
+			core::ComponentReference dereferencingFacade;
+			core::ComponentReference ontology;	///@todo TODO: remove and replace its use by use of the dereferencing facade.
 			core::ComponentReference smux;
 	};
 
