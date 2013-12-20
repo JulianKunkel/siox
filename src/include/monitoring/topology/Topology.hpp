@@ -18,12 +18,23 @@ XXX: Do we need to add a facility to generate paths? I. e. something like `enume
 The format of the topology paths is this:
 	path ::= pathComponent [ /pathComponent ...]
 	pathComponent ::= relationType:childName [ :objectType ]
+	pathComponent ::= aliasName
+	aliasName ::= @string
 The semantics for each path component are as follows:
 	Lookup of "relationType:childName": The returned object may have any type.
 	Lookup of "relationType:childName:childType": The returned object must have the given type.
 	Register of "relationType:childName": Equivalent to register of "relationType:childName:relationType".
 	Register of "relationType:childName:childType", no preexisting object: Just register with the given types and child name.
 	Register of "relationType:childName:childType", preexisting object: Fail if preexisting childType does not match the given childType.
+	If the path component is an alias, it is first expanded and then reexamined.
+
+Aliases map an almost arbitrary string to a path component. As far as the topology is concerned, this is purely syntactic sugar; aliases are not persisted, they are not communicated to another Topology object, they are only used within the path methods, and they are implemented directly in the Topology class. These are the rules for aliases (they are enforced by an assert in setAlias() ):
+	Once set, an alias must not be changed. However, it is not an error to set an alias twice with the same value.
+	An alias name must begin with the character '@'.
+	An alias name must not contain a slash '/'.
+	An alias value must not contain a slash '/'.
+	An alias value must be a valid pathComponent.
+	An alias value may be the name of another alias.
 
 All objects and relations have a type, which is simply a string describing the kind of object/relation.
 Example types for objects would be: node, block device, NIC, Network-Switch, etc.
@@ -101,11 +112,14 @@ Requirements:
 #ifndef INCLUDE_GUARD_MONITORING_TOPOLOGY_HPP
 #define INCLUDE_GUARD_MONITORING_TOPOLOGY_HPP
 
+#include <util/ExceptionHandling.hpp>
 #include <core/component/Component.hpp>
 #include <monitoring/datatypes/Topology.hpp>
 #include <monitoring/datatypes/Exceptions.hpp>
 
 #include <vector>
+#include <unordered_map>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace monitoring {
 	class Topology : public core::Component {
@@ -119,13 +133,18 @@ namespace monitoring {
 			typedef std::vector<TopologyRelation> TopologyRelationList;
 			typedef std::vector<TopologyValue> TopologyValueList;
 
+			//High level functions for easy handling of topology objects by specifying paths.
+			//These are implemented as metaalgorithms directly in this class, calling the plumbing level functions to do their work.
+			virtual TopologyObject registerObjectByPath( const string& path ) throw();
+			virtual TopologyObject lookupObjectByPath( const string& path ) throw();
+			virtual void setAlias( const string& aliasName, const string& aliasValue ) throw();	//For requirements on the alias name and value, see the class comment above.
+
+			//The normal, plumbing level functions.
 			virtual TopologyType registerType( const string& name ) throw() = 0;
 			virtual TopologyType lookupTypeByName( const string& name ) throw() = 0;
 			virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw() = 0;
 
 			virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw() = 0;
-			virtual TopologyObject registerObjectByPath( const string& path ) throw();
-			virtual TopologyObject lookupObjectByPath( const string& path ) throw();
 			virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw() = 0;
 
 			virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw() = 0;
@@ -144,6 +163,9 @@ namespace monitoring {
 			virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw() = 0;
 
 		private:
+			boost::shared_mutex aliasesLock;
+			std::unordered_map<string, string> aliases;	//Protected by aliasesLock.
+
 			class PathComponentDescription {
 				public:
 					string relationName, childName, childTypeName;
@@ -174,31 +196,42 @@ namespace monitoring {
 		return result;
 	}
 
-	bool Topology::parsePathComponent( const string& component, Topology::PathComponentDescription* outDescription ) throw() {
-		///@todo TODO: Add an alias lookup.
+	bool Topology::parsePathComponent( const string& aliasedComponent, Topology::PathComponentDescription* outDescription ) throw() {
+		//Substitute possible aliases.
+		const string* component = &aliasedComponent;
+		aliasesLock.lock_shared();
+		{
+			while( component && component->size() && (*component)[0] == '@' ) {
+				const string* temp = NULL;
+				IGNORE_EXCEPTIONS( temp = &aliases.at( *component ); );
+				component = temp;
+			}
+		}
+		aliasesLock.unlock_shared();
+		if( !component ) return false;
 		//Sanity check: Count the number of colons in the component string.
-		size_t colonCount = 0, componentSize = component.size();
-		for( size_t i = componentSize; i--; ) if( component[i] == ':' ) colonCount++;
+		size_t colonCount = 0, componentSize = component->size();
+		for( size_t i = componentSize; i--; ) if( (*component)[i] == ':' ) colonCount++;
 		if( !colonCount || colonCount > 2 ) return false;
 		if( colonCount == 1 ) {
 			//Find the one colon and check for empty names.
 			size_t colonPosition = 0;
-			for( ; component[colonPosition] != ':'; colonPosition++ ) ;
+			for( ; (*component)[colonPosition] != ':'; colonPosition++ ) ;
 			if( !colonPosition || colonPosition == componentSize - 1 ) return false;
 			//Fill in the descriptor.
-			outDescription->relationName = component.substr( 0, colonPosition );
-			outDescription->childName = component.substr( colonPosition + 1, componentSize - colonPosition - 1 );
+			outDescription->relationName = component->substr( 0, colonPosition );
+			outDescription->childName = component->substr( colonPosition + 1, componentSize - colonPosition - 1 );
 			outDescription->haveChildType = false;
 		} else {
 			//Find the colon positions and check for empty names.
 			size_t colon1 = 0, colon2 = 0;
-			for( ; component[colon1] != ':'; colon1++ ) ;
-			for( colon2 = colon1 + 1; component[colon2] != ':'; colon2++ ) ;
+			for( ; (*component)[colon1] != ':'; colon1++ ) ;
+			for( colon2 = colon1 + 1; (*component)[colon2] != ':'; colon2++ ) ;
 			if( !colon1 || colon1 == colon2 - 1 || colon2 == componentSize - 1 ) return false;
 			//Fill in the descriptor.
-			outDescription->relationName = component.substr( 0, colon1 );
-			outDescription->childName = component.substr( colon1 + 1, colon2 - colon1 - 1 );
-			outDescription->childTypeName = component.substr( colon2 + 1, componentSize - colon2 - 1 );
+			outDescription->relationName = component->substr( 0, colon1 );
+			outDescription->childName = component->substr( colon1 + 1, colon2 - colon1 - 1 );
+			outDescription->childTypeName = component->substr( colon2 + 1, componentSize - colon2 - 1 );
 			outDescription->haveChildType = true;
 		}
 		return true;
@@ -254,6 +287,26 @@ namespace monitoring {
 			return result;
 		}
 		return TopologyObject();
+	}
+
+	void Topology::setAlias( const string& name, const string& value ) throw() {
+		//First some sanity checks.
+		size_t nameSize = name.size();
+		assert( nameSize > 1 );
+		assert( name[0] == '@' );
+		for( size_t i = nameSize; i--; ) assert( name[i] != '/' );
+		PathComponentDescription trash;
+		assert( parsePathComponent( value, &trash ) );
+
+		aliasesLock.lock();
+		{
+			string* oldValue = NULL;
+			IGNORE_EXCEPTIONS( oldValue = &aliases.at( name ); );
+			if( oldValue ) assert( *oldValue == value );
+			//Then the actual "work".
+			aliases[name] = value;
+		}
+		aliasesLock.unlock();
 	}
 
 }
