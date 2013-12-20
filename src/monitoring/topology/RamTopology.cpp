@@ -30,10 +30,10 @@ class RamTopology : public Topology {
 		virtual TopologyType lookupTypeByName( const string& name ) throw();
 		virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw();
 
-		virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw();
+		virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw();
 		virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw();
 
-		virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw();
+		virtual TopologyRelation registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw();
 		virtual TopologyRelation lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw();
 
 		// TopologyRelationType may be 0 which indicates any parent/child.
@@ -131,7 +131,7 @@ TopologyType RamTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 }
 
 
-TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw() {
+TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
 	TopologyObject result;
 	pair<string, TopologyTypeId> childKey( childName, relationType );
 
@@ -215,7 +215,7 @@ TopologyObject RamTopology::lookupObjectById( TopologyObjectId anId ) throw() {
 }
 
 
-TopologyRelation RamTopology::registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw() {
+TopologyRelation RamTopology::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
 	TopologyRelation result;
 	pair<string, TopologyTypeId> childKey( childName, relationType );
 

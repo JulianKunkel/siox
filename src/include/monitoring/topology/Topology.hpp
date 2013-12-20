@@ -171,10 +171,10 @@ namespace monitoring {
 			virtual TopologyType lookupTypeByName( const string& name ) throw() = 0;
 			virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw() = 0;
 
-			virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw() = 0;
+			virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() = 0;
 			virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw() = 0;
 
-			virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw() = 0;
+			virtual TopologyRelation registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() = 0;
 			virtual TopologyRelation lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() = 0;
 
 			// TopologyRelationType may be 0 which indicates any parent/child.
@@ -282,7 +282,7 @@ namespace monitoring {
 				if( !curComponent->haveChildType ) curComponent->childTypeName = curComponent->relationName;
 				TopologyType childType = registerType( curComponent->childTypeName );
 				assert( childType );
-				TopologyObject child = registerObject( resultId, childType.id(), relationType.id(), curComponent->childName );
+				TopologyObject child = registerObject( resultId, relationType.id(), curComponent->childName, childType.id() );
 				if( !child ) break;
 				resultId = child.id();
 				if( i == componentCount - 1 ) result = child;

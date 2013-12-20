@@ -28,11 +28,11 @@ class DatabaseTopology : public Topology {
         virtual TopologyType lookupTypeByName( const string& name ) throw();
         virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw();
 
-        virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw();
+        virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw();
         virtual TopologyObject lookupObjectByPath( const string& Path ) throw();
         virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw();
 
-        virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw();
+        virtual TopologyRelation registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw();
         virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw();
 
         virtual TopologyRelationList enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw();
@@ -179,7 +179,7 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
     return tmpType;
 }
 
-TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw() {
+TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
     TopologyObject tmpObject;
     Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation( objectType ) );
 
@@ -251,7 +251,7 @@ TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw
     return tmpObject;
 }
 
-TopologyRelation DatabaseTopology::registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw() {
+TopologyRelation DatabaseTopology::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
     TopologyRelation tmpRelation;
     Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
 

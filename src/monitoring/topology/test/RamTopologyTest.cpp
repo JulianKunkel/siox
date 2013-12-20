@@ -52,14 +52,14 @@ int main( int argc, char const * argv[] ) throw() {
 	object1 = topology->lookupObjectById( 1 );
 	assert( !object1 );
 
-	object1 = topology->registerObject( 0, type1.id(), type2.id(), "object1" );
+	object1 = topology->registerObject( 0, type2.id(), "object1", type1.id() );
 	assert( object1.id() == 1 );
 	assert( object1.type() == type1.id() );
 	object2 = topology->lookupObjectById( 0 );
 	assert( !object2 );
 	object2 = topology->lookupObjectById( 1 );
 	assert( object2.type() == type1.id() );
-	object2 = topology->registerObject( object1.id(), type2.id(), type1.id(), "object2" );
+	object2 = topology->registerObject( object1.id(), type1.id(), "object2", type2.id() );
 	assert( object2.id() == 2 );
 	assert( object2.type() == type2.id() );
 
@@ -86,16 +86,16 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( relation2.child() == object2.id() );
 	assert( relation2.type() == type1.id() );
 
-	relation3 = topology->registerRelation( type2.id(), 0, object2.id(), "object1" );
+	relation3 = topology->registerRelation( 0, type2.id(), "object1", object2.id() );
 	assert( !relation3 );
-	relation3 = topology->registerRelation( type2.id(), 0, object1.id(), "object1" );
+	relation3 = topology->registerRelation( 0, type2.id(), "object1", object1.id() );
 	assert( &*relation3 == &*relation1 );
-	relation3 = topology->registerRelation( type1.id(), 0, object2.id(), "object2" );
+	relation3 = topology->registerRelation( 0, type1.id(), "object2", object2.id() );
 	assert( relation3.child() == object2.id() );
 	assert( relation3.type() == type1.id() );
-	relation4 = topology->registerRelation( type2.id(), object2.id(), 0, "object1" );
+	relation4 = topology->registerRelation( object2.id(), type2.id(), "object1", 0 );
 	assert( !relation4 );
-	relation4 = topology->registerRelation( type2.id(), object2.id(), object1.id(), "object1" );
+	relation4 = topology->registerRelation( object2.id(), type2.id(), "object1", object1.id() );
 	assert( relation4.child() == object1.id() );
 	assert( relation4.type() == type2.id() );
 
