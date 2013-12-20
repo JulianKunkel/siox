@@ -217,6 +217,16 @@ extern "C" {
 // Constructor for the shared library
 	__attribute__( ( constructor ) ) void siox_ll_ctor()
 	{
+		// for debugging of the LD_PRELOAD wrapper, you may use gdb to attach to the process
+		// Inside gdb run: set waiting = 0
+		// Then the loop will continue.
+		if ( getenv("SIOX_DEBUG_WAIT_LOOP") != nullptr ){
+			volatile int waiting = 1;
+			while(waiting){
+				sleep(1);
+			}
+		}
+		
 		NO_PERFMEASURE_FUNCTION_BEGIN
 		// Retrieve hostname; NodeID and PID will follow once process_data is set up
 		// If necessary, do actual initialisation
@@ -267,7 +277,6 @@ extern "C" {
 		// Never enter any SIOX function after siox-ll has been stopped.
 		// This is done by incrementing the counter.
 		monitoring_namespace_inc();
-
 		{
 			PERF_MEASURE_START("FINALIZE")
 

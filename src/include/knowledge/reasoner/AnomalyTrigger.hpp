@@ -8,7 +8,9 @@ namespace knowledge {
 
 	class AnomalyTrigger {
 		public:
-			virtual void triggerResponseForAnomaly() = 0;
+			// If the anomaly is still ongoing we keep the excited state.
+			virtual void triggerResponseForAnomaly(bool anomalyStillOngoing) = 0;
+			virtual void clearAnomalyStatus() = 0;
 	};
 
 }

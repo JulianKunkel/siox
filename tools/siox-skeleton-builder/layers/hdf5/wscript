@@ -75,14 +75,14 @@ def build(bld):
         def wrapper(task, typ): 
                 src = task.inputs[0].abspath()
                 tgt = task.outputs[0].abspath()
-                cmd = bld.path.abspath() + '/../../siox-skeleton-builder.py -o %s -t %s -s %s -W libsiox-%s.wrap %s' % (tgt, bld.path.abspath() + "/../../template.py", typ, LAYER, src)
+                cmd = bld.path.abspath() + '/../../siox-skeleton-builder -o %s -t %s -s %s -W libsiox-%s.wrap %s' % (tgt, bld.path.abspath() + "/../../template.py", typ, LAYER, src)
                 return task.exec_command(cmd)
 
         def dummy(task): 
                 cmd = ""
                 return task.exec_command(cmd)
 
-	what=(bld.path.abspath() + '/../../siox-skeleton-builder.py -o /dev/null -t %s -s wrap -W build/%s.wrap %s' % (bld.path.abspath() + "/../../template.py", LAYER, HEADER)).split(" ")
+	what=(bld.path.abspath() + '/../../siox-skeleton-builder -o /dev/null -t %s -s wrap -W build/%s.wrap %s' % (bld.path.abspath() + "/../../template.py", LAYER, HEADER)).split(" ")
 	print("[Wrapper] " + LAYER + str(what))
 	call(what)
 
@@ -99,7 +99,7 @@ def build(bld):
 		print "Could not read wrapper flags, this is critical!"
 		sys.exit(1)		
 
-	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = LAYER + ".wrap", install_path = "${LIBDIR}")
+	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = "libsiox-" + LAYER + ".wrap", install_path = "${LIBDIR}")
 
 	bld.shlib(includes="",  use = "GLIB SIOX_LL HDF5" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
 	bld.shlib(includes="",  use = "GLIB DL SIOX_LL HDF5",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)

@@ -6,6 +6,7 @@
 #include <util/ExceptionHandling.hpp>
 #include <monitoring/topology/TopologyImplementation.hpp>
 #include <workarounds.hpp>
+ #include <boost/algorithm/string.hpp>
 
  #include <pqxx/pqxx>
  #include <boost/algorithm/string.hpp>
@@ -14,6 +15,7 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 using namespace pqxx;
+using namespace boost;
 
 class DatabaseTopology : public Topology {
     public:
@@ -46,6 +48,31 @@ class DatabaseTopology : public Topology {
 
     private:
         connection* conn;
+
+        string serializeTopologyValue(TopologyValue value) {
+            string result = to_string(value->object)+"|"+to_string(value->attribute);
+            int tmpint = (int8_t) value->value.type();
+            result = result+"|"+to_string(tmpint)+"|"+value->value.str();
+            return result;
+        }
+
+        TopologyValue& deserializeTopologyValue(string value) {
+            TopologyValue tmpValue;
+            TopologyObjectId tmpObject;
+            TopologyAttributeId tmpAttr;
+            int8_t tmpValueInt;
+            TopologyVariable *innerValue;
+            
+            vector<string> SplitVec;
+            split(SplitVec, value, is_any_of("|"), token_compress_on);
+
+            tmpObject = stoul(SplitVec.at(0));
+            tmpAttr = stoul(SplitVec.at(1));
+            innerValue = new VariableDatatype(SplitVec.at(2), (int8_t) stoul(SplitVec.at(3)));
+
+            Release<TopologyValueImplementation> newValue(new TopologyValueImplementation(*innerValue, tmpObject, tmpAttr));
+            tmpValue.setObject(newValue);
+        }
 };
 
 DatabaseTopology::DatabaseTopology() {
@@ -444,13 +471,67 @@ TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId att
 }
 
 TopologyValue DatabaseTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw() {
-    assert(0 && "TODO"), abort();
+    work insertAction(*conn, "Insert Transaction");
+
+    string insertType = serializeTopologyValue(value);
+
+    // Perform an insert
+    insertAction.exec("INSERT INTO Value (objectId, attributeId, value) VALUES ('"+to_string(object)+"','"+to_string(attribute)+"','"+insertType+"')");
+    insertAction.commit();
+
+    assert(0 && "TODO"), abort();	//Sorry, Roman, I had to change the Topology interface again, and doing so, I also removed the last throw() clauses. So you have to return something here.
 }
 
 TopologyValue DatabaseTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
-    assert(0 && "TODO"), abort();
+    work selectAction(*conn, "Select Transaction");
+    string valueString;
+    
+    // Perform a select
+    result resultSelect = selectAction.exec(("SELECT value FROM Value WHERE objectId='" + to_string(object) + "' AND attributeId = '"+to_string(attribute)+"'"));
+    selectAction.commit();
+
+    // Check if there is only one result
+    if (resultSelect.size() == 1) {
+        // Check if results are sane (and convert them)
+        // TODO: Conversion okay?
+        if (!resultSelect[0]["value"].to(valueString)) {
+                // TODO: ERROR
+        }
+    }
+    else {
+        // TODO: ERROR
+    }
+
+    return deserializeTopologyValue(valueString);
 }
 
 Topology::TopologyValueList DatabaseTopology::enumerateAttributes( TopologyObjectId object ) throw() {
-    assert(0 && "TODO"), abort();
+    work selectAction(*conn, "Select Transaction");
+    string valueString;
+    
+    // Perform a select
+    result resultSelect = selectAction.exec(("SELECT value FROM Value WHERE objectId='" + to_string(object) + "'"));
+    selectAction.commit();
+
+    string tmpValueString;
+    TopologyValue tmpValue;
+    Topology::TopologyValueList returnVector;
+
+    // Check if there is only one result
+    if (resultSelect.size() > 0) {
+        for (result::size_type i = 0; i != resultSelect.size(); ++i) {
+            // TODO: Conversion okay?
+            if (!resultSelect[i]["value"].to(tmpValueString)) {
+                    // TODO: ERROR
+            }
+
+            tmpValue = deserializeTopologyValue(tmpValueString);
+            returnVector.emplace_back(tmpValue);
+        }
+    }
+    else {
+        // TODO: ERROR
+    }
+
+    return returnVector;
 }

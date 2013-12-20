@@ -28,3 +28,12 @@ target_link_libraries(
 symlink(siox.conf siox.conf)
 
 add_test(monitoring-low-level-c-test monitoring-low-level-c-test)
+
+
+siox_skeleton_builder(plain ${CMAKE_SOURCE_DIR}/src/include/C/siox-ll.h ${CMAKE_SOURCE_DIR}/tools/siox-skeleton-builder/stubs/null/template-null.py SIOX siox-ll-null.c)
+
+add_library(
+	siox-monitoring-siox-ll-null
+	siox-ll-null.c
+)
+

@@ -42,16 +42,11 @@ class ReasonerStandardImplementation : public Reasoner, ServerCallback, MessageC
 		QualitativeUtilization * utilization = nullptr;
 
 
-		set<PerformanceIssue>   knownIssues;
-		set<PerformanceIssue>   recentIssues;
+		shared_ptr<HealthStatistics>   runtimeStatistics;
 
 
-		mutex                   localIssues_lock;
-		// the position in the map depends on the plugin
-		map<Reasoner *, set<PerformanceIssue>> localIssues;
-
-		// for each host we store the latest observation
-		map<string, pair<Timestamp, set<PerformanceIssue>> > remoteIssues;
+		// for each host (by ID) we store the latest observation
+		unordered_map<string, pair<Timestamp, set<HealthStatistics>> > remoteIssues;
 
 
 		thread                  periodicThread;
@@ -72,25 +67,20 @@ class ReasonerStandardImplementation : public Reasoner, ServerCallback, MessageC
 		}
 
 		virtual void PeriodicRun() {
+			bool persistingAnomaly = false;
 			while( ! terminated ) {
 				//cout << "PeriodicRun" << terminated << endl;
 				auto timeout = chrono::system_clock::now() + chrono::milliseconds( update_intervall_ms );
 
-				set<AnomalyPluginObservation> adpiObservations;
+				unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>  adpiObservations;
 				// query recent observations of all connected plugins and integrate them into the local performance issues.
 				for( auto itr = adpis.begin(); itr != adpis.end() ; itr++ ) {
 					// memory management is going in our responsibility.
-					unique_ptr<set<AnomalyPluginObservation>> apo = ( *itr )->queryRecentObservations();
+					unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>  apo = ( *itr )->queryRecentObservations();
 
 					// Merge this set of the adpi into the global list.
-					mergeObservations( adpiObservations, *apo );
+					//mergeObservations( adpiObservations, *apo );
 					//cout << adpiObservations.size() << " " << apo->size() << endl;
-				}
-
-				// Merge remote issues:
-				set<PerformanceIssue> localIssues;
-				for( auto itr = this->localIssues.begin(); itr != this->localIssues.end() ; itr++ ) {
-					mergeIssues( localIssues, itr->second );
 				}
 
 				// Think:
@@ -103,7 +93,7 @@ class ReasonerStandardImplementation : public Reasoner, ServerCallback, MessageC
 				// TODO
 
 				// For testing:
-				if( adpiObservations.size() > 0 ) {
+				if( adpiObservations->size() > 0 ) {
 					anomalyDetected = true;
 				}
 				if( utilization != nullptr ) {
@@ -117,16 +107,12 @@ class ReasonerStandardImplementation : public Reasoner, ServerCallback, MessageC
 				// TODO
 
 				// Trigger anomaly if any:
-				if( anomalyDetected ) {
+				if( anomalyDetected && ! persistingAnomaly ) {
 					for( auto itr = triggers.begin(); itr != triggers.end() ; itr++ ) {
-						( *itr )->triggerResponseForAnomaly();
+						( *itr )->triggerResponseForAnomaly(false);
 					}
 				}
-
-				// Forward detected performance issues to reasoners connected locally.
-				for( auto itr = reasoners.begin(); itr != reasoners.end() ; itr++ ) {
-					( *itr )->reportRecentIssues( this, recentIssues );
-				}
+				// TODO sometimes we'd like to have persistent Anomalies ... persistingAnomaly = anomalyDetected;
 
 				// Forward detected performance issues to remote reasoners
 				for( auto itr = downstreamReasoners.begin(); itr != downstreamReasoners.end(); itr++ ){
@@ -143,38 +129,6 @@ class ReasonerStandardImplementation : public Reasoner, ServerCallback, MessageC
 				running_condition.wait_until( lock, timeout );
 			}
 			//cout << "PeriodicRun finished" << endl;
-		}
-
-		void mergeObservations( set<AnomalyPluginObservation> & issues, const set<AnomalyPluginObservation> & newIssues ) {
-			for( auto itr = newIssues.begin(); itr != newIssues.end() ; itr++ ) {
-				set<AnomalyPluginObservation>::iterator find = issues.find( *itr );
-				const AnomalyPluginObservation & nIssue = *itr;
-				// should be the default case.
-				if( find == issues.end() ) {
-					// append the item
-					issues.insert( nIssue );
-				} else {
-					AnomalyPluginObservation & existingIssue = ( AnomalyPluginObservation & )( *find );
-					existingIssue.occurences += nIssue.occurences;
-					existingIssue.delta_time_ms += nIssue.delta_time_ms;
-				}
-			}
-		}
-
-		void mergeIssues( set<PerformanceIssue> & issues, const set<PerformanceIssue> & newIssues ) {
-			for( auto itr = newIssues.begin(); itr != newIssues.end() ; itr++ ) {
-				set<PerformanceIssue>::iterator find = issues.find( *itr );
-				const PerformanceIssue & nIssue = *itr;
-				// should be the default case.
-				if( find == newIssues.end() ) {
-					// append the item
-					issues.insert( nIssue );
-				} else {
-					PerformanceIssue & existingIssue = ( PerformanceIssue & )( *find );
-					existingIssue.occurences += nIssue.occurences;
-					existingIssue.delta_time_ms += nIssue.delta_time_ms;
-				}
-			}
 		}
 
 
@@ -273,27 +227,8 @@ public:
 		periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
 	}
 
-	virtual void reportRecentIssues( const Reasoner * reasoner, const set<PerformanceIssue> & issues ) {
-		unique_lock<mutex> lock( localIssues_lock );
-
-		// Replace last reported issues in the remote issues set.
-		localIssues[( Reasoner * ) reasoner] = issues;
-	}
-
-	virtual unique_ptr<list<PerformanceIssue>> queryRecentPerformanceIssues() {
-		auto stats = new list<PerformanceIssue>();
-		for( auto itr = recentIssues.begin(); itr != recentIssues.end() ; itr++ ) {
-			stats->push_back( *itr );
-		}
-		return unique_ptr<list<PerformanceIssue> >( stats );
-	}
-
-	virtual unique_ptr<list<PerformanceIssue>> queryRuntimePerformanceIssues() {
-		auto stats = new list<PerformanceIssue>();
-		for( auto itr = knownIssues.begin(); itr != knownIssues.end() ; itr++ ) {
-			stats->push_back( *itr );
-		}
-		return unique_ptr<list<PerformanceIssue>>( stats );
+	virtual shared_ptr<HealthStatistics> queryRuntimePerformanceIssues() {
+		return nullptr;
 	}
 
 	virtual void connectAnomalyPlugin( AnomalyPlugin * plugin ) {
@@ -311,13 +246,6 @@ public:
 		assert( std::find( triggers.begin(), triggers.end(), trigger ) ==  triggers.end() );
 		triggers.push_back( trigger );
 	}
-
-	virtual void connectReasoner( Reasoner * reasoner ) {
-		assert( std::find( reasoners.begin(), reasoners.end(), reasoner ) ==  reasoners.end() );
-		reasoners.push_back( reasoner );
-		localIssues[reasoner] = set<PerformanceIssue>();
-	}
-
 };
 
 } // namespace knowledge

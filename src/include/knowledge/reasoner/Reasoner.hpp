@@ -232,6 +232,26 @@ namespace knowledge {
 
 	    @enduml
 	*/
+
+
+	struct HealthIssueWithExplaination : HealthIssue{
+		// The node and global issues, that might explain the performance issues:
+		unordered_map<string, HealthIssue> globalIssues;
+		unordered_map<string, HealthIssue> nodeLocalIssues;
+	};
+
+	/* 
+	 Remember and aggregate the local issues forever. 
+	 */
+	struct HealthStatistic{
+		UniqueInterfaceID cid; // can be mapped to the name later
+		unordered_map<string, HealthIssueWithExplaination> issues;
+	};
+
+	struct HealthStatistics{
+		unordered_map<uint16_t, AnomalyPluginHealthStatistic> map; // ComponentID.id
+	};
+
 	class Reasoner : public core::Component {
 		public:
 			// Report the observation of an activity
@@ -249,17 +269,17 @@ namespace knowledge {
 			// virtual void reportObservation(StatisticObservation o, OntologyAttributeID statistics_aid, const IssueLocation & issueLocation) = 0;
 
 			// Query a list of current performance causing reasons.
-			virtual unique_ptr<list<PerformanceIssue>> queryRecentPerformanceIssues() = 0;
+			//virtual unique_ptr<list<PerformanceIssue>> queryRecentPerformanceIssues() = 0;
 
 			// Query statistics about inefficiencies / efficiencies for the whole runtime of the application.
 			// Usually done at the end of the application to provide hints about application bottlenecks.
 
 			/*
-			 Based on the hierachy-level the reasoner keeps different stats for their run-time:
+			 Based on the hierarchy-level the reasoner keeps different stats for their run-time:
 			 A process reasoner has statistics for the process life-time.
-			 A daemon maintains stats for its life-time (until daemon is stopped).
+			 A daemon maintains statistics for its life-time (until daemon is stopped).
 			 */
-			virtual unique_ptr<list<PerformanceIssue>> queryRuntimePerformanceIssues() = 0;
+			virtual shared_ptr<HealthStatistics> queryRuntimePerformanceIssues() = 0;
 
 			// Register the presence of a statistics which can be queried to ask the current utilization.
 			// Internally, the relative utilization of such a statistics helps finding the reasons.
@@ -270,14 +290,6 @@ namespace knowledge {
 			virtual void connectTrigger( AnomalyTrigger * trigger ) = 0;
 
 			virtual void connectAnomalyPlugin( AnomalyPlugin * plugin ) = 0;
-
-			// A reasoner is connected either upstream / more global reasoner or downstream.
-			// Connection to a remote reasoner is realized using RPC (behind a reasoner facade).
-			// Either way the reasoner will forward only refined information
-			virtual void connectReasoner( Reasoner * reasoner ) = 0;
-
-			// A remote reasoner will report its issues using this call.
-			virtual void reportRecentIssues( const Reasoner * reasoner, const set<PerformanceIssue> & issues ) = 0;
 	};
 
 }

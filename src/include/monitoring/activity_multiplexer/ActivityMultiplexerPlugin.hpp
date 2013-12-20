@@ -39,19 +39,23 @@ namespace monitoring {
 			 */
 			void init() {
 				ActivityMultiplexerPluginOptions & o = getOptions<ActivityMultiplexerPluginOptions>();
-				assert( o.multiplexer.componentPointer != nullptr );
 
 				multiplexer = GET_INSTANCE(ActivityMultiplexer, o.multiplexer);
+
 				// may be NULL
 				facade = GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade);
 
 				initPlugin();
 
-				multiplexer->registerListener( this );
+				if ( multiplexer != nullptr ){
+					multiplexer->registerListener( this );
+				}
 			}
 
 			~ActivityMultiplexerPlugin(){
-				multiplexer->unregisterListener( this );	
+				if ( multiplexer != nullptr ){
+					multiplexer->unregisterListener( this );	
+				}
 			}
 	};
 
