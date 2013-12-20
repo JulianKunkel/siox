@@ -102,7 +102,7 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( relation4.type() == type2.id() );
 
 	{
-		TopologyObject temp;
+		TopologyObject temp, object3;
 		temp = topology->lookupObjectByPath( "" );
 		assert( !temp );
 		temp = topology->lookupObjectByPath( "/object1" );
@@ -111,16 +111,29 @@ int main( int argc, char const * argv[] ) throw() {
 		assert( !temp );
 		temp = topology->lookupObjectByPath( "object1//object2" );
 		assert( !temp );
-		temp = topology->lookupObjectByPath( "type2:object1" );
-//		assert( !temp );
 		temp = topology->lookupObjectByPath( "type1:object1" );
+fprintf(stderr, "temp = %jx\n", (intmax_t)&*temp);
+//		assert( !temp );
+		temp = topology->lookupObjectByPath( "type2:object1" );
+fprintf(stderr, "temp = %jx, object1 = %jx\n", (intmax_t)&*temp, (intmax_t)&*object1);
 		assert( &*temp == &*object1 );
-		temp = topology->lookupObjectByPath( "type2:object2/type1:object1" );
+		temp = topology->lookupObjectByPath( "type1:object2/type1:object1" );
 		assert( &*temp == &*object1 );
-		temp = topology->lookupObjectByPath( "type2:object2" );
+		temp = topology->lookupObjectByPath( "type1:object2" );
 		assert( &*temp == &*object2 );
-		temp = topology->lookupObjectByPath( "type1:object1/type2:object2" );
+		temp = topology->lookupObjectByPath( "type2:object1/type2:object2" );
 		assert( &*temp == &*object2 );
+		object3 = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
+		temp = topology->lookupObjectByPath( "type1:object2/tic:tac/toe:tric" );
+		assert( &*temp == &*object3 );
+		temp = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
+		assert( &*temp == &*object3 );
+		temp = topology->registerObjectByPath( "type1:object2/tic:tac/toe:tric:trac" );
+		assert( !temp );
+		temp = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric" );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
+		assert( &*temp == &*object3 );
 	}
 
 	{

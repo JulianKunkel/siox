@@ -142,62 +142,120 @@ namespace monitoring {
 			virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw() = 0;
 			virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() = 0;
 			virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw() = 0;
+
+		private:
+			class PathComponentDescription {
+				public:
+					string relationName, childName, childTypeName;
+					bool haveChildType;
+			};
+			PathComponentDescription* parsePath( const string& path, size_t* outComponentCount ) throw();	//Returns a new array of outComponentCount PathComponentDescriptions or NULL if an error occured.
+			bool parsePathComponent( const string& component, PathComponentDescription* outDescription) throw();	//Returns true on success.
 	};
 
+	Topology::PathComponentDescription* Topology::parsePath( const string& path, size_t* outComponentCount ) throw() {
+		//First count the path components, so that we can allocate descriptions for them.
+		size_t componentCount = 1, pathSize = path.size();
+		if( !pathSize ) return NULL;
+		for( size_t i = pathSize; i--; ) if( path[i] == '/' ) componentCount++;
+		//Get some mem.
+		PathComponentDescription* result = new PathComponentDescription[componentCount];
+		//Parse the components.
+		for( size_t i = 0, curComponent = 0; i < pathSize; i++, curComponent++ ) {
+			size_t componentStart = i;
+			for( ; i < pathSize && path[i] != '/'; i++ ) ;
+			string componentString = path.substr( componentStart, i - componentStart );
+			if( !parsePathComponent( componentString, &result[curComponent] ) ) {
+				delete[] result;
+				return NULL;
+			}
+		}
+		*outComponentCount = componentCount;
+		return result;
+	}
+
+	bool Topology::parsePathComponent( const string& component, Topology::PathComponentDescription* outDescription ) throw() {
+		///@todo TODO: Add an alias lookup.
+		//Sanity check: Count the number of colons in the component string.
+		size_t colonCount = 0, componentSize = component.size();
+		for( size_t i = componentSize; i--; ) if( component[i] == ':' ) colonCount++;
+		if( !colonCount || colonCount > 2 ) return false;
+		if( colonCount == 1 ) {
+			//Find the one colon and check for empty names.
+			size_t colonPosition = 0;
+			for( ; component[colonPosition] != ':'; colonPosition++ ) ;
+			if( !colonPosition || colonPosition == componentSize - 1 ) return false;
+			//Fill in the descriptor.
+			outDescription->relationName = component.substr( 0, colonPosition );
+			outDescription->childName = component.substr( colonPosition + 1, componentSize - colonPosition - 1 );
+			outDescription->haveChildType = false;
+		} else {
+			//Find the colon positions and check for empty names.
+			size_t colon1 = 0, colon2 = 0;
+			for( ; component[colon1] != ':'; colon1++ ) ;
+			for( colon2 = colon1 + 1; component[colon2] != ':'; colon2++ ) ;
+			if( !colon1 || colon1 == colon2 - 1 || colon2 == componentSize - 1 ) return false;
+			//Fill in the descriptor.
+			outDescription->relationName = component.substr( 0, colon1 );
+			outDescription->childName = component.substr( colon1 + 1, colon2 - colon1 - 1 );
+			outDescription->childTypeName = component.substr( colon2 + 1, componentSize - colon2 - 1 );
+			outDescription->haveChildType = true;
+		}
+		return true;
+	}
+
 	TopologyObject Topology::registerObjectByPath( const string& path ) throw() {
-		//TODO: actually do what this is supposed to do.
-		return lookupObjectByPath( path );
+		size_t componentCount;
+		if( PathComponentDescription* components = parsePath( path, &componentCount ) ) {
+			TopologyObjectId resultId = 0;
+			TopologyObject result;
+			for( size_t i = 0; i < componentCount; i++ ) {
+				PathComponentDescription* curComponent = &components[i];
+				//Lookup the corresponding relation and update resultId.
+				TopologyType relationType = registerType( curComponent->relationName );
+				assert( relationType );
+				if( !curComponent->haveChildType ) curComponent->childTypeName = curComponent->relationName;
+				TopologyType childType = registerType( curComponent->childTypeName );
+				assert( childType );
+				TopologyObject child = registerObject( resultId, childType.id(), relationType.id(), curComponent->childName );
+				if( !child ) break;
+				resultId = child.id();
+				if( i == componentCount - 1 ) result = child;
+			}
+			delete[] components;
+			return result;
+		}
+		return TopologyObject();
 	}
 
 	TopologyObject Topology::lookupObjectByPath( const string& path ) throw() {
-		size_t pathSize = path.size(), curPosition;
-		TopologyObjectId resultId = 0;
-		TopologyObject result;
-		for( curPosition = 0; curPosition < pathSize; ) {
-			//Get the elements of the current path component.
-			size_t firstColon = pathSize, secondColon = pathSize, slash = pathSize;
-			for( size_t i = curPosition; i < firstColon; i++ ) {
-				switch( path[i] ) {
-					case ':': firstColon = i; break;
-					case '/': return TopologyObject();
+		size_t componentCount;
+		if( PathComponentDescription* components = parsePath( path, &componentCount ) ) {
+			TopologyObjectId resultId = 0;
+			TopologyObject result;
+			for( size_t i = 0; i < componentCount; i++ ) {
+				PathComponentDescription* curComponent = &components[i];
+				//Lookup the corresponding relation and update resultId.
+				TopologyType relationType = lookupTypeByName( curComponent->relationName );
+				if( !relationType ) break;
+				TopologyRelation relation = lookupRelation( resultId, relationType.id(), curComponent->childName );
+				if( !relation ) break;
+				resultId = relation.child();
+				if( curComponent->haveChildType ) {	//Does the user want a type check?
+					TopologyObject child = lookupObjectById( resultId );
+					TopologyType expectedType = lookupTypeByName( curComponent->childTypeName );
+					if( !child || !expectedType || child.type() != expectedType.id() ) break;
+					if( i == componentCount - 1 ) result = child;
+				} else if( i == componentCount - 1 ) {
+					result = lookupObjectById( resultId );
 				}
 			}
-			for( size_t i = firstColon + 1; i < secondColon; i++ ) {
-				switch( path[i] ) {
-					case ':': secondColon = i;
-					case '/': secondColon = slash = i;
-				}
-			}
-			for( size_t i = secondColon + 1; i < slash; i++ ) if( path[i] == '/' ) slash = i;
-			//Check for empty components.
-			if( firstColon >= pathSize ) return TopologyObject();
-			if( secondColon == firstColon + 1 ) return TopologyObject();
-			if( slash == secondColon + 1 ) return TopologyObject();
-			bool haveObjectType = secondColon != slash;
-			if( pathSize == slash + 1 ) return TopologyObject();
-			//Get the strings.
-			string relationTypeName = path.substr( curPosition, firstColon - curPosition );
-			string childName = path.substr( firstColon + 1, secondColon - firstColon - 1 );
-			//Lookup the corresponding relation and update resultId.
-			TopologyType relationType = lookupTypeByName( relationTypeName );
-			if( !relationType ) return TopologyObject();
-			TopologyRelation relation = lookupRelation( resultId, relationType.id(), childName );
-			if( !relation ) return TopologyObject();
-			resultId = relation.child();
-			if( haveObjectType ) {	//Does the user want a type check?
-				string objectTypeName = path.substr( secondColon + 1, slash - secondColon - 1 );
-				result = lookupObjectById( resultId );
-				TopologyType expectedType = lookupTypeByName( objectTypeName );
-				if( !result || !expectedType || result.type() != expectedType.id() ) return TopologyObject();
-			}
-			//Setup for the next component.
-			curPosition = slash + 1;
+			delete[] components;
+			return result;
 		}
-		if( !result ) {
-			result = lookupObjectById( resultId );
-		}
-		return result;
+		return TopologyObject();
 	}
+
 }
 
 #define MONITORING_TOPOLOGY_INTERFACE "monitoring_topology"
