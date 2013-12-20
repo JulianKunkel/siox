@@ -134,9 +134,15 @@ fprintf(stderr, "temp = %jx, object1 = %jx\n", (intmax_t)&*temp, (intmax_t)&*obj
 		assert( !temp );
 		temp = topology->lookupObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
 		assert( &*temp == &*object3 );
-		topology->setAlias( "@foo", "type1:object2" );
-		topology->setAlias( "@foo", "type1:object2" );
-		temp = topology->lookupObjectByPath( "@foo/tic:tac/toe:tric" );
+		assert( topology->setAlias( "@foo", "type1:object2" ) );
+		assert( topology->setAlias( "@foo", "type1:object2" ) );
+		assert( !topology->setAlias( "@foo", "foo:bar" ) );
+		assert( !topology->setAlias( "@bar", "foo" ) );
+		assert( !topology->setAlias( "@bar", "foo:bar/tic:tac" ) );
+		assert( !topology->setAlias( "foo", "type1:object2" ) );
+		assert( !topology->setAlias( "@foo/bar", "type1:object2" ) );
+		assert( topology->setAlias( "@bar", "@foo" ) );
+		temp = topology->lookupObjectByPath( "@bar/tic:tac/toe:tric" );
 		assert( &*temp == &*object3 );
 	}
 

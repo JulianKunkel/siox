@@ -152,6 +152,8 @@ Implementation details for the requirements of a StatisticsCollector:
 #include <unordered_map>
 #include <string>
 #include <utility>
+#include <unistd.h>
+#include <limits.h>
 
 #include <workarounds.hpp>
 
@@ -247,12 +249,19 @@ void ThreadedStatisticsCollector::init() throw() {
 	smux = GET_INSTANCE(StatisticsMultiplexer, o.smux);
 	{
 		//Setup the alias for the localhost in the topology.
-		///@fixme FIXME: Currently, no alias is used, instead an object called @localhost is created.
 		Topology* topology = facade->topology();
-		TopologyTypeId typeNodeId = topology->registerType( "node" ).id();
-		TopologyObject localhost = topology->registerObject( 0, typeNodeId, typeNodeId, "@localhost" );
-		if( !localhost ) {
-			cerr << "SIOX internal error: Inconsistent definitions of \"@localhost\" topology entry. Aborting.\n";
+		char hostname[HOST_NAME_MAX + 1];
+		if( gethostname( hostname, sizeof( hostname ) ) ) {
+			cerr << "Fatal error: gethostname() is not POSIX.1-2001 compliant on this system. Aborting.\n";
+			abort();
+		}
+		string topologyPath = string( "host:" ) + string( hostname );
+		if( !topology->registerObjectByPath( topologyPath ) ) {
+			cerr << "SIOX internal error: Can't register the topology path \"" << topologyPath << "\". Aborting.\n";
+			abort();
+		}
+		if( !topology->setAlias( "@localhost", topologyPath ) ) {
+			cerr << "SIOX internal error: Inconsistent definitions of topology alias \"@localhost\". Aborting.\n";
 			abort();
 		}
 	}

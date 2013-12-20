@@ -31,7 +31,7 @@ namespace monitoring {
 
 			/*
 			 * The topology defines to which entities the metrics applies.
-			 * This is a topology path that may start with an alias like "@localhost/sda1".
+			 * This is a topology path that may start with an alias like "@localhost/sda:1".
 			 */
 			string topologyPath;
 

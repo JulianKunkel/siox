@@ -28,7 +28,7 @@ The semantics for each path component are as follows:
 	Register of "relationType:childName:childType", preexisting object: Fail if preexisting childType does not match the given childType.
 	If the path component is an alias, it is first expanded and then reexamined.
 
-Aliases map an almost arbitrary string to a path component. As far as the topology is concerned, this is purely syntactic sugar; aliases are not persisted, they are not communicated to another Topology object, they are only used within the path methods, and they are implemented directly in the Topology class. These are the rules for aliases (they are enforced by an assert in setAlias() ):
+Aliases map an almost arbitrary string to a path component. As far as the topology is concerned, this is purely syntactic sugar; aliases are not persisted, they are not communicated to another Topology object, they are only used within the path methods, and they are implemented directly in the Topology class. These are the rules for aliases (they are enforced by setAlias() ):
 	Once set, an alias must not be changed. However, it is not an error to set an alias twice with the same value.
 	An alias name must begin with the character '@'.
 	An alias name must not contain a slash '/'.
@@ -137,7 +137,7 @@ namespace monitoring {
 			//These are implemented as metaalgorithms directly in this class, calling the plumbing level functions to do their work.
 			virtual TopologyObject registerObjectByPath( const string& path ) throw();
 			virtual TopologyObject lookupObjectByPath( const string& path ) throw();
-			virtual void setAlias( const string& aliasName, const string& aliasValue ) throw();	//For requirements on the alias name and value, see the class comment above.
+			virtual bool setAlias( const string& aliasName, const string& aliasValue ) throw();	//Return true on success. For requirements on the alias name and value, see the class comment above.
 
 			//The normal, plumbing level functions.
 			virtual TopologyType registerType( const string& name ) throw() = 0;
@@ -211,7 +211,12 @@ namespace monitoring {
 		if( !component ) return false;
 		//Sanity check: Count the number of colons in the component string.
 		size_t colonCount = 0, componentSize = component->size();
-		for( size_t i = componentSize; i--; ) if( (*component)[i] == ':' ) colonCount++;
+		for( size_t i = componentSize; i--; ) {
+			switch( (*component)[i] ) {
+				case ':': colonCount++; break;
+				case '/': return false;
+			}
+		}
 		if( !colonCount || colonCount > 2 ) return false;
 		if( colonCount == 1 ) {
 			//Find the one colon and check for empty names.
@@ -289,24 +294,28 @@ namespace monitoring {
 		return TopologyObject();
 	}
 
-	void Topology::setAlias( const string& name, const string& value ) throw() {
+	bool Topology::setAlias( const string& name, const string& value ) throw() {
 		//First some sanity checks.
 		size_t nameSize = name.size();
-		assert( nameSize > 1 );
-		assert( name[0] == '@' );
-		for( size_t i = nameSize; i--; ) assert( name[i] != '/' );
+		if( nameSize < 2 ) return false;
+		if( name[0] != '@' ) return false;
+		for( size_t i = nameSize; i--; ) if( name[i] == '/' ) return false;
 		PathComponentDescription trash;
-		assert( parsePathComponent( value, &trash ) );
+		if( !parsePathComponent( value, &trash ) ) return false;
 
+		bool success = false;
 		aliasesLock.lock();
 		{
 			string* oldValue = NULL;
 			IGNORE_EXCEPTIONS( oldValue = &aliases.at( name ); );
-			if( oldValue ) assert( *oldValue == value );
-			//Then the actual "work".
-			aliases[name] = value;
+			if( !oldValue || *oldValue == value ) {
+				//Then the actual "work".
+				aliases[name] = value;
+				success = true;
+			}
 		}
 		aliasesLock.unlock();
+		return success;
 	}
 
 }

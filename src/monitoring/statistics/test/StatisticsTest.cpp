@@ -105,7 +105,7 @@ int main( int argc, char const * argv[] ) throw() {
 		}
 
 //		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}} );
-		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, topology->lookupObjectByPath( "localHost/ws1" ).id() );
+		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, topology->lookupObjectByPath( "@localhost/weather-station:0" ).id() );
 		array<StatisticsValue, Statistic::kHistorySize> nameLookupValues = collector->getStatistics( SUM, HUNDRED_MILLISECONDS, description );
 		assert( values[1] == nameLookupValues );
 		StatisticsValue aggregatedValue = collector->getReducedStatistics( SUM, SECOND, *statistics[0] );
