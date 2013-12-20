@@ -50,7 +50,7 @@ class RamTopology : public Topology {
 
 	private:
 		//These classes are just combinations of a container and a lock that protects it.
-		class ChildMap : public unordered_map<string, TopologyRelation>, public boost::shared_mutex {};
+		class ChildMap : public unordered_map<pair<string, TopologyTypeId>, TopologyRelation>, public boost::shared_mutex {};
 		class ParentVector : public vector<TopologyRelation>, public boost::shared_mutex {};
 		class AttributeMap : public unordered_map<TopologyAttributeId, TopologyValue>, public boost::shared_mutex {};
 
@@ -133,6 +133,7 @@ TopologyType RamTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 
 TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw() {
 	TopologyObject result;
+	pair<string, TopologyTypeId> childKey( childName, relationType );
 
 	//First look up the child map in which the requested relation should be stored.
 	ChildMap* childMap = NULL;
@@ -146,7 +147,7 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 	//Look up the relation, and create it if it doesn't exist.
 	TopologyRelation resultRelation;
 	childMap->lock_shared();
-	IGNORE_EXCEPTIONS( resultRelation = childMap->at( childName ); );
+	IGNORE_EXCEPTIONS( resultRelation = childMap->at( childKey ); );
 	childMap->unlock_shared();
 	if( !resultRelation ) {
 		//Looks like we have to allocate something.
@@ -161,7 +162,7 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 		//Regrap the locks for writing, and check if someone else was quicker in registering this object.
 		objectsLock.lock();
 		childMap->lock();
-		IGNORE_EXCEPTIONS( resultRelation = childMap->at( childName ); );
+		IGNORE_EXCEPTIONS( resultRelation = childMap->at( childKey ); );
 		if( !resultRelation ) {
 			//Finalize the object description.
 			newRelation->childId = newObject->id = objectsById.size();
@@ -176,7 +177,7 @@ TopologyObject RamTopology::registerObject( TopologyObjectId parentId, TopologyT
 			parentVectorsById.back() = newParentVector;
 			attributeMapsById.resize( objectCount );
 			attributeMapsById.back() = newAttributeMap;
-			(*childMap)[childName].setObject( newRelation );
+			(*childMap)[childKey].setObject( newRelation );
 
 			//Stuff for our personal cleanup.
 			resultRelation.setObject( newRelation );
@@ -216,6 +217,7 @@ TopologyObject RamTopology::lookupObjectById( TopologyObjectId anId ) throw() {
 
 TopologyRelation RamTopology::registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw() {
 	TopologyRelation result;
+	pair<string, TopologyTypeId> childKey( childName, relationType );
 
 	if( !child ) return result;
 	ChildMap* childMap = NULL;
@@ -229,16 +231,16 @@ TopologyRelation RamTopology::registerRelation( TopologyTypeId relationType, Top
 
 	bool preexistingRelation = true;
 	childMap->lock_shared();
-	IGNORE_EXCEPTIONS( result = childMap->at( childName ); );
+	IGNORE_EXCEPTIONS( result = childMap->at( childKey ); );
 	childMap->unlock_shared();
 	if( !result ) {
 		//Looks like we have to add this relation.
 		Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
 		childMap->lock();
-		IGNORE_EXCEPTIONS( result = childMap->at( childName ); );
+		IGNORE_EXCEPTIONS( result = childMap->at( childKey ); );
 		if( !result ) {
 			preexistingRelation = false;
-			(*childMap)[childName].setObject( newRelation );
+			(*childMap)[childKey].setObject( newRelation );
 			//It is important to retain the childMap lock at this point to ensure that no inconsistent state becomes visible.
 			parentVector->lock();
 			parentVector->resize( parentVector->size() + 1 );
@@ -258,13 +260,14 @@ TopologyRelation RamTopology::registerRelation( TopologyTypeId relationType, Top
 
 TopologyRelation RamTopology::lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() {
 	TopologyRelation result;
+	pair<string, TopologyTypeId> childKey( childName, relationType );
 	ChildMap* childMap = NULL;
 	objectsLock.lock_shared();
 	if( parent < objectsById.size() ) childMap = childMapsById[parent];
 	objectsLock.unlock_shared();
 	if( childMap ) {
 		childMap->lock_shared();
-		IGNORE_EXCEPTIONS( result = childMap->at( childName ); );
+		IGNORE_EXCEPTIONS( result = childMap->at( childKey ); );
 		childMap->unlock_shared();
 	}
 	return result;

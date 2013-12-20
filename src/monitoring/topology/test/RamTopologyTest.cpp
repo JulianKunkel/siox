@@ -73,7 +73,7 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( !relation1 );
 	relation1 = topology->lookupRelation( 0, type1.id(), "object2" );
 	assert( !relation1 );
-//	relation1 = topology->lookupRelation( 0, type1.id(), "object1" );
+	relation1 = topology->lookupRelation( 0, type1.id(), "object1" );
 	assert( !relation1 );
 	relation1 = topology->lookupRelation( 0, type2.id(), "object1" );
 	assert( relation1.childName() == "object1" );
@@ -86,8 +86,6 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( relation2.child() == object2.id() );
 	assert( relation2.type() == type1.id() );
 
-	relation3 = topology->registerRelation( type1.id(), 0, object1.id(), "object1" );
-	assert( !relation3 );
 	relation3 = topology->registerRelation( type2.id(), 0, object2.id(), "object1" );
 	assert( !relation3 );
 	relation3 = topology->registerRelation( type2.id(), 0, object1.id(), "object1" );
@@ -112,16 +110,14 @@ int main( int argc, char const * argv[] ) throw() {
 		temp = topology->lookupObjectByPath( "object1//object2" );
 		assert( !temp );
 		temp = topology->lookupObjectByPath( "type1:object1" );
-fprintf(stderr, "temp = %jx\n", (intmax_t)&*temp);
-//		assert( !temp );
+		assert( !temp );
 		temp = topology->lookupObjectByPath( "type2:object1" );
-fprintf(stderr, "temp = %jx, object1 = %jx\n", (intmax_t)&*temp, (intmax_t)&*object1);
 		assert( &*temp == &*object1 );
-		temp = topology->lookupObjectByPath( "type1:object2/type1:object1" );
+		temp = topology->lookupObjectByPath( "type1:object2/type2:object1" );
 		assert( &*temp == &*object1 );
 		temp = topology->lookupObjectByPath( "type1:object2" );
 		assert( &*temp == &*object2 );
-		temp = topology->lookupObjectByPath( "type2:object1/type2:object2" );
+		temp = topology->lookupObjectByPath( "type2:object1/type1:object2" );
 		assert( &*temp == &*object2 );
 		object3 = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
 		temp = topology->lookupObjectByPath( "type1:object2/tic:tac/toe:tric" );
