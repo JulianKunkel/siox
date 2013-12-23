@@ -95,6 +95,7 @@ class NetworkStats: public ProcSingleFilePlugin<18> {
 			vector<StatisticsProviderDatatypes> lst;
 
 			for( auto iter = CurrentValues.begin(); iter != CurrentValues.end(); iter++ ) {
+				///@todo TODO: The following four lines do not make any sense, as do some other parts of this file. Rework this file.
 				string name = iter -> first;
 				string name2 = iter -> first;
 				string name3 = iter -> first;
@@ -104,13 +105,13 @@ class NetworkStats: public ProcSingleFilePlugin<18> {
 
 				// Transfer Currentvalues by name to Statistics Array
 				std::array<StatisticsValue, 1> & Crrnt = CurrentValues[name];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsReceived", {{"node", LOCAL_HOSTNAME}, {"device", name}}, Crrnt[0], INCREMENTAL, "", "Field 1 -- # of packets received", overflow_value, 0} );
+				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsReceived", "@localhost", Crrnt[0], INCREMENTAL, "", "Field 1 -- # of packets received", overflow_value, 0} );
 				std::array<StatisticsValue, 1> & Crrnt2 = CurrentValues[name2];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsSent", {{"node", LOCAL_HOSTNAME}, {"device", name2}}, Crrnt2[0], INCREMENTAL, "", "Field 1 -- # of packets sent", overflow_value, 0} );
+				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsSent", "@localhost", Crrnt2[0], INCREMENTAL, "", "Field 1 -- # of packets sent", overflow_value, 0} );
 				std::array<StatisticsValue, 1> & Crrnt3 = CurrentValues[name3];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesReceived", {{"node", LOCAL_HOSTNAME}, {"device", name3}}, Crrnt3[0], INCREMENTAL, "", "Field 1 -- # of bytes received", overflow_value, 0} );
+				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesReceived", "@localhost", Crrnt3[0], INCREMENTAL, "", "Field 1 -- # of bytes received", overflow_value, 0} );
 				std::array<StatisticsValue, 1> & Crrnt4 = CurrentValues[name4];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesSent", {{"node", LOCAL_HOSTNAME}, {"device", name4}}, Crrnt4[0], INCREMENTAL, "", "Field 1 -- # of bytes sent", overflow_value, 0} );
+				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesSent", "@localhost", Crrnt4[0], INCREMENTAL, "", "Field 1 -- # of bytes sent", overflow_value, 0} );
 
 			}
 			return lst;

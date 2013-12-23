@@ -1,5 +1,6 @@
 #include "../ProcSingleFilePlugin.hpp"
 #include <stdint.h>
+#include <stdio.h>
 
 #include <map>
 
@@ -46,7 +47,7 @@ class IOstats: public ProcSingleFilePlugin<15> {
 	public:
 
 		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
-			vector<StatisticsProviderDatatypes> lst;
+			vector<StatisticsProviderDatatypes> result;
 			// walk through all known devices:
 
 			// TODO: determine available DEVICES using /sys/block/
@@ -54,29 +55,30 @@ class IOstats: public ProcSingleFilePlugin<15> {
 			// Right now we consider DEVICES to be NODE metrics, although this is wrong.
 			// It is NODE level for virtual devices and real DEVICES for existing hardware
 
-			for( auto itr = currentValues.begin(); itr != currentValues.end(); itr++ ) {
-				string name = itr->first;
+			for( auto iterator = currentValues.begin(); iterator != currentValues.end(); iterator++ ) {
+				string name = iterator->first;
+				string topologyPath = string( "@topology/" ) + name;
 				//cout << name << endl;
 				//Add the 11 metrics
 				uint64_t overflow_value = ( uint64_t ) 1 << 63; //TODO CHECK ME, we expect 64 Bit...
 
 				std::array<StatisticsValue, 11> & cur = currentValues[name];
-				lst.push_back( {INPUT_OUTPUT, NODE, "quantity/block/reads", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[0], INCREMENTAL, "", "Field 1 -- # of reads issued", overflow_value, 0} );
-				lst.push_back( {INPUT_OUTPUT, NODE, "quantity/block/reads/merged", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[1], INCREMENTAL, "", "Field 2 -- # of reads merged", overflow_value, 0} );
-				lst.push_back( {INPUT_OUTPUT, NODE, "quantity/block/dataRead", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[2], INCREMENTAL, "Bytes", "Data read based on Field 3 -- # of sectors read", overflow_value, 0} );
-				lst.push_back( {INPUT_OUTPUT, NODE, "time/block/reads", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[3], INCREMENTAL, "ms", "Field 4 -- # of milliseconds spent reading", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/reads", topologyPath, cur[0], INCREMENTAL, "", "Field 1 -- # of reads issued", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/reads/merged", topologyPath, cur[1], INCREMENTAL, "", "Field 2 -- # of reads merged", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/dataRead", topologyPath, cur[2], INCREMENTAL, "Bytes", "Data read based on Field 3 -- # of sectors read", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "time/block/reads", topologyPath, cur[3], INCREMENTAL, "ms", "Field 4 -- # of milliseconds spent reading", overflow_value, 0} );
 
-				lst.push_back( {INPUT_OUTPUT, NODE, "quantity/block/writes", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[4], INCREMENTAL, "", "Field 5 -- # of writes completed", overflow_value, 0} );
-				lst.push_back( {INPUT_OUTPUT, NODE, "quantity/block/writes/merged", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[5], INCREMENTAL, "", "Field 6 -- # of writes merged", overflow_value, 0} );
-				lst.push_back( {INPUT_OUTPUT, NODE, "quantity/block/dataWritten", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[6], INCREMENTAL, "Bytes", "Data written based on Field 7 -- # of sectors written", overflow_value, 0} );
-				lst.push_back( {INPUT_OUTPUT, NODE, "time/block/writes", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[7], INCREMENTAL, "ms", "Field 8 -- # of milliseconds spent writing", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/writes", topologyPath, cur[4], INCREMENTAL, "", "Field 5 -- # of writes completed", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/writes/merged", topologyPath, cur[5], INCREMENTAL, "", "Field 6 -- # of writes merged", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/dataWritten", topologyPath, cur[6], INCREMENTAL, "Bytes", "Data written based on Field 7 -- # of sectors written", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "time/block/writes", topologyPath, cur[7], INCREMENTAL, "ms", "Field 8 -- # of milliseconds spent writing", overflow_value, 0} );
 
-				lst.push_back( {INPUT_OUTPUT, NODE, "quantity/block/pendingIOs", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[8], SAMPLED, "", "Field 9 -- # of I/Os currently in progress", 0, 0} );
-				lst.push_back( {INPUT_OUTPUT, NODE, "time/block/access", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[9], INCREMENTAL, "ms", "Field 10 -- # of milliseconds spent doing I/Os", overflow_value, 0} );
-				lst.push_back( {INPUT_OUTPUT, NODE, "time/block/weighted", {{"node", LOCAL_HOSTNAME}, {"device", name}}, cur[10], INCREMENTAL, "ms", "Field 11 -- weighted # of milliseconds spent doing I/Os", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/pendingIOs", topologyPath, cur[8], SAMPLED, "", "Field 9 -- # of I/Os currently in progress", 0, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "time/block/access", topologyPath, cur[9], INCREMENTAL, "ms", "Field 10 -- # of milliseconds spent doing I/Os", overflow_value, 0} );
+				result.push_back( {INPUT_OUTPUT, NODE, "time/block/weighted", topologyPath, cur[10], INCREMENTAL, "ms", "Field 11 -- weighted # of milliseconds spent doing I/Os", overflow_value, 0} );
 			}
 
-			return lst;
+			return result;
 		}
 };
 

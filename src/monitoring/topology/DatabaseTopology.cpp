@@ -28,21 +28,21 @@ class DatabaseTopology : public Topology {
         virtual TopologyType lookupTypeByName( const string& name ) throw();
         virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw();
 
-        virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError );
+        virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw();
         virtual TopologyObject lookupObjectByPath( const string& Path ) throw();
         virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw();
 
-        virtual TopologyRelation registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError );
+        virtual TopologyRelation registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw();
         virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw();
 
         virtual TopologyRelationList enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw();
         virtual TopologyRelationList enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw();
 
 
-        virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError );
+        virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw();
         virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw();
         virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw();
-        virtual void setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError );
+        virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw();
         virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw();
         virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
@@ -116,7 +116,7 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
     }
     else {
         // TODO: ERROR
-    }       
+    }
 
     tmpType.setObject(newType);
     return tmpType;
@@ -143,7 +143,7 @@ TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw() {
     }
     else {
         // TODO: ERROR
-    }       
+    }
 
     tmpType.setObject(newType);
     return tmpType;
@@ -170,7 +170,7 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
     }
     else {
         // TODO: ERROR
-    }       
+    }
 
     Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(tmpName));
     newType->id = anId;
@@ -179,7 +179,7 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
     return tmpType;
 }
 
-TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId objectType, TopologyTypeId relationType, const string& childName ) throw( IllegalStateError ) {
+TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
     TopologyObject tmpObject;
     Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation( objectType ) );
 
@@ -208,7 +208,7 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
     }
     else {
         // TODO: ERROR
-    }       
+    }
 
     // Perform another insert for the relation
     insertAction.exec("INSERT INTO Relation (parentObjectId, childName, childObjectId, relationTypeId) VALUES ('"+to_string(parentId)+"','"+insertAction.esc(childName)+"','"+to_string(newObject->id)+"','"+to_string(relationType)+"')");
@@ -244,14 +244,14 @@ TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw
     }
     else {
         // TODO: ERROR
-    }       
+    }
 
     Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(tmpId) );
     tmpObject.setObject(newObject);
     return tmpObject;
 }
 
-TopologyRelation DatabaseTopology::registerRelation( TopologyTypeId relationType, TopologyObjectId parent, TopologyObjectId child, const string& childName ) throw( IllegalStateError ) {
+TopologyRelation DatabaseTopology::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
     TopologyRelation tmpRelation;
     Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
 
@@ -293,7 +293,7 @@ TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, cons
     }
     else {
         // TODO: ERROR
-    }       
+    }
 
     Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, tmpChild, tmpRelationType ) );
     tmpRelation.setObject(newRelation);
@@ -321,7 +321,7 @@ Topology::TopologyRelationList DatabaseTopology::enumerateChildren( TopologyObje
                     // TODO: ERROR
             }
 
-            Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( tmpChildName, parent, tmpChild, relationType ) );            
+            Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( tmpChildName, parent, tmpChild, relationType ) );
             tmpRelation.setObject(newRelation);
             returnVector.emplace_back(tmpRelation);
         }
@@ -354,7 +354,7 @@ Topology::TopologyRelationList DatabaseTopology::enumerateParents( TopologyObjec
                     // TODO: ERROR
             }
 
-            Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( tmpChildName, tmpParent, child, relationType ) );            
+            Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( tmpChildName, tmpParent, child, relationType ) );
             tmpRelation.setObject(newRelation);
             returnVector.emplace_back(tmpRelation);
         }
@@ -365,7 +365,7 @@ Topology::TopologyRelationList DatabaseTopology::enumerateParents( TopologyObjec
     return returnVector;
 }
 
-TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw( IllegalStateError ) {
+TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
     // TODO: Check if already in the database?
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work insertAction(*conn, "Insert Transaction");
@@ -394,7 +394,7 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
     }
     else {
         // TODO: ERROR
-    }       
+    }
 
     tmpAttribute.setObject(newAttribute);
     return tmpAttribute;
@@ -423,7 +423,7 @@ TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain
     }
     else {
         // TODO: ERROR
-    }       
+    }
 
     // TODO: Geht der Cast so?
     VariableDatatype::Type tmpType = (VariableDatatype::Type) tmpInt;
@@ -470,7 +470,7 @@ TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId att
     return tmpAttribute;
 }
 
-void DatabaseTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw( IllegalStateError ) {
+TopologyValue DatabaseTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw() {
     work insertAction(*conn, "Insert Transaction");
 
     string insertType = serializeTopologyValue(value);
@@ -479,7 +479,7 @@ void DatabaseTopology::setAttribute( TopologyObjectId object, TopologyAttributeI
     insertAction.exec("INSERT INTO Value (objectId, attributeId, value) VALUES ('"+to_string(object)+"','"+to_string(attribute)+"','"+insertType+"')");
     insertAction.commit();
 
-    return;
+    assert(0 && "TODO"), abort();	//Sorry, Roman, I had to change the Topology interface again, and doing so, I also removed the last throw() clauses. So you have to return something here.
 }
 
 TopologyValue DatabaseTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {

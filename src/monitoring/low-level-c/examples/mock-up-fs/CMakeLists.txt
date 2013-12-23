@@ -21,17 +21,18 @@ add_executable(
 
 target_link_libraries(
 	mockupfs-example
-	test-mufs 
-	siox-monitoring-siox-ll 
+	test-mufs
+	siox-monitoring-siox-ll
 	siox-core-autoconfigurator-FileConfigurationProvider
 	siox-monitoring-activityPlugin-AnomalySkeleton
+	siox-monitoring-RamTopology
 	siox-monitoring-FileOntology
 	siox-monitoring-FileAssociationMapper
 	siox-monitoring-FileBasedSystemInformation
 	siox-knowledge-ReasonerStandardImplementation
 	siox-knowledge-DereferencingFacade
-	siox-monitoring-ActivityMultiplexerAsync	
-	siox-monitoring-activityPlugin-ActivityForwarder	
+	siox-monitoring-ActivityMultiplexerAsync
+	siox-monitoring-activityPlugin-ActivityForwarder
 )
 
 symlink(siox.conf siox.conf)

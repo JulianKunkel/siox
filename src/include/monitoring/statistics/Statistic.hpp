@@ -23,7 +23,7 @@ namespace monitoring {
 		public:
 			const StatisticsValue & curValue;
 
-			StatisticsPluginDescriptionValue(const StatisticsValue & value, OntologyAttributeID attribute, const vector<pair<string, string> > & topology): StatisticsDescription(attribute, topology), curValue(value){};
+			StatisticsPluginDescriptionValue(const StatisticsValue & value, OntologyAttributeID attribute, TopologyObjectId topologyId): StatisticsDescription(attribute, topologyId), curValue(value){};
 	};
 
 	class Statistic : public StatisticsPluginDescriptionValue {
@@ -32,7 +32,7 @@ namespace monitoring {
 
 			//const StatisticsProviderPlugin* const provider;
 
-			Statistic( const StatisticsValue & value, const OntologyAttributeID attribute, const vector<pair<string, string> > & topology ) throw();
+			Statistic( const StatisticsValue & value, const OntologyAttributeID attribute, TopologyObjectId topologyId ) throw();
 
 			void requestReduction( StatisticsReduceOperator reductionOp ) throw();	///< Tell the Statistic object that it should calculate the given reductionOp. Each call must be matched with a call to cancelReductionRequest().
 			void cancelReductionRequest( StatisticsReduceOperator reductionOp ) throw();	///< Tell the Statistic object that the caller does not need the given reductionOp anymore.
