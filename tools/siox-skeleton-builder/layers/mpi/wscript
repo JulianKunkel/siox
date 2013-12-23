@@ -11,6 +11,7 @@ def options(opt):
 	gr.add_option('--label', action='store', dest="LABEL", default="", help='Add a label to the library, e.g. for multiple versions')
 	gr.add_option('--siox-test-implementation', action='store', dest="SIOX_LL_IMPLEMENTATION", help='Directory to a testing SIOX low-level API to use')
 	gr.add_option('--mpi', action='store', dest="MPI", default=False, help='Directory to MPI')
+	gr.add_option('--mpi-const', action='store_true', dest="MPICONST", default=False, help='Use const keyword for output buffers')
 	gr.add_option('--mpicc', action='store', dest="MPICC", default="mpicc", help='MPI compiler script')
 	gr.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
 
@@ -55,6 +56,10 @@ def configure(conf):
 	#conf.check(header_name='mpi.h', features='c cprogram')
 
 	# inverse at the moment:
+        if conf.options.MPICONST:
+                conf.env.append_value("CFLAGS", ['-DOPTIONAL_CONST=const'])
+
+
         if conf.options.debug:
                 conf.env.append_value("CFLAGS", ['-std=c99', '-O3', '-Wall'])
         else:

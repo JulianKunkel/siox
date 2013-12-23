@@ -10,8 +10,8 @@ import argparse
 
 genericVariablesForTemplates = {}
 
-global defines
-defines = []
+global precompiler
+precompiler = []
 
 #
 # @brief Generate and handle the command line parsing.
@@ -568,7 +568,7 @@ class CommandParser():
         # This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*@\s*(\w+)\s*(.*)')
         self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\'/]+)\s*')
-        self.defineRegex = re.compile('^\s*#define\s*(.*)\s*')
+        self.precompilerRegex = re.compile('^\s*#\s*(.*)\s*')
         
         self.options = options
 
@@ -620,9 +620,9 @@ class CommandParser():
                 i += 1
                 continue
 
-            define = self.matchDefine(inputLineList[i])
-            if define:
-                defines.append(define)
+            precompilerMatch = self.matchPrecompiler(inputLineList[i])
+            if precompilerMatch:
+                precompiler.append(precompilerMatch)
                 i += 1
                 continue
 
@@ -664,8 +664,8 @@ at the end of """)
         else:
             return False
 
-    def matchDefine(self, inputLine):
-        match = self.defineRegex.match(inputLine)
+    def matchPrecompiler(self, inputLine):
+        match = self.precompilerRegex.match(inputLine)
         if match:            
             return match.group(1).strip()
         else:
@@ -895,8 +895,8 @@ class Writer():
         output = open(self.outputFile, 'w')
 
         # write all needed includes
-        for match in defines:
-            print('#define ', match, end='\n', file=output)
+        for match in precompiler:
+            print('#', match, end='\n', file=output)
 
         for match in includes:
             print('#include ', match, end='\n', file=output)
@@ -1103,8 +1103,8 @@ class Writer():
         output = open(self.outputFile, 'w')
 
         print('#define _GNU_SOURCE', file=output)
-        for match in defines:
-            print('#define ', match, end='\n', file=output)
+        for match in precompiler:
+            print('#', match, end='\n', file=output)
         print('#include <dlfcn.h>\n', file=output)
 
         # write all needed includes
