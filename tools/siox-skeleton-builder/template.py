@@ -244,11 +244,13 @@ template = {
 	'init': '''''',
 	'before': '',
     'after': '''
+	if ( %(ActivityID)s != NULL ){
     	siox_activity_ID * nID = malloc(sizeof(siox_activity_ID));
     	memcpy(nID, %(ActivityID)s, sizeof(siox_activity_ID));
     	g_rw_lock_writer_lock(& lock_%(MapName)s);
     	g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), nID );
-    	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+	}''',
 	'cleanup': '',
 	'final': ''
 },
