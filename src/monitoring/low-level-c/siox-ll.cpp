@@ -85,6 +85,37 @@ struct FUNCTION_PERF_CLASS : FUNCTION_CLASS{
 #define FUNCTION_BEGIN FUNCTION_PERF_CLASS _class_inst_(__FUNCTION__);
 #define NO_PERFMEASURE_FUNCTION_BEGIN FUNCTION_CLASS _class_inst_x;
 
+enum SIOX_MONITORING_STATE{
+	SIOX_MONITORING_PERMANENTLY_DISABLED = -1,
+	SIOX_MONITORING_ENABLED = 0,
+	SIOX_MONITORING_DISABLED_BY_USER = 1,
+	SIOX_MONITORING_DISABLED_NOT_INITIALIZED = 2
+};
+
+static int monitoringDisabled = SIOX_MONITORING_DISABLED_NOT_INITIALIZED;
+
+int siox_is_monitoring_permanently_disabled(){
+	return monitoringDisabled == SIOX_MONITORING_PERMANENTLY_DISABLED;
+}
+
+
+int siox_is_monitoring_enabled(){
+	return monitoringDisabled == SIOX_MONITORING_ENABLED;
+}
+
+void siox_disable_monitoring(){
+	if ( monitoringDisabled != SIOX_MONITORING_ENABLED ) return;
+	monitoringDisabled = SIOX_MONITORING_DISABLED_BY_USER;
+}
+
+void siox_enable_monitoring(){
+	if ( monitoringDisabled == SIOX_MONITORING_DISABLED_BY_USER ) return;
+	monitoringDisabled = SIOX_MONITORING_ENABLED;
+}
+
+static void siox_disable_monitoring_permanently(){
+	monitoringDisabled = SIOX_MONITORING_PERMANENTLY_DISABLED;
+}
 
 //////////////////////////////////////////////////////////
 
@@ -259,13 +290,16 @@ extern "C" {
 			
 			} catch( exception & e ) {
 				cerr << "Received exception of type " << typeid( e ).name() << " message: " << e.what() << endl;
-				exit( 1 );
+				// SIOX will be disabled !
+				siox_disable_monitoring_permanently();
+				return;
 			}
 
 			add_program_information();
 		}
 
 		finalized = false;
+		monitoringDisabled = SIOX_MONITORING_ENABLED;
 	}
 
 // Destructor for the shared library
@@ -300,6 +334,7 @@ extern "C" {
 		}
 
 		finalized = true;
+		siox_disable_monitoring_permanently();
 	}
 
 //############################################################################
