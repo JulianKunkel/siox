@@ -113,7 +113,10 @@ int siox_is_monitoring_enabled();
 int siox_is_monitoring_permanently_disabled();
 void siox_disable_monitoring();
 void siox_enable_monitoring();
-void siox_disable_monitoring_permanently();
+
+// these two functions can be used to finalize / re-initialize monitoring, which is useful e.g. for fork()
+void siox_finalize_monitoring();
+void siox_initialize_monitoring();
 
 //////////////////////////////////////////////////////////////////////////////
 /// Retrieve the node id object for a given hardware component.
@@ -589,5 +592,8 @@ siox_activity * siox_activity_start_from_remote_call( siox_component * component
 
 //@test ''%p'' func
 void siox_register_termination_signal( void (*func)(void) );
+
+//@test ''%p'' func
+void siox_register_initialization_signal( void (*func)(void) );
 
 #endif

@@ -402,7 +402,7 @@ class FunctionParser():
         # parameters because a regex must have a fixed number of groups to
         # match.
         self.regexFunctionDefinition = re.compile(
-            '(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].]*)\)[\w+]*?;',
+            '(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].()]*)\)[\w+]*?;',
             re.S | re.M)
 
         # This regular expression matches parameter type and name.
@@ -416,6 +416,10 @@ class FunctionParser():
         # (?:\s*\[\s*\])? matches array [] if exist
         self.regexParamterDefinition = re.compile(
             '([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[\s*\])?)')
+
+        self.regexFunctionParameterDefinition = re.compile(
+            '([\w*\s]+(?:\*\s*|\s+))\(\s*[*]\s*([\w]+)\s*\)\s*(.*)')
+
 
         # This tuple of filter words searches for reseverd words in the
         # function return type.
@@ -506,8 +510,14 @@ class FunctionParser():
                     else:
                         parameterMatch = self.regexParamterDefinition.match(
                             parameter)
-                        parameterType = parameterMatch.group(1)
-                        parameterName = parameterMatch.group(2)
+
+                        if not parameterMatch:
+                            parameterMatch = self.regexFunctionParameterDefinition.match(parameter)
+                            parameterType = parameterMatch.group(0)
+                            parameterName = "" #parameterMatch.group(2)
+                        else:
+                            parameterType = parameterMatch.group(1)
+                            parameterName = parameterMatch.group(2)
 
                         # Search for something like 'int list[]' and convert it to
                         # 'int* list'
