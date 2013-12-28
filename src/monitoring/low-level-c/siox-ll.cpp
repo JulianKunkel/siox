@@ -113,9 +113,6 @@ void siox_enable_monitoring(){
 	monitoringDisabled = SIOX_MONITORING_ENABLED;
 }
 
-static void siox_disable_monitoring_permanently(){
-	monitoringDisabled = SIOX_MONITORING_PERMANENTLY_DISABLED;
-}
 
 //////////////////////////////////////////////////////////
 
@@ -336,6 +333,12 @@ extern "C" {
 		finalized = true;
 		siox_disable_monitoring_permanently();
 	}
+
+
+void siox_disable_monitoring_permanently(){
+	monitoringDisabled = SIOX_MONITORING_PERMANENTLY_DISABLED;
+	siox_ll_dtor();
+}
 
 //############################################################################
 ///////////////////// Implementation of SIOX-LL /////////////

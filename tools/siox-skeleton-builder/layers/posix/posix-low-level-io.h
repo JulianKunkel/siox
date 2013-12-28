@@ -792,9 +792,12 @@ int aio_cancel( int fd, struct aiocb * aiocbp );
 
 #include <sched.h>
 
-//@splice_before ''printf("Warning clone() called, presumably SIOX breaks!\n");''
+//@splice_before ''printf("Warning clone() called, SIOX is disabled for the parent!\n");''
+//@splice_before siox_disable_monitoring_permanently();
+//http://stackoverflow.com/questions/14407544/mixing-threads-fork-and-mutexes-what-should-i-watch-out-for 
 int clone( int ( *fn )( void * ), void * child_stack, int flags, void * arg, pid_t * ptid, struct user_desc * tls, pid_t * ctid );
 
-//@splice_before ''printf("Warning fork() called, presumably SIOX breaks!\n");''
+//@splice_before ''printf("Warning fork() called, SIOX is disabled for the parent!\n");''
+//@splice_before siox_disable_monitoring_permanently();
 pid_t fork( void );
 
