@@ -113,6 +113,7 @@ int siox_is_monitoring_enabled();
 int siox_is_monitoring_permanently_disabled();
 void siox_disable_monitoring();
 void siox_enable_monitoring();
+void siox_disable_monitoring_permanently();
 
 //////////////////////////////////////////////////////////////////////////////
 /// Retrieve the node id object for a given hardware component.
