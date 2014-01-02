@@ -56,6 +56,7 @@ static struct process_info process_data;
 
 static list<void (*)(void)> terminate_cbs;
 static list<void (*)(void)> initialization_cbs;
+static list<void (*)(void)> terminate_complete_cbs;
 
 
 struct FUNCTION_CLASS{
@@ -138,6 +139,13 @@ void siox_register_termination_signal( void (*func)(void) ){
 		if ( *itr == func ) return;
 	}
 	terminate_cbs.push_back(func);
+}
+
+void siox_register_termination_complete_signal( void (*func)(void) ){
+	for(auto itr = terminate_complete_cbs.begin(); itr != terminate_complete_cbs.end(); itr++ ){
+		if ( *itr == func ) return;
+	}
+	terminate_complete_cbs.push_back(func);	
 }
 
 void siox_register_initialization_signal( void (*func)(void) ){
@@ -359,6 +367,11 @@ static void finalizeSIOX(int print){
 __attribute__( ( destructor ) ) void siox_ll_dtor()
 {
 	finalizeSIOX(1);
+
+	// invoke termination complete callbacks
+	for( auto itr = terminate_complete_cbs.begin() ; itr != terminate_complete_cbs.end(); itr++ ){
+		(*itr)();
+	}
 }
 
 

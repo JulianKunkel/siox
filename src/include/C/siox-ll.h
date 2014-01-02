@@ -594,6 +594,9 @@ siox_activity * siox_activity_start_from_remote_call( siox_component * component
 void siox_register_termination_signal( void (*func)(void) );
 
 //@test ''%p'' func
+void siox_register_termination_complete_signal( void (*func)(void) );
+
+//@test ''%p'' func
 void siox_register_initialization_signal( void (*func)(void) );
 
 #endif
