@@ -24,6 +24,8 @@ def configure(conf):
 
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
 	conf.env.CXXFLAGS = ['-std=c++11', '-g', '-Wall'] 
+	conf.env.append_value("CFLAGS", ['-std=c99', '-g', '-Wall'])
+
 
 def build(bld):
         def wrapPlain(task): 
@@ -38,7 +40,7 @@ def build(bld):
 
 	bld.shlib(includes="",  use = "GLIB" ,  target = 'printf/siox-monitoring-siox-ll', source = 'printf/siox-monitoring-siox-ll.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/printf/" )
 	bld.shlib(includes="",  use = "GLIB" ,  target = 'testlist/siox-monitoring-siox-ll', source = 'testlist/siox-monitoring-siox-ll.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/testlist/" )
-	bld.shlib(includes="",  use = "GLIB" ,  target = 'null/siox-monitoring-siox-ll', source = 'testlist/siox-monitoring-siox-ll.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/null/" )
+	bld.shlib(includes="",  use = "GLIB" ,  target = 'null/siox-monitoring-siox-ll', source = 'null/siox-monitoring-siox-ll.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/null/" )
 	
 	
 

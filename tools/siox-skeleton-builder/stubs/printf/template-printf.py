@@ -5,11 +5,20 @@ template = {
 #
 # Text: The text to print
 'test': {
-    'variables': '''Text="" Text2=""''',
+    'variables': '''Text=%s Text2=""''',
     'global': '''''',
     'init': '''''',
     'before': '''fprintf(stderr, "%%s (%(Text)s);\\n", __FUNCTION__, %(Text2)s);''',
     'after': '',
+    'cleanup': '',
+    'final': ''
+},
+'null': {
+    'variables': '''retval=NULL''',
+    'global': '''''',
+    'init': '''''',
+    'before': '''''',
+    'after': 'ret = %(retval)s;',
     'cleanup': '',
     'final': ''
 }
