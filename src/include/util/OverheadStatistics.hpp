@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
+#include <mutex> 
 
 #include <monitoring/datatypes/GenericTypes.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
@@ -15,9 +16,11 @@
 
 namespace util{
 
-struct OverheadEntry{
-	// Overhead time in ns.
+struct OverheadEntry{	
+	// protect this entry
+	std::mutex m;
 
+	// Overhead time in ns.
 	uint64_t time = 0;
 	uint64_t occurence = 0;
 };
@@ -32,8 +35,10 @@ public:
 
 	OverheadEntry & getOverheadFor(const std::string & what);
 private:
+	// protect the map
+	std::mutex m;
+
 	std::unordered_map< std::string, OverheadEntry> entries;
-	OverheadEntry all;
 };
 
 class OverheadStatisticsDummy : public core::Component, public core::ComponentReportInterface{

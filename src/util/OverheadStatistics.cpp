@@ -17,26 +17,28 @@ void OverheadStatistics::stopMeasurement(const std::string & what, const Timesta
 
 void OverheadStatistics::stopMeasurement(OverheadEntry & entry, const Timestamp & start){
 	Timestamp delta = siox_gettime() - start;
+	unique_lock<mutex> lock( entry.m );
+
 	entry.occurence++;
 	entry.time += delta;
-
-	all.time += delta;
-	all.occurence++;
 }
 
 OverheadEntry & OverheadStatistics::getOverheadFor(const std::string & what){
 	assert(what.size() > 2);
+
+	unique_lock<mutex> lock( m );
 	
 	auto itr = entries.find(what);
 	if ( itr == entries.end() ){
-		entries[what] = OverheadEntry();
 		return entries[what];
 	}
 	return itr->second;
 }
 
-
 void OverheadStatistics::appendReport(unordered_map<core::GroupEntry* , ReportEntry> & map){
+	uint64_t all_occurrences = 0;
+	uint64_t all_time = 0;
+
 	for( auto itr = entries.begin(); itr != entries.end() ; itr++ ){
 		const string & name = itr->first;
 		const OverheadEntry & entry = itr->second;
@@ -47,6 +49,9 @@ void OverheadStatistics::appendReport(unordered_map<core::GroupEntry* , ReportEn
 
 		map[count] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, entry.occurence };
 		map[time] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, entry.time / 1000000000.0};
+
+		all_occurrences += entry.occurence;
+		all_time += entry.time;
 	}
 
 	// add sum with a high priority:
@@ -55,8 +60,8 @@ void OverheadStatistics::appendReport(unordered_map<core::GroupEntry* , ReportEn
 	auto count = new GroupEntry("count", group);
 	auto time = new GroupEntry("time", group);
 
-	map[count] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, all.occurence, 200 };
-	map[time] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, all.time / 1000000000.0, 200 };
+	map[count] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, all_occurrences, 200 };
+	map[time] = {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE, all_time / 1000000000.0, 200 };
 	}
 }
 

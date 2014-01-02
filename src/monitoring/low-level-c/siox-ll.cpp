@@ -69,22 +69,22 @@ struct FUNCTION_CLASS{
 	}
 };
 
+
 struct FUNCTION_PERF_CLASS : FUNCTION_CLASS{
-	const char * name; 
+	OverheadEntry & entry;
 	Timestamp eventStartTime;
 
-	FUNCTION_PERF_CLASS(const char * name) : name(name){
+	FUNCTION_PERF_CLASS(OverheadEntry & entry) : entry(entry){		
 		eventStartTime = process_data.overhead->startMeasurement();
 	}
 
 	~FUNCTION_PERF_CLASS(){
-		process_data.overhead->stopMeasurement(name, eventStartTime);
+		process_data.overhead->stopMeasurement(entry, eventStartTime);
 	}
 };
 
-
-#define PERF_MEASURE_START(name) FUNCTION_PERF_CLASS _class_inst_(name);
-#define FUNCTION_BEGIN FUNCTION_PERF_CLASS _class_inst_(__FUNCTION__);
+#define PERF_MEASURE_START(name) static OverheadEntry & _oe = process_data.overhead->getOverheadFor(name); FUNCTION_PERF_CLASS _class_inst_x(_oe);
+#define FUNCTION_BEGIN static OverheadEntry & _oe = process_data.overhead->getOverheadFor(__FUNCTION__); FUNCTION_PERF_CLASS _class_inst_x(_oe);
 #define NO_PERFMEASURE_FUNCTION_BEGIN FUNCTION_CLASS _class_inst_x;
 
 enum SIOX_MONITORING_STATE{

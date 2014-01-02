@@ -40,8 +40,8 @@ using namespace core;
 using namespace knowledge;
 
 
-#define OUTPUT(...) do { cout << "[HistogramAdpi] " << __VA_ARGS__ << "\n"; } while(0)
-//#define OUTPUT(...) 
+//#define OUTPUT(...) do { cout << "[HistogramAdpi] " << __VA_ARGS__ << "\n"; } while(0)
+#define OUTPUT(...) 
 
 
 struct ActivityTimeStatistics{
