@@ -9,7 +9,7 @@
 	siox-inst posix performance-test-multi-threaded 2 4
 
   Compile with Google Profiling (for shared libraries, low overhead, nice):
-	/usr/local/siox/bin/siox-inst posix wrap gcc -std=c99 performance-test-multi-threaded.c -g -lpthread -L /opt/gperftools/2.1/lib/ -lprofiler  -I /opt/gperftools/2.1/include/ -DGOOGLEPROF
+	/usr/local/siox/bin/siox-inst posix wrap gcc -std=gnu99 performance-test-multi-threaded.c -g -lpthread -L /opt/gperftools/2.1/lib/ -lprofiler  -I /opt/gperftools/2.1/include/ -DGOOGLEPROF
 	see: http://google-perftools.googlecode.com/svn/trunk/doc/cpuprofile.html
   To increase the sampling frequency use:
 	export CPUPROFILE_FREQUENCY=1000
@@ -120,7 +120,7 @@ void * threadFunc(void * data){
 		double deltaT = gettime() - startT;
 
 		if ( thread_number == 0){
-			printf( "%.2f\t%.3f\t%.9f\n", deltaT/ 1000000000.0, current_iterations * thread_count / (deltaT / 1000000000ull), deltaT / 1000000000ull / current_iterations);
+			printf( "%.2f\t%.3f\t%.9f\n", deltaT/ 1000000000.0, current_iterations * thread_count / (deltaT / 1000000000ull), deltaT / 1000000000ull / current_iterations / thread_count);
 		}
 	}
 
