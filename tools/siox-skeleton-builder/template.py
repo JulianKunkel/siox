@@ -10,14 +10,18 @@ template = {
 	'global': '''static siox_component * global_component = NULL;
 		     static siox_unique_interface * global_uid = NULL;
 				''',
-    'init': ''' if ( siox_is_monitoring_permanently_disabled() || global_component ) return; 
+    'init': ''' 
+    		  siox_register_initialization_signal(sioxInit);
+    		  siox_register_termination_signal(sioxFinal);
+    		  
+    		  if ( siox_is_monitoring_permanently_disabled() || global_component ) return; 
     		  %(SpliceCode)s
     		  global_uid = siox_system_information_lookup_interface_id(%(InterfaceName)s, %(ImplementationIdentifier)s);
               global_component = siox_component_register(global_uid, %(InstanceName)s);''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
-	'final': 'if (global_component) { siox_component_unregister(global_component); }'
+	'final': 'if (global_component) { siox_component_unregister(global_component); global_component = NULL; }'
 },
 # register_attribute
 #

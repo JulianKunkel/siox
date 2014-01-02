@@ -55,6 +55,8 @@ static bool finalized = true;
 static struct process_info process_data;
 
 static list<void (*)(void)> terminate_cbs;
+static list<void (*)(void)> initialization_cbs;
+static list<void (*)(void)> terminate_complete_cbs;
 
 
 struct FUNCTION_CLASS{
@@ -133,7 +135,24 @@ NodeID lookup_node_id( const string & hostname )
 }
 
 void siox_register_termination_signal( void (*func)(void) ){
+	for(auto itr = terminate_cbs.begin(); itr != terminate_cbs.end(); itr++ ){
+		if ( *itr == func ) return;
+	}
 	terminate_cbs.push_back(func);
+}
+
+void siox_register_termination_complete_signal( void (*func)(void) ){
+	for(auto itr = terminate_complete_cbs.begin(); itr != terminate_complete_cbs.end(); itr++ ){
+		if ( *itr == func ) return;
+	}
+	terminate_complete_cbs.push_back(func);	
+}
+
+void siox_register_initialization_signal( void (*func)(void) ){
+	for(auto itr = initialization_cbs.begin(); itr != initialization_cbs.end(); itr++ ){
+		if ( *itr == func ) return;
+	}
+	initialization_cbs.push_back(func);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -243,7 +262,8 @@ static void add_program_information()
 extern "C" {
 
 // Constructor for the shared library
-	__attribute__( ( constructor ) ) void siox_ll_ctor()
+
+__attribute__( ( constructor ) ) void siox_ctor()
 	{
 		// for debugging of the LD_PRELOAD wrapper, you may use gdb to attach to the process
 		// Inside gdb run: set waiting = 0
@@ -288,32 +308,46 @@ extern "C" {
 			} catch( exception & e ) {
 				cerr << "Received exception of type " << typeid( e ).name() << " message: " << e.what() << endl;
 				// SIOX will be disabled !
-				siox_disable_monitoring_permanently();
+				siox_finalize_monitoring();
 				return;
 			}
 
 			add_program_information();
-		}
 
-		finalized = false;
-		monitoringDisabled = SIOX_MONITORING_ENABLED;
+			finalized = false;
+			monitoringDisabled = SIOX_MONITORING_ENABLED;			
+		}		
 	}
 
-// Destructor for the shared library
-	__attribute__( ( destructor ) ) void siox_ll_dtor()
-	{
+void siox_initialize_monitoring(){
+	siox_ctor();
+
+	// invoke initialization callbacks
+	for( auto itr = initialization_cbs.begin() ; itr != initialization_cbs.end(); itr++ ){
+		(*itr)();
+	}
+}
+
+
+static void finalizeSIOX(int print){
+
 		if( finalized ) {
 			return;
 		}
-		// Never enter any SIOX function after siox-ll has been stopped.
-		// This is done by incrementing the counter.
-		monitoring_namespace_inc();
+
+		// invoke terminate callbacks
+		for( auto itr = terminate_cbs.begin() ; itr != terminate_cbs.end(); itr++ ){
+			(*itr)();
+		}
+
 		{
 			PERF_MEASURE_START("FINALIZE")
 
-			OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
-			process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
-			util::invokeAllReporters( process_data.registrar );
+			if( print ){
+				OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
+				process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
+				util::invokeAllReporters( process_data.registrar );
+			}
 			//process_data.registrar->unregisterComponent( -1 );
 
 			// cleanup data structures by using the component registrar:
@@ -325,20 +359,27 @@ extern "C" {
 
 		delete( process_data.overhead );
 
-		// invoke terminate callbacks
-		for( auto itr = terminate_cbs.begin() ; itr != terminate_cbs.end(); itr++ ){
-			(*itr)();
-		}
-
 		finalized = true;
-		siox_disable_monitoring_permanently();
-	}
-
-
-void siox_disable_monitoring_permanently(){
-	monitoringDisabled = SIOX_MONITORING_PERMANENTLY_DISABLED;
-	siox_ll_dtor();
+		monitoringDisabled = SIOX_MONITORING_PERMANENTLY_DISABLED;
 }
+
+// Destructor for the shared library
+__attribute__( ( destructor ) ) void siox_ll_dtor()
+{
+	finalizeSIOX(1);
+
+	// invoke termination complete callbacks
+	for( auto itr = terminate_complete_cbs.begin() ; itr != terminate_complete_cbs.end(); itr++ ){
+		(*itr)();
+	}
+}
+
+
+void siox_finalize_monitoring(){
+	monitoringDisabled = SIOX_MONITORING_PERMANENTLY_DISABLED;
+	finalizeSIOX(0);
+}
+
 
 //############################################################################
 ///////////////////// Implementation of SIOX-LL /////////////
@@ -510,7 +551,7 @@ void siox_disable_monitoring_permanently(){
 
 
 	void siox_component_unregister( siox_component * component )
-	{
+	{	
 		FUNCTION_BEGIN
 		assert( component != nullptr );
 		// Simple implementation: rely on ComponentRegistrar for shutdown.
@@ -609,10 +650,12 @@ void siox_disable_monitoring_permanently(){
 		// Find component's amux
 		siox_component * component = activity->component;
 		assert( component != nullptr );
-		// Send activity to it
 
+		// Send activity to it
 		shared_ptr<Activity> activity_shared_ptr (activity->activity);
-		component-> amux->Log( activity_shared_ptr );
+		if ( ! monitoringDisabled ){ 
+			component-> amux->Log( activity_shared_ptr );
+		}
 
 		delete( activity );
 
