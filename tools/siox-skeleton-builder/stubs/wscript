@@ -34,9 +34,11 @@ def build(bld):
 
 	bld(rule=wrapPlain, source="printf/template-printf.py", target='printf/siox-monitoring-siox-ll.c')
 	bld(rule=wrapPlain, source="testlist/template-list.py", target='testlist/siox-monitoring-siox-ll.c')
+	bld(rule=wrapPlain, source="null/template-null.py", target='null/siox-monitoring-siox-ll.c')
 
 	bld.shlib(includes="",  use = "GLIB" ,  target = 'printf/siox-monitoring-siox-ll', source = 'printf/siox-monitoring-siox-ll.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/printf/" )
 	bld.shlib(includes="",  use = "GLIB" ,  target = 'testlist/siox-monitoring-siox-ll', source = 'testlist/siox-monitoring-siox-ll.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/testlist/" )
+	bld.shlib(includes="",  use = "GLIB" ,  target = 'null/siox-monitoring-siox-ll', source = 'testlist/siox-monitoring-siox-ll.c', install_path = bld.env.PREFIX + "/test/monitoring/low-level-c/null/" )
 	
 	
 
