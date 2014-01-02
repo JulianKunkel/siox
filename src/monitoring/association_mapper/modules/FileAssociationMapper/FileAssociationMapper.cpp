@@ -99,7 +99,11 @@ namespace monitoring {
 			}
 
 			~FileAssociationMapper() {
-				save( filename );
+				try{
+					save( filename );
+				} catch( exception & e ) {
+					cerr << "Error while writing association information to file: " << filename << endl;
+				}					
 			}
 
 
@@ -254,10 +258,16 @@ namespace boost {
 		template<class Archive>
 		void serialize( Archive & ar, AttributeIDsAndValues & g, const unsigned int version )
 		{
-			assert( g.ids.size() == g.values.size() );
+			if( g.ids.size() != g.values.size() ){
+				throw "g.ids.size() != g.values.size()";
+			}
 
 			ar & boost::serialization::make_nvp( "attids", g.ids );
 			ar & boost::serialization::make_nvp( "values", g.values );
+
+			if( g.ids.size() != g.values.size() ){
+				throw "g.ids.size() != g.values.size()";
+			}
 		}
 
 
