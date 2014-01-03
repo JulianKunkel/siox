@@ -10,6 +10,7 @@
 #include <knowledge/reasoner/AnomalyPlugin.hpp>
 
 #include <knowledge/reasoner/modules/ReasonerStandardImplementationOptions.hpp>
+#include <knowledge/reasoner/modules/ReasoningDatatypesSerializable.hpp>
 
 using namespace std;
 
@@ -330,12 +331,70 @@ void testReasoner(){
 	delete(comm);
 }
 
+/*
+ This test forges a reasoner message and tries to serialize and deserialize it properly.
+ */
+void testSerializationOfTypes(){
+	ReasonerMessageData rsmd; 
+	rsmd.containedData = ReasonerMessageData::DataType::NODE;
+	rsmd.expectedResponse = ReasonerMessageData::DataType::NONE;
+	rsmd.reasonerID = "testReasoner";
+
+	NodeHealth nh;
+	nh.utilization[UtilizationIndex::CPU] = 20;
+	nh.utilization[UtilizationIndex::NETWORK] = 40;
+	nh.utilization[UtilizationIndex::IO] = 30;
+	nh.utilization[UtilizationIndex::MEMORY] = 10;
+	nh.overallState = HealthState::OK;
+	nh.occurrences = array<uint32_t,6>{{0,1,5,1,0,0}};
+	nh.positiveIssues = {{"test", 2, 10}, {"test2", 3, 3}};
+
+	uint64_t serLen = j_serialization::serializeLen(nh) + j_serialization::serializeLen(rsmd);
+	char * buffer = (char*) malloc(serLen);
+	uint64_t pos = 0;
+	j_serialization::serialize(rsmd, buffer, pos);
+	j_serialization::serialize(nh, buffer, pos);
+	pos = 0;
+
+
+
+	NodeHealth deserialized;
+	ReasonerMessageData rmsdDeserialized; 
+	j_serialization::deserialize(rmsdDeserialized, buffer, pos, serLen);
+	// usually we would de-serialize based on the data contained
+	j_serialization::deserialize(deserialized, buffer, pos, serLen);
+
+	free(buffer);
+
+	cout << "Message size: " << serLen << endl;
+
+	// now check the consistency of the result
+
+	// check that all data is consumed
+	assert( pos == serLen );
+
+	assert( serLen == 87 );
+
+	// check that the message is correctly transmitted
+	assert( rmsdDeserialized.containedData == ReasonerMessageData::DataType::NODE );
+	assert( rmsdDeserialized.expectedResponse == ReasonerMessageData::DataType::NONE );
+	assert( rmsdDeserialized.reasonerID == "testReasoner" );
+
+
+	assert( deserialized.occurrences == nh.occurrences );
+	assert( deserialized.overallState == nh.overallState );
+	assert( deserialized.utilization == nh.utilization );
+	assert( deserialized.positiveIssues == nh.positiveIssues );
+	assert( deserialized.negativeIssues == nh.negativeIssues );
+}
+
 int main( int argc, char const * argv[] )
 {
-	testAssessNodeAggregation();
-	return 0;
+	//testAssessNodeAggregation();
+	//return 0;
 
-	testReasoner();	
+	testSerializationOfTypes();
+	//testReasoner();
 
 	cout << endl << "OK" << endl;
 	return 0;

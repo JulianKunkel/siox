@@ -93,9 +93,9 @@ class ReasonerStandardImplementation : public Reasoner, ServerCallback, MessageC
 				// TODO
 
 				// For testing:
-				if( adpiObservations->size() > 0 ) {
-					anomalyDetected = true;
-				}
+				//if( adpiObservations->size() > 0 ) {
+				//	anomalyDetected = true;
+				//}
 				if( utilization != nullptr ) {
 //						StatisticObservation so = utilization->lastObservation( 4711 );
 				}
