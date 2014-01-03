@@ -86,9 +86,11 @@ namespace monitoring {
 				FileAssociationMapperOptions & o = getOptions<FileAssociationMapperOptions>();
 				filename = o.filename;
 				assert( filename != "" );
-				cout << "file " << filename << endl;
+				//cout << "file " << filename << endl;
 				try {
 					load( filename );
+				} catch( const char * text ){
+					cerr << "Error " << text << " while loading association information from file: " << filename << endl;
 				} catch( exception & e ) {
 					cerr << "Error while loading association information from file: " << filename << endl;
 				}
@@ -101,6 +103,8 @@ namespace monitoring {
 			~FileAssociationMapper() {
 				try{
 					save( filename );
+				} catch( const char * text ){
+					cerr << "Error " << text << " while writing association information to file: " << filename << endl;
 				} catch( exception & e ) {
 					cerr << "Error while writing association information to file: " << filename << endl;
 				}					

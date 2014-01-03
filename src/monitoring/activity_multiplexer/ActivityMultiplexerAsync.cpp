@@ -258,6 +258,9 @@ namespace monitoring {
 
 			boost::shared_mutex  listener_change_mutex;
 
+			// we only permit a single thread to call log() at a time
+			mutex logging_mutex;
+
 			// statistics about operation:
 			uint64_t lost_events = 0;
 			uint64_t processed_activities = 0;
@@ -295,6 +298,8 @@ namespace monitoring {
 				// quick sync dispatch
 				{
 					boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
+					unique_lock<mutex> onlyOne( logging_mutex );
+
 					for(auto l = listeners.begin(); l != listeners.end() ; l++){
 						(*l)->Notify(activity);
 					}
