@@ -10,19 +10,23 @@
 namespace knowledge {
 
 	//@serializable
-	struct ReasonerMessageData{
-		//@serializable
-		enum class DataType : uint8_t {
-			NONE = 0,
-			PROCESS = 1,
-			NODE = 2,
-			SYSTEM = 3
-		};
+	enum class ReasonerMessageDataType : uint8_t {
+		NONE = 0,
+		PROCESS = 1,
+		NODE = 2,
+		SYSTEM = 3
+	};
 
-		DataType containedData;
-		DataType expectedResponse;
+	//@serializable
+	struct ReasonerMessageData{
+		ReasonerMessageDataType containedData;
 
 		string reasonerID; // identifier of the reasoner sending this message
+
+		uint64_t timestamp;
+
+		//@noserialization
+		void * messagePayload = nullptr;
 	};
 }
 

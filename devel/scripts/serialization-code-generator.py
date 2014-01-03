@@ -657,13 +657,13 @@ def parseFile(file, options, output_generator):
                 foundAnnotation = True
 
                 # enum class Quality: uint8_t {
-                m = re.search("enum\s+class\s+([a-zA-Z0-9_]+)[\s]*:\s+([a-zA-Z_0-9]+)\s*{", lines[lineNR+1])
+                m = re.search("enum\s+(class\s+)?([a-zA-Z0-9_]+)[\s]*(:\s+([a-zA-Z_0-9]+))?\s*{", lines[lineNR+1])
                 if m != None :
-                    #print ("HERE " + m.group(1) + " " + m.group(2))
-                    if  curClass != "" : # curClass + "::" +
-                        output_generator.registerEnumClass( m.group(1), m.group(2))
-                    else:
-                        output_generator.registerEnumClass( m.group(1), m.group(2))
+                    enumType = m.group(4)
+                    if enumType == None: 
+                        enumType = "int32_t"
+
+                    output_generator.registerEnumClass( m.group(2), enumType)
                     
                     lineNR = lineNR + 1
                     continue;
@@ -672,7 +672,7 @@ def parseFile(file, options, output_generator):
                 containerMode = True
 
                 # The next line is expected to be the class definition
-                m = re.search("(class|struct|enum)\s+([a-zA-Z_0-9]+)\s*(:\s*([^{]+))?\s*({?)", lines[lineNR+1])               
+                m = re.search("(class|struct)\s+([a-zA-Z_0-9]+)\s*(:\s*([^{]+))?\s*({?)", lines[lineNR+1])
                 curClass = m.group(2).strip()
 
                 assert(m)
