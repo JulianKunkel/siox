@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <string>
 #include <mutex> 
+#include <atomic>
 
 #include <monitoring/datatypes/GenericTypes.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
@@ -16,13 +17,26 @@
 
 namespace util{
 
-struct OverheadEntry{	
-	// protect this entry
-	std::mutex m;
+class OverheadStatistics;
+
+class OverheadEntry{
+public:
+	uint64_t time() const { 
+		return time_.load(); 
+	}
+
+	uint64_t occurrence() const {
+		return occurrence_.load();
+	}
+
+private:
+	friend OverheadStatistics;
 
 	// Overhead time in ns.
-	uint64_t time = 0;
-	uint64_t occurence = 0;
+	std::atomic<uint64_t> time_;
+	std::atomic<uint64_t> occurrence_;
+
+	OverheadEntry() : time_(0), occurrence_(0) {}
 };
 
 class OverheadStatistics{
@@ -31,14 +45,14 @@ public:
 
 	Timestamp startMeasurement();
 	void stopMeasurement(const std::string & what, const Timestamp & start);
-	void stopMeasurement(OverheadEntry & entry, const Timestamp & start);
+	void stopMeasurement(OverheadEntry * entry, const Timestamp & start);
 
-	OverheadEntry & getOverheadFor(const std::string & what);
+	OverheadEntry * getOverheadFor(const std::string & what);
 private:
 	// protect the map
 	std::mutex m;
 
-	std::unordered_map< std::string, OverheadEntry> entries;
+	std::unordered_map< std::string, OverheadEntry* > entries;
 };
 
 class OverheadStatisticsDummy : public core::Component, public core::ComponentReportInterface{
