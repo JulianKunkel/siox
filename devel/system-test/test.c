@@ -7,6 +7,7 @@
 
 int main( int argc, char * argv[] )
 {
+	open("test.c", 0);
 	int rank, size;
 	MPI_File fh;
 	MPI_Datatype etype; 
