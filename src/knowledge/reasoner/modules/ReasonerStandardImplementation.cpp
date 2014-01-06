@@ -17,10 +17,18 @@ shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
 	return nullptr;
 }
 
-
-void ReasonerStandardImplementation::receivedReasonerMessage(ReasonerMessageReceived & data){
+void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessageReceived & data, ProcessHealth & health){
 	cout << "Received msg" << endl;
 }
+
+void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageReceived & data, NodeHealth & health){
+	cout << "Received msg" << endl;
+}
+
+void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessageReceived & data, SystemHealth & health){
+	cout << "Received msg" << endl;
+}
+
 
 void ReasonerStandardImplementation::PeriodicRun(){
 	bool persistingAnomaly = false;

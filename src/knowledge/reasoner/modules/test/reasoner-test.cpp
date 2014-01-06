@@ -383,17 +383,33 @@ void testSerializationOfTypes(){
 
 class MyReasoningDataReceivedCB : public ReasoningDataReceivedCB, public ProtectRaceConditions{
 public:
-	ReasonerMessageReceived lastData;
+	ReasonerMessageReceived received_data;
+	ProcessHealth received_ph;
+	SystemHealth received_sh;
+	NodeHealth received_nh;
 
 	shared_ptr<NodeHealth> nh;
 	shared_ptr<SystemHealth> sh;
 	shared_ptr<ProcessHealth> ph;	
 
-	void receivedReasonerMessage(ReasonerMessageReceived & data){
-		lastData = data;
+	void receivedReasonerProcessHealth(ReasonerMessageReceived & data, ProcessHealth & health){
+		received_data = data;
+		received_ph = health;
+		cout << "receivedReasonerProcessHealth: " << health.overallState << endl;
+		sthHappens();
+	}
 
-		cout << "receivedReasonerMessage: " << lastData.u.s->overallState << endl;
+	void receivedReasonerNodeHealth(ReasonerMessageReceived & data, NodeHealth & health){
+		received_data = data;
+		received_nh = health;
+		cout << "receivedReasonerNodeHealth: " << health.overallState << endl;
+		sthHappens();
+	}
 
+	void receivedReasonerSystemHealth(ReasonerMessageReceived & data, SystemHealth & health){
+		received_data = data;
+		received_sh = health;
+		cout << "receivedReasonerSystemHealth: " << health.overallState << endl;
 		sthHappens();
 	}
 
@@ -409,7 +425,7 @@ public:
 		return ph;
 	}
 
-	MyReasoningDataReceivedCB(){
+	MyReasoningDataReceivedCB() : received_data(0, "Undefined"){
 		// fill dummy data
 		{
 		NodeHealth * h = new NodeHealth();
@@ -467,49 +483,56 @@ void testReasonerCommunication(){
 		cout << "Exchanging SystemHealth" << endl;
 		{
 		shared_ptr<SystemHealth> sh = shared_ptr<SystemHealth>(new SystemHealth());
-		sh->overallState = HealthState::FAST;
+		sh->overallState = HealthState::SLOW;
 		r2.pushSystemStateUpstream(sh, 3);
 
 		mCB1.waitUntilSthHappened();
 
-		assert( mCB1.lastData.containedData == ReasonerMessageDataType::SYSTEM );
-		assert( mCB1.lastData.timestamp == 3);
-		assert( mCB1.lastData.u.s->overallState == HealthState::FAST );	
+		assert( mCB1.received_data.timestamp == 3);
+		assert( mCB1.received_sh.overallState == HealthState::SLOW );	
 
-		assert( mCB2.lastData.containedData == ReasonerMessageDataType::NONE );
+		assert( mCB2.received_data.timestamp == 0 );
 		}
 
 		cout << "Exchanging NodeHealth" << endl;
 
 		// node state:
 		{
+		shared_ptr<SystemHealth> sh = shared_ptr<SystemHealth>(new SystemHealth());
+		sh->overallState = HealthState::SLOW;
+		mCB1.sh = sh;
+
 		shared_ptr<NodeHealth> h = shared_ptr<NodeHealth>(new NodeHealth());
 		h->overallState = HealthState::FAST;
 		r2.pushNodeStateUpstream(h, 1);
 
 		mCB1.waitUntilSthHappened();
-		assert( mCB1.lastData.containedData == ReasonerMessageDataType::NODE );
+		assert( mCB1.received_nh.overallState == HealthState::FAST );	
 
 		mCB2.waitUntilSthHappened();
-		assert( mCB2.lastData.containedData == ReasonerMessageDataType::SYSTEM );
+		assert( mCB2.received_sh.overallState == HealthState::SLOW );	
 
-		assert( mCB1.lastData.timestamp == 1);
+		assert( mCB1.received_data.timestamp == 1);
 		}
 
 		cout << "Exchanging ProcessHealth" << endl;
 		// node state:
 		{
+		shared_ptr<NodeHealth> nh = shared_ptr<NodeHealth>(new NodeHealth());
+		nh->overallState = HealthState::SLOW;			
+		mCB1.nh = nh;
+
 		shared_ptr<ProcessHealth> h = shared_ptr<ProcessHealth>(new ProcessHealth());
 		h->overallState = HealthState::FAST;
 		r2.pushProcessStateUpstream(h, 2);
 
 		mCB1.waitUntilSthHappened();
-		assert( mCB1.lastData.containedData == ReasonerMessageDataType::PROCESS );
+		assert( mCB1.received_ph.overallState == HealthState::FAST );	
 
 		mCB2.waitUntilSthHappened();
-		assert( mCB2.lastData.containedData == ReasonerMessageDataType::NODE );
+		assert( mCB2.received_nh.overallState == HealthState::SLOW );	
 
-		assert( mCB1.lastData.timestamp == 2);
+		assert( mCB1.received_data.timestamp == 2);
 		}
 
 
