@@ -180,6 +180,7 @@ class JBinaryOutputGenerator(OutputGenerator):
         self.namespace = {}
         self.className = None
         self.registeredTypes = []
+        self.containerTypes = ["std::vector", "std::list", "std::array"]
 
     def registerAnnotatedHeader(self, className, parentClasses):
         self.createFileIfNeeded()
@@ -201,6 +202,23 @@ class JBinaryOutputGenerator(OutputGenerator):
             print("\tParents: " + str(self.parentClassnames))
 
         self.registeredTypes = []
+
+    def basicType(self, type):
+        pos = type.find("<")
+        if pos > 0:
+
+            childType = type[ type.find("<") + 1 : -1 ];
+            cpos = childType.find(",")
+            if cpos > 0:
+                childType = childType[ 0 : cpos ]
+
+            type = type[0:pos]
+
+            if type.startswith("std::"):
+                return [type, childType]
+            else:
+                return ["std::" + type, childType]
+        return [type, None]
 
     def map_type_length(self, type, name):
         if type == "bool":
@@ -227,9 +245,16 @@ class JBinaryOutputGenerator(OutputGenerator):
             return "count += 4" 
         if type == "long double":
             return "count += sizeof(" + name + ")"
-        if type.startswith("vector") or type.startswith("list") or type.startswith("std::vector") or type.startswith("std::list"):
-            childType = type[ type.find("<") + 1 : -1];
-            return "count += 4; \n\tfor(auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++){\n\t\t%(CHILD)s; \n\t}"  % {"NAME" : name, "CHILD": self.map_type_length(childType, "*itr")}
+
+        (bType,childType) = self.basicType(type)
+
+        if bType in self.containerTypes:
+            if bType == "std::array":
+                serializeLen = ""
+            else:
+                serializeLen = "count += 4;"
+
+            return serializeLen + "\n\tfor(auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++){\n\t\t%(CHILD)s; \n\t}"  % {"NAME" : name, "CHILD": self.map_type_length(childType, "*itr")}
         if type.endswith("*"):
             return "if (" + name + " == nullptr ) { count += 1 ; } else{ " + self.map_type_length(type[0:len(type)-2].strip(), "*" + name) + " + 1; }"
         #if type in self.typeMap:
@@ -241,9 +266,14 @@ class JBinaryOutputGenerator(OutputGenerator):
         return "count += serializeLen(" + name + ")"
 
     def map_type_serializer(self, type, name):
-        if type.startswith("vector") or type.startswith("list") or type.startswith("set")  or type.startswith("std::vector") or type.startswith("std::list") or type.startswith("std::set"):
-            childType = type[ type.find("<") + 1 : -1];
-            return "\n\t{ uint32_t vlen = %(NAME)s.size(); \n\tserialize(vlen, buffer, pos); \n\tfor(auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++){\n\t\t%(CHILD)s; \n\t}}"  % {"NAME" : name, "CHILD": self.map_type_serializer(childType, "*itr")}
+        (bType, childType) = self.basicType(type)
+        if bType in self.containerTypes:
+            if bType == "std::array":
+                serializeLen = ""
+            else:
+                serializeLen = "uint32_t vlen = %(NAME)s.size(); \n\tserialize(vlen, buffer, pos);"
+
+            return ("\n\t{ " + serializeLen + " \n\tfor(auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++){\n\t\t%(CHILD)s; \n\t}}")  % {"NAME" : name, "CHILD": self.map_type_serializer(childType, "*itr")}
 
         if type.endswith("*"):
             return "if (" + name + " == nullptr ) { serialize((uint8_t) 0, buffer, pos); } else{\n\t\tserialize((uint8_t) 1, buffer, pos); \n\t\t" + self.map_type_serializer(type[0:len(type)-2].strip(), "*" + name) + "; \n\t}"
@@ -254,9 +284,19 @@ class JBinaryOutputGenerator(OutputGenerator):
         return "serialize(" + name + ", buffer, pos)";
 
     def map_type_deserializer(self, type, name):
-        if type.startswith("vector") or type.startswith("list") or type.startswith("set")  or type.startswith("std::vector") or type.startswith("std::list") or type.startswith("std::set"):
-            childType = type[ type.find("<") + 1 : -1];
-            return "{ uint32_t vlen;  deserialize(vlen, buffer, pos, length);\n\t%(NAME)s.resize(0);\n\tfor(uint32_t i=0; i < vlen; i++){\n\t\t%(CHILDTYPE)s var;\n\t\t%(CHILD)s;\n\t\t%(NAME)s.push_back(var);\n\t}}"  % {"NAME" : name, "TYPE" : type, "CHILD": self.map_type_deserializer(childType, "var"), "CHILDTYPE": childType}
+        (bType, childType) = self.basicType(type)
+        if bType in self.containerTypes:
+            
+            if bType == "std::array":
+                append = "[i] = var"
+                serializeLen = ""
+                lenIndex = name + ".size()"
+            else:
+                append = ".push_back(var)"
+                serializeLen = "uint32_t vlen;  deserialize(vlen, buffer, pos, length); \n\t%(NAME)s.resize(0);"
+                lenIndex = "vlen"
+                
+            return ("{ " + serializeLen + "\n\tfor(uint32_t i=0; i < " + lenIndex + "; i++){\n\t\t%(CHILDTYPE)s var;\n\t\t%(CHILD)s;\n\t\t%(NAME)s" + append + ";\n\t}}")  % {"NAME" : name, "TYPE" : type, "CHILD": self.map_type_deserializer(childType, "var"), "CHILDTYPE": childType}
 
         if type.endswith("*"):
             childType = type[0:len(type)-2].strip()
@@ -290,7 +330,7 @@ class JBinaryOutputGenerator(OutputGenerator):
             print("\t" + self.map_type_length(memberType, "obj." + memberName) + ";", file = self.fh)
         
         for p in self.parentClassnames:
-            print("count += serializeLen( *( " + p + " *) "  + "this );" , file = self.fh)
+            print("\tcount += serializeLen( ( " + p + " ) "  + " obj );" , file = self.fh)
 
         print("\treturn count;", file = self.fh)
         print("}", file = self.fh)
@@ -298,7 +338,7 @@ class JBinaryOutputGenerator(OutputGenerator):
         print("inline void serialize(const %(CLASS)s & obj, char * buffer, uint64_t & pos){"  % self.mapping, file = self.fh)
 
         for p in self.parentClassnames:
-            print("\tserialize( *( " + p + " *) "  + "this );" , file = self.fh)
+            print("\tserialize( ( " + p + " &) "  + " obj, buffer, pos );" , file = self.fh)
 
         for (memberType, memberName) in self.registeredTypes:
             print("\t" + self.map_type_serializer(memberType, "obj." + memberName) + ";", file = self.fh)
@@ -308,7 +348,7 @@ class JBinaryOutputGenerator(OutputGenerator):
         print("inline void deserialize(%(CLASS)s & obj, const char * buffer, uint64_t & pos, uint64_t length){\n\t"  % self.mapping, file = self.fh)
 
         for p in self.parentClassnames:
-            print("\tdeserialize( *( " + p + " *) "  + "this );" , file = self.fh)
+            print("\tdeserialize( ( " + p + " &) "  + " obj, buffer, pos, length );" , file = self.fh)
 
         for (memberType, memberName) in self.registeredTypes:
             print("\t" + self.map_type_deserializer(memberType, "obj." + memberName) + ";", file = self.fh)
@@ -617,13 +657,13 @@ def parseFile(file, options, output_generator):
                 foundAnnotation = True
 
                 # enum class Quality: uint8_t {
-                m = re.search("enum\s+class\s+([a-zA-Z0-9_]+)[\s]*:\s+([a-zA-Z_0-9]+)\s*{", lines[lineNR+1])
+                m = re.search("enum\s+(class\s+)?([a-zA-Z0-9_]+)[\s]*(:\s+([a-zA-Z_0-9]+))?\s*{", lines[lineNR+1])
                 if m != None :
-                    #print ("HERE " + m.group(1) + " " + m.group(2))
-                    if  curClass != "" : # curClass + "::" +
-                        output_generator.registerEnumClass( m.group(1), m.group(2))
-                    else:
-                        output_generator.registerEnumClass( m.group(1), m.group(2))
+                    enumType = m.group(4)
+                    if enumType == None: 
+                        enumType = "int32_t"
+
+                    output_generator.registerEnumClass( m.group(2), enumType)
                     
                     lineNR = lineNR + 1
                     continue;
@@ -632,7 +672,7 @@ def parseFile(file, options, output_generator):
                 containerMode = True
 
                 # The next line is expected to be the class definition
-                m = re.search("(class|struct) ([a-zA-Z_0-9]+)\s*(:\s*([^{]*))?\s*({?)", lines[lineNR+1])
+                m = re.search("(class|struct)\s+([a-zA-Z_0-9]+)\s*(:\s*([^{]+))?\s*({?)", lines[lineNR+1])
                 curClass = m.group(2).strip()
 
                 assert(m)

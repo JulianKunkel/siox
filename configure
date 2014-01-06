@@ -1,9 +1,11 @@
-#!/bin/sh
+#!/bin/bash
+
+echo $0 $* > configure.log
 
 CMAKEFLAGS=
 srcdir="../"
 
-set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-mpicc:,with-mpicxx:,with-python:,srcdir:,build-wrappers" hV "$@"`
+set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-python:,srcdir:,build-wrappers" hV "$@"`
 test $# -lt 1  && exit 1
 while test $# -gt 0 
 do
@@ -15,6 +17,7 @@ do
 		--with-boost) boostdir="$2"; shift;;
 		--with-cc) ccdir="$2"; shift;;
 		--with-cxx) cxxdir="$2"; shift;;
+		--with-glib) glib="$2"; shift;;
 		--with-mpicc) mpicc="$2"; shift;;
 		--with-mpicxx) mpicxx="$2"; shift;;
 		--with-python) python="$2"; shift;;
@@ -35,6 +38,22 @@ if test -n "$cc"; then
 fi
 if test -n "$cxx"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER:FILEPATH=$cxx"
+fi
+if test -n "$glib"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_ROOT:PATH=$glib"
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_INCLUDE_DIR:PATH=$glib/include/glib-2.0"
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_INCLUDE_DIR:PATH=$glib/include/glib-2.0"
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_CONFIG_INCLUDE_DIR:PATH=$glib/lib/glib-2.0/include"
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIBCONFIG_INCLUDE_DIR:PATH=$glib/lib/glib-2.0/include"
+	CMAKEFLAGS="$CMAKEFLAGS -DGIOUNIX2_INCLUDE_DIR:PATH=$glib/include/gio-unix-2.0"
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_LIBRARIES:STRING=\"-L$glib/lib -lglib-2.0\""
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_LIBRARIES:STRING=\"-L$glib/lib -lglib-2.0\""
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_GIO_LIBRARIES:STRING=\"-L$glib/lib -lgio-2.0 -lgobject-2.0 -lglib-2.0\""
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_GIO_LIBRARIES:STRING=\"-L$glib/lib -lgio-2.0 -lgobject-2.0 -lglib-2.0\""
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_GOBJECT_LIBRARIES:STRING=\"-L$glib/lib -lgobject-2.0 -lglib-2.0\""
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_GOBJECT_LIBRARIES:STRING=\"-L$glib/lib -lgobject-2.0 -lglib-2.0\""
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_GMODULE_LIBRARIES:STRING=\"-Wl,--export-dynamic -pthread -L$glib/lib -lgmodule-2.0 -lrt -lglib-2.0\""
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_GMODULE_LIBRARIES:STRING=\"-Wl,--export-dynamic -pthread -L$glib/lib -lgmodule-2.0 -lrt -lglib-2.0\""
 fi
 if test -n "$mpicc"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DMPI_C_COMPILER:FILEPATH=$mpicc"
@@ -62,6 +81,7 @@ echo "--prefix=<dir>         : installation prefix"
 echo "--with-boost=<dir>     : path to the boost library root directory"
 echo "--with-cc=<file>       : path to the C compiler"
 echo "--with-cxx=<file>      : path to the C++ compiler"
+echo "--with-glib=<dir>      : path to the GLIB2 installation"
 echo "--with-python=<file>   : path to the Python interpreter"
 echo "--build-wrappers       : build the wrappers for MPI, POSIX, etc. that is in the path"
 echo
@@ -70,7 +90,7 @@ echo "So, if you have multiple versions it is not adviced to specify --build-wra
 echo "You can build a wrapper for each version of MPI etc. independently"
 echo "To do so, run ./devel/scripts/build-wrapper.sh [WRAPPER] [CONFIGURE OPTIONS | -h]"
 echo "For example: ./devel/scripts/build-wrapper.sh mpi --label=mpich2 --siox=/usr/local/siox --prefix=/usr/local/siox --mpicc=mpicc.mpich2 --mpi=/usr/lib/mpich2"
-
+echo
 echo "The following list of options is only needed if you choose to build the wrappers with cmake"
 echo "--with-mpicc=<file>    : path to the MPI C compiler"
 echo "--with-mpicxx=<file>   : path to the MPI C++ compiler"
@@ -80,7 +100,7 @@ echo "For more information visit \"http://www.hpc-io.org\"."
 echo ""
 echo "Your current configure options translate more or less to:"
 echo "	mkdir build ; cd build; cmake$CMAKEFLAGS $srcdir && make && make install"
-NINJA=$(which ninja)
+NINJA=$(which ninja 2> /dev/null)
 if [ "$NINJA" != "" ]; then
 	echo
 	echo "It seems you have the ninja-build tool installed, which you could use instead of the old fashioned make."
@@ -95,5 +115,6 @@ echo "export LD_LIBRARY_PATH=$TARGET_DIR/lib:$LD_LIBRARY_PATH"
 echo "export PATH=$TARGET_DIR/bin:$PATH"
 
 echo ""
+
 
 

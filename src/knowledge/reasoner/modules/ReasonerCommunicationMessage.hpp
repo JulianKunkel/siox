@@ -4,23 +4,29 @@
 #include <knowledge/reasoner/ReasoningDatatypes.hpp>
 
 /*
- Contains the messages that are exchanged between the reasoners.
+ The message header that is exchanged between the reasoners.
+ After a message header is send, the data specific to the ResponseType is transmitted.
  */
 namespace knowledge {
 
 	//@serializable
-	struct ReasonerMessageData{
-		//@serializable
-		enum class ResponseType : uint8_t {
-			NONE = 0,
-			PROCES = 1,
-			NODE = 2,
-			SYSTEM = 3
-		};
+	enum class ReasonerMessageDataType : uint8_t {
+		NONE = 0,
+		PROCESS = 1,
+		NODE = 2,
+		SYSTEM = 3
+	};
 
-		ResponseType expectedResponse;
+	//@serializable
+	struct ReasonerMessageData{
+		ReasonerMessageDataType containedData;
 
 		string reasonerID; // identifier of the reasoner sending this message
+
+		uint64_t timestamp;
+
+		//@noserialization
+		void * messagePayload = nullptr;
 	};
 }
 
