@@ -135,7 +135,7 @@ void AccessInfoPlotter::plotFileAccess(const OpenFiles & file){
 	}
 
 	stringstream nbuff;
-	nbuff << file.name << "_" << file.number;
+	nbuff << file.name << "_" << file.aid ;
 	string cleanedName = nbuff.str();
 	replace( cleanedName.begin(), cleanedName.end(), '/', '_');
 	replace( cleanedName.begin(), cleanedName.end(), ' ', '_');
@@ -160,7 +160,7 @@ void AccessInfoPlotter::plotFileAccess(const OpenFiles & file){
 	plotSingleFileOperation("sync", file.syncOperations, f, file);
 	f.close();
 
-	cout << "Run: siox-plot-trace-output plot/" + cleanedName << ".py"  << endl;
+	cout << "Run: siox-plot-trace-output \"plot/" + cleanedName << ".py\""  << endl;
 }
 
 void AccessInfoPlotter::finalize(){
@@ -246,7 +246,7 @@ void AccessInfoPlotter::handlePOSIXRead(Activity * a){
 void AccessInfoPlotter::handlePOSIXOpen(Activity * a){
 	OntologyAttributeID fname = o->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;
 
-	openFiles[ a->aid() ] = { findAttributeByID(a, fname).str(), a->time_start_, 0, a->aid_.id };
+	openFiles[ a->aid() ] = { findAttributeByID(a, fname).str(), a->time_start_, 0, a->aid_};
 }
 
 void AccessInfoPlotter::handlePOSIXClose(Activity * a){

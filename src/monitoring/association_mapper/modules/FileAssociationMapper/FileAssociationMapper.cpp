@@ -141,7 +141,7 @@ namespace monitoring {
 				globalMutex.unlock();
 
 				if( ret == false ) {
-					throw IllegalStateError( "Value exists already!" );
+					//throw IllegalStateError( "Value exists already!" );
 				}
 			}
 
@@ -163,7 +163,7 @@ namespace monitoring {
 				globalMutex.unlock();
 
 				if( ret == false ) {
-					throw IllegalStateError( "Value exists already!" );
+					//throw IllegalStateError( "Value exists already!" );
 				}
 			}
 
