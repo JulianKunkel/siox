@@ -75,7 +75,11 @@ int main( int argc, char ** argv )
 		registrar = new ComponentRegistrar();
 		AutoConfigurator * configurator = nullptr;
 		vector<Component *> loadedComponents = util::LoadConfiguration(& configurator, registrar);
+
+		// Stop on SIGINT and SIGUSR1 (USR1 eases debugging)
 		signal(SIGINT, signalHandler);
+		signal(SIGUSR1, signalHandler);
+
 
 		// fork daemon if requested:
 		if (vm.count("d")){
