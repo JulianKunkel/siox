@@ -33,10 +33,10 @@ if test -n "$prefix"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_INSTALL_PREFIX:PATH=$prefix"
 	TARGET_DIR="$prefix"
 fi
-if test -n "$cc"; then
+if test -n "$ccdir"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER:FILEPATH=$cc"
 fi
-if test -n "$cxx"; then
+if test -n "$cxxdir"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER:FILEPATH=$cxx"
 fi
 if test -n "$glib"; then
