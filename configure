@@ -15,8 +15,8 @@ do
 		--srcdir) srcdir="$2"; shift;;
 		--prefix) prefix="$2"; shift;;
 		--with-boost) boostdir="$2"; shift;;
-		--with-cc) ccdir="$2"; shift;;
-		--with-cxx) cxxdir="$2"; shift;;
+		--with-cc) ccbin="$2"; shift;;
+		--with-cxx) cxxbin="$2"; shift;;
 		--with-glib) glib="$2"; shift;;
 		--with-mpicc) mpicc="$2"; shift;;
 		--with-mpicxx) mpicxx="$2"; shift;;
@@ -33,11 +33,11 @@ if test -n "$prefix"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_INSTALL_PREFIX:PATH=$prefix"
 	TARGET_DIR="$prefix"
 fi
-if test -n "$ccdir"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER:FILEPATH=$cc"
+if test -n "$ccbin"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER:FILEPATH=$ccbin"
 fi
-if test -n "$cxxdir"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER:FILEPATH=$cxx"
+if test -n "$cxxbin"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER:FILEPATH=$cxxbin"
 fi
 if test -n "$glib"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_ROOT:PATH=$glib"
