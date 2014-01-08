@@ -17,17 +17,16 @@ int main( int argc, char * argv[] )
 
 	pid_t pid = getpid();
 
-	printf( "==========MPI_Init()==========\n" );
+	//printf( "==========MPI_Init()==========\n" );
 	MPI_Init( &argc, &argv );
-	printf( "==========MPI_Comm_rank()==========\n" );
+	//printf( "==========MPI_Comm_rank()==========\n" );
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-	printf( "==========MPI_Comm_size()==========\n" );
+	//printf( "==========MPI_Comm_size()==========\n" );
 	MPI_Comm_size( MPI_COMM_WORLD, &size );
-	printf( "Hello, world, I am %d of %d, pid: %lld .\n",
-	        rank, size, (long long int) pid );
+	//printf( "Hello, world, I am %d of %d, pid: %lld .\n", rank, size, (long long int) pid );
 
 	etype = MPI_CHAR;
-	printf( "==========MPI_File_open()==========\n" );
+	//printf( "==========MPI_File_open()==========\n" );
 
 	MPI_Info_create( &info );
 	MPI_Info_set( info, "testhint1", "test.txt" );
@@ -35,7 +34,7 @@ int main( int argc, char * argv[] )
 	MPI_Info_set( info, "cb_buffer_size", "1024" );
 
 	MPI_File_open( MPI_COMM_WORLD, "mpi_wrapper_test_file.mpi", MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh );
-	printf( "==========MPI_File_write()==========\n" );
+	//printf( "==========MPI_File_write()==========\n" );
 	{
 		//Tell the GenericHistory what hint combinations it should evaluate.
 		buf = malloc(1);
@@ -91,7 +90,7 @@ int main( int argc, char * argv[] )
 	MPI_File_write( fh, & data, 1, MPI_INT, &status );
 
 
-	printf( "==========MPI_File_close()==========\n" );
+	//printf( "==========MPI_File_close()==========\n" );
 	MPI_File_close( &fh );
 	printf( "==========MPI_Finalize()==========\n" );
 	MPI_Finalize();

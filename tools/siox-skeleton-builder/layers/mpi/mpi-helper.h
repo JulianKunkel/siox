@@ -6,7 +6,7 @@
 #include <glib.h>
 #include <stdio.h>
 
-
+// Could be auto-generated. As well as inverse translator.
 static inline unsigned translateMPIOpenFlagsToSIOX( unsigned flags )
 {
         return  ( ( flags & MPI_MODE_RDONLY ) > 0 ? SIOX_MPI_MODE_RDONLY : 0 ) |  ( ( flags & MPI_MODE_RDWR ) > 0 ? SIOX_MPI_MODE_RDWR : 0 ) |  ( ( flags & MPI_MODE_WRONLY ) > 0 ? SIOX_MPI_MODE_WRONLY : 0 ) |  ( ( flags & MPI_MODE_CREATE ) > 0 ? SIOX_MPI_MODE_CREATE : 0 ) |  ( ( flags & MPI_MODE_EXCL ) > 0 ? SIOX_MPI_MODE_EXCL : 0 ) |  ( ( flags & MPI_MODE_DELETE_ON_CLOSE ) > 0 ? SIOX_MPI_MODE_DELETE_ON_CLOSE : 0 ) |  ( ( flags & MPI_MODE_UNIQUE_OPEN ) > 0 ? SIOX_MPI_MODE_UNIQUE_OPEN : 0 ) |  ( ( flags & MPI_MODE_SEQUENTIAL ) > 0 ? SIOX_MPI_MODE_SEQUENTIAL : 0 ) |  ( ( flags & MPI_MODE_APPEND ) > 0 ? SIOX_MPI_MODE_APPEND : 0 );

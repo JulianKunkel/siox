@@ -201,10 +201,14 @@ class Function():
         else:
             arguments = ', '.join(parameter.name for parameter in self.parameterList)
 
+        name = self.name 
+        if self.rewriteCall:
+            name = self.rewriteCall
+
         if len(self.parameterList) == 1:
             if self.parameterList[0].name == 'void':
-                return '__real_%s()' % (self.name)
-        return '__real_%s(%s)' % (self.name, arguments)
+                return '__real_%s()' % (name)
+        return '__real_%s(%s)' % (name, arguments)
 
     #
     # @brief Generate the function definition prefixed with __real_.
@@ -246,7 +250,7 @@ class Function():
                                                    for parameter in self.parameterList))
 
         else:
-            return '%s __warp_%s%s' % (self.type, self.name, self.definition)
+            return '%s __wrap_%s%s' % (self.type, self.name, self.definition)
 
     #
     # @brief Generate the function call with a function pointer for dlsym.
@@ -971,6 +975,10 @@ class Writer():
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
+                if not function.rewriteCall:
+                    print("function: " + function.getDefinition() + " needs the rewriteCall annotation since it supports va_args")
+                    exit(1)
+
                 print('\tva_list valist;', file=output)
                 print(
                     '\tva_start(valist, %s);' % function.parameterList[-2].name,
