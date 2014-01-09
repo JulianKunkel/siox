@@ -25,7 +25,7 @@ struct OpenFiles{
 	Timestamp openTime;
 	Timestamp closeTime;
 
-	uint64_t number; // increasing
+	ActivityID aid; 
 
 	vector<Access> readAccesses;
 	vector<Access> writeAccesses;

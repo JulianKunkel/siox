@@ -12,53 +12,17 @@ using namespace core;
 namespace knowledge {
 
 struct ReasonerMessageReceived{
-		ReasonerMessageDataType containedData;
-		
 		Timestamp timestamp;
 
 		string reasonerID; // identifier of the reasoner sending this message
 
-		union {
-			NodeHealth * n;
-			ProcessHealth * p;
-			SystemHealth * s;
-		} u;
-
-		ReasonerMessageReceived() : containedData(ReasonerMessageDataType::NONE) {  }
-
-		ReasonerMessageReceived( ReasonerMessageDataType containedData, Timestamp timestamp, string reasonerID ) : containedData(containedData), timestamp(timestamp), reasonerID(reasonerID) {}
-
-		 ReasonerMessageReceived & operator= (ReasonerMessageReceived & other){
-		 	// Assignment operator should only be used for testing...
-		 	u.n = other.u.n;
-		 	containedData = other.containedData;
-		 	timestamp = other.timestamp;
-		 	reasonerID = other.reasonerID;
-		 	
-		 	other.containedData = ReasonerMessageDataType::NONE;
-		 	return *this;
-		 }
-
-		~ReasonerMessageReceived(){
-			switch(containedData){
-			case (ReasonerMessageDataType::PROCESS):
-				delete(u.p);
-				break;
-			case (ReasonerMessageDataType::NODE):
-				delete(u.n);
-				break;
-			case (ReasonerMessageDataType::SYSTEM):
-				delete(u.s);
-				break;
-			default:{
-
-			}
-			}
-		}
+		ReasonerMessageReceived( Timestamp timestamp, string reasonerID ): timestamp(timestamp), reasonerID(reasonerID) {}
 };
 
 struct ReasoningDataReceivedCB{
-	virtual void receivedReasonerMessage(ReasonerMessageReceived & data) = 0;
+	virtual void receivedReasonerProcessHealth(ReasonerMessageReceived & data, ProcessHealth & health) = 0;
+	virtual void receivedReasonerNodeHealth(ReasonerMessageReceived & data, NodeHealth & health) = 0;
+	virtual void receivedReasonerSystemHealth(ReasonerMessageReceived & data, SystemHealth & health) = 0;
 
 	virtual shared_ptr<NodeHealth> getNodeHealth() = 0;
 	virtual shared_ptr<SystemHealth> getSystemHealth() = 0;

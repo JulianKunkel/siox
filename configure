@@ -5,7 +5,7 @@ echo $0 $* > configure.log
 CMAKEFLAGS=
 srcdir="../"
 
-set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-python:,srcdir:,build-wrappers" hV "$@"`
+set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-postgresql,with-python:,srcdir:,build-wrappers" hV "$@"`
 test $# -lt 1  && exit 1
 while test $# -gt 0 
 do
@@ -15,12 +15,13 @@ do
 		--srcdir) srcdir="$2"; shift;;
 		--prefix) prefix="$2"; shift;;
 		--with-boost) boostdir="$2"; shift;;
-		--with-cc) ccdir="$2"; shift;;
-		--with-cxx) cxxdir="$2"; shift;;
+		--with-cc) ccbin="$2"; shift;;
+		--with-cxx) cxxbin="$2"; shift;;
 		--with-glib) glib="$2"; shift;;
 		--with-mpicc) mpicc="$2"; shift;;
 		--with-mpicxx) mpicxx="$2"; shift;;
 		--with-python) python="$2"; shift;;
+		--with-postgresql) postgresql="$2"; shift;;
 		--build-wrappers) buildWrappers="$2"; shift;;
 		--) shift; break;;
 	esac
@@ -33,11 +34,11 @@ if test -n "$prefix"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_INSTALL_PREFIX:PATH=$prefix"
 	TARGET_DIR="$prefix"
 fi
-if test -n "$cc"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER:FILEPATH=$cc"
+if test -n "$ccbin"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER:FILEPATH=$ccbin"
 fi
-if test -n "$cxx"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER:FILEPATH=$cxx"
+if test -n "$cxxbin"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER:FILEPATH=$cxxbin"
 fi
 if test -n "$glib"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_ROOT:PATH=$glib"
@@ -67,6 +68,10 @@ fi
 if test -n "$python"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPYTHON_EXECUTABLE:FILEPATH=$python"
 fi
+if test -n "$postgresql"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_INCLUDE_DIR:PATH=$postgresql/include"
+	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_LIBRARIES:STRING=\"-L$postgresql/lib -lpq\""
+fi
 if test -n "$buildWrappers"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DBUILD_WRAPPERS=YES"
 fi
@@ -76,14 +81,15 @@ echo "SIOX uses the CMake (http://www.cmake.org) buildsystem instead of configur
 echo "CMake uses different options than configure, but you can use this script to "
 echo "specify them in the traditional way and get the equivalent cmake command."
 echo "Use the following options to change default paths."
-echo "<srcdir>               : path to SIOX's source code"
-echo "--prefix=<dir>         : installation prefix"
-echo "--with-boost=<dir>     : path to the boost library root directory"
-echo "--with-cc=<file>       : path to the C compiler"
-echo "--with-cxx=<file>      : path to the C++ compiler"
-echo "--with-glib=<dir>      : path to the GLIB2 installation"
-echo "--with-python=<file>   : path to the Python interpreter"
-echo "--build-wrappers       : build the wrappers for MPI, POSIX, etc. that is in the path"
+echo "<srcdir>                 : path to SIOX's source code"
+echo "--prefix=<dir>           : installation prefix"
+echo "--with-boost=<dir>       : path to the boost library root directory"
+echo "--with-cc=<file>         : path to the C compiler"
+echo "--with-cxx=<file>        : path to the C++ compiler"
+echo "--with-glib=<dir>        : path to the GLIB2 installation"
+echo "--with-python=<file>     : path to the Python interpreter"
+echo "--with-postgresql=<dir>  : path to PostgreSQL's libpq"
+echo "--build-wrappers         : build the wrappers for MPI, POSIX, etc. that is in the path"
 echo
 echo "For each version of MPI, etc. you may need a wrapper library compiled against this version."
 echo "So, if you have multiple versions it is not adviced to specify --build-wrappers"

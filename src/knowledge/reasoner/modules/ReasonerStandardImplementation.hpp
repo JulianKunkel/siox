@@ -66,8 +66,9 @@ protected:
 
 public:
 
-	virtual void receivedReasonerMessage(ReasonerMessageReceived & data) override;
-
+	virtual void receivedReasonerProcessHealth(ReasonerMessageReceived & data, ProcessHealth & health) override;
+	virtual void receivedReasonerNodeHealth(ReasonerMessageReceived & data, NodeHealth & health) override;
+	virtual void receivedReasonerSystemHealth(ReasonerMessageReceived & data, SystemHealth & health) override;
 	virtual shared_ptr<NodeHealth> getNodeHealth() override;
 	virtual shared_ptr<SystemHealth> getSystemHealth() override;
 	virtual shared_ptr<ProcessHealth> getProcessHealth() override;

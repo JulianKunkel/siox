@@ -134,36 +134,40 @@ ReasonerMessageDataType ReasonerCommunication::parseReceivedData(const char * bu
 
 	ReasonerMessageDataType expectedResponse;
 
-	ReasonerMessageReceived rmr( data.containedData, data.timestamp, data.reasonerID );
+	ReasonerMessageReceived rmr( data.timestamp, data.reasonerID );
 
 	switch( data.containedData ){
 	case (ReasonerMessageDataType::PROCESS) : {
-		rmr.u.p = new ProcessHealth();
-		j_serialization::deserialize( *rmr.u.p, buffer, pos, buffer_size );
+		ProcessHealth health;
+		j_serialization::deserialize( health, buffer, pos, buffer_size );
+
+		// invoke the callback
+		cb.receivedReasonerProcessHealth(rmr, health); 
 
 		expectedResponse = ReasonerMessageDataType::NODE;
 		break;
 	}
 	case (ReasonerMessageDataType::NODE) : {
-		rmr.u.n = new NodeHealth();
-		j_serialization::deserialize( *rmr.u.n, buffer, pos, buffer_size );
+		NodeHealth health;
+		j_serialization::deserialize( health, buffer, pos, buffer_size );
+		// invoke the callback
+		cb.receivedReasonerNodeHealth(rmr, health); 
 
 		expectedResponse = ReasonerMessageDataType::SYSTEM;
 		break;
 	}
 	case (ReasonerMessageDataType::SYSTEM) : {
-		rmr.u.s = new SystemHealth();
-		j_serialization::deserialize( *rmr.u.s, buffer, pos, buffer_size );
-
+		SystemHealth health;
+		j_serialization::deserialize( health, buffer, pos, buffer_size );
+		// invoke the callback
+		cb.receivedReasonerSystemHealth(rmr, health); 
+		
 		expectedResponse = ReasonerMessageDataType::NONE;
 		break;
 	}
 	case (ReasonerMessageDataType::NONE) :{
 	}
 	}
-
-	// invoke the callback
-	cb.receivedReasonerMessage(rmr); 
 
 	return expectedResponse;
 }

@@ -90,7 +90,7 @@ int creat( const char * pathname, mode_t mode );
 //@splice_before mode_t mode = va_arg(valist,mode_t);
 //@guard
 //@error ''ret<0'' errno
-//@activity
+//@activity open
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret
 //@horizontal_map_put_int ret
@@ -100,7 +100,7 @@ int open64( const char * pathname, int flags, ... );
 
 //@guard
 //@error ''ret<0'' errno
-//@activity
+//@activity creat
 //@horizontal_map_put_int ret
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret

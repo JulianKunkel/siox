@@ -31,7 +31,7 @@ def main(argv):
 
     data = imp.load_source('data', argv[1])
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10, 5), dpi=300)
     ax = fig.add_subplot(111)
 
 
@@ -62,7 +62,8 @@ def main(argv):
 
     plt.plot( data.readX, data.readY, color='blue') 
     plt.plot( data.writeX, data.writeY, color='green') 
-    plt.plot( data.syncX, [ ax.get_ylim()[1] / 2, ax.get_ylim()[1] / 2], marker = "D" , color='red') 
+    if len (data.syncX) > 0:
+        plt.plot( data.syncX, [ ax.get_ylim()[1] / 2, ax.get_ylim()[1] / 2], marker = "D" , color='red') 
 
     #ax.set_ylim(0,5)
 
