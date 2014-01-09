@@ -5,7 +5,7 @@ echo $0 $* > configure.log
 CMAKEFLAGS=
 srcdir="../"
 
-set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-postgresql,with-python:,srcdir:,build-wrappers" hV "$@"`
+set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,srcdir:,build-wrappers" hV "$@"`
 test $# -lt 1  && exit 1
 while test $# -gt 0 
 do
@@ -21,7 +21,7 @@ do
 		--with-mpicc) mpicc="$2"; shift;;
 		--with-mpicxx) mpicxx="$2"; shift;;
 		--with-python) python="$2"; shift;;
-		--with-postgresql) postgresql="$2"; shift;;
+		--with-libpq) libpq="$2"; shift;;
 		--build-wrappers) buildWrappers="$2"; shift;;
 		--) shift; break;;
 	esac
@@ -63,17 +63,21 @@ if test -n "$mpicxx"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DMPI_CXX_COMPILER:FILEPATH=$mpicxx"
 fi
 if test -n "$boostdir"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DBOOST_ROOT:PATH=$boostdir -DBOOST_INCLUDEDIR:PATH=$boostdir/include/ -DBOOST_LIBRARYDIR:PATH=$boostdir/lib/ -DBoost_NO_SYSTEM_PATHS:BOOL=ON"
+	CMAKEFLAGS="$CMAKEFLAGS -DBOOST_ROOT:PATH=$boostdir"
+	CMAKEFLAGS="$CMAKEFLAGS -DBOOST_INCLUDEDIR:PATH=$boostdir/include/"
+	CMAKEFLAGS="$CMAKEFLAGS -DBOOST_LIBRARYDIR:PATH=$boostdir/lib/"
+	CMAKEFLAGS="$CMAKEFLAGS -DBoost_NO_SYSTEM_PATHS:BOOL=ON"
 fi
 if test -n "$python"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPYTHON_EXECUTABLE:FILEPATH=$python"
 fi
-if test -n "$postgresql"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_INCLUDE_DIR:PATH=$postgresql/include"
-	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_LIBRARIES:STRING=\"-L$postgresql/lib -lpq\""
+if test -n "$libpq"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_TYPE_INCLUDE_DIR=$libpq/include" # this is probably a bug in some FindPostgreSQL.cmake
+	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_INCLUDE_DIR:PATH=$libpq/include"
+	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_LIBRARY_DIR:PATH=$libpq/lib"
 fi
 if test -n "$buildWrappers"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DBUILD_WRAPPERS=YES"
+	CMAKEFLAGS="$CMAKEFLAGS -DBUILD_WRAPPERS:BOOL=ON"
 fi
 
 echo ""
