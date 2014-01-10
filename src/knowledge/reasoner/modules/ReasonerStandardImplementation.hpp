@@ -36,17 +36,14 @@ namespace knowledge {
 
 class ReasonerStandardImplementation : public Reasoner, ReasoningDataReceivedCB, ComponentReportInterface {
 private:
+		// Our scope: PROCESS, NODE or SYSTEM
+		ReasonerStandardImplementationOptions::Role role;
+
 		list<AnomalyTrigger *> triggers;
 		list<AnomalyPlugin *>  adpis;
 		list<Reasoner *>  reasoners; // remote reasoners
 
 		QualitativeUtilization * utilization = nullptr;
-
-		// Aggregator for past and current issues and health statistics
-		shared_ptr<HealthStatistics> gatheredStatistics;
-
-		// for each host (by ID) we store the latest observation
-		// unordered_map<string, pair<Timestamp, set<HealthStatistics>> > remoteIssues;
 
 
 		thread                  periodicThread;
@@ -61,9 +58,21 @@ private:
 
 		ReasonerCommunication comm;
 
+		// for each host (by ID) we store the latest observation
+		// unordered_map<string, pair<Timestamp, set<HealthStatistics>> > remoteIssues;
+
+		// Aggregator for past and current issues and health statistics
+		// Fields to hold current state and past observations
+		NodeHealth localHealth;
+		shared_ptr<HealthStatistics> gatheredStatistics;
 		uint64_t observationTotal = 0;
 		array<uint64_t, HEALTH_STATE_COUNT> observationCounts;
 		array<float, HEALTH_STATE_COUNT> observationRatios;
+
+		// Methods to compute local health - according to our scope - from observations
+		void assessProcessHealth();
+		void assessNodeHealth();
+		void assessSystemHealth();
 
 		// void mergeObservations(list<ProcessHealth> & l, Health & health, array<uint8_t, HEALTH_STATE_COUNT> & observationRatios, uint64_t & observationCount);
 protected:
@@ -82,7 +91,7 @@ public:
 	virtual shared_ptr<SystemHealth> getSystemHealth() override;
 	virtual shared_ptr<ProcessHealth> getProcessHealth() override;
 
-	ReasonerStandardImplementation() : gatheredStatistics(new HealthStatistics), comm(*this){
+	ReasonerStandardImplementation() :  comm(*this), localHealth(), gatheredStatistics(new HealthStatistics) {
 	}
 
 	~ReasonerStandardImplementation();

@@ -44,7 +44,7 @@ class TestAnomalyTrigger : public AnomalyTrigger {
 		}
 
 		bool waitForAnomalyCount( int i ) {
-			while( 1 ) { // FIXME Kuddelmuddel mit cond verstehen, klären und kommentieren
+			while( 1 ) {
 				auto timeout = chrono::system_clock::now() + chrono::milliseconds( 300000 );
 
 				unique_lock<mutex> lock( clock );
@@ -160,6 +160,10 @@ void mergeOutput(list<ProcessHealth> & l, Health & health, array<uint8_t, HEALTH
 }
 
 void testAssessNodeAggregation(){
+	cout << endl;
+	cout << "Test: ReasonerNodeAggregation" << endl;
+	cout << "=============================" << endl;
+
 	// Input: node statistics, process health, system health
 	// Configuration: global reasoner address, local address
 	// Result: node health
@@ -270,6 +274,11 @@ void testAssessGlobalAggregation(){
 }
 
 void testReasoner(){
+
+	cout << endl;
+	cout << "Test: Reasoner" << endl;
+	cout << "==============" << endl;
+
 	// Obtain some instances from module loader
 	Reasoner * r = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", "siox-core-comm-gio", CORE_COMM_INTERFACE );
@@ -289,7 +298,7 @@ void testReasoner(){
 	ReasonerStandardImplementationOptions & r_options = r->getOptions<ReasonerStandardImplementationOptions>();
 	r_options.communicationOptions.comm.componentPointer = comm;
 	r_options.communicationOptions.serviceAddress = "ipc://reasoner1";
-	r->init(); // Start Reasoner thread
+	r->init(); // This will start a separate Reasoner thread
 	}
 
 	r->connectTrigger( & at1 );
@@ -328,6 +337,11 @@ void testReasoner(){
  This test forges a reasoner message and tries to serialize and deserialize it properly.
  */
 void testSerializationOfTypes(){
+
+	cout << endl;
+	cout << "Test: ReasonerSerialization" << endl;
+	cout << "===========================" << endl;
+
 	ReasonerMessageData rsmd;
 	rsmd.containedData = ReasonerMessageDataType::NODE;
 	rsmd.reasonerID = "testReasoner";
@@ -452,6 +466,11 @@ public:
  push actively data from r2 upstream to r.
  */
 void testReasonerCommunication(){
+
+	cout << endl;
+	cout << "Test: ReasonerCommunication" << endl;
+	cout << "===========================" << endl;
+
 	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", "siox-core-comm-gio", CORE_COMM_INTERFACE );
 
 	assert(comm != nullptr);
@@ -547,7 +566,7 @@ void testReasonerCommunication(){
 
 int main( int argc, char const * argv[] )
 {
-	// testAssessNodeAggregation();
+	testAssessNodeAggregation();
 	// testSerializationOfTypes();
 	// testReasonerCommunication();
 	testReasoner();
