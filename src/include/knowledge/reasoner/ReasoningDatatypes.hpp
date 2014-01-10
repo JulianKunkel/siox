@@ -52,7 +52,7 @@ struct Health{
 
 	array<uint32_t, HEALTH_STATE_COUNT> occurrences; // indexed by HealthState
 
-	list<HealthIssue> positiveIssues;	
+	list<HealthIssue> positiveIssues;
 	list<HealthIssue> negativeIssues;
 };
 
@@ -66,6 +66,25 @@ struct NodeHealth : public Health{
 
 	NodeHealth() : Health({HealthState::OK, {{0}}, {}, {} }), utilization({{0, 0, 0, 0}}) {}
 };
+
+
+/*
+	struct HealthIssueWithExplaination : HealthIssue{
+		// The node and global issues, that might explain the performance issues:
+		unordered_map<string, HealthIssue> globalIssues;
+		unordered_map<string, HealthIssue> nodeLocalIssues;
+	};
+*/
+
+	/*
+	 Remember and aggregate the local issues forever.
+	 */
+/*
+	struct HealthStatistic{
+		UniqueInterfaceID cid; // can be mapped to the name later
+		unordered_map<string, HealthIssueWithExplaination> issues;
+	};
+*/
 
 
 // May be a good idea to provide an overloaded outputstream for the enums to make them "human" readable.
