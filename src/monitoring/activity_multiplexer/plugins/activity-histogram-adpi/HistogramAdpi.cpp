@@ -30,13 +30,15 @@
 
 #include <knowledge/reasoner/AnomalyPlugin.hpp>
 
+#include <monitoring/topology/Topology.hpp>
 
 #include "HistogramAdpiOptions.hpp"
 
 
 using namespace std;
-using namespace monitoring;
+
 using namespace core;
+using namespace monitoring;
 using namespace knowledge;
 
 
@@ -65,6 +67,11 @@ class HistogramAdpiPlugin: public ActivityMultiplexerPlugin, public ComponentRep
 		ComponentOptions * AvailableOptions() override;
 	private:
 		unordered_map<UniqueComponentActivityID, ActivityTimeStatistics> statistics;
+		TopologyTypeId   pluginTopoTypeID;
+		TopologyObjectId pluginTopoObjectID;
+
+		TopologyAttributeId bucketMinAttributID;
+		TopologyAttributeId bucketMaxAttributID;
 };
 
 
@@ -76,24 +83,71 @@ ComponentOptions * HistogramAdpiPlugin::AvailableOptions() {
 
 void HistogramAdpiPlugin::initPlugin() {
 	assert( facade != nullptr );
+
+	HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
+	Topology * topology =  GET_INSTANCE(Topology, o.topology);
+
+	assert(topology);
+
+	TopologyType dataType = topology->registerType("data");
+	pluginTopoTypeID = dataType.id();
+
+	TopologyObject myData = topology->registerObjectByPath( "AMUXPlugin:ADPIPlugin" );
+	pluginTopoObjectID = myData.id();
+	
+	TopologyAttribute bucketMinAttribute = topology->registerAttribute( dataType.id(), "min", VariableDatatype::Type::UINT64 );
+	bucketMinAttributID = bucketMinAttribute.id();
+
+	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( dataType.id(), "max", VariableDatatype::Type::UINT64 );
+	bucketMaxAttributID = bucketMaxAttribute.id();
 }
 
+static string convertAIDToString(UniqueComponentActivityID aid){
+	stringstream s;
+	s << aid;
+	return s.str();
+}
 
 void HistogramAdpiPlugin::Notify( shared_ptr<Activity> activity ) {
-	auto itr = statistics.find(activity->ucaid_);
+	HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
+	Topology * topology =  GET_INSTANCE(Topology, o.topology);
+
+	auto itr = statistics.find(activity->ucaid_);	
 	if ( itr == statistics.end() ){
 		statistics[activity->ucaid_] = {};
 		itr = statistics.find(activity->ucaid_);
+
+		ActivityTimeStatistics & mats = itr->second;
+
+		// try to load the data object from a persistent representation		
+		const string name = convertAIDToString( activity->ucaid_ );
+		TopologyRelation tr = topology->lookupRelation( pluginTopoObjectID, pluginTopoTypeID, name );
+		if (tr != nullptr){
+			TopologyObjectId storedObjectID = tr.child();
+
+			// try to get the attributes
+			TopologyValue min = topology->getAttribute( storedObjectID, bucketMinAttributID );
+			if (min != nullptr){
+				TopologyValue max = topology->getAttribute( storedObjectID, bucketMaxAttributID );
+				// cout << "reading values : " << min.value() << " - " << max.value() << endl;			
+				mats.minTimeS = min.value().uint64();
+				mats.maxTimeS = max.value().uint64();
+
+				// we have to create the bins			
+				mats.histogramBucketWidth = ( mats.maxTimeS - mats.minTimeS ) / o.buckets;
+
+				mats.histogram.resize( o.buckets );				
+			}
+		}
+
 	}
 	ActivityTimeStatistics & ats = itr->second;
 	Timestamp duration = activity->duration();
 
 	// are we still in learning mode?
-	HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
-
 	ats.totalOperationCount++;
 
-	if ( ats.totalOperationCount > o.learnCount ){
+	if ( ! ats.histogram.empty() ){
 		int bucket;
 		// we finished learning, determine the bin.
 		if ( duration < ats.minTimeS ){
@@ -136,6 +190,13 @@ void HistogramAdpiPlugin::Notify( shared_ptr<Activity> activity ) {
 
 			// assert( ats.histogramBucketWidth > 0 )
 			ats.histogram.resize( o.buckets );
+
+			const string name = convertAIDToString( activity->ucaid_ );
+			TopologyObject child = topology->registerObject( pluginTopoObjectID, pluginTopoTypeID, name, pluginTopoTypeID );
+			TopologyObjectId storedObjectID = child.id();
+
+			topology->setAttribute( storedObjectID, bucketMaxAttributID, ats.maxTimeS );
+			topology->setAttribute( storedObjectID, bucketMinAttributID, ats.minTimeS );
 		}
 	}
 }
