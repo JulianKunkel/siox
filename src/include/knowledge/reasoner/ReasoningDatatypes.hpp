@@ -5,10 +5,34 @@
 
 #include <list>
 #include <array>
+#include <unordered_map>
 
 using namespace monitoring;
 
 namespace knowledge{
+
+
+//@serializable
+enum HealthState{
+	ABNORMAL_FAST = 0,
+	FAST = 1,
+	OK = 2,
+	SLOW = 3,
+	ABNORMAL_SLOW = 4,
+	ABNORMAL_OTHER = 5,
+	HEALTH_STATE_COUNT = 6
+};
+
+
+//@serializable
+enum UtilizationIndex{
+	CPU = 0,
+	MEMORY = 1,
+	IO = 2,
+	NETWORK = 3,
+	UTILIZATION_STATISTIC_COUNT = 4
+};
+
 
 //@serializable
 struct HealthIssue{
@@ -24,27 +48,73 @@ struct HealthIssue{
 	bool operator==(const HealthIssue & hi) const{
 		return this->name == hi.name && this->occurrences == hi.occurrences && this->delta_time_ms == hi.delta_time_ms;
 	}
+
+	void aggregate( const HealthIssue & hi ) {
+		if ( this->name == hi.name ){
+			this->occurrences += hi.occurrences;
+			this->delta_time_ms += hi.delta_time_ms;
+		}
+		else {
+			cout << "Error: HealthIssue \"" << hi.name << "\" cannot be aggregated into \"" << this->name << "\"!" << endl;
+		}
+	}
 };
 
-//@serializable
-enum HealthState{
-	ABNORMAL_FAST = 0,
-	FAST = 1,
-	OK = 2,
-	SLOW = 3,
-	ABNORMAL_SLOW = 4,
-	ABNORMAL_OTHER = 5,
-	HEALTH_STATE_COUNT = 6
-};
 
 //@serializable
-enum UtilizationIndex{
-	CPU = 0,
-	MEMORY = 1,
-	IO = 2,
-	NETWORK = 3,
-	UTILIZATION_STATISTIC_COUNT = 4
+struct HealthIssueList{
+	list<HealthIssue> issues;
+
+	HealthIssueList() : issues() {}
+
+	void aggregate( const HealthIssue & hi ){
+		for( auto itr = this->issues.begin(); itr != this->issues.end(); itr++ ){
+			if( itr->name == hi.name ) {
+				itr->aggregate(hi);
+				return;
+			}
+		}
+		// Not found
+		this->issues.push_back(hi);
+	}
+
+	void aggregate( const HealthIssueList hil ){
+		for( auto itr = hil.issues.begin(); itr != hil.issues.end(); itr++ ){
+			this->aggregate(*itr);
+		}
+	}
+
 };
+
+
+struct HealthIssueMap{
+	unordered_map<string, HealthIssue> issues;
+
+	HealthIssueMap() : issues() {}
+
+	void aggregate( const HealthIssueList & hil ){
+		for( auto itr = hil.issues.begin(); itr != hil.issues.end(); itr++ ){
+			auto issue = this->issues.find( itr->name );
+			if( issue != this->issues.end() ){
+				issue->second.aggregate(*itr);
+			}else{
+				this->issues[itr->name] = *itr;
+			}
+		}
+	}
+
+	void aggregate( const HealthIssueMap & him ){
+		for( auto itr = him.issues.begin(); itr != him.issues.end(); itr++ ){
+			auto issue = this->issues.find( itr->first );
+			if( issue != this->issues.end() ){
+				issue->second.aggregate(itr->second);
+			}else{
+				this->issues[itr->first] = itr->second;
+			}
+		}
+	}
+};
+
 
 //@serializable
 struct Health{

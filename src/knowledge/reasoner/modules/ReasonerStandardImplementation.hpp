@@ -63,7 +63,7 @@ private:
 
 		// Aggregator for past and current issues and health statistics
 		// Fields to hold current state and past observations
-		NodeHealth localHealth;
+		shared_ptr<NodeHealth> localHealth;
 		shared_ptr<HealthStatistics> gatheredStatistics;
 		uint64_t observationTotal = 0;
 		array<uint64_t, HEALTH_STATE_COUNT> observationCounts;
@@ -91,7 +91,7 @@ public:
 	virtual shared_ptr<SystemHealth> getSystemHealth() override;
 	virtual shared_ptr<ProcessHealth> getProcessHealth() override;
 
-	ReasonerStandardImplementation() :  comm(*this), localHealth(), gatheredStatistics(new HealthStatistics) {
+	ReasonerStandardImplementation() :  comm(*this), localHealth(new NodeHealth), gatheredStatistics(new HealthStatistics) {
 	}
 
 	~ReasonerStandardImplementation();

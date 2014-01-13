@@ -44,35 +44,42 @@ namespace knowledge {
 
 
 shared_ptr<NodeHealth> ReasonerStandardImplementation::getNodeHealth(){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		if ( role == ReasonerStandardImplementationOptions::Role::NODE )
+			return localHealth;
 	}
 	return nullptr;
 }
 
 shared_ptr<SystemHealth> ReasonerStandardImplementation::getSystemHealth(){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM )
+			return localHealth;
 	}
 	return nullptr;
 }
 
 shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		if ( role == ReasonerStandardImplementationOptions::Role::PROCESS )
+			return localHealth;
 	}
 	return nullptr;
 }
 
 void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessageReceived & data, ProcessHealth & health){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
+
+		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
+			// FIXME: Aggregate process health into node health status
+		}
 
 		// FIXME: Implementieren!
 	}
@@ -80,8 +87,12 @@ void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessa
 }
 
 void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageReceived & data, NodeHealth & health){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
+
+		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM ){
+			// FIXME: Aggregate node health into system health status
+		}
 
 		// FIXME: Implementieren!
 	}
@@ -89,7 +100,7 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 }
 
 void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessageReceived & data, SystemHealth & health){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
 		// FIXME: Implementieren!
@@ -108,7 +119,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		/*
 		 * Query all registered ADPIs for news and aggregate them
 		 */
-		{	// Disallow other access to aggregated date fields
+		{	// Disallow other access to aggregated data fields
 			unique_lock<mutex> dataLock( dataMutex );
 
 
@@ -292,10 +303,10 @@ void ReasonerStandardImplementation::init(){
 	periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
 
 	// Some mock-up values until true utilization is available
-	localHealth.utilization[UtilizationIndex::CPU] = 20;
-	localHealth.utilization[UtilizationIndex::NETWORK] = 40;
-	localHealth.utilization[UtilizationIndex::IO] = 30;
-	localHealth.utilization[UtilizationIndex::MEMORY] = 10;
+	localHealth->utilization[UtilizationIndex::CPU] = 20;
+	localHealth->utilization[UtilizationIndex::NETWORK] = 40;
+	localHealth->utilization[UtilizationIndex::IO] = 30;
+	localHealth->utilization[UtilizationIndex::MEMORY] = 10;
 
 }
 
@@ -306,7 +317,7 @@ shared_ptr<HealthStatistics> ReasonerStandardImplementation::queryRuntimePerform
 
 
 ComponentReport ReasonerStandardImplementation::prepareReport() {
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
 		// FIXME: Implementieren!
@@ -333,21 +344,21 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 */
 
 	// determine node health based on the historic knowledge AND the statistics
-	if ( localHealth.occurrences[ABNORMAL_FAST] || localHealth.occurrences[ABNORMAL_SLOW] || localHealth.occurrences[ABNORMAL_OTHER] ){
+	if ( localHealth->occurrences[ABNORMAL_FAST] || localHealth->occurrences[ABNORMAL_SLOW] || localHealth->occurrences[ABNORMAL_OTHER] ){
 		// we have an condition in which we must fire the anomaly trigger.
 
 		if ( observationRatios[ABNORMAL_FAST] > 5 &&
 			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_SLOW] &&
 			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
-			localHealth.overallState = HealthState::ABNORMAL_FAST;
+			localHealth->overallState = HealthState::ABNORMAL_FAST;
 		}else if (observationRatios[ABNORMAL_SLOW] > 5 &&
 			observationRatios[ABNORMAL_SLOW] > 2 * observationRatios[ABNORMAL_FAST] &&
 			observationRatios[ABNORMAL_SLOW] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
-			localHealth.overallState = HealthState::ABNORMAL_SLOW;
+			localHealth->overallState = HealthState::ABNORMAL_SLOW;
 		}else{
-			localHealth.overallState = HealthState::ABNORMAL_OTHER;
+			localHealth->overallState = HealthState::ABNORMAL_OTHER;
 		}
 	}else{
 		// normal condition
@@ -355,30 +366,30 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 		if ( observationRatios[FAST] > 5 &&
 			observationRatios[FAST] > 3*observationRatios[SLOW] )
 		{
-			localHealth.overallState = HealthState::FAST;
+			localHealth->overallState = HealthState::FAST;
 		}else if ( observationRatios[SLOW] > 5 &&
 			observationRatios[SLOW] > 3*observationRatios[FAST] )
 		{
-			localHealth.overallState = HealthState::SLOW;
+			localHealth->overallState = HealthState::SLOW;
 		}else{
-			localHealth.overallState = HealthState::OK;
+			localHealth->overallState = HealthState::OK;
 		}
 	}
 
 	// If the current state is not OK and a statistics behaves suboptimal, we can take this into account and potentially add new issues and even set the health state to OK.
-	if ( localHealth.overallState != HealthState::OK ){
+	if ( localHealth->overallState != HealthState::OK ){
 		uint totalUtilization = 0;
 
-		if ( localHealth.overallState == HealthState::SLOW || localHealth.overallState == HealthState::ABNORMAL_SLOW || localHealth.overallState == HealthState::ABNORMAL_OTHER ){
+		if ( localHealth->overallState == HealthState::SLOW || localHealth->overallState == HealthState::ABNORMAL_SLOW || localHealth->overallState == HealthState::ABNORMAL_OTHER ){
 
 			for(int i=0; i < UTILIZATION_STATISTIC_COUNT; i++ ){
-				totalUtilization += localHealth.utilization[i];
-				if ( localHealth.utilization[i] > 80 ){ // if more than 80% utilization in one category
+				totalUtilization += localHealth->utilization[i];
+				if ( localHealth->utilization[i] > 80 ){ // if more than 80% utilization in one category
 					// overloaded!
-					localHealth.negativeIssues.push_back( { toString( (UtilizationIndex) i) + " overloaded", 1, 0 } );
+					localHealth->negativeIssues.push_back( { toString( (UtilizationIndex) i) + " overloaded", 1, 0 } );
 					// actually the decision should depend on this nodes role. A compute node is expected to have a high CPU and MEMORY utilization...
 					// TODO
-					localHealth.overallState = HealthState::OK;
+					localHealth->overallState = HealthState::OK;
 				}
 			}
 			if ( totalUtilization > 60*4 ){ // the overall system is overloaded
@@ -387,7 +398,7 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 		}
 	}
 
-	cout << "State: " << toString(localHealth.overallState) << endl;
+	cout << "State: " << toString(localHealth->overallState) << endl;
 }
 
 
@@ -410,7 +421,7 @@ void ReasonerStandardImplementation::assessProcessHealth(){
 
 		Compact process health (for the last interval) like for node etc.
   	 */
-	cout << "State: " << toString(localHealth.overallState) << endl;
+	cout << "State: " << toString(localHealth->overallState) << endl;
 }
 
 
