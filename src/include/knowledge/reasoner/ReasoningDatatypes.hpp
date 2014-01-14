@@ -49,7 +49,7 @@ struct HealthIssue{
 		return this->name == hi.name && this->occurrences == hi.occurrences && this->delta_time_ms == hi.delta_time_ms;
 	}
 
-	void aggregate( const HealthIssue & hi ) {
+	void add( const HealthIssue & hi ) {
 		if ( this->name == hi.name ){
 			this->occurrences += hi.occurrences;
 			this->delta_time_ms += hi.delta_time_ms;
@@ -67,10 +67,14 @@ struct HealthIssueList{
 
 	HealthIssueList() : issues() {}
 
-	void aggregate( const HealthIssue & hi ){
+	bool operator==( const HealthIssueList & hil ){
+		return this->issues == hil.issues;
+	}
+
+	void add( const HealthIssue & hi ){
 		for( auto itr = this->issues.begin(); itr != this->issues.end(); itr++ ){
 			if( itr->name == hi.name ) {
-				itr->aggregate(hi);
+				itr->add(hi);
 				return;
 			}
 		}
@@ -78,9 +82,9 @@ struct HealthIssueList{
 		this->issues.push_back(hi);
 	}
 
-	void aggregate( const HealthIssueList hil ){
+	void add( const HealthIssueList hil ){
 		for( auto itr = hil.issues.begin(); itr != hil.issues.end(); itr++ ){
-			this->aggregate(*itr);
+			this->add(*itr);
 		}
 	}
 
@@ -92,22 +96,26 @@ struct HealthIssueMap{
 
 	HealthIssueMap() : issues() {}
 
-	void aggregate( const HealthIssueList & hil ){
+	bool operator==( const HealthIssueMap & him ){
+		return this->issues == him.issues;
+	}
+
+	void add( const HealthIssueList & hil ){
 		for( auto itr = hil.issues.begin(); itr != hil.issues.end(); itr++ ){
 			auto issue = this->issues.find( itr->name );
 			if( issue != this->issues.end() ){
-				issue->second.aggregate(*itr);
+				issue->second.add(*itr);
 			}else{
 				this->issues[itr->name] = *itr;
 			}
 		}
 	}
 
-	void aggregate( const HealthIssueMap & him ){
+	void add( const HealthIssueMap & him ){
 		for( auto itr = him.issues.begin(); itr != him.issues.end(); itr++ ){
 			auto issue = this->issues.find( itr->first );
 			if( issue != this->issues.end() ){
-				issue->second.aggregate(itr->second);
+				issue->second.add(itr->second);
 			}else{
 				this->issues[itr->first] = itr->second;
 			}
@@ -147,7 +155,7 @@ struct NodeHealth : public Health{
 */
 
 	/*
-	 Remember and aggregate the local issues forever.
+	 Remember and add the local issues forever.
 	 */
 /*
 	struct HealthStatistic{

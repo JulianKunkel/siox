@@ -43,6 +43,14 @@ namespace knowledge {
 
 
 
+void ReasonerStandardImplementation::injectLocalHealth( shared_ptr<NodeHealth> health ){
+	{	// Disallow other access to aggregated data fields
+		unique_lock<mutex> dataLock( dataMutex );
+
+		localHealth = health;
+	}
+}
+
 shared_ptr<NodeHealth> ReasonerStandardImplementation::getNodeHealth(){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
@@ -50,6 +58,7 @@ shared_ptr<NodeHealth> ReasonerStandardImplementation::getNodeHealth(){
 		if ( role == ReasonerStandardImplementationOptions::Role::NODE )
 			return localHealth;
 	}
+	// For other roles, return NULL
 	return nullptr;
 }
 
@@ -60,6 +69,7 @@ shared_ptr<SystemHealth> ReasonerStandardImplementation::getSystemHealth(){
 		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM )
 			return localHealth;
 	}
+	// For other roles, return NULL
 	return nullptr;
 }
 
@@ -70,6 +80,7 @@ shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
 		if ( role == ReasonerStandardImplementationOptions::Role::PROCESS )
 			return localHealth;
 	}
+	// For other roles, return NULL
 	return nullptr;
 }
 
@@ -77,13 +88,14 @@ void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessa
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
+		// Only Node level reasoners should receive process level reports; others ignore them
 		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
-			// FIXME: Aggregate process health into node health status
+			(*processHealthMap)[data.reasonerID] = health;
+			cout << "Received status from process reasoner " << data.reasonerID << endl;
 		}
-
-		// FIXME: Implementieren!
+		else
+			cerr << "Received inappropriate message from reasoner " << data.reasonerID << "!" << endl;
 	}
-	cout << "Received msg" << endl;
 }
 
 void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageReceived & data, NodeHealth & health){
@@ -91,21 +103,29 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 		unique_lock<mutex> dataLock( dataMutex );
 
 		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM ){
-			// FIXME: Aggregate node health into system health status
+			(*nodeHealthMap)[data.reasonerID] = health;
+			cout << "Received status from node reasoner " << data.reasonerID << endl;
 		}
-
-		// FIXME: Implementieren!
+		else if ( role == ReasonerStandardImplementationOptions::Role::PROCESS ){
+			cout << "Received status from node reasoner " << data.reasonerID << endl;
+			nodeHealth = health;
+		}
+		else
+			cerr << "Received inappropriate message from reasoner " << data.reasonerID << "!" << endl;
 	}
-	cout << "Received msg" << endl;
 }
 
 void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessageReceived & data, SystemHealth & health){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
+			cout << "Received status from system reasoner " << data.reasonerID << endl;
+			systemHealth = health;
+		}
+		else
+			cerr << "Received inappropriate message from reasoner " << data.reasonerID << "!" << endl;
 	}
-	cout << "Received msg" << endl;
 }
 
 
@@ -210,9 +230,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 			}
 		}
 
-
-		// FIXME: Regeln übernehmen!
-
+		// Run assessment appropriate to reasoner's role
 		switch ( role ) {
 			case ReasonerStandardImplementationOptions::Role::PROCESS:
 				assessProcessHealth();
@@ -295,6 +313,10 @@ void ReasonerStandardImplementation::init(){
 	ReasonerStandardImplementationOptions & options = getOptions<ReasonerStandardImplementationOptions>();
 
 	role = options.role;
+	if (role == ReasonerStandardImplementationOptions::Role::NODE)
+		processHealthMap = new unordered_map<string,ProcessHealth>;
+	if (role == ReasonerStandardImplementationOptions::Role::SYSTEM)
+		nodeHealthMap = new unordered_map<string,NodeHealth>;
 
 	update_intervall_ms = options.update_intervall_ms;
 
@@ -302,12 +324,13 @@ void ReasonerStandardImplementation::init(){
 
 	periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
 
+/*
 	// Some mock-up values until true utilization is available
 	localHealth->utilization[UtilizationIndex::CPU] = 20;
 	localHealth->utilization[UtilizationIndex::NETWORK] = 40;
 	localHealth->utilization[UtilizationIndex::IO] = 30;
 	localHealth->utilization[UtilizationIndex::MEMORY] = 10;
-
+*/
 }
 
 
@@ -345,8 +368,8 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 
 	// determine node health based on the historic knowledge AND the statistics
 	if ( localHealth->occurrences[ABNORMAL_FAST] || localHealth->occurrences[ABNORMAL_SLOW] || localHealth->occurrences[ABNORMAL_OTHER] ){
-		// we have an condition in which we must fire the anomaly trigger.
-
+		// we have a condition in which we must fire the anomaly trigger.
+		cout << "Checkpoint 1a passed..." << endl;
 		if ( observationRatios[ABNORMAL_FAST] > 5 &&
 			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_SLOW] &&
 			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_OTHER] )
@@ -361,21 +384,26 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 			localHealth->overallState = HealthState::ABNORMAL_OTHER;
 		}
 	}else{
+		cout << "Checkpoint 1b passed..." << endl;
 		// normal condition
 		// We have to pick between FAST, OK & SLOW
 		if ( observationRatios[FAST] > 5 &&
 			observationRatios[FAST] > 3*observationRatios[SLOW] )
 		{
+			cout << "Checkpoint 1ba passed..." << endl;
 			localHealth->overallState = HealthState::FAST;
 		}else if ( observationRatios[SLOW] > 5 &&
 			observationRatios[SLOW] > 3*observationRatios[FAST] )
 		{
+			cout << "Checkpoint 1bb passed..." << endl;
 			localHealth->overallState = HealthState::SLOW;
 		}else{
+			cout << "Checkpoint 1bc passed..." << endl;
 			localHealth->overallState = HealthState::OK;
 		}
 	}
 
+	cout << "Checkpoint 2 passed..." << endl;
 	// If the current state is not OK and a statistics behaves suboptimal, we can take this into account and potentially add new issues and even set the health state to OK.
 	if ( localHealth->overallState != HealthState::OK ){
 		uint totalUtilization = 0;

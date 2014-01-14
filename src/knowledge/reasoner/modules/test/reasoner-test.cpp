@@ -11,6 +11,7 @@
 #include <knowledge/reasoner/Reasoner.hpp>
 #include <knowledge/reasoner/AnomalyPlugin.hpp>
 
+#include <knowledge/reasoner/modules/ReasonerStandardImplementation.hpp>
 #include <knowledge/reasoner/modules/ReasonerStandardImplementationOptions.hpp>
 #include <knowledge/reasoner/modules/ReasoningDatatypesSerializable.hpp>
 
@@ -271,6 +272,67 @@ void testAssessGlobalAggregation(){
 	// Result: system health
 	// Test case
 	// Three nodes report overlapping issues.
+}
+
+void testReasonerAssessment(){
+
+	cout << endl;
+	cout << "Test: Reasoner Assessment" << endl;
+	cout << "=========================" << endl;
+
+	// Input: node statistics, process health, system health
+	// Configuration: global reasoner address, local address
+	// Result: node health
+	//SystemHealth sh = { HealthState::OK, {{0,1,5,1,0,0}}, {}, {} };
+
+	// Obtain some instances from module loader
+	Reasoner * r = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", "siox-core-comm-gio", CORE_COMM_INTERFACE );
+
+	assert(comm != nullptr);
+	comm->init();
+
+	assert( r != nullptr );
+	{
+	ReasonerStandardImplementationOptions & r_options = r->getOptions<ReasonerStandardImplementationOptions>();
+	r_options.role = ReasonerStandardImplementationOptions::Role::NODE;
+	r_options.communicationOptions.comm.componentPointer = comm;
+	r_options.communicationOptions.serviceAddress = "ipc://reasoner1";
+	r->init(); // This will start a separate Reasoner thread
+	}
+
+	ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
+	ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
+	ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
+
+	ReasonerMessageReceived rmr1 = { 0, "P1"};
+	ReasonerMessageReceived rmr2 = { 0, "P2"};
+	ReasonerMessageReceived rmr3 = { 0, "P3"};
+
+	// list<ProcessHealth> l = {p1, p2, p3};
+
+	shared_ptr<NodeHealth> nh(new NodeHealth) ;
+
+	nh->utilization[UtilizationIndex::CPU] = 20;
+	nh->utilization[UtilizationIndex::NETWORK] = 40;
+	nh->utilization[UtilizationIndex::IO] = 30;
+	nh->utilization[UtilizationIndex::MEMORY] = 10;
+
+	((ReasonerStandardImplementation *) r)->injectLocalHealth(nh);
+
+
+	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr1, p1);
+	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr2, p2);
+	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr3, p3);
+
+	// Now we will query the reactions:
+	shared_ptr<HealthStatistics> stats = r->queryRuntimePerformanceIssues();
+	cout << "HealthStatistics: " << stats << endl;
+
+	cout << "Node health: " << toString(((ReasonerStandardImplementation *) r)->getProcessHealth()->overallState) << endl;
+
+	delete(r);
+	delete(comm);
 }
 
 void testReasoner(){
@@ -570,6 +632,7 @@ int main( int argc, char const * argv[] )
 	// testSerializationOfTypes();
 	// testReasonerCommunication();
 	testReasoner();
+	testReasonerAssessment();
 
 	cout << endl << "OK" << endl;
 	return 0;
