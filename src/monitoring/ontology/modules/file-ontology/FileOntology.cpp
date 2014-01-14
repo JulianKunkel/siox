@@ -112,11 +112,14 @@ namespace monitoring {
 
 			const OntologyAttribute register_attribute( const string & domain, const string & name, VariableDatatype::Type storage_type ) throw( IllegalStateError ) override {
 				// lookup if the domain + name exists in the table.
+
+				assert( storage_type != VariableDatatype::Type::INVALID );
+
 				stringstream unique;
 				unique << domain << "|" << name;
 				string fqn( unique.str() );
 
-				if( domain_name_map[fqn] == nullptr ) {
+				if( domain_name_map.count(fqn) == 0 ) {
 					attributeMutex.lock();
 					if( domain_name_map[fqn] == nullptr ) { // Necessary due to possible race conditions!
 						AttributeWithValues * av = new AttributeWithValues();

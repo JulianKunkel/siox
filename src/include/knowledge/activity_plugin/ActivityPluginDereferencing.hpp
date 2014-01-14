@@ -39,7 +39,7 @@ namespace monitoring {
 
 			virtual const OntologyValue lookup_component_attribute( const ComponentID & cid, const  OntologyAttribute & att ) const throw( NotFoundError ) = 0;
 
-			virtual const string & lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) = 0;
+			virtual const string lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) = 0;
 
 			// Register a plugin to behave as an anomaly plugin.
 			virtual void registerAnomalyPlugin( knowledge::AnomalyPlugin * plugin ) = 0;

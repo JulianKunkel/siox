@@ -72,6 +72,7 @@ class HistogramAdpiPlugin: public ActivityMultiplexerPlugin, public ComponentRep
 
 		TopologyAttributeId bucketMinAttributID;
 		TopologyAttributeId bucketMaxAttributID;
+		Topology * topology;
 };
 
 
@@ -85,7 +86,8 @@ void HistogramAdpiPlugin::initPlugin() {
 	assert( facade != nullptr );
 
 	HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
-	Topology * topology =  GET_INSTANCE(Topology, o.topology);
+	ActivityPluginDereferencing * f = GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade);
+	topology =  f->topology();
 
 	assert(topology);
 
@@ -111,9 +113,7 @@ static string convertAIDToString(UniqueComponentActivityID aid){
 }
 
 void HistogramAdpiPlugin::Notify( shared_ptr<Activity> activity ) {
-	HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
-	Topology * topology =  GET_INSTANCE(Topology, o.topology);
-
+	const HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
 	auto itr = statistics.find(activity->ucaid_);	
 	if ( itr == statistics.end() ){
 		statistics[activity->ucaid_] = {};

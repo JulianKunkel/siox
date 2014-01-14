@@ -21,7 +21,5 @@ struct HistogramAdpiOptions : public ActivityMultiplexerPluginOptions{
 
 	// after how many operations do we stop the learning count.
 	uint16_t learnCount = 1000;
-
-	ComponentReference topology;
 };
 

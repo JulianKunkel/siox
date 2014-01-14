@@ -41,7 +41,7 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 			return association_mapper->lookup_component_attribute( cid, att );
 		}
 
-		const string & lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) {
+		const string lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) {
 			return association_mapper->lookup_instance_mapping( id );
 		}
 
