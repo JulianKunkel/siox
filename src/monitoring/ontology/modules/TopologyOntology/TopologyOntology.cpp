@@ -45,7 +45,6 @@ namespace monitoring {
 				typeID = topology->registerAttribute( attribute.id(), "Type", VariableDatatype::Type::UINT32 ).id();
 				nameID = topology->registerAttribute( attribute.id(), "Name", VariableDatatype::Type::STRING ).id();
 				domainID = topology->registerAttribute( attribute.id(), "Domain", VariableDatatype::Type::STRING ).id();
-				idID = topology->registerAttribute( idTypeID, "ID", VariableDatatype::Type::UINT32 ).id();
 
 				for(int i=0 ; i < (int) VariableDatatype::Type::INVALID; i++){
 					stringstream number;
@@ -81,16 +80,10 @@ namespace monitoring {
 				}
 				
 				// store domain, name and storage type as attribute.				
-				topology->setAttribute(objID, idID, objID);
 				topology->setAttribute(objID, domainID, domain);
 				topology->setAttribute(objID, nameID, name);
 				topology->setAttribute(objID, typeID, (uint32_t) storage_type);
 				
-				// register in the alternative ID path.
-				stringstream n;
-				n << objID;
-				topology->registerRelation( pluginTopoObjectID, idTypeID, n.str() , obj.id() );
-
 				return OntologyAttribute(obj.id(), domain, name, storage_type);
 			}
 
@@ -112,22 +105,19 @@ namespace monitoring {
 
 			const OntologyAttribute lookup_attribute_by_ID( OntologyAttributeID aID ) const throw( NotFoundError ) override {
 
-				stringstream sAID;
-				sAID << aID;
-
-				TopologyRelation rel = topology->lookupRelation( pluginTopoObjectID, idTypeID, sAID.str() );
-				if ( ! rel ){
+				TopologyObject obj = topology->lookupObjectById( aID );
+				if ( ! obj ){
 					throw NotFoundError();
 				}
-				TopologyObjectId objID = rel.child();
+				TopologyObjectId objID = obj.id();
 
 				TopologyValue existingStorageType = topology->getAttribute(objID, typeID);
 				if (! existingStorageType){
 					// may happen if the object is not properly created
 					throw NotFoundError();
-				} 				
+				}
 
-				return OntologyAttribute(topology->getAttribute(objID, idID).value().uint32(), 
+				return OntologyAttribute(aID, 
 					topology->getAttribute(objID, domainID).value().str(), 
 					topology->getAttribute(objID, nameID).value().str(), 
 					(VariableDatatype::Type) existingStorageType.value().uint32());
@@ -201,7 +191,6 @@ namespace monitoring {
 			TopologyAttributeId typeID;
 			TopologyAttributeId nameID;
 			TopologyAttributeId domainID;
-			TopologyAttributeId idID;
 			// based on the type of the value we store a different type
 			TopologyAttributeId metaValueID[ (int) VariableDatatype::Type::INVALID];
 	};
