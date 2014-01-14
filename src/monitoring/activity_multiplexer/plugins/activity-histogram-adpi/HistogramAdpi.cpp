@@ -90,15 +90,17 @@ void HistogramAdpiPlugin::initPlugin() {
 	assert(topology);
 
 	TopologyType dataType = topology->registerType("data");
+	TopologyType adpiType = topology->registerType("ADPIPlugin");
+
 	pluginTopoTypeID = dataType.id();
 
 	TopologyObject myData = topology->registerObjectByPath( "AMUXPlugin:ADPIPlugin" );
 	pluginTopoObjectID = myData.id();
 	
-	TopologyAttribute bucketMinAttribute = topology->registerAttribute( dataType.id(), "min", VariableDatatype::Type::UINT64 );
+	TopologyAttribute bucketMinAttribute = topology->registerAttribute( adpiType.id(), "min", VariableDatatype::Type::UINT64 );
 	bucketMinAttributID = bucketMinAttribute.id();
 
-	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( dataType.id(), "max", VariableDatatype::Type::UINT64 );
+	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( adpiType.id(), "max", VariableDatatype::Type::UINT64 );
 	bucketMaxAttributID = bucketMaxAttribute.id();
 }
 

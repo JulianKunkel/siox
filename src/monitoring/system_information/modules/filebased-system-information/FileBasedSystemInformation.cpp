@@ -81,7 +81,7 @@ namespace monitoring {
 				if( filename.length() == 0 ) {
 					filename = "system_info.dat";
 				}
-				cout << "Initializing ID-mapper from file using " << filename << endl;
+				//cout << "Initializing ID-mapper from file using " << filename << endl;
 
 				load( filename );
 			}

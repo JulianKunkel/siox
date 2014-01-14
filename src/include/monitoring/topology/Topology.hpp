@@ -149,6 +149,10 @@ Example:
 #include <boost/thread/shared_mutex.hpp>
 
 namespace monitoring {
+
+	typedef std::vector<TopologyRelation> TopologyRelationList;
+	typedef std::vector<TopologyValue> TopologyValueList;
+				
 	class Topology : public core::Component {
 		//lookupXXX() members generally indicate failure by returning a false object, i. e. you are free to write
 		//    if( TopologyObject myObject = topology->lookupObjectByPath( "foo/bar" ) ) {
@@ -157,13 +161,12 @@ namespace monitoring {
 		//without fearing any exceptions...
 		public:
 
-			typedef std::vector<TopologyRelation> TopologyRelationList;
-			typedef std::vector<TopologyValue> TopologyValueList;
-
 			//High level functions for easy handling of topology objects by specifying paths.
 			//These are implemented as metaalgorithms directly in this class, calling the plumbing level functions to do their work.
-			virtual TopologyObject registerObjectByPath( const string& path ) throw();
-			virtual TopologyObject lookupObjectByPath( const string& path ) throw();
+			virtual TopologyObject registerObjectByPath( const string& path, TopologyObjectId parent = 0 ) throw();
+			virtual TopologyObject lookupObjectByPath( const string& path, TopologyObjectId parent = 0 ) throw();
+
+
 			virtual bool setAlias( const string& aliasName, const string& aliasValue ) throw();	//Return true on success. For requirements on the alias name and value, see the class comment above.
 
 			//The normal, plumbing level functions.
@@ -269,10 +272,10 @@ namespace monitoring {
 		return true;
 	}
 
-	TopologyObject Topology::registerObjectByPath( const string& path ) throw() {
+	TopologyObject Topology::registerObjectByPath( const string& path, TopologyObjectId parent ) throw() {
 		size_t componentCount;
 		if( PathComponentDescription* components = parsePath( path, &componentCount ) ) {
-			TopologyObjectId resultId = 0;
+			TopologyObjectId resultId = parent;
 			TopologyObject result;
 			for( size_t i = 0; i < componentCount; i++ ) {
 				PathComponentDescription* curComponent = &components[i];
@@ -293,10 +296,10 @@ namespace monitoring {
 		return TopologyObject();
 	}
 
-	TopologyObject Topology::lookupObjectByPath( const string& path ) throw() {
+	TopologyObject Topology::lookupObjectByPath( const string& path, TopologyObjectId parent ) throw() {
 		size_t componentCount;
 		if( PathComponentDescription* components = parsePath( path, &componentCount ) ) {
-			TopologyObjectId resultId = 0;
+			TopologyObjectId resultId = parent;
 			TopologyObject result;
 			for( size_t i = 0; i < componentCount; i++ ) {
 				PathComponentDescription* curComponent = &components[i];

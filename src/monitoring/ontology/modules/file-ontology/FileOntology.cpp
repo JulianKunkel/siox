@@ -110,7 +110,7 @@ namespace monitoring {
 			///////////////////////////////////////////////////
 
 
-			const OntologyAttribute & register_attribute( const string & domain, const string & name, VariableDatatype::Type storage_type ) throw( IllegalStateError ) {
+			const OntologyAttribute register_attribute( const string & domain, const string & name, VariableDatatype::Type storage_type ) throw( IllegalStateError ) override {
 				// lookup if the domain + name exists in the table.
 				stringstream unique;
 				unique << domain << "|" << name;
@@ -139,7 +139,7 @@ namespace monitoring {
 				return domain_name_map[fqn]->attribute;
 			}
 
-			void attribute_set_meta_attribute( const OntologyAttribute & att, const OntologyAttribute & meta, const OntologyValue & value ) throw( IllegalStateError ) {
+			void attribute_set_meta_attribute( const OntologyAttribute & att, const OntologyAttribute & meta, const OntologyValue & value ) throw( IllegalStateError )  override {
 				assert( meta.storage_type == value.type() );
 
 				attributeMutex.lock();
@@ -159,7 +159,7 @@ namespace monitoring {
 				attributeMutex.unlock();
 			}
 
-			const OntologyAttribute & lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) {
+			const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) override {
 				stringstream unique;
 				unique << domain << "|" << name;
 				string fqn( unique.str() );
@@ -173,7 +173,7 @@ namespace monitoring {
 				}
 			}
 
-			const OntologyAttribute & lookup_attribute_by_ID( OntologyAttributeID aID ) const throw( NotFoundError ) {
+			const OntologyAttribute lookup_attribute_by_ID( OntologyAttributeID aID ) const throw( NotFoundError ) override {
 
 				auto res = attribute_map.find( aID );
 
@@ -184,7 +184,7 @@ namespace monitoring {
 				}
 			}
 
-			const vector<OntologyAttributeID> & enumerate_meta_attributes( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
+			const vector<OntologyAttributeID> enumerate_meta_attributes( const OntologyAttribute & attribute ) const throw( NotFoundError ) override {
 				auto res = attribute_map.find( attribute.aID );
 
 				if( res != attribute_map.end() ) {
@@ -194,7 +194,7 @@ namespace monitoring {
 				}
 			}
 
-			const OntologyValue & lookup_meta_attribute( const OntologyAttribute & attribute, const OntologyAttribute & meta ) const throw( NotFoundError ) {
+			const OntologyValue lookup_meta_attribute( const OntologyAttribute & attribute, const OntologyAttribute & meta ) const throw( NotFoundError ) override {
 				// check for existing types:
 				int which = lookupAttributeIndex( attribute, meta );
 				if( which >= 0 ) {

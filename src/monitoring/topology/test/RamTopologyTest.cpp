@@ -143,7 +143,7 @@ int main( int argc, char const * argv[] ) throw() {
 	}
 
 	{
-		Topology::TopologyRelationList list;
+		TopologyRelationList list;
 		list = topology->enumerateChildren( 0, 0 );
 		assert( list.size() == 2 );
 		assert( &*list[0] == &*relation1 || &*list[0] == &*relation3 );
@@ -216,7 +216,7 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( value2.attribute() == attribute2.id() );
 	assert( value2.value() == 1.0 );
 
-	Topology::TopologyValueList valueList;
+	TopologyValueList valueList;
 	valueList = topology->enumerateAttributes( object2.id() );
 	assert( !valueList.size() );
 	valueList = topology->enumerateAttributes( object1.id() );

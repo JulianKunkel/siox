@@ -15,7 +15,7 @@ class VariableDatatypeAccessor;
 class VariableDatatype {
 	public:
 	enum class Type : int8_t {
-		    INT64, UINT64, INT32, UINT32, FLOAT, DOUBLE, INVALID, STRING // LONG_DOUBLE not needed right now, it will bloat this structure unnecessarily.
+		    INT64 = 0, UINT64, INT32, UINT32, FLOAT, DOUBLE, STRING, INVALID // LONG_DOUBLE not needed right now, it will bloat this structure unnecessarily.
 		};
 	protected:
 		friend VariableDatatypeAccessor;
