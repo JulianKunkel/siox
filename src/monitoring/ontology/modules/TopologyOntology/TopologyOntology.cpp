@@ -104,12 +104,7 @@ namespace monitoring {
 			}
 
 			const OntologyAttribute lookup_attribute_by_ID( OntologyAttributeID aID ) const throw( NotFoundError ) override {
-
-				TopologyObject obj = topology->lookupObjectById( aID );
-				if ( ! obj ){
-					throw NotFoundError();
-				}
-				TopologyObjectId objID = obj.id();
+				TopologyObjectId objID = aID;
 
 				TopologyValue existingStorageType = topology->getAttribute(objID, typeID);
 				if (! existingStorageType){
@@ -137,6 +132,10 @@ namespace monitoring {
 				// query existing value if any.
 				TopologyValue existingValue = topology->getAttribute( objID, metaValueID[(int) meta.storage_type] );
 				if ( existingValue ){
+					if ( existingValue.value() == value ){
+						// it is valid to set the identical value again
+						return;
+					}
 					throw IllegalStateError("Value has been set already");
 				}
 				

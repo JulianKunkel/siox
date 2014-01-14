@@ -68,7 +68,7 @@ int main( int argc, char const * argv[] )
 	assert( vText == vText2 );
 
 	o->attribute_set_meta_attribute( a1, a2, val );
-	//o->attribute_set_meta_attribute( a1, a2, val );
+	o->attribute_set_meta_attribute( a1, a2, val );
 	o->attribute_set_meta_attribute( a1, a5, vText );
 
 

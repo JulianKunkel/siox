@@ -58,7 +58,7 @@ int main( int argc, char const * argv[] )
    stringstream s;
    s << "AMUXPlugin:ADPIPlugin/data:" << ucaid3;
 
-  	TopologyType dataType = topology->registerType("data");
+  	TopologyType dataType = topology->registerType("ADPIPlugin");
   	TopologyObject ucaid3data = topology->registerObjectByPath( s.str() );
 	
 	TopologyAttribute bucketMinAttribute = topology->registerAttribute( dataType.id(), "min", VariableDatatype::Type::UINT64 );
