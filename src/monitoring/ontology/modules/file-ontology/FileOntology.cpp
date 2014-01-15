@@ -75,6 +75,10 @@ namespace monitoring {
 
 			void save( string filename ) {
 				ofstream file( filename );
+				if( ! file.good() ){
+					cerr << "Could not store ontology in file: " << filename << endl;
+					return;				
+				}
 				boost::archive::xml_oarchive archive( file, boost::archive::no_header | boost::archive::no_codecvt );
 				archive << boost::serialization::make_nvp( "MAX_VALUE", nextID );
 				archive << boost::serialization::make_nvp( "map", attribute_map );

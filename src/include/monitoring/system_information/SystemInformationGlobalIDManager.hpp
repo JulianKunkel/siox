@@ -39,6 +39,7 @@ namespace monitoring {
 			virtual UniqueComponentActivityID   lookup_activityID( UniqueInterfaceID id, const string & name ) const throw( NotFoundError )  = 0;
 			virtual UniqueInterfaceID           lookup_interface_of_activity( UniqueComponentActivityID id ) const throw( NotFoundError )  = 0;
 			virtual const string               lookup_activity_name( UniqueComponentActivityID id ) const throw( NotFoundError )  = 0;
+	
 	};
 
 }
