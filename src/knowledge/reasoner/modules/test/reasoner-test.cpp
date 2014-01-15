@@ -317,15 +317,15 @@ void testReasonerAssessment(){
 	nh->utilization[UtilizationIndex::IO] = 30;
 	nh->utilization[UtilizationIndex::MEMORY] = 10;
 
-	((ReasonerStandardImplementation *) r)->injectLocalHealth(nh);
+	((ReasonerStandardImplementation *) r)->injectNodeHealth(*nh);
 
 	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr1, p1);
 	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr2, p2);
 	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr3, p3);
 
 	// Now we will query the reactions:
-	shared_ptr<HealthStatistics> stats = r->queryRuntimePerformanceIssues();
-	cout << "HealthStatistics: " << stats->to_string() << endl;
+	// shared_ptr<HealthStatistics> stats = r->queryRuntimePerformanceIssues();
+	// cout << "HealthStatistics: " << stats->to_string() << endl;
 
 	nh = ((ReasonerStandardImplementation *) r)->getNodeHealth();
 	assert(nh != nullptr);
@@ -385,8 +385,8 @@ void testReasoner(){
 
 	// Now we will query the reactions:
 	shared_ptr<HealthStatistics> stats = r->queryRuntimePerformanceIssues();
+	cout << "HealthStatistics: " << stats->to_string() << endl;
 
-	cout << "HealthStatistics: " << stats << endl;
 
 	cout << "Anomalies at AT1: " << at1.anomaliesTriggered << endl;
 	cout << "Anomalies at AT2: " << at2.anomaliesTriggered << endl;
@@ -527,11 +527,11 @@ public:
  Create two communication endpoints, r is the global reasoner endpoint,
  push actively data from r2 upstream to r.
  */
-void testReasonerCommunication(){
+void testReasonerCommunicationRaw(){
 
 	cout << endl;
-	cout << "Test: ReasonerCommunication" << endl;
-	cout << "===========================" << endl;
+	cout << "Test: ReasonerCommunicationRaw" << endl;
+	cout << "==============================" << endl;
 
 	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", "siox-core-comm-gio", CORE_COMM_INTERFACE );
 
@@ -626,13 +626,175 @@ void testReasonerCommunication(){
 	delete(comm);
 }
 
+/*
+ Test the communication infrastructure of the reasoner.
+ Create a simple reasoner tree with two process, one node and one system reasoners.
+ Inject data into different levels.
+ */
+void testReasonerCommunication(){
+
+	cout << endl;
+	cout << "Test: ReasonerCommunication" << endl;
+	cout << "===========================" << endl;
+
+	/*
+	 * Obtain some instances from module loader
+	 */
+
+	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", "siox-core-comm-gio", CORE_COMM_INTERFACE );
+	assert(comm != nullptr);
+	comm->init();
+
+	Reasoner * rS = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+	assert( rS != nullptr );
+	{
+	ReasonerStandardImplementationOptions & r_options = rS->getOptions<ReasonerStandardImplementationOptions>();
+	r_options.role = ReasonerStandardImplementationOptions::Role::SYSTEM;
+	r_options.communicationOptions.comm.componentPointer = comm;
+	r_options.communicationOptions.serviceAddress = "ipc://reasonerS";
+	r_options.communicationOptions.reasonerID = "system";
+	rS->init(); // This will start a separate Reasoner thread
+	}
+
+	Reasoner * rN1 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+	assert( rN1 != nullptr );
+	{
+	ReasonerStandardImplementationOptions & r_options = rN1->getOptions<ReasonerStandardImplementationOptions>();
+	r_options.role = ReasonerStandardImplementationOptions::Role::NODE;
+	r_options.communicationOptions.comm.componentPointer = comm;
+	r_options.communicationOptions.serviceAddress = "ipc://reasonerN1";
+	r_options.communicationOptions.upstreamReasoner = "ipc://reasonerS";
+	r_options.communicationOptions.reasonerID = "node1";
+	rN1->init(); // This will start a separate Reasoner thread
+	}
+
+	Reasoner * rP11 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+	assert( rP11 != nullptr );
+	{
+	ReasonerStandardImplementationOptions & r_options = rP11->getOptions<ReasonerStandardImplementationOptions>();
+	r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
+	r_options.communicationOptions.comm.componentPointer = comm;
+	r_options.communicationOptions.serviceAddress = "ipc://reasonerP11";
+	r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
+	r_options.communicationOptions.reasonerID = "process11";
+	rP11->init(); // This will start a separate Reasoner thread
+	}
+
+	Reasoner * rP12 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+	assert( rP12 != nullptr );
+	{
+	ReasonerStandardImplementationOptions & r_options = rP12->getOptions<ReasonerStandardImplementationOptions>();
+	r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
+	r_options.communicationOptions.comm.componentPointer = comm;
+	r_options.communicationOptions.serviceAddress = "ipc://reasonerP12";
+	r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
+	r_options.communicationOptions.reasonerID = "process12";
+	rP12->init(); // This will start a separate Reasoner thread
+	}
+
+	// Reasoner * rP21 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+	// Reasoner * rP22 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+	// Reasoner * rP23 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+	// Reasoner * rN2 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+
+
+	{
+
+		MyReasoningDataReceivedCB mCB1;
+		MyReasoningDataReceivedCB mCB2;
+
+		ReasonerCommunication r(mCB1);
+		ReasonerCommunication r2(mCB2);
+
+		{
+		ReasonerCommunicationOptions o;
+		o.comm.componentPointer = comm;
+		o.serviceAddress = "ipc://reasoner1";
+		o.reasonerID = "global";
+		r.init(o);
+		}
+
+		{
+		ReasonerCommunicationOptions o;
+		o.comm.componentPointer = comm;
+		o.serviceAddress = "ipc://reasoner2";
+		o.upstreamReasoner = "ipc://reasoner1";
+		o.reasonerID = "node1";
+		r2.init(o);
+		}
+
+		// push data upstream
+		// system state:
+		cout << "Exchanging SystemHealth" << endl;
+		{
+		shared_ptr<SystemHealth> sh = shared_ptr<SystemHealth>(new SystemHealth());
+		sh->overallState = HealthState::SLOW;
+		r2.pushSystemStateUpstream(sh, 3);
+
+		mCB1.waitUntilSthHappened();
+
+		assert( mCB1.received_data.timestamp == 3);
+		assert( mCB1.received_sh.overallState == HealthState::SLOW );
+
+		assert( mCB2.received_data.timestamp == 0 );
+		}
+
+		cout << "Exchanging NodeHealth" << endl;
+
+		// node state:
+		{
+		shared_ptr<SystemHealth> sh = shared_ptr<SystemHealth>(new SystemHealth());
+		sh->overallState = HealthState::SLOW;
+		mCB1.sh = sh;
+
+		shared_ptr<NodeHealth> h = shared_ptr<NodeHealth>(new NodeHealth());
+		h->overallState = HealthState::FAST;
+		r2.pushNodeStateUpstream(h, 1);
+
+		mCB1.waitUntilSthHappened();
+		assert( mCB1.received_nh.overallState == HealthState::FAST );
+
+		mCB2.waitUntilSthHappened();
+		assert( mCB2.received_sh.overallState == HealthState::SLOW );
+
+		assert( mCB1.received_data.timestamp == 1);
+		}
+
+		cout << "Exchanging ProcessHealth" << endl;
+		// node state:
+		{
+		shared_ptr<NodeHealth> nh = shared_ptr<NodeHealth>(new NodeHealth());
+		nh->overallState = HealthState::SLOW;
+		mCB1.nh = nh;
+
+		shared_ptr<ProcessHealth> h = shared_ptr<ProcessHealth>(new ProcessHealth());
+		h->overallState = HealthState::FAST;
+		r2.pushProcessStateUpstream(h, 2);
+
+		mCB1.waitUntilSthHappened();
+		assert( mCB1.received_ph.overallState == HealthState::FAST );
+
+		mCB2.waitUntilSthHappened();
+		assert( mCB2.received_nh.overallState == HealthState::SLOW );
+
+		assert( mCB1.received_data.timestamp == 2);
+		}
+
+
+		//assert ( mCB1.sh->overallState == HealthState::FAST );
+	}
+
+	delete(comm);
+}
+
 int main( int argc, char const * argv[] )
 {
-	// testAssessNodeAggregation();
-	// testSerializationOfTypes();
+	testAssessNodeAggregation();
+	testSerializationOfTypes();
+	testReasonerCommunicationRaw();
 	// testReasonerCommunication();
 	// testReasoner();
-	testReasonerAssessment();
+	// testReasonerAssessment();
 
 	cout << endl << "OK" << endl;
 	return 0;

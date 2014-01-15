@@ -38,7 +38,7 @@ struct AnomalyPluginHealthStatistic{
 	string to_string(){
 		ostringstream result;
 
-		result << "[CID " << cid << ", #";
+		result << "[CID " << cid << ": #";
         for( int state = 0; state < HEALTH_STATE_COUNT; state++)
 	        result << occurrences[state] << "#";
 	    result << " +" << positiveIssues.size();
