@@ -21,7 +21,6 @@ class TopologyAssociationMapper: public AssociationMapper {
 
 	TopologyTypeId processID;
 	TopologyTypeId componentID;
-	TopologyTypeId stringID;
 
 	TopologyAttributeId attrStringValue;
 
@@ -37,7 +36,6 @@ class TopologyAssociationMapper: public AssociationMapper {
 
 		processID = topology->registerType("ProcessID").id();
 		componentID = topology->registerType("ComponentID").id();
-		stringID = topology->registerType("StringID").id();
 
 		TopologyType metaAttribute = topology->registerType("AssociationMapperMetaAttribute");
 		metaAttributeTypeID = metaAttribute.id();
@@ -153,25 +151,19 @@ class TopologyAssociationMapper: public AssociationMapper {
 	AssociateID create_instance_mapping( const string & value ) {
 		assert( value.size() > 0 );
 
-		TopologyObject obj = topology->registerObject( pluginTopoObjectID, stringID, value, stringID );
+		TopologyType obj = topology->registerType(value);
 		if ( ! obj ){
 			throw IllegalStateError("Could not register instance mapping: " + value);
 		}
-
-		TopologyValue tv = topology->setAttribute(obj.id(), attrStringValue, value);
-		if ( ! tv){
-			throw IllegalStateError("Could not set the attribute");
-		}
-
 		return obj.id();
 	}
 
 	const string lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) override {
-		TopologyValue existingStorageType = topology->getAttribute( id, attrStringValue );
-		if (! existingStorageType){
+		TopologyType obj = topology->lookupTypeById( id );
+		if (! obj){
 			throw NotFoundError();
 		}
-		return existingStorageType.value().str();
+		return obj.name();
 	}
 
 };
