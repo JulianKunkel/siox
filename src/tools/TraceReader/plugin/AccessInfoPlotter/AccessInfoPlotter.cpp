@@ -195,6 +195,18 @@ void AccessInfoPlotter::finalize(){
 	}
 }
 
+static const uint32_t findUINT32AttributeByID( const Activity * a, OntologyAttributeID oaid )
+{
+ 	const vector<Attribute> & attributes = a->attributeArray();
+	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
+		if( itr->id == oaid )
+			return itr->value.uint32();
+	}
+
+	return 0;
+}
+
+
 static const uint64_t findUINT64AttributeByID( const Activity * a, OntologyAttributeID oaid )
 {
  	const vector<Attribute> & attributes = a->attributeArray();
@@ -234,13 +246,15 @@ OpenFiles * AccessInfoPlotter::findParentFileByFh( const Activity * a ){
 	OpenFiles * parent = findParentFile(a);
 	if ( parent == nullptr ){
 		// add a dummy for the file handle since we do not know the filename
-		if ( unnamedFiles.count(fhID) > 0){
-			parent = & unnamedFiles[fhID];
+		uint32_t fh = findUINT32AttributeByID(a, fhID);
+
+		if ( unnamedFiles.count(fh) > 0){
+			parent = & unnamedFiles[fh];
 		}else{
 			stringstream s;
-			s << fhID;
-			unnamedFiles[fhID] = { s.str(), a->time_start_, fhID + 10000000 };
-			parent = & unnamedFiles[fhID];
+			s << fh;
+			unnamedFiles[fh] = { s.str(), a->time_start_, fh + 10000000 };
+			parent = & unnamedFiles[fh];
 		}
 	}
 	return parent;
