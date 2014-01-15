@@ -301,9 +301,11 @@ __attribute__( ( constructor ) ) void siox_ctor()
 				assert( process_data.system_information_manager );
 				assert( process_data.association_mapper );
 				assert( process_data.amux );
+
 				// Retrieve NodeID and PID now that we have a valid SystemInformationManager
 				process_data.nid = lookup_node_id( hostname );
 				process_data.pid = create_process_id( process_data.nid );
+				process_data.association_mapper->setLocalInformation(hostname, process_data.pid);
 			
 			} catch( exception & e ) {
 				cerr << "Received exception of type " << typeid( e ).name() << " message: " << e.what() << endl;
