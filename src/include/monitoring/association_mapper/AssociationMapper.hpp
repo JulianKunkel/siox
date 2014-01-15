@@ -31,6 +31,23 @@ namespace monitoring {
 			/* These functions are used to create the RemoteInstanceID */
 			virtual AssociateID create_instance_mapping( const string & value ) = 0;
 			virtual const string lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) = 0;
+
+			string localHostname(){
+				return hostname;
+			}
+
+			ProcessID localProcessID(){
+				return processID;
+			}
+
+			void setLocalInformation(const string & hostname, const ProcessID & processID){
+				this->processID = processID;
+				this->hostname = hostname;
+			}
+
+		private:
+			ProcessID processID;
+			string hostname = "undefined";		
 	};
 
 }
