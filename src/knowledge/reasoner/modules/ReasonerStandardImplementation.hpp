@@ -38,6 +38,7 @@ class ReasonerStandardImplementation : public Reasoner, ReasoningDataReceivedCB,
 private:
 		// Our scope: PROCESS, NODE or SYSTEM
 		ReasonerStandardImplementationOptions::Role role;
+		string id;
 
 		list<AnomalyTrigger *> triggers;
 		list<AnomalyPlugin *>  adpis;
@@ -57,13 +58,21 @@ private:
 		uint32_t update_intervall_ms = -1;
 
 		ReasonerCommunication comm;
+		bool upstreamReasonerExists = false;
 
 		// for each host (by ID) we store the latest observation
 		// unordered_map<string, pair<Timestamp, set<HealthStatistics>> > remoteIssues;
 
-		// Aggregator for past and current issues and health statistics
 		// Fields to hold current state and past observations
-		NodeHealth localHealth;
+		//
+		// Local or neighbouring reasoners' states, depending on our role
+		shared_ptr<ProcessHealth> processHealth;
+		shared_ptr<NodeHealth> nodeHealth;
+		shared_ptr<SystemHealth> systemHealth;
+		// States of possible child reasoners, depending on our role
+		unordered_map<string,ProcessHealth> * childProcessesHealthMap = nullptr;
+		unordered_map<string,NodeHealth> * childNodesHealthMap = nullptr;
+		// Aggregators for past and current issues and health statistics
 		shared_ptr<HealthStatistics> gatheredStatistics;
 		uint64_t observationTotal = 0;
 		array<uint64_t, HEALTH_STATE_COUNT> observationCounts;
@@ -84,6 +93,8 @@ protected:
 
 public:
 
+	virtual void injectNodeHealth( const NodeHealth & health ); // TODO: Remove after testing!
+
 	virtual void receivedReasonerProcessHealth(ReasonerMessageReceived & data, ProcessHealth & health) override;
 	virtual void receivedReasonerNodeHealth(ReasonerMessageReceived & data, NodeHealth & health) override;
 	virtual void receivedReasonerSystemHealth(ReasonerMessageReceived & data, SystemHealth & health) override;
@@ -91,7 +102,7 @@ public:
 	virtual shared_ptr<SystemHealth> getSystemHealth() override;
 	virtual shared_ptr<ProcessHealth> getProcessHealth() override;
 
-	ReasonerStandardImplementation() :  comm(*this), localHealth(), gatheredStatistics(new HealthStatistics) {
+	ReasonerStandardImplementation() :  comm(*this), gatheredStatistics(new HealthStatistics) {
 	}
 
 	~ReasonerStandardImplementation();
