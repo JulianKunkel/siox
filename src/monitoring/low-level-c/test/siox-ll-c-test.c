@@ -47,7 +47,7 @@ int main()
 
 	printf( "Looking up existing attribute..." );
 	siox_attribute * m2 = siox_ontology_lookup_attribute_by_name( "local", "throughput/network" );
-	assert( m1 == m2 );
+	assert( m2 != NULL );
 	printf( "success!\n" );
 
 	printf( "Unregistering component..." );

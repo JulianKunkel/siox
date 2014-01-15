@@ -45,6 +45,7 @@ int main( int argc, char const * argv[] )
 	systemInfo->init( );
 
 	facade->getOptions<DereferencingFacadeOptions>().system_information_manager = systemInfo;
+	facade->getOptions<DereferencingFacadeOptions>().topology = topology;
 	facade->init();
 
 	UniqueInterfaceID uid = systemInfo->register_interfaceID( "MPI", "MPICH2" );
@@ -58,7 +59,7 @@ int main( int argc, char const * argv[] )
    stringstream s;
    s << "AMUXPlugin:ADPIPlugin/data:" << ucaid3;
 
-  	TopologyType dataType = topology->registerType("data");
+  	TopologyType dataType = topology->registerType("ADPIPlugin");
   	TopologyObject ucaid3data = topology->registerObjectByPath( s.str() );
 	
 	TopologyAttribute bucketMinAttribute = topology->registerAttribute( dataType.id(), "min", VariableDatatype::Type::UINT64 );
@@ -72,7 +73,6 @@ int main( int argc, char const * argv[] )
 	auto & options = adpi->getOptions<HistogramAdpiOptions>();
 	options.learnCount = 3;
 	options.dereferenceFacade = facade;
-	options.topology = topology;
 
 	options.buckets = 10;
 	options.extremeBucketCount = 1; 

@@ -81,7 +81,7 @@ namespace monitoring {
 				if( filename.length() == 0 ) {
 					filename = "system_info.dat";
 				}
-				cout << "Initializing ID-mapper from file using " << filename << endl;
+				//cout << "Initializing ID-mapper from file using " << filename << endl;
 
 				load( filename );
 			}
@@ -131,7 +131,7 @@ namespace monitoring {
 				CHECK( nodeMap, hostname )
 			}
 
-			const string        &       lookup_node_hostname( NodeID id ) const throw( NotFoundError ) {
+			const string                lookup_node_hostname( NodeID id ) const throw( NotFoundError ) {
 				CHECK( valueStringMap, id )
 			}
 
@@ -216,15 +216,15 @@ namespace monitoring {
 			}
 
 
-			const string        &       lookup_device_local_name( DeviceID id ) const throw( NotFoundError ) {
+			const string               lookup_device_local_name( DeviceID id ) const throw( NotFoundError ) {
 				CHECK( valueStringMap, id )
 			}
 
-			const string        &       lookup_filesystem_name( FilesystemID id ) const throw( NotFoundError ) {
+			const string               lookup_filesystem_name( FilesystemID id ) const throw( NotFoundError ) {
 				CHECK( valueStringMap, id )
 			}
 
-			const string        &       lookup_activity_name( UniqueComponentActivityID id ) const throw( NotFoundError ) {
+			const string               lookup_activity_name( UniqueComponentActivityID id ) const throw( NotFoundError ) {
 				CHECK( valueStringMap, id )
 			}
 
@@ -266,7 +266,7 @@ namespace monitoring {
 				}
 			}
 
-			const string        &       lookup_interface_name( UniqueInterfaceID id ) const throw( NotFoundError )  {
+			const string               lookup_interface_name( UniqueInterfaceID id ) const throw( NotFoundError )  {
 				auto res = interfaceImplStrMap.find( id );
 				if( res != interfaceImplStrMap.end() ) {
 					return res->second.first;
@@ -275,7 +275,7 @@ namespace monitoring {
 				}
 			}
 
-			const string        &       lookup_interface_implementation( UniqueInterfaceID id ) const throw( NotFoundError ) {
+			const string               lookup_interface_implementation( UniqueInterfaceID id ) const throw( NotFoundError ) {
 				auto res = interfaceImplStrMap.find( id );
 				if( res != interfaceImplStrMap.end() ) {
 					return res->second.second;

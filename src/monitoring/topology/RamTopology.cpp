@@ -18,7 +18,7 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 
-
+
 class RamTopology : public Topology {
 	public:
 		RamTopology();
@@ -274,7 +274,7 @@ TopologyRelation RamTopology::lookupRelation( TopologyObjectId parent, TopologyT
 }
 
 
-Topology::TopologyRelationList RamTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
+TopologyRelationList RamTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
 	ChildMap* childMap = NULL;
 	objectsLock.lock_shared();
 	if( parent < objectsById.size() ) childMap = childMapsById[parent];
@@ -291,7 +291,7 @@ Topology::TopologyRelationList RamTopology::enumerateChildren( TopologyObjectId 
 }
 
 
-Topology::TopologyRelationList RamTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
+TopologyRelationList RamTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
 	ParentVector* parentVector = NULL;
 	objectsLock.lock_shared();
 	if( child < objectsById.size() ) parentVector = parentVectorsById[child];
@@ -351,7 +351,6 @@ TopologyAttribute RamTopology::lookupAttributeById( TopologyAttributeId attribut
 	return result;
 }
 
-
 TopologyValue RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
 	TopologyValue result;
 
@@ -381,7 +380,6 @@ TopologyValue RamTopology::setAttribute( TopologyObjectId object, TopologyAttrib
 	return result;
 }
 
-
 TopologyValue RamTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
 	TopologyValue result;
 	AttributeMap* attributeMap = NULL;
@@ -396,8 +394,7 @@ TopologyValue RamTopology::getAttribute( TopologyObjectId object, TopologyAttrib
 	return result;
 }
 
-
-Topology::TopologyValueList RamTopology::enumerateAttributes( TopologyObjectId object ) throw() {
+TopologyValueList RamTopology::enumerateAttributes( TopologyObjectId object ) throw() {
 	AttributeMap* attributeMap = NULL;
 	objectsLock.lock_shared();
 	if( object < objectsById.size() ) attributeMap = attributeMapsById[object];

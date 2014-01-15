@@ -72,6 +72,7 @@ class HistogramAdpiPlugin: public ActivityMultiplexerPlugin, public ComponentRep
 
 		TopologyAttributeId bucketMinAttributID;
 		TopologyAttributeId bucketMaxAttributID;
+		Topology * topology;
 };
 
 
@@ -85,20 +86,23 @@ void HistogramAdpiPlugin::initPlugin() {
 	assert( facade != nullptr );
 
 	HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
-	Topology * topology =  GET_INSTANCE(Topology, o.topology);
+	ActivityPluginDereferencing * f = GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade);
+	topology =  f->topology();
 
 	assert(topology);
 
 	TopologyType dataType = topology->registerType("data");
+	TopologyType adpiType = topology->registerType("ADPIPlugin");
+
 	pluginTopoTypeID = dataType.id();
 
 	TopologyObject myData = topology->registerObjectByPath( "AMUXPlugin:ADPIPlugin" );
 	pluginTopoObjectID = myData.id();
 	
-	TopologyAttribute bucketMinAttribute = topology->registerAttribute( dataType.id(), "min", VariableDatatype::Type::UINT64 );
+	TopologyAttribute bucketMinAttribute = topology->registerAttribute( adpiType.id(), "min", VariableDatatype::Type::UINT64 );
 	bucketMinAttributID = bucketMinAttribute.id();
 
-	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( dataType.id(), "max", VariableDatatype::Type::UINT64 );
+	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( adpiType.id(), "max", VariableDatatype::Type::UINT64 );
 	bucketMaxAttributID = bucketMaxAttribute.id();
 }
 
@@ -109,9 +113,7 @@ static string convertAIDToString(UniqueComponentActivityID aid){
 }
 
 void HistogramAdpiPlugin::Notify( shared_ptr<Activity> activity ) {
-	HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
-	Topology * topology =  GET_INSTANCE(Topology, o.topology);
-
+	const HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
 	auto itr = statistics.find(activity->ucaid_);	
 	if ( itr == statistics.end() ){
 		statistics[activity->ucaid_] = {};

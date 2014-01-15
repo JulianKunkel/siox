@@ -21,27 +21,27 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 			return theTopology;
 		}
 
-		virtual const OntologyAttribute & lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) {
+		virtual const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) {
 			return ontology->lookup_attribute_by_name( domain, name );
 		}
 
-		virtual const OntologyAttribute & lookup_attribute_by_ID( const OntologyAttributeID aID ) const throw( NotFoundError ) {
+		virtual const OntologyAttribute lookup_attribute_by_ID( const OntologyAttributeID aID ) const throw( NotFoundError ) {
 			return ontology->lookup_attribute_by_ID( aID );
 		}
 
-		virtual const OntologyValue & lookup_meta_attribute( const OntologyAttribute & attribute, const OntologyAttribute & meta ) const throw( NotFoundError ) {
+		virtual const OntologyValue lookup_meta_attribute( const OntologyAttribute & attribute, const OntologyAttribute & meta ) const throw( NotFoundError ) {
 			return ontology->lookup_meta_attribute( attribute, meta );
 		}
 
-		const OntologyValue & lookup_process_attribute( const  ProcessID & pid, const  OntologyAttribute & att ) const throw( NotFoundError ) {
+		const OntologyValue lookup_process_attribute( const  ProcessID & pid, const  OntologyAttribute & att ) const throw( NotFoundError ) {
 			return association_mapper->lookup_process_attribute( pid, att );
 		}
 
-		const OntologyValue & lookup_component_attribute( const ComponentID & cid, const  OntologyAttribute & att ) const throw( NotFoundError ) {
+		const OntologyValue lookup_component_attribute( const ComponentID & cid, const  OntologyAttribute & att ) const throw( NotFoundError ) {
 			return association_mapper->lookup_component_attribute( cid, att );
 		}
 
-		const string & lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) {
+		const string lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) {
 			return association_mapper->lookup_instance_mapping( id );
 		}
 
