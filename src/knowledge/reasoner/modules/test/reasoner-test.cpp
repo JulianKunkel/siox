@@ -789,11 +789,11 @@ void testReasonerCommunication(){
 
 int main( int argc, char const * argv[] )
 {
-	testAssessNodeAggregation();
-	testSerializationOfTypes();
-	testReasonerCommunicationRaw();
+	// testAssessNodeAggregation();
+	// testSerializationOfTypes();
+	// testReasonerCommunicationRaw();
 	// testReasonerCommunication();
-	// testReasoner();
+	testReasoner();
 	// testReasonerAssessment();
 
 	cout << endl << "OK" << endl;

@@ -58,6 +58,7 @@ private:
 		uint32_t update_intervall_ms = -1;
 
 		ReasonerCommunication comm;
+		bool upstreamReasonerExists = false;
 
 		// for each host (by ID) we store the latest observation
 		// unordered_map<string, pair<Timestamp, set<HealthStatistics>> > remoteIssues;

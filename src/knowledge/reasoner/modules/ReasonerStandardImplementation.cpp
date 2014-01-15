@@ -247,15 +247,18 @@ void ReasonerStandardImplementation::PeriodicRun(){
 			switch ( role ) {
 				case ReasonerStandardImplementationOptions::Role::PROCESS:
 					assessProcessHealth();
-					comm.pushProcessStateUpstream( processHealth, time(0));
+					if (upstreamReasonerExists)
+						comm.pushProcessStateUpstream( processHealth, time(0));
 					break;
 				case ReasonerStandardImplementationOptions::Role::NODE:
 					assessNodeHealth();
-					comm.pushNodeStateUpstream( nodeHealth, time(0));
+					if (upstreamReasonerExists)
+						comm.pushNodeStateUpstream( nodeHealth, time(0));
 					break;
 				case ReasonerStandardImplementationOptions::Role::SYSTEM:
 					assessSystemHealth();
-					comm.pushSystemStateUpstream( systemHealth, time(0));
+					if (upstreamReasonerExists)
+						comm.pushSystemStateUpstream( systemHealth, time(0));
 					break;
 
 			}
@@ -350,6 +353,8 @@ void ReasonerStandardImplementation::init(){
 	update_intervall_ms = options.update_intervall_ms;
 
 	comm.init( options.communicationOptions );
+	if (options.communicationOptions.upstreamReasoner != "")
+		upstreamReasonerExists = true;
 
 	periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
 }
@@ -445,7 +450,8 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 		}
 	}
 
-	comm.pushNodeStateUpstream(nodeHealth, 1); //time(0));
+	if (upstreamReasonerExists)
+		comm.pushNodeStateUpstream(nodeHealth, 1); //time(0));
 
 	cout << "State of resoner " << id << ": " << toString(nodeHealth->overallState) << endl;
 }
