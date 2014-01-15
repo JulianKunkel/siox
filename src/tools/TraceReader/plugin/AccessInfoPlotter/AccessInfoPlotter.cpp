@@ -278,7 +278,7 @@ void AccessInfoPlotter::handlePOSIXWrite(Activity * a){
 	uint64_t realPosition = position;
 	if ( position == INVALID_UINT64){
 		realPosition = parent->currentPosition;
-		realPosition += bytes;
+		parent->realPosition += bytes;
 	}
 	parent->writeAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
@@ -291,7 +291,7 @@ void AccessInfoPlotter::handlePOSIXRead(Activity * a){
 	uint64_t realPosition = position;
 	if ( position == INVALID_UINT64){
 		realPosition = parent->currentPosition;
-		realPosition += bytes;
+		parent->realPosition += bytes;
 	}	
 	parent->readAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
