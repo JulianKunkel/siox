@@ -300,7 +300,6 @@ void testReasonerAssessment(){
 	r_options.communicationOptions.serviceAddress = "ipc://reasoner1";
 	r->init(); // This will start a separate Reasoner thread
 	}
-
 	ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
 	ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
 	ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
@@ -320,16 +319,17 @@ void testReasonerAssessment(){
 
 	((ReasonerStandardImplementation *) r)->injectLocalHealth(nh);
 
-
 	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr1, p1);
 	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr2, p2);
 	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr3, p3);
 
 	// Now we will query the reactions:
 	shared_ptr<HealthStatistics> stats = r->queryRuntimePerformanceIssues();
-	cout << "HealthStatistics: " << stats << endl;
+	cout << "HealthStatistics: " << stats->to_string() << endl;
 
-	cout << "Node health: " << toString(((ReasonerStandardImplementation *) r)->getProcessHealth()->overallState) << endl;
+	nh = ((ReasonerStandardImplementation *) r)->getNodeHealth();
+	assert(nh != nullptr);
+	cout << "Node health: " << toString(nh->overallState) << endl;
 
 	delete(r);
 	delete(comm);
@@ -628,10 +628,10 @@ void testReasonerCommunication(){
 
 int main( int argc, char const * argv[] )
 {
-	testAssessNodeAggregation();
+	// testAssessNodeAggregation();
 	// testSerializationOfTypes();
 	// testReasonerCommunication();
-	testReasoner();
+	// testReasoner();
 	testReasonerAssessment();
 
 	cout << endl << "OK" << endl;

@@ -55,8 +55,10 @@ shared_ptr<NodeHealth> ReasonerStandardImplementation::getNodeHealth(){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		if ( role == ReasonerStandardImplementationOptions::Role::NODE )
+		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
+			assessNodeHealth();
 			return localHealth;
+		}
 	}
 	// For other roles, return NULL
 	return nullptr;
@@ -228,20 +230,20 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				}
 				cout << endl;
 			}
-		}
 
-		// Run assessment appropriate to reasoner's role
-		switch ( role ) {
-			case ReasonerStandardImplementationOptions::Role::PROCESS:
-				assessProcessHealth();
-				break;
-			case ReasonerStandardImplementationOptions::Role::NODE:
-				assessNodeHealth();
-				break;
-			case ReasonerStandardImplementationOptions::Role::SYSTEM:
-				assessSystemHealth();
-				break;
+			// Run assessment appropriate to reasoner's role
+			switch ( role ) {
+				case ReasonerStandardImplementationOptions::Role::PROCESS:
+					assessProcessHealth();
+					break;
+				case ReasonerStandardImplementationOptions::Role::NODE:
+					assessNodeHealth();
+					break;
+				case ReasonerStandardImplementationOptions::Role::SYSTEM:
+					assessSystemHealth();
+					break;
 
+			}
 		}
 
 		// TODO Think:

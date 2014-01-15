@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <sstream>
 
 #include <knowledge/reasoner/ReasoningDatatypes.hpp>
 
@@ -32,6 +33,20 @@ struct AnomalyPluginHealthStatistic{
 
 	unordered_map<string, HealthIssue> positiveIssues;
 	unordered_map<string, HealthIssue> negativeIssues;
+
+
+	string to_string(){
+		ostringstream result;
+
+		result << "[CID " << cid << ", #";
+        for( int state = 0; state < HEALTH_STATE_COUNT; state++)
+	        result << occurrences[state] << "#";
+	    result << " +" << positiveIssues.size();
+	    result << " -" << negativeIssues.size();
+	    result << "]";
+
+		return result.str();
+	}
 };
 
 
@@ -41,6 +56,18 @@ struct AnomalyPluginHealthStatistic{
 struct HealthStatistics{
 	// @todo TODO: Any reason not to use the full CID as a key but only ComponentID.id?
 	unordered_map<ComponentID, AnomalyPluginHealthStatistic> map;
+
+
+	string to_string(){
+		ostringstream result;
+
+		result << "[" << endl;
+        for( auto itr = map.begin(); itr != map.end(); itr++ )
+        	result << "\t" << itr->second.to_string() << endl;
+		result << "]";
+
+		return result.str();
+	}
 };
 
 

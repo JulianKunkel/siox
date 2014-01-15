@@ -6,6 +6,7 @@
 #include <list>
 #include <array>
 #include <unordered_map>
+#include <sstream>
 
 using namespace monitoring;
 
@@ -58,6 +59,18 @@ struct HealthIssue{
 			cout << "Error: HealthIssue \"" << hi.name << "\" cannot be aggregated into \"" << this->name << "\"!" << endl;
 		}
 	}
+
+	string to_string(){
+		ostringstream result;
+
+		result << "[\"" << name << "\", ";
+        result << occurrences << "x, ";
+	    result << delta_time_ms << " ms";
+	    result << "]";
+
+		return result.str();
+	}
+
 };
 
 
@@ -67,9 +80,11 @@ struct HealthIssueList{
 
 	HealthIssueList() : issues() {}
 
+
 	bool operator==( const HealthIssueList & hil ){
 		return this->issues == hil.issues;
 	}
+
 
 	void add( const HealthIssue & hi ){
 		for( auto itr = this->issues.begin(); itr != this->issues.end(); itr++ ){
@@ -82,12 +97,24 @@ struct HealthIssueList{
 		this->issues.push_back(hi);
 	}
 
+
 	void add( const HealthIssueList hil ){
 		for( auto itr = hil.issues.begin(); itr != hil.issues.end(); itr++ ){
 			this->add(*itr);
 		}
 	}
 
+
+	string to_string(){
+		ostringstream result;
+
+		result << "[ " << issues.size() << "issues:" << endl;
+        for( auto itr = issues.begin(); itr != issues.end(); itr++)
+        	result << "\t" << itr->to_string() << endl;
+	    result << "]";
+
+		return result.str();
+	}
 };
 
 
@@ -120,6 +147,18 @@ struct HealthIssueMap{
 				this->issues[itr->first] = itr->second;
 			}
 		}
+	}
+
+
+	string to_string(){
+		ostringstream result;
+
+		result << "[ " << issues.size() << "issues:" << endl;
+        for( auto itr = issues.begin(); itr != issues.end(); itr++)
+        	result << "\t" << itr->second.to_string() << endl;
+	    result << "]";
+
+		return result.str();
 	}
 };
 
