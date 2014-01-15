@@ -25,6 +25,8 @@ struct OpenFiles{
 	Timestamp openTime;
 	Timestamp closeTime;
 
+	uint64_t currentPosition;
+
 	ActivityID aid; 
 
 	vector<Access> readAccesses;
@@ -65,6 +67,14 @@ class AccessInfoPlotter: public TraceReaderPlugin{
 		void handlePOSIXWrite(Activity * activity);
 		void handlePOSIXRead(Activity * activity);
 		void handlePOSIXClose(Activity * activity);
+		void handlePOSIXSeek(Activity * a);
+
+		// Ontology attributes needed in the plugin
+		OntologyAttributeID fhID;
+		OntologyAttributeID fname;
+		OntologyAttributeID bytesReadID;
+		OntologyAttributeID positionID;
+		OntologyAttributeID bytesWrittenID;		
 };
 
 #endif
