@@ -14,6 +14,8 @@
 
 #include "DatabaseTopologyOptions.hpp"
 
+#include <sstream>
+
 using namespace std;
 using namespace core;
 using namespace monitoring;
@@ -22,7 +24,6 @@ using namespace boost;
 
 class DatabaseTopology : public Topology {
     public:
-        DatabaseTopology();
         ~DatabaseTopology();
 
         virtual void init();
@@ -100,20 +101,20 @@ class DatabaseTopology : public Topology {
         }
 };
 
-DatabaseTopology::DatabaseTopology() {
-    // TODO: Alles in init?
-}
-
 DatabaseTopology::~DatabaseTopology() {
     conn->disconnect();
 }
 
 void DatabaseTopology::init() {
-    conn = new connection("hostaddr=127.0.0.1 port=5432 user=postgres password=unitek dbname=siox");
+    DatabaseTopologyOptions & o = getOptions<DatabaseTopologyOptions>();
+    stringstream endpoint;
+    endpoint << "hostaddr=" << o.hostaddress << " port=" << o.port << " user=" << o.username << " password=" << o.password << " dbname=" << o.dbname;
+
+    conn = new connection(endpoint.str());
 }
 
 ComponentOptions* DatabaseTopology::AvailableOptions() {
-    return new DatabaseTopologyOptions;
+    return new DatabaseTopologyOptions();
 }
 
 TopologyType DatabaseTopology::registerType( const string& name ) throw() {
