@@ -19,7 +19,14 @@ using namespace monitoring;
 int main( int argc, char const * argv[] ) throw() {
 
 	Topology* topology = module_create_instance<Topology>( "", "siox-monitoring-DatabaseTopology", MONITORING_TOPOLOGY_INTERFACE );
-	topology->getOptions<DatabaseTopologyOptions>();
+
+	DatabaseTopologyOptions & o = topology->getOptions<DatabaseTopologyOptions>();
+	o.hostaddress = "127.0.0.1";
+	o.port = 5432;
+	o.username = "postgres";
+	o.password = "unitek";
+	o.dbname = "siox";
+
 	topology->init();
 
 	//Test types
