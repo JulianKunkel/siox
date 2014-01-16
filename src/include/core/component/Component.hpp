@@ -36,6 +36,11 @@ namespace core {
 				init();
 			}
 
+			// This function will (and must) be called before the destructor of the object is called.
+			virtual void finalize(){
+
+			}
+
 			inline ComponentOptions & getOptions() {
 				if( options == nullptr ) {
 					options = AvailableOptions();
@@ -56,8 +61,9 @@ namespace core {
 			//virtual void shutdown() = 0; // Shutdown is merged into the destructor.
 
 			virtual ~Component() {
-				if( options != nullptr )
+				if( options != nullptr ){
 					delete( options );
+				}
 			}
 	};
 

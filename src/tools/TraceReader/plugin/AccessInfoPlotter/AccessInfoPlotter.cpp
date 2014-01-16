@@ -17,6 +17,9 @@ using namespace std;
 using namespace monitoring;
 using namespace tools;
 
+#define INVALID_UINT64 ((uint64_t) -1)
+#define IGNORE_ERROR(x) try{ x } catch(NotFoundError & e){}
+
 void AccessInfoPlotter::moduleOptions(program_options::options_description & od){
 	od.add_options()
 		( "plotFileGraphRegex", program_options::value<string>()->default_value( ".*" ), "Extract for each file matching the regular expression the time/offset tupels for plotting. The regular expression for which access information is extracted" );
@@ -31,11 +34,23 @@ void AccessInfoPlotter::init(program_options::variables_map * vm, TraceReader * 
 	o = tr->getOntology();
 
 	addActivityHandler("POSIX", "", "open", & AccessInfoPlotter::handlePOSIXOpen);
+	addActivityHandler("POSIX", "", "creat", & AccessInfoPlotter::handlePOSIXOpen);
 	addActivityHandler("POSIX", "", "write", & AccessInfoPlotter::handlePOSIXWrite);
 	addActivityHandler("POSIX", "", "read", & AccessInfoPlotter::handlePOSIXRead);
+	addActivityHandler("POSIX", "", "pwrite", & AccessInfoPlotter::handlePOSIXWrite);
+	addActivityHandler("POSIX", "", "pread", & AccessInfoPlotter::handlePOSIXRead);	
+	addActivityHandler("POSIX", "", "writev", & AccessInfoPlotter::handlePOSIXWrite);
+	addActivityHandler("POSIX", "", "readv", & AccessInfoPlotter::handlePOSIXRead);
 	addActivityHandler("POSIX", "", "close", & AccessInfoPlotter::handlePOSIXClose);
 	addActivityHandler("POSIX", "", "sync", & AccessInfoPlotter::handlePOSIXSync);
 	addActivityHandler("POSIX", "", "fdatasync", & AccessInfoPlotter::handlePOSIXSync);
+	addActivityHandler("POSIX", "", "lseek", & AccessInfoPlotter::handlePOSIXSeek);
+
+	IGNORE_ERROR(fhID = o->lookup_attribute_by_name( "POSIX", "descriptor/filehandle" ).aID;)
+	IGNORE_ERROR(fname = o->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;)
+	IGNORE_ERROR(bytesReadID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesRead" ).aID;)
+	IGNORE_ERROR(positionID = o->lookup_attribute_by_name( "POSIX", "file/position" ).aID;)
+	IGNORE_ERROR(bytesWrittenID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;)
 }
 
 void AccessInfoPlotter::addActivityHandler(const string & interface, const string & impl, const string & a, void (AccessInfoPlotter::* handler)(Activity*) )
@@ -43,8 +58,13 @@ void AccessInfoPlotter::addActivityHandler(const string & interface, const strin
 	SystemInformationGlobalIDManager * s = tr->getSystemInformationGlobalIDManager();
 
 	UniqueInterfaceID uiid = s->lookup_interfaceID( interface, impl );	
-	UniqueComponentActivityID  ucaid = s->lookup_activityID( uiid, a );
-	activityHandlers[ucaid] = handler;
+
+	try{
+		UniqueComponentActivityID  ucaid = s->lookup_activityID( uiid, a );
+		activityHandlers[ucaid] = handler;
+	}catch(NotFoundError & e){
+		// we are not installing the handler if the type is unknown
+	}
 }
 
 Activity * AccessInfoPlotter::processNextActivity(Activity * a){
@@ -175,16 +195,38 @@ void AccessInfoPlotter::finalize(){
 	}
 }
 
- static const AttributeValue & findAttributeByID( const Activity * a, OntologyAttributeID oaid )
- {
+static const uint32_t findUINT32AttributeByID( const Activity * a, OntologyAttributeID oaid )
+{
  	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
 		if( itr->id == oaid )
-			return itr->value;
+			return itr->value.uint32();
 	}
 
-	cerr << "Unexpected, did not find attribute with ID " << oaid << endl;
-	exit(1);
+	return 0;
+}
+
+
+static const uint64_t findUINT64AttributeByID( const Activity * a, OntologyAttributeID oaid )
+{
+ 	const vector<Attribute> & attributes = a->attributeArray();
+	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
+		if( itr->id == oaid )
+			return itr->value.uint64();
+	}
+
+	return INVALID_UINT64;
+}
+
+static const char * findStrAttributeByID( const Activity * a, OntologyAttributeID oaid )
+{
+ 	const vector<Attribute> & attributes = a->attributeArray();
+	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
+		if( itr->id == oaid )
+			return itr->value.str();
+	}
+
+	return "unknown";
 }
 
 OpenFiles * AccessInfoPlotter::findParentFile( const Activity * a )
@@ -204,18 +246,23 @@ OpenFiles * AccessInfoPlotter::findParentFileByFh( const Activity * a ){
 	OpenFiles * parent = findParentFile(a);
 	if ( parent == nullptr ){
 		// add a dummy for the file handle since we do not know the filename
-		OntologyAttributeID fhID = o->lookup_attribute_by_name( "POSIX", "descriptor/filehandle" ).aID;
+		uint32_t fh = findUINT32AttributeByID(a, fhID);
 
-		if ( unnamedFiles.count(fhID) > 0){
-			parent = & unnamedFiles[fhID];
+		if ( unnamedFiles.count(fh) > 0){
+			parent = & unnamedFiles[fh];
 		}else{
 			stringstream s;
-			s << fhID;
-			unnamedFiles[fhID] = { s.str(), a->time_start_, fhID + 10000000 };
-			parent = & unnamedFiles[fhID];
+			s << fh;
+			unnamedFiles[fh] = { s.str(), a->time_start_, fh + 10000000 };
+			parent = & unnamedFiles[fh];
 		}
 	}
 	return parent;
+}
+
+void AccessInfoPlotter::handlePOSIXSeek(Activity * a){
+	OpenFiles * parent = findParentFileByFh(a);
+	parent->currentPosition = findUINT64AttributeByID(a, positionID);
 }
 
 void AccessInfoPlotter::handlePOSIXSync(Activity * a){
@@ -224,29 +271,33 @@ void AccessInfoPlotter::handlePOSIXSync(Activity * a){
 }
 
 void AccessInfoPlotter::handlePOSIXWrite(Activity * a){	
-	OntologyAttributeID bytesID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;
-	OntologyAttributeID positionID = o->lookup_attribute_by_name( "POSIX", "file/position" ).aID;
+	uint64_t bytes = findUINT64AttributeByID(a, bytesWrittenID);
+	uint64_t position = findUINT64AttributeByID(a, positionID);
 
-	uint64_t bytes = findAttributeByID(a, bytesID).uint64();
-	uint64_t position = findAttributeByID(a, positionID).uint64();
 	OpenFiles * parent = findParentFileByFh(a);
+	uint64_t realPosition = position;
+	if ( position == INVALID_UINT64){
+		realPosition = parent->currentPosition;
+		parent->currentPosition += bytes;
+	}
 	parent->writeAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
 
 void AccessInfoPlotter::handlePOSIXRead(Activity * a){	
-	OntologyAttributeID bytesID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesRead" ).aID;
-	OntologyAttributeID positionID = o->lookup_attribute_by_name( "POSIX", "file/position" ).aID;
-
-	uint64_t bytes = findAttributeByID(a, bytesID).uint64();
-	uint64_t position = findAttributeByID(a, positionID).uint64();
+	uint64_t bytes = findUINT64AttributeByID(a, bytesReadID);
+	uint64_t position = findUINT64AttributeByID(a, positionID);
+	
 	OpenFiles * parent = findParentFileByFh(a);
+	uint64_t realPosition = position;
+	if ( position == INVALID_UINT64){
+		realPosition = parent->currentPosition;
+		parent->currentPosition += bytes;
+	}	
 	parent->readAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
 
 void AccessInfoPlotter::handlePOSIXOpen(Activity * a){
-	OntologyAttributeID fname = o->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;
-
-	openFiles[ a->aid() ] = { findAttributeByID(a, fname).str(), a->time_start_, 0, a->aid_};
+	openFiles[ a->aid() ] = { findStrAttributeByID(a, fname), a->time_start_, 0, 0, a->aid_};
 }
 
 void AccessInfoPlotter::handlePOSIXClose(Activity * a){

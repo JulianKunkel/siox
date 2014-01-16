@@ -15,6 +15,12 @@
 
 
 #include "../HistogramAdpiOptions.hpp"
+#include <monitoring/topology/Topology.hpp>
+
+#include <monitoring/topology/RamTopologyOptions.hpp>
+
+using namespace core;
+using namespace monitoring;
 
 using namespace std;
 
@@ -29,16 +35,39 @@ int main( int argc, char const * argv[] )
 	ActivityPluginDereferencing * facade = core::module_create_instance<ActivityPluginDereferencing>( "", "siox-knowledge-DereferencingFacade", ACTIVITY_DEREFERENCING_FACADE_INTERFACE );
 
 	SystemInformationGlobalIDManager * systemInfo = core::module_create_instance<SystemInformationGlobalIDManager>( "", "siox-monitoring-FileBasedSystemInformation", SYSTEMINFORMATION_GLOBALID_MANAGER_INTERFACE );
+
+	Topology* topology = module_create_instance<Topology>( "", "siox-monitoring-RamTopology", MONITORING_TOPOLOGY_INTERFACE );
+	topology->getOptions<RamTopologyOptions>();
+	topology->init();
+
 	
 	systemInfo->getOptions<FileBasedSystemInformationOptions>().filename = "system-info-test.txt";
 	systemInfo->init( );
 
 	facade->getOptions<DereferencingFacadeOptions>().system_information_manager = systemInfo;
+	facade->getOptions<DereferencingFacadeOptions>().topology = topology;
 	facade->init();
 
 	UniqueInterfaceID uid = systemInfo->register_interfaceID( "MPI", "MPICH2" );
 	UniqueComponentActivityID ucaid1 = systemInfo->register_activityID( uid, "open" );
 	UniqueComponentActivityID ucaid2 = systemInfo->register_activityID( uid, "write" );
+
+	UniqueComponentActivityID ucaid3 = systemInfo->register_activityID( uid, "close" );
+
+   // register a topology entry with pre-filled data for ucaid3 to test if we read it properly
+   {
+   stringstream s;
+   s << "AMUXPlugin:ADPIPlugin/data:" << ucaid3;
+
+  	TopologyType dataType = topology->registerType("ADPIPlugin");
+  	TopologyObject ucaid3data = topology->registerObjectByPath( s.str() );
+	
+	TopologyAttribute bucketMinAttribute = topology->registerAttribute( dataType.id(), "min", VariableDatatype::Type::UINT64 );
+	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( dataType.id(), "max", VariableDatatype::Type::UINT64 );
+
+	topology->setAttribute( ucaid3data.id(), bucketMinAttribute.id(), (uint64_t) 2000 );
+	topology->setAttribute( ucaid3data.id(), bucketMaxAttribute.id(), (uint64_t) 4000 );
+	}
 
 
 	auto & options = adpi->getOptions<HistogramAdpiOptions>();
@@ -146,6 +175,52 @@ int main( int argc, char const * argv[] )
 
 	reporter->processFinalReport( lst );
 
+	// dump the current topology relation list
+	
+	TopologyObject stored1;
+	TopologyObject stored2;
+	TopologyObject stored3;
+	{
+	TopologyType typ = topology->lookupTypeByName("data");
+	assert(typ);
+
+	stringstream path;
+	path << "AMUXPlugin:ADPIPlugin/data:" << ucaid1;
+	stored1 = topology->lookupObjectByPath( path.str() );
+	assert(stored1 != nullptr);
+	}
+	{
+	stringstream path;
+	path << "AMUXPlugin:ADPIPlugin/data:" << ucaid2;
+	stored2 = topology->lookupObjectByPath( path.str() );
+	assert(stored2 == nullptr);
+	}
+
+	// test if the injected data for ucaid3 has been set properly
+	{
+	stringstream path;
+	path << "AMUXPlugin:ADPIPlugin/data:" << ucaid3;
+	stored3 = topology->lookupObjectByPath( path.str() );
+	assert(stored3 != nullptr);
+	}
+
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid3, 0, 1000, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+
+	{
+	unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> aphsMap = dynamic_cast<AnomalyPlugin*>(adpi)->queryRecentObservations();
+
+	assert( aphsMap->size() == 1 );
+
+	AnomalyPluginHealthStatistic & aph = (*aphsMap)[cid];
+	assert( aph.cid == cid );
+	
+	assert( aph.positiveIssues.size() == 0 );
+	assert( aph.negativeIssues.size() == 0 );
+
+	assert( aph.occurrences[HealthState::ABNORMAL_FAST ] == 1 );
+	}
+
+
 
 	cout << "OK" << endl;
 
@@ -153,6 +228,7 @@ int main( int argc, char const * argv[] )
 	delete( facade );
 	delete( adpi );
 	delete( reporter );
+	delete( topology );
 
 	return 0;
 }

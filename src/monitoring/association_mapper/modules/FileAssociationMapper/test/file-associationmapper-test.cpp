@@ -31,7 +31,10 @@ int main( int argc, char const * argv[] )
 	cout << aid1 << endl;
 	cout << aid2 << endl;
 
-	o->lookup_instance_mapping( 444 );
+	try{
+		o->lookup_instance_mapping( 444 );
+		assert(false);
+	}catch(NotFoundError & e){}
 
 	AssociateID aid3 = o->create_instance_mapping( i1 );
 	cout << aid3 << endl;

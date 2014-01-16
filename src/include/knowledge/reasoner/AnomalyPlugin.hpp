@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <sstream>
 
 #include <knowledge/reasoner/ReasoningDatatypes.hpp>
 
@@ -22,13 +23,51 @@ namespace knowledge {
 // };
 
 
+/**
+ * Aggregate of a component's health report, as compiled by an ADPI.
+ */
 struct AnomalyPluginHealthStatistic{
 	ComponentID cid;
-	
+
 	array<uint32_t, HEALTH_STATE_COUNT> occurrences;
 
 	unordered_map<string, HealthIssue> positiveIssues;
 	unordered_map<string, HealthIssue> negativeIssues;
+
+
+	string to_string(){
+		ostringstream result;
+
+		result << "[CID " << cid << ": #";
+        for( int state = 0; state < HEALTH_STATE_COUNT; state++)
+	        result << occurrences[state] << "#";
+	    result << " +" << positiveIssues.size();
+	    result << " -" << negativeIssues.size();
+	    result << "]";
+
+		return result.str();
+	}
+};
+
+
+/**
+ * Maps components' CIDs to an ADPI-generated health status report for each.
+ */
+struct HealthStatistics{
+	// @todo TODO: Any reason not to use the full CID as a key but only ComponentID.id?
+	unordered_map<ComponentID, AnomalyPluginHealthStatistic> map;
+
+
+	string to_string(){
+		ostringstream result;
+
+		result << "[" << endl;
+        for( auto itr = map.begin(); itr != map.end(); itr++ )
+        	result << "\t" << itr->second.to_string() << endl;
+		result << "]";
+
+		return result.str();
+	}
 };
 
 
@@ -59,7 +98,7 @@ class AnomalyPlugin {
 			if( find == recentObservations->end() ) {
 				// append an empty health state
 				(*recentObservations)[cid] = { cid };
-				find = recentObservations->find( cid );		
+				find = recentObservations->find( cid );
 			}
 
 			AnomalyPluginHealthStatistic & stat = find->second;
@@ -77,7 +116,7 @@ class AnomalyPlugin {
 		void addIssue( unordered_map<string, HealthIssue> & map, const string & issue, int32_t delta_time_ms ){
 			auto find = map.find( issue );
 			if ( find == map.end() ){
-				map[issue] = { issue, 1, delta_time_ms };				
+				map[issue] = { issue, 1, delta_time_ms };
 			}else{
 				HealthIssue & health = find->second;
 				health.occurrences++;

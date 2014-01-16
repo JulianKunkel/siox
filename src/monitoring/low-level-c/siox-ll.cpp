@@ -301,9 +301,11 @@ __attribute__( ( constructor ) ) void siox_ctor()
 				assert( process_data.system_information_manager );
 				assert( process_data.association_mapper );
 				assert( process_data.amux );
+
 				// Retrieve NodeID and PID now that we have a valid SystemInformationManager
 				process_data.nid = lookup_node_id( hostname );
 				process_data.pid = create_process_id( process_data.nid );
+				process_data.association_mapper->setLocalInformation(hostname, process_data.pid);
 			
 			} catch( exception & e ) {
 				cerr << "Received exception of type " << typeid( e ).name() << " message: " << e.what() << endl;
@@ -400,7 +402,7 @@ void siox_finalize_monitoring(){
 	static VariableDatatype convert_attribute( siox_attribute * attribute, const void * value )
 	{
 		AttributeValue v;
-		switch( attribute->storage_type ) {
+		switch( attribute->o.storage_type ) {
 			case( VariableDatatype::Type::UINT32 ):
 				return *( ( uint32_t * ) value );
 			case( VariableDatatype::Type::INT32 ): {
@@ -434,7 +436,7 @@ void siox_finalize_monitoring(){
 		assert( value != nullptr );
 		FUNCTION_BEGIN
 		AttributeValue val = convert_attribute( attribute, value );
-		process_data.association_mapper->set_process_attribute( process_data.pid, *attribute, val );
+		process_data.association_mapper->set_process_attribute( process_data.pid, attribute->o, val );
 	}
 
 
@@ -535,7 +537,7 @@ void siox_finalize_monitoring(){
 		assert( component != nullptr );
 
 		OntologyValue val = convert_attribute( attribute, value );
-		process_data.association_mapper->set_component_attribute( ( component->cid ), *attribute, val );
+		process_data.association_mapper->set_component_attribute( ( component->cid ), attribute->o, val );
 	}
 
 
@@ -615,7 +617,7 @@ void siox_finalize_monitoring(){
 		FUNCTION_BEGIN
 
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
-		Attribute attr( attribute->aID, convert_attribute( attribute, value ) );
+		Attribute attr( attribute->o.aID, convert_attribute( attribute, value ) );
 
 		ab->setActivityAttribute( activity->activity, attr );
 
@@ -712,7 +714,7 @@ void siox_finalize_monitoring(){
 		assert( value != nullptr );
 		FUNCTION_BEGIN
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
-		Attribute attr( attribute->aID, convert_attribute( attribute, value ) );
+		Attribute attr( attribute->o.aID, convert_attribute( attribute, value ) );
 
 		ab->setRemoteCallAttribute( remote_call, attr );
 
@@ -755,8 +757,9 @@ void siox_finalize_monitoring(){
 
 		FUNCTION_BEGIN
 		try {
-			auto ret = & process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
-			return ret;
+			OntologyAttribute ret = process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
+
+			return new siox_attribute(ret);
 		} catch( IllegalStateError & e ) {
 			return nullptr;
 		}
@@ -773,7 +776,7 @@ void siox_finalize_monitoring(){
 		FUNCTION_BEGIN
 		AttributeValue val = convert_attribute( meta_attribute, value );
 		try {			
-			process_data.ontology->attribute_set_meta_attribute( *parent_attribute, *meta_attribute, val );
+			process_data.ontology->attribute_set_meta_attribute( parent_attribute->o, meta_attribute->o, val );
 		} catch( IllegalStateError & e ) {
 			return 0;
 		}
@@ -791,9 +794,10 @@ void siox_finalize_monitoring(){
 		try {
 			const OntologyAttribute & meta = process_data.ontology->register_attribute( "Meta", "Unit", VariableDatatype::Type::STRING );
 			// OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
-			const OntologyAttribute & attribute = process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
+			const OntologyAttribute attribute = process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
 			process_data.ontology->attribute_set_meta_attribute( attribute, meta, unit );
-			return & attribute;
+
+			return new siox_attribute(attribute);
 		} catch( IllegalStateError & e ) {
 			return nullptr;
 		}
@@ -805,13 +809,17 @@ void siox_finalize_monitoring(){
 		FUNCTION_BEGIN
 		assert( name != nullptr );
 		try {			
-			auto ret = & process_data.ontology->lookup_attribute_by_name( domain, name );
-			return ret;
+			auto ret = process_data.ontology->lookup_attribute_by_name( domain, name );
+			return new siox_attribute(ret);
 		} catch( NotFoundError & e ) {
 			return nullptr;
 		}
 	}
 
+	void siox_ontology_free_attribute(siox_attribute * attribute){
+		assert(attribute);
+		delete(attribute);
+	}
 
 	siox_unique_interface * siox_system_information_lookup_interface_id( const char * interface_name, const char * implementation_identifier )
 	{
@@ -834,7 +842,7 @@ void siox_finalize_monitoring(){
 		FUNCTION_BEGIN
 
 		try{
-			OntologyValue val(process_data.optimizer->optimalParameter(*attribute));
+			OntologyValue val(process_data.optimizer->optimalParameter(attribute->o));
 			switch( val.type() ) {
 				case VariableDatatype::Type::INT32:
 					*((int32_t*) out_value) = val.int32();
@@ -873,11 +881,11 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 		if ( process_data.optimizer == nullptr ){
 			return 0;
 		}
-		string what("siox_suggest_optimal_value_str(" + attribute->domain + "," + attribute->name + ")");
+		string what("siox_suggest_optimal_value_str(" + attribute->o.domain + "," + attribute->o.name + ")");
 		PERF_MEASURE_START( what.c_str() )
 
 		try{
-			OntologyValue val( process_data.optimizer->optimalParameter(*attribute) );
+			OntologyValue val( process_data.optimizer->optimalParameter(attribute->o) );
 			strncpy( target_str, val.str(), maxLength );
 			return 1;
 		}catch ( NotFoundError & e ){

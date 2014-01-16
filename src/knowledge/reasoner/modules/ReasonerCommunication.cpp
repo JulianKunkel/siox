@@ -7,7 +7,7 @@
 
 namespace knowledge{
 ReasonerCommunication::~ReasonerCommunication(){
-	if (server){			
+	if (server){
 		delete(server);
 	}
 	if ( upstreamReasoner != nullptr ){
@@ -92,13 +92,13 @@ void ReasonerCommunication::messageReceivedCB(std::shared_ptr<ServerClientMessag
 	case (ReasonerMessageDataType::NODE) : {
 		shared_ptr<NodeHealth> payload = cb.getNodeHealth();
 		rmsd.messagePayload = &* payload;
-		msg->isendResponse(& rmsd);		
+		msg->isendResponse(& rmsd);
 		break;
 	}
-	case (ReasonerMessageDataType::SYSTEM) : {	
+	case (ReasonerMessageDataType::SYSTEM) : {
 		shared_ptr<SystemHealth> payload = cb.getSystemHealth();
 		rmsd.messagePayload = &* payload;
-		msg->isendResponse(& rmsd);				
+		msg->isendResponse(& rmsd);
 		break;
 	}
 	default:{
@@ -120,7 +120,7 @@ void ReasonerCommunication::serializeResponseMessage(const ServerClientMessage *
 
 
 ReasonerMessageDataType ReasonerCommunication::parseReceivedData(const char * buffer, uint64_t buffer_size){
-	ReasonerMessageData data; 
+	ReasonerMessageData data;
 	uint64_t pos = 0;
 
 	j_serialization::deserialize(data, buffer, pos, buffer_size);
@@ -142,7 +142,7 @@ ReasonerMessageDataType ReasonerCommunication::parseReceivedData(const char * bu
 		j_serialization::deserialize( health, buffer, pos, buffer_size );
 
 		// invoke the callback
-		cb.receivedReasonerProcessHealth(rmr, health); 
+		cb.receivedReasonerProcessHealth(rmr, health);
 
 		expectedResponse = ReasonerMessageDataType::NODE;
 		break;
@@ -151,7 +151,7 @@ ReasonerMessageDataType ReasonerCommunication::parseReceivedData(const char * bu
 		NodeHealth health;
 		j_serialization::deserialize( health, buffer, pos, buffer_size );
 		// invoke the callback
-		cb.receivedReasonerNodeHealth(rmr, health); 
+		cb.receivedReasonerNodeHealth(rmr, health);
 
 		expectedResponse = ReasonerMessageDataType::SYSTEM;
 		break;
@@ -160,8 +160,8 @@ ReasonerMessageDataType ReasonerCommunication::parseReceivedData(const char * bu
 		SystemHealth health;
 		j_serialization::deserialize( health, buffer, pos, buffer_size );
 		// invoke the callback
-		cb.receivedReasonerSystemHealth(rmr, health); 
-		
+		cb.receivedReasonerSystemHealth(rmr, health);
+
 		expectedResponse = ReasonerMessageDataType::NONE;
 		break;
 	}
@@ -179,7 +179,7 @@ void ReasonerCommunication::messageResponseCB(BareMessage * msg, char * buffer, 
 	parseReceivedData(buffer, buffer_size);
 }
 
-void ReasonerCommunication::messageTransferErrorCB(BareMessage * msg, CommunicationError error){ 
+void ReasonerCommunication::messageTransferErrorCB(BareMessage * msg, CommunicationError error){
 
 }
 
@@ -187,7 +187,7 @@ void ReasonerCommunication::connectionSuccessfullCB(ServiceClient & client){
 	//cout << "CONNECTED" << endl;
 }
 
-uint64_t ReasonerCommunication::serializeMessageLen(const void * msgObject){	
+uint64_t ReasonerCommunication::serializeMessageLen(const void * msgObject){
 	ReasonerMessageData & data = *(ReasonerMessageData *) msgObject;
 
 	if (data.containedData == ReasonerMessageDataType::NONE){
@@ -212,12 +212,12 @@ uint64_t ReasonerCommunication::serializeMessageLen(const void * msgObject){
 		serLen += j_serialization::serializeLen( *(SystemHealth*) data.messagePayload );
 		break;
 	}
-	}		
+	}
 
 	return serLen;
 }
 
-void ReasonerCommunication::serializeMessage(const void * msgObject, char * buffer, uint64_t & pos){	
+void ReasonerCommunication::serializeMessage(const void * msgObject, char * buffer, uint64_t & pos){
 	//cout << "serializeMessage" << endl;
 
 	ReasonerMessageData & data = *(ReasonerMessageData *) msgObject;

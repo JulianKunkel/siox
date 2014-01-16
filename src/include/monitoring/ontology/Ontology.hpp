@@ -90,7 +90,7 @@ namespace monitoring {
 		public:
 			/// Retrieve an attribute's data object from the ontology.
 			/// If necessary, a new entry will be created.
-			virtual const OntologyAttribute & register_attribute( const string & domain, const string & name, VariableDatatype::Type storage_type ) throw( IllegalStateError ) = 0;
+			virtual const OntologyAttribute register_attribute( const string & domain, const string & name, VariableDatatype::Type storage_type ) throw( IllegalStateError ) = 0;
 
 			/// Set a (meta) attribute applying to another attribute.
 			/// Examples are an attribute's status as descriptor or a unit for the value
@@ -99,13 +99,13 @@ namespace monitoring {
 			/// and the storage type SIOX_STORAGE_STRING would first be registered
 			virtual void attribute_set_meta_attribute( const OntologyAttribute & att, const OntologyAttribute & meta, const OntologyValue & value ) throw( IllegalStateError ) = 0;
 
-			virtual const OntologyAttribute & lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0;
+			virtual const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0;
 
-			virtual const OntologyAttribute & lookup_attribute_by_ID( const OntologyAttributeID aID ) const throw( NotFoundError ) = 0;
+			virtual const OntologyAttribute lookup_attribute_by_ID( const OntologyAttributeID aID ) const throw( NotFoundError ) = 0;
 
-			virtual const vector<OntologyAttributeID> & enumerate_meta_attributes( const OntologyAttribute & attribute ) const = 0;
+			virtual const vector<OntologyAttributeID> enumerate_meta_attributes( const OntologyAttribute & attribute ) const = 0;
 
-			virtual const OntologyValue & lookup_meta_attribute( const OntologyAttribute & attribute, const OntologyAttribute & meta ) const throw( NotFoundError ) = 0;
+			virtual const OntologyValue lookup_meta_attribute( const OntologyAttribute & attribute, const OntologyAttribute & meta ) const throw( NotFoundError ) = 0;
 
 
 			// From the system information table:

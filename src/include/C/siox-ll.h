@@ -248,6 +248,11 @@ int siox_ontology_set_meta_attribute( siox_attribute * parent_attribute, siox_at
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name );
 
 /*
+ Destroy the attribute.
+ */
+void siox_ontology_free_attribute(siox_attribute * attribute);
+
+/*
  * Example: interface_name POSIX, MPI, MPIv3 ...
  * Interface is "POSIX"
  * Implementation could be MPICHv3 (major number, please ensure compatibility)
