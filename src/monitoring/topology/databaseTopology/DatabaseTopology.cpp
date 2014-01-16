@@ -219,7 +219,6 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 }
 
 TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
-    TopologyObject tmpObject;
 
     TopologyRelation tmpRelation = lookupRelation(parentId, relationType, childName);
     if(tmpRelation){
@@ -233,37 +232,29 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
     work insertAction(*conn, "Insert Transaction");
 
     // Perform the insert
-    insertAction.exec("INSERT INTO Object (typeId) VALUES ('"+to_string(objectType)+"')");
+    result resultSelect = insertAction.exec("INSERT INTO Object (typeId) VALUES ('"+to_string(objectType)+"') returning id" );
     insertAction.commit();
-
-    // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
-
-    // Perform a select
-    result resultSelect = selectAction.exec(("SELECT id FROM Object WHERE typeId='" + to_string(objectType) + "'"));
-    selectAction.commit();
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
+         TopologyObjectId tmpId;
+
         // Check if results are sane (and convert them)
-        // TODO: Conversion okay?
-        if (!resultSelect[0]["id"].to(newObject->id)) {
+        if (!resultSelect[0]["id"].to(tmpId)) {
             // TODO: ERROR
             assert(false);
         }
-        tmpObject.setObject(newObject);
+        TopologyObject tmpObject;
+        Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(tmpId) );
+        tmpObject.setObject(newObject);  
+
+        registerRelation(parentId, relationType, childName, tmpId );
+        return tmpObject;
     }
     else {
         // TODO: ERROR
         assert(false);
     }
-
-    // Perform another insert for the relation
-    work insertAction2(*conn, "Insert Transaction");
-    insertAction2.exec("INSERT INTO Relation (parentObjectId, childName, childObjectId, relationTypeId) VALUES ('"+to_string(parentId)+"','"+insertAction2.esc(childName)+"','"+to_string(newObject->id)+"','"+to_string(relationType)+"')");
-    insertAction2.commit();
-
-    return tmpObject;
 }
 
 TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw() {
