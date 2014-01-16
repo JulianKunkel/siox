@@ -57,7 +57,7 @@ private:
 
 		uint32_t update_intervall_ms = -1;
 
-		ReasonerCommunication comm;
+		ReasonerCommunication * comm;
 		bool upstreamReasonerExists = false;
 
 		// for each host (by ID) we store the latest observation
@@ -102,7 +102,7 @@ public:
 	virtual shared_ptr<SystemHealth> getSystemHealth() override;
 	virtual shared_ptr<ProcessHealth> getProcessHealth() override;
 
-	ReasonerStandardImplementation() :  comm(*this), gatheredStatistics(new HealthStatistics) {
+	ReasonerStandardImplementation() :  gatheredStatistics(new HealthStatistics) {
 	}
 
 	~ReasonerStandardImplementation();

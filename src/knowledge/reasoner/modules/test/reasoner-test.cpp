@@ -784,16 +784,21 @@ void testReasonerCommunication(){
 		//assert ( mCB1.sh->overallState == HealthState::FAST );
 	}
 
+	delete(rP12);
+	delete(rP11);
+	delete(rN1);
+	delete(rS);
+	
 	delete(comm);
-}
-
+}	
+	
 int main( int argc, char const * argv[] )
 {
 	// testAssessNodeAggregation();
 	// testSerializationOfTypes();
 	// testReasonerCommunicationRaw();
-	// testReasonerCommunication();
-	testReasoner();
+	testReasonerCommunication();
+	//testReasoner();
 	// testReasonerAssessment();
 
 	cout << endl << "OK" << endl;
