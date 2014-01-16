@@ -220,6 +220,12 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 
 TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
     TopologyObject tmpObject;
+
+    TopologyRelation tmpRelation = lookupRelation(parentId, relationType, childName);
+    if(tmpRelation){
+        return lookupObjectById(tmpRelation.child());
+    }
+
     Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation( objectType ) );
 
     // TODO: Check if already in the database?
