@@ -63,6 +63,11 @@ int main( int argc, char const * argv[] )
 	a2.aID = 2;
 	a2.storage_type = VariableDatatype::Type::UINT32;
 
+	OntologyAttribute a3;
+	a3.aID = 3;
+	a3.storage_type = VariableDatatype::Type::STRING;
+
+
 	OntologyValue v1( (uint32_t) 34 );
 	OntologyValue v2( (uint32_t) 35 );
 	o->set_process_attribute( pid, a1, v1 );
@@ -73,13 +78,23 @@ int main( int argc, char const * argv[] )
 		myAssert( false );
 	} catch( IllegalStateError & e ) {}
 
+	o->set_process_attribute( pid, a3, "/home/test/file1" );
+	o->set_process_attribute( pid, a3, "/home/test/file1" );
+
+	try {
+		o->set_process_attribute( pid, a3, "/home/test/fileWRONG" );
+		myAssert( false );
+	} catch( IllegalStateError & e ) {}
+
+	OntologyValue vp = o->lookup_process_attribute( pid, a3 );
+	myAssert( vp == "/home/test/file1" );
 	try {
 		const OntologyValue & vp = o->lookup_process_attribute( pid, a2 );
 		cerr << "vp = " << vp << "\n";
 		myAssert( false );
 	} catch( NotFoundError & e ) {}
 
-	OntologyValue vp = o->lookup_process_attribute( pid, a1 );	
+	vp = o->lookup_process_attribute( pid, a1 );	
 
 	myAssert( vp == v1 );
 
