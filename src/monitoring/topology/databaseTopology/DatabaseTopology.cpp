@@ -179,7 +179,6 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
     }
 
     Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation( objectType ) );
-
     // TODO: Check if already in the database?
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work insertAction(*conn, "Insert Transaction");
@@ -228,7 +227,7 @@ TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw
             // TODO: ERROR
             assert(false);
         }
-        Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(tmpId, tmpId) );
+        Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(tmpId, anId) );
         tmpObject.setObject(newObject);
     }
     else {
