@@ -33,7 +33,7 @@ namespace monitoring {
 
 				assert(topology);
 
-				TopologyObject ontologyTopologyObject = topology->registerObjectByPath( "Module:Ontology" );
+				TopologyObject ontologyTopologyObject = topology->registerObjectByPath( {{"ModuleName", "Ontology", "Module"}} );
 				pluginTopoObjectID = ontologyTopologyObject.id();
 
 				TopologyType attribute = topology->registerType("OntologyAttribute");
@@ -60,11 +60,9 @@ namespace monitoring {
 			///////////////////////////////////////////////////
 
 			const OntologyAttribute register_attribute( const string & domain, const string & name, VariableDatatype::Type storage_type ) throw( IllegalStateError ) override {
-				stringstream s;
-				s << "domain:" << domain << "/" << "attributeName:" << name;
-				TopologyObject obj = topology->registerObjectByPath( s.str(), pluginTopoObjectID );			
+				TopologyObject obj = topology->registerObjectByPath( {{"DomainName", domain, "Domain" }, {"AttributeName", name, "Attribute"} }, pluginTopoObjectID );
 				if ( ! obj ){
-					throw IllegalStateError("Could not register attribute: " + s.str());
+					throw IllegalStateError("Could not register attribute: " + domain +"/" + name);
 				}
 				const uint32_t objID = obj.id();
 
@@ -73,7 +71,7 @@ namespace monitoring {
 				if ( existingStorageType ){
 					 uint32_t currentST = existingStorageType.value().uint32();
 					 if ( ((VariableDatatype::Type) currentST) != storage_type ){
-					 	throw IllegalStateError("Existing storage type is not compatible in attribute " + s.str());
+					 	throw IllegalStateError("Existing storage type is not compatible in attribute " + domain + "/" + name);
 					 }
 
 	 				return OntologyAttribute(obj.id(), domain, name, storage_type);
@@ -88,9 +86,7 @@ namespace monitoring {
 			}
 
 			const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) override {
-				stringstream s;
-				s << "domain:" << domain << "/" << "attributeName:" << name;
-				TopologyObject obj = topology->lookupObjectByPath( s.str(), pluginTopoObjectID );			
+				TopologyObject obj = topology->lookupObjectByPath( {{"DomainName", domain }, {"AttributeName", name}}, pluginTopoObjectID );
 				if ( ! obj ){
 					throw NotFoundError();
 				}
@@ -139,9 +135,8 @@ namespace monitoring {
 					throw IllegalStateError("Value has been set already");
 				}
 				
-				// store domain, name and storage type as attribute.				
-				TopologyValue tv = topology->setAttribute(objID, metaValueID[(int) meta.storage_type], value);
-				if ( ! tv){
+				// store domain, name and storage type as attribute.
+				if ( ! topology->setAttribute(objID, metaValueID[(int) meta.storage_type], value) ){
 					throw IllegalStateError("Could not set the attribute");
 				}
 			}

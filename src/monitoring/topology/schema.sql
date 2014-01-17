@@ -56,7 +56,8 @@ CREATE TABLE value
 (
   objectid integer,
   attributeid integer,
-  topologyvalue text,
+  type smallint,
+  value text,
   UNIQUE(objectid, attributeid)
 )
 WITH (

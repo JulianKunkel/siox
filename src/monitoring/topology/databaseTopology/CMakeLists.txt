@@ -14,6 +14,7 @@ add_library(
 target_link_libraries(
 	siox-monitoring-DatabaseTopology
 	siox-core-AutoConfigurator
+	siox-monitoring-Topology
 	${Boost_LIBRARIES}
 	pqxx
 )

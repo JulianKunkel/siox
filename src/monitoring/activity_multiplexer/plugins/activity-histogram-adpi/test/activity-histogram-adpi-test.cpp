@@ -56,11 +56,8 @@ int main( int argc, char const * argv[] )
 
    // register a topology entry with pre-filled data for ucaid3 to test if we read it properly
    {
-   stringstream s;
-   s << "AMUXPlugin:ADPIPlugin/data:" << ucaid3;
-
   	TopologyType dataType = topology->registerType("ADPIPlugin");
-  	TopologyObject ucaid3data = topology->registerObjectByPath( s.str() );
+  	TopologyObject ucaid3data = topology->registerObjectByPath( {{ "AMUXPluginName", "ADPIPlugin", "AMUXPlugin" }, {"data", ucaid3 , "data"}} );
 	
 	TopologyAttribute bucketMinAttribute = topology->registerAttribute( dataType.id(), "min", VariableDatatype::Type::UINT64 );
 	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( dataType.id(), "max", VariableDatatype::Type::UINT64 );
@@ -184,23 +181,17 @@ int main( int argc, char const * argv[] )
 	TopologyType typ = topology->lookupTypeByName("data");
 	assert(typ);
 
-	stringstream path;
-	path << "AMUXPlugin:ADPIPlugin/data:" << ucaid1;
-	stored1 = topology->lookupObjectByPath( path.str() );
+	stored1 = topology->lookupObjectByPath( {{ "AMUXPluginName", "ADPIPlugin"}, {"data", ucaid1 }} );
 	assert(stored1 != nullptr);
 	}
 	{
-	stringstream path;
-	path << "AMUXPlugin:ADPIPlugin/data:" << ucaid2;
-	stored2 = topology->lookupObjectByPath( path.str() );
+	stored2 = topology->lookupObjectByPath( {{ "AMUXPluginName", "ADPIPlugin"}, {"data", ucaid2 }} );
 	assert(stored2 == nullptr);
 	}
 
 	// test if the injected data for ucaid3 has been set properly
 	{
-	stringstream path;
-	path << "AMUXPlugin:ADPIPlugin/data:" << ucaid3;
-	stored3 = topology->lookupObjectByPath( path.str() );
+	stored3 = topology->lookupObjectByPath( {{ "AMUXPluginName", "ADPIPlugin"}, {"data", ucaid3 }} );
 	assert(stored3 != nullptr);
 	}
 

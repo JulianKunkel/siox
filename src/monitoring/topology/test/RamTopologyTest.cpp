@@ -197,19 +197,17 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( attribute2.dataType() == TopologyVariable::Type::FLOAT );
 	attribute2 = topology->registerAttribute( type1.id(), "attribute2", TopologyVariable::Type::DOUBLE );
 
-	TopologyValue value1, value2;
-	value1 = topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1 ) );
-	assert( !value1 );
-	value1 = topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1.0f ) );
-	assert( value1.object() == object1.id() );
-	assert( value1.attribute() == attribute1.id() );
-	assert( value1.value() == 1.0f );
+	TopologyVariable value1(1.0f);
+	TopologyValue value2;
+	assert( ! topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable(1) ) );
+	assert( topology->setAttribute( object1.id(), attribute1.id(), value1) );
 	value2 = topology->getAttribute( object2.id(), attribute1.id() );
 	assert( !value2 );
 	value2 = topology->getAttribute( object1.id(), attribute2.id() );
 	assert( !value2 );
 	value2 = topology->getAttribute( object1.id(), attribute1.id() );
-	assert( &*value1 == &*value2 );
+	assert( value1 == value2.value() );
+
 	topology->setAttribute( object1.id(), attribute2.id(), TopologyVariable( 1.0 ) );
 	value2 = topology->getAttribute( object1.id(), attribute2.id() );
 	assert( value2.object() == object1.id() );
@@ -221,8 +219,23 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( !valueList.size() );
 	valueList = topology->enumerateAttributes( object1.id() );
 	assert( valueList.size() == 2 );
-	assert( &*valueList[0] == &*value1 || &*valueList[0] == &*value2 );
-	assert( &*valueList[1] == &*value1 || &*valueList[1] == &*value2 );
+	assert( valueList[0].value() == value1 || &*valueList[0] == &*value2 );
+	assert( valueList[1].value() == value1 || &*valueList[1] == &*value2 );
+
+	// Test object with full string paths
+	{
+	TopologyObject obj1 = topology->registerObjectByPath( {{"ComponentID", "test", "Component"}, {"AttributeID", 4711, "Attribute"}} );
+	assert(obj1);
+	TopologyObject obj2 = topology->lookupObjectByPath( {{"ComponentID", "test"}, {"AttributeID", 4711}} );
+	assert( &*obj1 == &*obj2 );
+	}
+	{
+	TopologyObject obj1 = topology->registerObjectByPath( {{"ComponentID", "@proc/schuh:shoe", "Component"}, {"AttributeID", "@slang:///FALSE\1\2\3TRUE", "Attribute"}} );
+	assert(obj1);
+	TopologyObject obj2 = topology->lookupObjectByPath(  {{"ComponentID", "@proc/schuh:shoe"}, {"AttributeID", "@slang:///FALSE\1\2\3TRUE"}} );
+	assert( &*obj1 == &*obj2 );
+	}
+
 
 	delete topology;
 

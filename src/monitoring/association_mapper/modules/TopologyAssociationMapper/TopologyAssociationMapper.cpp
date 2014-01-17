@@ -31,7 +31,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 		topology = GET_INSTANCE(Topology, o.topology);
 		assert(topology);
 
-		TopologyObject asObject = topology->registerObjectByPath( "Module:AssociationMapper" );
+		TopologyObject asObject = topology->registerObjectByPath( {{"ModuleName", "AssociationMapper", "Module"}} );
 		pluginTopoObjectID = asObject.id();
 
 		processID = topology->registerType("ProcessID").id();
@@ -55,12 +55,13 @@ class TopologyAssociationMapper: public AssociationMapper {
 
 
 	void set_process_attribute( const ProcessID & pid, const OntologyAttribute & att, const OntologyValue & value ) throw( IllegalStateError ) override {
-		stringstream s;
-		s << "ProcessID:" << pid << "/OntologyAttributeID:" << att.aID;
+		stringstream spid, sAttrID;
+		spid <<  pid;
+		sAttrID << att.aID;
 
-		TopologyObject obj = topology->registerObjectByPath( s.str(), pluginTopoObjectID );
+		TopologyObject obj = topology->registerObjectByPath( {{"ProcessID", spid.str(), "Process"}, {"AttributeID", sAttrID.str(), "Attribute"}}, pluginTopoObjectID );
 		if ( ! obj ){
-			throw IllegalStateError("Could not register attribute: " + s.str());
+			throw IllegalStateError("Could not register attribute: " + spid.str() + "-" + sAttrID.str());
 		}
 		const uint32_t objID = obj.id();
 
@@ -75,17 +76,17 @@ class TopologyAssociationMapper: public AssociationMapper {
 		}
 		
 		// store value into the appriate datatype
-		TopologyValue tv = topology->setAttribute(objID, metaValueID[(int) att.storage_type], value);
-		if ( ! tv){
+		if ( ! topology->setAttribute(objID, metaValueID[(int) att.storage_type], value)){
 			throw IllegalStateError("Could not set the attribute");
 		}
 	}
 
 	const OntologyValue lookup_process_attribute( const ProcessID & pid, const OntologyAttribute & att ) const throw( NotFoundError ) override {
-		stringstream s;
-		s << "ProcessID:" << pid << "/OntologyAttributeID:" << att.aID;
+		stringstream spid, sAttrID;
+		spid <<  pid;
+		sAttrID << att.aID;
 
-		TopologyObject obj = topology->lookupObjectByPath(s.str(), pluginTopoObjectID);
+		TopologyObject obj = topology->lookupObjectByPath(  {{"ProcessID", spid.str()}, {"AttributeID", sAttrID.str() }}, pluginTopoObjectID);
 		if ( ! obj ){
 			throw NotFoundError();
 		}
@@ -101,12 +102,13 @@ class TopologyAssociationMapper: public AssociationMapper {
 	}
 
 	void set_component_attribute( const ComponentID & cid, const OntologyAttribute & att, const  OntologyValue & value ) throw( IllegalStateError ) override {
-		stringstream s;
-		s << "ComponentID:" << cid << "/OntologyAttributeID:" << att.aID;
+		stringstream scid, sAttrID;
+		scid <<  cid;
+		sAttrID << att.aID;
 
-		TopologyObject obj = topology->registerObjectByPath( s.str(), pluginTopoObjectID );
+		TopologyObject obj = topology->registerObjectByPath( {{"ComponentID", scid.str(), "Component"}, {"AttributeID", sAttrID.str(), "Attribute"}}, pluginTopoObjectID );
 		if ( ! obj ){
-			throw IllegalStateError("Could not register attribute: " + s.str());
+			throw IllegalStateError("Could not register attribute: " + scid.str() + "/" + sAttrID.str());
 		}
 		const uint32_t objID = obj.id();
 
@@ -121,17 +123,17 @@ class TopologyAssociationMapper: public AssociationMapper {
 		}
 		
 		// store value into the appriate datatype
-		TopologyValue tv = topology->setAttribute(objID, metaValueID[(int) att.storage_type], value);
-		if ( ! tv){
+		if ( ! topology->setAttribute(objID, metaValueID[(int) att.storage_type], value)){
 			throw IllegalStateError("Could not set the attribute");
 		}
 	}
 
 	const OntologyValue lookup_component_attribute( const ComponentID & cid, const OntologyAttribute & att ) const throw( NotFoundError ) override {
-		stringstream s;
-		s << "ComponentID:" << cid << "/OntologyAttributeID:" << att.aID;
+		stringstream scid, sAttrID;
+		scid <<  cid;
+		sAttrID << att.aID;
 
-		TopologyObject obj = topology->lookupObjectByPath(s.str(), pluginTopoObjectID);
+		TopologyObject obj = topology->lookupObjectByPath( {{"ComponentID", scid.str()}, {"AttributeID", sAttrID.str()}}, pluginTopoObjectID);
 		if ( ! obj ){
 			throw NotFoundError();
 		}
