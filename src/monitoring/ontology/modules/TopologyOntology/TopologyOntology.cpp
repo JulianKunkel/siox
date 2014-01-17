@@ -33,7 +33,7 @@ namespace monitoring {
 
 				assert(topology);
 
-				TopologyObject ontologyTopologyObject = topology->registerObjectByPath( "Module:Ontology" );
+				TopologyObject ontologyTopologyObject = topology->registerObjectByPath( "Module" TOPO_TYPE_SEP "Ontology" );
 				pluginTopoObjectID = ontologyTopologyObject.id();
 
 				TopologyType attribute = topology->registerType("OntologyAttribute");
@@ -61,7 +61,7 @@ namespace monitoring {
 
 			const OntologyAttribute register_attribute( const string & domain, const string & name, VariableDatatype::Type storage_type ) throw( IllegalStateError ) override {
 				stringstream s;
-				s << "domain:" << domain << "/" << "attributeName:" << name;
+				s << "domain" TOPO_TYPE_SEP << domain << TOPO_PATH_SEP "attributeName" << TOPO_TYPE_SEP << name;
 				TopologyObject obj = topology->registerObjectByPath( s.str(), pluginTopoObjectID );			
 				if ( ! obj ){
 					throw IllegalStateError("Could not register attribute: " + s.str());
@@ -89,7 +89,7 @@ namespace monitoring {
 
 			const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) override {
 				stringstream s;
-				s << "domain:" << domain << "/" << "attributeName:" << name;
+				s << "domain" TOPO_TYPE_SEP << domain << TOPO_PATH_SEP "attributeName" << TOPO_TYPE_SEP << name;
 				TopologyObject obj = topology->lookupObjectByPath( s.str(), pluginTopoObjectID );			
 				if ( ! obj ){
 					throw NotFoundError();

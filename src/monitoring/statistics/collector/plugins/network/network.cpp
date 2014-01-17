@@ -105,13 +105,13 @@ class NetworkStats: public ProcSingleFilePlugin<18> {
 
 				// Transfer Currentvalues by name to Statistics Array
 				std::array<StatisticsValue, 1> & Crrnt = CurrentValues[name];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsReceived", "@localhost", Crrnt[0], INCREMENTAL, "", "Field 1 -- # of packets received", overflow_value, 0} );
+				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsReceived", LOCALHOST, Crrnt[0], INCREMENTAL, "", "Field 1 -- # of packets received", overflow_value, 0} );
 				std::array<StatisticsValue, 1> & Crrnt2 = CurrentValues[name2];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsSent", "@localhost", Crrnt2[0], INCREMENTAL, "", "Field 1 -- # of packets sent", overflow_value, 0} );
+				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsSent", LOCALHOST, Crrnt2[0], INCREMENTAL, "", "Field 1 -- # of packets sent", overflow_value, 0} );
 				std::array<StatisticsValue, 1> & Crrnt3 = CurrentValues[name3];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesReceived", "@localhost", Crrnt3[0], INCREMENTAL, "", "Field 1 -- # of bytes received", overflow_value, 0} );
+				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesReceived", LOCALHOST, Crrnt3[0], INCREMENTAL, "", "Field 1 -- # of bytes received", overflow_value, 0} );
 				std::array<StatisticsValue, 1> & Crrnt4 = CurrentValues[name4];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesSent", "@localhost", Crrnt4[0], INCREMENTAL, "", "Field 1 -- # of bytes sent", overflow_value, 0} );
+				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesSent", LOCALHOST, Crrnt4[0], INCREMENTAL, "", "Field 1 -- # of bytes sent", overflow_value, 0} );
 
 			}
 			return lst;

@@ -30,9 +30,9 @@ The semantics for each path component are as follows:
 
 Aliases map an almost arbitrary string to a path component. As far as the topology is concerned, this is purely syntactic sugar; aliases are not persisted, they are not communicated to another Topology object, they are only used within the path methods, and they are implemented directly in the Topology class. These are the rules for aliases (they are enforced by setAlias() ):
 	Once set, an alias must not be changed. However, it is not an error to set an alias twice with the same value.
-	An alias name must begin with the character '@'.
-	An alias name must not contain a slash '/'.
-	An alias value must not contain a slash '/'.
+	An alias name must begin with the character TOPO_ALIAS_CHAR.
+	An alias name must not contain a TOPO_PATH_CHAR.
+	An alias value must not contain a TOPO_PATH_CHAR.
 	An alias value must be a valid pathComponent.
 	An alias value may be the name of another alias.
 
@@ -152,6 +152,13 @@ namespace monitoring {
 
 	typedef std::vector<TopologyRelation> TopologyRelationList;
 	typedef std::vector<TopologyValue> TopologyValueList;
+
+	#define TOPO_PATH_CHAR '\1'
+	#define TOPO_ALIAS_CHAR '\2'
+	#define TOPO_TYPE_CHAR '\3'
+	#define TOPO_PATH_SEP "\1"
+	#define TOPO_ALIAS_SEP "\2"
+	#define TOPO_TYPE_SEP "\3"
 				
 	class Topology : public core::Component {
 		//lookupXXX() members generally indicate failure by returning a false object, i. e. you are free to write
@@ -160,7 +167,6 @@ namespace monitoring {
 		//    }
 		//without fearing any exceptions...
 		public:
-
 			//High level functions for easy handling of topology objects by specifying paths.
 			//These are implemented as metaalgorithms directly in this class, calling the plumbing level functions to do their work.
 			virtual TopologyObject registerObjectByPath( const string& path, TopologyObjectId parent = 0 ) throw();
@@ -209,13 +215,13 @@ namespace monitoring {
 		//First count the path components, so that we can allocate descriptions for them.
 		size_t componentCount = 1, pathSize = path.size();
 		if( !pathSize ) return NULL;
-		for( size_t i = pathSize; i--; ) if( path[i] == '/' ) componentCount++;
+		for( size_t i = pathSize; i--; ) if( path[i] == TOPO_PATH_CHAR ) componentCount++;
 		//Get some mem.
 		PathComponentDescription* result = new PathComponentDescription[componentCount];
 		//Parse the components.
 		for( size_t i = 0, curComponent = 0; i < pathSize; i++, curComponent++ ) {
 			size_t componentStart = i;
-			for( ; i < pathSize && path[i] != '/'; i++ ) ;
+			for( ; i < pathSize && path[i] != TOPO_PATH_CHAR; i++ ) ;
 			string componentString = path.substr( componentStart, i - componentStart );
 			if( !parsePathComponent( componentString, &result[curComponent] ) ) {
 				delete[] result;
@@ -231,9 +237,9 @@ namespace monitoring {
 		const string* component = &aliasedComponent;
 		aliasesLock.lock_shared();
 		{
-			while( component && component->size() && (*component)[0] == '@' ) {
+			while( component && component->size() && (*component)[0] == TOPO_ALIAS_CHAR ) {
 				const string* temp = NULL;
-				IGNORE_EXCEPTIONS( temp = &aliases.at( *component ); );
+				IGNORE_EXCEPTIONS( temp = &aliases.at( component->substr(1) ); );
 				component = temp;
 			}
 		}
@@ -241,17 +247,17 @@ namespace monitoring {
 		if( !component ) return false;
 		//Sanity check: Count the number of colons in the component string.
 		size_t colonCount = 0, componentSize = component->size();
-		for( size_t i = componentSize; i--; ) {
+		for( size_t i = 0; i < componentSize; i++) {
 			switch( (*component)[i] ) {
-				case ':': colonCount++; break;
-				case '/': return false;
+				case TOPO_TYPE_CHAR: colonCount++; break;
+				case TOPO_PATH_CHAR: return false;
 			}
 		}
 		if( !colonCount || colonCount > 2 ) return false;
 		if( colonCount == 1 ) {
 			//Find the one colon and check for empty names.
 			size_t colonPosition = 0;
-			for( ; (*component)[colonPosition] != ':'; colonPosition++ ) ;
+			for( ; (*component)[colonPosition] != TOPO_TYPE_CHAR; colonPosition++ ) ;
 			if( !colonPosition || colonPosition == componentSize - 1 ) return false;
 			//Fill in the descriptor.
 			outDescription->relationName = component->substr( 0, colonPosition );
@@ -260,8 +266,8 @@ namespace monitoring {
 		} else {
 			//Find the colon positions and check for empty names.
 			size_t colon1 = 0, colon2 = 0;
-			for( ; (*component)[colon1] != ':'; colon1++ ) ;
-			for( colon2 = colon1 + 1; (*component)[colon2] != ':'; colon2++ ) ;
+			for( ; (*component)[colon1] != TOPO_TYPE_CHAR; colon1++ ) ;
+			for( colon2 = colon1 + 1; (*component)[colon2] != TOPO_TYPE_CHAR; colon2++ ) ;
 			if( !colon1 || colon1 == colon2 - 1 || colon2 == componentSize - 1 ) return false;
 			//Fill in the descriptor.
 			outDescription->relationName = component->substr( 0, colon1 );
@@ -328,8 +334,8 @@ namespace monitoring {
 		//First some sanity checks.
 		size_t nameSize = name.size();
 		if( nameSize < 2 ) return false;
-		if( name[0] != '@' ) return false;
-		for( size_t i = nameSize; i--; ) if( name[i] == '/' ) return false;
+		
+		for( size_t i = 0; i < nameSize; i++) if( name[i] == TOPO_PATH_CHAR ) return false;
 		PathComponentDescription trash;
 		if( !parsePathComponent( value, &trash ) ) return false;
 

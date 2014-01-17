@@ -96,7 +96,7 @@ void HistogramAdpiPlugin::initPlugin() {
 
 	pluginTopoTypeID = dataType.id();
 
-	TopologyObject myData = topology->registerObjectByPath( "AMUXPlugin:ADPIPlugin" );
+	TopologyObject myData = topology->registerObjectByPath( "AMUXPlugin" TOPO_TYPE_SEP "ADPIPlugin" );
 	pluginTopoObjectID = myData.id();
 	
 	TopologyAttribute bucketMinAttribute = topology->registerAttribute( adpiType.id(), "min", VariableDatatype::Type::UINT64 );

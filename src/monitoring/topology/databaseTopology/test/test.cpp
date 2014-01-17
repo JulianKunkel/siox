@@ -35,22 +35,23 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( !type1 );
 	type1 = topology->lookupTypeById( 0 );
 	assert( !type1 );
-	
 	type1 = topology->lookupTypeById( 1 );
 	assert( !type1 );
 
 	type1 = topology->registerType( "type1" );
 	assert( type1.name() == "type1" );
+	assert( type1.id() == 1 );
 
+	type2 = topology->lookupTypeById( 0 );
+	assert( !type2 );
+	type2 = topology->lookupTypeById( 1 );
+	assert( type2.name() == "type1" );
 	type2 = topology->lookupTypeByName( "type1" );
-	assert( type2.name() == "type1" );
-
-	type2 = topology->lookupTypeById( type2.id() );
-	assert( type2.name() == "type1" );
+	assert( type2.id() == 1 );
 
 	type2 = topology->registerType( "type2" );
-	assert( type2.name() == "type2" );	
-
+	assert( type2.name() == "type2" );
+	assert( type2.id() == 2 );
 
 	//Test objects
 	TopologyObject object1, object2;
@@ -60,51 +61,97 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( !object1 );
 
 	object1 = topology->registerObject( 0, type2.id(), "object1", type1.id() );
+	assert( object1.id() == 1 );
 	assert( object1.type() == type1.id() );
-
-	object2 = topology->lookupObjectById( object1.id() );
-	assert( object2.type() == object1.type() );
-
-	object2 = topology->registerObject( object1.id(), type1.id(), "object2", type2.id() );	
+	object2 = topology->lookupObjectById( 0 );
+	assert( !object2 );
+	object2 = topology->lookupObjectById( 1 );
+	assert( object2.type() == type1.id() );
+	object2 = topology->registerObject( object1.id(), type1.id(), "object2", type2.id() );
+	assert( object2.id() == 2 );
 	assert( object2.type() == type2.id() );
-
 
 	//Test relations
 	TopologyRelation relation1, relation2, relation3, relation4;
 	relation1 = topology->lookupRelation( 0, type1.id(), "foo" );
 	assert( !relation1 );
-
 	relation1 = topology->lookupRelation( object2.id(), type2.id(), "object1" );
 	assert( !relation1 );
 	relation1 = topology->lookupRelation( object1.id(), type2.id(), "object1" );
 	assert( !relation1 );
 	relation1 = topology->lookupRelation( 0, type1.id(), "object2" );
 	assert( !relation1 );
-
+	relation1 = topology->lookupRelation( 0, type1.id(), "object1" );
+	assert( !relation1 );
 	relation1 = topology->lookupRelation( 0, type2.id(), "object1" );
 	assert( relation1.childName() == "object1" );
 	assert( relation1.parent() == 0 );
 	assert( relation1.child() == object1.id() );
 	assert( relation1.type() == type2.id() );
-
 	relation2 = topology->lookupRelation( object1.id(), type1.id(), "object2" );
 	assert( relation2.childName() == "object2" );
 	assert( relation2.parent() == object1.id() );
 	assert( relation2.child() == object2.id() );
 	assert( relation2.type() == type1.id() );
 
+	relation3 = topology->registerRelation( 0, type2.id(), "object1", object2.id() );
+	assert( !relation3 );
+	relation3 = topology->registerRelation( 0, type2.id(), "object1", object1.id() );
+	assert( &*relation3 == &*relation1 );
 	relation3 = topology->registerRelation( 0, type1.id(), "object2", object2.id() );
 	assert( relation3.child() == object2.id() );
 	assert( relation3.type() == type1.id() );
-
+	relation4 = topology->registerRelation( object2.id(), type2.id(), "object1", 0 );
+	assert( !relation4 );
 	relation4 = topology->registerRelation( object2.id(), type2.id(), "object1", object1.id() );
 	assert( relation4.child() == object1.id() );
 	assert( relation4.type() == type2.id() );
 
-/*
-TODO: This can not be reused as it is comparing pointers.
 	{
-		Topology::TopologyRelationList list;
+		TopologyObject temp, object3;
+		temp = topology->lookupObjectByPath( "" );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( TOPO_PATH_SEP "object1" );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( "object1" TOPO_PATH_SEP );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( "object1" TOPO_PATH_SEP TOPO_PATH_SEP "object2" );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object1" );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( "type2" TOPO_TYPE_SEP "object1" );
+		assert( &*temp == &*object1 );
+		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_PATH_SEP "type2" TOPO_TYPE_SEP "object1" );
+		assert( &*temp == &*object1 );
+		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object2" );
+		assert( &*temp == &*object2 );
+		temp = topology->lookupObjectByPath( "type2" TOPO_TYPE_SEP "object1" TOPO_PATH_SEP "type1" TOPO_TYPE_SEP "object2" );
+		assert( &*temp == &*object2 );
+		object3 = topology->registerObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_TYPE_SEP "type2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" TOPO_TYPE_SEP "trac" );
+		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" );
+		assert( &*temp == &*object3 );
+		temp = topology->registerObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_TYPE_SEP "type2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" TOPO_TYPE_SEP "trac" );
+		assert( &*temp == &*object3 );
+		temp = topology->registerObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" TOPO_TYPE_SEP "trac" );
+		assert( !temp );
+		temp = topology->registerObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_TYPE_SEP "type2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_TYPE_SEP "type2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" TOPO_TYPE_SEP "trac" );
+		assert( &*temp == &*object3 );
+		assert( topology->setAlias( "foo", "type1" TOPO_TYPE_SEP "object2" ) );
+		assert( topology->setAlias( "foo", "type1" TOPO_TYPE_SEP "object2" ) );
+		assert( !topology->setAlias( "foo", "foo" TOPO_TYPE_SEP "bar" ) );
+		assert( !topology->setAlias( "bar", "foo" ) );
+		assert( !topology->setAlias( "bar", "foo" TOPO_TYPE_SEP "bar" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" ) );
+		assert( !topology->setAlias( "foo", "type1" TOPO_TYPE_SEP "object3" ) );
+		assert( !topology->setAlias( "foo" TOPO_PATH_SEP "bar", "type1" TOPO_TYPE_SEP "object2" ) );
+		assert( topology->setAlias( "bar", TOPO_ALIAS_SEP "foo" ) );
+		temp = topology->lookupObjectByPath( "bar" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" );
+		assert( &*temp == &*object3 );
+	}
+
+	{
+		TopologyRelationList list;
 		list = topology->enumerateChildren( 0, 0 );
 		assert( list.size() == 2 );
 		assert( &*list[0] == &*relation1 || &*list[0] == &*relation3 );
@@ -129,8 +176,6 @@ TODO: This can not be reused as it is comparing pointers.
 		list = topology->enumerateParents( object1.id(), type1.id() );
 		assert( !list.size() );
 	}
-*/
-
 
 	//Test attributes
 	TopologyAttribute attribute1, attribute2;
@@ -141,16 +186,17 @@ TODO: This can not be reused as it is comparing pointers.
 	attribute1 = topology->lookupAttributeById( 1 );
 	assert( !attribute1 );
 
-
 	attribute1 = topology->registerAttribute( type1.id(), "attribute1", TopologyVariable::Type::FLOAT );
 	assert( attribute1.name() == "attribute1" );
+	assert( attribute1.id() == 1 );
 	assert( attribute1.domainId() == type1.id() );
 	assert( attribute1.dataType() == TopologyVariable::Type::FLOAT );
-
-	attribute2 = topology->lookupAttributeById( attribute1.id()+1 );
+	attribute2 = topology->registerAttribute( type1.id(), "attribute1", TopologyVariable::Type::DOUBLE );
 	assert( !attribute2 );
 
-	attribute2 = topology->lookupAttributeById( attribute1.id() );
+	attribute2 = topology->lookupAttributeById( 0 );
+	assert( !attribute2 );
+	attribute2 = topology->lookupAttributeById( 1 );
 	assert( attribute2.name() == "attribute1" );
 	assert( attribute2.domainId() == type1.id() );
 	assert( attribute2.dataType() == TopologyVariable::Type::FLOAT );
@@ -160,6 +206,8 @@ TODO: This can not be reused as it is comparing pointers.
 	attribute2 = topology->registerAttribute( type1.id(), "attribute2", TopologyVariable::Type::DOUBLE );
 
 	TopologyValue value1, value2;
+	value1 = topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1 ) );
+	assert( !value1 );
 	value1 = topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1.0f ) );
 	assert( value1.object() == object1.id() );
 	assert( value1.attribute() == attribute1.id() );
@@ -168,20 +216,22 @@ TODO: This can not be reused as it is comparing pointers.
 	assert( !value2 );
 	value2 = topology->getAttribute( object1.id(), attribute2.id() );
 	assert( !value2 );
+	value2 = topology->getAttribute( object1.id(), attribute1.id() );
+	assert( &*value1 == &*value2 );
 	topology->setAttribute( object1.id(), attribute2.id(), TopologyVariable( 1.0 ) );
 	value2 = topology->getAttribute( object1.id(), attribute2.id() );
 	assert( value2.object() == object1.id() );
 	assert( value2.attribute() == attribute2.id() );
+	assert( value2.value() == 1.0 );
 
-/*	TODO: This can not be reused as it is comparing pointers.
-	Topology::TopologyValueList valueList;
+	TopologyValueList valueList;
 	valueList = topology->enumerateAttributes( object2.id() );
 	assert( !valueList.size() );
 	valueList = topology->enumerateAttributes( object1.id() );
 	assert( valueList.size() == 2 );
 	assert( &*valueList[0] == &*value1 || &*valueList[0] == &*value2 );
 	assert( &*valueList[1] == &*value1 || &*valueList[1] == &*value2 );
-*/
+
 	delete topology;
 
 	cerr << "OK" << endl;

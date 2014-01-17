@@ -57,7 +57,7 @@ int main( int argc, char const * argv[] )
    // register a topology entry with pre-filled data for ucaid3 to test if we read it properly
    {
    stringstream s;
-   s << "AMUXPlugin:ADPIPlugin/data:" << ucaid3;
+   s << "AMUXPlugin" TOPO_TYPE_SEP "ADPIPlugin" TOPO_PATH_SEP "data" TOPO_TYPE_SEP << ucaid3;
 
   	TopologyType dataType = topology->registerType("ADPIPlugin");
   	TopologyObject ucaid3data = topology->registerObjectByPath( s.str() );
@@ -185,13 +185,13 @@ int main( int argc, char const * argv[] )
 	assert(typ);
 
 	stringstream path;
-	path << "AMUXPlugin:ADPIPlugin/data:" << ucaid1;
+	path << "AMUXPlugin" TOPO_TYPE_SEP "ADPIPlugin" TOPO_PATH_SEP "data" TOPO_TYPE_SEP << ucaid1;
 	stored1 = topology->lookupObjectByPath( path.str() );
 	assert(stored1 != nullptr);
 	}
 	{
 	stringstream path;
-	path << "AMUXPlugin:ADPIPlugin/data:" << ucaid2;
+	path << "AMUXPlugin" TOPO_TYPE_SEP "ADPIPlugin" TOPO_PATH_SEP "data" TOPO_TYPE_SEP << ucaid2;
 	stored2 = topology->lookupObjectByPath( path.str() );
 	assert(stored2 == nullptr);
 	}
@@ -199,7 +199,7 @@ int main( int argc, char const * argv[] )
 	// test if the injected data for ucaid3 has been set properly
 	{
 	stringstream path;
-	path << "AMUXPlugin:ADPIPlugin/data:" << ucaid3;
+	path << "AMUXPlugin" TOPO_TYPE_SEP "ADPIPlugin" TOPO_PATH_SEP "data" TOPO_TYPE_SEP << ucaid3;
 	stored3 = topology->lookupObjectByPath( path.str() );
 	assert(stored3 != nullptr);
 	}

@@ -31,7 +31,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 		topology = GET_INSTANCE(Topology, o.topology);
 		assert(topology);
 
-		TopologyObject asObject = topology->registerObjectByPath( "Module:AssociationMapper" );
+		TopologyObject asObject = topology->registerObjectByPath( "Module" TOPO_TYPE_SEP "AssociationMapper" );
 		pluginTopoObjectID = asObject.id();
 
 		processID = topology->registerType("ProcessID").id();
@@ -56,7 +56,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 
 	void set_process_attribute( const ProcessID & pid, const OntologyAttribute & att, const OntologyValue & value ) throw( IllegalStateError ) override {
 		stringstream s;
-		s << "ProcessID:" << pid << "/OntologyAttributeID:" << att.aID;
+		s << "ProcessID" << TOPO_TYPE_SEP << pid << TOPO_PATH_SEP << "OntologyAttributeID" TOPO_TYPE_SEP  << att.aID;
 
 		TopologyObject obj = topology->registerObjectByPath( s.str(), pluginTopoObjectID );
 		if ( ! obj ){
@@ -83,7 +83,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 
 	const OntologyValue lookup_process_attribute( const ProcessID & pid, const OntologyAttribute & att ) const throw( NotFoundError ) override {
 		stringstream s;
-		s << "ProcessID:" << pid << "/OntologyAttributeID:" << att.aID;
+		s << "ProcessID" << TOPO_TYPE_SEP << pid << TOPO_PATH_SEP << "OntologyAttributeID" TOPO_TYPE_SEP << att.aID;
 
 		TopologyObject obj = topology->lookupObjectByPath(s.str(), pluginTopoObjectID);
 		if ( ! obj ){
@@ -102,7 +102,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 
 	void set_component_attribute( const ComponentID & cid, const OntologyAttribute & att, const  OntologyValue & value ) throw( IllegalStateError ) override {
 		stringstream s;
-		s << "ComponentID:" << cid << "/OntologyAttributeID:" << att.aID;
+		s << "ComponentID" << TOPO_TYPE_SEP << cid << TOPO_PATH_SEP << "OntologyAttributeID" TOPO_TYPE_SEP << att.aID;
 
 		TopologyObject obj = topology->registerObjectByPath( s.str(), pluginTopoObjectID );
 		if ( ! obj ){
@@ -129,7 +129,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 
 	const OntologyValue lookup_component_attribute( const ComponentID & cid, const OntologyAttribute & att ) const throw( NotFoundError ) override {
 		stringstream s;
-		s << "ComponentID:" << cid << "/OntologyAttributeID:" << att.aID;
+		s << "ComponentID" TOPO_TYPE_SEP << cid << TOPO_PATH_SEP "OntologyAttributeID" TOPO_TYPE_SEP << att.aID;
 
 		TopologyObject obj = topology->lookupObjectByPath(s.str(), pluginTopoObjectID);
 		if ( ! obj ){
