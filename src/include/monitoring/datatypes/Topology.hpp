@@ -27,6 +27,7 @@ namespace monitoring {
 	class TopologyTypeImplementation : public ReferencedObject {
 		public:
 			TopologyTypeImplementation( const string& name ) : name(name), id(0) {}
+			TopologyTypeImplementation( const string& name, TopologyTypeId id ) : name(name), id(id) {}
 			string name;
 			TopologyTypeId id;
 	};
@@ -34,6 +35,8 @@ namespace monitoring {
 	class TopologyObjectImplementation : public ReferencedObject {
 		public:
 			TopologyObjectImplementation( TopologyTypeId type ) : id(0), typeId(type) {}
+			TopologyObjectImplementation( TopologyTypeId type, TopologyObjectId id ) : id(id), typeId(type) {}
+
 			TopologyObjectId id;
 			TopologyTypeId typeId;
 	};
