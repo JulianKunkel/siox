@@ -38,16 +38,16 @@ private:
 
 		assert(topology);
 
-		TopologyObject ontologyTopologyObject = topology->registerObjectByPath( "Module:SystemInformationIDManager" );
+		TopologyObject ontologyTopologyObject = topology->registerObjectByPath( {{"ModuleName", "SystemInformationIDManager", "Module"}} );
 		pluginTopoObjectID = ontologyTopologyObject.id();		
 
 		TopologyTypeId systemInfoID = topology->registerType("SystemInformation").id();
 
-		hostID = topology->registerType("SystemInformationHost").id();
-		deviceID = topology->registerType("SystemInformationDevice").id();
-		fsID = topology->registerType("SystemInformationFilesystem").id();
-		interfaceID = topology->registerType("SystemInformationInterface").id();
-		activityID = topology->registerType("SystemInformationActivity").id();
+		hostID = topology->registerType("Host").id();
+		deviceID = topology->registerType("Device").id();
+		fsID = topology->registerType("Filesystem").id();
+		interfaceID = topology->registerType("Interface").id();
+		activityID = topology->registerType("Activity").id();
 
 		attrNameID = topology->registerAttribute( systemInfoID, "Name", VariableDatatype::Type::STRING ).id();
 
@@ -159,12 +159,9 @@ private:
 	}
 
 	UniqueInterfaceID register_interfaceID( const string & interface, const string & implementation ) {
-		stringstream s;
-		s << "SystemInformationInterface:" << interface << "/SystemInformationInterfaceImplementation:" << implementation;
-
-		TopologyObject d = topology->registerObjectByPath( s.str(), pluginTopoObjectID );
+		TopologyObject d = topology->registerObjectByPath(  {{"Interface", interface, "Interface"}, {"Implementation", implementation, "Implementation"} }, pluginTopoObjectID );
 		if ( ! d ){
-			throw IllegalStateError("Could not register interface: " + s.str());
+			throw IllegalStateError("Could not register interface: " + interface + " " + implementation);
 		}
 		const TopologyObjectId objID = d.id();
 
@@ -183,9 +180,7 @@ private:
 	}
 
 	UniqueInterfaceID lookup_interfaceID( const string & interface, const string & implementation ) const throw( NotFoundError ) {
-		stringstream s;
-		s << "SystemInformationInterface:" << interface << "/SystemInformationInterfaceImplementation:" << implementation;
-		TopologyObject obj = topology->lookupObjectByPath( s.str(), pluginTopoObjectID);
+		TopologyObject obj = topology->lookupObjectByPath( {{"Interface", interface}, {"Implementation", implementation} }, pluginTopoObjectID);
 		if (! obj){
 			throw NotFoundError();
 		}

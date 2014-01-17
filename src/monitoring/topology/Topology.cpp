@@ -18,6 +18,7 @@ namespace monitoring{
 			assert( childType );
 			result = registerObject( resultId, relationType.id(), curComponent.name, childType.id() );
 			if( ! result ) return TopologyObject();
+			resultId = result.id();
 		}
 		return result;
 	}

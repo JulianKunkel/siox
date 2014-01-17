@@ -132,7 +132,7 @@ namespace monitoring {
 						// it is valid to set the identical value again
 						return;
 					}
-					throw IllegalStateError("Value has been set already");
+					throw IllegalStateError("Meta attribute has been set already to an incompatible value");
 				}
 				
 				// store domain, name and storage type as attribute.
