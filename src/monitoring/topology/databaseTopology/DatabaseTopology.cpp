@@ -241,34 +241,41 @@ TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw
 TopologyRelation DatabaseTopology::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
     TopologyRelation tmpRelation;
 
-    tmpRelation = lookupRelation(parent, relationType, childName);
-    if(tmpRelation){
-        return tmpRelation;
-    }
-
     // TODO: Check if already in the database?
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work insertAction(*conn, "Insert Transaction");
+
+    stringstream buff;    
+    buff << "SELECT childObjectID FROM Relation WHERE childName='" << insertAction.esc(childName) << "' AND parentObjectId = '" << parent << "' AND relationTypeId='" << relationType << "'";
+    // Perform a select
+    result resultSelect = insertAction.exec(buff.str());
+    // Check if there is only one result
+    if (resultSelect.size() == 1) {        
+        insertAction.commit();
+        Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
+        tmpRelation.setObject(newRelation);
+        return tmpRelation;
+    }
 
     // Perform another insert
     insertAction.exec("INSERT INTO Relation (parentObjectId, childName, childObjectId, relationTypeId) VALUES ('"+to_string(parent)+"','"+insertAction.esc(childName)+"','"+to_string(child)+"','"+to_string(relationType)+"')");
     insertAction.commit();
 
     Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
-
     tmpRelation.setObject(newRelation);
     return tmpRelation;
 }
 
 TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() {
-    TopologyTypeId tmpRelationType;
     TopologyObjectId tmpChild;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "Select Transaction");
 
+    stringstream buff;
+    buff << "SELECT childObjectID FROM Relation WHERE childName='" << selectAction.esc(childName) << "' AND parentObjectId = '" << parent << "' AND relationTypeId='" << relationType << "'";
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT childObjectID, relationTypeId FROM Relation WHERE childName='" + selectAction.esc(childName) + "' AND parentObjectId = '"+ to_string(parent) + "'"));
+    result resultSelect = selectAction.exec(buff.str());
     selectAction.commit();
 
     // Check if there is only one result
@@ -281,11 +288,7 @@ TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, Topo
             // TODO: ERROR
             assert(false);
         }
-        if (!resultSelect[0]["relationTypeId"].to(tmpRelationType)) {
-            // TODO: ERROR
-            assert(false);
-        }
-        Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, tmpChild, tmpRelationType ) );
+        Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, tmpChild, relationType ) );
         tmpRelation.setObject(newRelation);
         return tmpRelation;
     }
@@ -489,7 +492,7 @@ bool DatabaseTopology::setAttribute( TopologyObjectId objectId, TopologyAttribut
     result resultSelect = insertAction.exec(buff.str() );
     if (resultSelect.size() == 1) {
         insertAction.commit();
-        
+
         return true;
     }
 
