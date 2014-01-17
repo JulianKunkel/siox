@@ -46,59 +46,12 @@ class DatabaseTopology : public Topology {
         virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw();
         virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw();
         virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw();
-        virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw();
+        virtual bool setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw();
         virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw();
         virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
     private:
         connection* conn;
-
-        string serializeTopologyVariable(TopologyVariable value) {
-            /* OLD AND BROKEN
-            ONLY HERE FOR REFERENCE
-            string result = to_string(value->object)+"|"+to_string(value->attribute);
-            int tmpint = (int8_t) value->value.type();
-            result = result+"|"+to_string(tmpint)+"|"+value->value.str();
-            return result;
-            */
-
-            string result = to_string(value.str());
-            int tmpint = (int8_t) value.type();
-            result = result+"|"+to_string(tmpint);
-
-            return result;
-        }
-
-        TopologyVariable* deserializeTopologyVariable(string value) {
-            /*OLD AND BROKEN
-            ONLY HERE FOR REFERENCE
-            TopologyValue tmpValue;
-            TopologyObjectId tmpObject;
-            TopologyAttributeId tmpAttr;
-            int8_t tmpValueInt;
-            TopologyVariable *innerValue;
-            
-            vector<string> SplitVec;
-            split(SplitVec, value, is_any_of("|"), token_compress_on);
-
-            tmpObject = stoul(SplitVec.at(0));
-            tmpAttr = stoul(SplitVec.at(1));
-            innerValue = new VariableDatatype(SplitVec.at(2), (int8_t) stoul(SplitVec.at(3)));
-
-            Release<TopologyValueImplementation> newValue(new TopologyValueImplementation(*innerValue, tmpObject, tmpAttr));
-            tmpValue.setObject(newValue);
-
-            return tmpValue;*/
-
-            TopologyVariable *innerValue;
-
-            vector<string> SplitVec;
-            split(SplitVec, value, is_any_of("|"), token_compress_on);
-
-            innerValue = new VariableDatatype((VariableDatatype::Type) stoul(SplitVec.at(1)), SplitVec.at(0));
-
-            return innerValue;
-        }
 };
 
 DatabaseTopology::~DatabaseTopology() {
@@ -526,49 +479,60 @@ TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId att
     return tmpAttribute;
 }
 
-TopologyValue DatabaseTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
+bool DatabaseTopology::setAttribute( TopologyObjectId objectId, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
     work insertAction(*conn, "Insert Transaction");
+    // Perform an insert OR update the existing value
+    stringstream buff;
 
-    string insertType = serializeTopologyVariable(value);
+    buff << "UPDATE Value SET value='" << value.toStr() << "' WHERE objectid=" << objectId << " AND attributeid=" << attributeId << " returning objectid"; // returning objectid is a trick to get a row back
 
-    // Perform an insert
-    insertAction.exec("INSERT INTO Value (objectId, attributeId, topologyvalue) VALUES ('"+to_string(object)+"','"+to_string(attributeId)+"','"+insertType+"')");
+    result resultSelect = insertAction.exec(buff.str() );
+    if (resultSelect.size() == 1) {
+        insertAction.commit();
+        
+        return true;
+    }
+
+    stringstream insert;
+    insert << "INSERT INTO Value (objectId, attributeId, type, value) VALUES ('" << objectId << "','" << attributeId << "','" << ((int) value.type()) << "','" << value.toStr() << "')";
+    insertAction.exec(insert.str() );
     insertAction.commit();
 
-    TopologyValue value1;
-    Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( value, object, attributeId ) );
-    value1.setObject(newValue);
-
-    return value1;
+    return true;
 }
 
 TopologyValue DatabaseTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
     work selectAction(*conn, "Select Transaction");
-    string valueString;
-    TopologyValue value;
     
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT value FROM Value WHERE objectId='" + to_string(object) + "' AND attributeId = '"+to_string(attribute)+"'"));
+    result resultSelect = selectAction.exec(("SELECT value, type FROM Value WHERE objectId='" + to_string(object) + "' AND attributeId = '"+to_string(attribute)+"'"));
     selectAction.commit();
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
+        string valueString;       
+        int type;
+
         // Check if results are sane (and convert them)
-        // TODO: Conversion okay?
         if (!resultSelect[0]["value"].to(valueString)) {
             // TODO: ERROR
             assert(false);
         }
-        TopologyVariable *tmpVarib = deserializeTopologyVariable(valueString);
-    
-        Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( *tmpVarib, object, attribute ) );
+        if (!resultSelect[0]["type"].to(type)) {
+            // TODO: ERROR
+            assert(false);
+        }
+        TopologyValue value;
+        VariableDatatype convertedValue((VariableDatatype::Type) type, valueString);
+
+        Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( convertedValue, object, attribute ) );
         value.setObject(newValue);
+        return value;
     }
     else {
         // Not found
-    }
-
-    return value;
+        return TopologyValue();
+    }    
 }
 
 TopologyValueList DatabaseTopology::enumerateAttributes( TopologyObjectId object ) throw() {

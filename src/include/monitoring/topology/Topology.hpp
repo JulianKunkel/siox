@@ -213,7 +213,7 @@ namespace monitoring {
 			virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() = 0;
 			virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() = 0;
 			virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw() = 0;
-			virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw() = 0;
+			virtual bool setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw() = 0;
 			virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() = 0;
 			virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw() = 0;
 

@@ -61,7 +61,7 @@ namespace monitoring {
 
 	class TopologyValueImplementation : public ReferencedObject {
 		public:
-			TopologyValueImplementation( TopologyVariable value, TopologyObjectId object, TopologyAttributeId attribute) : value(value), object(object), attribute(attribute) {}
+			TopologyValueImplementation( const TopologyVariable & value, TopologyObjectId object, TopologyAttributeId attribute) : value(value), object(object), attribute(attribute) {}
 			TopologyVariable value;
 			TopologyObjectId object;
 			TopologyAttributeId attribute;

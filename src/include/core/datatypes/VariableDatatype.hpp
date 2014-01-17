@@ -160,30 +160,8 @@ class VariableDatatype {
 		}
 
 		inline char * str() const {
-			unsigned long long iValue = 0;
-			double fValue = 0;
-			bool isSigned = false, isFloat = false;
-			switch( type_ ) {
-				case Type::INT32:  iValue = data.i32; isSigned = true; break;
-				case Type::INT64:  iValue = data.i64; isSigned = true; break;
-				case Type::UINT32: iValue = data.ui32; break;
-				case Type::UINT64: iValue = data.ui32; break;
-				case Type::FLOAT:  fValue = data.f; isFloat = true; break;
-				case Type::DOUBLE: fValue = data.d; isFloat = true; break;
-				case Type::STRING: return data.str;
-				case Type::INVALID:
-				default:
-					assert(0 && "tried to stringify a VariableDatatypes of invalid type"), abort();
-			}
-			static char resultString[100];
-			if(isSigned) {
-				snprintf(resultString, sizeof(resultString) - 1, "%lld", (long long)iValue);
-			} else if(isFloat) {
-				snprintf(resultString, sizeof(resultString) - 1, "%g", fValue);
-			} else {
-				snprintf(resultString, sizeof(resultString) - 1, "%llu", iValue);
-			}
-			return resultString;
+			assert( type_ == Type::STRING );
+			return data.str;
 		}
 
 		inline float flt() const {
@@ -194,6 +172,21 @@ class VariableDatatype {
 		inline double dbl() const {
 			assert( type_ == Type::DOUBLE );
 			return data.d;
+		}
+
+		inline string toStr() const {
+			switch( type_ ) {
+				case Type::INT32:  return to_string(data.i32);
+				case Type::INT64:  return to_string(data.i64);
+				case Type::UINT32: return to_string(data.ui32);
+				case Type::UINT64: return to_string(data.ui64);
+				case Type::FLOAT:  return to_string(data.f);
+				case Type::DOUBLE: return to_string(data.d);
+				case Type::STRING: return data.str;
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to stringify a VariableDatatypes of invalid type"), abort();
+			}
 		}
 
 		// convert to double
@@ -452,33 +445,11 @@ class VariableDatatype {
 inline ostream & operator<<( ostream & os, const VariableDatatype & v )
 {
 	switch( v.type() ) {
-		case VariableDatatype::Type::INT32:
-			os << v.int32();
-			break;
-		case VariableDatatype::Type::INT64:
-			os << v.int64();
-			break;
-		case VariableDatatype::Type::UINT32:
-			os << v.uint32();
-			break;
-		case VariableDatatype::Type::UINT64:
-			os << v.uint64();
-			break;
-		case VariableDatatype::Type::STRING:
-			os << v.str();
-			break;
-		case VariableDatatype::Type::FLOAT:
-			os << v.flt();
-			break;
-		case VariableDatatype::Type::DOUBLE:
-			os << v.dbl();
-			break;
-//      case VariableDatatype::Type::LONG_DOUBLE:
-//          os << v.ldbl();
-//            break;
 		case VariableDatatype::Type::INVALID:
 			os << "(INVALID TYPE!)";
 			break;
+		default:
+			os << v.toStr();
 	}
 	return os;
 }

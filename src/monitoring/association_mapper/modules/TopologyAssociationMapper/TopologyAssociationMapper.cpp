@@ -76,8 +76,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 		}
 		
 		// store value into the appriate datatype
-		TopologyValue tv = topology->setAttribute(objID, metaValueID[(int) att.storage_type], value);
-		if ( ! tv){
+		if ( ! topology->setAttribute(objID, metaValueID[(int) att.storage_type], value)){
 			throw IllegalStateError("Could not set the attribute");
 		}
 	}
@@ -124,8 +123,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 		}
 		
 		// store value into the appriate datatype
-		TopologyValue tv = topology->setAttribute(objID, metaValueID[(int) att.storage_type], value);
-		if ( ! tv){
+		if ( ! topology->setAttribute(objID, metaValueID[(int) att.storage_type], value)){
 			throw IllegalStateError("Could not set the attribute");
 		}
 	}

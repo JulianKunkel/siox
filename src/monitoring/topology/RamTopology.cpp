@@ -44,7 +44,7 @@ class RamTopology : public Topology {
 		virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw();
 		virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw();
 		virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw();
-		virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw();
+		virtual bool setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw();
 		virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw();
 		virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
@@ -351,33 +351,33 @@ TopologyAttribute RamTopology::lookupAttributeById( TopologyAttributeId attribut
 	return result;
 }
 
-TopologyValue RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
-	TopologyValue result;
-
+bool RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
 	AttributeMap* attributeMap = NULL;
 	objectsLock.lock_shared();
 	if( object < objectsById.size() ) attributeMap = attributeMapsById[object];
 	objectsLock.unlock_shared();
-	if( !attributeMap ) return result;
+	if( !attributeMap ) return false;
 
 	TopologyAttribute attribute = lookupAttributeById( attributeId );
-	if( attribute.dataType() != value.type() ) return result;
+	if( attribute.dataType() != value.type() ) return false;
 
+	TopologyValue result;
 	attributeMap->lock_shared();
 	IGNORE_EXCEPTIONS( result = attributeMap->at( attributeId ); );
 	attributeMap->unlock_shared();
 	if( !result ) {
 		Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( value, object, attributeId ) );
 		attributeMap->lock();
-		IGNORE_EXCEPTIONS( result = attributeMap->at( attributeId ); );
-		if( !result ) {
-			(*attributeMap)[attributeId].setObject( newValue );
-			result.setObject( newValue );
-		}
+		(*attributeMap)[attributeId].setObject( newValue );
 		attributeMap->unlock();
+		return true;
+	}else{
+		//Consistency check if we found a preexisting attributeId value.		
+		if( value != result.value() ){
+			return false;
+		}
+		return true;
 	}
-	if( value != result.value() ) result.setObject( 0 );	//Consistency check if we found a preexisting attributeId value.
-	return result;
 }
 
 TopologyValue RamTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {

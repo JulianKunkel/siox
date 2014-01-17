@@ -135,9 +135,8 @@ namespace monitoring {
 					throw IllegalStateError("Value has been set already");
 				}
 				
-				// store domain, name and storage type as attribute.				
-				TopologyValue tv = topology->setAttribute(objID, metaValueID[(int) meta.storage_type], value);
-				if ( ! tv){
+				// store domain, name and storage type as attribute.
+				if ( ! topology->setAttribute(objID, metaValueID[(int) meta.storage_type], value) ){
 					throw IllegalStateError("Could not set the attribute");
 				}
 			}
