@@ -36,15 +36,14 @@ namespace knowledge {
 
 class ReasonerStandardImplementation : public Reasoner, ReasoningDataReceivedCB, ComponentReportInterface {
 private:
-		// Our scope: PROCESS, NODE or SYSTEM
-		ReasonerStandardImplementationOptions::Role role;
+		ReasonerStandardImplementationOptions::Role role; // Our scope: PROCESS, NODE or SYSTEM
 		string id;
 
 		list<AnomalyTrigger *> triggers;
 		list<AnomalyPlugin *>  adpis;
 		list<Reasoner *>  reasoners; // remote reasoners
 
-		QualitativeUtilization * utilization = nullptr;
+		QualitativeUtilization * utilization;
 
 
 		thread                  periodicThread;
@@ -70,8 +69,8 @@ private:
 		shared_ptr<NodeHealth> nodeHealth;
 		shared_ptr<SystemHealth> systemHealth;
 		// States of possible child reasoners, depending on our role
-		unordered_map<string,ProcessHealth> * childProcessesHealthMap = nullptr;
-		unordered_map<string,NodeHealth> * childNodesHealthMap = nullptr;
+		unordered_map<string,ProcessHealth> * childProcessesHealthMap;
+		unordered_map<string,NodeHealth> * childNodesHealthMap;
 		// Aggregators for past and current issues and health statistics
 		shared_ptr<HealthStatistics> gatheredStatistics;
 		uint64_t observationTotal = 0;
@@ -102,7 +101,20 @@ public:
 	virtual shared_ptr<SystemHealth> getSystemHealth() override;
 	virtual shared_ptr<ProcessHealth> getProcessHealth() override;
 
-	ReasonerStandardImplementation() :  gatheredStatistics(new HealthStatistics) {
+	ReasonerStandardImplementation() : gatheredStatistics(new HealthStatistics) {
+		terminated = false;
+		upstreamReasonerExists = false;
+
+		utilization = nullptr;
+		comm = nullptr;
+
+		childProcessesHealthMap = nullptr;
+		childNodesHealthMap = nullptr;
+
+		for (int i = 0; i < HEALTH_STATE_COUNT; ++i){
+			observationCounts[i] = 0;
+			observationRatios[i] = 0.0;
+		}
 	}
 
 	~ReasonerStandardImplementation();

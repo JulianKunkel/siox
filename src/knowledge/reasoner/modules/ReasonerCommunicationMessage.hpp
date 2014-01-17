@@ -23,8 +23,6 @@ namespace knowledge {
 
 		string reasonerID; // identifier of the reasoner sending this message
 
-		uint64_t timestamp;
-
 		//@noserialization
 		void * messagePayload = nullptr;
 	};

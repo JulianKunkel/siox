@@ -46,6 +46,26 @@ struct HealthIssue{
 	// How can we derive this value?
 	int32_t delta_time_ms;
 
+
+	HealthIssue(){
+		this->name = "unspecified issue";
+		this->occurrences = 0;
+		this->delta_time_ms = 0;
+	}
+
+	HealthIssue( string name ){
+		this->name = name;
+		this->occurrences = 0;
+		this->delta_time_ms = 0;
+	}
+
+	HealthIssue( string name, uint32_t occurrences, int32_t delta_time_ms){
+		this->name = name;
+		this->occurrences = occurrences;
+		this->delta_time_ms = delta_time_ms;
+	}
+
+
 	bool operator==(const HealthIssue & hi) const{
 		return this->name == hi.name && this->occurrences == hi.occurrences && this->delta_time_ms == hi.delta_time_ms;
 	}
@@ -70,7 +90,6 @@ struct HealthIssue{
 
 		return result.str();
 	}
-
 };
 
 
@@ -98,7 +117,7 @@ struct HealthIssueList{
 	}
 
 
-	void add( const HealthIssueList hil ){
+	void add( const HealthIssueList & hil ){
 		for( auto itr = hil.issues.begin(); itr != hil.issues.end(); itr++ ){
 			this->add(*itr);
 		}
@@ -165,12 +184,38 @@ struct HealthIssueMap{
 
 //@serializable
 struct Health{
+
+	Timestamp timeLastModified; // The last time any modifications were made to the object's data
+
 	HealthState overallState;
 
 	array<uint32_t, HEALTH_STATE_COUNT> occurrences; // indexed by HealthState
 
 	list<HealthIssue> positiveIssues;
 	list<HealthIssue> negativeIssues;
+
+
+	Health(){
+		timeLastModified = time(0);
+		overallState = HealthState::OK;
+		for (int i = 0; i < HEALTH_STATE_COUNT; ++i)
+		{
+			occurrences[i] = 0;
+		}
+	}
+
+	Health( HealthState state ){
+		timeLastModified = time(0);
+		overallState = state;
+		for (int i = 0; i < HEALTH_STATE_COUNT; ++i)
+		{
+			occurrences[i] = 0;
+		}
+	}
+
+	Health( HealthState state, array<uint32_t, HEALTH_STATE_COUNT> nOccurrences, list<HealthIssue> posIssues, list<HealthIssue> negIssues) : overallState(state), occurrences(nOccurrences), positiveIssues(posIssues), negativeIssues(negIssues){
+		timeLastModified = time(0);
+	}
 };
 
 typedef Health SystemHealth;
@@ -181,7 +226,11 @@ typedef Health ProcessHealth;
 struct NodeHealth : public Health{
 	array<uint8_t, UTILIZATION_STATISTIC_COUNT> utilization; // UtilizationIndex
 
-	NodeHealth() : Health({HealthState::OK, {{0}}, {}, {} }), utilization({{0, 0, 0, 0}}) {}
+	NodeHealth(){
+		for (int i = 0; i < UTILIZATION_STATISTIC_COUNT; ++i){
+			this->utilization[i] = 0;
+		}
+	}
 };
 
 
