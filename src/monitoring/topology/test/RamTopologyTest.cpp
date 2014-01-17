@@ -103,42 +103,42 @@ int main( int argc, char const * argv[] ) throw() {
 		TopologyObject temp, object3;
 		temp = topology->lookupObjectByPath( "" );
 		assert( !temp );
-		temp = topology->lookupObjectByPath( TOPO_PATH_SEP "object1" );
+		temp = topology->lookupObjectByPath( "/object1" );
 		assert( !temp );
-		temp = topology->lookupObjectByPath( "object1" TOPO_PATH_SEP );
+		temp = topology->lookupObjectByPath( "object1/" );
 		assert( !temp );
-		temp = topology->lookupObjectByPath( "object1" TOPO_PATH_SEP TOPO_PATH_SEP "object2" );
+		temp = topology->lookupObjectByPath( "object1//object2" );
 		assert( !temp );
-		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object1" );
+		temp = topology->lookupObjectByPath( "type1:object1" );
 		assert( !temp );
-		temp = topology->lookupObjectByPath( "type2" TOPO_TYPE_SEP "object1" );
+		temp = topology->lookupObjectByPath( "type2:object1" );
 		assert( &*temp == &*object1 );
-		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_PATH_SEP "type2" TOPO_TYPE_SEP "object1" );
+		temp = topology->lookupObjectByPath( "type1:object2/type2:object1" );
 		assert( &*temp == &*object1 );
-		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object2" );
+		temp = topology->lookupObjectByPath( "type1:object2" );
 		assert( &*temp == &*object2 );
-		temp = topology->lookupObjectByPath( "type2" TOPO_TYPE_SEP "object1" TOPO_PATH_SEP "type1" TOPO_TYPE_SEP "object2" );
+		temp = topology->lookupObjectByPath( "type2:object1/type1:object2" );
 		assert( &*temp == &*object2 );
-		object3 = topology->registerObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_TYPE_SEP "type2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" TOPO_TYPE_SEP "trac" );
-		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" );
+		object3 = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
+		temp = topology->lookupObjectByPath( "type1:object2/tic:tac/toe:tric" );
 		assert( &*temp == &*object3 );
-		temp = topology->registerObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_TYPE_SEP "type2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" TOPO_TYPE_SEP "trac" );
+		temp = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
 		assert( &*temp == &*object3 );
-		temp = topology->registerObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" TOPO_TYPE_SEP "trac" );
+		temp = topology->registerObjectByPath( "type1:object2/tic:tac/toe:tric:trac" );
 		assert( !temp );
-		temp = topology->registerObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_TYPE_SEP "type2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" );
+		temp = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric" );
 		assert( !temp );
-		temp = topology->lookupObjectByPath( "type1" TOPO_TYPE_SEP "object2" TOPO_TYPE_SEP "type2" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" TOPO_TYPE_SEP "trac" );
+		temp = topology->lookupObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
 		assert( &*temp == &*object3 );
-		assert( topology->setAlias( "foo", "type1" TOPO_TYPE_SEP "object2" ) );
-		assert( topology->setAlias( "foo", "type1" TOPO_TYPE_SEP "object2" ) );
-		assert( !topology->setAlias( "foo", "foo" TOPO_TYPE_SEP "bar" ) );
-		assert( !topology->setAlias( "bar", "foo" ) );
-		assert( !topology->setAlias( "bar", "foo" TOPO_TYPE_SEP "bar" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" ) );
-		assert( ! topology->setAlias( "foo", "type1" TOPO_TYPE_SEP "object2/2" ) );
-		assert( !topology->setAlias( "foo" TOPO_PATH_SEP "bar", "type1" TOPO_TYPE_SEP "object2" ) );
-		assert( topology->setAlias( "bar", TOPO_ALIAS_SEP "foo" ) );
-		temp = topology->lookupObjectByPath( TOPO_ALIAS_SEP "bar" TOPO_PATH_SEP "tic" TOPO_TYPE_SEP "tac" TOPO_PATH_SEP "toe" TOPO_TYPE_SEP "tric" );
+		assert( topology->setAlias( "@foo", "type1:object2" ) );
+		assert( topology->setAlias( "@foo", "type1:object2" ) );
+		assert( !topology->setAlias( "@foo", "foo:bar" ) );
+		assert( !topology->setAlias( "@bar", "foo" ) );
+		assert( !topology->setAlias( "@bar", "foo:bar/tic:tac" ) );
+		assert( !topology->setAlias( "foo", "type1:object2" ) );
+		assert( !topology->setAlias( "@foo/bar", "type1:object2" ) );
+		assert( topology->setAlias( "@bar", "@foo" ) );
+		temp = topology->lookupObjectByPath( "@bar/tic:tac/toe:tric" );
 		assert( &*temp == &*object3 );
 	}
 
@@ -223,6 +223,21 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( valueList.size() == 2 );
 	assert( &*valueList[0] == &*value1 || &*valueList[0] == &*value2 );
 	assert( &*valueList[1] == &*value1 || &*valueList[1] == &*value2 );
+
+	// Test object with full string paths
+	{
+	TopologyObject obj1 = topology->registerObjectByPath( {{"ComponentID", "test", "Component"}, {"AttributeID", 4711, "Attribute"}} );
+	assert(obj1);
+	TopologyObject obj2 = topology->lookupObjectByPath( {{"ComponentID", "test"}, {"AttributeID", 4711}} );
+	assert( &*obj1 == &*obj2 );
+	}
+	{
+	TopologyObject obj1 = topology->registerObjectByPath( {{"ComponentID", "@proc/schuh:shoe", "Component"}, {"AttributeID", "@slang:///FALSE\1\2\3TRUE", "Attribute"}} );
+	assert(obj1);
+	TopologyObject obj2 = topology->lookupObjectByPath(  {{"ComponentID", "@proc/schuh:shoe"}, {"AttributeID", "@slang:///FALSE\1\2\3TRUE"}} );
+	assert( &*obj1 == &*obj2 );
+	}
+
 
 	delete topology;
 

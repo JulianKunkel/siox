@@ -38,7 +38,7 @@ private:
 
 		assert(topology);
 
-		TopologyObject ontologyTopologyObject = topology->registerObjectByPath( "Module" TOPO_TYPE_SEP "SystemInformationIDManager" );
+		TopologyObject ontologyTopologyObject = topology->registerObjectByPath( "Module:SystemInformationIDManager" );
 		pluginTopoObjectID = ontologyTopologyObject.id();		
 
 		TopologyTypeId systemInfoID = topology->registerType("SystemInformation").id();
@@ -160,7 +160,7 @@ private:
 
 	UniqueInterfaceID register_interfaceID( const string & interface, const string & implementation ) {
 		stringstream s;
-		s << "SystemInformationInterface" TOPO_TYPE_SEP << interface << TOPO_PATH_SEP "SystemInformationInterfaceImplementation" TOPO_TYPE_SEP << implementation;
+		s << "SystemInformationInterface:" << interface << "/SystemInformationInterfaceImplementation:" << implementation;
 
 		TopologyObject d = topology->registerObjectByPath( s.str(), pluginTopoObjectID );
 		if ( ! d ){
@@ -184,7 +184,7 @@ private:
 
 	UniqueInterfaceID lookup_interfaceID( const string & interface, const string & implementation ) const throw( NotFoundError ) {
 		stringstream s;
-		s << "SystemInformationInterface" TOPO_TYPE_SEP << interface << TOPO_PATH_SEP "SystemInformationInterfaceImplementation" TOPO_TYPE_SEP << implementation;
+		s << "SystemInformationInterface:" << interface << "/SystemInformationInterfaceImplementation:" << implementation;
 		TopologyObject obj = topology->lookupObjectByPath( s.str(), pluginTopoObjectID);
 		if (! obj){
 			throw NotFoundError();

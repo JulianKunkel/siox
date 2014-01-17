@@ -153,12 +153,29 @@ namespace monitoring {
 	typedef std::vector<TopologyRelation> TopologyRelationList;
 	typedef std::vector<TopologyValue> TopologyValueList;
 
-	#define TOPO_PATH_CHAR '\1'
-	#define TOPO_ALIAS_CHAR '\2'
-	#define TOPO_TYPE_CHAR '\3'
-	#define TOPO_PATH_SEP "\1"
-	#define TOPO_ALIAS_SEP "\2"
-	#define TOPO_TYPE_SEP "\3"
+	struct ObjectPathElement{
+		string relationName;
+		string name;
+
+		ObjectPathElement(const string & relationName, const string & name) : relationName(relationName), name(name) {}
+		ObjectPathElement(const string & relationName, int64_t name) : relationName(relationName), name(to_string(name)) {}
+		ObjectPathElement(const string & relationName, uint64_t name) : relationName(relationName), name(to_string(name)) {}
+		ObjectPathElement(const string & relationName, int32_t name) : relationName(relationName), name(to_string(name)) {}
+		ObjectPathElement(const string & relationName, uint32_t name) : relationName(relationName), name(to_string(name)) {}
+	};
+
+	struct CreateObjectPathElement{
+		string objectType;
+		string relationName;
+		string name;
+
+		CreateObjectPathElement(const string & relationName, const string & name, const string & objectType) : objectType(objectType), relationName(relationName), name(name) {}
+		CreateObjectPathElement(const string & relationName, uint64_t name, const string & objectType) : objectType(objectType), relationName(relationName), name(to_string(name)) {}
+		CreateObjectPathElement(const string & relationName, int64_t name, const string & objectType) : objectType(objectType), relationName(relationName), name(to_string(name)) {}
+		CreateObjectPathElement(const string & relationName, uint32_t name, const string & objectType) : objectType(objectType), relationName(relationName), name(to_string(name)) {}
+		CreateObjectPathElement(const string & relationName, int32_t name, const string & objectType) : objectType(objectType), relationName(relationName), name(to_string(name)) {}
+
+	};
 				
 	class Topology : public core::Component {
 		//lookupXXX() members generally indicate failure by returning a false object, i. e. you are free to write
@@ -169,9 +186,11 @@ namespace monitoring {
 		public:
 			//High level functions for easy handling of topology objects by specifying paths.
 			//These are implemented as metaalgorithms directly in this class, calling the plumbing level functions to do their work.
-			virtual TopologyObject registerObjectByPath( const string& path, TopologyObjectId parent = 0 ) throw();
-			virtual TopologyObject lookupObjectByPath( const string& path, TopologyObjectId parent = 0 ) throw();
+			TopologyObject registerObjectByPath( const vector<CreateObjectPathElement> & path, TopologyObjectId parent = 0 ) throw();
+			TopologyObject lookupObjectByPath( const vector<ObjectPathElement> & path, TopologyObjectId parent = 0 ) throw();
 
+			TopologyObject registerObjectByPath( const string & path, TopologyObjectId parent = 0 ) throw();
+			TopologyObject lookupObjectByPath( const string & path, TopologyObjectId parent = 0 ) throw();
 
 			virtual bool setAlias( const string& aliasName, const string& aliasValue ) throw();	//Return true on success. For requirements on the alias name and value, see the class comment above.
 
@@ -210,149 +229,6 @@ namespace monitoring {
 			PathComponentDescription* parsePath( const string& path, size_t* outComponentCount ) throw();	//Returns a new array of outComponentCount PathComponentDescriptions or NULL if an error occured.
 			bool parsePathComponent( const string& component, PathComponentDescription* outDescription) throw();	//Returns true on success.
 	};
-
-	Topology::PathComponentDescription* Topology::parsePath( const string& path, size_t* outComponentCount ) throw() {
-		//First count the path components, so that we can allocate descriptions for them.
-		size_t componentCount = 1, pathSize = path.size();
-		if( !pathSize ) return NULL;
-		for( size_t i = pathSize; i--; ) if( path[i] == TOPO_PATH_CHAR ) componentCount++;
-		//Get some mem.
-		PathComponentDescription* result = new PathComponentDescription[componentCount];
-		//Parse the components.
-		for( size_t i = 0, curComponent = 0; i < pathSize; i++, curComponent++ ) {
-			size_t componentStart = i;
-			for( ; i < pathSize && path[i] != TOPO_PATH_CHAR; i++ ) ;
-			string componentString = path.substr( componentStart, i - componentStart );
-			if( !parsePathComponent( componentString, &result[curComponent] ) ) {
-				delete[] result;
-				return NULL;
-			}
-		}
-		*outComponentCount = componentCount;
-		return result;
-	}
-
-	bool Topology::parsePathComponent( const string& aliasedComponent, Topology::PathComponentDescription* outDescription ) throw() {
-		//Substitute possible aliases.
-		const string* component = &aliasedComponent;
-		aliasesLock.lock_shared();
-		{
-			while( component && component->size() && (*component)[0] == TOPO_ALIAS_CHAR ) {
-				const string* temp = NULL;
-				IGNORE_EXCEPTIONS( temp = &aliases.at( component->substr(1) ); );
-				component = temp;
-			}
-		}
-		aliasesLock.unlock_shared();
-		if( !component ) return false;
-		//Sanity check: Count the number of colons in the component string.
-		size_t colonCount = 0, componentSize = component->size();
-		for( size_t i = 0; i < componentSize; i++) {
-			switch( (*component)[i] ) {
-				case TOPO_TYPE_CHAR: colonCount++; break;
-				case TOPO_PATH_CHAR: return false;
-			}
-		}
-		if( !colonCount || colonCount > 2 ) return false;
-		if( colonCount == 1 ) {
-			//Find the one colon and check for empty names.
-			size_t colonPosition = 0;
-			for( ; (*component)[colonPosition] != TOPO_TYPE_CHAR; colonPosition++ ) ;
-			if( !colonPosition || colonPosition == componentSize - 1 ) return false;
-			//Fill in the descriptor.
-			outDescription->relationName = component->substr( 0, colonPosition );
-			outDescription->childName = component->substr( colonPosition + 1, componentSize - colonPosition - 1 );
-			outDescription->haveChildType = false;
-		} else {
-			//Find the colon positions and check for empty names.
-			size_t colon1 = 0, colon2 = 0;
-			for( ; (*component)[colon1] != TOPO_TYPE_CHAR; colon1++ ) ;
-			for( colon2 = colon1 + 1; (*component)[colon2] != TOPO_TYPE_CHAR; colon2++ ) ;
-			if( !colon1 || colon1 == colon2 - 1 || colon2 == componentSize - 1 ) return false;
-			//Fill in the descriptor.
-			outDescription->relationName = component->substr( 0, colon1 );
-			outDescription->childName = component->substr( colon1 + 1, colon2 - colon1 - 1 );
-			outDescription->childTypeName = component->substr( colon2 + 1, componentSize - colon2 - 1 );
-			outDescription->haveChildType = true;
-		}
-		return true;
-	}
-
-	TopologyObject Topology::registerObjectByPath( const string& path, TopologyObjectId parent ) throw() {
-		size_t componentCount;
-		if( PathComponentDescription* components = parsePath( path, &componentCount ) ) {
-			TopologyObjectId resultId = parent;
-			TopologyObject result;
-			for( size_t i = 0; i < componentCount; i++ ) {
-				PathComponentDescription* curComponent = &components[i];
-				//Lookup the corresponding relation and update resultId.
-				TopologyType relationType = registerType( curComponent->relationName );
-				assert( relationType );
-				if( !curComponent->haveChildType ) curComponent->childTypeName = curComponent->relationName;
-				TopologyType childType = registerType( curComponent->childTypeName );
-				assert( childType );
-				TopologyObject child = registerObject( resultId, relationType.id(), curComponent->childName, childType.id() );
-				if( !child ) break;
-				resultId = child.id();
-				if( i == componentCount - 1 ) result = child;
-			}
-			delete[] components;
-			return result;
-		}
-		return TopologyObject();
-	}
-
-	TopologyObject Topology::lookupObjectByPath( const string& path, TopologyObjectId parent ) throw() {
-		size_t componentCount;
-		if( PathComponentDescription* components = parsePath( path, &componentCount ) ) {
-			TopologyObjectId resultId = parent;
-			TopologyObject result;
-			for( size_t i = 0; i < componentCount; i++ ) {
-				PathComponentDescription* curComponent = &components[i];
-				//Lookup the corresponding relation and update resultId.
-				TopologyType relationType = lookupTypeByName( curComponent->relationName );
-				if( !relationType ) break;
-				TopologyRelation relation = lookupRelation( resultId, relationType.id(), curComponent->childName );
-				if( !relation ) break;
-				resultId = relation.child();
-				if( curComponent->haveChildType ) {	//Does the user want a type check?
-					TopologyObject child = lookupObjectById( resultId );
-					TopologyType expectedType = lookupTypeByName( curComponent->childTypeName );
-					if( !child || !expectedType || child.type() != expectedType.id() ) break;
-					if( i == componentCount - 1 ) result = child;
-				} else if( i == componentCount - 1 ) {
-					result = lookupObjectById( resultId );
-				}
-			}
-			delete[] components;
-			return result;
-		}
-		return TopologyObject();
-	}
-
-	bool Topology::setAlias( const string& name, const string& value ) throw() {
-		//First some sanity checks.
-		size_t nameSize = name.size();
-		if( nameSize < 2 ) return false;
-		
-		for( size_t i = 0; i < nameSize; i++) if( name[i] == TOPO_PATH_CHAR ) return false;
-		PathComponentDescription trash;
-		if( !parsePathComponent( value, &trash ) ) return false;
-
-		bool success = false;
-		aliasesLock.lock();
-		{
-			string* oldValue = NULL;
-			IGNORE_EXCEPTIONS( oldValue = &aliases.at( name ); );
-			if( !oldValue || *oldValue == value ) {
-				//Then the actual "work".
-				aliases[name] = value;
-				success = true;
-			}
-		}
-		aliasesLock.unlock();
-		return success;
-	}
 
 }
 

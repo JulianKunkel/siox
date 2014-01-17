@@ -20,11 +20,27 @@ target_link_libraries(
 	${PostgreSQL_LIBRARIES}
 )
 
+
+add_library(
+	siox-monitoring-Topology
+	Topology.cpp
+)
+
+target_link_libraries(
+	siox-monitoring-RamTopology
+	siox-core-AutoConfigurator
+	siox-monitoring-Topology
+	siox-util
+	${Boost_LIBRARIES}
+	${PostgreSQL_LIBRARIES}
+)
+
 siox_run_serializer(RamTopologyOptions.hpp RamTopologyOptions.cpp)
 
 add_subdirectory(test)
 
 install(TARGETS siox-monitoring-RamTopology LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
+install(TARGETS siox-monitoring-Topology LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
 
 if (PostgreSQL_FOUND)
 	add_subdirectory(databaseTopology)

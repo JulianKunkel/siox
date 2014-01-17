@@ -27,9 +27,9 @@ class ProviderSkeleton: public StatisticsProviderPlugin {
 		virtual vector<StatisticsProviderDatatypes> availableMetrics() override {
 			vector<StatisticsProviderDatatypes> result;
 
-			result.push_back( {SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", LOCALHOST, i, GAUGE, "%", "test desc", 0, 0} );
-			result.push_back( {HARDWARE_SPECIFIC, NODE, "test/weather", LOCALHOST PATH_SEP "weather-station:0", f, INCREMENTAL, "unit", "desc2", 0, 0} );
-			result.push_back( {HARDWARE_SPECIFIC, DEVICE, "test/hdd", LOCALHOST PATH_SEP "sda:1", f, INCREMENTAL, "GB/s", "Throughput", 0, 0} );
+			result.push_back( {SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", "@localhost", i, GAUGE, "%", "test desc", 0, 0} );
+			result.push_back( {HARDWARE_SPECIFIC, NODE, "test/weather", "@localhost/weather-station:0", f, INCREMENTAL, "unit", "desc2", 0, 0} );
+			result.push_back( {HARDWARE_SPECIFIC, DEVICE, "test/hdd", "@localhost/sda:1", f, INCREMENTAL, "GB/s", "Throughput", 0, 0} );
 
 			return result;
 		}

@@ -31,7 +31,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 		topology = GET_INSTANCE(Topology, o.topology);
 		assert(topology);
 
-		TopologyObject asObject = topology->registerObjectByPath( "Module" TOPO_TYPE_SEP "AssociationMapper" );
+		TopologyObject asObject = topology->registerObjectByPath( {{"ModuleName", "AssociationMapper", "Module"}} );
 		pluginTopoObjectID = asObject.id();
 
 		processID = topology->registerType("ProcessID").id();
@@ -55,12 +55,13 @@ class TopologyAssociationMapper: public AssociationMapper {
 
 
 	void set_process_attribute( const ProcessID & pid, const OntologyAttribute & att, const OntologyValue & value ) throw( IllegalStateError ) override {
-		stringstream s;
-		s << "ProcessID" << TOPO_TYPE_SEP << pid << TOPO_PATH_SEP << "OntologyAttributeID" TOPO_TYPE_SEP  << att.aID;
+		stringstream spid, sAttrID;
+		spid <<  pid;
+		sAttrID << att.aID;
 
-		TopologyObject obj = topology->registerObjectByPath( s.str(), pluginTopoObjectID );
+		TopologyObject obj = topology->registerObjectByPath( {{"ProcessID", spid.str(), "Process"}, {"AttributeID", sAttrID.str(), "Attribute"}}, pluginTopoObjectID );
 		if ( ! obj ){
-			throw IllegalStateError("Could not register attribute: " + s.str());
+			throw IllegalStateError("Could not register attribute: " + spid.str() + "-" + sAttrID.str());
 		}
 		const uint32_t objID = obj.id();
 
@@ -82,10 +83,11 @@ class TopologyAssociationMapper: public AssociationMapper {
 	}
 
 	const OntologyValue lookup_process_attribute( const ProcessID & pid, const OntologyAttribute & att ) const throw( NotFoundError ) override {
-		stringstream s;
-		s << "ProcessID" << TOPO_TYPE_SEP << pid << TOPO_PATH_SEP << "OntologyAttributeID" TOPO_TYPE_SEP << att.aID;
+		stringstream spid, sAttrID;
+		spid <<  pid;
+		sAttrID << att.aID;
 
-		TopologyObject obj = topology->lookupObjectByPath(s.str(), pluginTopoObjectID);
+		TopologyObject obj = topology->lookupObjectByPath(  {{"ProcessID", spid.str()}, {"AttributeID", sAttrID.str() }}, pluginTopoObjectID);
 		if ( ! obj ){
 			throw NotFoundError();
 		}
@@ -101,12 +103,13 @@ class TopologyAssociationMapper: public AssociationMapper {
 	}
 
 	void set_component_attribute( const ComponentID & cid, const OntologyAttribute & att, const  OntologyValue & value ) throw( IllegalStateError ) override {
-		stringstream s;
-		s << "ComponentID" << TOPO_TYPE_SEP << cid << TOPO_PATH_SEP << "OntologyAttributeID" TOPO_TYPE_SEP << att.aID;
+		stringstream scid, sAttrID;
+		scid <<  cid;
+		sAttrID << att.aID;
 
-		TopologyObject obj = topology->registerObjectByPath( s.str(), pluginTopoObjectID );
+		TopologyObject obj = topology->registerObjectByPath( {{"ComponentID", scid.str(), "Component"}, {"AttributeID", sAttrID.str(), "Attribute"}}, pluginTopoObjectID );
 		if ( ! obj ){
-			throw IllegalStateError("Could not register attribute: " + s.str());
+			throw IllegalStateError("Could not register attribute: " + scid.str() + "/" + sAttrID.str());
 		}
 		const uint32_t objID = obj.id();
 
@@ -128,10 +131,11 @@ class TopologyAssociationMapper: public AssociationMapper {
 	}
 
 	const OntologyValue lookup_component_attribute( const ComponentID & cid, const OntologyAttribute & att ) const throw( NotFoundError ) override {
-		stringstream s;
-		s << "ComponentID" TOPO_TYPE_SEP << cid << TOPO_PATH_SEP "OntologyAttributeID" TOPO_TYPE_SEP << att.aID;
+		stringstream scid, sAttrID;
+		scid <<  cid;
+		sAttrID << att.aID;
 
-		TopologyObject obj = topology->lookupObjectByPath(s.str(), pluginTopoObjectID);
+		TopologyObject obj = topology->lookupObjectByPath( {{"ComponentID", scid.str()}, {"AttributeID", sAttrID.str()}}, pluginTopoObjectID);
 		if ( ! obj ){
 			throw NotFoundError();
 		}

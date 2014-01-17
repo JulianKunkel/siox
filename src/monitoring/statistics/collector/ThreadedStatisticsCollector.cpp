@@ -255,13 +255,13 @@ void ThreadedStatisticsCollector::init() throw() {
 			cerr << "Fatal error: gethostname() is not POSIX.1-2001 compliant on this system. Aborting.\n";
 			abort();
 		}
-		string topologyPath = string( "host" TOPO_TYPE_SEP ) + string( hostname );
+		string topologyPath = string( "host:" ) + string( hostname );
 		if( !topology->registerObjectByPath( topologyPath ) ) {
 			cerr << "SIOX internal error: Can't register the topology path \"" << topologyPath << "\". Aborting.\n";
 			abort();
 		}
-		if( !topology->setAlias( "localhost", topologyPath ) ) {
-			cerr << "SIOX internal error: Inconsistent definitions of topology alias \"localhost\". Aborting.\n";
+		if( !topology->setAlias( "@localhost", topologyPath ) ) {
+			cerr << "SIOX internal error: Inconsistent definitions of topology alias \"@localhost\". Aborting.\n";
 			abort();
 		}
 	}
