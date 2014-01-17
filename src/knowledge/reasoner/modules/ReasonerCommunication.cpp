@@ -85,18 +85,21 @@ void ReasonerCommunication::messageReceivedCB(std::shared_ptr<ServerClientMessag
 	switch (expectedResponse){
 	case (ReasonerMessageDataType::PROCESS) : {
 		shared_ptr<ProcessHealth> payload = cb.getProcessHealth();
+		assert(payload);
 		rmsd.messagePayload = &* payload;
 		msg->isendResponse(& rmsd);
 		break;
 	}
 	case (ReasonerMessageDataType::NODE) : {
 		shared_ptr<NodeHealth> payload = cb.getNodeHealth();
+		assert(payload);
 		rmsd.messagePayload = &* payload;
 		msg->isendResponse(& rmsd);
 		break;
 	}
 	case (ReasonerMessageDataType::SYSTEM) : {
 		shared_ptr<SystemHealth> payload = cb.getSystemHealth();
+		assert(payload);
 		rmsd.messagePayload = &* payload;
 		msg->isendResponse(& rmsd);
 		break;

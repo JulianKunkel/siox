@@ -1,4 +1,6 @@
 /**
+ * Topologoy that holds its data in a SQL-database
+ *
  * @author Roman Michel
  * @date 2013
  */
@@ -6,10 +8,13 @@
 #include <util/ExceptionHandling.hpp>
 #include <monitoring/topology/TopologyImplementation.hpp>
 #include <workarounds.hpp>
- #include <boost/algorithm/string.hpp>
 
- #include <pqxx/pqxx>
- #include <boost/algorithm/string.hpp>
+#include <pqxx/pqxx>
+#include <boost/algorithm/string.hpp>
+
+#include "DatabaseTopologyOptions.hpp"
+
+#include <sstream>
 
 using namespace std;
 using namespace core;
@@ -19,21 +24,20 @@ using namespace boost;
 
 class DatabaseTopology : public Topology {
     public:
-        DatabaseTopology();
         ~DatabaseTopology();
 
         virtual void init();
+        virtual ComponentOptions * AvailableOptions();
 
         virtual TopologyType registerType( const string& name ) throw();
         virtual TopologyType lookupTypeByName( const string& name ) throw();
         virtual TopologyType lookupTypeById( TopologyTypeId anId ) throw();
-
         virtual TopologyObject registerObject( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw();
-        virtual TopologyObject lookupObjectByPath( const string& Path ) throw();
         virtual TopologyObject lookupObjectById( TopologyObjectId anId ) throw();
 
         virtual TopologyRelation registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw();
-        virtual TopologyRelation lookupRelation( TopologyObjectId parent, const string& childName ) throw();
+        virtual TopologyRelation lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw();
+
 
         virtual TopologyRelationList enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw();
         virtual TopologyRelationList enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw();
@@ -42,21 +46,32 @@ class DatabaseTopology : public Topology {
         virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw();
         virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw();
         virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw();
-        virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw();
+        virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw();
         virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw();
         virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
     private:
         connection* conn;
 
-        string serializeTopologyValue(TopologyValue value) {
+        string serializeTopologyVariable(TopologyVariable value) {
+            /* OLD AND BROKEN
+            ONLY HERE FOR REFERENCE
             string result = to_string(value->object)+"|"+to_string(value->attribute);
             int tmpint = (int8_t) value->value.type();
             result = result+"|"+to_string(tmpint)+"|"+value->value.str();
             return result;
+            */
+
+            string result = to_string(value.str());
+            int tmpint = (int8_t) value.type();
+            result = result+"|"+to_string(tmpint);
+
+            return result;
         }
 
-        TopologyValue& deserializeTopologyValue(string value) {
+        TopologyVariable* deserializeTopologyVariable(string value) {
+            /*OLD AND BROKEN
+            ONLY HERE FOR REFERENCE
             TopologyValue tmpValue;
             TopologyObjectId tmpObject;
             TopologyAttributeId tmpAttr;
@@ -72,23 +87,44 @@ class DatabaseTopology : public Topology {
 
             Release<TopologyValueImplementation> newValue(new TopologyValueImplementation(*innerValue, tmpObject, tmpAttr));
             tmpValue.setObject(newValue);
+
+            return tmpValue;*/
+
+            TopologyVariable *innerValue;
+
+            vector<string> SplitVec;
+            split(SplitVec, value, is_any_of("|"), token_compress_on);
+
+            innerValue = new VariableDatatype((VariableDatatype::Type) stoul(SplitVec.at(1)), SplitVec.at(0));
+
+            return innerValue;
         }
 };
-
-DatabaseTopology::DatabaseTopology() {
-    // TODO: Alles in init?
-}
 
 DatabaseTopology::~DatabaseTopology() {
     conn->disconnect();
 }
 
 void DatabaseTopology::init() {
-    conn = new connection("hostaddr=136.172.14.14 port=48142 user=siox password=xxx dbname=siox");
+    DatabaseTopologyOptions & o = getOptions<DatabaseTopologyOptions>();
+    stringstream endpoint;
+    endpoint << "hostaddr=" << o.hostaddress << " port=" << o.port << " user=" << o.username << " password=" << o.password << " dbname=" << o.dbname;
+
+    conn = new connection(endpoint.str());
+}
+
+ComponentOptions* DatabaseTopology::AvailableOptions() {
+    return new DatabaseTopologyOptions();
 }
 
 TopologyType DatabaseTopology::registerType( const string& name ) throw() {
     TopologyType tmpType;
+
+    tmpType = lookupTypeByName(name);
+    if( tmpType ){
+        return tmpType;
+    }
+
     Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name));
 
     // TODO: Check if already in the database?
@@ -96,26 +132,27 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
     work insertAction(*conn, "Insert Transaction");
 
     // Perform the insert
-    insertAction.exec("INSERT INTO Type (name) VALUES ('"+insertAction.esc(name)+"')");
+    insertAction.exec("INSERT INTO type (name) VALUES ('"+insertAction.esc(name)+"')");
     insertAction.commit();
+
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "Select Transaction");
-
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT id FROM Type WHERE name='" + selectAction.esc(name) + "'"));
+    result resultSelect = selectAction.exec(("SELECT id FROM type WHERE name='" + selectAction.esc(name) + "'"));
     selectAction.commit();
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
         // Check if results are sane (and convert them)
-        // TODO: Conversion okay?
         if (!resultSelect[0]["id"].to(newType->id)) {
             // TODO: ERROR
+            assert(false);
         }
     }
     else {
         // TODO: ERROR
+        assert(false);
     }
 
     tmpType.setObject(newType);
@@ -123,7 +160,7 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
 }
 
 TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw() {
-    TopologyType tmpType;
+    
     Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name));
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
@@ -135,22 +172,23 @@ TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw() {
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
+        TopologyType tmpType;
         // Check if results are sane (and convert them)
-        // TODO: Conversion okay?
         if (!resultSelect[0]["id"].to(newType->id)) {
             // TODO: ERROR
+            assert(false);
         }
+        tmpType.setObject(newType);
+
+        return tmpType;
     }
     else {
-        // TODO: ERROR
+        // Not found
+        return TopologyType();
     }
-
-    tmpType.setObject(newType);
-    return tmpType;
 }
 
 TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
-    TopologyType tmpType;
     string tmpName;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
@@ -162,25 +200,31 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
+        TopologyType tmpType;
         // Check if results are sane (and convert them)
-        // TODO: Conversion okay?
         if (!resultSelect[0]["name"].to(tmpName)) {
             // TODO: ERROR
+            assert(false);
         }
+        Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(tmpName));
+        newType->id = anId;
+        tmpType.setObject(newType);
+        return tmpType;
+
     }
     else {
-        // TODO: ERROR
+        // Not found
+        return TopologyType();
     }
-
-    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(tmpName));
-    newType->id = anId;
-    tmpType.setObject(newType);
-
-    return tmpType;
 }
 
 TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
-    TopologyObject tmpObject;
+
+    TopologyRelation tmpRelation = lookupRelation(parentId, relationType, childName);
+    if(tmpRelation){
+        return lookupObjectById(tmpRelation.child());
+    }
+
     Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation( objectType ) );
 
     // TODO: Check if already in the database?
@@ -188,39 +232,29 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
     work insertAction(*conn, "Insert Transaction");
 
     // Perform the insert
-    insertAction.exec("INSERT INTO Object (typeId) VALUES ('"+to_string(objectType)+"')");
+    result resultSelect = insertAction.exec("INSERT INTO Object (typeId) VALUES ('"+to_string(objectType)+"') returning id" );
     insertAction.commit();
-
-    // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
-
-    // Perform a select
-    result resultSelect = selectAction.exec(("SELECT id FROM Object WHERE typeId='" + to_string(objectType) + "'"));
-    selectAction.commit();
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
+         TopologyObjectId tmpId;
+
         // Check if results are sane (and convert them)
-        // TODO: Conversion okay?
-        if (!resultSelect[0]["id"].to(newObject->id)) {
+        if (!resultSelect[0]["id"].to(tmpId)) {
             // TODO: ERROR
+            assert(false);
         }
+        TopologyObject tmpObject;
+        Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(tmpId) );
+        tmpObject.setObject(newObject);  
+
+        registerRelation(parentId, relationType, childName, tmpId );
+        return tmpObject;
     }
     else {
         // TODO: ERROR
+        assert(false);
     }
-
-    // Perform another insert for the relation
-    insertAction.exec("INSERT INTO Relation (parentObjectId, childName, childObjectId, relationTypeId) VALUES ('"+to_string(parentId)+"','"+insertAction.esc(childName)+"','"+to_string(newObject->id)+"','"+to_string(relationType)+"')");
-    insertAction.commit();
-
-    tmpObject.setObject(newObject);
-    return tmpObject;
-}
-
-TopologyObject DatabaseTopology::lookupObjectByPath( const string& path ) throw() {
-    // TODO: Old logic completly broken. Rethink.
-    assert(0 && "TODO"), abort();
 }
 
 TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw() {
@@ -237,23 +271,27 @@ TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw
     // Check if there is only one result
     if (resultSelect.size() == 1) {
         // Check if results are sane (and convert them)
-        // TODO: Conversion okay?
         if (!resultSelect[0]["TypeId"].to(tmpId)) {
             // TODO: ERROR
+            assert(false);
         }
+        Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(tmpId) );
+        tmpObject.setObject(newObject);
     }
     else {
         // TODO: ERROR
     }
 
-    Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(tmpId) );
-    tmpObject.setObject(newObject);
     return tmpObject;
 }
 
 TopologyRelation DatabaseTopology::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
     TopologyRelation tmpRelation;
-    Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
+
+    tmpRelation = lookupRelation(parent, relationType, childName);
+    if(tmpRelation){
+        return tmpRelation;
+    }
 
     // TODO: Check if already in the database?
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
@@ -263,13 +301,13 @@ TopologyRelation DatabaseTopology::registerRelation( TopologyObjectId parent, To
     insertAction.exec("INSERT INTO Relation (parentObjectId, childName, childObjectId, relationTypeId) VALUES ('"+to_string(parent)+"','"+insertAction.esc(childName)+"','"+to_string(child)+"','"+to_string(relationType)+"')");
     insertAction.commit();
 
+    Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
+
     tmpRelation.setObject(newRelation);
     return tmpRelation;
 }
 
-TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, const string& childName ) throw() {
-    TopologyRelation tmpRelation;
-
+TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() {
     TopologyTypeId tmpRelationType;
     TopologyObjectId tmpChild;
 
@@ -282,25 +320,30 @@ TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, cons
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
+        TopologyRelation tmpRelation;
+
         // Check if results are sane (and convert them)
         // TODO: Conversion okay?
         if (!resultSelect[0]["childObjectID"].to(tmpChild)) {
             // TODO: ERROR
+            assert(false);
         }
         if (!resultSelect[0]["relationTypeId"].to(tmpRelationType)) {
             // TODO: ERROR
+            assert(false);
         }
+        Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, tmpChild, tmpRelationType ) );
+        tmpRelation.setObject(newRelation);
+        return tmpRelation;
     }
     else {
-        // TODO: ERROR
+        // Not found
+        return TopologyRelation();
     }
 
-    Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, tmpChild, tmpRelationType ) );
-    tmpRelation.setObject(newRelation);
-    return tmpRelation;
 }
 
-Topology::TopologyRelationList DatabaseTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
+TopologyRelationList DatabaseTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "Select Transaction");
 
@@ -327,13 +370,13 @@ Topology::TopologyRelationList DatabaseTopology::enumerateChildren( TopologyObje
         }
     }
     else {
-        // TODO: ERROR
+        // Not found
     }
     return returnVector;
     
 }
 
-Topology::TopologyRelationList DatabaseTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
+TopologyRelationList DatabaseTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "Select Transaction");
 
@@ -360,12 +403,18 @@ Topology::TopologyRelationList DatabaseTopology::enumerateParents( TopologyObjec
         }
     }
     else {
-        // TODO: ERROR
+        // Not found
     }
     return returnVector;
 }
 
 TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
+
+    TopologyAttribute tmp = lookupAttributeByName(domain, name);
+    if(tmp){
+        return tmp;
+    }
+
     // TODO: Check if already in the database?
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work insertAction(*conn, "Insert Transaction");
@@ -390,10 +439,12 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
         // TODO: Conversion okay?
         if (!resultSelect[0]["id"].to(newAttribute->id)) {
             // TODO: ERROR
+            assert(false);
         }
     }
     else {
-        // TODO: ERROR
+        // Not found
+        assert(false);
     }
 
     tmpAttribute.setObject(newAttribute);
@@ -401,8 +452,6 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
 }
 
 TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
-    TopologyAttribute tmpAttribute;
-
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "Select Transaction");
     TopologyTypeId tmpId;
@@ -414,24 +463,26 @@ TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
+        TopologyAttribute tmpAttribute;
         // Check if results are sane (and convert them)
-        // TODO: Conversion okay?
-        if (!resultSelect[0]["id"].to(tmpId) &&
-            !resultSelect[0]["dataType"].to(tmpInt)) {
-                // TODO: ERROR
+        if (!resultSelect[0]["id"].to(tmpId)) {
+            // TODO: ERROR
+            assert(false);
         }
+        if (!resultSelect[0]["dataType"].to(tmpInt)) {
+            // TODO: ERROR
+            assert(false);
+        }
+        VariableDatatype::Type tmpType = (VariableDatatype::Type) tmpInt;
+        Release<TopologyAttributeImplementation> newAttribute( new TopologyAttributeImplementation( name, domain, tmpType ) );
+        newAttribute->id = tmpId;
+        tmpAttribute.setObject(newAttribute);
+        return tmpAttribute;
     }
     else {
-        // TODO: ERROR
+        // Not found
+        return TopologyAttribute();
     }
-
-    // TODO: Geht der Cast so?
-    VariableDatatype::Type tmpType = (VariableDatatype::Type) tmpInt;
-    Release<TopologyAttributeImplementation> newAttribute( new TopologyAttributeImplementation( name, domain, tmpType ) );
-    newAttribute->id = tmpId;
-    tmpAttribute.setObject(newAttribute);
-
-    return tmpAttribute;
 }
 
 TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId attributeId ) throw() {
@@ -440,51 +491,61 @@ TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId att
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "Select Transaction");
     string tmpName;
-    TopologyTypeId tmpId;
+    //TopologyTypeId tmpId;
+    int tmpId;
     intmax_t tmpInt;
 
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT name, domainTypeId, dataType FROM Attribute WHERE id='" + to_string(attributeId) + "'"));
+    result resultSelect = selectAction.exec(("SELECT name, domaintypeid, dataType FROM Attribute WHERE id='" + to_string(attributeId) + "'"));
     selectAction.commit();
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
         // Check if results are sane (and convert them)
-        // TODO: Conversion okay?
-        if (!resultSelect[0]["name"].to(tmpName) &&
-            !resultSelect[0]["domainTypeId"].to(tmpId) &&
-            !resultSelect[0]["dataType"].to(tmpInt)) {
-                // TODO: ERROR
+        if (!resultSelect[0]["name"].to(tmpName)) {
+            // TODO: ERROR
+            assert(false);
         }
+        if (!resultSelect[0]["domaintypeid"].to(tmpId)) {
+            // TODO: ERROR
+            assert(false);
+        }
+        if (!resultSelect[0]["dataType"].to(tmpInt)) {
+            // TODO: ERROR
+            assert(false);
+        }
+        VariableDatatype::Type tmpType = (VariableDatatype::Type) tmpInt;
+        Release<TopologyAttributeImplementation> newAttribute( new TopologyAttributeImplementation( tmpName, tmpId, tmpType ) );
+        newAttribute->id = attributeId;
+        tmpAttribute.setObject(newAttribute);    
     }
     else {
-        // TODO: ERROR
+        // Not found
     }
-
-    // TODO: Geht der Cast so?
-    VariableDatatype::Type tmpType = (VariableDatatype::Type) tmpInt;
-    Release<TopologyAttributeImplementation> newAttribute( new TopologyAttributeImplementation( tmpName, tmpId, tmpType ) );
-    newAttribute->id = attributeId;
-    tmpAttribute.setObject(newAttribute);
 
     return tmpAttribute;
 }
 
-TopologyValue DatabaseTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyValue& value ) throw() {
+TopologyValue DatabaseTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
     work insertAction(*conn, "Insert Transaction");
 
-    string insertType = serializeTopologyValue(value);
+    string insertType = serializeTopologyVariable(value);
 
     // Perform an insert
-    insertAction.exec("INSERT INTO Value (objectId, attributeId, value) VALUES ('"+to_string(object)+"','"+to_string(attribute)+"','"+insertType+"')");
+    insertAction.exec("INSERT INTO Value (objectId, attributeId, topologyvalue) VALUES ('"+to_string(object)+"','"+to_string(attributeId)+"','"+insertType+"')");
     insertAction.commit();
 
-    assert(0 && "TODO"), abort();	//Sorry, Roman, I had to change the Topology interface again, and doing so, I also removed the last throw() clauses. So you have to return something here.
+    TopologyValue value1;
+    Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( value, object, attributeId ) );
+    value1.setObject(newValue);
+
+    return value1;
 }
 
 TopologyValue DatabaseTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
     work selectAction(*conn, "Select Transaction");
     string valueString;
+    TopologyValue value;
     
     // Perform a select
     result resultSelect = selectAction.exec(("SELECT value FROM Value WHERE objectId='" + to_string(object) + "' AND attributeId = '"+to_string(attribute)+"'"));
@@ -495,18 +556,23 @@ TopologyValue DatabaseTopology::getAttribute( TopologyObjectId object, TopologyA
         // Check if results are sane (and convert them)
         // TODO: Conversion okay?
         if (!resultSelect[0]["value"].to(valueString)) {
-                // TODO: ERROR
+            // TODO: ERROR
+            assert(false);
         }
+        TopologyVariable *tmpVarib = deserializeTopologyVariable(valueString);
+    
+        Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( *tmpVarib, object, attribute ) );
+        value.setObject(newValue);
     }
     else {
-        // TODO: ERROR
+        // Not found
     }
 
-    return deserializeTopologyValue(valueString);
+    return value;
 }
 
-Topology::TopologyValueList DatabaseTopology::enumerateAttributes( TopologyObjectId object ) throw() {
-    work selectAction(*conn, "Select Transaction");
+TopologyValueList DatabaseTopology::enumerateAttributes( TopologyObjectId object ) throw() {
+    /*work selectAction(*conn, "Select Transaction");
     string valueString;
     
     // Perform a select
@@ -514,7 +580,7 @@ Topology::TopologyValueList DatabaseTopology::enumerateAttributes( TopologyObjec
     selectAction.commit();
 
     string tmpValueString;
-    TopologyValue tmpValue;
+    TopologyVariable *tmpValue;
     Topology::TopologyValueList returnVector;
 
     // Check if there is only one result
@@ -525,13 +591,21 @@ Topology::TopologyValueList DatabaseTopology::enumerateAttributes( TopologyObjec
                     // TODO: ERROR
             }
 
-            tmpValue = deserializeTopologyValue(tmpValueString);
-            returnVector.emplace_back(tmpValue);
+            tmpValue = deserializeTopologyVariable(tmpValueString);
+            returnVector.emplace_back(*tmpValue);
         }
     }
     else {
-        // TODO: ERROR
+        // Not found
     }
 
-    return returnVector;
+    return returnVector;*/
+    assert(0 && "TODO"), abort();
+}
+
+extern "C" {
+    void* TOPOLOGY_INSTANCIATOR_NAME()
+    {
+        return new DatabaseTopology();
+    }
 }

@@ -248,17 +248,17 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				case ReasonerStandardImplementationOptions::Role::PROCESS:
 					assessProcessHealth();
 					if (upstreamReasonerExists)
-						comm.pushProcessStateUpstream( processHealth, time(0));
+						comm->pushProcessStateUpstream( processHealth, time(0));
 					break;
 				case ReasonerStandardImplementationOptions::Role::NODE:
 					assessNodeHealth();
 					if (upstreamReasonerExists)
-						comm.pushNodeStateUpstream( nodeHealth, time(0));
+						comm->pushNodeStateUpstream( nodeHealth, time(0));
 					break;
 				case ReasonerStandardImplementationOptions::Role::SYSTEM:
 					assessSystemHealth();
 					if (upstreamReasonerExists)
-						comm.pushSystemStateUpstream( systemHealth, time(0));
+						comm->pushSystemStateUpstream( systemHealth, time(0));
 					break;
 
 			}
@@ -327,6 +327,8 @@ ReasonerStandardImplementation::~ReasonerStandardImplementation() {
 	recentIssuesMutex.unlock();
 
 	periodicThread.join();
+
+	delete(comm);
 }
 
 void ReasonerStandardImplementation::init(){
@@ -337,6 +339,8 @@ void ReasonerStandardImplementation::init(){
 	switch( role ){
 		case ReasonerStandardImplementationOptions::Role::SYSTEM :
 			systemHealth = make_shared<SystemHealth>();
+			systemHealth->overallState = HealthState::OK;
+			
 			childNodesHealthMap = new unordered_map<string,NodeHealth>;
 			break;
 		case ReasonerStandardImplementationOptions::Role::NODE :
@@ -352,7 +356,9 @@ void ReasonerStandardImplementation::init(){
 
 	update_intervall_ms = options.update_intervall_ms;
 
-	comm.init( options.communicationOptions );
+	comm = new ReasonerCommunication(*this);
+
+	comm->init( options.communicationOptions );
 	if (options.communicationOptions.upstreamReasoner != "")
 		upstreamReasonerExists = true;
 
@@ -451,7 +457,7 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 	}
 
 	if (upstreamReasonerExists)
-		comm.pushNodeStateUpstream(nodeHealth, 1); //time(0));
+		comm->pushNodeStateUpstream(nodeHealth, 1); //time(0));
 
 	cout << "State of resoner " << id << ": " << toString(nodeHealth->overallState) << endl;
 }

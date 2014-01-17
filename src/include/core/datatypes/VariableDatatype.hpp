@@ -40,6 +40,34 @@ class VariableDatatype {
 			type_ = Type::INVALID;
 		}
 
+		VariableDatatype( enum Type type, const string & str ) : type_(type) {
+			switch( type_ ) {
+				case Type::INT32:
+					data.i32 = atoi(str.c_str());
+					return;
+				case Type::UINT32:
+					data.ui32 = (uint32_t) atoll(str.c_str());
+					return;
+				case Type::INT64:
+					data.i64 =  atoll(str.c_str());
+					return;
+				case Type::UINT64:
+					data.ui64 = atoll(str.c_str());
+					return;
+				case Type::FLOAT:
+					data.f = (float) atof(str.c_str());
+					return;
+				case Type::DOUBLE:
+					data.d = atof(str.c_str());
+					return;
+				case Type::STRING:
+					data.str = strdup( str.c_str() );
+					return;
+				case Type::INVALID:
+					return;
+			}
+		}		
+
 		VariableDatatype( int64_t i ) {
 			data.i64 = i;
 			type_ = Type::INT64;
