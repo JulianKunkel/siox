@@ -34,9 +34,8 @@ namespace monitoring{
 			TopologyRelation relation = lookupRelation( resultId, relationType.id(), curComponent.name );
 			if( !relation )  return TopologyObject();
 			resultId = relation.child();
-			result = lookupObjectById( resultId );
 		}
-		return result;
+		return lookupObjectById( resultId );
 	}
 
 	Topology::PathComponentDescription* Topology::parsePath( const string& path, size_t* outComponentCount ) throw() {

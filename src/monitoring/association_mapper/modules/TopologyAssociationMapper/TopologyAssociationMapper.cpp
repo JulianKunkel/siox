@@ -72,7 +72,8 @@ class TopologyAssociationMapper: public AssociationMapper {
 			if ( value == existingValue.value() ){
 				return;
 			}
-			throw IllegalStateError("Value has been set already");
+			cerr << "AssociationMapper process attributes incompatible values for: " << pid << " " << att.aID << " value: " << value << " old: " << existingValue.value() << endl;
+			throw IllegalStateError("AssociationMapper: Value has been set already");
 		}
 		
 		// store value into the appriate datatype
@@ -119,7 +120,7 @@ class TopologyAssociationMapper: public AssociationMapper {
 			if ( value == existingValue.value() ){
 				return;
 			}
-			throw IllegalStateError("Value has been set already");
+			throw IllegalStateError("AssociationMapper Component attribute has been set already");
 		}
 		
 		// store value into the appriate datatype
