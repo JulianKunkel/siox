@@ -312,6 +312,7 @@ void testReasonerAssessment(){
 
 	// list<ProcessHealth> l = {p1, p2, p3};
 
+	ReasonerMessageReceived rmrInject("INJECT");// Magic word to overwrite reasoner's own health
 	shared_ptr<NodeHealth> nh(new NodeHealth) ;
 
 	nh->utilization[UtilizationIndex::CPU] = 20;
@@ -319,7 +320,7 @@ void testReasonerAssessment(){
 	nh->utilization[UtilizationIndex::IO] = 30;
 	nh->utilization[UtilizationIndex::MEMORY] = 10;
 
-	((ReasonerStandardImplementation *) r)->injectNodeHealth(*nh);
+	((ReasonerStandardImplementation *) r)->receivedReasonerNodeHealth(rmrInject, *nh);
 
 	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr1, p1);
 	((ReasonerStandardImplementation *) r)->receivedReasonerProcessHealth(rmr2, p2);
@@ -331,7 +332,7 @@ void testReasonerAssessment(){
 
 	nh = ((ReasonerStandardImplementation *) r)->getNodeHealth();
 	assert(nh != nullptr);
-	cout << "Node health: " << toString(nh->overallState) << endl;
+	cout << "Node health: " << (*nh) << endl;
 
 	delete(r);
 	delete(comm);
@@ -722,7 +723,7 @@ void testReasonerCommunication(){
 	r_options.role = ReasonerStandardImplementationOptions::Role::NODE;
 	r_options.communicationOptions.comm.componentPointer = comm;
 	r_options.communicationOptions.serviceAddress = "ipc://reasonerN1";
-	// r_options.communicationOptions.upstreamReasoner = "ipc://reasonerS";
+	r_options.communicationOptions.upstreamReasoner = "ipc://reasonerS";
 	r_options.communicationOptions.reasonerID = "node1";
 	rN1->init(); // This will start a separate Reasoner thread
 	}
@@ -738,7 +739,7 @@ void testReasonerCommunication(){
 	r_options.communicationOptions.reasonerID = "process11";
 	rP11->init(); // This will start a separate Reasoner thread
 	}
-/*
+
 	Reasoner * rP12 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	assert( rP12 != nullptr );
 	{
@@ -750,116 +751,76 @@ void testReasonerCommunication(){
 	r_options.communicationOptions.reasonerID = "process12";
 	rP12->init(); // This will start a separate Reasoner thread
 	}
-*/
+
+	Reasoner * rP13 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
+	assert( rP13 != nullptr );
+	{
+	ReasonerStandardImplementationOptions & r_options = rP13->getOptions<ReasonerStandardImplementationOptions>();
+	r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
+	r_options.communicationOptions.comm.componentPointer = comm;
+	r_options.communicationOptions.serviceAddress = "ipc://reasonerP13";
+	r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
+	r_options.communicationOptions.reasonerID = "process13";
+	rP13->init(); // This will start a separate Reasoner thread
+	}
+
 	// Reasoner * rP21 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	// Reasoner * rP22 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	// Reasoner * rP23 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	// Reasoner * rN2 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 
+	cout << "Injecting states..." << endl;
 
-	//SystemHealth sh = { HealthState::OK, {{0,1,5,1,0,0}}, {}, {} };
-	// ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
-	// ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
-	// ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
+	ReasonerMessageReceived rmr("INJECT");
 
+	SystemHealth sh = { HealthState::OK, {{0,1,5,1,0,0}}, {}, {} };
+	((ReasonerStandardImplementation *) rS)->receivedReasonerSystemHealth( rmr, sh );
+	cout << ((ReasonerStandardImplementation *) rS) << endl;
 
-	/*{
-
-		MyReasoningDataReceivedCB mCB1;
-		MyReasoningDataReceivedCB mCB2;
-
-		ReasonerCommunication r(mCB1);
-		ReasonerCommunication r2(mCB2);
-
-		{
-		ReasonerCommunicationOptions o;
-		o.comm.componentPointer = comm;
-		o.serviceAddress = "ipc://reasoner1";
-		o.reasonerID = "global";
-		r.init(o);
-		}
-
-		{
-		ReasonerCommunicationOptions o;
-		o.comm.componentPointer = comm;
-		o.serviceAddress = "ipc://reasoner2";
-		o.upstreamReasoner = "ipc://reasoner1";
-		o.reasonerID = "node1";
-		r2.init(o);
-		}
-
-		// push data upstream
-		// system state:
-		cout << "Exchanging SystemHealth" << endl;
-		{
-		shared_ptr<SystemHealth> sh = shared_ptr<SystemHealth>(new SystemHealth());
-		sh->overallState = HealthState::SLOW;
-		r2.pushSystemStateUpstream(sh, 3);
-
-		mCB1.waitUntilSthHappened();
-
-		assert( mCB1.received_data.timestamp == 3);
-		assert( mCB1.received_sh.overallState == HealthState::SLOW );
-
-		assert( mCB2.received_data.timestamp == 0 );
-		}
-
-		cout << "Exchanging NodeHealth" << endl;
-
-		// node state:
-		{
-		shared_ptr<SystemHealth> sh = shared_ptr<SystemHealth>(new SystemHealth());
-		sh->overallState = HealthState::SLOW;
-		mCB1.sh = sh;
-
-		shared_ptr<NodeHealth> h = shared_ptr<NodeHealth>(new NodeHealth());
-		h->overallState = HealthState::FAST;
-		r2.pushNodeStateUpstream(h, 1);
-
-		mCB1.waitUntilSthHappened();
-		assert( mCB1.received_nh.overallState == HealthState::FAST );
-
-		mCB2.waitUntilSthHappened();
-		assert( mCB2.received_sh.overallState == HealthState::SLOW );
-
-		assert( mCB1.received_data.timestamp == 1);
-		}
-
-		cout << "Exchanging ProcessHealth" << endl;
-		// node state:
-		{
-		shared_ptr<NodeHealth> nh = shared_ptr<NodeHealth>(new NodeHealth());
-		nh->overallState = HealthState::SLOW;
-		mCB1.nh = nh;
-
-		shared_ptr<ProcessHealth> h = shared_ptr<ProcessHealth>(new ProcessHealth());
-		h->overallState = HealthState::FAST;
-		r2.pushProcessStateUpstream(h, 2);
-
-		mCB1.waitUntilSthHappened();
-		assert( mCB1.received_ph.overallState == HealthState::FAST );
-
-		mCB2.waitUntilSthHappened();
-		assert( mCB2.received_nh.overallState == HealthState::SLOW );
-
-		assert( mCB1.received_data.timestamp == 2);
-		}
+	NodeHealth nh;
+	nh.utilization[UtilizationIndex::CPU] = 20;
+	nh.utilization[UtilizationIndex::NETWORK] = 40;
+	nh.utilization[UtilizationIndex::IO] = 30;
+	nh.utilization[UtilizationIndex::MEMORY] = 10;
+	nh.positiveIssues = { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} };
+	((ReasonerStandardImplementation *) rN1)->receivedReasonerNodeHealth( rmr, nh );
+	cout << ((ReasonerStandardImplementation *) rN1) << endl;
 
 
-		//assert ( mCB1.sh->overallState == HealthState::FAST );
-	}
-*/
-	cout << "Test started..." << endl;
+	ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
+	((ReasonerStandardImplementation *) rP11)->receivedReasonerProcessHealth( rmr, p1 );
+	cout << ((ReasonerStandardImplementation *) rP11) << endl;
+
+	ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
+	((ReasonerStandardImplementation *) rP12)->receivedReasonerProcessHealth( rmr, p2 );
+	cout << ((ReasonerStandardImplementation *) rP12) << endl;
+
+	ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
+	((ReasonerStandardImplementation *) rP13)->receivedReasonerProcessHealth( rmr, p3 );
+	cout << ((ReasonerStandardImplementation *) rP13) << endl;
+
+
+	cout << "Setup ended, going to sleep..." << endl;
 	sleep(1);
-	cout << "Test ended!" << endl;
+	cout << "...waking up!" << endl;
 
-	// delete(rP12);
+
+	cout << "...result:" << endl;
+	cout << ((ReasonerStandardImplementation *) rN1) << endl;
+
+
+	/*
+	 * Cleaning up
+	 */
+	delete(rP13);
+	delete(rP12);
 	delete(rP11);
 	delete(rN1);
 	delete(rS);
 
 	delete(comm);
 }
+
 
 int main( int argc, char const * argv[] )
 {
@@ -868,7 +829,7 @@ int main( int argc, char const * argv[] )
 	// testReasonerCommunicationRaw();
 	testReasonerCommunication();
 	// testReasoner();
-	// testReasonerAssessment();
+	testReasonerAssessment();
 
 	cout << endl << "=== TEST FINISHED ===" << endl;
 	return 0;

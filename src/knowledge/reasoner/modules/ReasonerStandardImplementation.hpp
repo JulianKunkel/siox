@@ -92,7 +92,7 @@ protected:
 
 public:
 
-	virtual void injectNodeHealth( const NodeHealth & health ); // TODO: Remove after testing!
+	friend std::ostream & operator<<( std::ostream& os, const ReasonerStandardImplementation * r );
 
 	virtual void receivedReasonerProcessHealth(ReasonerMessageReceived & data, ProcessHealth & health) override;
 	virtual void receivedReasonerNodeHealth(ReasonerMessageReceived & data, NodeHealth & health) override;

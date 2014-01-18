@@ -7,6 +7,7 @@
 #include <array>
 #include <unordered_map>
 #include <sstream>
+#include <iostream>
 
 using namespace monitoring;
 
@@ -79,6 +80,8 @@ struct HealthIssue{
 			cout << "Error: HealthIssue \"" << hi.name << "\" cannot be aggregated into \"" << this->name << "\"!" << endl;
 		}
 	}
+
+
 
 	string to_string(){
 		ostringstream result;
@@ -196,25 +199,47 @@ struct Health{
 
 
 	Health(){
+
 		timeLastModified = time(0);
 		overallState = HealthState::OK;
-		for (int i = 0; i < HEALTH_STATE_COUNT; ++i)
-		{
+		for ( int i = 0; i < HEALTH_STATE_COUNT; ++i )
 			occurrences[i] = 0;
-		}
 	}
 
 	Health( HealthState state ){
+
 		timeLastModified = time(0);
 		overallState = state;
-		for (int i = 0; i < HEALTH_STATE_COUNT; ++i)
-		{
+		for ( int i = 0; i < HEALTH_STATE_COUNT; ++i )
 			occurrences[i] = 0;
-		}
 	}
 
-	Health( HealthState state, array<uint32_t, HEALTH_STATE_COUNT> nOccurrences, list<HealthIssue> posIssues, list<HealthIssue> negIssues) : overallState(state), occurrences(nOccurrences), positiveIssues(posIssues), negativeIssues(negIssues){
+	Health( HealthState state, array<uint32_t, HEALTH_STATE_COUNT> nOccurrences, list<HealthIssue> posIssues, list<HealthIssue> negIssues) :
+		overallState(state),
+		occurrences(nOccurrences),
+		positiveIssues(posIssues),
+		negativeIssues(negIssues){
+
 		timeLastModified = time(0);
+	}
+
+	friend std::ostream & operator<<( std::ostream & os, const Health & h )
+	{
+		ostringstream result;
+
+		result << "\t[" << endl;
+		result << "\t\tState:    \t" << to_string(h.overallState) << endl;
+		result << "\t\tOccurrences:\t";
+		for (auto o : h.occurrences )
+			result << " | " << o;
+		result << " | " << endl;
+		result << "\t\tIssues:\t\t";
+		result << "+" << h.positiveIssues.size() << "\t";
+		result << "-" << h.negativeIssues.size() << endl;
+		result << "\t\tLast Modified:\t" << h.timeLastModified << endl;
+
+		result << "\t]" << endl;
+		return os << result.str();
 	}
 };
 
@@ -227,10 +252,36 @@ struct NodeHealth : public Health{
 	array<uint8_t, UTILIZATION_STATISTIC_COUNT> utilization; // UtilizationIndex
 
 	NodeHealth(){
-		for (int i = 0; i < UTILIZATION_STATISTIC_COUNT; ++i){
-			this->utilization[i] = 0;
+
+		for ( int i = 0; i < UTILIZATION_STATISTIC_COUNT; ++i ){
+			utilization[i] = 0;
 		}
 	}
+
+	friend std::ostream & operator<<( std::ostream & os, const NodeHealth & h )
+	{
+		ostringstream result;
+
+		result << "\t[" << endl;
+		result << "\t\tState:    \t" << to_string(h.overallState) << endl;
+		result << "\t\tUtilization:\t";
+		for ( auto util : h.utilization )
+			result << " | " << (int) util;
+		result << " | " << endl;
+		result << "\t\tOccurrences:\t";
+		for ( auto o : h.occurrences )
+			result << " | " << o;
+		result << " | " << endl;
+		result << "\t\tIssues:\t\t";
+		result << "+" << h.positiveIssues.size() << "\t";
+		result << "-" << h.negativeIssues.size() << endl;
+		result << "\t\tLast Modified:\t" << h.timeLastModified << endl;
+
+		result << "\t]" << endl;
+		return os << result.str();
+	}
+/*
+*/
 };
 
 
@@ -255,7 +306,7 @@ struct NodeHealth : public Health{
 
 // May be a good idea to provide an overloaded outputstream for the enums to make them "human" readable.
 // TODO: Offer a CPP for this reason.
-}
 
+} // namespace knowledge
 
 #endif
