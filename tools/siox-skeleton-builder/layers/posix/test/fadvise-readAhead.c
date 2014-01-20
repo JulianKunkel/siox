@@ -36,12 +36,12 @@ Dropping cache: echo 3 > /proc/sys/vm/drop_caches
 
 Without fadvise()
 	iter: 52428 stride: 20480 blocksize: 1024 runtime: 15.320709s iotime: 6.145555s volume: 51.199219 MiB throughput: 8.331098 MiB/s; pages cached: 0.113281 MiB, pages not cached: 204.683594 MiB
-	Zeiten: 6.1, 5.1, 6.4
+	Zeiten: 6.1, 5.1, 6.4, 6.15, 6.3, 6.33
 
 With fadvise()
 gcc -Wall -g ./fadvise-readAhead.c -std=gnu99 -lrt -o fadvise-readAhead  -DFADVISE2 -DFADVISE -DTIME_THINK=100
 	iter: 52428 stride: 20480 blocksize: 1024 runtime: 10.643501s iotime: 1.548526s volume: 51.199219 MiB throughput: 33.063194 MiB/s; pages cached: 190.914062 MiB, pages not cached: 13.882812 MiB
-	Zeiten: 1.65, 1.55, 1.58
+	Zeiten: 1.65, 1.55, 1.58, 1.61, 1.67, 1.67
 
 
 Reverse:
@@ -60,7 +60,15 @@ for I in 1 2 3 ; do  sudo bash drop.sh  ;  ./fadvise-readAhead /tmp/test ; done
 	iter: 52428 stride: 20480 blocksize: 1024 runtime: 39.159108s iotime: 29.275999s volume: 51.199219 MiB throughput: 1.748846 MiB/s; pages cached: 0.062500 MiB, pages not cached: 204.734375 MiB
 	iter: 52428 stride: 20480 blocksize: 1024 runtime: 39.990411s iotime: 30.436572s volume: 51.199219 MiB throughput: 1.682161 MiB/s; pages cached: 0.046875 MiB, pages not cached: 204.750000 MiB
 
- */
+With SIOX (No Multiplexer forwarding, otherwise + 0.3s)
+	2.82s, 2.78, 2.7
+Overhead:
+	+ 0.54s siox_activity_end()
+	+ 0.17s siox_activity_start()
+	+ 0.26s siox_activity_set_attribute()
+	+ 0.1s siox_link_to_parent()
+	+ 0.9s time for siox_activity_end() with fadviseReadAhead Plugin
+*/
 
 // total file size 1 KiB
 #define SIZE_MIB 1*1024ul*1024
@@ -174,12 +182,7 @@ int main( int argc, char const * argv[] )
    	}
    	uint64_t op_start_time = gettime();   	
 		bytesWritten = read( fh, data, BLOCK_LEN );
-		totalIOtime += gettime() - op_start_time;
-		if( bytesWritten < BLOCK_LEN ) {
-			fprintf( stderr, "Error while reading from file\n" );
-			exit( 1 );
-		}
-
+		
 #ifdef FADVISE2
 #warning "Using fadvise during loop()"		
 		// prefetch next I/O
@@ -189,7 +192,13 @@ int main( int argc, char const * argv[] )
 		if (pret != 0){
 			fprintf(stderr, "Error in fadvise(): %s\n", strerror(pret));
 		}
-#endif		
+#endif
+
+		totalIOtime += gettime() - op_start_time;
+		if( bytesWritten < BLOCK_LEN ) {
+			fprintf( stderr, "Error while reading from file\n" );
+			exit( 1 );
+		}
 	}
 	uint64_t delta = gettime() - start_time;
 	double volume = iter * BLOCK_LEN / 1024.0 / 1024;
