@@ -27,7 +27,7 @@ def configure(conf):
 	conf.env.LIB_SIOX_LL = ["siox-monitoring-siox-ll"]
 
 	if conf.options.SIOX:
-		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
+		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include', "." ])
 		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
 		conf.env.append_value('LINKFLAGS', ["-Wl,-rpath-link=" + conf.options.SIOX + "/lib"])
 		conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
@@ -45,9 +45,9 @@ def configure(conf):
 	# conf.env.append_value('LIBDIR', [conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"])
 
         if conf.options.debug:
-	        conf.env.append_value("CFLAGS", ['-std=c99', '-O3', '-Wall'])
+	        conf.env.append_value("CFLAGS", ['-std=gnu99', '-O3', '-Wall'])
 	else:
-		conf.env.append_value("CFLAGS", ['-std=c99', '-g', '-Wall'])
+		conf.env.append_value("CFLAGS", ['-std=gnu99', '-g', '-Wall'])
 
 	conf.env.append_value("LABEL", conf.options.LABEL )
 
