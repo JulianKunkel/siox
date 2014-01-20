@@ -32,7 +32,7 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 			int sourceLine;	//the number of the line that contains the information for this cpu
 			int id;	//the aggregated field has the id -1
 			StatisticsValue user, nice, system, idle, iowait, irq, softirq, virtualSystems, virtualOs;
-			Cpu( int sourceLine, int id ) : sourceLine(sourceLine), id(id) {}
+			Cpu( int sourceLine, int id ) : sourceLine(sourceLine), id(id), user( ( uint64_t )0 ), nice( ( uint64_t )0 ), system( ( uint64_t )0 ), idle( ( uint64_t )0 ), iowait( ( uint64_t )0 ), irq( ( uint64_t )0 ), softirq( ( uint64_t )0 ), virtualSystems( ( uint64_t )0 ), virtualOs( ( uint64_t )0 ) {}
 		} Cpu;
 
 		long tickLen;

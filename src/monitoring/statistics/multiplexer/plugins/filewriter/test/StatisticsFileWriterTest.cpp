@@ -22,7 +22,7 @@ int main( int argc, char const * argv[] )
 
 	// init plugin
 	// not necessary, but for testing...
-	StatisticsFileWriterOptions & op = ( StatisticsFileWriterOptions & ) ap->getOptions();
+	StatisticsFileWriterOptions & op = dynamic_cast<StatisticsFileWriterOptions &>(ap->getOptions());
 	op.filename = "test.txt";
 	op.multiplexer.componentPointer = m1;
 

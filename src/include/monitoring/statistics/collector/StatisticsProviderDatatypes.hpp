@@ -20,7 +20,7 @@ namespace monitoring {
 		SAMPLED
 	};
 
-
+	const string kStatisticsDomain = "statistics";
 
 	class StatisticsProviderDatatypes {
 		public:

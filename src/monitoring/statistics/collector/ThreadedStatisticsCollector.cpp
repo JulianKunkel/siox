@@ -282,7 +282,7 @@ void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plu
 	plugins.emplace_back( plugin );
 	vector<StatisticsProviderDatatypes> metrics( plugin->availableMetrics() );
 	for( size_t i = metrics.size(); i--; ) {
-		OntologyAttributeID ontologyId = ontology->register_attribute( "Statistics", metrics[i].metrics , metrics[i].value.type() ).aID;
+		OntologyAttributeID ontologyId = ontology->register_attribute( kStatisticsDomain, metrics[i].metrics , metrics[i].value.type() ).aID;
 		if( TopologyObject device = topology->registerObjectByPath( metrics[i].topologyPath ) ) {
 			TopologyObjectId topologyId = device.id();
 			shared_ptr<Statistic> curStatistic( new Statistic( metrics[i].value, ontologyId, topologyId ) );
