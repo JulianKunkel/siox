@@ -292,7 +292,7 @@ void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plu
 			index[curKey] = curStatistic;
 		} else {
 			cerr << "SIOX error: Error registering topology path \"" << metrics[i].topologyPath << "\"\n";
-			abort();
+			assert(false), abort();
 		}
 	}
 	statisticsAdded = true;

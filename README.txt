@@ -19,8 +19,12 @@ Additional requirements for the wrappers are found under tools/siox-skeleton-bui
 Ubuntu 13.04/13.10
 ==================
 To install the SIOX dependencies call:
-apt-get install libboost-dev libboost-program-options-dev libboost-serialization-dev libboost-regex-dev libboost-system-dev libboost-random-dev libboost-thread-dev ninja-build cmake libglib2.0-dev libpqxx3-dev
+apt-get install libboost-dev libboost-program-options-dev libboost-serialization-dev libboost-regex-dev libboost-system-dev libboost-random-dev libboost-thread-dev ninja-build cmake libglib2.0-dev 
 
+To build with postgres you need:
+libpqxx3-dev postgresql-common postgresql
+
+In CMAKE set the type folder to: /usr/share/postgresql-common/t
 
 Compilation
 ===========

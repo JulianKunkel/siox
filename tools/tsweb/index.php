@@ -10,6 +10,12 @@ require_once("header.php");
 
 <?php $activities = Activity::get_list(); ?>
 
+<form name="purge_frm" method="post" action="purge.php">
+	<input type="submit" value="Purge all actvities" onclick="return confirm('Dude, you are gonna delete all data. Are you sure?')" />
+</form>
+
+<br /><br />
+
 <table cellspacing="0" cellpadding="0">
 <thead>
 	<tr>

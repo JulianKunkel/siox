@@ -109,7 +109,7 @@ namespace monitoring {
 			// interface specific error value.
 			ActivityError errorValue_;
 
-			Activity( UniqueComponentActivityID ucaid, Timestamp start_t, Timestamp end_t, ActivityID aid, vector<ActivityID> & parentArray, vector<Attribute> & attributeArray, vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, ActivityError errorValue )
+			Activity( UniqueComponentActivityID ucaid, Timestamp start_t, Timestamp end_t, ActivityID aid, const vector<ActivityID> & parentArray, const vector<Attribute> & attributeArray, const vector<RemoteCall> & remoteCallsArray, RemoteCallIdentifier * remoteInvoker, ActivityError errorValue )
 				:
 				ucaid_( ucaid ), time_start_( start_t ), time_stop_( end_t ),
 				aid_( aid ), parentArray_( std::move( parentArray ) ),

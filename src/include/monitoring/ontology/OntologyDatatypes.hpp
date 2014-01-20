@@ -37,6 +37,19 @@ namespace monitoring {
 			inline bool operator!=( OntologyAttribute const & a ) const {
 				return !( a.aID == this->aID );
 			}
+
+			OntologyAttribute & operator=( OntologyAttribute const & a ) {
+				this->aID = a.aID;
+				this->domain = a.domain;
+				this->name = a.name;
+				this->storage_type = a.storage_type;
+				return *this;
+			}
+
+			OntologyAttribute() : aID(0), domain(), name(), storage_type(VariableDatatype::Type::INVALID) {}
+			OntologyAttribute(OntologyAttributeID aID, const string & domain, const string & name, enum VariableDatatype::Type storage_type) : aID(aID), domain(domain), name(name), storage_type(storage_type){
+				
+			}
 	};
 }
 

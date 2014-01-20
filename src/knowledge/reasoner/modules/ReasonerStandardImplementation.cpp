@@ -1,4 +1,5 @@
 #include <knowledge/reasoner/modules/ReasonerStandardImplementation.hpp>
+#include <iostream>
 
 using namespace std;
 using namespace core;
@@ -24,7 +25,21 @@ namespace knowledge {
 				return "UNKNOWN";
 		}
 	}
+/*
+	#include <iostream>
+	#include <cassert>
 
+	enum X { a, b };
+
+	std::ostream& operator<<(std::ostream& os, X x)
+	{
+	    switch (x) {
+	        case a: return os << "a";
+	        case b: return os << "b";
+	    }
+	    assert(false && "wrong enum value");
+	}
+*/
 
 	string toString(UtilizationIndex s){
 		switch(s){
@@ -43,58 +58,95 @@ namespace knowledge {
 
 
 
-shared_ptr<NodeHealth> ReasonerStandardImplementation::getNodeHealth(){
-	{	// Disallow other access to aggregated date fields
+shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		if ( role == ReasonerStandardImplementationOptions::Role::PROCESS )
+			return processHealth;
 	}
+	// For other roles, return NULL; this should never happen
 	return nullptr;
 }
+
+
+
+shared_ptr<NodeHealth> ReasonerStandardImplementation::getNodeHealth(){
+	{	// Disallow other access to aggregated data fields
+		unique_lock<mutex> dataLock( dataMutex );
+
+		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
+			assessNodeHealth();
+			return nodeHealth;
+		}
+	}
+	// For other roles, return NULL; this should never happen
+	return nullptr;
+}
+
 
 shared_ptr<SystemHealth> ReasonerStandardImplementation::getSystemHealth(){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM )
+			return systemHealth;
 	}
+	// For other roles, return NULL; this should never happen
 	return nullptr;
 }
 
-shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
-	{	// Disallow other access to aggregated date fields
-		unique_lock<mutex> dataLock( dataMutex );
-
-		// FIXME: Implementieren!
-	}
-	return nullptr;
-}
 
 void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessageReceived & data, ProcessHealth & health){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		// Only Node level reasoners should receive process level reports; others ignore them
+		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
+			(*childProcessesHealthMap)[data.reasonerID] = health;
+			// cout << id << " received status from process reasoner " << data.reasonerID << endl;
+		}
+		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
+			processHealth = make_shared<ProcessHealth>( health );
+		else
+			cout << id << " received inappropriate message from " << data.reasonerID << "!" << endl;
 	}
-	cout << "Received msg" << endl;
 }
+
 
 void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageReceived & data, NodeHealth & health){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM ){
+			(*childNodesHealthMap)[data.reasonerID] = health;
+			// cout << id << " received status from node reasoner " << data.reasonerID << endl;
+		}
+		else if ( role == ReasonerStandardImplementationOptions::Role::PROCESS ){
+			nodeHealth = make_shared<NodeHealth>(health);
+			// cout << id << " received status from node reasoner " << data.reasonerID << endl;
+		}
+		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
+			nodeHealth = make_shared<NodeHealth>( health );
+		else
+			cout << id << " received inappropriate message from " << data.reasonerID << "!" << endl;
 	}
-	cout << "Received msg" << endl;
 }
 
+
 void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessageReceived & data, SystemHealth & health){
-	{	// Disallow other access to aggregated date fields
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
+			// cout << id << " received status from system reasoner " << data.reasonerID << endl;
+			systemHealth = make_shared<SystemHealth>(health);
+		}
+		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
+			systemHealth = make_shared<SystemHealth>( health );
+		else
+			cout << id << " received inappropriate message from " << data.reasonerID << "!" << endl;
 	}
-	cout << "Received msg" << endl;
 }
 
 
@@ -108,16 +160,13 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		/*
 		 * Query all registered ADPIs for news and aggregate them
 		 */
-		{	// Disallow other access to aggregated date fields
+		{	// Disallow other access to aggregated data fields
 			unique_lock<mutex> dataLock( dataMutex );
-
 
 			{	// Disallow changes in registered plugins while cycling through ADPIs
 				unique_lock<mutex> pluginLock( pluginMutex );
 
-
 				// Query recent observations of all connected plugins and integrate them into the local performance issues.
-				// unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>  adpiObservations( new unordered_map<ComponentID, AnomalyPluginHealthStatistic> );
 				// Loop over all registered ADPIs
 				for( auto adpi = adpis.begin(); adpi != adpis.end() ; adpi++ ) {
 					cout << "ADPI: " << (* adpi) << endl;
@@ -168,52 +217,66 @@ void ReasonerStandardImplementation::PeriodicRun(){
 							}
 						}
 					}
-					// cout << "Reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() << endl;
+					// cout << id << " reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() << endl;
 				}
-			}
-
+			} // pluginLock
 			// Update statistics on the different observation categories
 			observationTotal = 0;
-			for ( int i=0; i < HEALTH_STATE_COUNT; i++ ){
+			for ( int i = 0; i< HEALTH_STATE_COUNT; i++ ){
 				observationCounts[i] = 0;
 			}
-			for ( auto report = gatheredStatistics->map.begin(); report != gatheredStatistics->map.end(); report++) {
-				for ( int i=0; i < HEALTH_STATE_COUNT; i++ ){
-					observationCounts[i] += report->second.occurrences[i];
-					observationTotal += report->second.occurrences[i];
+			for ( auto report : gatheredStatistics->map ) {
+				for ( int i = 0; i < HEALTH_STATE_COUNT; i++ ){
+					observationCounts[i] += report.second.occurrences[i];
+					observationTotal += report.second.occurrences[i];
 				}
 			}
 			if( observationTotal == 0 ){
 				// What to do if no operation has been performed at all
-				for ( int i=0; i < HEALTH_STATE_COUNT; i++ ){
+				for (  auto i = 0; i< HEALTH_STATE_COUNT; i++  ){
 					observationRatios[i] = 0;
 				}
 			}
 			else{
-				for ( int i=0; i < HEALTH_STATE_COUNT; i++ ){
+				for ( int i = 0; i< HEALTH_STATE_COUNT; i++ ){
 					float scale = 100 / observationTotal;
 					observationRatios[i] = observationCounts[i] * scale;
 					cout << observationCounts[i] << "=" << (int) observationRatios[i] << "% ";
 				}
 				cout << endl;
 			}
-		}
 
+			// Run assessment appropriate to reasoner's role
+			switch ( role ) {
 
-		// FIXME: Regeln übernehmen!
+				case ReasonerStandardImplementationOptions::Role::PROCESS:
+					assessProcessHealth();
+					if (upstreamReasonerExists){
+						// cout << id << " pushing process state upstream!" << endl;
+						comm->pushProcessStateUpstream( processHealth);
+					}
+					break;
 
-		switch ( role ) {
-			case ReasonerStandardImplementationOptions::Role::PROCESS:
-				assessProcessHealth();
-				break;
-			case ReasonerStandardImplementationOptions::Role::NODE:
-				assessNodeHealth();
-				break;
-			case ReasonerStandardImplementationOptions::Role::SYSTEM:
-				assessSystemHealth();
-				break;
+				case ReasonerStandardImplementationOptions::Role::NODE:
+					assessNodeHealth();
+					if (upstreamReasonerExists){
+						// cout << id << " pushing node state upstream!" << endl;
+						comm->pushNodeStateUpstream( nodeHealth);
+					}
+					break;
 
-		}
+				case ReasonerStandardImplementationOptions::Role::SYSTEM:
+					assessSystemHealth();
+					if (upstreamReasonerExists){
+						// cout << id << " pushing system state upstream!" << endl;
+						comm->pushSystemStateUpstream( systemHealth);
+					}
+					break;
+
+				default:
+					break;
+			}
+		} // dataLock
 
 		// TODO Think:
 		// Update recent performance issues that are stored locally.
@@ -258,6 +321,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		// TODO
 
 
+		// cout << "PeriodicRun() going to sleep..." << endl;
 		unique_lock<mutex> lock( recentIssuesMutex );
 		// TODO: Understand, clarify and comment this!
 		if( terminated ) {
@@ -271,32 +335,49 @@ void ReasonerStandardImplementation::PeriodicRun(){
 
 
 ReasonerStandardImplementation::~ReasonerStandardImplementation() {
-	recentIssuesMutex.lock();
-	// TODO: Understand, clarify and comment this!
-	terminated = true;
-	running_condition.notify_one();
-	recentIssuesMutex.unlock();
+	// {	unique_lock<mutex> dataLock( dataMutex );
+		// unique_lock<mutex> pluginLock( pluginMutex );
+			recentIssuesMutex.lock();
+			// TODO: Understand, clarify and comment this!
+			terminated = true;
+			running_condition.notify_one();
+			recentIssuesMutex.unlock();
+		periodicThread.join();
+	// }
 
-	periodicThread.join();
+	delete(comm);
 }
 
 void ReasonerStandardImplementation::init(){
 	ReasonerStandardImplementationOptions & options = getOptions<ReasonerStandardImplementationOptions>();
 
+	id = options.communicationOptions.reasonerID;
 	role = options.role;
+	switch( role ){
+		case ReasonerStandardImplementationOptions::Role::SYSTEM :
+			systemHealth = make_shared<SystemHealth>();
+			childNodesHealthMap = new unordered_map<string,NodeHealth>;
+			break;
+		case ReasonerStandardImplementationOptions::Role::NODE :
+			systemHealth = make_shared<SystemHealth>();
+			nodeHealth = make_shared<NodeHealth>();
+			childProcessesHealthMap = new unordered_map<string,ProcessHealth>;
+			break;
+		case ReasonerStandardImplementationOptions::Role::PROCESS :
+			nodeHealth = make_shared<NodeHealth>();
+			processHealth = make_shared<ProcessHealth>();
+			break;
+	}
 
 	update_intervall_ms = options.update_intervall_ms;
 
-	comm.init( options.communicationOptions );
+	comm = new ReasonerCommunication(*this);
+
+	comm->init( options.communicationOptions );
+	if (options.communicationOptions.upstreamReasoner != "")
+		upstreamReasonerExists = true;
 
 	periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
-
-	// Some mock-up values until true utilization is available
-	localHealth.utilization[UtilizationIndex::CPU] = 20;
-	localHealth.utilization[UtilizationIndex::NETWORK] = 40;
-	localHealth.utilization[UtilizationIndex::IO] = 30;
-	localHealth.utilization[UtilizationIndex::MEMORY] = 10;
-
 }
 
 
@@ -306,79 +387,115 @@ shared_ptr<HealthStatistics> ReasonerStandardImplementation::queryRuntimePerform
 
 
 ComponentReport ReasonerStandardImplementation::prepareReport() {
-	{	// Disallow other access to aggregated date fields
+
+	ComponentReport result;
+
+	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		// FIXME: Implementieren!
+		ostringstream reportText;
+
+		reportText << this;
+		result.addEntry( id, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() )));
 	}
-	return ComponentReport();
+
+	return result;
 }
 
 
-void ReasonerStandardImplementation::assessNodeHealth(){
-	cout << "Assessing NODE health..." << endl;
-/*
-	// TODO: Write a test feeding this to reasoner via received... methods
+std::ostream & operator<<( std::ostream & os, const ReasonerStandardImplementation * r )
+{
+	ostringstream result;
 
+	result << "\t\"" << r->id << "\":" << endl;
+	switch ( r->role ){
+		case ReasonerStandardImplementationOptions::Role::PROCESS :
+			result << (*(r->processHealth)) << endl;
+			break;
+		case ReasonerStandardImplementationOptions::Role::NODE :
+			result << (*(r->nodeHealth)) << endl;
+			break;
+		case ReasonerStandardImplementationOptions::Role::SYSTEM :
+			result << (*(r->systemHealth)) << endl;
+			break;
+		default:
+			assert(false && "Invalid reasoner role!");
+	}
+
+	return os << result.str();
+}
+
+
+
+
+
+void ReasonerStandardImplementation::assessNodeHealth(){
+	// cout << "Reasoner " << id << " assessing NODE health..." << endl;
+/*
 	// Input: node statistics, process health, system health
 	// Configuration: global reasoner address, local address
 	// Result: node health
-	//SystemHealth sh = { HealthState::OK, {{0,1,5,1,0,0}}, {}, {} };
-
-	ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
-	ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
-	ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
-
-	list<ProcessHealth> l = {p1, p2, p3};
 */
+	// For now: Simulate historic occurences by totalling child processes' occurences //TODO Replace!
+	for (int i = 0; i < HEALTH_STATE_COUNT; ++i)
+		nodeHealth->occurrences[i] = 0;
+	for(auto childHealth : *childProcessesHealthMap)
+		for (int i = 0; i < HEALTH_STATE_COUNT; ++i)
+			nodeHealth->occurrences[i] += childHealth.second.occurrences[i];
+
 
 	// determine node health based on the historic knowledge AND the statistics
-	if ( localHealth.occurrences[ABNORMAL_FAST] || localHealth.occurrences[ABNORMAL_SLOW] || localHealth.occurrences[ABNORMAL_OTHER] ){
-		// we have an condition in which we must fire the anomaly trigger.
-
+	if ( nodeHealth->occurrences[ABNORMAL_FAST] || nodeHealth->occurrences[ABNORMAL_SLOW] || nodeHealth->occurrences[ABNORMAL_OTHER] ){
+		// we have a condition in which we must fire the anomaly trigger.
+		// cout << "Checkpoint 1a passed..." << endl;
 		if ( observationRatios[ABNORMAL_FAST] > 5 &&
 			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_SLOW] &&
 			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
-			localHealth.overallState = HealthState::ABNORMAL_FAST;
+			nodeHealth->overallState = HealthState::ABNORMAL_FAST;
 		}else if (observationRatios[ABNORMAL_SLOW] > 5 &&
 			observationRatios[ABNORMAL_SLOW] > 2 * observationRatios[ABNORMAL_FAST] &&
 			observationRatios[ABNORMAL_SLOW] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
-			localHealth.overallState = HealthState::ABNORMAL_SLOW;
+			nodeHealth->overallState = HealthState::ABNORMAL_SLOW;
 		}else{
-			localHealth.overallState = HealthState::ABNORMAL_OTHER;
+			nodeHealth->overallState = HealthState::ABNORMAL_OTHER;
 		}
 	}else{
+		// cout << "Checkpoint 1b passed..." << endl;
 		// normal condition
 		// We have to pick between FAST, OK & SLOW
 		if ( observationRatios[FAST] > 5 &&
 			observationRatios[FAST] > 3*observationRatios[SLOW] )
 		{
-			localHealth.overallState = HealthState::FAST;
+			// cout << "Checkpoint 1ba passed..." << endl;
+			nodeHealth->overallState = HealthState::FAST;
 		}else if ( observationRatios[SLOW] > 5 &&
 			observationRatios[SLOW] > 3*observationRatios[FAST] )
 		{
-			localHealth.overallState = HealthState::SLOW;
+			// cout << "Checkpoint 1bb passed..." << endl;
+			nodeHealth->overallState = HealthState::SLOW;
 		}else{
-			localHealth.overallState = HealthState::OK;
+			// cout << "Checkpoint 1bc passed..." << endl;
+			nodeHealth->overallState = HealthState::OK;
 		}
 	}
 
+	// cout << "Checkpoint 2 passed..." << endl;
 	// If the current state is not OK and a statistics behaves suboptimal, we can take this into account and potentially add new issues and even set the health state to OK.
-	if ( localHealth.overallState != HealthState::OK ){
+	if ( nodeHealth->overallState != HealthState::OK ){
 		uint totalUtilization = 0;
 
-		if ( localHealth.overallState == HealthState::SLOW || localHealth.overallState == HealthState::ABNORMAL_SLOW || localHealth.overallState == HealthState::ABNORMAL_OTHER ){
+		if ( nodeHealth->overallState == HealthState::SLOW || nodeHealth->overallState == HealthState::ABNORMAL_SLOW || nodeHealth->overallState == HealthState::ABNORMAL_OTHER ){
 
 			for(int i=0; i < UTILIZATION_STATISTIC_COUNT; i++ ){
-				totalUtilization += localHealth.utilization[i];
-				if ( localHealth.utilization[i] > 80 ){ // if more than 80% utilization in one category
+				totalUtilization += nodeHealth->utilization[i];
+				if ( nodeHealth->utilization[i] > 80 ){ // if more than 80% utilization in one category
 					// overloaded!
-					localHealth.negativeIssues.push_back( { toString( (UtilizationIndex) i) + " overloaded", 1, 0 } );
+					nodeHealth->negativeIssues.push_back( { toString( (UtilizationIndex) i) + " overloaded", 1, 0 } );
 					// actually the decision should depend on this nodes role. A compute node is expected to have a high CPU and MEMORY utilization...
 					// TODO
-					localHealth.overallState = HealthState::OK;
+					nodeHealth->overallState = HealthState::OK;
 				}
 			}
 			if ( totalUtilization > 60*4 ){ // the overall system is overloaded
@@ -386,13 +503,14 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 			}
 		}
 	}
-
-	cout << "State: " << toString(localHealth.overallState) << endl;
+/*
+*/
+	// cout << "State of resoner " << id << ": " << toString(nodeHealth->overallState) << endl;
 }
 
 
 void ReasonerStandardImplementation::assessProcessHealth(){
-	cout << "Assessing PROCESS health..." << endl;
+	// cout << "Reasoner " << id << " assessing PROCESS health..." << endl;
 	// FIXME: Implementieren!
 
 	// Input: node health, system health, activity anomalies from the plugins: the AnomalyPluginHealthStatistic
@@ -410,13 +528,14 @@ void ReasonerStandardImplementation::assessProcessHealth(){
 
 		Compact process health (for the last interval) like for node etc.
   	 */
-	cout << "State: " << toString(localHealth.overallState) << endl;
+
+	// cout << "State of resoner " << id << ": " << toString(processHealth->overallState) << endl;
 }
 
 
 
 void ReasonerStandardImplementation::assessSystemHealth(){
-	cout << "Assessing SYSTEM health..." << endl;
+	// cout << "Reasoner " << id << " assessing SYSTEM health..." << endl;
 	// FIXME: Implementieren!
 
 	// Input: node health
@@ -424,6 +543,8 @@ void ReasonerStandardImplementation::assessSystemHealth(){
 	// Result: system health
 	// Test case
 	// Three nodes report overlapping issues.
+
+	// cout << "State of resoner " << id << ": " << toString(systemHealth->overallState) << endl;
 }
 
 

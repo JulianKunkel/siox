@@ -18,7 +18,7 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 
-
+
 class RamTopology : public Topology {
 	public:
 		RamTopology();
@@ -44,7 +44,7 @@ class RamTopology : public Topology {
 		virtual TopologyAttribute registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw();
 		virtual TopologyAttribute lookupAttributeByName( TopologyTypeId domain, const string& name ) throw();
 		virtual TopologyAttribute lookupAttributeById( TopologyAttributeId attributeId ) throw();
-		virtual TopologyValue setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw();
+		virtual bool setAttribute( TopologyObjectId object, TopologyAttributeId attribute, const TopologyVariable& value ) throw();
 		virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw();
 		virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
@@ -274,7 +274,7 @@ TopologyRelation RamTopology::lookupRelation( TopologyObjectId parent, TopologyT
 }
 
 
-Topology::TopologyRelationList RamTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
+TopologyRelationList RamTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
 	ChildMap* childMap = NULL;
 	objectsLock.lock_shared();
 	if( parent < objectsById.size() ) childMap = childMapsById[parent];
@@ -291,7 +291,7 @@ Topology::TopologyRelationList RamTopology::enumerateChildren( TopologyObjectId 
 }
 
 
-Topology::TopologyRelationList RamTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
+TopologyRelationList RamTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
 	ParentVector* parentVector = NULL;
 	objectsLock.lock_shared();
 	if( child < objectsById.size() ) parentVector = parentVectorsById[child];
@@ -351,37 +351,35 @@ TopologyAttribute RamTopology::lookupAttributeById( TopologyAttributeId attribut
 	return result;
 }
 
-
-TopologyValue RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
-	TopologyValue result;
-
+bool RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
 	AttributeMap* attributeMap = NULL;
 	objectsLock.lock_shared();
 	if( object < objectsById.size() ) attributeMap = attributeMapsById[object];
 	objectsLock.unlock_shared();
-	if( !attributeMap ) return result;
+	if( !attributeMap ) return false;
 
 	TopologyAttribute attribute = lookupAttributeById( attributeId );
-	if( attribute.dataType() != value.type() ) return result;
+	if( attribute.dataType() != value.type() ) return false;
 
+	TopologyValue result;
 	attributeMap->lock_shared();
 	IGNORE_EXCEPTIONS( result = attributeMap->at( attributeId ); );
 	attributeMap->unlock_shared();
 	if( !result ) {
 		Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( value, object, attributeId ) );
 		attributeMap->lock();
-		IGNORE_EXCEPTIONS( result = attributeMap->at( attributeId ); );
-		if( !result ) {
-			(*attributeMap)[attributeId].setObject( newValue );
-			result.setObject( newValue );
-		}
+		(*attributeMap)[attributeId].setObject( newValue );
 		attributeMap->unlock();
+		return true;
+	}else{
+		//Consistency check if we found a preexisting attributeId value.		
+		if( value != result.value() ){
+			return false;
+		}
+		return true;
 	}
-	if( value != result.value() ) result.setObject( 0 );	//Consistency check if we found a preexisting attributeId value.
-	return result;
 }
 
-
 TopologyValue RamTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
 	TopologyValue result;
 	AttributeMap* attributeMap = NULL;
@@ -396,8 +394,7 @@ TopologyValue RamTopology::getAttribute( TopologyObjectId object, TopologyAttrib
 	return result;
 }
 
-
-Topology::TopologyValueList RamTopology::enumerateAttributes( TopologyObjectId object ) throw() {
+TopologyValueList RamTopology::enumerateAttributes( TopologyObjectId object ) throw() {
 	AttributeMap* attributeMap = NULL;
 	objectsLock.lock_shared();
 	if( object < objectsById.size() ) attributeMap = attributeMapsById[object];

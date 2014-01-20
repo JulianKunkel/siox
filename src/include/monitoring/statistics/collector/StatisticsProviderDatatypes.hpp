@@ -10,8 +10,6 @@
 
 using namespace std;
 
-#define LOCAL_HOSTNAME "LOCAL_HOSTNAME"
-
 namespace monitoring {
 
 	enum StatisticIntervalType {

@@ -16,6 +16,7 @@ target_link_libraries(
 	siox-monitoring-ThreadedStatisticsCollector
 	siox-core-AutoConfigurator
 	siox-util
+	siox-monitoring-Topology
 	${Boost_LIBRARIES}
 )
 

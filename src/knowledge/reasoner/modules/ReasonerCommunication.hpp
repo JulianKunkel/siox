@@ -12,11 +12,9 @@ using namespace core;
 namespace knowledge {
 
 struct ReasonerMessageReceived{
-		Timestamp timestamp;
-
 		string reasonerID; // identifier of the reasoner sending this message
 
-		ReasonerMessageReceived( Timestamp timestamp, string reasonerID ): timestamp(timestamp), reasonerID(reasonerID) {}
+		ReasonerMessageReceived( string reasonerID ): reasonerID(reasonerID) {}
 };
 
 struct ReasoningDataReceivedCB{
@@ -33,9 +31,9 @@ class ReasonerCommunication : ServerCallback, MessageCallback, ConnectionCallbac
 public:
 	void init(ReasonerCommunicationOptions & options);
 
-	void pushNodeStateUpstream(shared_ptr<NodeHealth> & health, Timestamp time);
-	void pushSystemStateUpstream(shared_ptr<SystemHealth> & health, Timestamp time);
-	void pushProcessStateUpstream(shared_ptr<ProcessHealth> & health, Timestamp time);
+	void pushNodeStateUpstream(shared_ptr<NodeHealth> & health);
+	void pushSystemStateUpstream(shared_ptr<SystemHealth> & health);
+	void pushProcessStateUpstream(shared_ptr<ProcessHealth> & health);
 
 	ReasonerCommunication(ReasoningDataReceivedCB & cb): cb(cb){}
 
@@ -66,7 +64,7 @@ private:
 
 	// client connection callback
 	virtual void connectionErrorCB(ServiceClient & client, CommunicationError error) override;
-	
+
 	virtual void connectionSuccessfullCB(ServiceClient & client) override;
 
 	ServiceServer * server = nullptr;
