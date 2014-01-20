@@ -95,7 +95,7 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 				vector<StatisticsValue> & vals = CPUValues[i];
 
 				StatisticsScope type = NODE;
-				vector<pair<string, string> > topology {{"node", LOCAL_HOSTNAME}};
+				vector<pair<string, string> > topology {{"node", "@localhost"}};
 
 				if( i > 0 ) {
 					type = DEVICE;

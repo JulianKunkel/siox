@@ -1,9 +1,10 @@
-#ifndef SIOX_STATISTICS_COLLECTOR_MODULE
-#define SIOX_STATISTICS_COLLECTOR_MODULE
+#ifndef SIOX_STATISTICS_COLLECTOR_MODULE_IMPL_HPP
+#define SIOX_STATISTICS_COLLECTOR_MODULE_IMPL_HPP
 
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
 
 #define STATISTICS_COLLECTOR_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_statistics_collector)
+
 
 #endif
 

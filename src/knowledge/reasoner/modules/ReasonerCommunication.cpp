@@ -30,36 +30,33 @@ void ReasonerCommunication::init(ReasonerCommunicationOptions & options){
 	}
 }
 
-void ReasonerCommunication::pushNodeStateUpstream(shared_ptr<NodeHealth> & health, Timestamp time){
+void ReasonerCommunication::pushNodeStateUpstream(shared_ptr<NodeHealth> & health){
 	assert( upstreamReasoner );
 	ReasonerMessageData data;
 
 	data.reasonerID = this->reasonerID;
-	data.timestamp = time;
 	data.containedData = ReasonerMessageDataType::NODE;
 	data.messagePayload = &* health;
 
 	upstreamReasoner->isend( & data, (const void*) ReasonerMessageDataType::SYSTEM );
 }
 
-void ReasonerCommunication::pushSystemStateUpstream(shared_ptr<SystemHealth> & health, Timestamp time){
+void ReasonerCommunication::pushSystemStateUpstream(shared_ptr<SystemHealth> & health){
 	assert( upstreamReasoner );
 	ReasonerMessageData data;
 
 	data.reasonerID = this->reasonerID;
-	data.timestamp = time;
 	data.containedData = ReasonerMessageDataType::SYSTEM;
 	data.messagePayload = &* health;
 
 	upstreamReasoner->isend( & data, (const void*) ReasonerMessageDataType::NONE );
 }
 
-void ReasonerCommunication::pushProcessStateUpstream(shared_ptr<ProcessHealth> & health, Timestamp time){
+void ReasonerCommunication::pushProcessStateUpstream(shared_ptr<ProcessHealth> & health){
 	assert( upstreamReasoner );
 	ReasonerMessageData data;
 
 	data.reasonerID = this->reasonerID;
-	data.timestamp = time;
 	data.containedData = ReasonerMessageDataType::PROCESS;
 	data.messagePayload = &* health;
 
@@ -79,12 +76,13 @@ void ReasonerCommunication::messageReceivedCB(std::shared_ptr<ServerClientMessag
 	ReasonerMessageData rmsd;
 
 	// TODO check against our role if we can provide the requested data
+
 	rmsd.containedData = expectedResponse;
 	rmsd.reasonerID = this->reasonerID;
 
 	switch (expectedResponse){
 	case (ReasonerMessageDataType::PROCESS) : {
-		shared_ptr<ProcessHealth> payload = cb.getProcessHealth();
+		shared_ptr<ProcessHealth> payload (new ProcessHealth()); //= cb.getProcessHealth(); FIXME
 		assert(payload);
 		rmsd.messagePayload = &* payload;
 		msg->isendResponse(& rmsd);
@@ -93,6 +91,7 @@ void ReasonerCommunication::messageReceivedCB(std::shared_ptr<ServerClientMessag
 	case (ReasonerMessageDataType::NODE) : {
 		shared_ptr<NodeHealth> payload = cb.getNodeHealth();
 		assert(payload);
+
 		rmsd.messagePayload = &* payload;
 		msg->isendResponse(& rmsd);
 		break;
@@ -128,7 +127,7 @@ ReasonerMessageDataType ReasonerCommunication::parseReceivedData(const char * bu
 
 	j_serialization::deserialize(data, buffer, pos, buffer_size);
 
-	cout << "parseReceivedData: " << (int) data.containedData << endl;
+	// cout << "parseReceivedData: " << (int) data.containedData << endl;
 
 
 	if (data.containedData == ReasonerMessageDataType::NONE){
@@ -137,7 +136,7 @@ ReasonerMessageDataType ReasonerCommunication::parseReceivedData(const char * bu
 
 	ReasonerMessageDataType expectedResponse;
 
-	ReasonerMessageReceived rmr( data.timestamp, data.reasonerID );
+	ReasonerMessageReceived rmr( data.reasonerID );
 
 	switch( data.containedData ){
 	case (ReasonerMessageDataType::PROCESS) : {

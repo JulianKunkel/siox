@@ -457,7 +457,7 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 ComponentReport FileSurveyorPlugin::prepareReport()
 {
 	ComponentReport result;
-	ostringstream reportText;
+	// ostringstream reportText;
 
 	if( !tryEnsureInitialization() ) return ComponentReport();
 
