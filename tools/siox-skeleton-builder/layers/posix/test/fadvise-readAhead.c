@@ -71,11 +71,13 @@ Overhead:
 */
 
 // total file size 1 KiB
-#define SIZE_MIB 1*1024ul*1024
+#define SIZE_MIB 10*1024ul*1024
 #define SIZE_BYTE SIZE_MIB*1024
 
 // 20 KiB stride which is a multiple of page size
+#ifndef STRIDE
 #define STRIDE 20480
+#endif
 
 // block length
 #define BLOCK_LEN 1024
