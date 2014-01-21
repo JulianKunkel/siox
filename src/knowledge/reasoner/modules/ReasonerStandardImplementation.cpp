@@ -458,16 +458,16 @@ std::ostream & operator<<( std::ostream & os, const ReasonerStandardImplementati
 {
 	ostringstream result;
 
-	result << "\t\"" << r->id << "\":" << endl;
+	result << "\"" << r->id << "\":" << endl;
 	switch ( r->role ){
 		case ReasonerStandardImplementationOptions::Role::PROCESS :
-			result << (*(r->processHealth)) << endl;
+			result << (*(r->processHealth));
 			break;
 		case ReasonerStandardImplementationOptions::Role::NODE :
-			result << (*(r->nodeHealth)) << endl;
+			result << (*(r->nodeHealth));
 			break;
 		case ReasonerStandardImplementationOptions::Role::SYSTEM :
-			result << (*(r->systemHealth)) << endl;
+			result << (*(r->systemHealth));
 			break;
 		default:
 			assert(false && "Invalid reasoner role!");

@@ -357,17 +357,21 @@ void testReasoner(){
 	sleep(1);
 	cout << "...waking up!" << endl;
 
-	cout << "Anomalies at atP11a: " << atP11a.anomaliesTriggered << endl;
-	// cout << "Anomalies at AT2: " << at2.anomaliesTriggered << endl;
 
 	cout << "...result:" << endl;
-	cout << ((ReasonerStandardImplementation *) rP11) << endl;
+
+	cout << endl << ((ReasonerStandardImplementation *) rP11);
 	shared_ptr<HealthStatistics> statsP11 = rP11->queryRuntimePerformanceIssues();
 	cout << "HealthStatistics gathered by P11: " << statsP11->to_string() << endl;
-	cout << ((ReasonerStandardImplementation *) rN1) << endl;
+	cout << "Anomalies at atP11a: " << atP11a.anomaliesTriggered << endl;
+
+	cout << endl << ((ReasonerStandardImplementation *) rN1);
 	shared_ptr<HealthStatistics> statsN1 = rN1->queryRuntimePerformanceIssues();
 	cout << "HealthStatistics gathered by N1: " << statsN1->to_string() << endl;
-	cout << ((ReasonerStandardImplementation *) rS) << endl;
+	cout << "Anomalies at atN1a: " << atN1a.anomaliesTriggered << endl;
+	cout << "Anomalies at atN1b: " << atN1b.anomaliesTriggered << endl;
+
+	cout << endl << ((ReasonerStandardImplementation *) rS);
 
 
 	/*

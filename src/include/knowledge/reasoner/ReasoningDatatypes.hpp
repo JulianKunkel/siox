@@ -270,22 +270,22 @@ struct NodeHealth : public Health{
 	{
 		ostringstream result;
 
-		result << "\t[" << endl;
-		result << "\t\tState:    \t" << to_string(h.overallState) << endl;
-		result << "\t\tUtilization:\t";
+		result << "[" << endl;
+		result << "\tState:    \t" << to_string(h.overallState) << endl;
+		result << "\tUtilization:\t";
 		for ( auto util : h.utilization )
 			result << " | " << (int) util;
 		result << " | " << endl;
-		result << "\t\tOccurrences:\t";
+		result << "\tOccurrences:\t";
 		for ( auto o : h.occurrences )
 			result << " | " << o;
 		result << " | " << endl;
-		result << "\t\tIssues:\t\t";
+		result << "\tIssues:\t\t";
 		result << "+" << h.positiveIssues.size() << "\t";
 		result << "-" << h.negativeIssues.size() << endl;
-		result << "\t\tLast Modified:\t" << h.timeLastModified << endl;
+		result << "\tLast Modified:\t" << h.timeLastModified << endl;
 
-		result << "\t]" << endl;
+		result << "]" << endl;
 		return os << result.str();
 	}
 /*
