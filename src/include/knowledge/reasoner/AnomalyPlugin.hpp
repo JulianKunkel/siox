@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <sstream>
+#include <mutex>
 
 #include <knowledge/reasoner/ReasoningDatatypes.hpp>
 
@@ -54,7 +55,7 @@ struct AnomalyPluginHealthStatistic{
  * Maps components' CIDs to an ADPI-generated health status report for each.
  */
 struct HealthStatistics{
-	// @todo TODO: Any reason not to use the full CID as a key but only ComponentID.id?
+	// TODO: Any reason not to use the full CID as a key but only ComponentID.id? Any problems resulting?
 	unordered_map<ComponentID, AnomalyPluginHealthStatistic> map;
 
 
@@ -73,26 +74,40 @@ struct HealthStatistics{
 
 
 class AnomalyPlugin {
+
 	public:
+
 		// After executing this call, the plugin iterates to the next timestep.
 		// Ownership of the pointer is transferred to the caller.
 		virtual unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> queryRecentObservations()
 		{
+			// Disallow other access to aggregated data fields
+			unique_lock<mutex> dataLock( dataMutex );
+
 			unordered_map<ComponentID, AnomalyPluginHealthStatistic> * tmp = recentObservations;
 			recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
+
 			return unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>(tmp);
 		}
+
 
 		AnomalyPlugin() {
 			recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
 		}
 
+
 	private:
+
+		mutex	dataMutex; // To protect access to aggregated data
 		unordered_map<ComponentID, AnomalyPluginHealthStatistic> * recentObservations;
+
 
 	protected:
 
-		void addObservation( ComponentID cid, HealthState state,  const string & issue, int32_t delta_time_ms ) {
+		void addObservation( ComponentID cid, HealthState state,  const string & issue, int32_t delta_time_ms )
+		{	// Disallow other access to aggregated data fields
+			unique_lock<mutex> dataLock( dataMutex );
+
 			unordered_map<ComponentID, AnomalyPluginHealthStatistic>::iterator find = recentObservations->find( cid );
 
 			if( find == recentObservations->end() ) {
@@ -110,10 +125,14 @@ class AnomalyPlugin {
 				if ( state > HealthState::OK ){
 					addIssue( stat.negativeIssues, issue, delta_time_ms );
 				}
+				// FIXME: "Neutral issues" will never be added! Is this as intended?
 			}
 		}
 
-		void addIssue( unordered_map<string, HealthIssue> & map, const string & issue, int32_t delta_time_ms ){
+
+		void addIssue( unordered_map<string, HealthIssue> & map, const string & issue, int32_t delta_time_ms )
+		{
+			// FIXME: Protect this via dataMutex, too?
 			auto find = map.find( issue );
 			if ( find == map.end() ){
 				map[issue] = { issue, 1, delta_time_ms };
