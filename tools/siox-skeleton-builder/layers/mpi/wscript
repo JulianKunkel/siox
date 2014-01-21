@@ -11,6 +11,7 @@ def options(opt):
 	gr.add_option('--label', action='store', dest="LABEL", default="", help='Add a label to the library, e.g. for multiple versions')
 	gr.add_option('--siox-test-implementation', action='store', dest="SIOX_LL_IMPLEMENTATION", help='Directory to a testing SIOX low-level API to use')
 	gr.add_option('--mpi', action='store', dest="MPI", default=False, help='Directory to MPI')
+	gr.add_option('--mpi-const', action='store_true', dest="MPICONST", default=False, help='Use const keyword for output buffers')
 	gr.add_option('--mpicc', action='store', dest="MPICC", default="mpicc", help='MPI compiler script')
 	gr.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
 
@@ -31,11 +32,11 @@ def configure(conf):
 	if conf.options.SIOX:
 		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
 		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
-		conf.env.append_value('LINKFLAGS', ["-Wl,-rpath-link=" + conf.options.SIOX + "/lib"])	
+		conf.env.append_value('LINKFLAGS', ["-Wl,-rpath-link=" + conf.options.SIOX + "/lib"])
 
 		conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
 	else:
-		conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)   	
+		conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)
 
 	conf.env.append_value('INCLUDES', ['.' ])
 
@@ -48,13 +49,17 @@ def configure(conf):
         # locate mpi.h and mpicc
 	if conf.options.MPI:
 		conf.env.append_value('INCLUDES', [conf.options.MPI + '/include' ])
-		conf.find_program(conf.options.MPICC, var='MPICC', path_list=[conf.options.MPI+os.path.sep+'bin'].append(os.environ["PATH"].split(":"))) 
+		conf.find_program(conf.options.MPICC, var='MPICC', path_list=[conf.options.MPI+os.path.sep+'bin'].append(os.environ["PATH"].split(":")))
 	else:
 		conf.find_program(conf.options.MPICC, var='MPICC')
-	
+
 	#conf.check(header_name='mpi.h', features='c cprogram')
 
 	# inverse at the moment:
+        if conf.options.MPICONST:
+                conf.env.append_value("CFLAGS", ['-DOPTIONAL_CONST=const'])
+
+
         if conf.options.debug:
                 conf.env.append_value("CFLAGS", ['-std=c99', '-O3', '-Wall'])
         else:
@@ -75,21 +80,21 @@ def build(bld):
 	LAYERPLAIN=LAYER
 	label = bld.env.LABEL[0]
 	if label != "":
-		LAYER=LAYER + "-" + bld.env.LABEL[0]	
+		LAYER=LAYER + "-" + bld.env.LABEL[0]
 
-        def wrap(task): 
+        def wrap(task):
 		return wrapper(task, "wrap")
 
-        def dlsym(task): 
+        def dlsym(task):
 		return wrapper(task, "dlsym")
 
-        def wrapper(task, typ): 
+        def wrapper(task, typ):
                 src = task.inputs[0].abspath()
                 tgt = task.outputs[0].abspath()
                 cmd = bld.path.abspath() + '/../../siox-skeleton-builder -o %s -t %s -s %s -W libsiox-%s.wrap %s' % (tgt, bld.path.abspath() + "/../../template.py", typ, LAYER, src)
                 return task.exec_command(cmd)
 
-        def dummy(task): 
+        def dummy(task):
                 cmd = ""
                 return task.exec_command(cmd)
 
@@ -112,7 +117,7 @@ def build(bld):
 		print "Could not read wrapper flags, this is critical!"
 		sys.exit(1)
 
-	bld.shlib(includes="",  use = "GLIB SIOX_LL" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)	
+	bld.shlib(includes="",  use = "GLIB SIOX_LL" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
 	bld.shlib(includes="",  use = "GLIB DL SIOX_LL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
 
 	try:
@@ -124,7 +129,7 @@ def build(bld):
 
 	from waflib.Tools import waf_unit_test
 	bld.add_post_fun(waf_unit_test.summary)
-	
 
-	
+
+
 

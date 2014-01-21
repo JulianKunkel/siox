@@ -16,19 +16,6 @@
 using namespace core;
 using namespace monitoring;
 
-#define EXPECT_EXCEPTION(...) do { \
-	bool success = false; \
-	try { \
-		__VA_ARGS__ \
-	} catch(...) { \
-		success = true; \
-	} \
-	if( !success ) { \
-		cerr << "Couldn't catch expected exception in\n\t" #__VA_ARGS__ "\n"; \
-		abort(); \
-	} \
-} while( 0 )
-
 int main( int argc, char const * argv[] ) throw() {
 	Topology* topology = module_create_instance<Topology>( "", "siox-monitoring-RamTopology", MONITORING_TOPOLOGY_INTERFACE );
 	topology->getOptions<RamTopologyOptions>();
@@ -65,55 +52,55 @@ int main( int argc, char const * argv[] ) throw() {
 	object1 = topology->lookupObjectById( 1 );
 	assert( !object1 );
 
-	object1 = topology->registerObject( 0, type1.id(), type2.id(), "object1" );
+	object1 = topology->registerObject( 0, type2.id(), "object1", type1.id() );
 	assert( object1.id() == 1 );
 	assert( object1.type() == type1.id() );
 	object2 = topology->lookupObjectById( 0 );
 	assert( !object2 );
 	object2 = topology->lookupObjectById( 1 );
 	assert( object2.type() == type1.id() );
-	object2 = topology->registerObject( object1.id(), type2.id(), type1.id(), "object2" );
+	object2 = topology->registerObject( object1.id(), type1.id(), "object2", type2.id() );
 	assert( object2.id() == 2 );
 	assert( object2.type() == type2.id() );
 
 	//Test relations
 	TopologyRelation relation1, relation2, relation3, relation4;
-	relation1 = topology->lookupRelation( 0, "foo" );
+	relation1 = topology->lookupRelation( 0, type1.id(), "foo" );
 	assert( !relation1 );
-	relation1 = topology->lookupRelation( object2.id(), "object1" );
+	relation1 = topology->lookupRelation( object2.id(), type2.id(), "object1" );
 	assert( !relation1 );
-	relation1 = topology->lookupRelation( object1.id(), "object1" );
+	relation1 = topology->lookupRelation( object1.id(), type2.id(), "object1" );
 	assert( !relation1 );
-	relation1 = topology->lookupRelation( 0, "object2" );
+	relation1 = topology->lookupRelation( 0, type1.id(), "object2" );
 	assert( !relation1 );
-	relation1 = topology->lookupRelation( 0, "object1" );
+	relation1 = topology->lookupRelation( 0, type1.id(), "object1" );
+	assert( !relation1 );
+	relation1 = topology->lookupRelation( 0, type2.id(), "object1" );
 	assert( relation1.childName() == "object1" );
 	assert( relation1.parent() == 0 );
 	assert( relation1.child() == object1.id() );
 	assert( relation1.type() == type2.id() );
-	relation2 = topology->lookupRelation( object1.id(), "object2" );
+	relation2 = topology->lookupRelation( object1.id(), type1.id(), "object2" );
 	assert( relation2.childName() == "object2" );
 	assert( relation2.parent() == object1.id() );
 	assert( relation2.child() == object2.id() );
 	assert( relation2.type() == type1.id() );
 
-	IGNORE_EXCEPTIONS( relation3 = topology->registerRelation( type1.id(), 0, object1.id(), "object1" ); );
+	relation3 = topology->registerRelation( 0, type2.id(), "object1", object2.id() );
 	assert( !relation3 );
-	IGNORE_EXCEPTIONS( relation3 = topology->registerRelation( type2.id(), 0, object2.id(), "object1" ); );
-	assert( !relation3 );
-	relation3 = topology->registerRelation( type2.id(), 0, object1.id(), "object1" );
+	relation3 = topology->registerRelation( 0, type2.id(), "object1", object1.id() );
 	assert( &*relation3 == &*relation1 );
-	relation3 = topology->registerRelation( type1.id(), 0, object2.id(), "object2" );
+	relation3 = topology->registerRelation( 0, type1.id(), "object2", object2.id() );
 	assert( relation3.child() == object2.id() );
 	assert( relation3.type() == type1.id() );
-	IGNORE_EXCEPTIONS( relation4 = topology->registerRelation( type2.id(), object2.id(), 0, "object1" ); );
+	relation4 = topology->registerRelation( object2.id(), type2.id(), "object1", 0 );
 	assert( !relation4 );
-	relation4 = topology->registerRelation( type2.id(), object2.id(), object1.id(), "object1" );
+	relation4 = topology->registerRelation( object2.id(), type2.id(), "object1", object1.id() );
 	assert( relation4.child() == object1.id() );
 	assert( relation4.type() == type2.id() );
 
 	{
-		TopologyObject temp;
+		TopologyObject temp, object3;
 		temp = topology->lookupObjectByPath( "" );
 		assert( !temp );
 		temp = topology->lookupObjectByPath( "/object1" );
@@ -122,18 +109,41 @@ int main( int argc, char const * argv[] ) throw() {
 		assert( !temp );
 		temp = topology->lookupObjectByPath( "object1//object2" );
 		assert( !temp );
-		temp = topology->lookupObjectByPath( "object1" );
+		temp = topology->lookupObjectByPath( "type1:object1" );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( "type2:object1" );
 		assert( &*temp == &*object1 );
-		temp = topology->lookupObjectByPath( "object2/object1" );
+		temp = topology->lookupObjectByPath( "type1:object2/type2:object1" );
 		assert( &*temp == &*object1 );
-		temp = topology->lookupObjectByPath( "object2" );
+		temp = topology->lookupObjectByPath( "type1:object2" );
 		assert( &*temp == &*object2 );
-		temp = topology->lookupObjectByPath( "object1/object2" );
+		temp = topology->lookupObjectByPath( "type2:object1/type1:object2" );
 		assert( &*temp == &*object2 );
+		object3 = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
+		temp = topology->lookupObjectByPath( "type1:object2/tic:tac/toe:tric" );
+		assert( &*temp == &*object3 );
+		temp = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
+		assert( &*temp == &*object3 );
+		temp = topology->registerObjectByPath( "type1:object2/tic:tac/toe:tric:trac" );
+		assert( !temp );
+		temp = topology->registerObjectByPath( "type1:object2:type2/tic:tac/toe:tric" );
+		assert( !temp );
+		temp = topology->lookupObjectByPath( "type1:object2:type2/tic:tac/toe:tric:trac" );
+		assert( &*temp == &*object3 );
+		assert( topology->setAlias( "@foo", "type1:object2" ) );
+		assert( topology->setAlias( "@foo", "type1:object2" ) );
+		assert( !topology->setAlias( "@foo", "foo:bar" ) );
+		assert( !topology->setAlias( "@bar", "foo" ) );
+		assert( !topology->setAlias( "@bar", "foo:bar/tic:tac" ) );
+		assert( !topology->setAlias( "foo", "type1:object2" ) );
+		assert( !topology->setAlias( "@foo/bar", "type1:object2" ) );
+		assert( topology->setAlias( "@bar", "@foo" ) );
+		temp = topology->lookupObjectByPath( "@bar/tic:tac/toe:tric" );
+		assert( &*temp == &*object3 );
 	}
 
 	{
-		Topology::TopologyRelationList list;
+		TopologyRelationList list;
 		list = topology->enumerateChildren( 0, 0 );
 		assert( list.size() == 2 );
 		assert( &*list[0] == &*relation1 || &*list[0] == &*relation3 );
@@ -173,7 +183,7 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( attribute1.id() == 1 );
 	assert( attribute1.domainId() == type1.id() );
 	assert( attribute1.dataType() == TopologyVariable::Type::FLOAT );
-	IGNORE_EXCEPTIONS( attribute2 = topology->registerAttribute( type1.id(), "attribute1", TopologyVariable::Type::DOUBLE ); );
+	attribute2 = topology->registerAttribute( type1.id(), "attribute1", TopologyVariable::Type::DOUBLE );
 	assert( !attribute2 );
 
 	attribute2 = topology->lookupAttributeById( 0 );
@@ -187,30 +197,45 @@ int main( int argc, char const * argv[] ) throw() {
 	assert( attribute2.dataType() == TopologyVariable::Type::FLOAT );
 	attribute2 = topology->registerAttribute( type1.id(), "attribute2", TopologyVariable::Type::DOUBLE );
 
-	TopologyValue value1, value2;
-	EXPECT_EXCEPTION( topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1 ) ); );
-	topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1.0f ) );
-	IGNORE_EXCEPTIONS( value1 = topology->getAttribute( object2.id(), attribute1.id() ); );
-	assert( !value1 );
-	IGNORE_EXCEPTIONS( value1 = topology->getAttribute( object1.id(), attribute2.id() ); );
-	assert( !value1 );
-	value1 = topology->getAttribute( object1.id(), attribute1.id() );
-	assert( value1.object() == object1.id() );
-	assert( value1.attribute() == attribute1.id() );
-	assert( value1.value() == 1.0f );
+	TopologyVariable value1(1.0f);
+	TopologyValue value2;
+	assert( ! topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable(1) ) );
+	assert( topology->setAttribute( object1.id(), attribute1.id(), value1) );
+	value2 = topology->getAttribute( object2.id(), attribute1.id() );
+	assert( !value2 );
+	value2 = topology->getAttribute( object1.id(), attribute2.id() );
+	assert( !value2 );
+	value2 = topology->getAttribute( object1.id(), attribute1.id() );
+	assert( value1 == value2.value() );
+
 	topology->setAttribute( object1.id(), attribute2.id(), TopologyVariable( 1.0 ) );
 	value2 = topology->getAttribute( object1.id(), attribute2.id() );
 	assert( value2.object() == object1.id() );
 	assert( value2.attribute() == attribute2.id() );
 	assert( value2.value() == 1.0 );
 
-	Topology::TopologyValueList valueList;
+	TopologyValueList valueList;
 	valueList = topology->enumerateAttributes( object2.id() );
 	assert( !valueList.size() );
 	valueList = topology->enumerateAttributes( object1.id() );
 	assert( valueList.size() == 2 );
-	assert( &*valueList[0] == &*value1 || &*valueList[0] == &*value2 );
-	assert( &*valueList[1] == &*value1 || &*valueList[1] == &*value2 );
+	assert( valueList[0].value() == value1 || &*valueList[0] == &*value2 );
+	assert( valueList[1].value() == value1 || &*valueList[1] == &*value2 );
+
+	// Test object with full string paths
+	{
+	TopologyObject obj1 = topology->registerObjectByPath( {{"ComponentID", "test", "Component"}, {"AttributeID", 4711, "Attribute"}} );
+	assert(obj1);
+	TopologyObject obj2 = topology->lookupObjectByPath( {{"ComponentID", "test"}, {"AttributeID", 4711}} );
+	assert( &*obj1 == &*obj2 );
+	}
+	{
+	TopologyObject obj1 = topology->registerObjectByPath( {{"ComponentID", "@proc/schuh:shoe", "Component"}, {"AttributeID", "@slang:///FALSE\1\2\3TRUE", "Attribute"}} );
+	assert(obj1);
+	TopologyObject obj2 = topology->lookupObjectByPath(  {{"ComponentID", "@proc/schuh:shoe"}, {"AttributeID", "@slang:///FALSE\1\2\3TRUE"}} );
+	assert( &*obj1 == &*obj2 );
+	}
+
 
 	delete topology;
 

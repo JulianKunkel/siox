@@ -10,6 +10,7 @@ using namespace core;
 //@serializable
 class DereferencingFacadeOptions: public ComponentOptions {
 	public:
+		ComponentReference topology;
 		ComponentReference ontology;
 		ComponentReference system_information_manager;
 		ComponentReference association_mapper;

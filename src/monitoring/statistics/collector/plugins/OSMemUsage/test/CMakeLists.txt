@@ -11,7 +11,7 @@ add_executable(
 
 target_link_libraries(
 	OSMemUsageTest
-	siox-monitoring-statisticsPlugin-OSMemUsage 
+	siox-monitoring-statisticsPlugin-OSMemUsage
 	siox-core-AutoConfigurator
 )
 

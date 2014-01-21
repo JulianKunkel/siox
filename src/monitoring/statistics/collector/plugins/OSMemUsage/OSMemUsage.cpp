@@ -16,7 +16,6 @@ class OSMemUsage: public ProcSingleFilePlugin<3> {
 	protected:
 		map<string, pair<StatisticsValue, string> > values;
 
-
 		string initRegex() {
 			return "[ \t]*[^ \t:]+";
 		}
@@ -54,21 +53,17 @@ class OSMemUsage: public ProcSingleFilePlugin<3> {
 		}
 
 		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
-			vector<StatisticsProviderDatatypes> lst;
+			vector<StatisticsProviderDatatypes> result;
 
 			uint64_t overflow_value = ( uint64_t ) 1 << 63; //TODO CHECK ME, we expect 64 Bit...
 
-			for( auto itr = values.begin(); itr != values.end(); itr++ ) {
-				char name[51];
-				name[50] = 0;
-				snprintf( name, 50, "quantity/%s", itr->first.c_str() );
-
-				string unit = itr->second.second == "kB" ?  "Bytes" : itr->second.second;
-
-				lst.push_back( {MEMORY, NODE, name, {{"node", LOCAL_HOSTNAME}}, itr->second.first, SAMPLED, unit, "", overflow_value, 0} );
+			for( auto iterator = values.begin(); iterator != values.end(); iterator++ ) {
+				string ontologyName = string( "quantity/memory/" ) + iterator->first;
+				string unit = iterator->second.second == "kB" ?  "Bytes" : iterator->second.second;
+				result.push_back( {MEMORY, NODE, ontologyName, "@localhost", iterator->second.first, SAMPLED, unit, "", overflow_value, 0} );
 			}
 
-			return lst;
+			return result;
 		}
 };
 

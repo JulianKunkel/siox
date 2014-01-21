@@ -23,14 +23,31 @@ namespace monitoring {
 			Key: cid + OntologyAttributeID, VALUE as value...
 			*/
 			virtual void set_process_attribute( const ProcessID & pid, const OntologyAttribute & att, const OntologyValue & value ) throw( IllegalStateError ) = 0;
-			virtual const OntologyValue & lookup_process_attribute( const ProcessID & pid, const OntologyAttribute & att ) const throw( NotFoundError ) = 0;
+			virtual const OntologyValue lookup_process_attribute( const ProcessID & pid, const OntologyAttribute & att ) const throw( NotFoundError ) = 0;
 
 			virtual void set_component_attribute( const ComponentID & cid, const OntologyAttribute & att, const  OntologyValue & value ) throw( IllegalStateError ) = 0;
-			virtual const OntologyValue & lookup_component_attribute( const ComponentID & cid, const OntologyAttribute & att ) const throw( NotFoundError ) = 0;
+			virtual const OntologyValue lookup_component_attribute( const ComponentID & cid, const OntologyAttribute & att ) const throw( NotFoundError ) = 0;
 
 			/* These functions are used to create the RemoteInstanceID */
 			virtual AssociateID create_instance_mapping( const string & value ) = 0;
-			virtual const string & lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) = 0;
+			virtual const string lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) = 0;
+
+			string localHostname(){
+				return hostname;
+			}
+
+			ProcessID localProcessID(){
+				return processID;
+			}
+
+			void setLocalInformation(const string & hostname, const ProcessID & processID){
+				this->processID = processID;
+				this->hostname = hostname;
+			}
+
+		private:
+			ProcessID processID;
+			string hostname = "undefined";		
 	};
 
 }

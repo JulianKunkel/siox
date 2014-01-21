@@ -62,9 +62,9 @@ int main( int argc, char const * argv[] )
 {
 	StatisticsProviderPlugin * ps = module_create_instance<StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-providerskel" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 
-	ps->getOptions<ProviderSkeletonOptions>().statisticsCollector.componentID = ( ComponentReferenceID ) new StatisticsCollectorTester();
+	ps->getOptions<ProviderSkeletonOptions>().statisticsCollector.componentPointer = new StatisticsCollectorTester();
 
- 	StatisticsProviderPluginOptions options;
+	StatisticsProviderPluginOptions options;
 	ps->init(options);
 
 	delete( ps );

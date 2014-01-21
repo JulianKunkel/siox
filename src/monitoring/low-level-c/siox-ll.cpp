@@ -55,6 +55,8 @@ static bool finalized = true;
 static struct process_info process_data;
 
 static list<void (*)(void)> terminate_cbs;
+static list<void (*)(void)> initialization_cbs;
+static list<void (*)(void)> terminate_complete_cbs;
 
 
 struct FUNCTION_CLASS{
@@ -67,23 +69,51 @@ struct FUNCTION_CLASS{
 	}
 };
 
+
 struct FUNCTION_PERF_CLASS : FUNCTION_CLASS{
-	const char * name; 
+	OverheadEntry * entry;
 	Timestamp eventStartTime;
 
-	FUNCTION_PERF_CLASS(const char * name) : name(name){
+	FUNCTION_PERF_CLASS(OverheadEntry * entry) : entry(entry){		
 		eventStartTime = process_data.overhead->startMeasurement();
 	}
 
 	~FUNCTION_PERF_CLASS(){
-		process_data.overhead->stopMeasurement(name, eventStartTime);
+		process_data.overhead->stopMeasurement(entry, eventStartTime);
 	}
 };
 
-
-#define PERF_MEASURE_START(name) FUNCTION_PERF_CLASS _class_inst_(name);
-#define FUNCTION_BEGIN FUNCTION_PERF_CLASS _class_inst_(__FUNCTION__);
+#define PERF_MEASURE_START(name) static OverheadEntry * _oe = process_data.overhead->getOverheadFor(name); FUNCTION_PERF_CLASS _class_inst_x(_oe);
+#define FUNCTION_BEGIN static OverheadEntry * _oe = process_data.overhead->getOverheadFor(__FUNCTION__); FUNCTION_PERF_CLASS _class_inst_x(_oe);
 #define NO_PERFMEASURE_FUNCTION_BEGIN FUNCTION_CLASS _class_inst_x;
+
+enum SIOX_MONITORING_STATE{
+	SIOX_MONITORING_PERMANENTLY_DISABLED = -1,
+	SIOX_MONITORING_ENABLED = 0,
+	SIOX_MONITORING_DISABLED_BY_USER = 1,
+	SIOX_MONITORING_DISABLED_NOT_INITIALIZED = 2
+};
+
+static int monitoringDisabled = SIOX_MONITORING_DISABLED_NOT_INITIALIZED;
+
+int siox_is_monitoring_permanently_disabled(){
+	return monitoringDisabled == SIOX_MONITORING_PERMANENTLY_DISABLED;
+}
+
+
+int siox_is_monitoring_enabled(){
+	return monitoringDisabled == SIOX_MONITORING_ENABLED;
+}
+
+void siox_disable_monitoring(){
+	if ( monitoringDisabled != SIOX_MONITORING_ENABLED ) return;
+	monitoringDisabled = SIOX_MONITORING_DISABLED_BY_USER;
+}
+
+void siox_enable_monitoring(){
+	if ( monitoringDisabled == SIOX_MONITORING_DISABLED_BY_USER ) return;
+	monitoringDisabled = SIOX_MONITORING_ENABLED;
+}
 
 
 //////////////////////////////////////////////////////////
@@ -105,7 +135,24 @@ NodeID lookup_node_id( const string & hostname )
 }
 
 void siox_register_termination_signal( void (*func)(void) ){
+	for(auto itr = terminate_cbs.begin(); itr != terminate_cbs.end(); itr++ ){
+		if ( *itr == func ) return;
+	}
 	terminate_cbs.push_back(func);
+}
+
+void siox_register_termination_complete_signal( void (*func)(void) ){
+	for(auto itr = terminate_complete_cbs.begin(); itr != terminate_complete_cbs.end(); itr++ ){
+		if ( *itr == func ) return;
+	}
+	terminate_complete_cbs.push_back(func);	
+}
+
+void siox_register_initialization_signal( void (*func)(void) ){
+	for(auto itr = initialization_cbs.begin(); itr != initialization_cbs.end(); itr++ ){
+		if ( *itr == func ) return;
+	}
+	initialization_cbs.push_back(func);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -215,7 +262,8 @@ static void add_program_information()
 extern "C" {
 
 // Constructor for the shared library
-	__attribute__( ( constructor ) ) void siox_ll_ctor()
+
+__attribute__( ( constructor ) ) void siox_ctor()
 	{
 		// for debugging of the LD_PRELOAD wrapper, you may use gdb to attach to the process
 		// Inside gdb run: set waiting = 0
@@ -253,36 +301,55 @@ extern "C" {
 				assert( process_data.system_information_manager );
 				assert( process_data.association_mapper );
 				assert( process_data.amux );
+
 				// Retrieve NodeID and PID now that we have a valid SystemInformationManager
 				process_data.nid = lookup_node_id( hostname );
 				process_data.pid = create_process_id( process_data.nid );
+				process_data.association_mapper->setLocalInformation(hostname, process_data.pid);
 			
 			} catch( exception & e ) {
 				cerr << "Received exception of type " << typeid( e ).name() << " message: " << e.what() << endl;
-				exit( 1 );
+				// SIOX will be disabled !
+				siox_finalize_monitoring();
+				return;
 			}
 
 			add_program_information();
-		}
 
-		finalized = false;
+			finalized = false;
+			monitoringDisabled = SIOX_MONITORING_ENABLED;			
+		}		
 	}
 
-// Destructor for the shared library
-	__attribute__( ( destructor ) ) void siox_ll_dtor()
-	{
+void siox_initialize_monitoring(){
+	siox_ctor();
+
+	// invoke initialization callbacks
+	for( auto itr = initialization_cbs.begin() ; itr != initialization_cbs.end(); itr++ ){
+		(*itr)();
+	}
+}
+
+
+static void finalizeSIOX(int print){
+
 		if( finalized ) {
 			return;
 		}
-		// Never enter any SIOX function after siox-ll has been stopped.
-		// This is done by incrementing the counter.
-		monitoring_namespace_inc();
+
+		// invoke terminate callbacks
+		for( auto itr = terminate_cbs.begin() ; itr != terminate_cbs.end(); itr++ ){
+			(*itr)();
+		}
+
 		{
 			PERF_MEASURE_START("FINALIZE")
 
-			OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
-			process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
-			util::invokeAllReporters( process_data.registrar );
+			if( print ){
+				OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
+				process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
+				util::invokeAllReporters( process_data.registrar );
+			}
 			//process_data.registrar->unregisterComponent( -1 );
 
 			// cleanup data structures by using the component registrar:
@@ -294,13 +361,27 @@ extern "C" {
 
 		delete( process_data.overhead );
 
-		// invoke terminate callbacks
-		for( auto itr = terminate_cbs.begin() ; itr != terminate_cbs.end(); itr++ ){
-			(*itr)();
-		}
-
 		finalized = true;
+		monitoringDisabled = SIOX_MONITORING_PERMANENTLY_DISABLED;
+}
+
+// Destructor for the shared library
+__attribute__( ( destructor ) ) void siox_ll_dtor()
+{
+	finalizeSIOX(1);
+
+	// invoke termination complete callbacks
+	for( auto itr = terminate_complete_cbs.begin() ; itr != terminate_complete_cbs.end(); itr++ ){
+		(*itr)();
 	}
+}
+
+
+void siox_finalize_monitoring(){
+	monitoringDisabled = SIOX_MONITORING_PERMANENTLY_DISABLED;
+	finalizeSIOX(0);
+}
+
 
 //############################################################################
 ///////////////////// Implementation of SIOX-LL /////////////
@@ -321,7 +402,7 @@ extern "C" {
 	static VariableDatatype convert_attribute( siox_attribute * attribute, const void * value )
 	{
 		AttributeValue v;
-		switch( attribute->storage_type ) {
+		switch( attribute->o.storage_type ) {
 			case( VariableDatatype::Type::UINT32 ):
 				return *( ( uint32_t * ) value );
 			case( VariableDatatype::Type::INT32 ): {
@@ -355,7 +436,7 @@ extern "C" {
 		assert( value != nullptr );
 		FUNCTION_BEGIN
 		AttributeValue val = convert_attribute( attribute, value );
-		process_data.association_mapper->set_process_attribute( process_data.pid, *attribute, val );
+		process_data.association_mapper->set_process_attribute( process_data.pid, attribute->o, val );
 	}
 
 
@@ -456,7 +537,7 @@ extern "C" {
 		assert( component != nullptr );
 
 		OntologyValue val = convert_attribute( attribute, value );
-		process_data.association_mapper->set_component_attribute( ( component->cid ), *attribute, val );
+		process_data.association_mapper->set_component_attribute( ( component->cid ), attribute->o, val );
 	}
 
 
@@ -472,7 +553,7 @@ extern "C" {
 
 
 	void siox_component_unregister( siox_component * component )
-	{
+	{	
 		FUNCTION_BEGIN
 		assert( component != nullptr );
 		// Simple implementation: rely on ComponentRegistrar for shutdown.
@@ -536,7 +617,7 @@ extern "C" {
 		FUNCTION_BEGIN
 
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
-		Attribute attr( attribute->aID, convert_attribute( attribute, value ) );
+		Attribute attr( attribute->o.aID, convert_attribute( attribute, value ) );
 
 		ab->setActivityAttribute( activity->activity, attr );
 
@@ -571,10 +652,12 @@ extern "C" {
 		// Find component's amux
 		siox_component * component = activity->component;
 		assert( component != nullptr );
-		// Send activity to it
 
+		// Send activity to it
 		shared_ptr<Activity> activity_shared_ptr (activity->activity);
-		component-> amux->Log( activity_shared_ptr );
+		if ( ! monitoringDisabled ){ 
+			component-> amux->Log( activity_shared_ptr );
+		}
 
 		delete( activity );
 
@@ -631,7 +714,7 @@ extern "C" {
 		assert( value != nullptr );
 		FUNCTION_BEGIN
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
-		Attribute attr( attribute->aID, convert_attribute( attribute, value ) );
+		Attribute attr( attribute->o.aID, convert_attribute( attribute, value ) );
 
 		ab->setRemoteCallAttribute( remote_call, attr );
 
@@ -674,8 +757,9 @@ extern "C" {
 
 		FUNCTION_BEGIN
 		try {
-			auto ret = & process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
-			return ret;
+			OntologyAttribute ret = process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
+
+			return new siox_attribute(ret);
 		} catch( IllegalStateError & e ) {
 			return nullptr;
 		}
@@ -692,7 +776,7 @@ extern "C" {
 		FUNCTION_BEGIN
 		AttributeValue val = convert_attribute( meta_attribute, value );
 		try {			
-			process_data.ontology->attribute_set_meta_attribute( *parent_attribute, *meta_attribute, val );
+			process_data.ontology->attribute_set_meta_attribute( parent_attribute->o, meta_attribute->o, val );
 		} catch( IllegalStateError & e ) {
 			return 0;
 		}
@@ -710,9 +794,10 @@ extern "C" {
 		try {
 			const OntologyAttribute & meta = process_data.ontology->register_attribute( "Meta", "Unit", VariableDatatype::Type::STRING );
 			// OntologyAttribute * attribute = process_data.ontology->register_attribute(d, n, convert_attribute_type(storage_type));
-			const OntologyAttribute & attribute = process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
+			const OntologyAttribute attribute = process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
 			process_data.ontology->attribute_set_meta_attribute( attribute, meta, unit );
-			return & attribute;
+
+			return new siox_attribute(attribute);
 		} catch( IllegalStateError & e ) {
 			return nullptr;
 		}
@@ -724,13 +809,17 @@ extern "C" {
 		FUNCTION_BEGIN
 		assert( name != nullptr );
 		try {			
-			auto ret = & process_data.ontology->lookup_attribute_by_name( domain, name );
-			return ret;
+			auto ret = process_data.ontology->lookup_attribute_by_name( domain, name );
+			return new siox_attribute(ret);
 		} catch( NotFoundError & e ) {
 			return nullptr;
 		}
 	}
 
+	void siox_ontology_free_attribute(siox_attribute * attribute){
+		assert(attribute);
+		delete(attribute);
+	}
 
 	siox_unique_interface * siox_system_information_lookup_interface_id( const char * interface_name, const char * implementation_identifier )
 	{
@@ -753,7 +842,7 @@ extern "C" {
 		FUNCTION_BEGIN
 
 		try{
-			OntologyValue val(process_data.optimizer->optimalParameter(*attribute));
+			OntologyValue val(process_data.optimizer->optimalParameter(attribute->o));
 			switch( val.type() ) {
 				case VariableDatatype::Type::INT32:
 					*((int32_t*) out_value) = val.int32();
@@ -792,11 +881,11 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 		if ( process_data.optimizer == nullptr ){
 			return 0;
 		}
-		string what("siox_suggest_optimal_value_str(" + attribute->domain + "," + attribute->name + ")");
+		string what("siox_suggest_optimal_value_str(" + attribute->o.domain + "," + attribute->o.name + ")");
 		PERF_MEASURE_START( what.c_str() )
 
 		try{
-			OntologyValue val( process_data.optimizer->optimalParameter(*attribute) );
+			OntologyValue val( process_data.optimizer->optimalParameter(attribute->o) );
 			strncpy( target_str, val.str(), maxLength );
 			return 1;
 		}catch ( NotFoundError & e ){

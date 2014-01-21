@@ -10,8 +10,8 @@ import argparse
 
 genericVariablesForTemplates = {}
 
-global defines
-defines = []
+global precompiler
+precompiler = []
 
 #
 # @brief Generate and handle the command line parsing.
@@ -201,10 +201,14 @@ class Function():
         else:
             arguments = ', '.join(parameter.name for parameter in self.parameterList)
 
+        name = self.name 
+        if self.rewriteCall:
+            name = self.rewriteCall
+
         if len(self.parameterList) == 1:
             if self.parameterList[0].name == 'void':
-                return '__real_%s()' % (self.name)
-        return '__real_%s(%s)' % (self.name, arguments)
+                return '__real_%s()' % (name)
+        return '__real_%s(%s)' % (name, arguments)
 
     #
     # @brief Generate the function definition prefixed with __real_.
@@ -246,7 +250,7 @@ class Function():
                                                    for parameter in self.parameterList))
 
         else:
-            return '%s __warp_%s%s' % (self.type, self.name, self.definition)
+            return '%s __wrap_%s%s' % (self.type, self.name, self.definition)
 
     #
     # @brief Generate the function call with a function pointer for dlsym.
@@ -402,7 +406,7 @@ class FunctionParser():
         # parameters because a regex must have a fixed number of groups to
         # match.
         self.regexFunctionDefinition = re.compile(
-            '(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].]*)\)[\w+]*?;',
+            '(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].()]*)\)[\w+]*?;',
             re.S | re.M)
 
         # This regular expression matches parameter type and name.
@@ -416,6 +420,10 @@ class FunctionParser():
         # (?:\s*\[\s*\])? matches array [] if exist
         self.regexParamterDefinition = re.compile(
             '([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[\s*\])?)')
+
+        self.regexFunctionParameterDefinition = re.compile(
+            '([\w*\s]+(?:\*\s*|\s+))\(\s*[*]\s*([\w]+)\s*\)\s*(.*)')
+
 
         # This tuple of filter words searches for reseverd words in the
         # function return type.
@@ -506,8 +514,14 @@ class FunctionParser():
                     else:
                         parameterMatch = self.regexParamterDefinition.match(
                             parameter)
-                        parameterType = parameterMatch.group(1)
-                        parameterName = parameterMatch.group(2)
+
+                        if not parameterMatch:
+                            parameterMatch = self.regexFunctionParameterDefinition.match(parameter)
+                            parameterType = parameterMatch.group(0)
+                            parameterName = "" #parameterMatch.group(2)
+                        else:
+                            parameterType = parameterMatch.group(1)
+                            parameterName = parameterMatch.group(2)
 
                         # Search for something like 'int list[]' and convert it to
                         # 'int* list'
@@ -568,7 +582,7 @@ class CommandParser():
         # This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*@\s*(\w+)\s*(.*)')
         self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\'/]+)\s*')
-        self.defineRegex = re.compile('^\s*#define\s*(.*)\s*')
+        self.precompilerRegex = re.compile('^\s*#\s*(.*)\s*')
         
         self.options = options
 
@@ -620,9 +634,9 @@ class CommandParser():
                 i += 1
                 continue
 
-            define = self.matchDefine(inputLineList[i])
-            if define:
-                defines.append(define)
+            precompilerMatch = self.matchPrecompiler(inputLineList[i])
+            if precompilerMatch:
+                precompiler.append(precompilerMatch)
                 i += 1
                 continue
 
@@ -664,8 +678,8 @@ at the end of """)
         else:
             return False
 
-    def matchDefine(self, inputLine):
-        match = self.defineRegex.match(inputLine)
+    def matchPrecompiler(self, inputLine):
+        match = self.precompilerRegex.match(inputLine)
         if match:            
             return match.group(1).strip()
         else:
@@ -895,8 +909,8 @@ class Writer():
         output = open(self.outputFile, 'w')
 
         # write all needed includes
-        for match in defines:
-            print('#define ', match, end='\n', file=output)
+        for match in precompiler:
+            print('#', match, end='\n', file=output)
 
         for match in includes:
             print('#include ', match, end='\n', file=output)
@@ -961,6 +975,10 @@ class Writer():
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
+                if not function.rewriteCall:
+                    print("function: " + function.getDefinition() + " needs the rewriteCall annotation since it supports va_args")
+                    exit(1)
+
                 print('\tva_list valist;', file=output)
                 print(
                     '\tva_start(valist, %s);' % function.parameterList[-2].name,
@@ -1103,8 +1121,8 @@ class Writer():
         output = open(self.outputFile, 'w')
 
         print('#define _GNU_SOURCE', file=output)
-        for match in defines:
-            print('#define ', match, end='\n', file=output)
+        for match in precompiler:
+            print('#', match, end='\n', file=output)
         print('#include <dlfcn.h>\n', file=output)
 
         # write all needed includes

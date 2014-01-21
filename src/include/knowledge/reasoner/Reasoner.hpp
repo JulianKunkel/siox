@@ -232,26 +232,6 @@ namespace knowledge {
 
 	    @enduml
 	*/
-
-
-	struct HealthIssueWithExplaination : HealthIssue{
-		// The node and global issues, that might explain the performance issues:
-		unordered_map<string, HealthIssue> globalIssues;
-		unordered_map<string, HealthIssue> nodeLocalIssues;
-	};
-
-	/* 
-	 Remember and aggregate the local issues forever. 
-	 */
-	struct HealthStatistic{
-		UniqueInterfaceID cid; // can be mapped to the name later
-		unordered_map<string, HealthIssueWithExplaination> issues;
-	};
-
-	struct HealthStatistics{
-		unordered_map<uint16_t, AnomalyPluginHealthStatistic> map; // ComponentID.id
-	};
-
 	class Reasoner : public core::Component {
 		public:
 			// Report the observation of an activity

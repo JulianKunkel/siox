@@ -16,7 +16,7 @@ namespace monitoring {
 
 		public:
 
-			virtual void init() {
+			void init() override{
 				StatisticsMultiplexerPluginOptions* o = &getOptions<StatisticsMultiplexerPluginOptions>();
 				assert( o && "either no options were set, or they are of the wrong type" );
 
@@ -27,12 +27,11 @@ namespace monitoring {
 				multiplexer->registerListener( this );
 			}
 
-			virtual ~StatisticsMultiplexerPlugin() {
+			void finalize() override{
 				StatisticsMultiplexerPluginOptions* o = &getOptions<StatisticsMultiplexerPluginOptions>();
 				StatisticsMultiplexer* multiplexer = GET_INSTANCE( StatisticsMultiplexer, o->multiplexer );
 				multiplexer->unregisterListener( this );
 			}
-
 	};
 
 }

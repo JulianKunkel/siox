@@ -25,6 +25,18 @@ class TraceReader {
 		void printActivity( Activity * activity );
 
 		bool printHostname = false;
+
+		Ontology * getOntology() const{
+			return o;
+		}
+
+		AssociationMapper * getAssociationMapper() const{
+			return a;
+		}
+
+		SystemInformationGlobalIDManager * getSystemInformationGlobalIDManager() const{
+			return s;
+		}				
 	private:
 		AssociationMapper * a;
 		Ontology * o;

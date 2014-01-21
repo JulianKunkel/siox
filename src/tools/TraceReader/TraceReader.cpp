@@ -14,10 +14,15 @@
 #include <core/component/ActivitySerializableText.cpp>
 
 Activity * TraceReader::nextActivity() {
+	try{
 	if( activityDeserializer->hasNext() )
 		return activityDeserializer->parseNext();
 	else
 		return nullptr;
+	}catch(exception & e){
+		cerr << "Error while reading trace entry: " << e.what() << endl;
+		return nullptr;
+	}
 }
 
 TraceReader::TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile )

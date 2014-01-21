@@ -9,6 +9,7 @@ add_library(
 	siox-knowledge-ReasonerStandardImplementation
 	ReasonerStandardImplementation.cpp
 	ReasonerStandardImplementationOptions.cpp
+	ReasonerCommunication.cpp
 	ReasoningDatatypesSerializable.hpp
 )
 

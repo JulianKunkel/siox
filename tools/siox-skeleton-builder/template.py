@@ -10,14 +10,18 @@ template = {
 	'global': '''static siox_component * global_component = NULL;
 		     static siox_unique_interface * global_uid = NULL;
 				''',
-    'init': ''' if( global_component != NULL ) return;
+    'init': ''' 
+    		  siox_register_initialization_signal(sioxInit);
+    		  siox_register_termination_signal(sioxFinal);
+    		  
+    		  if ( siox_is_monitoring_permanently_disabled() || global_component ) return; 
     		  %(SpliceCode)s
     		  global_uid = siox_system_information_lookup_interface_id(%(InterfaceName)s, %(ImplementationIdentifier)s);
               global_component = siox_component_register(global_uid, %(InstanceName)s);''',
 	'before': '',
 	'after': '',
 	'cleanup': '',
-	'final': 'if (global_component) { siox_component_unregister(global_component); }'
+	'final': 'if (global_component) { siox_component_unregister(global_component); global_component = NULL; }'
 },
 # register_attribute
 #
@@ -139,7 +143,7 @@ template = {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': '''\tif( monitoring_namespace_deactivated() && global_component != NULL ){ ''',
+	'before': '''\tif( monitoring_namespace_deactivated() && global_component != NULL && siox_is_monitoring_enabled() ){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''
@@ -244,11 +248,13 @@ template = {
 	'init': '''''',
 	'before': '',
     'after': '''
+	if ( %(ActivityID)s != NULL ){
     	siox_activity_ID * nID = malloc(sizeof(siox_activity_ID));
     	memcpy(nID, %(ActivityID)s, sizeof(siox_activity_ID));
     	g_rw_lock_writer_lock(& lock_%(MapName)s);
     	g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), nID );
-    	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
+    	g_rw_lock_writer_unlock(& lock_%(MapName)s);
+	}''',
 	'cleanup': '',
 	'final': ''
 },

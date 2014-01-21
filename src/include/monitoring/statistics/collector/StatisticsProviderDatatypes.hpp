@@ -6,10 +6,9 @@
 
 #include <core/math/MathematicalEquation.hpp>
 #include <monitoring/statistics/StatisticsTypes.hpp>
+#include <monitoring/datatypes/Topology.hpp>
 
 using namespace std;
-
-#define LOCAL_HOSTNAME "LOCAL_HOSTNAME"
 
 namespace monitoring {
 
@@ -19,7 +18,7 @@ namespace monitoring {
 		SAMPLED
 	};
 
-
+	const string kStatisticsDomain = "statistics";
 
 	class StatisticsProviderDatatypes {
 		public:
@@ -30,10 +29,9 @@ namespace monitoring {
 
 			/*
 			 * The topology defines to which entities the metrics applies.
-			 * e.g. (node, device) = ("west1", "0")
-			*/
-
-			vector<pair<string, string> > topology;
+			 * This is a topology path that may start with an alias like "@localhost/sda:1".
+			 */
+			string topologyPath;
 
 
 			// This is a pointer to the value which is updated by the SPlugin.
@@ -58,12 +56,12 @@ namespace monitoring {
 			StatisticsProviderDatatypes(
 			    StatisticsEntity entity,
 			    StatisticsScope  scope,
-			    string metrics,
-			    const vector<pair<string, string> > &  topology,
+			    const string& metrics,
+			    const string& topologyPath,
 			    StatisticsValue & value,
 			    enum StatisticIntervalType intervalType,
-			    string si_unit,
-			    string description,
+			    const string& si_unit,
+			    const string& description,
 			    uint64_t overflow_max_value,
 			    uint64_t overflow_next_value
 			)
@@ -71,7 +69,7 @@ namespace monitoring {
 				entity( entity ),
 				scope( scope ),
 				metrics( metrics ),
-				topology( std::move( topology ) ),
+				topologyPath( topologyPath ),
 				value( value ),
 				intervalType( intervalType ),
 				si_unit( std::move( si_unit ) ),

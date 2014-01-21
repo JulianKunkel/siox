@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <atomic>
 #include <assert.h>
+#include <type_traits>
 
 //Select a type to use for the reference counts.
 //We prefer it to be guaranteed to be lock free, and if that fails, we select one that can at least be lock free. In either case, we want the largest type that is available (overflowing reference counts just won't do!).
@@ -95,14 +96,18 @@ class ReferencedObject {
  * reinventing auto_ptr, but this time for retention counting
  */
 
+template<class T> class Retain;
 template<class T>
 	class Release {
 		public:
 			explicit Release(T* obj) : itsObject(obj) { };
+			Release(const Release<T>&) = delete;
+
 			T& operator*() { return *itsObject; };
 			const T& operator*() const { return *itsObject; };
 			T* operator->() { return itsObject; };
 			const T* operator->() const { return itsObject; };
+
 			void setObject(T* obj) {
 				if (obj) obj->retain();
 				if (this->itsObject) this->itsObject->release();
@@ -129,8 +134,20 @@ template<class T>
 			Release<T>& copy(const T& obj) {
 				return release(new T(obj));
 			};
+
 			operator bool() const { return itsObject; };
+			template<class U> bool operator ==(const Release<U>& other) const { return (char*)this->itsObject == (char*)&*other; };
+			template<class U> bool operator !=(const Release<U>& other) const { return (char*)this->itsObject != (char*)&*other; };
 			operator T*() const { return itsObject; };
+
+			//Tell the compiler that it can just use a Release<Derived> in place of a Release<Base>.
+			template<class U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type> operator Retain<U>&() { return *(Retain<U>*)this; };
+			template<class U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type> operator const Retain<U>&() const { return *(const Retain<U>*)this; };
+			template<class U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type> Release<T>& operator=(const Release<U>& obj) {
+				setObject(obj.itsObject);
+				return *this;
+			};
+
 			~Release() { if (itsObject) itsObject->release(); };
 		protected:
 			T* itsObject;
@@ -154,25 +171,25 @@ template<class T>
 template<class T>
 	class Retain : public Release<T> {
 		public:
-			Retain(T* obj = 0) : Release<T>(obj) {
+			Retain(T* obj = 0) : Release<T>(obj) {	//To construct with a bare pointer, use `Retain<T> foo(bar);`
 				if (obj) obj->retain();
 			};
-			Retain(const Release<T>& obj) : Release<T>(obj) {
-				if (obj) ((Retain<T>&)obj)->retain();
+			Retain(const Retain<T>& obj) : Release<T>((T*)&*obj) {	//To construct with a smart pointer, use `Retain<T> foo = bar;`
+				if (obj) ((T*)&*obj)->retain();
 			};
-			Retain(const Retain<T>& obj) : Release<T>(obj) {
-				if (obj) ((Retain<T>&)obj)->retain();
-			};
+
 			Retain<T>& operator=(T* obj) {
 				if (obj) obj->retain();
 				if (this->itsObject) this->itsObject->release();
 				this->itsObject = obj;
 				return *this;
 			};
-			Retain<T>& operator=(const Release<T>& obj) {
-				if (obj) ((Release<T>&)obj)->retain();
-				if (this->itsObject) this->itsObject->release();
-				this->itsObject = (T*)(const T*)obj;
+
+			//Tell the compiler that it can just use a Retain<Derived> in place of a Retain<Base>.
+			template<class U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type> operator Retain<U>&() { return *(Retain<U>*)this; };
+			template<class U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type> operator const Retain<U>&() const { return *(const Retain<U>*)this; };
+			template<class U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type> Retain<T>& operator=(const Release<U>& obj) {
+				this->setObject((T*)&*obj);
 				return *this;
 			};
 	};

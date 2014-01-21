@@ -20,7 +20,7 @@ target_link_libraries(
 	siox-core-ContainerSerializer
 	siox-core-AutoConfigurator
 	${Boost_LIBRARIES}
-	pq
+	${PostgreSQL_LIBRARIES}
 )
 
 siox_run_serializer(ActivityPostgreSQLWriterOptions.hpp ActivityPostgreSQLWriterOptions.cpp)

@@ -37,7 +37,7 @@ namespace monitoring {
 			 *
 			 * It creates an multiplexer instance with the options given.
 			 */
-			void init() {
+			void init() override {
 				ActivityMultiplexerPluginOptions & o = getOptions<ActivityMultiplexerPluginOptions>();
 
 				multiplexer = GET_INSTANCE(ActivityMultiplexer, o.multiplexer);
@@ -52,7 +52,7 @@ namespace monitoring {
 				}
 			}
 
-			~ActivityMultiplexerPlugin(){
+			void finalize() override {
 				if ( multiplexer != nullptr ){
 					multiplexer->unregisterListener( this );	
 				}

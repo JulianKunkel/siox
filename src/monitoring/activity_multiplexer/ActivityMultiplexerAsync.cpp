@@ -61,7 +61,7 @@ namespace monitoring {
 		std::condition_variable not_empty;
 
 		std::deque< shared_ptr<Activity> > queue;
-		unsigned int capacity = 1000; // TODO specify by options
+		unsigned int capacity = 10; // TODO specify by options
 
 		bool overloaded = false;
 		int lost = 1;
@@ -82,8 +82,7 @@ namespace monitoring {
 			 * @return  bool	true = queue is full, false = not full
 			 */
 			virtual bool Full() {
-				bool result = ( queue.size() > capacity );
-				return result;
+				return ( queue.size() > capacity );
 			};
 
 
@@ -143,32 +142,28 @@ namespace monitoring {
 			 * @return	Activity	an activity that needs to be dispatched to async listeners
 			 */
 			virtual shared_ptr<Activity> Pop() {
-
-				//std::lock_guard<std::mutex> lock( mut );
-
 				std::unique_lock<std::mutex> l(lock);
 
-				if ( Empty() ){
-					not_empty.wait(l, [=](){ return (this->Empty() == 0 || terminate); });
+				if ( Empty() && ! terminate ){
+					not_empty.wait(l, [=](){ return ( ! this->Empty() || terminate); });
 				}
 
-				if (queue.empty() || terminate) {
-						return nullptr;
+				if ( terminate ) {
+					return nullptr;
 				}
 
-				auto itr = queue.begin();
-				shared_ptr<Activity> activity = *itr;
-				queue.erase(itr);
-				// printf("pop %p\n", & *activity);
-
+				auto activity = queue.front();
+				queue.pop_front();
 				return activity;
 			};
 
 			virtual void finalize() {
 				//printf("Queue:  Finalizing\n");
-				terminate = true;
-
+				{
 				std::unique_lock<std::mutex> l(lock);
+				terminate = true;
+				}
+				
 				// this is important to wake up waiting pop/notifier
 				not_empty.notify_one();
 			}
@@ -203,35 +198,37 @@ namespace monitoring {
 
 				// sleep(8); // for testing of overloading mode!
 
-				while( !terminate ) {
+				while( true ) {
 
 					shared_ptr<Activity> activity = queue->Pop();
 
-					if ( activity )
+					if (! activity )
 					{
-						int lost = 0;
-
-						if( queue->overloaded && queue->Empty() ){
-						   //	cout << "Overloading finished lost: " << queue->lost << endl;
-							lost = queue->lost;
-							// TODO small race condition here
-					    	queue->lost = 0;
-					    	queue->overloaded = false;
-					   }
-
-					   events++;
-
-						// reasoning for void pointer?
-						dispatcher->Dispatch( lost, (void *) &activity );
-						//dispatcher->Dispatch(queue->lost, activity);
+					    break;
 					}
+					
+					int lost = 0;
+
+					if( queue->overloaded && queue->Empty() ){
+					
+					    //	cout << "Overloading finished lost: " << queue->lost << endl;
+					    lost = queue->lost;
+					    // TODO small race condition here
+					    queue->lost = 0;
+					    queue->overloaded = false;
+					}
+
+					events++;
+
+					// reasoning for void pointer?
+					dispatcher->Dispatch( lost, (void *) &activity );
+					//dispatcher->Dispatch(queue->lost, activity);
 				}
 				//cout << "Caught: " << events << endl;
 			}
 
 			virtual void finalize() {
 				//printf("Notifier:  Finalizing\n");
-				terminate = true;
 				queue->finalize();
 			}
 
@@ -242,8 +239,6 @@ namespace monitoring {
 			// notifier currently maintains own thread pool
 			int num_dispatcher = 1;
 			list<std::thread> t;
-
-			bool terminate = false;
 	};
 
 
@@ -262,6 +257,9 @@ namespace monitoring {
 			ActivityMultiplexerNotifier * notifier = nullptr;
 
 			boost::shared_mutex  listener_change_mutex;
+
+			// we only permit a single thread to call log() at a time
+			mutex logging_mutex;
 
 			// statistics about operation:
 			uint64_t lost_events = 0;
@@ -295,11 +293,13 @@ namespace monitoring {
 			 */
 			virtual void Log( shared_ptr<Activity> activity ){
 				processed_activities++;
-
 				assert( activity != nullptr );
+
 				// quick sync dispatch
 				{
 					boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
+					unique_lock<mutex> onlyOne( logging_mutex );
+
 					for(auto l = listeners.begin(); l != listeners.end() ; l++){
 						(*l)->Notify(activity);
 					}

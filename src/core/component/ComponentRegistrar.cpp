@@ -44,6 +44,7 @@ namespace core {
 	{
 		for( auto it = list.rbegin(); it != list.rend(); it++ ) {
 			//cout << "Shutting down " << (*it)->moduleName << endl;
+			const_cast<Component*>((*it)->component)->finalize();
 			delete( (*it)->component );
 			delete( *it );
 		}

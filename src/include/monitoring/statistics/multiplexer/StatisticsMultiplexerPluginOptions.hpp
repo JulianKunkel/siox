@@ -4,15 +4,13 @@
 #include <core/component/component-options.hpp>
 #include <core/component/ComponentReference.hpp>
 
-using namespace core;
-
 namespace monitoring {
 
 	//@serializable
-	class StatisticsMultiplexerPluginOptions: public ComponentOptions {
+	class StatisticsMultiplexerPluginOptions: public core::ComponentOptions {
 		public:
-			ComponentReference multiplexer;
-//			ComponentReference dereferenceFacade;
+			core::ComponentReference multiplexer;
+			core::ComponentReference dereferencingFacade;
 	};
 
 }

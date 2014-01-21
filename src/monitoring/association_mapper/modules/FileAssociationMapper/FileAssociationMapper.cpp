@@ -86,9 +86,11 @@ namespace monitoring {
 				FileAssociationMapperOptions & o = getOptions<FileAssociationMapperOptions>();
 				filename = o.filename;
 				assert( filename != "" );
-				cout << "file " << filename << endl;
+				//cout << "file " << filename << endl;
 				try {
 					load( filename );
+				} catch( const char * text ){
+					cerr << "Error " << text << " while loading association information from file: " << filename << endl;
 				} catch( exception & e ) {
 					cerr << "Error while loading association information from file: " << filename << endl;
 				}
@@ -99,11 +101,17 @@ namespace monitoring {
 			}
 
 			~FileAssociationMapper() {
-				save( filename );
+				try{
+					save( filename );
+				} catch( const char * text ){
+					cerr << "Error " << text << " while writing association information to file: " << filename << endl;
+				} catch( exception & e ) {
+					cerr << "Error while writing association information to file: " << filename << endl;
+				}					
 			}
 
 
-			virtual const OntologyValue & lookup_process_attribute( const ProcessID & pid, const OntologyAttribute & att ) const throw( NotFoundError ) {
+			virtual const OntologyValue lookup_process_attribute( const ProcessID & pid, const OntologyAttribute & att ) const throw( NotFoundError ) {
 				auto res = map_processAttributes.find( pid );
 
 				if( res != map_processAttributes.end() ) {
@@ -159,7 +167,7 @@ namespace monitoring {
 				}
 			}
 
-			virtual const OntologyValue & lookup_component_attribute( const ComponentID & cid, const OntologyAttribute & att ) const throw( NotFoundError ) {
+			virtual const OntologyValue lookup_component_attribute( const ComponentID & cid, const OntologyAttribute & att ) const throw( NotFoundError ) {
 				auto res = map_componentAttributes.find( cid );
 
 				if( res != map_componentAttributes.end() ) {
@@ -192,7 +200,10 @@ namespace monitoring {
 				return last;
 			}
 
-			virtual const string & lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) {
+			virtual const string lookup_instance_mapping( AssociateID id ) const throw( NotFoundError ) {
+				if ( vector_aid_str.size() < id ){
+					throw NotFoundError();
+				}
 				return vector_aid_str[id - 1]; // !!!!!
 			}
 
@@ -203,7 +214,7 @@ namespace monitoring {
 				int which = 0;
 				for( auto it = av->ids.begin(); it != av->ids.end(); it++ ) {
 					if( *it == searchFor ) {
-						// check if the value is identical
+						// check if the value is identical with the new value
 						if( value == av->values[which] ) {
 							return true;
 						}
@@ -254,10 +265,16 @@ namespace boost {
 		template<class Archive>
 		void serialize( Archive & ar, AttributeIDsAndValues & g, const unsigned int version )
 		{
-			assert( g.ids.size() == g.values.size() );
+			if( g.ids.size() != g.values.size() ){
+				throw "g.ids.size() != g.values.size()";
+			}
 
 			ar & boost::serialization::make_nvp( "attids", g.ids );
 			ar & boost::serialization::make_nvp( "values", g.values );
+
+			if( g.ids.size() != g.values.size() ){
+				throw "g.ids.size() != g.values.size()";
+			}
 		}
 
 

@@ -17,7 +17,6 @@ def configure(conf):
         conf.load('waf_unit_test')
 
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
-
 	conf.check_cc(lib='dl', uselib_store='DL', mandatory = True)
 
 	if conf.options.SIOX_LL_IMPLEMENTATION:
@@ -27,13 +26,16 @@ def configure(conf):
 
 	conf.env.LIB_SIOX_LL = ["siox-monitoring-siox-ll"]
 
-	if conf.options.SIOX:		
-		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include' ])
+	if conf.options.SIOX:
+		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include', "." ])
 		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
-		conf.env.append_value('LINKFLAGS', ["-Wl,-rpath-link=" + conf.options.SIOX + "/lib"])	
+		conf.env.append_value('LINKFLAGS', ["-Wl,-rpath-link=" + conf.options.SIOX + "/lib"])
 		conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
 	else:
-		conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)   	
+		conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)
+
+        # also find header files in current dir
+	conf.env.append_value('INCLUDES', ['.' ])
 
 	conf.check_cc(lib='siox-monitoring-siox-ll', mandatory = True)
 
@@ -43,9 +45,9 @@ def configure(conf):
 	# conf.env.append_value('LIBDIR', [conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"])
 
         if conf.options.debug:
-	        conf.env.append_value("CFLAGS", ['-std=c99', '-O3', '-Wall'])
+	        conf.env.append_value("CFLAGS", ['-std=gnu99', '-O3', '-Wall'])
 	else:
-		conf.env.append_value("CFLAGS", ['-std=c99', '-g', '-Wall'])
+		conf.env.append_value("CFLAGS", ['-std=gnu99', '-g', '-Wall'])
 
 	conf.env.append_value("LABEL", conf.options.LABEL )
 
@@ -57,21 +59,21 @@ def build(bld):
 	label = bld.env.LABEL[0]
 	if label != "":
 		LAYER=LAYER + "-" + bld.env.LABEL[0]
-	
-        def wrap(task): 
+
+        def wrap(task):
 		return wrapper(task, "wrap")
 
-        def dlsym(task): 
+        def dlsym(task):
 		return wrapper(task, "dlsym")
 
-        def wrapper(task, typ): 
+        def wrapper(task, typ):
                 src = task.inputs[0].abspath()
                 tgt = task.outputs[0].abspath()
                 cmd = bld.path.abspath() + '/../../siox-skeleton-builder -o %s -t %s -s %s -W libsiox-%s.wrap %s' % (tgt, bld.path.abspath() + "/../../template.py", typ, LAYER, src)
                 print("Command: "+cmd)
                 return task.exec_command(cmd)
 
-        def dummy(task): 
+        def dummy(task):
                 cmd = ""
                 return task.exec_command(cmd)
 
@@ -90,15 +92,15 @@ def build(bld):
 		wrap_linkerflags = open(wrap_file, 'r').read()
 	else:
 		print "Could not read wrapper flags, this is critical!"
-		sys.exit(1)		
+		sys.exit(1)
 
 	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = "libsiox-" + LAYER + ".wrap", install_path = "${LIBDIR}")
 
 	bld.shlib(includes="",  use = "GLIB SIOX_LL" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
 	bld.shlib(includes="",  use = "GLIB DL SIOX_LL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
-	
+
 	# build tests if a dummy implementation has been selected
-	bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,  
+	bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,
 			linkflags=wrap_linkerflags,  install_path = None)
 	bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
 
@@ -107,8 +109,9 @@ def build(bld):
 	except OSError, e:
    		pass
 
+        bld.install_files("${PREFIX}/include", "siox-datatypes-helper-" + LAYERPLAIN +".h")
 
 	from waflib.Tools import waf_unit_test
 	bld.add_post_fun(waf_unit_test.summary)
-	
+
 

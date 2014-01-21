@@ -22,7 +22,7 @@ int main( int argc, char const * argv[] )
 
 	// init plugin
 	// not necessary, but for testing...
-	StatisticsFileWriterOptions & op = ( StatisticsFileWriterOptions & ) ap->getOptions();
+	StatisticsFileWriterOptions & op = dynamic_cast<StatisticsFileWriterOptions &>(ap->getOptions());
 	op.filename = "test.txt";
 	op.multiplexer.componentPointer = m1;
 
@@ -32,14 +32,14 @@ int main( int argc, char const * argv[] )
 	vector<shared_ptr<Statistic> > statistics;
 
 	StatisticsValue value(0);
-	auto stat = shared_ptr<Statistic>(new Statistic(value, 4711, {{"test", "test2"}}));
+	auto stat = shared_ptr<Statistic>(new Statistic(value, 4711, 3));
 
 	statistics.push_back( stat );
 
 	m1->notifyAvailableStatisticsChange( statistics, true, true );
 
 	value = 2;
-	stat->update( siox_gettime() );	
+	stat->update( siox_gettime() );
 	m1->newDataAvailable();
 
 	value = 4;

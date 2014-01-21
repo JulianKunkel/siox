@@ -108,8 +108,8 @@ bool ConsoleReporter::sortGroups(const GroupEntry * a, const GroupEntry * b){
 	// empty groups come first
 	// sort by group hierarchy
 	// sort by name
-	if( a->parent == b->parent && a->name < b->name ){
-		return true;
+	if( a->parent == b->parent  ){
+		return ( a->name < b->name);
 	}else if  ( a->parent == nullptr && b->parent != nullptr ){
 		return true;
 	}else if  ( b->parent == nullptr && a->parent != nullptr ){

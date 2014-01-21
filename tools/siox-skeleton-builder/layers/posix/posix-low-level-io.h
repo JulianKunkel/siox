@@ -62,6 +62,8 @@
 //TODO we have to determine the filesystem based on the mountpoint, this is a SIOX helper function.
 //@splice_once ''#define SET_FILENAME(ARG) char fileNamebuffer[PATH_MAX]; char * resPath = realpath(ARG, fileNamebuffer); if ( resPath == NULL ) fileNamebuffer[0] = 0;  siox_activity_set_attribute( sioxActivity, fileName, fileNamebuffer );''
 
+//@include "posix-low-level-io-helper.h"
+
 /*------------------------------------------------------------------------------
 End of global part
 ------------------------------------------------------------------------------*/
@@ -71,6 +73,8 @@ End of global part
 //@guard
 //@error ''ret<0'' errno
 //@activity
+////@splice_before uint32_t translatedFlags = translatePOSIXFlagsToSIOX(flags);
+////@activity_attribute fileOpenFlags translatedFlags
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret
 //@horizontal_map_put_int ret
@@ -90,9 +94,11 @@ int creat( const char * pathname, mode_t mode );
 //@splice_before mode_t mode = va_arg(valist,mode_t);
 //@guard
 //@error ''ret<0'' errno
-//@activity
+//@activity open
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret
+////@splice_before uint32_t translatedFlags = translatePOSIXFlagsToSIOX(flags);
+////@activity_attribute fileOpenFlags translatedFlags
 //@horizontal_map_put_int ret
 //@guardEnd
 //@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
@@ -100,7 +106,7 @@ int open64( const char * pathname, int flags, ... );
 
 //@guard
 //@error ''ret<0'' errno
-//@activity
+//@activity creat
 //@horizontal_map_put_int ret
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_u32 fileHandle ret
@@ -175,6 +181,7 @@ ssize_t read( int fd, void * buf, size_t count );
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute_u32 fileMemoryRegions iovcnt
 //@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
+//@splice_before ''''
 //@activity_attribute filePosition offset
 //@activity_link_int fd
 //@guardEnd
@@ -191,7 +198,6 @@ ssize_t writev( int fd, const struct iovec * iov, int iovcnt );
 //@activity_link_int fd
 //@guardEnd
 ssize_t readv( int fd, const struct iovec * iov, int iovcnt );
-
 
 //@guard
 //@error ''ret==(size_t)-1'' errno
@@ -236,7 +242,6 @@ ssize_t pwrite64( int fd, const void * buf, size_t count, off_t offset );
 //@activity_link_int fd
 //@guardEnd
 ssize_t pread64( int fd, void * buf, size_t count, off_t offset );
-
 
 //@guard
 //@error ''ret==(size_t)-1'' errno
@@ -497,7 +502,7 @@ int fileno( FILE * stream );
 
 /*
 Reuses stream to either open the file specified by filename or to change its access mode.
-If a new filename is specified, the function first attempts to close any file already associated with stream (third parameter) and disassociates it. Then, independently of whether that stream was successfuly closed or not, freopen opens the file specified by filename and associates it with the stream just as fopen would do using the specified mode.
+If a new filename is specified, the /function first attempts to close any file already associated with stream (third parameter) and disassociates it. Then, independently of whether that stream was successfuly closed or not, freopen opens the file specified by filename and associates it with the stream just as fopen would do using the specified mode.
 
 If filename is a null pointer, the function attempts to change the mode of the stream. Although a particular library implementation is allowed to restrict the changes permitted, and under which circumstances.
 
@@ -792,9 +797,15 @@ int aio_cancel( int fd, struct aiocb * aiocbp );
 
 #include <sched.h>
 
-//@splice_before ''printf("Warning clone() called, presumably SIOX breaks!\n");''
-int clone( int ( *fn )( void * ), void * child_stack, int flags, void * arg, pid_t * ptid, struct user_desc * tls, pid_t * ctid );
+//http://stackoverflow.com/questions/14407544/mixing-threads-fork-and-mutexes-what-should-i-watch-out-for
 
-//@splice_before ''printf("Warning fork() called, presumably SIOX breaks!\n");''
+//splice_before ''printf("Warning clone() called, statistics are re-initialized !\n");''
+//splice_before siox_finalize_monitoring();
+//splice_after siox_initialize_monitoring();
+//int clone( int ( *fn )( void * ), void * child_stack, int flags, void * arg, pid_t * ptid, struct user_desc * tls, pid_t * ctid );
+
+//@splice_before ''printf("Warning fork() called, statistics are re-initialized !\n");''
+//@splice_before siox_finalize_monitoring();
+//@splice_after siox_initialize_monitoring();
 pid_t fork( void );
 
