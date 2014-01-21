@@ -33,8 +33,11 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		OntologyAttributeID softirqTimeAttribute = 0;
 		OntologyAttributeID vmsTimeAttribute = 0;
 		OntologyAttributeID vmsOsTimeAttribute = 0;
+		OntologyAttributeID totalMemoryAttribute = 0;
+		OntologyAttributeID activeMemoryAttribute = 0;
+		OntologyAttributeID inactiveMemoryAttribute = 0;
 		TopologyTypeId blockDeviceType = 0;
-		TopologyObjectId allCpusObject = 0;
+		TopologyObjectId localhostObject = 0, allCpusObject = 0;
 
 		std::vector<std::shared_ptr<Statistic> > ioStatistics;
 		uint64_t lastIoBlockCount = 0;	///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
@@ -42,6 +45,7 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		uint64_t lastBusyCpuTime = 0;	///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
 		std::shared_ptr<Statistic> idleCpuStatistic;
 		uint64_t lastIdleCpuTime = 0;	///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
+		std::shared_ptr<Statistic> totalMemoryStatistic, activeMemoryStatistic, inactiveMemoryStatistic;
 
 		StatisticsValue cpuUtilization = 0.0;
 		StatisticsValue networkUtilization = 0.0;	//XXX: Should we split this into an upstream and a downstream utilization?
@@ -108,6 +112,15 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 				cerr << "detected idle time statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
 				lastIdleCpuTime = curStatistic->curValue.uint64();
 			}
+		} else if( totalMemoryAttribute == curAttribute && curTopology == localhostObject ) {
+			totalMemoryStatistic = curStatistic;
+			cerr << "detected total memory statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
+		} else if( activeMemoryAttribute == curAttribute && curTopology == localhostObject ) {
+			activeMemoryStatistic = curStatistic;
+			cerr << "detected active memory statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
+		} else if( inactiveMemoryAttribute == curAttribute && curTopology == localhostObject ) {
+			inactiveMemoryStatistic = curStatistic;
+			cerr << "detected inactive memory statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
 		}
 	}
 }
@@ -123,6 +136,15 @@ void QualitativeUtilization::newDataAvailable() throw() {
 
 	ioUtilization = options->ioBlockSize * ( curIoBlockCount - lastIoBlockCount ) / options->availableIoBandwidth;
 	cpuUtilization = ( curBusyCpuTime - lastBusyCpuTime ) / ( double )( curBusyCpuTime - lastBusyCpuTime + curIdleCpuTime - lastIdleCpuTime );
+	memoryUtilization = 0.0;
+	if( totalMemoryStatistic && activeMemoryStatistic && inactiveMemoryStatistic) {
+		//There is unfortunately not a right way to calculate memory consumption. The approach used here tries to assess the danger of thrashing: If we have a high amount of inactive pages, there is no danger of thrashing. Likewise, if we have a low number of active one, danger is low, even if there are few inactive pages. To reflect that both measures are important, we just use the average between active and not inactive pages as the memory that is currently used. However, it might turn out that the plain average is not good enough, that a weighted average is required, or some other, more complex formula is needed. So, feel free to correct me.
+		uint64_t total = totalMemoryStatistic->curValue.uint64();
+		uint64_t lowUsage = activeMemoryStatistic->curValue.uint64();
+		uint64_t highUsage = total - inactiveMemoryStatistic->curValue.uint64();
+		memoryUtilization = ( lowUsage + highUsage ) / ( 2.0 * total );
+	}
+	cerr << "Utilization: " << ( int )100*cpuUtilization.dbl() << "% CPU, " << ( int )100*memoryUtilization.dbl() << "% Memory, " << ( int )100*networkUtilization.dbl() << "% Network, " << ( int )100*ioUtilization.dbl() << "% I/O\n";
 
 	lastIoBlockCount = curIoBlockCount;
 	lastBusyCpuTime = curBusyCpuTime;
@@ -149,8 +171,12 @@ void QualitativeUtilization::fetchAttributeIds() throw() {
 	fetchOntologyAttribute( softirqTimeAttribute, "time/softirq" );
 	fetchOntologyAttribute( vmsTimeAttribute, "time/vms" );
 	fetchOntologyAttribute( vmsOsTimeAttribute, "time/vmsOS" );
+	fetchOntologyAttribute( totalMemoryAttribute, "quantity/memory/MemTotal" );
+	fetchOntologyAttribute( activeMemoryAttribute, "quantity/memory/Active" );
+	fetchOntologyAttribute( inactiveMemoryAttribute, "quantity/memory/Inactive" );
 
 	if( !blockDeviceType ) blockDeviceType = topology->registerType( "block-device" ).id();
+	if( !localhostObject ) localhostObject = topology->registerObjectByPath( "@localhost" ).id();
 	if( !allCpusObject ) allCpusObject = topology->registerObjectByPath( "@localhost/cpu:all" ).id();
 
 	AttributesComplete = readDataAttribute && writtenDataAttribute && userTimeAttribute && niceTimeAttribute && systemTimeAttribute && idleTimeAttribute && iowaitTimeAttribute && interruptsTimeAttribute && softirqTimeAttribute && vmsTimeAttribute && vmsOsTimeAttribute;
