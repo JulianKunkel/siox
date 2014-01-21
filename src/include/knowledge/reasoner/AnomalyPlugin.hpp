@@ -101,6 +101,27 @@ class AnomalyPlugin {
 		mutex	dataMutex; // To protect access to aggregated data
 		unordered_map<ComponentID, AnomalyPluginHealthStatistic> * recentObservations;
 
+		/**
+		 * Adds an issue to the local aggregate, assuming mutex protection
+		 *
+		 * @warning To ensure thread safety, this function requires dataMutex to have been acquired
+		 * by the caller!
+		 *
+		 * @param map [description]
+		 * @param issue [description]
+		 * @param delta_time_ms [description]
+		 */
+		void addIssueSafely( unordered_map<string, HealthIssue> & map, const string & issue, int32_t delta_time_ms ){
+
+			auto find = map.find( issue );
+			if ( find == map.end() ){
+				map[issue] = { issue, 1, delta_time_ms };
+			}else{
+				HealthIssue & health = find->second;
+				health.occurrences++;
+				health.delta_time_ms += delta_time_ms;
+			}
+		}
 
 	protected:
 
@@ -125,22 +146,16 @@ class AnomalyPlugin {
 				if ( state > HealthState::OK ){
 					addIssue( stat.negativeIssues, issue, delta_time_ms );
 				}
-				// FIXME: "Neutral issues" will never be added! Is this as intended?
 			}
 		}
 
 
 		void addIssue( unordered_map<string, HealthIssue> & map, const string & issue, int32_t delta_time_ms )
-		{
-			// FIXME: Protect this via dataMutex, too?
-			auto find = map.find( issue );
-			if ( find == map.end() ){
-				map[issue] = { issue, 1, delta_time_ms };
-			}else{
-				HealthIssue & health = find->second;
-				health.occurrences++;
-				health.delta_time_ms += delta_time_ms;
-			}
+		{	// Disallow other access to aggregated data fields
+			// FIXME: Uncommenting this causes hangup?!?
+			// unique_lock<mutex> dataLock( dataMutex );
+
+			addIssueSafely( map, issue, delta_time_ms );
 		}
 };
 
