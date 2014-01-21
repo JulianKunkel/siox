@@ -56,15 +56,19 @@ class NetworkStats: public ProcSingleFilePlugin<18> {
 
 			string name = "PacketsReceived";
 			CurrentValues[name] = std::array<StatisticsValue, 1>();
+			CurrentValues[name][0] = ( uint64_t )0;
 
 			string name2 = "PacketsSent";
 			CurrentValues[name2] = std::array<StatisticsValue, 1>();
+			CurrentValues[name2][0] = ( uint64_t )0;
 
 			string name3 = "BytesReceived";
 			CurrentValues[name3] = std::array<StatisticsValue, 1>();
+			CurrentValues[name3][0] = ( uint64_t )0;
 
 			string name4 = "BytesSent";
 			CurrentValues[name4] = std::array<StatisticsValue, 1>();
+			CurrentValues[name4][0] = ( uint64_t )0;
 
 
 		}
