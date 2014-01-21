@@ -46,6 +46,7 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 		}
 
 		void registerAnomalyPlugin( knowledge::AnomalyPlugin * plugin ) {
+			if (reasoner == nullptr) return;
 			assert( reasoner != nullptr );
 			reasoner->connectAnomalyPlugin( plugin );
 		}
