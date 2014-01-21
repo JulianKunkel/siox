@@ -282,7 +282,7 @@ void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plu
 	plugins.emplace_back( plugin );
 	vector<StatisticsProviderDatatypes> metrics( plugin->availableMetrics() );
 	for( size_t i = metrics.size(); i--; ) {
-		OntologyAttributeID ontologyId = ontology->register_attribute( "Statistics", metrics[i].metrics , metrics[i].value.type() ).aID;
+		OntologyAttributeID ontologyId = ontology->register_attribute( kStatisticsDomain, metrics[i].metrics , metrics[i].value.type() ).aID;
 		if( TopologyObject device = topology->registerObjectByPath( metrics[i].topologyPath ) ) {
 			TopologyObjectId topologyId = device.id();
 			shared_ptr<Statistic> curStatistic( new Statistic( metrics[i].value, ontologyId, topologyId ) );
@@ -292,7 +292,7 @@ void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plu
 			index[curKey] = curStatistic;
 		} else {
 			cerr << "SIOX error: Error registering topology path \"" << metrics[i].topologyPath << "\"\n";
-			assert(false);
+			assert(false), abort();
 		}
 	}
 	statisticsAdded = true;
@@ -310,7 +310,7 @@ void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * p
 	}
 
 	// Remove the dependent Statistics from the statistics list.
-	for( int i= statistics.size() ; i >= 0 ; i-- ){
+	for( int i = statistics.size() ; i--; ){
 		if( pluginPerStatistics[i] == plugin ){
 			pair<OntologyAttributeID, TopologyObjectId> key( statistics[i]->ontologyId, statistics[i]->topologyId);
 			index.erase(key);
@@ -325,29 +325,38 @@ void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * p
 }
 
 vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::availableMetrics() throw() {
-	return statistics;
+	sourcesLock.lock_shared();
+	vector<shared_ptr<Statistic> > result = statistics;
+	sourcesLock.unlock_shared();
+	return result;
 }
 
 array<StatisticsValue, Statistic::kHistorySize> ThreadedStatisticsCollector::getStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
 	array<StatisticsValue, Statistic::kHistorySize> result;
 	pair<OntologyAttributeID, TopologyObjectId> key(description.ontologyId, description.topologyId);
+	sourcesLock.lock_shared();
 	if(Statistic* statistic = &*index[key]) {
 		statistic->getHistoricValues( reductionOp, interval, &result, NULL );
 	}
+	sourcesLock.unlock_shared();
 	return result;
 }
 
 StatisticsValue ThreadedStatisticsCollector::getRollingStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
 	pair<OntologyAttributeID, TopologyObjectId> key(description.ontologyId, description.topologyId);
 	Statistic* statistic = NULL;
+	sourcesLock.lock_shared();
 	IGNORE_EXCEPTIONS( statistic = &*index.at(key); );
+	sourcesLock.unlock_shared();
 	return (statistic) ? statistic->getRollingValue( reductionOp, interval ) : StatisticsValue();
 }
 
 StatisticsValue ThreadedStatisticsCollector::getReducedStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
 	pair<OntologyAttributeID, TopologyObjectId> key(description.ontologyId, description.topologyId);
 	Statistic* statistic = NULL;
+	sourcesLock.lock_shared();
 	IGNORE_EXCEPTIONS( statistic = &*index.at(key); );
+	sourcesLock.unlock_shared();
 	return (statistic) ? statistic->getReducedValue( reductionOp, interval ) : StatisticsValue();
 }
 
@@ -394,10 +403,10 @@ void ThreadedStatisticsCollector::pollingThreadMain() throw() {
 		//reset the change flags
 		bool hadAdditions = statisticsAdded, hadDeletions = statisticsRemoved;
 		statisticsAdded = statisticsRemoved = false;
-		sourcesLock.unlock_shared();
 
 		//notify consumers of the statistics
 		if( hadAdditions || hadDeletions ) smux->notifyAvailableStatisticsChange( statistics, hadAdditions, hadDeletions );
+		sourcesLock.unlock_shared();
 		smux->newDataAvailable();
 
 		// Sleep until it's time to poll again.

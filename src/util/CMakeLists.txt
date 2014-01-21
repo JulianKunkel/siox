@@ -25,3 +25,4 @@ INSTALL(FILES ${files} DESTINATION include/util)
 
 
 add_subdirectory(JobProcessors)
+add_subdirectory(test)

@@ -20,6 +20,7 @@ target_link_libraries(
 
 
 siox_run_serializer(StatisticsFileWriterOptions.hpp StatisticsFileWriterOptions.cpp)
+siox_run_serializer(StatisticsIntegratorOptions.hpp StatisticsIntegratorOptions.cpp)
 siox_run_text_serializer(StatisticTypesSerializable.hpp StatisticTypesSerializableText.cpp)
 
 add_subdirectory(collector)

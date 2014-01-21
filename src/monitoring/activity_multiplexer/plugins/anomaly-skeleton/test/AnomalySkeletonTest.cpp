@@ -34,7 +34,7 @@ int main( int argc, char const * argv[] )
 	}
 
 	Reasoner * r1 = a->searchFor<Reasoner>( components );
-	assert( r1 != nullptr );
+	//assert( r1 != nullptr );
 
 	// the activity multiplexer is expected to be first:
 	ActivityMultiplexer * m1 = a->searchFor<ActivityMultiplexer>( components );

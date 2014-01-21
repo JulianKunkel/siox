@@ -5,14 +5,12 @@
 #include <core/component/ComponentReference.hpp>
 
 
-using namespace core;
-
 namespace monitoring {
 
 	//@serializable
-	class StatisticsProviderPluginOptions: public ComponentOptions {
+	class StatisticsProviderPluginOptions: public core::ComponentOptions {
 		public:
-			ComponentReference statisticsCollector;
+			core::ComponentReference statisticsCollector;
 	};
 
 }
