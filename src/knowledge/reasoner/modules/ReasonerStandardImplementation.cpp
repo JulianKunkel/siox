@@ -386,17 +386,15 @@ void ReasonerStandardImplementation::PeriodicRun(){
 
 
 ReasonerStandardImplementation::~ReasonerStandardImplementation() {
-	// {	unique_lock<mutex> dataLock( dataMutex );
-		// unique_lock<mutex> pluginLock( pluginMutex );
-			recentIssuesMutex.lock();
-			// TODO: Understand, clarify and comment this!
-			terminated = true;
-			running_condition.notify_one();
-			recentIssuesMutex.unlock();
-		periodicThread.join();
-	// }
-
+	recentIssuesMutex.lock();
+	terminated = true;
+	running_condition.notify_one();
+	recentIssuesMutex.unlock();
+	periodicThread.join();
 	delete(comm);
+
+	if (childProcessesHealthMap) delete(childProcessesHealthMap);
+	if (childNodesHealthMap) delete(childNodesHealthMap);	
 }
 
 void ReasonerStandardImplementation::init(){
