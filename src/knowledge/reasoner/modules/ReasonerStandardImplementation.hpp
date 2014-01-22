@@ -69,13 +69,16 @@ private:
 		shared_ptr<NodeHealth> nodeHealth;
 		shared_ptr<SystemHealth> systemHealth;
 		// States of possible child reasoners, depending on our role
-		unordered_map<string,ProcessHealth> * childProcessesHealthMap;
-		unordered_map<string,NodeHealth> * childNodesHealthMap;
+		unordered_map<string,ProcessHealth> * childProcessesHealthMap = nullptr;
+		unordered_map<string,NodeHealth> * childNodesHealthMap  = nullptr;
 		// Aggregators for past and current issues and health statistics
 		shared_ptr<HealthStatistics> gatheredStatistics;
 		uint64_t observationTotal = 0;
 		array<uint64_t, HEALTH_STATE_COUNT> observationCounts;
-		array<float, HEALTH_STATE_COUNT> observationRatios;
+		array<uint8_t, HEALTH_STATE_COUNT> observationRatios;
+		uint64_t oldObservationTotal = 0;
+		array<uint64_t, HEALTH_STATE_COUNT> oldObservationCounts;
+		array<uint8_t, HEALTH_STATE_COUNT> oldObservationRatios;
 
 		// Methods to compute local health - according to our scope - from observations
 		void assessProcessHealth();
@@ -113,8 +116,12 @@ public:
 
 		for (int i = 0; i < HEALTH_STATE_COUNT; ++i){
 			observationCounts[i] = 0;
-			observationRatios[i] = 0.0;
+			oldObservationCounts[i] = 0;
+			observationRatios[i] = 0;
+			oldObservationRatios[i] = 0;
 		}
+		observationTotal = 0;
+		oldObservationTotal = 0;
 	}
 
 	~ReasonerStandardImplementation();
@@ -130,7 +137,7 @@ public:
 		// Element should not be in the list yet
 		assert( std::find( adpis.begin(), adpis.end(), plugin ) ==  adpis.end() );
 		adpis.push_back( plugin );
-		cout << "ADPIs: " << adpis.size() << endl;
+		// cout << "ADPIs: " << adpis.size() << endl;
 	}
 
 	virtual void connectUtilization( QualitativeUtilization * plugin ) override {
@@ -138,7 +145,7 @@ public:
 		// There can be only one!
 		assert( utilization == nullptr );
 		utilization = plugin;
-		cout << "Utilization: " << ((utilization != nullptr) ? "TRUE" : "FALSE") << endl;
+		// cout << "Utilization: " << ((utilization != nullptr) ? "TRUE" : "FALSE") << endl;
 	}
 
 	virtual void connectTrigger( AnomalyTrigger * trigger ) override {
@@ -146,7 +153,7 @@ public:
 		// Element should not be in the list yet
 		assert( std::find( triggers.begin(), triggers.end(), trigger ) ==  triggers.end() );
 		triggers.push_back( trigger );
-		cout << "ATriggers: " << triggers.size() << endl;
+		// cout << "ATriggers: " << triggers.size() << endl;
 	}
 };
 

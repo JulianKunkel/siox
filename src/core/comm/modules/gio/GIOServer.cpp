@@ -85,13 +85,13 @@ void GIOServiceServer::removeAcceptorThread(uint64_t threadID){
 	if (itr != pendingClientThreads.end()){
 		auto var = itr->second;
 
-	    g_object_unref(var.second);
+	   g_object_unref(var.second);
 		finishedThread = var.first;
 
 		pendingClientThreads.erase(itr);
 	}
 
-	if( pendingClientThreads.size() == 0){
+	if( pendingClientThreads.empty() ){
 		allThreadsFinished.notify_one();
 	}
 }

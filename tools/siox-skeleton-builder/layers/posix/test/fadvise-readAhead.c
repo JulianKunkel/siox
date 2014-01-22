@@ -146,7 +146,7 @@ int main( int argc, char const * argv[] )
 	{
 	// DO NOT USE THIS OTHERWISE FADV DOES NOT WORK
 	// disable read-ahead
-	int pret = posix_fadvise(fh, 0, 0, POSIX_FADV_RANDOM | POSIX_FADV_NOREUSE);
+	int pret = posix_fadvise(fh, 0, 0, POSIX_FADV_RANDOM );
 	if (pret != 0){
 		fprintf(stderr, "Error in fadvise POSIX_FADV_RANDOM: %s\n", strerror(pret));
 	}
@@ -190,7 +190,6 @@ int main( int argc, char const * argv[] )
 		// prefetch next I/O
 		int pret = posix_fadvise(fh, positionNext, BLOCK_LEN, POSIX_FADV_WILLNEED);
 		//int pret = readahead(fh, positionNext, BLOCK_LEN);
-
 		if (pret != 0){
 			fprintf(stderr, "Error in fadvise(): %s\n", strerror(pret));
 		}

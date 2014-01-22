@@ -52,13 +52,13 @@ class OSMemUsage: public ProcSingleFilePlugin<3> {
 			return "/proc/meminfo";
 		}
 
-		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() throw() {
 			vector<StatisticsProviderDatatypes> result;
 
 			uint64_t overflow_value = ( uint64_t ) 1 << 63; //TODO CHECK ME, we expect 64 Bit...
 
 			for( auto iterator = values.begin(); iterator != values.end(); iterator++ ) {
-				string ontologyName = string( "quantity/" ) + iterator->first;
+				string ontologyName = string( "quantity/memory/" ) + iterator->first;
 				string unit = iterator->second.second == "kB" ?  "Bytes" : iterator->second.second;
 				result.push_back( {MEMORY, NODE, ontologyName, "@localhost", iterator->second.first, SAMPLED, unit, "", overflow_value, 0} );
 			}

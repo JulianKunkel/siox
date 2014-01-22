@@ -16,7 +16,7 @@ class ProviderSkeleton: public StatisticsProviderPlugin {
 			return new ProviderSkeletonOptions();
 		}
 
-		virtual void nextTimestep() override {
+		virtual void nextTimestep() throw() override {
 			int32_t cur = i.int32();
 			i = cur + 1;
 
@@ -24,7 +24,7 @@ class ProviderSkeleton: public StatisticsProviderPlugin {
 			f = f2 * 2;
 		}
 
-		virtual vector<StatisticsProviderDatatypes> availableMetrics() override {
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() throw() override {
 			vector<StatisticsProviderDatatypes> result;
 
 			result.push_back( {SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", "@localhost", i, GAUGE, "%", "test desc", 0, 0} );

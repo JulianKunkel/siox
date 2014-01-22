@@ -48,30 +48,36 @@ struct HealthIssue{
 	int32_t delta_time_ms;
 
 
-	HealthIssue(){
+	HealthIssue()
+	{
 		this->name = "unspecified issue";
 		this->occurrences = 0;
 		this->delta_time_ms = 0;
 	}
 
-	HealthIssue( string name ){
+	HealthIssue( string name )
+	{
 		this->name = name;
 		this->occurrences = 0;
 		this->delta_time_ms = 0;
 	}
 
-	HealthIssue( string name, uint32_t occurrences, int32_t delta_time_ms){
+	HealthIssue( string name, uint32_t occurrences, int32_t delta_time_ms)
+	{
 		this->name = name;
 		this->occurrences = occurrences;
 		this->delta_time_ms = delta_time_ms;
 	}
 
 
-	bool operator==(const HealthIssue & hi) const{
+	bool operator==(const HealthIssue & hi) const
+	{
 		return this->name == hi.name && this->occurrences == hi.occurrences && this->delta_time_ms == hi.delta_time_ms;
 	}
 
-	void add( const HealthIssue & hi ) {
+
+	void add( const HealthIssue & hi )
+	{
 		if ( this->name == hi.name ){
 			this->occurrences += hi.occurrences;
 			this->delta_time_ms += hi.delta_time_ms;
@@ -82,16 +88,16 @@ struct HealthIssue{
 	}
 
 
-
-	string to_string(){
+	friend std::ostream & operator<<( std::ostream & os, const HealthIssue & issue )
+	{
 		ostringstream result;
 
-		result << "[\"" << name << "\", ";
-        result << occurrences << "x, ";
-	    result << delta_time_ms << " ms";
+		result << "[\"" << issue.name << "\", ";
+        result << issue.occurrences << "x, ";
+	    result << issue.delta_time_ms << " ms";
 	    result << "]";
 
-		return result.str();
+		return os << result.str();
 	}
 };
 
@@ -127,15 +133,16 @@ struct HealthIssueList{
 	}
 
 
-	string to_string(){
+	friend std::ostream & operator<<( std::ostream & os, const HealthIssueList & list )
+	{
 		ostringstream result;
 
-		result << "[ " << issues.size() << "issues:" << endl;
-        for( auto itr = issues.begin(); itr != issues.end(); itr++)
-        	result << "\t" << itr->to_string() << endl;
+		result << "[ " << list.issues.size() << "issues:" << endl;
+        for( auto issue : list.issues )
+        	result << "\t" << issue << endl;
 	    result << "]";
 
-		return result.str();
+		return os << result.str();
 	}
 };
 
@@ -172,15 +179,16 @@ struct HealthIssueMap{
 	}
 
 
-	string to_string(){
+	friend std::ostream & operator<<( std::ostream & os, const HealthIssueMap & map )
+	{
 		ostringstream result;
 
-		result << "[ " << issues.size() << "issues:" << endl;
-        for( auto itr = issues.begin(); itr != issues.end(); itr++)
-        	result << "\t" << itr->second.to_string() << endl;
+		result << "[ " << map.issues.size() << "issues:" << endl;
+        for( auto issue : map.issues )
+        	result << "\t" << issue.second << endl;
 	    result << "]";
 
-		return result.str();
+		return os << result.str();
 	}
 };
 
@@ -262,22 +270,22 @@ struct NodeHealth : public Health{
 	{
 		ostringstream result;
 
-		result << "\t[" << endl;
-		result << "\t\tState:    \t" << to_string(h.overallState) << endl;
-		result << "\t\tUtilization:\t";
+		result << "[" << endl;
+		result << "\tState:    \t" << to_string(h.overallState) << endl;
+		result << "\tUtilization:\t";
 		for ( auto util : h.utilization )
 			result << " | " << (int) util;
 		result << " | " << endl;
-		result << "\t\tOccurrences:\t";
+		result << "\tOccurrences:\t";
 		for ( auto o : h.occurrences )
 			result << " | " << o;
 		result << " | " << endl;
-		result << "\t\tIssues:\t\t";
+		result << "\tIssues:\t\t";
 		result << "+" << h.positiveIssues.size() << "\t";
 		result << "-" << h.negativeIssues.size() << endl;
-		result << "\t\tLast Modified:\t" << h.timeLastModified << endl;
+		result << "\tLast Modified:\t" << h.timeLastModified << endl;
 
-		result << "\t]" << endl;
+		result << "]" << endl;
 		return os << result.str();
 	}
 /*
