@@ -82,10 +82,12 @@ class AnomalyPlugin {
 		virtual unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> queryRecentObservations()
 		{
 			// Disallow other access to aggregated data fields
+			unordered_map<ComponentID, AnomalyPluginHealthStatistic> * tmp;
+			{
 			unique_lock<mutex> dataLock( dataMutex );
-
-			unordered_map<ComponentID, AnomalyPluginHealthStatistic> * tmp = recentObservations;
+			tmp = recentObservations;
 			recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
+			}
 
 			return unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>(tmp);
 		}
@@ -93,6 +95,10 @@ class AnomalyPlugin {
 
 		AnomalyPlugin() {
 			recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
+		}
+
+		~AnomalyPlugin(){
+			delete( recentObservations );
 		}
 
 
@@ -141,21 +147,12 @@ class AnomalyPlugin {
 			stat.occurrences[state]++;
 			if ( issue != "" ){
 				if ( state < HealthState::OK ){
-					addIssue( stat.positiveIssues, issue, delta_time_ms );
+					addIssueSafely( stat.positiveIssues, issue, delta_time_ms );
 				}
 				if ( state > HealthState::OK ){
-					addIssue( stat.negativeIssues, issue, delta_time_ms );
+					addIssueSafely( stat.negativeIssues, issue, delta_time_ms );
 				}
 			}
-		}
-
-
-		void addIssue( unordered_map<string, HealthIssue> & map, const string & issue, int32_t delta_time_ms )
-		{	// Disallow other access to aggregated data fields
-			// FIXME: Uncommenting this causes hangup?!?
-			// unique_lock<mutex> dataLock( dataMutex );
-
-			addIssueSafely( map, issue, delta_time_ms );
 		}
 };
 

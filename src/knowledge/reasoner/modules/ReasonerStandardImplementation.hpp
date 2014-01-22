@@ -69,8 +69,8 @@ private:
 		shared_ptr<NodeHealth> nodeHealth;
 		shared_ptr<SystemHealth> systemHealth;
 		// States of possible child reasoners, depending on our role
-		unordered_map<string,ProcessHealth> * childProcessesHealthMap;
-		unordered_map<string,NodeHealth> * childNodesHealthMap;
+		unordered_map<string,ProcessHealth> * childProcessesHealthMap = nullptr;
+		unordered_map<string,NodeHealth> * childNodesHealthMap  = nullptr;
 		// Aggregators for past and current issues and health statistics
 		shared_ptr<HealthStatistics> gatheredStatistics;
 		uint64_t observationTotal = 0;
