@@ -193,24 +193,28 @@ void FadviseReadAheadPlugin::initPlugin() {
 	FadviseReadAheadPluginOptions & o = getOptions<FadviseReadAheadPluginOptions>();
 	ActivityPluginDereferencing * f = GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade);
 
-	addActivityHandler(f, "POSIX", "", "open", & FadviseReadAheadPlugin::handlePOSIXOpen);
-	addActivityHandler(f, "POSIX", "", "creat", & FadviseReadAheadPlugin::handlePOSIXOpen);
-	addActivityHandler(f, "POSIX", "", "close", & FadviseReadAheadPlugin::handlePOSIXClose);
-	addActivityHandler(f, "POSIX", "", "write", & FadviseReadAheadPlugin::handlePOSIXWrite);
-	addActivityHandler(f, "POSIX", "", "read", & FadviseReadAheadPlugin::handlePOSIXRead);
-	addActivityHandler(f, "POSIX", "", "pwrite", & FadviseReadAheadPlugin::handlePOSIXWrite);
-	addActivityHandler(f, "POSIX", "", "pread", & FadviseReadAheadPlugin::handlePOSIXRead);
-	addActivityHandler(f, "POSIX", "", "writev", & FadviseReadAheadPlugin::handlePOSIXWrite);
-	addActivityHandler(f, "POSIX", "", "readv", & FadviseReadAheadPlugin::handlePOSIXRead);
+	try{
+		addActivityHandler(f, "POSIX", "", "open", & FadviseReadAheadPlugin::handlePOSIXOpen);
+		addActivityHandler(f, "POSIX", "", "creat", & FadviseReadAheadPlugin::handlePOSIXOpen);
+		addActivityHandler(f, "POSIX", "", "close", & FadviseReadAheadPlugin::handlePOSIXClose);
+		addActivityHandler(f, "POSIX", "", "write", & FadviseReadAheadPlugin::handlePOSIXWrite);
+		addActivityHandler(f, "POSIX", "", "read", & FadviseReadAheadPlugin::handlePOSIXRead);
+		addActivityHandler(f, "POSIX", "", "pwrite", & FadviseReadAheadPlugin::handlePOSIXWrite);
+		addActivityHandler(f, "POSIX", "", "pread", & FadviseReadAheadPlugin::handlePOSIXRead);
+		addActivityHandler(f, "POSIX", "", "writev", & FadviseReadAheadPlugin::handlePOSIXWrite);
+		addActivityHandler(f, "POSIX", "", "readv", & FadviseReadAheadPlugin::handlePOSIXRead);
 
 	//We will use lseek to determine the file position if needed manually!
 	//addActivityHandler(f, "POSIX", "", "lseek", & FadviseReadAheadPlugin::handlePOSIXSeek);
 
-	fhID = f->lookup_attribute_by_name( "POSIX", "descriptor/filehandle" ).aID;
-	fname = f->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;	
-	positionID = f->lookup_attribute_by_name( "POSIX", "file/position" ).aID;
-	bytesReadID = f->lookup_attribute_by_name( "POSIX", "quantity/BytesRead" ).aID;	
-	bytesWrittenID = f->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;
+		fhID = f->lookup_attribute_by_name( "POSIX", "descriptor/filehandle" ).aID;
+		fname = f->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;	
+		positionID = f->lookup_attribute_by_name( "POSIX", "file/position" ).aID;
+		bytesReadID = f->lookup_attribute_by_name( "POSIX", "quantity/BytesRead" ).aID;	
+		bytesWrittenID = f->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;
+	}catch(const NotFoundError & e){
+		cerr << "Warning, disabling FadviseReadAheadPlugin because some attributes could not be fetched. error: " << e.what() << endl;
+	}
 }
 
 
@@ -268,8 +272,6 @@ void FadviseReadAheadPlugin::handlePOSIXRead(Activity * a){
 			OUTPUT( fs->correctPredictionInARow << " pos: " << realPosition << " nextPos: " << fs->nextPredictionOffset << " fadvise " << fh << " " <<  strerror(ret) );
 		}
 	}
-
-	cout << fs->correctPredictionInARow << " pos: " << realPosition << " nextPos: " << fs->nextPredictionOffset << endl;
 
 	// remember the last region
 	fs->lastReadOffset = realPosition;
