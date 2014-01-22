@@ -38,12 +38,12 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 		long tickLen;
 	protected:
 		vector<Cpu> cpuStatistics;
-		StatisticsValue interrupts;
-		StatisticsValue sw_interrupts;
-		StatisticsValue contextSwitches;
-		StatisticsValue threadsCreated;
-		StatisticsValue curProcsRunning;
-		StatisticsValue curProcsBlocked;
+		StatisticsValue interrupts = ( uint64_t )0;
+		StatisticsValue sw_interrupts = ( uint64_t )0;
+		StatisticsValue contextSwitches = ( uint64_t )0;
+		StatisticsValue threadsCreated = ( uint64_t )0;
+		StatisticsValue curProcsRunning = ( uint64_t )0;
+		StatisticsValue curProcsBlocked = ( uint64_t )0;
 
 		void timestepLine( int lineNr, vector<string> & entries ) {
 			string name = entries[0];

@@ -14,7 +14,7 @@
 //#include <list>
 #include <unordered_map>
 #include <unordered_set>
-//#include <algorithm>
+#include <algorithm>
 
 #include <util/ExceptionHandling.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
@@ -152,9 +152,14 @@ ComponentOptions * FileSurveyorPlugin::AvailableOptions() {
   return new FileSurveyorOptions();
 }
 
+static void toUpper(string & ext){
+	for_each( ext.begin(), ext.end(), [](char&c){ 
+		c = std::toupper(c); 
+	});
+}
 
 void FileSurveyorPlugin::initPlugin() {
-	fprintf(stderr, "FileSurveyorPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
+	// fprintf(stderr, "FileSurveyorPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
 
 	// Retrieve options
 	FileSurveyorOptions & o = getOptions<FileSurveyorOptions>();
@@ -207,10 +212,11 @@ void FileSurveyorPlugin::initPlugin() {
 
 		case 5:
 			// Gather the list of file extensions we are to watch into a map (for easy reference)
-			RETURN_ON_EXCEPTION(
-				for( auto itr = o.fileExtensionsToWatch.begin(); itr != o.fileExtensionsToWatch.end(); itr++ )
-					fileExtensionsToWatch.emplace(*itr);
-			);
+			for( auto itr = o.fileExtensionsToWatch.begin(); itr != o.fileExtensionsToWatch.end(); itr++ ){
+				string ext = *itr;
+				toUpper(ext);
+				fileExtensionsToWatch.emplace(ext);
+			}
 /*			initLevel = 6;
 
 		case 6:
@@ -281,9 +287,10 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 		cerr << "[FileSurvey] No valid file name in activity " << activity->aid() << "!" << endl;
 		return;
 	}
-	const string fileExtension = findFileNameExtension(attFileName->value.str());
+	string fileExtension = findFileNameExtension(attFileName->value.str());
+	toUpper(fileExtension);
 	//OUTPUT( "File extension found: " << fileExtension );
-	if( fileExtensionsToWatch.count( fileExtension ) > 0 )
+	if( fileExtensionsToWatch.count( fileExtension ) > 0 || fileExtensionsToWatch.empty() )
 	{
 		// Create and fill new survey for the file just opened
 
@@ -296,13 +303,13 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 		// User ID
 		// @todo TODO: Retrieve correct UID for OPEN activities.
 		const Attribute * attUserID = findAttributeByID( activity, uidAttID );
-		if ( attUserID != NULL )
-		{
+		if ( attUserID != NULL ){
 			survey.userID = attUserID->value.str();
 			OUTPUT( "UserID: " << attUserID->value.str() );
 		}
-		else
+		else{
 			OUTPUT( "No valid user ID in activity" << activity->aid() << "!" << endl );
+		}
 
 		openFileSurveys[ activity->aid() ] = survey;
 
@@ -481,7 +488,8 @@ ComponentReport FileSurveyorPlugin::prepareReport()
 		GroupEntry * geFile = new GroupEntry( itr->fileName );
 
 		// General
-		result.addEntry( new GroupEntry( "User ID", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->userID ) ));
+		// Does not make any sense to include the USER ID as this is the same for all...
+		//result.addEntry( new GroupEntry( "User ID", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->userID ) ));
 		//result.addEntry( new GroupEntry( "Time opened", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeOpened ) ));
 		//result.addEntry( new GroupEntry( "Time closed", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeClosed ) ));
 
