@@ -62,9 +62,9 @@ namespace monitoring {
 			}
 
 			/* For testing purpose the two methods are public, so you can use the plugin even without collector */
-			virtual void nextTimestep() = 0;	//Update the statistics values.
+			virtual void nextTimestep() throw() = 0;	//Update the statistics values.
 
-			virtual vector<StatisticsProviderDatatypes> availableMetrics() = 0;	//This provides access to the statistics values.
+			virtual vector<StatisticsProviderDatatypes> availableMetrics() throw() = 0;	//This provides access to the statistics values.
 
 	};
 

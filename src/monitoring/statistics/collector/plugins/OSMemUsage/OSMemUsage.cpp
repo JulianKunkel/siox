@@ -52,7 +52,7 @@ class OSMemUsage: public ProcSingleFilePlugin<3> {
 			return "/proc/meminfo";
 		}
 
-		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() throw() {
 			vector<StatisticsProviderDatatypes> result;
 
 			uint64_t overflow_value = ( uint64_t ) 1 << 63; //TODO CHECK ME, we expect 64 Bit...
