@@ -88,7 +88,7 @@ class ProcSingleFilePlugin: public StatisticsProviderPlugin {
 			// We need multiple filename possibility !
 		}
 
-		virtual void nextTimestep() {
+		virtual void nextTimestep() throw() {
 			//cout << "Start extracting info of source on next timestep" << endl;
 			parseProcLine<0>( filename() );
 			// We need multiple filename possibility !

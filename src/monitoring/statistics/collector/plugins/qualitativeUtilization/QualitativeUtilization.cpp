@@ -10,8 +10,8 @@ using namespace core;
 class QualitativeUtilization : public StatisticsIntegrator {
 	public:
 		ComponentOptions* AvailableOptions() override;
-		virtual void nextTimestep() override;
-		virtual vector<StatisticsProviderDatatypes> availableMetrics() override;
+		virtual void nextTimestep() throw() override;
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() throw() override;
 		virtual void initPlugin() throw() override;
 		virtual void notifyAvailableStatisticsChange( const std::vector<std::shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw() override;
 		virtual void newDataAvailable() throw() override;
@@ -58,10 +58,10 @@ ComponentOptions* QualitativeUtilization::AvailableOptions() {
 }
 
 //XXX: Currently, we aggregate the data in `newDataAvailable()`, because that guarantees that the inputs are all from the current iteration. However, it makes our output values change _while_ the listeners are informed of the new data. That means, that some listeners may still see the old values while others see the new ones. Integrating data in `nextTimestep()` would cause us to use inconsistent data to begin with. I cannot say whether it is a problem that some listeners get older data than others. I see only one fix to the inconsistency problem: calculate and cache the data in `newDataAvailable()`, and make it available when `nextTimestep()` is called. However, this would have the drawback that all our listeners would get data that is at least 0.1 seconds old.
-void QualitativeUtilization::nextTimestep() {
+void QualitativeUtilization::nextTimestep() throw() {
 }
 
-vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() {
+vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() throw() {
 	vector<StatisticsProviderDatatypes> result;
 
 	result.push_back( {CPU, NODE, "utilization/cpu", "@localhost/utilization:cpu:percentage", cpuUtilization, GAUGE, "", "average cpu utilization on a node", 0, 0} );
