@@ -31,7 +31,6 @@ using namespace core;
 using namespace monitoring;
 
 int main( int argc, char const * argv[] ) throw() {
-	cerr << "Checkpoint 2\n";
 	#define makeModule(Type, PointerName, ModuleName, InterfaceName) \
 		Type* PointerName = module_create_instance<Type>( "", ModuleName, InterfaceName)
 	makeModule( Topology, topology, "siox-monitoring-RamTopology", MONITORING_TOPOLOGY_INTERFACE );
@@ -45,7 +44,6 @@ int main( int argc, char const * argv[] ) throw() {
 	makeModule( StatisticsMultiplexer, multiplexer, "siox-monitoring-StatisticsMultiplexerSync", STATISTICS_MULTIPLEXER_INTERFACE );
 	makeModule( StatisticsIntegrator, integrator, "siox-monitoring-statisticsPlugin-qualitativeUtilization", MONITORING_STATISTICS_PLUGIN_INTERFACE );
 
-	cerr << "Checkpoint 3\n";
 	#define fetchOptions(Type, ComponentVariableName) \
 		Type* ComponentVariableName##Options = &ComponentVariableName->getOptions<Type>();
 	fetchOptions( ComponentOptions, topology );
@@ -59,7 +57,6 @@ int main( int argc, char const * argv[] ) throw() {
 	fetchOptions( StatisticsMultiplexerSyncOptions, multiplexer );
 	fetchOptions( QualitativeUtilizationOptions, integrator );
 
-	cerr << "Checkpoint 4\n";
 	(void)topologyOptions;	//avoid warning about unused variable
 	facadeOptions->topology.componentPointer = topology;
 	facadeOptions->ontology.componentPointer = ontology;
@@ -78,7 +75,6 @@ int main( int argc, char const * argv[] ) throw() {
 	integratorOptions->availableIoBandwidth = 100ull << 20;
 	integratorOptions->ioBlockSize = 512;
 
-	cerr << "Checkpoint 5\n";
 	topology->init();
 	ontology->init();
 	facade->init();
@@ -90,48 +86,11 @@ int main( int argc, char const * argv[] ) throw() {
 	ramProvider->init();
 	integrator->init();
 
-	cerr << "Checkpoint 6\n";
-//	{
-//		vector<shared_ptr<Statistic> > statistics = collector->availableMetrics();
-//		assert( statistics.size() == 3 );
-//		statistics[0]->requestReduction( SUM );
-//		statistics[1]->requestReduction( SUM );
-//		statistics[2]->requestReduction( SUM );
-//	}
-
 	cerr << "sleeping\n";
 	sleep( 1 );
 	cerr << "waking up\n";
 
-//	{
-//		vector<shared_ptr<Statistic> > statistics = collector->availableMetrics();
-//		assert( statistics.size() == 3 );
-//		array<StatisticsValue, Statistic::kHistorySize> values[3];
-//		statistics[0]->getHistoricValues( SUM, HUNDRED_MILLISECONDS, &values[0], NULL );
-//		statistics[1]->getHistoricValues( SUM, HUNDRED_MILLISECONDS, &values[1], NULL );
-//		statistics[2]->getHistoricValues( SUM, HUNDRED_MILLISECONDS, &values[2], NULL );
-//		double expectedSum = 0;
-//		for(size_t i = 0; i < Statistic::kHistorySize; i++) {
-//			double expectedValue = 0.8*(1 << values[2][i].int32())/2;
-//			expectedSum += expectedValue;
-//			assert( values[0][i] == expectedValue );
-//			assert( values[1][i] == expectedValue );
-//		}
-//
-////		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, {{"node", LOCAL_HOSTNAME}, {"tschaka", "test2"}} );
-//		StatisticsDescription description( ontology->lookup_attribute_by_name( "Statistics", "test/weather" ).aID, topology->lookupObjectByPath( "@localhost/weather-station:0" ).id() );
-//		array<StatisticsValue, Statistic::kHistorySize> nameLookupValues = collector->getStatistics( SUM, HUNDRED_MILLISECONDS, description );
-//		assert( values[1] == nameLookupValues );
-//		StatisticsValue aggregatedValue = collector->getReducedStatistics( SUM, SECOND, *statistics[0] );
-//		assert( aggregatedValue == expectedSum );
-//
-//		StatisticsValue rollingValue = collector->getRollingStatistics( SUM, SECOND, *statistics[0] );
-//		expectedSum = 0;
-//		for(size_t i = 20; i --> 10; ) expectedSum += 0.8*(1 << i);
-//		assert( rollingValue == expectedSum );
-//
-//		assert( listener->registeredValidInput() );
-//	}
+	//Theoretically, we should be checking the output here for sensibility. But that is hard to do because there is no way to decide if a value is correct, apart from recalculating it. So we only do a functional test here.
 
 	cpuProvider->finalize();
 	networkProvider->finalize();
