@@ -3,6 +3,7 @@ project(SIOX)
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIR}
+	${libpqxx_INCLUDE_DIRS}
 )
 
 add_library(
@@ -16,9 +17,9 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	siox-monitoring-Topology
 	${Boost_LIBRARIES}
-	pqxx
+	${libpqxx_LDFLAGS}
+	pq
 )
-# TODO add pqxx detection to configure / CMAKE
 
 siox_run_serializer(DatabaseTopologyOptions.hpp DatabaseTopologyOptions.cpp)
 

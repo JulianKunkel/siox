@@ -51,7 +51,7 @@ ComponentOptions* TestListenerImplementation::AvailableOptions() {
 
 void TestListenerImplementation::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw(){
 
-	OntologyAttributeID anId = ontology->lookup_attribute_by_name( "Statistics", "test/metrics" ).aID;
+	OntologyAttributeID anId = ontology->lookup_attribute_by_name( kStatisticsDomain, "test/metrics" ).aID;
 	TopologyObject localHost = topology->lookupObjectByPath( "@localhost" );
 
 	for( auto itr = statistics.begin(); itr != statistics.end(); itr++){

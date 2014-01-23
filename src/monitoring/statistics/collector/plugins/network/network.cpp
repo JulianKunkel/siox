@@ -71,6 +71,9 @@ namespace {
 	void NetworkStatisticsPlugin::InterfaceData::addMetricsToList( vector<StatisticsProviderDatatypes>* metricsList ) throw() {
 		uint64_t overflow_value = ( uint64_t )-1;
 		string topologyPath = "@localhost/networkInterface:" + interfaceName;
+		if( interfaceName.size() >= 4 && string( interfaceName, 0, 3 ) == "eth" ) {
+			topologyPath = "@localhost/eth:" + string( interfaceName, 3, interfaceName.size() - 3 );
+		}
 		#define addGaugeMetric( variableName, unitString, descriptionString ) do { \
 			metricsList->push_back( {NETWORK, DEVICE, "quantity/" #variableName, topologyPath, variableName, GAUGE, unitString, descriptionString, 0, 0} ); \
 		} while(0)
