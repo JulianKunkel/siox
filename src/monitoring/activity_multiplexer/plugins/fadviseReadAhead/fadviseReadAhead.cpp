@@ -27,6 +27,7 @@
 #include <vector>
 #include <limits>
 #include <cmath>
+#include <mutex>
 
 #include <core/reporting/ComponentReportInterface.hpp>
 
@@ -122,6 +123,8 @@ class FadviseReadAheadPlugin: public ActivityMultiplexerPlugin, public Component
 
 		ComponentOptions * AvailableOptions() override;
 	private:
+		mutex giant_mutex;
+		
 		// statistics by parent file_open
 		unordered_map<ActivityID, FileStatistics> statistics;
 		unordered_map<int, FileStatistics> statisticsUnnamedFiles;
@@ -221,6 +224,8 @@ void FadviseReadAheadPlugin::initPlugin() {
 void FadviseReadAheadPlugin::handlePOSIXWrite(Activity * a){	
 	uint64_t bytes = findUINT64AttributeByID(a, bytesWrittenID);
 	uint64_t position = findUINT64AttributeByID(a, positionID);
+
+	unique_lock<mutex> lock( giant_mutex );
 	FileStatistics * fs = findParentFileByFh(a);
 
 	uint64_t realPosition = position;
@@ -240,6 +245,8 @@ void FadviseReadAheadPlugin::handlePOSIXRead(Activity * a){
 	uint64_t bytes = findUINT64AttributeByID(a, bytesReadID);
 	uint32_t fh = findUINT32AttributeByID(a, fhID);
 	uint64_t position = findUINT64AttributeByID(a, positionID);
+
+	unique_lock<mutex> lock( giant_mutex );
 	FileStatistics * fs = findParentFileByFh(a);
 
 	uint64_t realPosition = position;
@@ -279,10 +286,12 @@ void FadviseReadAheadPlugin::handlePOSIXRead(Activity * a){
 }
 
 void FadviseReadAheadPlugin::handlePOSIXOpen(Activity * a){
+	unique_lock<mutex> lock( giant_mutex );
 	statistics[ a->aid() ] = { findStrAttributeByID(a, fname) };
 }
 
 void FadviseReadAheadPlugin::handlePOSIXClose(Activity * a){
+	// unique_lock<mutex> lock( giant_mutex );
 	FileStatistics * parent = findParentFileByFh(a);
 	// TODO we could remove the statistics theoretically. 
 	// Shall we remember states between different open's

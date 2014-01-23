@@ -20,6 +20,7 @@
 #include <vector>
 #include <limits>
 #include <cmath>
+#include <mutex>
 
 #include <core/reporting/ComponentReportInterface.hpp>
 
@@ -66,6 +67,7 @@ class HistogramAdpiPlugin: public ActivityMultiplexerPlugin, public ComponentRep
 
 		ComponentOptions * AvailableOptions() override;
 	private:
+		mutex giant_mutex;
 		unordered_map<UniqueComponentActivityID, ActivityTimeStatistics> statistics;
 		TopologyTypeId   pluginTopoTypeID;
 		TopologyObjectId pluginTopoObjectID;
@@ -114,6 +116,8 @@ static string convertAIDToString(UniqueComponentActivityID aid){
 
 void HistogramAdpiPlugin::Notify( shared_ptr<Activity> activity ) {
 	const HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
+	unique_lock<mutex> lock( giant_mutex );
+	
 	auto itr = statistics.find(activity->ucaid_);	
 	if ( itr == statistics.end() ){
 		statistics[activity->ucaid_] = {};
