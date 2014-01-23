@@ -235,18 +235,16 @@ struct Health{
 	{
 		ostringstream result;
 
-		result << "\t[" << endl;
-		result << "\t\tState:    \t" << to_string(h.overallState) << endl;
-		result << "\t\tOccurrences:\t";
+		result << "State:    \t" << to_string(h.overallState) << endl;
+		result << "Occurrences:\t";
 		for (auto o : h.occurrences )
 			result << " | " << o;
 		result << " | " << endl;
-		result << "\t\tIssues:\t\t";
+		result << "Issues:\t\t";
 		result << "+" << h.positiveIssues.size() << "\t";
 		result << "-" << h.negativeIssues.size() << endl;
-		result << "\t\tLast Modified:\t" << h.timeLastModified << endl;
+		result << "Last Modified:\t" << h.timeLastModified << endl;
 
-		result << "\t]" << endl;
 		return os << result.str();
 	}
 };
@@ -270,22 +268,20 @@ struct NodeHealth : public Health{
 	{
 		ostringstream result;
 
-		result << "[" << endl;
-		result << "\tState:    \t" << to_string(h.overallState) << endl;
-		result << "\tUtilization:\t";
+		result << "State:    \t" << to_string(h.overallState) << endl;
+		result << "Utilization:\t";
 		for ( auto util : h.utilization )
 			result << " | " << (int) util;
 		result << " | " << endl;
-		result << "\tOccurrences:\t";
+		result << "Occurrences:\t";
 		for ( auto o : h.occurrences )
 			result << " | " << o;
 		result << " | " << endl;
-		result << "\tIssues:\t\t";
+		result << "Issues:\t\t";
 		result << "+" << h.positiveIssues.size() << "\t";
 		result << "-" << h.negativeIssues.size() << endl;
-		result << "\tLast Modified:\t" << h.timeLastModified << endl;
+		result << "Last Modified:\t" << h.timeLastModified << endl;
 
-		result << "]" << endl;
 		return os << result.str();
 	}
 /*
