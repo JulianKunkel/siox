@@ -256,10 +256,10 @@ namespace monitoring {
 			ActivityMultiplexerQueue * queue = nullptr;
 			ActivityMultiplexerNotifier * notifier = nullptr;
 
-			boost::shared_mutex  listener_change_mutex;
+			boost::shared_mutex  asyncQueueMutex;
 
 			// we only permit a single thread to call log() at a time
-			mutex logging_mutex;
+			//mutex sync_mutex;
 
 			// statistics about operation:
 			uint64_t lost_events = 0;
@@ -297,8 +297,7 @@ namespace monitoring {
 
 				// quick sync dispatch
 				{
-					boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
-					unique_lock<mutex> onlyOne( logging_mutex );
+					//unique_lock<mutex> onlyOne( sync_mutex );
 
 					for(auto l = listeners.begin(); l != listeners.end() ; l++){
 						(*l)->Notify(activity);
@@ -321,7 +320,7 @@ namespace monitoring {
 				//printf("dispatch: %p\n", work);
 				shared_ptr<Activity> activity = *(shared_ptr<Activity>*) work;
 				assert( activity != nullptr );
-				boost::shared_lock<boost::shared_mutex> lock( listener_change_mutex );
+				//boost::shared_lock<boost::shared_mutex> lock( asyncQueueMutex );
 				for(auto l = listeners.begin(); l != listeners.end() ; l++){
 					(*l)->NotifyAsync(lost, activity);
 				}
@@ -333,13 +332,13 @@ namespace monitoring {
 			 * @param	listener	listener to be registered
 			 */
 			virtual void registerListener( ActivityMultiplexerListener * listener ){
-				boost::unique_lock<boost::shared_mutex> lock( listener_change_mutex );
+				boost::unique_lock<boost::shared_mutex> lock( asyncQueueMutex );			
 				listeners.push_back(listener);
 
 				// snipped conserved for later use
-				//boost::upgrade_lock<boost::shared_mutex> lock( listener_change_mutex );
+				//boost::upgrade_lock<boost::shared_mutex> lock( asyncQueueMutex );
 				// if () {
-				// 		boost::upgrade_to_unique_lock<boost::shared_mutex> lock( listener_change_mutex );
+				// 		boost::upgrade_to_unique_lock<boost::shared_mutex> lock( asyncQueueMutex );
 				// }
 			}
 
@@ -350,7 +349,7 @@ namespace monitoring {
 			 * @param	listener	listener to be unregistered
 			 */
 			virtual void unregisterListener( ActivityMultiplexerListener * listener ){
-				boost::unique_lock<boost::shared_mutex> lock( listener_change_mutex );
+				boost::unique_lock<boost::shared_mutex> lock( asyncQueueMutex );
 				listeners.remove(listener);
 			}
 
