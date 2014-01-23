@@ -22,7 +22,7 @@ do
 		--with-mpicxx) mpicxx="$2"; shift;;
 		--with-python) python="$2"; shift;;
 		--with-libpq) libpq="$2"; shift;;
-		--build-wrappers) buildWrappers="$2"; shift;;
+		--build-wrappers) buildWrappers="YES";;
 		--) shift; break;;
 	esac
 	shift
