@@ -331,7 +331,7 @@ void testReasonerAssessment(){
 
 	// Now we will query the reactions:
 	// shared_ptr<HealthStatistics> stats = r->queryRuntimePerformanceIssues();
-	// cout << "HealthStatistics: " << stats->to_string() << endl;
+	// cout << "HealthStatistics: " << *stats << endl;
 
 	nh = ((ReasonerStandardImplementation *) r)->getNodeHealth();
 	assert(nh != nullptr);
@@ -394,7 +394,7 @@ void testReasonerAnomalies(){
 
 	// Now we will query the reactions:
 	shared_ptr<HealthStatistics> stats = r->queryRuntimePerformanceIssues();
-	cout << "HealthStatistics: " << stats->to_string() << endl;
+	cout << "HealthStatistics: " << *stats << endl;
 
 
 	cout << "Anomalies at AT1: " << at1.anomaliesTriggered << endl;
