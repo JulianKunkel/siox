@@ -300,7 +300,17 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						int diff = ((int)oldObservationRatios[i]) - ((int)observationRatios[i]);
 						if( abs(diff) > 2 ){
 							anomalyDetected = true;
-							cout << id << " detected an anomaly!" << endl;
+							cout << id << " detected an anomaly (moving observation ratio)!" << endl;
+						}
+					}
+
+					// Did number of any ABNORMAL state rise?
+					if( i == HealthState::ABNORMAL_SLOW
+					   || i == HealthState::ABNORMAL_FAST
+					   || i == HealthState::ABNORMAL_OTHER ){
+						if( observationCounts[i] > oldObservationCounts[i] ){
+							anomalyDetected = true;
+							cout << id << " detected an anomaly (abnormal state)!" << endl;
 						}
 					}
 				}
@@ -343,12 +353,8 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		// Determine local performance issues based on recent observations and remote issues.
 		// TODO
 
-		// For testing:
-		//if( adpiObservations->size() > 0 ) {
-		//	anomalyDetected = true;
-		//}
 		if( utilization != nullptr ) {
-//						StatisticObservation so = utilization->lastObservation( 4711 );
+						// StatisticObservation so = utilization->lastObservation( 4711 );
 		}
 
 		// Save recentIssues
@@ -394,7 +400,7 @@ ReasonerStandardImplementation::~ReasonerStandardImplementation() {
 	delete(comm);
 
 	if (childProcessesHealthMap) delete(childProcessesHealthMap);
-	if (childNodesHealthMap) delete(childNodesHealthMap);	
+	if (childNodesHealthMap) delete(childNodesHealthMap);
 }
 
 void ReasonerStandardImplementation::init(){
@@ -423,8 +429,7 @@ void ReasonerStandardImplementation::init(){
 	comm = new ReasonerCommunication(*this);
 
 	comm->init( options.communicationOptions );
-	if (options.communicationOptions.upstreamReasoner != "")
-		upstreamReasonerExists = true;
+	upstreamReasonerExists = (options.communicationOptions.upstreamReasoner != "");
 
 	periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
 }
