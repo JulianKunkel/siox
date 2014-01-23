@@ -45,7 +45,7 @@ private:
 
 		QualitativeUtilization * utilization;
 
-
+		// Fields to coordinate threaded behaviour
 		thread                  periodicThread;
 		mutex 					pluginMutex; // To protect state of registered plugins
 		mutex 					dataMutex; // To protect state of aggregated data
@@ -56,14 +56,18 @@ private:
 
 		uint32_t update_intervall_ms = -1;
 
+		// Fields used for communicatiion
 		ReasonerCommunication * comm;
 		bool upstreamReasonerExists = false;
+		uint64_t nPushesSent = 0;
+		uint64_t nPushesReceived = 0;
 
 		// for each host (by ID) we store the latest observation
 		// unordered_map<string, pair<Timestamp, set<HealthStatistics>> > remoteIssues;
 
-		// Fields to hold current state and past observations
-		//
+		/*
+		 * Fields to hold current state and past observations
+		 */
 		// Local or neighbouring reasoners' states, depending on our role
 		shared_ptr<ProcessHealth> processHealth;
 		shared_ptr<NodeHealth> nodeHealth;
@@ -85,7 +89,6 @@ private:
 		void assessNodeHealth();
 		void assessSystemHealth();
 
-		// void mergeObservations(list<ProcessHealth> & l, Health & health, array<uint8_t, HEALTH_STATE_COUNT> & observationRatios, uint64_t & observationCount);
 protected:
 	ComponentOptions * AvailableOptions() {
 			return new ReasonerStandardImplementationOptions();

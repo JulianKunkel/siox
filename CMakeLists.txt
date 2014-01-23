@@ -60,6 +60,8 @@ set_package_properties(GIOUNIX2 PROPERTIES URL "http://www.gtk.org" TYPE OPTIONA
 find_package(GMODULE2 REQUIRED)
 set_package_properties(GMODULE2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
+find_package(libpqxx 3.0 REQUIRED)
+
 find_package(PostgreSQL)
 set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYPE OPTIONAL PURPOSE "SIOX PostgreSQL backend support.")
 

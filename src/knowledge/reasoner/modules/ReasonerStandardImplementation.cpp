@@ -110,6 +110,8 @@ void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessa
 			processHealth = make_shared<ProcessHealth>( health );
 		else
 			cout << id << " received inappropriate message from " << data.reasonerID << "!" << endl;
+
+		nPushesReceived++;
 	}
 }
 
@@ -130,6 +132,8 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 			nodeHealth = make_shared<NodeHealth>( health );
 		else
 			cout << id << " received inappropriate message from " << data.reasonerID << "!" << endl;
+
+		nPushesReceived++;
 	}
 }
 
@@ -147,6 +151,8 @@ void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessag
 		else
 			cout << id << " received inappropriate message from " << data.reasonerID << "!" << endl;
 	}
+
+		nPushesReceived++;
 }
 
 
@@ -300,7 +306,17 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						int diff = ((int)oldObservationRatios[i]) - ((int)observationRatios[i]);
 						if( abs(diff) > 2 ){
 							anomalyDetected = true;
-							cout << id << " detected an anomaly!" << endl;
+							cout << id << " detected an anomaly (moving observation ratio)!" << endl;
+						}
+					}
+
+					// Did number of any ABNORMAL state rise?
+					if( i == HealthState::ABNORMAL_SLOW
+					   || i == HealthState::ABNORMAL_FAST
+					   || i == HealthState::ABNORMAL_OTHER ){
+						if( observationCounts[i] > oldObservationCounts[i] ){
+							anomalyDetected = true;
+							cout << id << " detected an anomaly (abnormal state)!" << endl;
 						}
 					}
 				}
@@ -315,6 +331,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						if (upstreamReasonerExists){
 							// cout << id << " pushing process state upstream!" << endl;
 							comm->pushProcessStateUpstream( processHealth);
+							nPushesSent++;
 						}
 						break;
 
@@ -323,6 +340,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						if (upstreamReasonerExists){
 							// cout << id << " pushing node state upstream!" << endl;
 							comm->pushNodeStateUpstream( nodeHealth);
+							nPushesSent++;
 						}
 						break;
 
@@ -331,6 +349,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						if (upstreamReasonerExists){
 							// cout << id << " pushing system state upstream!" << endl;
 							comm->pushSystemStateUpstream( systemHealth);
+							nPushesSent++;
 						}
 						break;
 
@@ -343,12 +362,8 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		// Determine local performance issues based on recent observations and remote issues.
 		// TODO
 
-		// For testing:
-		//if( adpiObservations->size() > 0 ) {
-		//	anomalyDetected = true;
-		//}
 		if( utilization != nullptr ) {
-//						StatisticObservation so = utilization->lastObservation( 4711 );
+						// StatisticObservation so = utilization->lastObservation( 4711 );
 		}
 
 		// Save recentIssues
@@ -394,7 +409,7 @@ ReasonerStandardImplementation::~ReasonerStandardImplementation() {
 	delete(comm);
 
 	if (childProcessesHealthMap) delete(childProcessesHealthMap);
-	if (childNodesHealthMap) delete(childNodesHealthMap);	
+	if (childNodesHealthMap) delete(childNodesHealthMap);
 }
 
 void ReasonerStandardImplementation::init(){
@@ -423,8 +438,7 @@ void ReasonerStandardImplementation::init(){
 	comm = new ReasonerCommunication(*this);
 
 	comm->init( options.communicationOptions );
-	if (options.communicationOptions.upstreamReasoner != "")
-		upstreamReasonerExists = true;
+	upstreamReasonerExists = (options.communicationOptions.upstreamReasoner != "");
 
 	periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
 }
@@ -470,6 +484,7 @@ std::ostream & operator<<( std::ostream & os, const ReasonerStandardImplementati
 		default:
 			assert(false && "Invalid reasoner role!");
 	}
+	result << "Pushes: -> " << r->nPushesSent << ", <- " << r->nPushesReceived << endl;
 
 	return os << result.str();
 }
@@ -484,14 +499,6 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 	// Input: node statistics, process health, system health
 	// Configuration: global reasoner address, local address
 	// Result: node health
-*/
-/*
-	// For now: Simulate historic occurences by totalling child processes' occurences //TODO Replace!
-	for (int i = 0; i < HEALTH_STATE_COUNT; ++i)
-		nodeHealth->occurrences[i] = 0;
-	for(auto childHealth : *childProcessesHealthMap)
-		for (int i = 0; i < HEALTH_STATE_COUNT; ++i)
-			nodeHealth->occurrences[i] += childHealth.second.occurrences[i];
 */
 
 	// determine node health based on the historic knowledge AND the statistics
