@@ -1,6 +1,6 @@
 project(SIOX)
 
-add_subdirectory(posix)
+# add_subdirectory(posix)
 
 if (MPI_FOUND)
 	add_subdirectory(mpi)

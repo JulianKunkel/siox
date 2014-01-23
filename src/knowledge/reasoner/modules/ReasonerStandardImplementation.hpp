@@ -34,7 +34,7 @@ using namespace core;
 
 namespace knowledge {
 
-class ReasonerStandardImplementation : public Reasoner, ReasoningDataReceivedCB, ComponentReportInterface {
+class ReasonerStandardImplementation : public Reasoner, public ReasoningDataReceivedCB, public ComponentReportInterface {
 private:
 		ReasonerStandardImplementationOptions::Role role; // Our scope: PROCESS, NODE or SYSTEM
 		string id;
@@ -79,10 +79,10 @@ private:
 		shared_ptr<HealthStatistics> gatheredStatistics;
 		uint64_t observationTotal = 0;
 		array<uint64_t, HEALTH_STATE_COUNT> observationCounts;
-		array<uint8_t, HEALTH_STATE_COUNT> observationRatios;
+		array<int, HEALTH_STATE_COUNT> observationRatios;
 		uint64_t oldObservationTotal = 0;
 		array<uint64_t, HEALTH_STATE_COUNT> oldObservationCounts;
-		array<uint8_t, HEALTH_STATE_COUNT> oldObservationRatios;
+		array<int, HEALTH_STATE_COUNT> oldObservationRatios;
 
 		// Methods to compute local health - according to our scope - from observations
 		void assessProcessHealth();
