@@ -9,7 +9,7 @@ static string deviceName2topologyPath( string device );
 
 class IOstats: public ProcSingleFilePlugin<15> {
 	public:
-		virtual vector<StatisticsProviderDatatypes> availableMetrics();
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() throw();
 
 	private:
 		void timestepLine( int lineNr,  vector<string> & entries );
@@ -56,7 +56,7 @@ const string IOstats::filename() {
 	return "/proc/diskstats";
 }
 
-vector<StatisticsProviderDatatypes> IOstats::availableMetrics() {
+vector<StatisticsProviderDatatypes> IOstats::availableMetrics() throw() {
 	vector<StatisticsProviderDatatypes> result;
 	// walk through all known devices:
 

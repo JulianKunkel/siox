@@ -273,8 +273,6 @@ void FadviseReadAheadPlugin::handlePOSIXRead(Activity * a){
 		}
 	}
 
-	cout << fs->correctPredictionInARow << " pos: " << realPosition << " nextPos: " << fs->nextPredictionOffset << endl;
-
 	// remember the last region
 	fs->lastReadOffset = realPosition;
 	fs->lastReadSize = bytes;

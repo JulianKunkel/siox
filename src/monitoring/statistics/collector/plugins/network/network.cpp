@@ -1,130 +1,127 @@
-#include "../ProcSingleFilePlugin.hpp" //Central module header with template for parsing from statisticproviderplugins and nextTimestep
-#include <stdint.h>
+/**
+ * @author Nathanael Hübbe
+ * @date 2014
+ */
 
-#include <map>
+#include <monitoring/statistics/collector/StatisticsProviderPluginImplementation.hpp>
+#include <util/ExceptionHandling.hpp>
 
-using namespace std;
+#include <fstream>
+#include <vector>
+#include <dirent.h>
 
-class NetworkStats: public ProcSingleFilePlugin<18> {
-	protected:
-		map<string, map<StatisticsValue, string> > values;
+namespace {
 
-		void timestepLine( int lineNr, vector<string> & entries ) {
-			string name = "PacketsReceived";
-			string name2 = "PacketsSent";
-			string name3 = "BytesReceived";
-			string name4 = "BytesSent";
+	using namespace std;
+	using namespace monitoring;
 
-			if( CurrentValues.find( name ) == CurrentValues.end() ) {
-				cerr << "File " << filename() << "changed while accessing. New field " << name << endl;
-				return;
+	class NetworkStatisticsPlugin : public StatisticsProviderPlugin {
+		public:
+			virtual void init( StatisticsProviderPluginOptions & options );
+
+			virtual void nextTimestep() throw();
+			virtual vector<StatisticsProviderDatatypes> availableMetrics() throw();
+		private:
+			class InterfaceData {
+				public:
+					StatisticsValue bandwidthBytes = ( uint64_t )0;	//the theoretical link speed
+					StatisticsValue bytesSent = ( uint64_t )0, bytesRecieved = ( uint64_t )0;
+					StatisticsValue packetsSent = ( uint64_t )0, packetsRecieved = ( uint64_t )0;
+					string interfaceName, speedPath, bytesSentPath, bytesRecievedPath, packetsSentPath, packetsRecievedPath;
+
+					InterfaceData( string interfaceName );
+					void nextTimestep() throw();
+					void addMetricsToList( vector<StatisticsProviderDatatypes>* metricsList ) throw();
+			};
+
+			vector<InterfaceData> interfaces;
+	};
+
+
+	NetworkStatisticsPlugin::InterfaceData::InterfaceData( string interfaceName ) :
+		interfaceName( interfaceName ),
+		speedPath( "/sys/class/net/" + interfaceName + "/speed" ),
+		bytesSentPath( "/sys/class/net/" + interfaceName + "/statistics/tx_bytes" ),
+		bytesRecievedPath( "/sys/class/net/" + interfaceName + "/statistics/rx_bytes" ),
+		packetsSentPath( "/sys/class/net/" + interfaceName + "/statistics/tx_packets" ),
+		packetsRecievedPath( "/sys/class/net/" + interfaceName + "/statistics/rx_packets" )
+	{}
+
+
+	uint64_t fetchFileValue( const string& path ) throw() {
+		ifstream file( path );
+		//Unfortunately, I found no exception free way to check whether opening the file actually succeeded.
+		//On my system even `file.good() && file.is_open()` would succeed for the nonexistant file `/sys/class/net/lo/speed`.
+		//No idea why, but if someone knows better, please feel free to insert a sensible check.
+		uint64_t result = 0;
+		IGNORE_EXCEPTIONS( file >> result; );
+		return result;
+	}
+
+
+	void NetworkStatisticsPlugin::InterfaceData::nextTimestep() throw() {
+		bandwidthBytes = 1000*1000/8*fetchFileValue( speedPath );	//the file gives the link speed in MBits, we use Bytes
+		bytesSent = fetchFileValue( bytesSentPath );
+		bytesRecieved = fetchFileValue( bytesRecievedPath );
+		packetsSent = fetchFileValue( packetsSentPath );
+		packetsRecieved = fetchFileValue( packetsRecievedPath );
+	}
+
+
+	void NetworkStatisticsPlugin::InterfaceData::addMetricsToList( vector<StatisticsProviderDatatypes>* metricsList ) throw() {
+		uint64_t overflow_value = ( uint64_t )-1;
+		string topologyPath = "@localhost/networkInterface:" + interfaceName;
+		if( interfaceName.size() >= 4 && string( interfaceName, 0, 3 ) == "eth" ) {
+			topologyPath = "@localhost/eth:" + string( interfaceName, 3, interfaceName.size() - 3 );
+		}
+		#define addGaugeMetric( variableName, unitString, descriptionString ) do { \
+			metricsList->push_back( {NETWORK, DEVICE, "quantity/" #variableName, topologyPath, variableName, GAUGE, unitString, descriptionString, 0, 0} ); \
+		} while(0)
+		#define addIncrementalMetric( variableName, unitString, descriptionString ) do { \
+			metricsList->push_back( {NETWORK, DEVICE, "quantity/" #variableName, topologyPath, variableName, INCREMENTAL, unitString, descriptionString, overflow_value, 0} ); \
+		} while(0)
+		addGaugeMetric( bandwidthBytes, "B/s", "theoretical link speed" );
+		addIncrementalMetric( bytesSent, "B", "total bytes sent over this network interface" );
+		addIncrementalMetric( bytesRecieved, "B", "total bytes recieved over this network interface" );
+		addIncrementalMetric( packetsSent, "", "total packets sent over this network interface" );
+		addIncrementalMetric( packetsRecieved, "", "total packets recieved over this network interface" );
+		
+	}
+
+
+	void NetworkStatisticsPlugin::init( StatisticsProviderPluginOptions& options ) {
+		if( DIR* directory = opendir( "/sys/class/net" ) ) {
+			union {	//this is for portability
+				struct dirent64 data;
+				char spacer[offsetof ( struct dirent64, d_name ) + NAME_MAX + 1];
+			} enlargedDirent;
+			struct dirent64* curEntry = NULL;
+			while( !readdir64_r( directory, &enlargedDirent.data, &curEntry ) && curEntry ) {
+				if( curEntry->d_name[0] != '.' ) {	//we need to skip the "." and ".." entries
+					string interfaceName( curEntry->d_name, _D_EXACT_NAMLEN( curEntry ) );
+					interfaces.emplace_back( interfaceName );
+				}
 			}
-
-			std::array<StatisticsValue, 1> & Crrnt = CurrentValues[name];
-
-			for( int i = 0; i < 1; i++ ) {
-				Crrnt[i] = ( uint64_t ) atoll( entries[i].c_str() );
-			}
-
-			std::array<StatisticsValue, 1> & Crrnt2 = CurrentValues[name2];
-
-			for( int i = 0; i < 1; i++ ) {
-				Crrnt2[i] = ( uint64_t ) atoll( entries[i].c_str() );
-			}
-
-			std::array<StatisticsValue, 1> & Crrnt3 = CurrentValues[name3];
-
-			for( int i = 0; i < 1; i++ ) {
-				Crrnt3[i] = ( uint64_t ) atoll( entries[i].c_str() );
-			}
-
-			std::array<StatisticsValue, 1> & Crrnt4 = CurrentValues[name4];
-
-			for( int i = 0; i < 1; i++ ) {
-				Crrnt4[i] = ( uint64_t ) atoll( entries[i].c_str() );
-			}
-
-
-			// Nur für etwaige Umrechnung mit fixen Faktoren
-			// Crrnt[1] = ((uint64_t) atoll(entries[2+3].c_str())) * factor;
+			closedir( directory );
 		}
+	}
 
+
+	void NetworkStatisticsPlugin::nextTimestep() throw() {
+		for( size_t i = interfaces.size(); i--; ) interfaces[i].nextTimestep();
+	}
 
+
+	vector<StatisticsProviderDatatypes> NetworkStatisticsPlugin::availableMetrics() throw() {
+		vector<StatisticsProviderDatatypes> result;
+		for( size_t i = interfaces.size(); i--; ) interfaces[i].addMetricsToList( &result );
+		return result;
+	}
+}
 
-
-		void initLine( int lineNr, vector<string> & entries ) {
-
-			string name = "PacketsReceived";
-			CurrentValues[name] = std::array<StatisticsValue, 1>();
-			CurrentValues[name][0] = ( uint64_t )0;
-
-			string name2 = "PacketsSent";
-			CurrentValues[name2] = std::array<StatisticsValue, 1>();
-			CurrentValues[name2][0] = ( uint64_t )0;
-
-			string name3 = "BytesReceived";
-			CurrentValues[name3] = std::array<StatisticsValue, 1>();
-			CurrentValues[name3][0] = ( uint64_t )0;
-
-			string name4 = "BytesSent";
-			CurrentValues[name4] = std::array<StatisticsValue, 1>();
-			CurrentValues[name4][0] = ( uint64_t )0;
-
-
-		}
-
-		const string filename() {
-			return "/sys/class/net/eth0/statistics/rx_packets";
-		}
-
-		const string filename2() {
-			return "/sys/class/net/eth0/statistics/tx_packets";
-		}
-
-		const string filename3() {
-			return "/sys/class/net/eth0/statistics/rx_bytes";
-		}
-
-		const string filename4() {
-			return "/sys/class/net/eth0/statistics/tx_bytes";
-		}
-
-
-
-		map<string, std::array<StatisticsValue, 1> > CurrentValues;
-
-	public:
-
-		virtual vector<StatisticsProviderDatatypes> availableMetrics() {
-			vector<StatisticsProviderDatatypes> lst;
-
-			for( auto iter = CurrentValues.begin(); iter != CurrentValues.end(); iter++ ) {
-				///@todo TODO: The following four lines do not make any sense, as do some other parts of this file. Rework this file.
-				string name = iter -> first;
-				string name2 = iter -> first;
-				string name3 = iter -> first;
-				string name4 = iter -> first;
-				uint64_t overflow_value = ( uint64_t ) 1 << 63;
-
-
-				// Transfer Currentvalues by name to Statistics Array
-				std::array<StatisticsValue, 1> & Crrnt = CurrentValues[name];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsReceived", "@localhost", Crrnt[0], INCREMENTAL, "", "Field 1 -- # of packets received", overflow_value, 0} );
-				std::array<StatisticsValue, 1> & Crrnt2 = CurrentValues[name2];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/PacketsSent", "@localhost", Crrnt2[0], INCREMENTAL, "", "Field 1 -- # of packets sent", overflow_value, 0} );
-				std::array<StatisticsValue, 1> & Crrnt3 = CurrentValues[name3];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesReceived", "@localhost", Crrnt3[0], INCREMENTAL, "", "Field 1 -- # of bytes received", overflow_value, 0} );
-				std::array<StatisticsValue, 1> & Crrnt4 = CurrentValues[name4];
-				lst.push_back( {INPUT_OUTPUT, NODE, "Quantity/BytesSent", "@localhost", Crrnt4[0], INCREMENTAL, "", "Field 1 -- # of bytes sent", overflow_value, 0} );
-
-			}
-			return lst;
-		}
-};
-
+
 extern "C" {
-	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME()
-	{
-		return new NetworkStats();
+	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME() {
+		return new NetworkStatisticsPlugin();
 	}
 }

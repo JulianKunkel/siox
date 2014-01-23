@@ -7,11 +7,12 @@ using namespace std;
 using namespace monitoring;
 using namespace core;
 
+
 class QualitativeUtilization : public StatisticsIntegrator {
 	public:
 		ComponentOptions* AvailableOptions() override;
-		virtual void nextTimestep() override;
-		virtual vector<StatisticsProviderDatatypes> availableMetrics() override;
+		virtual void nextTimestep() throw() override;
+		virtual vector<StatisticsProviderDatatypes> availableMetrics() throw() override;
 		virtual void initPlugin() throw() override;
 		virtual void notifyAvailableStatisticsChange( const std::vector<std::shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw() override;
 		virtual void newDataAvailable() throw() override;
@@ -36,16 +37,26 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		OntologyAttributeID totalMemoryAttribute = 0;
 		OntologyAttributeID activeMemoryAttribute = 0;
 		OntologyAttributeID inactiveMemoryAttribute = 0;
+		OntologyAttributeID bandwidthBytesAttribute = 0;
+		OntologyAttributeID bytesSentAttribute = 0;
+		OntologyAttributeID bytesRecievedAttribute = 0;
 		TopologyTypeId blockDeviceType = 0;
+		TopologyTypeId ethType = 0;
 		TopologyObjectId localhostObject = 0, allCpusObject = 0;
 
+		///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
 		std::vector<std::shared_ptr<Statistic> > ioStatistics;
-		uint64_t lastIoBlockCount = 0;	///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
+		uint64_t lastIoBlockCount = 0;
 		std::vector<std::shared_ptr<Statistic> > busyCpuStatistics;
-		uint64_t lastBusyCpuTime = 0;	///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
+		uint64_t lastBusyCpuTime = 0;
 		std::shared_ptr<Statistic> idleCpuStatistic;
-		uint64_t lastIdleCpuTime = 0;	///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
+		uint64_t lastIdleCpuTime = 0;
 		std::shared_ptr<Statistic> totalMemoryStatistic, activeMemoryStatistic, inactiveMemoryStatistic;
+		std::vector<std::shared_ptr<Statistic> > bandwidthStatistics;
+		std::vector<std::shared_ptr<Statistic> > bytesSentStatistics;
+		uint64_t lastBytesSent;
+		std::vector<std::shared_ptr<Statistic> > bytesRecievedStatistics;
+		uint64_t lastBytesRecieved;
 
 		StatisticsValue cpuUtilization = 0.0;
 		StatisticsValue networkUtilization = 0.0;	//XXX: Should we split this into an upstream and a downstream utilization?
@@ -53,15 +64,18 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		StatisticsValue ioUtilization = 0.0;
 };
 
+
 ComponentOptions* QualitativeUtilization::AvailableOptions() {
 	return new QualitativeUtilizationOptions();
 }
 
+
 //XXX: Currently, we aggregate the data in `newDataAvailable()`, because that guarantees that the inputs are all from the current iteration. However, it makes our output values change _while_ the listeners are informed of the new data. That means, that some listeners may still see the old values while others see the new ones. Integrating data in `nextTimestep()` would cause us to use inconsistent data to begin with. I cannot say whether it is a problem that some listeners get older data than others. I see only one fix to the inconsistency problem: calculate and cache the data in `newDataAvailable()`, and make it available when `nextTimestep()` is called. However, this would have the drawback that all our listeners would get data that is at least 0.1 seconds old.
-void QualitativeUtilization::nextTimestep() {
+void QualitativeUtilization::nextTimestep() throw() {
 }
 
-vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() {
+
+vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() throw() {
 	vector<StatisticsProviderDatatypes> result;
 
 	result.push_back( {CPU, NODE, "utilization/cpu", "@localhost/utilization:cpu:percentage", cpuUtilization, GAUGE, "", "average cpu utilization on a node", 0, 0} );
@@ -72,10 +86,12 @@ vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() {
 	return result;
 }
 
+
 void QualitativeUtilization::initPlugin() throw() {
 	options = &getOptions<QualitativeUtilizationOptions>();
 }
 
+
 void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<std::shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw() {
 	if( !readDataAttribute ) fetchAttributeIds();
 	Topology* topology = GET_INSTANCE( ActivityPluginDereferencing, options->dereferencingFacade )->topology();
@@ -86,53 +102,60 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 	lastBusyCpuTime = 0;
 	idleCpuStatistic = NULL;
 	lastIdleCpuTime = 0;
+	bandwidthStatistics.clear();
+	bytesSentStatistics.clear();
+	lastBytesSent = 0;
+	bytesRecievedStatistics.clear();
+	lastBytesRecieved = 0;
 
 	for( size_t i = statistics.size(); i--; ) {
 		const std::shared_ptr<Statistic>& curStatistic = statistics[i];
 		OntologyAttributeID curAttribute = curStatistic->ontologyId;
 		TopologyObjectId curTopology = curStatistic->topologyId;
+		TopologyTypeId curTopologyType = topology->lookupTypeById( topology->lookupObjectById( curTopology ).type() ).id();
 		if( !curAttribute ) continue;
 		if( readDataAttribute == curAttribute || writtenDataAttribute == curAttribute ) {
-			TopologyObject object = topology->lookupObjectById( curTopology );
-			TopologyType type = topology->lookupTypeById( object.type() );
-			if( type.id() == blockDeviceType ) {
+			if( curTopologyType == blockDeviceType ) {
 				ioStatistics.push_back( curStatistic );
-				cerr << "detected input statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
 				lastIoBlockCount += curStatistic->curValue.uint64();
 			}
 		} else if( userTimeAttribute == curAttribute || niceTimeAttribute == curAttribute || systemTimeAttribute == curAttribute || iowaitTimeAttribute == curAttribute || interruptsTimeAttribute == curAttribute || softirqTimeAttribute == curAttribute || vmsTimeAttribute == curAttribute || vmsOsTimeAttribute == curAttribute ) {
 			if( curTopology == allCpusObject ) {
 				busyCpuStatistics.push_back( curStatistic );
-				cerr << "detected busy time statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
 				lastBusyCpuTime += curStatistic->curValue.uint64();
 			}
 		} else if( idleTimeAttribute == curAttribute ) {
 			if( curTopology == allCpusObject ) {
 				idleCpuStatistic = curStatistic;
-				cerr << "detected idle time statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
 				lastIdleCpuTime = curStatistic->curValue.uint64();
 			}
 		} else if( totalMemoryAttribute == curAttribute && curTopology == localhostObject ) {
 			totalMemoryStatistic = curStatistic;
-			cerr << "detected total memory statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
 		} else if( activeMemoryAttribute == curAttribute && curTopology == localhostObject ) {
 			activeMemoryStatistic = curStatistic;
-			cerr << "detected active memory statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
 		} else if( inactiveMemoryAttribute == curAttribute && curTopology == localhostObject ) {
 			inactiveMemoryStatistic = curStatistic;
-			cerr << "detected inactive memory statistic: ontologyId = " << curAttribute << ", topologyId = " << curTopology << "\n";
+		} else if( bandwidthBytesAttribute == curAttribute && curTopologyType == ethType ) {
+			bandwidthStatistics.push_back( curStatistic );
+		} else if( bytesSentAttribute == curAttribute && curTopologyType == ethType ) {
+			bytesSentStatistics.push_back( curStatistic );
+			lastBytesSent += curStatistic->curValue.uint64();
+		} else if( bytesRecievedAttribute == curAttribute && curTopologyType == ethType ) {
+			bytesRecievedStatistics.push_back( curStatistic );
+			lastBytesRecieved += curStatistic->curValue.uint64();
 		}
 	}
 }
 
+
 void QualitativeUtilization::newDataAvailable() throw() {
-	uint64_t curIoBlockCount = 0;
+	uint64_t curIoBlockCount = 0, curBusyCpuTime = 0, curIdleCpuTime = 0, curBandwidth = 0, curBytesSent = 0, curBytesRecieved = 0;
 	for( size_t i = ioStatistics.size(); i--; ) curIoBlockCount += ioStatistics[i]->curValue.uint64();
-	uint64_t curBusyCpuTime = 0;
 	for( size_t i = busyCpuStatistics.size(); i--; ) curBusyCpuTime += busyCpuStatistics[i]->curValue.uint64();
-	uint64_t curIdleCpuTime = ( idleCpuStatistic ) ? idleCpuStatistic->curValue.uint64() : 0;
-
-	cerr << "detected " << curIoBlockCount - lastIoBlockCount << " io blocks from " << ioStatistics.size() << " statistics, curIoBlockCount == " << curIoBlockCount << ", idle time = " << curIdleCpuTime - lastIdleCpuTime << ", busy time = " << curBusyCpuTime - lastBusyCpuTime << "\n";
+	if( idleCpuStatistic ) curIdleCpuTime = idleCpuStatistic->curValue.uint64();
+	for( size_t i = bandwidthStatistics.size(); i--; ) curBandwidth += bandwidthStatistics[i]->curValue.uint64();
+	for( size_t i = bytesSentStatistics.size(); i--; ) curBytesSent += bytesSentStatistics[i]->curValue.uint64();
+	for( size_t i = bytesRecievedStatistics.size(); i--; ) curBytesRecieved += bytesRecievedStatistics[i]->curValue.uint64();
 
 	ioUtilization = options->ioBlockSize * ( curIoBlockCount - lastIoBlockCount ) / options->availableIoBandwidth;
 	cpuUtilization = ( curBusyCpuTime - lastBusyCpuTime ) / ( double )( curBusyCpuTime - lastBusyCpuTime + curIdleCpuTime - lastIdleCpuTime );
@@ -144,22 +167,28 @@ void QualitativeUtilization::newDataAvailable() throw() {
 		uint64_t highUsage = total - inactiveMemoryStatistic->curValue.uint64();
 		memoryUtilization = ( lowUsage + highUsage ) / ( 2.0 * total );
 	}
-	cerr << "Utilization: " << ( int )100*cpuUtilization.dbl() << "% CPU, " << ( int )100*memoryUtilization.dbl() << "% Memory, " << ( int )100*networkUtilization.dbl() << "% Network, " << ( int )100*ioUtilization.dbl() << "% I/O\n";
+	networkUtilization = ( curBytesSent - lastBytesSent + curBytesRecieved - lastBytesRecieved ) / ( 2.0 * curBandwidth / 10 );	//*2 for duplex, /10 for 100ms poll interval
 
 	lastIoBlockCount = curIoBlockCount;
 	lastBusyCpuTime = curBusyCpuTime;
 	lastIdleCpuTime = curIdleCpuTime;
+	lastBytesSent = curBytesSent;
+	lastBytesRecieved = curBytesRecieved;
 }
 
+
 void QualitativeUtilization::fetchAttributeIds() throw() {
 	if( AttributesComplete ) return;
 	ActivityPluginDereferencing* facade = GET_INSTANCE( ActivityPluginDereferencing, options->dereferencingFacade );
 	Topology* topology = facade->topology();
+	AttributesComplete = true;
+
 	#define fetchOntologyAttribute( idVariable, attributeName ) do { \
 		if( !idVariable ) { \
 			IGNORE_EXCEPTIONS( idVariable = facade->lookup_attribute_by_name( kStatisticsDomain, attributeName ).aID; ); \
+			if( !idVariable ) AttributesComplete = false; \
 		} \
-	} while(0)
+	} while( 0 )
 	fetchOntologyAttribute( readDataAttribute, "quantity/block/dataRead" );
 	fetchOntologyAttribute( writtenDataAttribute, "quantity/block/dataWritten" );
 	fetchOntologyAttribute( userTimeAttribute, "time/user" );
@@ -174,14 +203,26 @@ void QualitativeUtilization::fetchAttributeIds() throw() {
 	fetchOntologyAttribute( totalMemoryAttribute, "quantity/memory/MemTotal" );
 	fetchOntologyAttribute( activeMemoryAttribute, "quantity/memory/Active" );
 	fetchOntologyAttribute( inactiveMemoryAttribute, "quantity/memory/Inactive" );
+	fetchOntologyAttribute( bandwidthBytesAttribute, "quantity/bandwidthBytes" );
+	fetchOntologyAttribute( bytesSentAttribute, "quantity/bytesSent" );
+	fetchOntologyAttribute( bytesRecievedAttribute, "quantity/bytesRecieved" );
 
-	if( !blockDeviceType ) blockDeviceType = topology->registerType( "block-device" ).id();
-	if( !localhostObject ) localhostObject = topology->registerObjectByPath( "@localhost" ).id();
-	if( !allCpusObject ) allCpusObject = topology->registerObjectByPath( "@localhost/cpu:all" ).id();
-
-	AttributesComplete = readDataAttribute && writtenDataAttribute && userTimeAttribute && niceTimeAttribute && systemTimeAttribute && idleTimeAttribute && iowaitTimeAttribute && interruptsTimeAttribute && softirqTimeAttribute && vmsTimeAttribute && vmsOsTimeAttribute;
+	#define fetchTopologyId( idVariable, topologyFunction, argument ) do { \
+		if( !idVariable ) { \
+			if( auto temp = topology->topologyFunction( argument ) ) { \
+				idVariable = temp.id(); \
+			} else { \
+				AttributesComplete = false; \
+			} \
+		} \
+	} while( 0 )
+	fetchTopologyId( blockDeviceType, registerType, "block-device" );
+	fetchTopologyId( ethType, registerType, "eth" );
+	fetchTopologyId( localhostObject, registerObjectByPath, "@localhost" );
+	fetchTopologyId( allCpusObject, registerObjectByPath, "@localhost/cpu:all" );
 }
 
+
 extern "C" {
 	void * MONITORING_STATISTICS_PLUGIN_INSTANCIATOR_NAME()
 	{
