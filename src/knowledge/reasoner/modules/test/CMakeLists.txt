@@ -10,6 +10,7 @@ add_executable(
 )
 target_link_libraries(
 	knowledge-reasoner-modules-reasoner-test
+	siox-monitoring-activityPlugin-AnomalyInjector
 	siox-core-ModuleLoader
 	siox-knowledge-ReasonerStandardImplementation
 	siox-core-comm-gio

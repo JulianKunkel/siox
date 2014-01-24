@@ -12,6 +12,7 @@
 
 #include <knowledge/reasoner/Reasoner.hpp>
 #include <knowledge/reasoner/AnomalyPlugin.hpp>
+#include <monitoring/activity_multiplexer/plugins/anomaly-injector/AnomalyInjector.cpp>
 
 #include <knowledge/reasoner/modules/ReasonerStandardImplementation.hpp>
 #include <knowledge/reasoner/modules/ReasonerStandardImplementationOptions.hpp>
@@ -231,6 +232,17 @@ void testReasoner(){
 	rN1->connectTrigger( & atN1b );
 	TestAnomalyPlugin adpiN1a;
 	rN1->connectAnomalyPlugin( & adpiN1a );
+	// AnomalyInjectorPlugin * adpiN1b = core::module_create_instance<AnomalyInjectorPlugin>( "", "siox-monitoring-activityPlugin-AnomalyInjector", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
+	AnomalyInjectorPlugin adpiN1b;
+	{
+		AnomalyInjectorPluginOptions & aipOptions = adpiN1b.getOptions<AnomalyInjectorPluginOptions>();
+		aipOptions.issueName = "Gaussian Issue";
+		aipOptions.intervalMean = 75.0;
+		aipOptions.deltaTimeMean = 15.0;
+		aipOptions.deltaTimeVariance = 0.0; //15.0;
+		rN1->connectAnomalyPlugin( & adpiN1b );
+		adpiN1b.initPlugin();
+	}
 
 	// Process 11 Reasoner
 	// One ADPI, one AT
@@ -293,12 +305,13 @@ void testReasoner(){
 	 */
 	// TODO: Create these via the ADPIs
 
+/*
 	cout << "Injecting states..." << endl;
 
-	ReasonerMessageReceived rmr("INJECT");
-/*
+	ReasonerMessageReceived rmrInject("INJECT"); // Magic word to set reasoner's own state
+
 	SystemHealth sh = { HealthState::OK, {{0,1,5,1,0,0}}, {}, {} };
-	((ReasonerStandardImplementation *) rS)->receivedReasonerSystemHealth( rmr, sh );
+	((ReasonerStandardImplementation *) rS)->receivedReasonerSystemHealth( rmrInject, sh );
 	cout << ((ReasonerStandardImplementation *) rS) << endl;
 
 	NodeHealth nh;
@@ -307,20 +320,20 @@ void testReasoner(){
 	nh.utilization[UtilizationIndex::IO] = 30;
 	nh.utilization[UtilizationIndex::MEMORY] = 10;
 	nh.positiveIssues = { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} };
-	((ReasonerStandardImplementation *) rN1)->receivedReasonerNodeHealth( rmr, nh );
+	((ReasonerStandardImplementation *) rN1)->receivedReasonerNodeHealth( rmrInject, nh );
 	cout << ((ReasonerStandardImplementation *) rN1) << endl;
 
 
 	ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
-	((ReasonerStandardImplementation *) rP11)->receivedReasonerProcessHealth( rmr, p1 );
+	((ReasonerStandardImplementation *) rP11)->receivedReasonerProcessHealth( rmrInject, p1 );
 	cout << ((ReasonerStandardImplementation *) rP11) << endl;
 
 	ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
-	((ReasonerStandardImplementation *) rP12)->receivedReasonerProcessHealth( rmr, p2 );
+	((ReasonerStandardImplementation *) rP12)->receivedReasonerProcessHealth( rmrInject, p2 );
 	cout << ((ReasonerStandardImplementation *) rP12) << endl;
 
 	ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
-	((ReasonerStandardImplementation *) rP13)->receivedReasonerProcessHealth( rmr, p3 );
+	((ReasonerStandardImplementation *) rP13)->receivedReasonerProcessHealth( rmrInject, p3 );
 	cout << ((ReasonerStandardImplementation *) rP13) << endl;
 */
 	// We begin with a clean slate
@@ -357,19 +370,19 @@ void testReasoner(){
 	sleep(1);
 	cout << "...waking up!" << endl;
 
-
 	cout << "...result:" << endl;
 
 	cout << endl << ((ReasonerStandardImplementation *) rP11);
 	shared_ptr<HealthStatistics> statsP11 = rP11->queryRuntimePerformanceIssues();
-	cout << "HealthStatistics gathered by P11: " << statsP11->to_string() << endl;
+	cout << "HealthStatistics gathered by P11: " << *statsP11 << endl;
 	cout << "Anomalies at atP11a: " << atP11a.anomaliesTriggered << endl;
 
 	cout << endl << ((ReasonerStandardImplementation *) rN1);
 	shared_ptr<HealthStatistics> statsN1 = rN1->queryRuntimePerformanceIssues();
-	cout << "HealthStatistics gathered by N1: " << statsN1->to_string() << endl;
+	cout << "HealthStatistics gathered by N1: " << *statsN1 << endl;
 	cout << "Anomalies at atN1a: " << atN1a.anomaliesTriggered << endl;
 	cout << "Anomalies at atN1b: " << atN1b.anomaliesTriggered << endl;
+	// cout << adpiN1b << endl;
 
 	cout << endl << ((ReasonerStandardImplementation *) rS);
 
