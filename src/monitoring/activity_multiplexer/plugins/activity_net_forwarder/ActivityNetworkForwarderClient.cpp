@@ -10,6 +10,7 @@
 
 #include <knowledge/reasoner/AnomalyTrigger.hpp>
 #include <knowledge/reasoner/Reasoner.hpp>
+#include <core/reporting/ComponentReportInterface.hpp>
 
 #include "ActivityNetworkForwarderOptions.hpp"
 
@@ -21,7 +22,7 @@ using namespace knowledge;
  * Forward an activity from one ActivityMultiplexer to another.
  * Data is only forwarded if this client is triggered.
  */
-class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, public MessageCallback, public AnomalyTrigger{
+class ActivityNetworkForwarderClient: public ActivityMultiplexerPlugin, public MessageCallback, public AnomalyTrigger, public ComponentReportInterface{
 private:
 	// the ringBuffer
 	vector<shared_ptr<Activity>> ringBuffer;
@@ -34,7 +35,21 @@ private:
 
 	mutex ringBuffMutex;
 
+
+	uint64_t activitiesSendCount;
+	uint64_t activitiesReceptionConfirmed;
+	uint64_t activitiesErrorCount;
+
 public:
+
+	ComponentReport prepareReport(){
+		ComponentReport report;
+
+		report.addEntry( new GroupEntry( "activitiesSend" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesSendCount ) ));
+		report.addEntry( new GroupEntry( "activitiesReceptionConfirmed" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesReceptionConfirmed ) ));
+		report.addEntry( new GroupEntry( "activitiesErrors" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesErrorCount ) ));
+		return report;
+	}
 
 	/**
 	 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
@@ -121,12 +136,17 @@ public:
 		}		
 	}
 
-	virtual void messageSendCB(BareMessage * msg){ /* do nothing */ }
-
-	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size){
+	virtual void messageSendCB(BareMessage * msg){ 
+		activitiesSendCount++;
 	}
 
-	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error){  }
+	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size){
+		activitiesReceptionConfirmed++;
+	}
+
+	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error){  
+		activitiesErrorCount++;
+	}
 
 	virtual uint64_t serializeMessageLen(const void * msgObject) {
 		return j_serialization::serializeLen(* (Activity*) msgObject);
