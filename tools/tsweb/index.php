@@ -9,9 +9,9 @@ require_once("header.php");
 <h1>Activity List</h1>
 
 <?php $page_size = 200; ?>
-<?php $current_page = isset($_GET['page']) ? $_GET['page'] : 1; ?>
 <?php $total_activities = Activity::get_count(); ?>
 <?php $total_pages = ceil($total_activities / $page_size); ?>
+<?php $current_page = isset($_GET['page']) ? $_GET['page'] : $total_pages; ?>
 <?php $activities = Activity::get_list($current_page, $page_size); ?>
 
 <form name="purge_frm" method="post" action="purge.php">
