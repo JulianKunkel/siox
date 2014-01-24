@@ -1,4 +1,5 @@
 #include <mutex>
+#include <atomic>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
@@ -11,12 +12,14 @@
 #include <knowledge/reasoner/AnomalyTrigger.hpp>
 #include <knowledge/reasoner/Reasoner.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
-
+	
 #include "ActivityNetworkForwarderOptions.hpp"
 
 using namespace core;
 using namespace monitoring;
 using namespace knowledge;
+
+#define max_pending_ops 1000
 
 /**
  * Forward an activity from one ActivityMultiplexer to another.
@@ -35,10 +38,13 @@ private:
 
 	mutex ringBuffMutex;
 
+	atomic<uint32_t> pendingActivities;
+	atomic<uint64_t> droppedActivities;
+	atomic<uint64_t> droppedActivitiesDuringAnomaly;
 
-	uint64_t activitiesSendCount;
-	uint64_t activitiesReceptionConfirmed;
-	uint64_t activitiesErrorCount;
+	uint64_t activitiesSendCount = 0;
+	uint64_t activitiesReceptionConfirmed = 0;
+	uint64_t activitiesErrorCount = 0;
 
 public:
 
@@ -48,15 +54,37 @@ public:
 		report.addEntry( new GroupEntry( "activitiesSend" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesSendCount ) ));
 		report.addEntry( new GroupEntry( "activitiesReceptionConfirmed" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesReceptionConfirmed ) ));
 		report.addEntry( new GroupEntry( "activitiesErrors" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesErrorCount ) ));
+		report.addEntry( new GroupEntry( "activitiesDroppedDueToOverflow" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( droppedActivities.load() ) ));
+		report.addEntry( new GroupEntry( "activitiesAsyncDroppedDueToOverflowWhileAnomaly" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( droppedActivitiesDuringAnomaly.load() ) ));		
+		
 		return report;
+	}
+
+	void Notify( shared_ptr<Activity> element ) override {
+		if ( forwardAllActivities ){
+
+			if ( pendingActivities.load() < max_pending_ops ){
+				pendingActivities++;
+				client->isend(&*element);
+			}else{
+				droppedActivities++;
+			}
+		}		
 	}
 
 	/**
 	 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 	 */
-	virtual void NotifyAsync( int lostActivitiesCount, shared_ptr<Activity> element ) {
-		if (forwardAllActivities || anomalyStatus){
-			client->isend(&*element);
+	void NotifyAsync( int lostActivitiesCount, shared_ptr<Activity> element ) override {	
+		if ( forwardAllActivities ) return;
+
+		if ( anomalyStatus ){
+			if ( pendingActivities.load() < max_pending_ops ){
+				pendingActivities++;
+				client->isend(&*element);
+			}else{
+				droppedActivitiesDuringAnomaly++;
+			}
 		}else{
 			lock_guard<mutex> lock(ringBuffMutex);
 
@@ -100,8 +128,10 @@ public:
 			}
 
 			//cout << "sending " << realPos << " " << data->ucaid_ << endl;
-
-			client->isend( &*data );			
+			if ( pendingActivities.load() < max_pending_ops ){
+				pendingActivities++;
+				client->isend(&*data);
+			}			
 		}
 		this->sendPos = curPos;
 	}
@@ -121,6 +151,10 @@ public:
 	 * out going end of the Forwarder.
 	 */
 	void initPlugin() {
+		pendingActivities = 0;
+		droppedActivities = 0;
+		droppedActivitiesDuringAnomaly = 0;
+
 		ActivityNetworkForwarderClientOptions & options = getOptions<ActivityNetworkForwarderClientOptions>();
 		CommunicationModule * comm =  GET_INSTANCE(CommunicationModule, options.comm);
 		client = comm->startClientService(options.targetAddress, & connCallback, this);
