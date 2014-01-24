@@ -204,12 +204,12 @@ void testReasoner(){
 	Reasoner * rS = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	assert( rS != nullptr );
 	{
-	ReasonerStandardImplementationOptions & r_options = rS->getOptions<ReasonerStandardImplementationOptions>();
-	r_options.role = ReasonerStandardImplementationOptions::Role::SYSTEM;
-	r_options.communicationOptions.comm.componentPointer = comm;
-	r_options.communicationOptions.serviceAddress = "ipc://reasonerS";
-	r_options.communicationOptions.reasonerID = "system";
-	rS->init(); // This will start a separate Reasoner thread
+		ReasonerStandardImplementationOptions & r_options = rS->getOptions<ReasonerStandardImplementationOptions>();
+		r_options.role = ReasonerStandardImplementationOptions::Role::SYSTEM;
+		r_options.communicationOptions.comm.componentPointer = comm;
+		r_options.communicationOptions.serviceAddress = "ipc://reasonerS";
+		r_options.communicationOptions.reasonerID = "system";
+		rS->init(); // This will start a separate Reasoner thread
 	}
 	TestAnomalyTrigger atS;
 	rS->connectTrigger( & atS );
@@ -218,13 +218,13 @@ void testReasoner(){
 	Reasoner * rN1 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	assert( rN1 != nullptr );
 	{
-	ReasonerStandardImplementationOptions & r_options = rN1->getOptions<ReasonerStandardImplementationOptions>();
-	r_options.role = ReasonerStandardImplementationOptions::Role::NODE;
-	r_options.communicationOptions.comm.componentPointer = comm;
-	r_options.communicationOptions.serviceAddress = "ipc://reasonerN1";
-	r_options.communicationOptions.upstreamReasoner = "ipc://reasonerS";
-	r_options.communicationOptions.reasonerID = "node1";
-	rN1->init(); // This will start a separate Reasoner thread
+		ReasonerStandardImplementationOptions & r_options = rN1->getOptions<ReasonerStandardImplementationOptions>();
+		r_options.role = ReasonerStandardImplementationOptions::Role::NODE;
+		r_options.communicationOptions.comm.componentPointer = comm;
+		r_options.communicationOptions.serviceAddress = "ipc://reasonerN1";
+		r_options.communicationOptions.upstreamReasoner = "ipc://reasonerS";
+		r_options.communicationOptions.reasonerID = "node1";
+		rN1->init(); // This will start a separate Reasoner thread
 	}
 	TestAnomalyTrigger atN1a;
 	rN1->connectTrigger( & atN1a );
@@ -249,13 +249,13 @@ void testReasoner(){
 	Reasoner * rP11 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	assert( rP11 != nullptr );
 	{
-	ReasonerStandardImplementationOptions & r_options = rP11->getOptions<ReasonerStandardImplementationOptions>();
-	r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
-	r_options.communicationOptions.comm.componentPointer = comm;
-	r_options.communicationOptions.serviceAddress = "ipc://reasonerP11";
-	r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
-	r_options.communicationOptions.reasonerID = "process11";
-	rP11->init(); // This will start a separate Reasoner thread
+		ReasonerStandardImplementationOptions & r_options = rP11->getOptions<ReasonerStandardImplementationOptions>();
+		r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
+		r_options.communicationOptions.comm.componentPointer = comm;
+		r_options.communicationOptions.serviceAddress = "ipc://reasonerP11";
+		r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
+		r_options.communicationOptions.reasonerID = "process11";
+		rP11->init(); // This will start a separate Reasoner thread
 	}
 	TestAnomalyTrigger atP11a;
 	rP11->connectTrigger( & atP11a );
@@ -267,13 +267,13 @@ void testReasoner(){
 	Reasoner * rP12 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	assert( rP12 != nullptr );
 	{
-	ReasonerStandardImplementationOptions & r_options = rP12->getOptions<ReasonerStandardImplementationOptions>();
-	r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
-	r_options.communicationOptions.comm.componentPointer = comm;
-	r_options.communicationOptions.serviceAddress = "ipc://reasonerP12";
-	r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
-	r_options.communicationOptions.reasonerID = "process12";
-	rP12->init(); // This will start a separate Reasoner thread
+		ReasonerStandardImplementationOptions & r_options = rP12->getOptions<ReasonerStandardImplementationOptions>();
+		r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
+		r_options.communicationOptions.comm.componentPointer = comm;
+		r_options.communicationOptions.serviceAddress = "ipc://reasonerP12";
+		r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
+		r_options.communicationOptions.reasonerID = "process12";
+		rP12->init(); // This will start a separate Reasoner thread
 	}
 	TestAnomalyTrigger atP12a;
 	rP12->connectTrigger( & atP12a );
@@ -287,13 +287,13 @@ void testReasoner(){
 	Reasoner * rP13 = core::module_create_instance<Reasoner>( "", "siox-knowledge-ReasonerStandardImplementation", KNOWLEDGE_REASONER_INTERFACE );
 	assert( rP13 != nullptr );
 	{
-	ReasonerStandardImplementationOptions & r_options = rP13->getOptions<ReasonerStandardImplementationOptions>();
-	r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
-	r_options.communicationOptions.comm.componentPointer = comm;
-	r_options.communicationOptions.serviceAddress = "ipc://reasonerP13";
-	r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
-	r_options.communicationOptions.reasonerID = "process13";
-	rP13->init(); // This will start a separate Reasoner thread
+		ReasonerStandardImplementationOptions & r_options = rP13->getOptions<ReasonerStandardImplementationOptions>();
+		r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
+		r_options.communicationOptions.comm.componentPointer = comm;
+		r_options.communicationOptions.serviceAddress = "ipc://reasonerP13";
+		r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
+		r_options.communicationOptions.reasonerID = "process13";
+		rP13->init(); // This will start a separate Reasoner thread
 	}
 	TestAnomalyTrigger atP13a;
 	rP13->connectTrigger( & atP13a );
@@ -346,13 +346,13 @@ void testReasoner(){
 
 
 	// Now we inject an observation which will trigger a reaction:
-	adpiP11a.injectObservation( {{0,0,0},1}, HealthState::SLOW, "SlownessIssue", 10 );
+	adpiP11a.injectObservation( {{1,1,1},1}, HealthState::SLOW, "SlownessIssue", 10 );
 	usleep(500);
-	adpiN1a.injectObservation( {{0,0,0},3}, HealthState::FAST, "Quickness Issue", -70 );
+	adpiN1a.injectObservation( {{3,3,3},3}, HealthState::FAST, "Quickness Issue", -70 );
 	usleep(500);
-	adpiP11a.injectObservation( {{0,0,0},2}, HealthState::SLOW, "Slowness Issue", 10 );
+	adpiP11a.injectObservation( {{2,2,2},2}, HealthState::SLOW, "Slowness Issue", 10 );
 	usleep(500);
-	adpiP11a.injectObservation( {{0,0,0},1}, HealthState::ABNORMAL_SLOW, "Standstill Issue", 10 );
+	adpiP11a.injectObservation( {{1,1,1},1}, HealthState::ABNORMAL_SLOW, "Standstill Issue", 10 );
 
 /*
 	assert( at2.waitForAnomalyCount( 1 ) );
@@ -397,6 +397,9 @@ void testReasoner(){
 	delete(rS);
 
 	delete(comm);
+
+	ComponentID cid = {{1,2,3},4};
+	cout << "Cid=" << cid << endl;
 }
 
 
