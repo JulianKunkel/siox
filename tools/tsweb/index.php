@@ -23,9 +23,9 @@ require_once("header.php");
 <table cellspacing="0" cellpadding="0">
 <thead>
 	<tr>
-		<th colspan="2" style="text-align: left"><a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
+		<th colspan="2" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
 		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="2" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a></th>
+		<th colspan="2" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
 	</tr>
 	<tr>
 		<th>#</th>
@@ -51,9 +51,9 @@ require_once("header.php");
 </tbody>
 <tfoot>
 	<tr>
-		<th colspan="2" style="text-align: left"><a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
+		<th colspan="2" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
 		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="2" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a></th>
+		<th colspan="2" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
 	</tr>
 </tfoot>
 </table>
