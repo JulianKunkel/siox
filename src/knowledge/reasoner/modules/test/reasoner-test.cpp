@@ -236,9 +236,10 @@ void testReasoner(){
 	AnomalyInjectorPlugin adpiN1b;
 	{
 		AnomalyInjectorPluginOptions & aipOptions = adpiN1b.getOptions<AnomalyInjectorPluginOptions>();
+		aipOptions.issueName = "Gaussian Issue";
 		aipOptions.intervalMean = 75.0;
-		aipOptions.deltaTimeMean = 10.0;
-		aipOptions.deltaTimeVariance = 25.0;
+		aipOptions.deltaTimeMean = 15.0;
+		aipOptions.deltaTimeVariance = 0.0; //15.0;
 		rN1->connectAnomalyPlugin( & adpiN1b );
 		adpiN1b.initPlugin();
 	}
@@ -381,6 +382,7 @@ void testReasoner(){
 	cout << "HealthStatistics gathered by N1: " << *statsN1 << endl;
 	cout << "Anomalies at atN1a: " << atN1a.anomaliesTriggered << endl;
 	cout << "Anomalies at atN1b: " << atN1b.anomaliesTriggered << endl;
+	// cout << adpiN1b << endl;
 
 	cout << endl << ((ReasonerStandardImplementation *) rS);
 

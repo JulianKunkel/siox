@@ -46,12 +46,16 @@ class AnomalyInjectorPlugin: public ActivityMultiplexerPlugin, public ComponentR
 
 		~AnomalyInjectorPlugin();
 
+		friend ostream & operator<<( ostream & os, AnomalyInjectorPlugin & aipi );
+
 
 	private:
 
 		// ComponentID to attribute anomalies to
 		ComponentID cid;
 
+		// Name for issue to inject
+		string issueName;
 		// Random generator for intervals and
 		random_device rd;
 		// Mean of Exponential distribution for interval between two anomaly injections in microseconds
@@ -106,6 +110,7 @@ void AnomalyInjectorPlugin::initPlugin()
 	AnomalyInjectorPluginOptions & o = getOptions<AnomalyInjectorPluginOptions>();
 
 	// Retrieve parameters for anomaly generation
+	issueName = o.issueName;
 	intervalMean = (o.intervalMean > 0 ? o.intervalMean : -o.intervalMean );
 	if (intervalMean < 10.0)
 		intervalMean = 10.0;
@@ -125,12 +130,11 @@ AnomalyInjectorPlugin::~AnomalyInjectorPlugin()
 	// Safely notify generator thread of termination
 	generatorMutex.lock();
 	terminate = true;
-	cout << "Generator stop..." << endl;
+	// cout << "Generator stop..." << endl;
 	generatorSleep.notify_one();
 	generatorMutex.unlock();
 	generatorThread.join();
-	cout << "Generator stopped!" << endl;
-	cout << "Total sleep time: " << sumSleep << "; sleep cycles: " << numSleep << "; average nap duration: " << (sumSleep / numSleep) << endl;
+	// cout << "Generator stopped!" << endl;
 }
 
 
@@ -148,7 +152,6 @@ void AnomalyInjectorPlugin::generateAnomaly()
 	unsigned int sleepTime;
 
 	HealthState state = HealthState::OK;
-	string issue = "Test issue";
 	int32_t delta_time_ms = 50;
 
 	// Create distribution for interval until next injection
@@ -178,13 +181,12 @@ void AnomalyInjectorPlugin::generateAnomaly()
 			state = HealthState::OK;
 
 		// Actually inject the issue generated
-		addObservation( cid, state,  issue, delta_time_ms );
-
-		sumSleep += sleepTime;
-		numSleep++;
+		addObservation( cid, state,  issueName, delta_time_ms );
 
 		// Unless termination has been requested, go to sleep until the next injection is due
 		unique_lock<mutex> generatorLock( generatorMutex );
+		nAnomaliesGenerated++;
+		sumSleep += sleepTime;
 		if( terminate )
 			break;
 		generatorSleep.wait_until( generatorLock, wakeupTime );
@@ -200,6 +202,19 @@ ComponentReport AnomalyInjectorPlugin::prepareReport()
 
 	return result;
 }
+
+inline ostream & operator<<( ostream & os, AnomalyInjectorPlugin & aipi )
+{
+	{ // Disallow generator's access to data fields
+		lock_guard<mutex> generatorLock(aipi.generatorMutex);
+
+		os << "[AnomalyInjector(" << aipi.intervalMean << ",(" << aipi.deltaTimeMean << "," << aipi.deltaTimeVariance << ")): ";
+		os << aipi.nAnomaliesGenerated << "x \"" << aipi.issueName << "\" in ";
+		os << aipi.sumSleep << " ms; average nap: " << (aipi.sumSleep / aipi.nAnomaliesGenerated) << " ms]";
+	}
+	return os;
+}
+
 
 
 
