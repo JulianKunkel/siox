@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include <mutex>
 
 #include <util/ExceptionHandling.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
@@ -114,6 +115,8 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		string interface;
 		string implementation;
 		UniqueInterfaceID uiid;
+		
+		mutex  giant_mutex;
 
 		// OAIDs of various attributes
 		OntologyAttributeID uidAttID;	// user-id
@@ -311,8 +314,10 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 			OUTPUT( "No valid user ID in activity" << activity->aid() << "!" << endl );
 		}
 
-		openFileSurveys[ activity->aid() ] = survey;
-
+		{
+			unique_lock<mutex> lock( giant_mutex );
+			openFileSurveys[ activity->aid() ] = survey;
+		}
 	}
 	//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
 }
@@ -329,6 +334,8 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 
 	if( parentAID != NULL )
 	{
+		unique_lock<mutex> lock( giant_mutex );
+
 		FileSurvey * survey;
 
 		try {
@@ -440,8 +447,10 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 	if( parentAID != NULL )
 	{
 		FileSurvey survey;
-
-		try {
+		
+		unique_lock<mutex> lock( giant_mutex );
+		
+		try {			
 			survey = openFileSurveys.at( *parentAID );
 		}
 		catch( NotFoundError ) {

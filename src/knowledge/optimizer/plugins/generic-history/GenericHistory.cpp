@@ -3,6 +3,7 @@
 #include <list>
 #include <unordered_map>
 #include <algorithm>
+#include <mutex>
 
 #include <util/ExceptionHandling.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
@@ -97,6 +98,8 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 		///////////////////////////
 
+		mutex giant_mutex;
+
 		int initLevel = 0;
 		const int initializedLevel = -1;
 
@@ -130,9 +133,12 @@ ComponentOptions * GenericHistoryPlugin::AvailableOptions() {
 void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 	TRACK_FUNCTION_CALLS
 	//cout <<"[GenericHistory]: " << "received " << activity << endl;
-	if( !tryEnsureInitialization() ) return;
+	if( ! tryEnsureInitialization() ) return;
 
 	TokenType type = UNKNOWN;
+	
+	unique_lock<mutex> lock( giant_mutex );
+
 	IGNORE_EXCEPTIONS( type = types.at( activity->ucaid() ); );
 
 	nTypes[type]++;
@@ -140,6 +146,7 @@ void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
 //	cerr <<"[GenericHistory]: " << "saw activity of type " << activity->ucaid() << " => ";
 //	for(size_t i = 0; i < TOKEN_TYPE_COUNT; i++) cerr << nTypes[i] << " ";
 //	cerr << "\n";
+
 
 	switch (type) {
 
@@ -359,6 +366,8 @@ ComponentReport GenericHistoryPlugin::prepareReport() {
 
 
 bool GenericHistoryPlugin::tryEnsureInitialization() {
+	unique_lock<mutex> lock( giant_mutex );
+
 	TRACK_FUNCTION_CALLS
 	if( initLevel == initializedLevel ) return true;
 	if( !initLevel ) return false;	//initPlugin() must be called from outside first!

@@ -36,17 +36,22 @@ struct AnomalyPluginHealthStatistic{
 	unordered_map<string, HealthIssue> negativeIssues;
 
 
-	string to_string(){
+	friend std::ostream & operator<<( std::ostream & os, const AnomalyPluginHealthStatistic & aphs )
+	{
 		ostringstream result;
 
-		result << "[CID " << cid << ": #";
+		result << "[CID " << aphs.cid << ": #";
         for( int state = 0; state < HEALTH_STATE_COUNT; state++)
-	        result << occurrences[state] << "#";
-	    result << " +" << positiveIssues.size();
-	    result << " -" << negativeIssues.size();
+	        result << aphs.occurrences[state] << "#";
+	    result << " +" << aphs.positiveIssues.size() << ":";
+	    for (auto issue : aphs.positiveIssues)
+	    	result << issue.second;
+	    result << " -" << aphs.negativeIssues.size() << ":";
+	    for (auto issue : aphs.negativeIssues)
+	    	result << issue.second;
 	    result << "]";
 
-		return result.str();
+		return os << result.str();
 	}
 };
 
@@ -59,15 +64,16 @@ struct HealthStatistics{
 	unordered_map<ComponentID, AnomalyPluginHealthStatistic> map;
 
 
-	string to_string(){
+	friend std::ostream & operator<<( std::ostream & os, const HealthStatistics & hs )
+	{
 		ostringstream result;
 
 		result << "[" << endl;
-        for( auto itr = map.begin(); itr != map.end(); itr++ )
-        	result << "\t" << itr->second.to_string() << endl;
+        for( auto aphs : hs.map )
+        	result << "\t" << aphs.second << endl;
 		result << "]";
 
-		return result.str();
+		return os << result.str();
 	}
 };
 

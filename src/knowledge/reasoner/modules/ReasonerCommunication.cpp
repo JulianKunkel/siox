@@ -23,7 +23,9 @@ void ReasonerCommunication::init(ReasonerCommunicationOptions & options){
 	this->reasonerID = options.reasonerID;
 
 	// spawn the server upon which we receive the remote status of different nodes.
-	server = comm->startServerService(options.serviceAddress, this);
+	if ( options.serviceAddress != "" ){
+		server = comm->startServerService(options.serviceAddress, this);
+	}
 
 	if ( options.upstreamReasoner != "" ){
 		upstreamReasoner = comm->startClientService( options.upstreamReasoner, this, this );

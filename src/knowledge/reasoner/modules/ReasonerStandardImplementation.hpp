@@ -34,7 +34,7 @@ using namespace core;
 
 namespace knowledge {
 
-class ReasonerStandardImplementation : public Reasoner, ReasoningDataReceivedCB, ComponentReportInterface {
+class ReasonerStandardImplementation : public Reasoner, public ReasoningDataReceivedCB, public ComponentReportInterface {
 private:
 		ReasonerStandardImplementationOptions::Role role; // Our scope: PROCESS, NODE or SYSTEM
 		string id;
@@ -45,7 +45,7 @@ private:
 
 		QualitativeUtilization * utilization;
 
-
+		// Fields to coordinate threaded behaviour
 		thread                  periodicThread;
 		mutex 					pluginMutex; // To protect state of registered plugins
 		mutex 					dataMutex; // To protect state of aggregated data
@@ -56,14 +56,18 @@ private:
 
 		uint32_t update_intervall_ms = -1;
 
+		// Fields used for communicatiion
 		ReasonerCommunication * comm;
 		bool upstreamReasonerExists = false;
+		uint64_t nPushesSent = 0;
+		uint64_t nPushesReceived = 0;
 
 		// for each host (by ID) we store the latest observation
 		// unordered_map<string, pair<Timestamp, set<HealthStatistics>> > remoteIssues;
 
-		// Fields to hold current state and past observations
-		//
+		/*
+		 * Fields to hold current state and past observations
+		 */
 		// Local or neighbouring reasoners' states, depending on our role
 		shared_ptr<ProcessHealth> processHealth;
 		shared_ptr<NodeHealth> nodeHealth;
@@ -75,17 +79,16 @@ private:
 		shared_ptr<HealthStatistics> gatheredStatistics;
 		uint64_t observationTotal = 0;
 		array<uint64_t, HEALTH_STATE_COUNT> observationCounts;
-		array<uint8_t, HEALTH_STATE_COUNT> observationRatios;
+		array<int, HEALTH_STATE_COUNT> observationRatios;
 		uint64_t oldObservationTotal = 0;
 		array<uint64_t, HEALTH_STATE_COUNT> oldObservationCounts;
-		array<uint8_t, HEALTH_STATE_COUNT> oldObservationRatios;
+		array<int, HEALTH_STATE_COUNT> oldObservationRatios;
 
 		// Methods to compute local health - according to our scope - from observations
 		void assessProcessHealth();
 		void assessNodeHealth();
 		void assessSystemHealth();
 
-		// void mergeObservations(list<ProcessHealth> & l, Health & health, array<uint8_t, HEALTH_STATE_COUNT> & observationRatios, uint64_t & observationCount);
 protected:
 	ComponentOptions * AvailableOptions() {
 			return new ReasonerStandardImplementationOptions();

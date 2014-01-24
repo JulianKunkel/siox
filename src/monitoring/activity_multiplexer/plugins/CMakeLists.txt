@@ -7,6 +7,7 @@ add_subdirectory(filewriter)
 add_subdirectory(fadviseReadAhead)
 add_subdirectory(file-surveyor)
 add_subdirectory(activity-histogram-adpi)
+add_subdirectory(anomaly-injector)
 
 if (PostgreSQL_FOUND)
 	add_subdirectory(postgres_writer)
