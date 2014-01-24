@@ -138,14 +138,7 @@ namespace monitoring {
 		uint32_t time;
 
 		inline bool operator==( ProcessID const & b ) const {
-			if( nid != b.nid )
-				return false;
-			if( pid != b.pid )
-				return false;
-			if( time != b.time )
-				return false;
-
-			return true;
+			return nid == b.nid && pid == b.pid && time == b.time;
 		}
 
 		inline bool operator!=( ProcessID const & b ) const {
@@ -153,7 +146,11 @@ namespace monitoring {
 		}
 
 		inline bool operator<( ProcessID const & b ) const {
-			return nid < b.nid || pid < b.pid || time < b.time;
+			if( nid < b.nid ) return true;
+			if( nid > b.nid ) return false;
+			if( pid < b.pid ) return true;
+			if( pid > b.pid ) return false;
+			return time < b.time;
 		}
 
 	};
@@ -188,10 +185,7 @@ namespace monitoring {
 		uint16_t id;
 
 		inline bool operator==( ComponentID const & b ) const {
-			if( id != b.id )
-				return false;
-
-			return pid == b.pid;
+			return id == b.id && pid == b.pid;
 		}
 
 		inline bool operator!=( ComponentID const & b ) const {
@@ -199,7 +193,9 @@ namespace monitoring {
 		}
 
 		inline bool operator<( ComponentID const & b ) const {
-			return id < b.id || pid < b.pid;
+			if( id < b.id ) return true;
+			if( id > b.id ) return false;
+			return pid < b.pid;
 		}
 	};
 

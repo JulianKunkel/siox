@@ -264,6 +264,8 @@ namespace monitoring {
 			// statistics about operation:
 			uint64_t lost_events = 0;
 			uint64_t processed_activities = 0;
+
+			uint64_t processed_events_in_async = 0;
 	public:
 
 			~ActivityMultiplexerAsync() {
@@ -282,6 +284,7 @@ namespace monitoring {
 
 			rep.addEntry("ASYNC_DROPPED_ACTIVITIES", {ReportEntry::Type::SIOX_INTERNAL_CRITICAL, lost_events});
 			rep.addEntry("PROCESSED_ACTIVITIES", {ReportEntry::Type::SIOX_INTERNAL_INFO, processed_activities});
+			rep.addEntry("PROCESSED_ACTIVITIES_ASYNC", {ReportEntry::Type::SIOX_INTERNAL_INFO, processed_events_in_async});
 
 			return rep;
 		}
@@ -315,15 +318,14 @@ namespace monitoring {
 			 * @param	lost	lost activtiy count
 			 * @param	work	activtiy as void pointer to support abstract notifier
 			 */
-			virtual void Dispatch(int lost, void * work) {
-			//virtual void Dispatch(int lost, shared_ptr<Activity> activity) {
-				//printf("dispatch: %p\n", work);
+			virtual void Dispatch(int lost, void * work) {				
 				shared_ptr<Activity> activity = *(shared_ptr<Activity>*) work;
 				assert( activity != nullptr );
 				//boost::shared_lock<boost::shared_mutex> lock( asyncQueueMutex );
 				for(auto l = listeners.begin(); l != listeners.end() ; l++){
 					(*l)->NotifyAsync(lost, activity);
 				}
+				processed_events_in_async++;
 			}
 
 			/**

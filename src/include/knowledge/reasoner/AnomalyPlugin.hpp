@@ -90,9 +90,9 @@ class AnomalyPlugin {
 			// Disallow other access to aggregated data fields
 			unordered_map<ComponentID, AnomalyPluginHealthStatistic> * tmp;
 			{
-			unique_lock<mutex> dataLock( dataMutex );
-			tmp = recentObservations;
-			recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
+				unique_lock<mutex> dataLock( dataMutex );
+				tmp = recentObservations;
+				recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
 			}
 
 			return unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>(tmp);
@@ -139,7 +139,7 @@ class AnomalyPlugin {
 
 		void addObservation( ComponentID cid, HealthState state,  const string & issue, int32_t delta_time_ms )
 		{	// Disallow other access to aggregated data fields
-			unique_lock<mutex> dataLock( dataMutex );
+			lock_guard<mutex> dataLock( dataMutex );
 
 			unordered_map<ComponentID, AnomalyPluginHealthStatistic>::iterator find = recentObservations->find( cid );
 
