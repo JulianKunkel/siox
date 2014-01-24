@@ -8,7 +8,11 @@ require_once("header.php");
 
 <h1>Activity List</h1>
 
-<?php $activities = Activity::get_list(); ?>
+<?php $page_size = 200; ?>
+<?php $total_activities = Activity::get_count(); ?>
+<?php $total_pages = ceil($total_activities / $page_size); ?>
+<?php $current_page = isset($_GET['page']) ? $_GET['page'] : $total_pages; ?>
+<?php $activities = Activity::get_list($current_page, $page_size); ?>
 
 <form name="purge_frm" method="post" action="purge.php">
 	<input type="submit" value="Purge all actvities" onclick="return confirm('Dude, you are gonna delete all data. Are you sure?')" />
@@ -18,6 +22,11 @@ require_once("header.php");
 
 <table cellspacing="0" cellpadding="0">
 <thead>
+	<tr>
+		<th colspan="2" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
+		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
+		<th colspan="2" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
+	</tr>
 	<tr>
 		<th>#</th>
 		<th>Function</th>
@@ -40,6 +49,13 @@ require_once("header.php");
 	</tr>
 <?php endforeach ?>
 </tbody>
+<tfoot>
+	<tr>
+		<th colspan="2" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
+		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
+		<th colspan="2" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
+	</tr>
+</tfoot>
 </table>
 
 <?php require_once("footer.php"); ?>

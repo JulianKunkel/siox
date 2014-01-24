@@ -17,6 +17,9 @@ struct AnomalyInjectorPluginOptions : public ActivityMultiplexerPluginOptions{
 	// Random seed for plugin; set to 0 for "true random"
 	// TODO
 
+	// Name for anomaly to inject
+	string issueName = "TestIssue";
+
 	// Mean of Geometric distribution for interval between two anomaly injections in ms
 	float intervalMean = 80.0;
 

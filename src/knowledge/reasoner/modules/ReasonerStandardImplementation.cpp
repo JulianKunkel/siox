@@ -75,10 +75,8 @@ shared_ptr<NodeHealth> ReasonerStandardImplementation::getNodeHealth(){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
-			assessNodeHealth();
+		if ( role == ReasonerStandardImplementationOptions::Role::NODE )
 			return nodeHealth;
-		}
 	}
 	// For other roles, return NULL; this should never happen
 	return nullptr;
@@ -157,14 +155,16 @@ void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessag
 
 
 void ReasonerStandardImplementation::PeriodicRun(){
-	bool persistingAnomaly = false;
+	bool persistingAnomaly; // Last cycle's anomalyDetected
+	bool anomalyDetected = false;
+
 	while( ! terminated ) {
 		// cout << "PeriodicRun started" << endl;
 
 		auto timeout = chrono::system_clock::now() + chrono::milliseconds( update_intervall_ms );
 
-		bool anomalyDetected = false;
-
+		persistingAnomaly = anomalyDetected;
+		anomalyDetected = false;
 
 		/*
 		 * Query all registered ADPIs for news and aggregate them
@@ -213,13 +213,14 @@ void ReasonerStandardImplementation::PeriodicRun(){
 
 						}
 
-						// Merge positive issues into gatheredStatistics and *local Health
+						// Merge positive issues into gatheredStatistics and *localHealth
 						unordered_map<string, HealthIssue> * sourceIssueMap = & (report.second.positiveIssues);
 						unordered_map<string, HealthIssue> * targetIssueMap = & (gatheredStatistics->map[report.first].positiveIssues);
 						list<HealthIssue> * targetIssueList = & (localHealth->positiveIssues);
 						for ( auto issue : *sourceIssueMap )
 						{
 							// cout << id << " received issue: "<< issue.second << endl;
+
 							{ // gatheredStatistics
 								auto precedent = targetIssueMap->find( issue.first );
 								if ( precedent == targetIssueMap->end() )
@@ -241,25 +242,32 @@ void ReasonerStandardImplementation::PeriodicRun(){
 							}
 						}
 
-						// Merge negative issues into gatheredStatistics and local Health
+						// Merge negative issues into gatheredStatistics and *localHealth
 						sourceIssueMap = & (report.second.negativeIssues);
 						targetIssueMap = & (gatheredStatistics->map[report.first].negativeIssues);
 						targetIssueList = & (localHealth->negativeIssues);
 						for ( auto issue : *sourceIssueMap )
 						{
 							// cout << id << " received issue: "<< issue.second << endl;
-							// gatheredStatistics
+
+							{ // gatheredStatistics
 							auto precedent = targetIssueMap->find( issue.first );
-							if ( precedent == targetIssueMap->end() )
+							if ( precedent == targetIssueMap->end() ){
 								(*targetIssueMap)[issue.first] = HealthIssue( issue.first, issue.second.occurrences, issue.second.delta_time_ms );
-							else
+								// cout << "Created " << (*targetIssueMap)[issue.first] << endl;
+							}
+							else{
 								precedent->second.add(issue.second);
+								// cout << "Added to " << precedent->second << endl;
+							}
+							}
 
 							{ // *localHealth
 								HealthIssue * precedent = nullptr;
 								for( auto candidate : *targetIssueList ){
-									if ( candidate.name == issue.first )
+									if ( candidate.name == issue.first ){
 										precedent = & candidate;
+									}
 								}
 								if( precedent == nullptr )
 									targetIssueList->push_back( HealthIssue( issue.first, issue.second.occurrences, issue.second.delta_time_ms ) );
@@ -497,17 +505,17 @@ std::ostream & operator<<( std::ostream & os, const ReasonerStandardImplementati
 
 
 void ReasonerStandardImplementation::assessNodeHealth(){
-	// cout << "Reasoner " << id << " assessing NODE health..." << endl;
 /*
 	// Input: node statistics, process health, system health
 	// Configuration: global reasoner address, local address
 	// Result: node health
 */
-/*
+	// cout << "Reasoner " << id << " assessing NODE health..." << endl;
+
+
 	// Create fresh NodeHealth to hold our results
-	NodeHealth newHealth(*nodeHealth);
-	nodeHealth = make_shared<NodeHealth>(newHealth);
-*/
+	shared_ptr<NodeHealth> newHealth = make_shared<NodeHealth>();
+
 	// determine node health based on the historic knowledge AND the statistics
 	if ( nodeHealth->occurrences[ABNORMAL_FAST] || nodeHealth->occurrences[ABNORMAL_SLOW] || nodeHealth->occurrences[ABNORMAL_OTHER] ){
 		// we have a condition in which we must fire the anomaly trigger.
@@ -516,14 +524,14 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_SLOW] &&
 			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
-			nodeHealth->overallState = HealthState::ABNORMAL_FAST;
+			newHealth->overallState = HealthState::ABNORMAL_FAST;
 		}else if (observationRatios[ABNORMAL_SLOW] > 5 &&
 			observationRatios[ABNORMAL_SLOW] > 2 * observationRatios[ABNORMAL_FAST] &&
 			observationRatios[ABNORMAL_SLOW] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
-			nodeHealth->overallState = HealthState::ABNORMAL_SLOW;
+			newHealth->overallState = HealthState::ABNORMAL_SLOW;
 		}else{
-			nodeHealth->overallState = HealthState::ABNORMAL_OTHER;
+			newHealth->overallState = HealthState::ABNORMAL_OTHER;
 		}
 	}else{
 		// cout << "Checkpoint 1b passed..." << endl;
@@ -533,33 +541,33 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 			observationRatios[FAST] > 3*observationRatios[SLOW] )
 		{
 			// cout << "Checkpoint 1ba passed..." << endl;
-			nodeHealth->overallState = HealthState::FAST;
+			newHealth->overallState = HealthState::FAST;
 		}else if ( observationRatios[SLOW] > 5 &&
 			observationRatios[SLOW] > 3*observationRatios[FAST] )
 		{
 			// cout << "Checkpoint 1bb passed..." << endl;
-			nodeHealth->overallState = HealthState::SLOW;
+			newHealth->overallState = HealthState::SLOW;
 		}else{
 			// cout << "Checkpoint 1bc passed..." << endl;
-			nodeHealth->overallState = HealthState::OK;
+			newHealth->overallState = HealthState::OK;
 		}
 	}
 
 	// cout << "Checkpoint 2 passed..." << endl;
 	// If the current state is not OK and a statistics behaves suboptimal, we can take this into account and potentially add new issues and even set the health state to OK.
-	if ( nodeHealth->overallState != HealthState::OK ){
+	if ( newHealth->overallState != HealthState::OK ){
 		uint totalUtilization = 0;
 
-		if ( nodeHealth->overallState == HealthState::SLOW || nodeHealth->overallState == HealthState::ABNORMAL_SLOW || nodeHealth->overallState == HealthState::ABNORMAL_OTHER ){
+		if ( newHealth->overallState == HealthState::SLOW || newHealth->overallState == HealthState::ABNORMAL_SLOW || newHealth->overallState == HealthState::ABNORMAL_OTHER ){
 
 			for(int i=0; i < UTILIZATION_STATISTIC_COUNT; i++ ){
-				totalUtilization += nodeHealth->utilization[i];
-				if ( nodeHealth->utilization[i] > 80 ){ // if more than 80% utilization in one category
+				totalUtilization += newHealth->utilization[i];
+				if ( newHealth->utilization[i] > 80 ){ // if more than 80% utilization in one category
 					// overloaded!
-					nodeHealth->negativeIssues.push_back( { toString( (UtilizationIndex) i) + " overloaded", 1, 0 } );
+					newHealth->negativeIssues.push_back( { toString( (UtilizationIndex) i) + " overloaded", 1, 0 } );
 					// actually the decision should depend on this nodes role. A compute node is expected to have a high CPU and MEMORY utilization...
 					// TODO
-					nodeHealth->overallState = HealthState::OK;
+					newHealth->overallState = HealthState::OK;
 				}
 			}
 			if ( totalUtilization > 60*4 ){ // the overall system is overloaded
@@ -569,19 +577,14 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 	}
 /*
 */
+
+	nodeHealth = newHealth;
 	// cout << "State of resoner " << id << ": " << toString(nodeHealth->overallState) << endl;
 }
 
 
 void ReasonerStandardImplementation::assessProcessHealth(){
-	// cout << "Reasoner " << id << " assessing PROCESS health..." << endl;
-	// FIXME: Implementieren!
-/*
-	ProcessHealth newHealth(*processHealth);
-	processHealth = make_shared<ProcessHealth>(newHealth);
-*/
 	// Input: node health, system health, activity anomalies from the plugins: the AnomalyPluginHealthStatistic
-
 	// Configuration: address of node global reasoner
 	// Result: process health (& user information upon process termination)
 	/*
@@ -596,21 +599,32 @@ void ReasonerStandardImplementation::assessProcessHealth(){
 		Compact process health (for the last interval) like for node etc.
   	 */
 
+	// cout << "Reasoner " << id << " assessing PROCESS health..." << endl;
+
+	shared_ptr<ProcessHealth> newHealth = make_shared<ProcessHealth>();
+
+	// FIXME: Implementieren!
+
+	processHealth = newHealth;
 	// cout << "State of resoner " << id << ": " << toString(processHealth->overallState) << endl;
 }
 
 
 
 void ReasonerStandardImplementation::assessSystemHealth(){
-	// cout << "Reasoner " << id << " assessing SYSTEM health..." << endl;
-	// FIXME: Implementieren!
-
 	// Input: node health
 	// Configuration: set of nodes belonging to each file system (at the moment we consider only  one file system)
 	// Result: system health
 	// Test case
 	// Three nodes report overlapping issues.
 
+	// cout << "Reasoner " << id << " assessing SYSTEM health..." << endl;
+
+	shared_ptr<SystemHealth> newHealth = make_shared<SystemHealth>();
+
+	// FIXME: Implementieren!
+
+	systemHealth = newHealth;
 	// cout << "State of resoner " << id << ": " << toString(systemHealth->overallState) << endl;
 }
 
