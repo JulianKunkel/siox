@@ -1,0 +1,9 @@
+Execute with:
+pgbench -U postgres -p 48142 -f bench.psql benchdb
+
+Useful options:
+-t number of repetitions (or "transactions")
+-c number of clients
+
+More info at: http://www.postgresql.org/docs/9.1/static/pgbench.html
+
