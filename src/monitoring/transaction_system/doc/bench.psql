@@ -1,0 +1,49 @@
+\setrandom id           1 1000000
+\setrandom thread_id    1 100
+\setrandom cid_id       1 1000
+\setrandom cid_pid_nid  1 1000
+\setrandom cid_pid_pid  1 1000
+\setrandom cid_pid_time 1 1000
+\setrandom unique_id    1 100000000
+\setrandom time_start   1 10000
+\setrandom time_stop    1 10000
+\setrandom error_value  1 100
+\setrandom ucaid        1 1000
+BEGIN;
+SELECT unique_id FROM activity_ids WHERE id=:id AND thread_id=:thread_id AND cid_id=:cid_id AND cid_pid_nid=:cid_pid_nid AND cid_pid_pid=:cid_pid_pid AND cid_pid_time=:cid_pid_time;
+INSERT INTO activity_ids (id, thread_id, cid_pid_nid, cid_pid_pid, cid_pid_time, cid_id) VALUES (:id, :thread_id, :cid_pid_nid, :cid_pid_pid, :cid_pid_time, :cid_id);
+
+\setrandom id           1 1000000
+\setrandom thread_id    1 100
+\setrandom cid_id       1 1000
+\setrandom cid_pid_nid  1 1000
+\setrandom cid_pid_pid  1 1000
+\setrandom cid_pid_time 1 1000
+\setrandom unique_id    1 100000000
+\setrandom time_start   1 10000
+\setrandom time_stop    1 10000
+\setrandom error_value  1 100
+\setrandom ucaid        1 1000
+SELECT unique_id FROM activity_ids WHERE id=:id AND thread_id=:thread_id AND cid_id=:cid_id AND cid_pid_nid=:cid_pid_nid AND cid_pid_pid=:cid_pid_pid AND cid_pid_time=:cid_pid_time;
+INSERT INTO activity_ids (id, thread_id, cid_pid_nid, cid_pid_pid, cid_pid_time, cid_id) VALUES (:id, :thread_id, :cid_pid_nid, :cid_pid_pid, :cid_pid_time, :cid_id);
+INSERT INTO parents VALUES (:unique_id, :id);
+
+\setrandom id           1 1000000
+\setrandom thread_id    1 100
+\setrandom cid_id       1 1000
+\setrandom cid_pid_nid  1 1000
+\setrandom cid_pid_pid  1 1000
+\setrandom cid_pid_time 1 1000
+\setrandom unique_id    1 100000000
+\setrandom time_start   1 10000
+\setrandom time_stop    1 10000
+\setrandom error_value  1 100
+\setrandom ucaid        1 1000
+SELECT unique_id FROM activity_ids WHERE id=:id AND thread_id=:thread_id AND cid_id=:cid_id AND cid_pid_nid=:cid_pid_nid AND cid_pid_pid=:cid_pid_pid AND cid_pid_time=:cid_pid_time;
+INSERT INTO activity_ids (id, thread_id, cid_pid_nid, cid_pid_pid, cid_pid_time, cid_id) VALUES (:id, :thread_id, :cid_pid_nid, :cid_pid_pid, :cid_pid_time, :cid_id);
+INSERT INTO parents VALUES (:unique_id, :id)
+
+INSERT INTO activities (ucaid, time_start, time_stop, error_value, attributes) VALUES (:ucaid, :time_start, :time_stop, :error_value, 'Generic attribute');
+
+END;
+

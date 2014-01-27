@@ -207,9 +207,11 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						for ( int healthState=0; healthState < HEALTH_STATE_COUNT; healthState++ ){
 							// cout << "healthState = " << healthState;
 							// cout << "\tBefore: " << gatheredStatistics->map[report.first].occurrences[healthState];
+							gatheredStatistics->map[report.first].cid = report.first;
 							gatheredStatistics->map[report.first].occurrences[healthState] += report.second.occurrences[healthState];
 							// cout << "\tAfter:  " << gatheredStatistics->map[report.first].occurrences[healthState] << endl;
 							localHealth->occurrences[healthState] += report.second.occurrences[healthState];
+							// cout << "Updated: " << gatheredStatistics->map[report.first] << endl;
 
 						}
 
