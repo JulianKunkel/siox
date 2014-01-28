@@ -1,6 +1,6 @@
-<nextID>53</nextID>
+<nextID>59</nextID>
 <valueStringMap class_id="0" tracking_level="0" version="0">
-	<count>51</count>
+	<count>57</count>
 	<item_version>0</item_version>
 	<item class_id="1" tracking_level="0" version="0">
 		<first>1</first>
@@ -56,154 +56,178 @@
 	</item>
 	<item>
 		<first>15</first>
-		<second>pwritev</second>
+		<second>pwrite64</second>
 	</item>
 	<item>
 		<first>16</first>
-		<second>preadv</second>
+		<second>pread64</second>
 	</item>
 	<item>
 		<first>17</first>
-		<second>sync</second>
+		<second>pwritev</second>
 	</item>
 	<item>
 		<first>18</first>
-		<second>fsync</second>
+		<second>preadv</second>
 	</item>
 	<item>
 		<first>19</first>
-		<second>fdatasync</second>
+		<second>pwritev64</second>
 	</item>
 	<item>
 		<first>20</first>
-		<second>posix_fadvise</second>
+		<second>preadv64</second>
 	</item>
 	<item>
 		<first>21</first>
-		<second>remove</second>
+		<second>sync</second>
 	</item>
 	<item>
 		<first>22</first>
-		<second>rename</second>
+		<second>fsync</second>
 	</item>
 	<item>
 		<first>23</first>
-		<second>stat</second>
+		<second>fdatasync</second>
 	</item>
 	<item>
 		<first>24</first>
-		<second>lstat</second>
+		<second>posix_fadvise</second>
 	</item>
 	<item>
 		<first>25</first>
-		<second>fstat</second>
+		<second>remove</second>
 	</item>
 	<item>
 		<first>26</first>
-		<second>mmap</second>
+		<second>rename</second>
 	</item>
 	<item>
 		<first>27</first>
-		<second>fopen</second>
+		<second>stat</second>
 	</item>
 	<item>
 		<first>28</first>
-		<second>fdopen</second>
+		<second>lstat</second>
 	</item>
 	<item>
 		<first>29</first>
-		<second>fileno</second>
+		<second>fstat</second>
 	</item>
 	<item>
 		<first>30</first>
-		<second>freopen</second>
+		<second>mmap</second>
 	</item>
 	<item>
 		<first>31</first>
-		<second>tmpfile</second>
+		<second>fopen</second>
 	</item>
 	<item>
 		<first>32</first>
-		<second>fclose</second>
+		<second>mmap64</second>
 	</item>
 	<item>
 		<first>33</first>
-		<second>fflush</second>
+		<second>fopen64</second>
 	</item>
 	<item>
 		<first>34</first>
-		<second>fgetc</second>
+		<second>fdopen</second>
 	</item>
 	<item>
 		<first>35</first>
-		<second>getc</second>
+		<second>fileno</second>
 	</item>
 	<item>
 		<first>36</first>
-		<second>fputc</second>
+		<second>freopen</second>
 	</item>
 	<item>
 		<first>37</first>
-		<second>putc</second>
+		<second>tmpfile</second>
 	</item>
 	<item>
 		<first>38</first>
-		<second>fgets</second>
+		<second>fclose</second>
 	</item>
 	<item>
 		<first>39</first>
-		<second>fputs</second>
+		<second>fflush</second>
 	</item>
 	<item>
 		<first>40</first>
-		<second>fread</second>
+		<second>fgetc</second>
 	</item>
 	<item>
 		<first>41</first>
-		<second>fwrite</second>
+		<second>getc</second>
 	</item>
 	<item>
 		<first>42</first>
-		<second>setbuf</second>
+		<second>fputc</second>
 	</item>
 	<item>
 		<first>43</first>
-		<second>setvbuf</second>
+		<second>putc</second>
 	</item>
 	<item>
 		<first>44</first>
-		<second>vfprintf</second>
+		<second>fgets</second>
 	</item>
 	<item>
 		<first>45</first>
-		<second>vfscanf</second>
+		<second>fputs</second>
 	</item>
 	<item>
 		<first>46</first>
-		<second>fscanf</second>
+		<second>fread</second>
 	</item>
 	<item>
 		<first>47</first>
-		<second>fprintf</second>
+		<second>fwrite</second>
 	</item>
 	<item>
 		<first>48</first>
-		<second>aio_read</second>
+		<second>setbuf</second>
 	</item>
 	<item>
 		<first>49</first>
-		<second>aio_write</second>
+		<second>setvbuf</second>
 	</item>
 	<item>
 		<first>50</first>
-		<second>lio_listio</second>
+		<second>vfprintf</second>
 	</item>
 	<item>
 		<first>51</first>
-		<second>aio_suspend</second>
+		<second>vfscanf</second>
 	</item>
 	<item>
 		<first>52</first>
+		<second>fscanf</second>
+	</item>
+	<item>
+		<first>53</first>
+		<second>fprintf</second>
+	</item>
+	<item>
+		<first>54</first>
+		<second>aio_read</second>
+	</item>
+	<item>
+		<first>55</first>
+		<second>aio_write</second>
+	</item>
+	<item>
+		<first>56</first>
+		<second>lio_listio</second>
+	</item>
+	<item>
+		<first>57</first>
+		<second>aio_suspend</second>
+	</item>
+	<item>
+		<first>58</first>
 		<second>aio_cancel</second>
 	</item>
 </valueStringMap>
@@ -250,7 +274,7 @@
 	</item>
 </nodeMap>
 <activityInterfaceIDMap>
-	<count>50</count>
+	<count>56</count>
 	<item_version>0</item_version>
 	<item class_id="11" tracking_level="0" version="0">
 		<first>3</first>
@@ -452,37 +476,61 @@
 		<first>52</first>
 		<second>2</second>
 	</item>
+	<item>
+		<first>53</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>54</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>55</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>56</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>57</first>
+		<second>2</second>
+	</item>
+	<item>
+		<first>58</first>
+		<second>2</second>
+	</item>
 </activityInterfaceIDMap>
 <activityMap>
-	<count>50</count>
+	<count>56</count>
 	<item_version>0</item_version>
 	<item class_id="12" tracking_level="0" version="0">
 		<first class_id="13" tracking_level="0" version="0">
 			<first>2</first>
 			<second>aio_cancel</second>
 		</first>
-		<second>52</second>
+		<second>58</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>aio_read</second>
 		</first>
-		<second>48</second>
+		<second>54</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>aio_suspend</second>
 		</first>
-		<second>51</second>
+		<second>57</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>aio_write</second>
 		</first>
-		<second>49</second>
+		<second>55</second>
 	</item>
 	<item>
 		<first>
@@ -524,147 +572,161 @@
 			<first>2</first>
 			<second>fclose</second>
 		</first>
-		<second>32</second>
+		<second>38</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fdatasync</second>
 		</first>
-		<second>19</second>
+		<second>23</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fdopen</second>
 		</first>
-		<second>28</second>
+		<second>34</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fflush</second>
 		</first>
-		<second>33</second>
+		<second>39</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fgetc</second>
 		</first>
-		<second>34</second>
+		<second>40</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fgets</second>
 		</first>
-		<second>38</second>
+		<second>44</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fileno</second>
 		</first>
-		<second>29</second>
+		<second>35</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fopen</second>
 		</first>
-		<second>27</second>
+		<second>31</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>fopen64</second>
+		</first>
+		<second>33</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fprintf</second>
 		</first>
-		<second>47</second>
+		<second>53</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fputc</second>
 		</first>
-		<second>36</second>
+		<second>42</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fputs</second>
 		</first>
-		<second>39</second>
+		<second>45</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fread</second>
 		</first>
-		<second>40</second>
+		<second>46</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>freopen</second>
 		</first>
-		<second>30</second>
+		<second>36</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fscanf</second>
 		</first>
-		<second>46</second>
+		<second>52</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fstat</second>
 		</first>
-		<second>25</second>
+		<second>29</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fsync</second>
 		</first>
-		<second>18</second>
+		<second>22</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>fwrite</second>
 		</first>
-		<second>41</second>
+		<second>47</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>getc</second>
 		</first>
-		<second>35</second>
+		<second>41</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>lio_listio</second>
 		</first>
-		<second>50</second>
+		<second>56</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>lstat</second>
 		</first>
-		<second>24</second>
+		<second>28</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>mmap</second>
 		</first>
-		<second>26</second>
+		<second>30</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>mmap64</second>
+		</first>
+		<second>32</second>
 	</item>
 	<item>
 		<first>
@@ -678,7 +740,7 @@
 			<first>2</first>
 			<second>posix_fadvise</second>
 		</first>
-		<second>20</second>
+		<second>24</second>
 	</item>
 	<item>
 		<first>
@@ -690,16 +752,30 @@
 	<item>
 		<first>
 			<first>2</first>
-			<second>preadv</second>
+			<second>pread64</second>
 		</first>
 		<second>16</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
+			<second>preadv</second>
+		</first>
+		<second>18</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>preadv64</second>
+		</first>
+		<second>20</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
 			<second>putc</second>
 		</first>
-		<second>37</second>
+		<second>43</second>
 	</item>
 	<item>
 		<first>
@@ -711,9 +787,23 @@
 	<item>
 		<first>
 			<first>2</first>
-			<second>pwritev</second>
+			<second>pwrite64</second>
 		</first>
 		<second>15</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>pwritev</second>
+		</first>
+		<second>17</second>
+	</item>
+	<item>
+		<first>
+			<first>2</first>
+			<second>pwritev64</second>
+		</first>
+		<second>19</second>
 	</item>
 	<item>
 		<first>
@@ -734,63 +824,63 @@
 			<first>2</first>
 			<second>remove</second>
 		</first>
-		<second>21</second>
+		<second>25</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>rename</second>
 		</first>
-		<second>22</second>
+		<second>26</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>setbuf</second>
 		</first>
-		<second>42</second>
+		<second>48</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>setvbuf</second>
 		</first>
-		<second>43</second>
+		<second>49</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>stat</second>
 		</first>
-		<second>23</second>
+		<second>27</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>sync</second>
 		</first>
-		<second>17</second>
+		<second>21</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>tmpfile</second>
 		</first>
-		<second>31</second>
+		<second>37</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>vfprintf</second>
 		</first>
-		<second>44</second>
+		<second>50</second>
 	</item>
 	<item>
 		<first>
 			<first>2</first>
 			<second>vfscanf</second>
 		</first>
-		<second>45</second>
+		<second>51</second>
 	</item>
 	<item>
 		<first>

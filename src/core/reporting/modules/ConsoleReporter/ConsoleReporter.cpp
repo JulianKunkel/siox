@@ -60,13 +60,15 @@ void ConsoleReporter::processReports(ostream & out, const std::list< pair<Regist
 				curStack.push_back(cur);
 			}
 			// output all parents (outputPos would be the missing parents)
+			
+			//parGroupStack = curStack;
+
+			out << "[" << rc.moduleName << ":" << id << ":\"" << rc.section << "\"] ";
+			
 			for( auto parentItr = curStack.rbegin(); parentItr != curStack.rend(); parentItr++ ){
 				out << (*parentItr)->name << "/"; 
 			}
-
-			//parGroupStack = curStack;
-
-			out << (*key)->name << " = " << elem->second.value << " [" << rc.moduleName << ":" << id << ":\"" << rc.section << "\"]" << endl;
+			out << (*key)->name << " = " << elem->second.value  << endl;
 			// r.componentType << ":" << 
 		}
 	}

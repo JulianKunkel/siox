@@ -237,7 +237,7 @@ void MPIReporter::printAggregatedResult(ostream & out, unordered_map<string, Ent
 		for (auto cur = entryNames.begin(); cur != entryNames.end(); cur++ ){
 			string * name = const_cast<string*>(*cur);
 			Entry & entry = group.map[*name];
-			out << *name << " = (" << entry.average() << "," << entry.min << "," << entry.max << ") " << entry.processes <<  " [" << group.moduleName << ":" << group.componentID << ":\"" << group.sectionName << "\"]" << endl;
+			out <<  "[" << group.moduleName << ":" << group.componentID << ":\"" << group.sectionName << "\"] " << *name << " = (" << entry.average() << "," << entry.min << "," << entry.max << ") " << entry.processes << endl;
 		}
 	}
 }

@@ -176,10 +176,12 @@ public:
 
 	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size){
 		activitiesReceptionConfirmed++;
+		pendingActivities--;
 	}
 
 	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error){  
 		activitiesErrorCount++;
+		pendingActivities--;
 	}
 
 	virtual uint64_t serializeMessageLen(const void * msgObject) {

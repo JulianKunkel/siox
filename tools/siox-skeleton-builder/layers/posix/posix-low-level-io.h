@@ -3,8 +3,6 @@
  * Kurzbeschreibungen hier hineinkopieren!
  */
 
-#define _GNU_SOURCE
-
 #include <unistd.h>
 #include <sys/uio.h>
 #include <sys/types.h>

@@ -326,6 +326,7 @@ namespace monitoring {
 					(*l)->NotifyAsync(lost, activity);
 				}
 				processed_events_in_async++;
+				lost_events += lost;
 			}
 
 			/**

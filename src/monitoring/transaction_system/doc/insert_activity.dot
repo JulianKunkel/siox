@@ -1,0 +1,40 @@
+digraph I {
+	insert_activity[label="insert_activity(act)",color="green"];
+	insert_activity_id [label="insert_activity_id(act_id)",color="red"];
+	query_activity_unique_id [label="query_activity_unique_id(act_id)\n\n(Parent may have previously added just the ID of this activity)",color="lightblue"];
+	select_activity_unique_id [shape="box",label="SELECT unique_id FROM activity_ids",color="lightblue",style="filled"];
+	insert_activity_id_2 [shape="box",label="INSERT aid INTO activity_ids",color="red",style="filled"];
+	insert_parents [shape="box",label="insert_activity_parents(parents)"];
+	insert_parent [shape="box",label="foreach parents as p:\ninsert_activity_parent(p)"];
+	insert_parent_2 [shape="box",label="INSERT p INTO parents",style="filled"];
+	insert_rcs [shape="box",label="insert_remote_calls(rcs)",color="yellow"];
+	insert_rc [shape="box",label="foreach rcs as rc:\ninsert_remote_call(rc)",color="yellow"];
+	insert_rc_id [shape="box",label="insert_remote_call_id(rcid)",color="yellow"];
+	query_rc_uid [shape="box",label="query_remote_call_unique_id(rcid)",color="yellow"];
+	select_rc_uid [shape="box",label="SELECT uid FROM remote_call_ids",color="yellow",style="filled"];
+	insert_rc_id_2 [shape="box",label="INSERT rcid INTO remote_call_ids",color="yellow",style="filled"];
+	insert_rc_2 [shape="box",label="INSERT rc INTO remote_calls",color="yellow",style="filled"];
+	insert_activity_2 [shape="box",label="INSERT act INTO activities",color="green",style="filled"];
+	
+
+	insert_activity -> insert_activity_id [color="green"];
+	insert_activity_id -> query_activity_unique_id [color="green"];
+	query_activity_unique_id -> select_activity_unique_id [color="green"];
+	select_activity_unique_id -> insert_activity_id_2 [color="green"];
+	insert_activity_id_2 -> insert_parents [color="green"];
+	insert_parents -> insert_parent [color="green"];
+	insert_parent -> insert_activity_id [];
+	insert_activity_id -> query_activity_unique_id [];
+	query_activity_unique_id -> select_activity_unique_id [];
+	select_activity_unique_id -> insert_activity_id_2 [];
+	insert_activity_id_2 -> insert_parent_2 [];
+	insert_parent -> insert_rcs [color="green"];
+	insert_rcs -> insert_rc [color="green"];
+	insert_rc -> insert_rc_id [color="green"];
+	insert_rc_id -> query_rc_uid [color="green"];
+	query_rc_uid -> select_rc_uid [color="green"];
+	select_rc_uid -> insert_rc_id_2 [color="green"];
+	insert_rc_id_2 -> insert_rc_2 [color="green"];
+	insert_rc_2 -> insert_activity_2 [color="green"];
+
+}
