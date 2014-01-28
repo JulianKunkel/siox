@@ -39,7 +39,7 @@ class ActivityMonitor: public ActivityMultiplexerPlugin {
 			n[1] = observedActivities.load();
 			n[2] = observedAsyncActivities.load();
 
-			cout << "ActivityMonitor sync: " << (n[1] - o[1])  << " async: " << (n[2] - o[2]) << " dropped: " << (n[0] - o[0]) << endl;
+			cout << "ActivityMonitor sync: " << (n[1] - o[1])  << " async: " << (n[2] - o[2]) << " dropped: " << (n[0] - o[0]) << " = " <<  100.0*(n[0] - o[0]) / (n[1] - o[1]) << " %" << endl;
 
 			o[0] = n[0];
 			o[1] = n[1];
