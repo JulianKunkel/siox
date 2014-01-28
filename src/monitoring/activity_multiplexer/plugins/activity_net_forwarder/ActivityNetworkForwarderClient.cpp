@@ -24,7 +24,15 @@ using namespace knowledge;
 #define max_pending_ops 1000
 
 class ReconnectionCallback : public ConnectionCallback{
+public:
+	atomic<uint32_t> connectionErrors;
+
+	ReconnectionCallback(){
+		connectionErrors = 0;
+	}
+
 	void connectionErrorCB(ServiceClient & connection, CommunicationError error){
+		connectionErrors++;		
 		usleep( 1000l );
 
 		connection.ireconnect();
@@ -66,9 +74,10 @@ public:
 
 		report.addEntry( new GroupEntry( "activitiesSend" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesSendCount ) ));
 		report.addEntry( new GroupEntry( "activitiesReceptionConfirmed" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesReceptionConfirmed ) ));
-		report.addEntry( new GroupEntry( "activitiesErrors" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesErrorCount ) ));
+		report.addEntry( new GroupEntry( "activitySendErrors" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesErrorCount ) ));
 		report.addEntry( new GroupEntry( "activitiesDroppedDueToOverflow" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( droppedActivities.load() ) ));
 		report.addEntry( new GroupEntry( "activitiesAsyncDroppedDueToOverflowWhileAnomaly" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( droppedActivitiesDuringAnomaly.load() ) ));		
+		report.addEntry( new GroupEntry( "connectionErrors" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( connCallback.connectionErrors.load() ) ));		
 		
 		return report;
 	}
