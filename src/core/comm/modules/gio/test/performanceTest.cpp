@@ -37,6 +37,7 @@ static uint64_t messageSize = 1*1024;
 static int runtime = 5;
 static string address = "tcp://0.0.0.0:30000";
 static bool terminated = false;
+static bool clientWaitForResponse = false;
 static ServiceClient * c;
 
 
@@ -92,13 +93,17 @@ public:
 	void messageSendCB(BareMessage * msg){
 		messagesSend++;
 
-		if (! terminated){
+		if ( ! clientWaitForResponse && ! terminated){
 			c->isend("");
 		}
 	}
 
 	void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size){
 		messageResponsesReceived++;
+
+		if (clientWaitForResponse && ! terminated){
+			c->isend("");
+		}
 	}
 
 	void messageTransferErrorCB(BareMessage * msg, CommunicationError error){
@@ -206,7 +211,7 @@ static void runServer(CommunicationModule * comm){
 
 
 static void help(char ** argv){
-		cerr << "Synopsis: " << argv[0] << " -s|-c [<address>] [Runtime [MessageSize]]" << endl; 
+		cerr << "Synopsis: " << argv[0] << " -s|-c [<address>] [Runtime] [MessageSize] [--waitForResponse]" << endl; 
 		cerr << "-s: server" << endl;
 		cerr << "-c: client" << endl;
 		cerr << "<Address> is either ipc://<NAME> or tcp://<host>:<port>" << endl;
@@ -235,6 +240,14 @@ int main(int argc, char ** argv){
 	if ( argc > 4 ){
 		messageSize = atoll(argv[4]);
 	}
+	if ( argc > 5 ){
+		if ( strcmp(argv[5], "--waitForResponse") == 0 ){
+			clientWaitForResponse = true;
+		}else{
+			help(argv);
+		}
+	}
+
 
 	printf( "%s instance with messageSize: %llu runtime: %d address: %s\n", roleServer ? "Server" : "Client", (long long unsigned) messageSize, runtime, address.c_str() );
 
