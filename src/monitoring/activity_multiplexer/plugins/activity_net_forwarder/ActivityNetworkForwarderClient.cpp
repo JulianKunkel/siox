@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include <mutex>
 #include <atomic>
 
@@ -20,6 +22,17 @@ using namespace monitoring;
 using namespace knowledge;
 
 #define max_pending_ops 1000
+
+class ReconnectionCallback : public ConnectionCallback{
+	void connectionErrorCB(ServiceClient & connection, CommunicationError error){
+		usleep( 1000l );
+
+		connection.ireconnect();
+	}
+
+	void connectionSuccessfullCB(ServiceClient & connection){
+	}
+};
 
 /**
  * Forward an activity from one ActivityMultiplexer to another.
@@ -198,7 +211,7 @@ public:
 
 	private:
 		ServiceClient * client;
-		ConnectionCallback connCallback;
+		ReconnectionCallback connCallback;
 };
 
 extern "C" {
