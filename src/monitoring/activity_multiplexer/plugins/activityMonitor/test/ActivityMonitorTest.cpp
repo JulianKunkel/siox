@@ -6,10 +6,6 @@
 #include <core/autoconfigurator/AutoConfigurator.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/ontology/Ontology.hpp>
-#include <knowledge/reasoner/Reasoner.hpp>
-
-
-#include "../AnomalySkeletonOptions.hpp"
 
 using namespace std;
 
@@ -29,13 +25,6 @@ int main( int argc, char const * argv[] )
 
 	vector<Component *> components = a->LoadConfiguration( "skeletonTest", "" );
 	cout << "Loaded: " << components.size() << " Components/Plugins" << endl;
-	for( auto itr = components.begin() ; itr != components.end(); itr++ ) {
-		cout << *itr << endl;
-	}
-
-	Reasoner * r1 = a->searchFor<Reasoner>( components );
-	//assert( r1 != nullptr );
-
 	// the activity multiplexer is expected to be first:
 	ActivityMultiplexer * m1 = a->searchFor<ActivityMultiplexer>( components );
 	assert( m1 != nullptr );
@@ -62,6 +51,8 @@ int main( int argc, char const * argv[] )
 	{.id = o3.aID, .value = ( uint32_t ) 1}}, {}, NULL, 0 ) );
 
 	m1->Log( activity );
+
+	sleep(1);
 
 	registrar.shutdown();
 
