@@ -22,32 +22,20 @@ struct FileSurveyorOptions : public ActivityMultiplexerPluginOptions{
 	// The lists of activity domains and names belonging to each of these groups
 	// (open calls, file access calls, close calls)
 	vector<string> openTokens;
-	vector<string> accessTokens;
+	//vector<string> seekTokens; // TODO Recognize and process seek() calls!
+	vector<string> readTokens;
+	vector<string> writeTokens;
 	vector<string> closeTokens;
 
 	// The highest number of bytes that will still be classified as a "short jump";
 	// anything above will be deemed a "long jump".
-	uint64_t jumpSizeLimit;
+	uint64_t seekSizeLimit;
 
-	//vector<string> hintTokens;
-	// where are the hints stored: activity name and vector of attribute names.
-	//vector<pair<string, vector<pair<string,string>>>> hintAttributes;
-
-	//vector<pair<string,string>> accessRelevantOntologyAttributes; // e.g. MPI descriptor/fileHandle
-	// Plug this into siox.conf to comply with new format:
-/*		<accessRelevantOntologyAttributes>
-			<count>2</count>
-			<item_version>0</item_version>
-			<item>
-				<first>MPI</first>
-				<second>quantity/BytesToRead</second>
-			</item>
-			<item>
-				<first>MPI</first>
-				<second>quantity/BytesToWrite</second>
-			</item>
-		</accessRelevantOntologyAttributes>
-*/
-	//vector<pair<string,string> > hintAttributes;	// attributes containing hints, e.g. ('MPI','hint/noncollReadBuffSize')
+	// Reporting options; set to 1 for true, 0 for false.
+	// Setting BOTH of these to 0 will switch off reports from this plugin!
+	// Should every combination of (UserID, FileName) be reported separately?
+	bool individualReports = false;
+	// Should an aggregation over all combinations of (UserID, FileName) be reported?
+	bool aggregatedReport = false;
 };
 

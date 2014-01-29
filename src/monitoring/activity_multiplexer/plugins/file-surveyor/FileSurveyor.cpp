@@ -1,18 +1,19 @@
 /**
  * An ActivityMultiplexerPlugin to watch the stream of incoming activites,
- * group information on the ones pertaining to the same files and report them
- * upon component shutdown.
+ * group information on the ones pertaining to the same (user, file) combination
+ * and report them upon component shutdown.
+ * It can be applied to any layer that supports the semantics of OPEN, READ, WRITE, SEEK and CLOSE.
+ * A configuration file defines the symbols which map to the OPEN etc. semantics
+ * and an integer limit to differentiate between short and long SEEKs.
  *
- * XXX: Should work correctly if the same file is opened several times, however, it is not thread safe.
- *
- * @author Michaela Zimmer, Nathanael Hübbe
- * @date 2013-12-06
+ * @author Michaela Zimmer, Nathanael Hübbe, Julian Kunkel
+ * @date 2014-01-27
  */
 
 #include <iostream>
 #include <sstream>
-//#include <list>
-#include <unordered_map>
+#include <list>
+// #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
 #include <mutex>
@@ -53,7 +54,8 @@ static inline const uint64_t absu64( uint64_t a, uint64_t b )
 
 enum TokenType {
 	OPEN = 0,
-	ACCESS,
+	READ,
+	WRITE,
 	CLOSE,
 	UNKNOWN,
 	TOKEN_TYPE_COUNT
@@ -63,11 +65,19 @@ ADD_ENUM_OPERATORS(TokenType)
 
 class FileSurvey {
 	public:
+		// Used to differentiate surveys
 		string fileName = "[NO VALID FILENAME]";
-		string userID = "[NO VALID UID]";
+		//string userID = "[NO VALID UID]";
+		// Counters for current open-access-close cycle
+		Timestamp timeFirstOpened = 0;
 		Timestamp timeOpened = 0;
 		Timestamp timeClosed = 0;
 		uint64_t filePosition = 0;
+		// Aggregated statistics over all cycles
+		Timestamp timeTotalOpen = 0;
+		Timestamp timeTotalRead = 0;
+		Timestamp timeTotalWrite = 0;
+		Timestamp timeTotalClose = 0;
 		uint64_t nAccessesRead = 0;
 		uint64_t nAccessesReadSequential = 0;
 		uint64_t nAccessesReadRandomShort = 0;
@@ -78,24 +88,16 @@ class FileSurvey {
 		uint64_t nAccessesWriteRandomLong = 0;
 		uint64_t nBytesRead = 0;
 		uint64_t nBytesWrite = 0;
+		uint64_t nTotalSeekDistanceRead = 0;
+		uint64_t nTotalSeekDistanceWrite = 0;
 };
 
+// TODO: Aggregate over all files
+// TODO: Total access time
 
-/*
- OBSOLETE COMMENT - UPDATE THIS!
- Some thoughts for an abstract plugin.
-
- This plugin remembers for every program, user, and filename (extensions) efficient and inefficient operations.
- It can be applied to any layer that supports the semantics of OPEN, ACCESS (i.e. read(), write(), etc.), optional HINTS and CLOSE.
-
- A configuration file defines the symbols which map to the OPEN etc. semantics and an integer descriptor as ontology identifier to track these.
- The time needed for the ACCESS semantics may depend on the abstract attributes: "size", offset (which defines some sort of regularity), and the set of supported HINTS.
- A hint may be set either on OPEN, during ACCESS.
- File extension, user and program are considered to behave similar as a hint.
- */
 class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentReportInterface {
 	public:
-		//FileSurveyorPlugin() { }
+		// FileSurveyorPlugin() { }
 
 		void initPlugin() override;
 		ComponentOptions * AvailableOptions() override;
@@ -112,11 +114,10 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 
 		SystemInformationGlobalIDManager * sysinfo;
 
+		// Information about the layer we are to watch
 		string interface;
 		string implementation;
 		UniqueInterfaceID uiid;
-		
-		mutex  giant_mutex;
 
 		// OAIDs of various attributes
 		OntologyAttributeID uidAttID;	// user-id
@@ -125,18 +126,27 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		OntologyAttributeID btrAttID;	// bytes to read
 		OntologyAttributeID btwAttID;	// bytes to write
 
-		// Map ucaid to type of activity (Open/Access/Close)
+		// Map ucaid to type of activity (Open/Read/Write/Close)
 		unordered_map<UniqueComponentActivityID, TokenType> types;
-
-		unordered_map<ActivityID, FileSurvey > openFileSurveys;
-		vector<FileSurvey> closedFileSurveys;
 
 		// The set of file extensions we are to watch; we will ignore all others
 		unordered_set<string> fileExtensionsToWatch;
 
-		// The highest number of bytes that will still be classified as a "short jump";
-		// anything above will be deemed a "long jump".
-		uint64_t jumpSizeLimit;
+		// The highest number of bytes that will still be classified as a "short seek";
+		// anything above will be deemed a "long seek".
+		uint64_t seekSizeLimit;
+
+		// What to report; setting both to false will switch off reporting
+		bool individualReports = false;
+		bool aggregatedReport = false;
+
+
+		// Collections for closed and still opened surveys
+		mutex  collectionMutex; // To protect access to collections
+		list<FileSurvey> closedFileSurveys;
+		unordered_map<ActivityID, FileSurvey> openFileSurveys; // Key: AID of last open() to file
+		// unordered_map<pair<string,string>, FileSurvey> closedFileSurveys; // TODO Key: (UserID, Filename)
+
 
 		bool tryEnsureInitialization();	//If we are not initialized yet, try to do it. Returns true if initialization could be ensured.
 
@@ -144,22 +154,29 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		void updateSurvey( shared_ptr<Activity> activity );
 		void closeSurvey( shared_ptr<Activity> activity );
 
+		const FileSurvey aggregateSurveys();
+		void reportSurvey(ComponentReport & report, const FileSurvey & survey);
+
 		const ActivityID * findParentAID( const shared_ptr<Activity>& activity );
 		const Attribute * findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid );
 		const string findFileNameExtension( const string & fileName );
 };
 
 
-
 ComponentOptions * FileSurveyorPlugin::AvailableOptions() {
   return new FileSurveyorOptions();
 }
 
+
+/**
+ * Turn a string in-place into uppercase
+ */
 static void toUpper(string & ext){
-	for_each( ext.begin(), ext.end(), [](char&c){ 
-		c = std::toupper(c); 
+	for_each( ext.begin(), ext.end(), [](char&c){
+		c = std::toupper(c);
 	});
 }
+
 
 void FileSurveyorPlugin::initPlugin() {
 	// fprintf(stderr, "FileSurveyorPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
@@ -180,52 +197,56 @@ void FileSurveyorPlugin::initPlugin() {
 			// Retrieve interface, implementation and uiid
 			interface = o.interface;
 			implementation = o.implementation;
-			jumpSizeLimit = o.jumpSizeLimit;
+			seekSizeLimit = o.seekSizeLimit;
 			RETURN_ON_EXCEPTION( uiid = sysinfo->lookup_interfaceID(interface, implementation); );
+
+			// Retrieve report detail levels
+			individualReports = o.individualReports;
+			aggregatedReport = o.aggregatedReport;
+
 			initLevel = 2;
 
 		case 2:
 			// Fill the token maps with every known activity's UCAID and type
 			// First: OPEN calls
 			RETURN_ON_EXCEPTION(
-				for( auto itr = o.openTokens.begin(); itr != o.openTokens.end(); itr++ )
-					types[sysinfo->lookup_activityID(uiid,*itr)] = OPEN;
+				for( auto token : o.openTokens )
+					types[sysinfo->lookup_activityID(uiid,token)] = OPEN;
 			);
 			initLevel = 3;
 
 		case 3:
-			// Second: ACCESS calls
+			// Second: READ calls
 			RETURN_ON_EXCEPTION(
-				auto itr = o.accessTokens.begin();
-				while (itr != o.accessTokens.end()) {
-					UniqueComponentActivityID ucaid = sysinfo->lookup_activityID(uiid,*itr);
-					types[ucaid] = ACCESS;
-					itr++;
-				}
+				for( auto token : o.readTokens )
+					types[sysinfo->lookup_activityID(uiid,token)] = READ;
 			);
 			initLevel = 4;
 
 		case 4:
-			// Third: CLOSE calls
+			// Third: WRITE calls
 			RETURN_ON_EXCEPTION(
-				for( auto itr = o.closeTokens.begin(); itr != o.closeTokens.end(); itr++ )
-					types[sysinfo->lookup_activityID(uiid,*itr)] = CLOSE;
+				for( auto token : o.writeTokens )
+					types[sysinfo->lookup_activityID(uiid,token)] = WRITE;
 			);
 			initLevel = 5;
 
 		case 5:
+			// Fourth: CLOSE calls
+			RETURN_ON_EXCEPTION(
+				for( auto token : o.closeTokens )
+					types[sysinfo->lookup_activityID(uiid,token)] = CLOSE;
+			);
+			initLevel = 6;
+
+		case 6:
 			// Gather the list of file extensions we are to watch into a map (for easy reference)
-			for( auto itr = o.fileExtensionsToWatch.begin(); itr != o.fileExtensionsToWatch.end(); itr++ ){
-				string ext = *itr;
+			for( auto extension : o.fileExtensionsToWatch ){
+				string ext = extension;
 				toUpper(ext);
 				fileExtensionsToWatch.emplace(ext);
 			}
-/*			initLevel = 6;
-
-		case 6:
-			// Find oaids and value types for attributes used as hints and remember them
-			RETURN_ON_EXCEPTION( );
-*/			initLevel = 7;
+			initLevel = 7;
 
 		case 7:
 			// Find and remember various other OAIDs
@@ -256,7 +277,8 @@ void FileSurveyorPlugin::Notify( shared_ptr<Activity> activity ) {
 			openSurvey( activity );
 			break;
 
-		case ACCESS: {
+		case READ:
+		case WRITE: {
 			//OUTPUT( "access[" << activity->aid() << "]\n" );
 			updateSurvey( activity );
 			break;
@@ -283,41 +305,68 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 	//OUTPUT( "openSurvey() received activity " << activity->aid() );
 
 	// Find file name and check whether extension matches pattern given in configuration
+	string fileName = "(no valid FileName)";
 	const Attribute * attFileName = findAttributeByID( activity, fnAttID );
 	if( attFileName == NULL )
 	{
-		// This should not happen; it is, however, no serious problem.
+		// This should not happen; it is, however, no serious problem; just don't do anything.
 		cerr << "[FileSurvey] No valid file name in activity " << activity->aid() << "!" << endl;
 		return;
 	}
-	string fileExtension = findFileNameExtension(attFileName->value.str());
+	fileName = attFileName->value.str();
+	string fileExtension = findFileNameExtension(fileName);
 	toUpper(fileExtension);
 	//OUTPUT( "File extension found: " << fileExtension );
 	if( fileExtensionsToWatch.count( fileExtension ) > 0 || fileExtensionsToWatch.empty() )
 	{
-		// Create and fill new survey for the file just opened
+		// Retrieve User ID
+		//string userID = "(no valid UserID)";
+		// TODO: Retrieve correct UID for OPEN activities.
+		// TODO: Add application name/path (and PID?) to tuple by which to differentiate surveys
+		//const Attribute * attUserID = findAttributeByID( activity, uidAttID );
+		//if ( attUserID == NULL ){
+		//	cerr << "[FileSurvey] No valid user ID in activity" << activity->aid() << "!" << endl;
+		//}
+		//else{
+		//	userID = attUserID->value.str();
+			// OUTPUT( "UserID: " << userID );
+		//}
 
 		FileSurvey	survey;
 
-		// Start time
-		survey.timeOpened = activity->time_start();
-		// File name
-		survey.fileName = attFileName->value.str();
-		// User ID
-		// @todo TODO: Retrieve correct UID for OPEN activities.
-		const Attribute * attUserID = findAttributeByID( activity, uidAttID );
-		if ( attUserID != NULL ){
-			survey.userID = attUserID->value.str();
-			OUTPUT( "UserID: " << attUserID->value.str() );
-		}
-		else{
-			OUTPUT( "No valid user ID in activity" << activity->aid() << "!" << endl );
-		}
+		{	// Disallow other access to our survey collections
+			lock_guard<mutex> collectionLock( collectionMutex );
 
-		{
-			unique_lock<mutex> lock( giant_mutex );
+			// See whether there is a survey for this user and file already that can be reopened
+			for(auto candidate=closedFileSurveys.begin(); candidate != closedFileSurveys.end(); candidate++)
+			{
+				if( //candidate->userID == attUserID->value.str() && 
+				   candidate->fileName == attFileName->value.str())
+				{
+					// Reuse closed survey
+
+					// Update data
+					survey = *candidate;
+					survey.timeOpened = activity->time_start();
+					survey.filePosition = 0;
+					survey.timeTotalOpen += activity->time_stop() - activity->time_start();
+
+					// Move survey back to open collection
+					openFileSurveys[ activity->aid() ] = survey;
+					closedFileSurveys.erase(candidate);
+
+					return;
+				}
+			}
+
+			// Create and fill new survey for the file just opened
+			survey.timeFirstOpened = survey.timeOpened = activity->time_start();
+			survey.fileName = attFileName->value.str();
+			//survey.userID = userID;
+			survey.timeTotalOpen += activity->time_stop() - activity->time_start();
+
 			openFileSurveys[ activity->aid() ] = survey;
-		}
+		} // collectionLock
 	}
 	//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
 }
@@ -334,95 +383,103 @@ void FileSurveyorPlugin::updateSurvey( shared_ptr<Activity> activity )
 
 	if( parentAID != NULL )
 	{
-		unique_lock<mutex> lock( giant_mutex );
-
 		FileSurvey * survey;
 
-		try {
-			survey = & openFileSurveys.at( *parentAID );
-		}
-		catch( NotFoundError ) {
-			// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost to // SIOX, or when the file name did not match the pattern given in the configuration.
-			// Therefore, disregard all following activities on those files until closed and re-opened.
-			// cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
-			return;
-		}
+		{	// Disallow other access to our survey collections
+			lock_guard<mutex> collectionLock( collectionMutex );
 
-		// Find file position to distinguish between random (short or long jump) and sequential accesses
-		const Attribute * attFilePointer = findAttributeByID( activity, fpAttID );
+			try {
+				survey = & openFileSurveys.at( *parentAID );
+			}
+			catch( NotFoundError ) {
+				// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost to // SIOX, or when the file name did not match the pattern given in the configuration.
+				// Therefore, disregard all following activities on those files until closed and re-opened.
+				// cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+				return;
+			}
 
-		// Process BytesToRead or BytesToWrite, assuming exactly one of both is set
-		// First try: BytesToRead
-		const Attribute * attBytesProcessed = findAttributeByID( activity, btrAttID );
-		if( attBytesProcessed != NULL )
-		{
-			uint64_t nBytesProcessed = attBytesProcessed->value.uint64();
+			// Find file position to distinguish between random (short or long jump) and sequential accesses
+			const Attribute * attFilePointer = findAttributeByID( activity, fpAttID );
 
-			// Update byte count
-			survey->nBytesRead += nBytesProcessed;
-			// Move memorized file pointer accordingly
-			survey->filePosition += attBytesProcessed->value.uint64();
-			// Update access counts according to file pointer position
-			if( attFilePointer != NULL )
+			// Process BytesToRead or BytesToWrite, assuming exactly one of both is set
+			// First try: BytesToRead
+			const Attribute * attBytesProcessed = findAttributeByID( activity, btrAttID );
+			if( attBytesProcessed != NULL )
 			{
-				uint64_t fp = attFilePointer->value.uint64();
-				uint64_t fpJump = absu64(fp, survey->filePosition);
+				uint64_t nBytesProcessed = attBytesProcessed->value.uint64();
 
-				if( fpJump > 0 )
+				// Update memorized file position
+				survey->filePosition += nBytesProcessed;
+				// Update access counts according to file position
+				if( attFilePointer != NULL )
 				{
-					survey->filePosition = fp;
-					if ( fpJump > jumpSizeLimit )
-						survey->nAccessesReadRandomLong++;
+					uint64_t fp = attFilePointer->value.uint64();
+					uint64_t fpJump = absu64(fp, survey->filePosition);
+
+					if( fpJump > 0 )
+					{
+						survey->filePosition = fp;
+						if ( fpJump > seekSizeLimit )
+							survey->nAccessesReadRandomLong++;
+						else
+							survey->nAccessesReadRandomShort++;
+						survey->nTotalSeekDistanceRead += fpJump;
+					}
 					else
-						survey->nAccessesReadRandomShort++;
+						survey->nAccessesReadSequential++;
+					//OUTPUT( "file position = " << fp );
 				}
 				else
+				{
 					survey->nAccessesReadSequential++;
-				//OUTPUT( "file pointer = " << fp );
+				}
+
+				// Update statistics
+				survey->nBytesRead += nBytesProcessed;
+				survey->timeTotalRead += activity->time_stop() - activity->time_start();
+
+				return;
 			}
-			else
+
+			// Second try: BytesToWrite
+			attBytesProcessed = findAttributeByID( activity, btwAttID );
+			if (attBytesProcessed != NULL )
 			{
-				survey->nAccessesReadSequential++;
-			}
+				uint64_t nBytesProcessed = attBytesProcessed->value.uint64();
 
-			return;
-		}
-
-		// Second try: BytesToWrite
-		attBytesProcessed = findAttributeByID( activity, btwAttID );
-		if (attBytesProcessed != NULL )
-		{
-			uint64_t nBytesProcessed = attBytesProcessed->value.uint64();
-
-			// Update byte count
-			survey->nBytesWrite += nBytesProcessed;
-			// Move memorized file pointer accordingly
-			survey->filePosition += nBytesProcessed;
-			// Update access counts according to file pointer position
-			if( attFilePointer != NULL )
-			{
-				uint64_t fp = attFilePointer->value.uint64();
-				uint64_t fpJump = absu64(fp, survey->filePosition);
-
-				if( fpJump > 0 )
+				// Update memorized file position
+				survey->filePosition += nBytesProcessed;
+				// Update access counts according to file position
+				if( attFilePointer != NULL )
 				{
-					survey->filePosition = fp;
-					if ( fpJump > jumpSizeLimit )
-						survey->nAccessesWriteRandomLong++;
+					uint64_t fp = attFilePointer->value.uint64();
+					uint64_t fpJump = absu64(fp, survey->filePosition);
+
+					if( fpJump > 0 )
+					{
+						survey->filePosition = fp;
+						if ( fpJump > seekSizeLimit )
+							survey->nAccessesWriteRandomLong++;
+						else
+							survey->nAccessesWriteRandomShort++;
+						survey->nTotalSeekDistanceWrite += fpJump;
+					}
 					else
-						survey->nAccessesWriteRandomShort++;
+						survey->nAccessesWriteSequential++;
+					//OUTPUT( "file position = " << fp );
 				}
 				else
+				{
 					survey->nAccessesWriteSequential++;
-				//OUTPUT( "file pointer = " << fp );
-			}
-			else
-			{
-				survey->nAccessesWriteSequential++;
-			}
+				}
 
-			return;
-		}
+				// Update statistics
+				survey->nBytesWrite += nBytesProcessed;
+				survey->timeTotalWrite += activity->time_stop() - activity->time_start();
+
+				return;
+			}
+		} // collectionLock
 
 		// Report that neither was found
 		cerr << "[FileSurvey] No size of payload data attribute found in activity " << activity->aid() << "!" << endl;
@@ -447,25 +504,30 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 	if( parentAID != NULL )
 	{
 		FileSurvey survey;
-		
-		unique_lock<mutex> lock( giant_mutex );
-		
-		try {			
-			survey = openFileSurveys.at( *parentAID );
-		}
-		catch( NotFoundError ) {
-			// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost to // SIOX, or when the file name did not match the pattern given in the configuration.
-			// Therefore, disregard all following activities on those files until closed and re-opened.
-			//cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
-			return;
-		}
 
-		survey.timeClosed = activity->time_stop();
+		{	// Disallow other access to our survey collections
+			lock_guard<mutex> collectionLock( collectionMutex );
 
-		openFileSurveys.erase( *parentAID );
-		closedFileSurveys.push_back( survey );
-		//OUTPUT( "openSurveys size = " << openFileSurveys.size() );
-		//OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
+			try {
+				survey = openFileSurveys.at( *parentAID );
+			}
+			catch( NotFoundError ) {
+				// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost to // SIOX, or when the file name did not match the pattern given in the configuration.
+				// Therefore, disregard all following activities on those files until closed and re-opened.
+				//cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+				return;
+			}
+
+			// Update statistics
+			survey.timeClosed = activity->time_stop();
+			survey.timeTotalClose += activity->time_stop() - activity->time_start();
+
+			// Move survey from open to closed collection
+			openFileSurveys.erase( *parentAID );
+			closedFileSurveys.push_back( survey );
+			OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+			OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
+		} // collectionLock
 	}
 }
 
@@ -473,84 +535,100 @@ void FileSurveyorPlugin::closeSurvey( shared_ptr<Activity> activity )
 ComponentReport FileSurveyorPlugin::prepareReport()
 {
 	ComponentReport result;
-	// ostringstream reportText;
 
 	if( !tryEnsureInitialization() ) return ComponentReport();
 
-	for( auto itr = closedFileSurveys.begin(); itr != closedFileSurveys.end(); itr++ )
-	{
-		uint64_t nAccessesReadRandom = itr->nAccessesReadRandomShort + itr->nAccessesReadRandomLong;
-		uint64_t nAccessesRead = nAccessesReadRandom + itr->nAccessesReadSequential;
-		uint64_t nAccessesWriteRandom = itr->nAccessesWriteRandomShort + itr->nAccessesWriteRandomLong;
-		uint64_t nAccessesWrite = nAccessesWriteRandom + itr->nAccessesWriteSequential;
-		uint64_t nAccesses = nAccessesRead + nAccessesWrite;
-		uint64_t nBytes = itr->nBytesRead + itr->nBytesWrite;
+	{	// Disallow other access to our survey collections
+		lock_guard<mutex> collectionLock( collectionMutex );
 
-		double nBytesReadAverage = 0.0;
-		if( nAccessesRead > 0 )
-			nBytesReadAverage = itr->nBytesRead / ((double) nAccessesRead);
-		double nBytesWriteAverage = 0.0;
-		if( nAccessesWrite > 0 )
-			nBytesWriteAverage = ((double) itr->nBytesWrite) / ((double) nAccessesWrite);
+		if( individualReports )
+			for( auto survey : closedFileSurveys )
+				reportSurvey(result, survey);
 
+		if( aggregatedReport )
+			reportSurvey(result, aggregateSurveys());
 
-		GroupEntry * geFile = new GroupEntry( itr->fileName );
-
-		// General
-		// Does not make any sense to include the USER ID as this is the same for all...
-		//result.addEntry( new GroupEntry( "User ID", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->userID ) ));
-		//result.addEntry( new GroupEntry( "Time opened", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeOpened ) ));
-		//result.addEntry( new GroupEntry( "Time closed", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->timeClosed ) ));
-
-		// # Accesses
-		GroupEntry * geAccesses = new GroupEntry( "Accesses", geFile );
-		result.addEntry( geAccesses, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nAccesses ) ));
-		// Reading
-		GroupEntry * geReading = new GroupEntry( "Reading", geAccesses );
-		result.addEntry( geReading, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesRead ) ));
-		result.addEntry( new GroupEntry( "Sequential", geReading ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesReadSequential ) ));
-		result.addEntry( new GroupEntry( "Random, short seek", geReading ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesReadRandomShort ) ));
-		result.addEntry( new GroupEntry( "Random, long seek", geReading ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesReadRandomLong ) ));
-		// Writing
-		GroupEntry * geWriting = new GroupEntry( "Writing", geAccesses );
-		result.addEntry( geWriting, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesWrite ) ));
-		result.addEntry( new GroupEntry( "Sequential", geWriting ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesWriteSequential ) ));
-		result.addEntry( new GroupEntry( "Random, short seek", geWriting ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesWriteRandomShort ) ));
-		result.addEntry( new GroupEntry( "Random, long seek", geWriting ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nAccessesWriteRandomLong ) ));
-
-		// # Bytes
-		GroupEntry * geBytes = new GroupEntry( "Bytes", geFile );
-		result.addEntry( geBytes, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytes ) ));
-		result.addEntry( new GroupEntry( "Total read", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nBytesRead ) ));
-		result.addEntry( new GroupEntry( "Read per access", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytesReadAverage ) ));
-		result.addEntry( new GroupEntry( "Total written", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( itr->nBytesWrite ) ));
-		result.addEntry( new GroupEntry( "Written per access", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytesWriteAverage ) ));
-
-		//reportText << endl;
-		//reportText << "\t\"" << itr->fileName << "\":" << endl;
-		//reportText << "\t\tUser ID:    \t" << itr->userID << endl;
-		//reportText << "\t\tTime opened:\t" << itr->timeOpened << endl;
-		//reportText << "\t\tTime closed:\t" << itr->timeClosed << endl;
-		//reportText << "\t\tnAccesses:\t" << nAccesses << endl;
-		//reportText << "\t\t\tReading:\t" << nAccessesRead << endl;
-		//reportText << "\t\t\t\tSequential:\t" << itr->nAccessesReadSequential << endl;
-		//reportText << "\t\t\t\tRandom:    \t" << nAccessesReadRandom << endl;
-		//reportText << "\t\t\t\t\tshort seek:\t" << itr->nAccessesReadRandomShort << endl;
-		//reportText << "\t\t\t\t\tlong seek: \t" << itr->nAccessesReadRandomLong << endl;
-		//reportText << "\t\t\tWriting:\t" << nAccessesWrite << endl;
-		//reportText << "\t\t\t\tSequential:\t" << itr->nAccessesWriteSequential << endl;
-		//reportText << "\t\t\t\tRandom:    \t" << nAccessesWriteRandom << endl;
-		//reportText << "\t\t\t\t\tshort seek:\t" << itr->nAccessesWriteRandomShort << endl;
-		//reportText << "\t\t\t\t\tlong seek: \t" << itr->nAccessesWriteRandomLong << endl;
-		//reportText << "\t\tnBytes:\t" << nBytes << endl;
-		//reportText << "\t\t\tTotal read:        \t" << itr->nBytesRead << endl;
-		//reportText << "\t\t\tRead per access:   \t" << nBytesReadAverage << endl;
-		//reportText << "\t\t\tTotal written:     \t" << itr->nBytesWrite << endl;
-		//reportText << "\t\t\tWritten per access:\t" << nBytesWriteAverage << endl;
-	}
-	//result.addEntry( gePlugin, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() ) ));
+	} // collectionLock
 
 	return result;
+}
+
+void FileSurveyorPlugin::reportSurvey(ComponentReport & report, const FileSurvey & survey)
+{
+	uint64_t nAccessesReadRandom = survey.nAccessesReadRandomShort + survey.nAccessesReadRandomLong;
+	uint64_t nAccessesRead = nAccessesReadRandom + survey.nAccessesReadSequential;
+	uint64_t nAccessesWriteRandom = survey.nAccessesWriteRandomShort + survey.nAccessesWriteRandomLong;
+	uint64_t nAccessesWrite = nAccessesWriteRandom + survey.nAccessesWriteSequential;
+	uint64_t nAccesses = nAccessesRead + nAccessesWrite;
+	uint64_t nBytes = survey.nBytesRead + survey.nBytesWrite;
+
+	Timestamp timeTotalAccess = survey.timeTotalRead + survey.timeTotalWrite;
+	Timestamp timeTotalManage = survey.timeTotalOpen + survey.timeTotalClose;
+	Timestamp timeTotalSurvey = survey.timeClosed - survey.timeFirstOpened;
+
+	// TODO: Rather base average seek distance on accesses actually seeking?
+	double nBytesReadAverage = 0.0;
+	double nSeekDistanceReadAverage = 0.0;
+	if( nAccessesRead > 0 ){
+		nBytesReadAverage = survey.nBytesRead / ((double) nAccessesRead);
+		nSeekDistanceReadAverage = survey.nTotalSeekDistanceRead / ((double) nAccessesRead);
+	}
+	double nBytesWriteAverage = 0.0;
+	double nSeekDistanceWriteAverage = 0.0;
+	if( nAccessesWrite > 0 ){
+		nBytesWriteAverage = ((double) survey.nBytesWrite) / ((double) nAccessesWrite);
+		nSeekDistanceWriteAverage = survey.nTotalSeekDistanceWrite / ((double) nAccessesWrite);
+	}
+
+
+	GroupEntry * geFile = new GroupEntry( survey.fileName );
+
+	// General
+	// Does not make any sense to include the USER ID as this is the same for all...
+	//report.addEntry( new GroupEntry( "User ID", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.userID ) ));
+	//report.addEntry( new GroupEntry( "Time opened", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.timeOpened ) ));
+	//report.addEntry( new GroupEntry( "Time closed", geFile ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.timeClosed ) ));
+
+	// # Accesses
+	GroupEntry * geAccesses = new GroupEntry( "Accesses", geFile );
+	report.addEntry( geAccesses, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nAccesses ) ));
+	// Reading
+	GroupEntry * geReading = new GroupEntry( "Reading", geAccesses );
+	report.addEntry( geReading, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nAccessesRead ) ));
+	report.addEntry( new GroupEntry( "Sequential", geReading ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nAccessesReadSequential ) ));
+	report.addEntry( new GroupEntry( "Random, short seek", geReading ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nAccessesReadRandomShort ) ));
+	report.addEntry( new GroupEntry( "Random, long seek", geReading ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nAccessesReadRandomLong ) ));
+	// Writing
+	GroupEntry * geWriting = new GroupEntry( "Writing", geAccesses );
+	report.addEntry( geWriting, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nAccessesWrite ) ));
+	report.addEntry( new GroupEntry( "Sequential", geWriting ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nAccessesWriteSequential ) ));
+	report.addEntry( new GroupEntry( "Random, short seek", geWriting ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nAccessesWriteRandomShort ) ));
+	report.addEntry( new GroupEntry( "Random, long seek", geWriting ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nAccessesWriteRandomLong ) ));
+
+	// # Bytes
+	GroupEntry * geBytes = new GroupEntry( "Bytes", geFile );
+	report.addEntry( geBytes, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytes ) ));
+	report.addEntry( new GroupEntry( "Total read", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nBytesRead ) ));
+	report.addEntry( new GroupEntry( "Read per access", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytesReadAverage ) ));
+	report.addEntry( new GroupEntry( "Total written", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.nBytesWrite ) ));
+	report.addEntry( new GroupEntry( "Written per access", geBytes ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytesWriteAverage ) ));
+
+	// # Time
+	GroupEntry * geTime = new GroupEntry( "Time", geFile );
+	report.addEntry( geBytes, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytes ) ));
+	report.addEntry( new GroupEntry( "Total for opening", geTime ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.timeTotalOpen ) ));
+	report.addEntry( new GroupEntry( "Total for reading", geTime ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.timeTotalRead ) ));
+	report.addEntry( new GroupEntry( "Total for writing", geTime ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.timeTotalWrite ) ));
+	report.addEntry( new GroupEntry( "Total for closing", geTime ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( survey.timeTotalClose ) ));
+	report.addEntry( new GroupEntry( "Total for accessing (read & write)", geTime ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( timeTotalAccess ) ));
+	report.addEntry( new GroupEntry( "Total for managing (open & close)", geTime ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( timeTotalManage ) ));
+	report.addEntry( new GroupEntry( "Total surveyed", geTime ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( timeTotalSurvey ) ));
+
+	// # Seek Distance
+	GroupEntry * geSeekDistance = new GroupEntry( "Seek Distance", geFile );
+	report.addEntry( geBytes, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nBytes ) ));
+	report.addEntry( new GroupEntry( "Average reading", geSeekDistance ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nSeekDistanceReadAverage ) ));
+	report.addEntry( new GroupEntry( "Average writing", geSeekDistance ), ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( nSeekDistanceWriteAverage ) ));
 }
 
 
@@ -601,6 +679,51 @@ const ActivityID * FileSurveyorPlugin::findParentAID( const shared_ptr<Activity>
 	}
 	return NULL;
  }
+
+
+/*
+ * Aggregate statistics over all file surveys present
+ */
+const FileSurvey FileSurveyorPlugin::aggregateSurveys()
+{
+	FileSurvey total;
+
+	{	// Disallow other access to our survey collections
+		// lock_guard<mutex> collectionLock( collectionMutex );
+
+		total.timeFirstOpened = -1;
+
+		for(auto survey : closedFileSurveys){
+
+			total.fileName = "(Aggregated over all files)";
+			//total.userID = "(Aggregated over all users)";
+			if (survey.timeFirstOpened < total.timeFirstOpened)
+				total.timeFirstOpened = survey.timeFirstOpened;
+			// timeOpened = 0;
+			if (survey.timeClosed > total.timeClosed)
+				total.timeClosed = survey.timeClosed;
+			// filePosition = 0;
+			total.timeTotalOpen += survey.timeTotalOpen;
+			total.timeTotalRead += survey.timeTotalRead;
+			total.timeTotalWrite += survey.timeTotalWrite;
+			total.timeTotalClose += survey.timeTotalClose;
+			total.nAccessesRead += survey.nAccessesRead;
+			total.nAccessesReadSequential += survey.nAccessesReadSequential;
+			total.nAccessesReadRandomShort += survey.nAccessesReadRandomShort;
+			total.nAccessesReadRandomLong += survey.nAccessesReadRandomLong;
+			total.nAccessesWrite += survey.nAccessesWrite;
+			total.nAccessesWriteSequential += survey.nAccessesWriteSequential;
+			total.nAccessesWriteRandomShort += survey.nAccessesWriteRandomShort;
+			total.nAccessesWriteRandomLong += survey.nAccessesWriteRandomLong;
+			total.nBytesRead += survey.nBytesRead;
+			total.nBytesWrite += survey.nBytesWrite;
+			total.nTotalSeekDistanceRead += survey.nTotalSeekDistanceRead;
+			total.nTotalSeekDistanceWrite += survey.nTotalSeekDistanceWrite;
+		}
+	} // collectionLock
+
+	return total;
+}
 
 
 /*
