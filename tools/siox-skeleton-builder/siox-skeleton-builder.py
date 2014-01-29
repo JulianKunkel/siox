@@ -1177,6 +1177,11 @@ class Writer():
                 outputString = templ.output('init').strip()
                 if outputString.strip() != '':
                     print('\t', outputString, end='\n', sep='', file=output)
+        for function in reversed(functionList):
+            for templ in function.usedTemplateList:
+                outputString = templ.output('initLast').strip()
+                if outputString.strip() != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
         print("}", file=output)
 
         print("\nstatic void sioxFinal() {", file=output)
