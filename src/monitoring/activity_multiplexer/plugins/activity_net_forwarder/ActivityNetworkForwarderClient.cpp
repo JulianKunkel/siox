@@ -33,7 +33,7 @@ public:
 
 	void connectionErrorCB(ServiceClient & connection, CommunicationError error){
 		connectionErrors++;		
-		usleep( 1000l );
+		sleep( 1 );
 
 		connection.ireconnect();
 	}
