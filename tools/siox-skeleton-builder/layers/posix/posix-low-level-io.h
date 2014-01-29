@@ -155,8 +155,6 @@ int dup3( int oldfd, int newfd, int flags );
 //@activity_attribute bytesToWrite count
 //@activity_attribute bytesWritten ret
 //@activity_attribute_u32 fileHandle fd
-//@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
-//@activity_attribute filePosition offset
 //@activity_link_int fd
 //@guardEnd
 ssize_t write( int fd, const void * buf, size_t count );
@@ -166,8 +164,6 @@ ssize_t write( int fd, const void * buf, size_t count );
 //@activity
 //@activity_attribute bytesRead ret
 //@activity_attribute_u32 fileHandle fd
-//@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
-//@activity_attribute filePosition offset
 //@activity_link_int fd
 //@guardEnd
 ssize_t read( int fd, void * buf, size_t count );
@@ -178,9 +174,6 @@ ssize_t read( int fd, void * buf, size_t count );
 //@activity_attribute bytesWritten ret
 //@activity_attribute_u32 fileHandle fd
 //@activity_attribute_u32 fileMemoryRegions iovcnt
-//@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
-//@splice_before ''''
-//@activity_attribute filePosition offset
 //@activity_link_int fd
 //@guardEnd
 ssize_t writev( int fd, const struct iovec * iov, int iovcnt );
@@ -191,8 +184,6 @@ ssize_t writev( int fd, const struct iovec * iov, int iovcnt );
 //@activity_attribute bytesRead ret
 //@activity_attribute_u32 fileMemoryRegions iovcnt
 //@activity_attribute_u32 fileHandle fd
-//@splice_before ''uint64_t offset = lseek(fd,0,SEEK_CUR);''
-//@activity_attribute filePosition offset
 //@activity_link_int fd
 //@guardEnd
 ssize_t readv( int fd, const struct iovec * iov, int iovcnt );
@@ -306,6 +297,16 @@ int fsync( int fd );
 //@activity_link_int fd
 //@guardEnd
 int fdatasync( int fd );
+
+//@guard
+//@error ''ret == (off_t) -1'' errno
+//@activity
+//@activity_attribute_u32 fileHandle fd
+//@activity_link_int fd
+//@activity_attribute filePosition ret
+//@guardEnd
+off_t lseek(int fd, off_t offset, int whence);
+
 
 
 /* Hints to the system, this might be used for optimizations by SIOX in the future */
@@ -597,10 +598,6 @@ If a read error occurs, the error indicator (ferror) is set and a null pointer i
 //@error ''ret == NULL'' errno
 //@activity
 //@activity_link_size stream
-//@splice_before ''size_t posB = ftell (stream );''
-//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
-//@activity_attribute bytesRead posDelta
-//@activity_attribute filePosition posB
 //@guardEnd
 char * fgets( char * str, int num, FILE * stream );
 
@@ -613,10 +610,6 @@ On error, the function returns EOF and sets the error indicator (ferror).
 //@error ''ret == EOF'' errno
 //@activity
 //@activity_link_size stream
-//@splice_before ''size_t posB = ftell (stream );''
-//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
-//@activity_attribute bytesWritten posDelta
-//@activity_attribute filePosition posB
 //@guardEnd
 int fputs( const char * str, FILE * stream );
 
@@ -651,6 +644,16 @@ If either size or count is zero, the function returns zero and the error indicat
 //@activity_attribute bytesWritten posDelta
 //@guardEnd
 size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
+
+
+//@guard
+//@error ''ret != 0'' errno
+//@activity
+//@activity_link_size stream
+//@splice_after ''uint64_t pos = (uint64_t) ftell(stream);''
+//@activity_attribute filePosition pos
+//@guardEnd
+int fseeko(FILE *stream, off_t offset, int whence);
 
 
 
@@ -688,10 +691,7 @@ If a multibyte character encoding error occurs while writing wide characters, er
 //@error ''ret < 0'' errno
 //@activity
 //@activity_link_size stream
-//@splice_before ''size_t posB = ftell (stream );''
-//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
-//@activity_attribute bytesWritten posDelta
-//@activity_attribute filePosition posB
+//@activity_attribute bytesWritten ret
 //@guardEnd
 int vfprintf( FILE * stream, const char * format, va_list arg );
 
@@ -704,10 +704,6 @@ If an encoding error happens interpreting wide characters, the function sets err
 //@error ''ret < 0'' errno
 //@activity
 //@activity_link_size stream
-//@splice_before ''size_t posB = ftell (stream );''
-//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
-//@activity_attribute bytesRead posDelta
-//@activity_attribute filePosition posB
 //@guardEnd
 int vfscanf( FILE * stream, const char * format, va_list arg );
 
@@ -722,10 +718,6 @@ If an encoding error happens interpreting wide characters, the function sets err
 //@error ''ret < 0'' errno
 //@activity
 //@activity_link_size stream
-//@splice_before ''size_t posB = ftell (stream );''
-//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
-//@activity_attribute bytesRead posDelta
-//@activity_attribute filePosition posB
 //@guardEnd
 //@rewriteCall vfscanf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
 int fscanf( FILE * stream, const char * format, ... );
@@ -736,10 +728,6 @@ int fscanf( FILE * stream, const char * format, ... );
 //@error ''ret < 0'' errno
 //@activity
 //@activity_link_size stream
-//@splice_before ''size_t posB = ftell (stream );''
-//@splice_after ''uint64_t posDelta = ftell (stream ) - posB;''
-//@activity_attribute bytesWritten posDelta
-//@activity_attribute filePosition posB
 //@guardEnd
 //@rewriteCall vfprintf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
 int fprintf( FILE * stream, const char * format, ... );
