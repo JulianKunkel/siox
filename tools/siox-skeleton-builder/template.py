@@ -9,6 +9,7 @@ template = {
 	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" SpliceCode=',
 	'global': '''static siox_component * global_component = NULL;
 		     static siox_unique_interface * global_uid = NULL;
+                     static int layer_initialized = FALSE;
 				''',
     'init': ''' 
     		  siox_register_initialization_signal(sioxInit);
@@ -18,10 +19,11 @@ template = {
     		  %(SpliceCode)s
     		  global_uid = siox_system_information_lookup_interface_id(%(InterfaceName)s, %(ImplementationIdentifier)s);
               global_component = siox_component_register(global_uid, %(InstanceName)s);''',
+        'initLast': 'layer_initialized = TRUE;',
 	'before': '',
 	'after': '',
 	'cleanup': '',
-	'final': 'if (global_component) { siox_component_unregister(global_component); global_component = NULL; }'
+	'final': 'if (layer_initialized) { siox_component_unregister(global_component); global_component = NULL; layer_initialized = FALSE; }'
 },
 # register_attribute
 #
@@ -143,7 +145,7 @@ template = {
 	'variables': 'Name=guard',
 	'global': '''''',
 	'init': '''''',
-	'before': '''\tif( monitoring_namespace_deactivated() && global_component != NULL && siox_is_monitoring_enabled() ){ ''',
+	'before': '''\tif( monitoring_namespace_deactivated() && layer_initialized && siox_is_monitoring_enabled() ){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'final': ''

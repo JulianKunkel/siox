@@ -96,6 +96,8 @@ from a other header file.''')
 
             if not "init" in entries:
                 entries["init"] = ""
+            if not "initLast" in entries:
+                entries["initLast"] = ""
             if not "before" in entries:
                 entries["before"] = ""
             if not "after" in entries:
@@ -758,6 +760,7 @@ class Template():
         # Remember template-access for easier usage
         self.world = self.templateDict['global']
         self.init = self.templateDict['init']
+        self.initLast = self.templateDict['initLast']
         self.before = self.templateDict['before']
         self.after = self.templateDict['after']
         self.final = self.templateDict['final']
@@ -840,6 +843,8 @@ class Template():
             return self.cleanOutput(self.world)
         elif (type == 'init'):
             return self.cleanOutput(self.init)
+        elif (type == 'initLast'):
+            return self.cleanOutput(self.initLast)
         elif (type == 'before'):
             return self.cleanOutput(self.before)
         elif (type == 'after'):
@@ -942,6 +947,12 @@ class Writer():
             prepareGenericVariablesForTemplates(function)
             for templ in function.usedTemplateList:
                 outputString = templ.output('init').strip()
+                if outputString.strip() != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+        
+        for function in reversed(functionList):
+            for templ in function.usedTemplateList:
+                outputString = templ.output('initLast').strip()
                 if outputString.strip() != '':
                     print('\t', outputString, end='\n', sep='', file=output)
         print("}", file=output)
@@ -1164,6 +1175,11 @@ class Writer():
 
             for templ in function.usedTemplateList:
                 outputString = templ.output('init').strip()
+                if outputString.strip() != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+        for function in reversed(functionList):
+            for templ in function.usedTemplateList:
+                outputString = templ.output('initLast').strip()
                 if outputString.strip() != '':
                     print('\t', outputString, end='\n', sep='', file=output)
         print("}", file=output)

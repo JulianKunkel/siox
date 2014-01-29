@@ -75,7 +75,7 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
 
     // Check if Type is in database
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "registerType");
     // Perform a select
     result resultSelect = selectAction.exec(("SELECT id FROM type WHERE name='" + selectAction.esc(name) + "'"));
 
@@ -125,7 +125,7 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
 
 TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw() {
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "lookupTypeByName");
 
     // Perform a select
     result resultSelect = selectAction.exec(("SELECT id FROM Type WHERE name='" + selectAction.esc(name) + "'"));
@@ -155,7 +155,7 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
     string tmpName;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "lookupTypeById");
 
     // Perform a select
     result resultSelect = selectAction.exec("SELECT name FROM Type WHERE id='"+to_string(anId)+"'");
@@ -182,7 +182,7 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 
 TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
 
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "registerObject");
     // Perform a select
     result resultSelect = selectAction.exec(("SELECT childObjectId FROM relation WHERE childName='" + selectAction.esc(childName) + "' AND parentObjectId = '"+to_string(parentId)+"' AND relationTypeId = '"+to_string(relationType)+"'"));
 
@@ -238,7 +238,7 @@ TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw
     TopologyObjectId tmpId;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "lookupObjectById");
 
     // Perform a select
     result resultSelect = selectAction.exec(("SELECT typeId FROM Object WHERE id='" + to_string(anId) + "'"));
@@ -264,7 +264,7 @@ TopologyRelation DatabaseTopology::registerRelation( TopologyObjectId parent, To
     TopologyRelation tmpRelation;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work insertAction(*conn, "Insert Transaction");
+    work insertAction(*conn, "registerRelation");
 
     stringstream buff;    
     buff << "SELECT childObjectID FROM Relation WHERE childName='" << insertAction.esc(childName) << "' AND parentObjectId = '" << parent << "' AND relationTypeId='" << relationType << "'";
@@ -291,7 +291,7 @@ TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, Topo
     TopologyObjectId tmpChild;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "lookupRelation");
 
     stringstream buff;
     buff << "SELECT childObjectID FROM Relation WHERE childName='" << selectAction.esc(childName) << "' AND parentObjectId = '" << parent << "' AND relationTypeId='" << relationType << "'";
@@ -388,7 +388,7 @@ TopologyRelationList DatabaseTopology::enumerateParents( TopologyObjectId child,
 TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "registerAttribute");
 
     // Perform a select
     result resultSelect = selectAction.exec(("SELECT id, dataType FROM Attribute WHERE name='" + selectAction.esc(name) + "' AND domainTypeId = '"+to_string(domain)+"'"));
@@ -446,7 +446,7 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
 
 TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "lookupAttributeByName");
     TopologyTypeId tmpId;
     intmax_t tmpInt;
 
@@ -480,7 +480,7 @@ TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId att
     TopologyAttribute tmpAttribute;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "lookupAttributeById");
     string tmpName;
     int tmpId;
     intmax_t tmpInt;
@@ -514,7 +514,7 @@ TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId att
 }
 
 bool DatabaseTopology::setAttribute( TopologyObjectId objectId, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
-    work insertAction(*conn, "Insert Transaction");
+    work insertAction(*conn, "setAttribute");
     // Perform an insert OR update the existing value
     stringstream buff;
 
@@ -536,7 +536,7 @@ bool DatabaseTopology::setAttribute( TopologyObjectId objectId, TopologyAttribut
 }
 
 TopologyValue DatabaseTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
-    work selectAction(*conn, "Select Transaction");
+    work selectAction(*conn, "getAttribute");
     
     // Perform a select
     result resultSelect = selectAction.exec(("SELECT value, type FROM Value WHERE objectId='" + to_string(object) + "' AND attributeId = '"+to_string(attribute)+"'"));
