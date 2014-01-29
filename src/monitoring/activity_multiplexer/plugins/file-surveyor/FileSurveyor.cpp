@@ -67,7 +67,7 @@ class FileSurvey {
 	public:
 		// Used to differentiate surveys
 		string fileName = "[NO VALID FILENAME]";
-		string userID = "[NO VALID UID]";
+		//string userID = "[NO VALID UID]";
 		// Counters for current open-access-close cycle
 		Timestamp timeFirstOpened = 0;
 		Timestamp timeOpened = 0;
@@ -320,17 +320,17 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 	if( fileExtensionsToWatch.count( fileExtension ) > 0 || fileExtensionsToWatch.empty() )
 	{
 		// Retrieve User ID
-		string userID = "(no valid UserID)";
+		//string userID = "(no valid UserID)";
 		// TODO: Retrieve correct UID for OPEN activities.
 		// TODO: Add application name/path (and PID?) to tuple by which to differentiate surveys
-		const Attribute * attUserID = findAttributeByID( activity, uidAttID );
-		if ( attUserID == NULL ){
-			cerr << "[FileSurvey] No valid user ID in activity" << activity->aid() << "!" << endl;
-		}
-		else{
-			userID = attUserID->value.str();
+		//const Attribute * attUserID = findAttributeByID( activity, uidAttID );
+		//if ( attUserID == NULL ){
+		//	cerr << "[FileSurvey] No valid user ID in activity" << activity->aid() << "!" << endl;
+		//}
+		//else{
+		//	userID = attUserID->value.str();
 			// OUTPUT( "UserID: " << userID );
-		}
+		//}
 
 		FileSurvey	survey;
 
@@ -340,8 +340,8 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 			// See whether there is a survey for this user and file already that can be reopened
 			for(auto candidate=closedFileSurveys.begin(); candidate != closedFileSurveys.end(); candidate++)
 			{
-				if( candidate->userID == attUserID->value.str()
-				   && candidate->fileName == attFileName->value.str())
+				if( //candidate->userID == attUserID->value.str() && 
+				   candidate->fileName == attFileName->value.str())
 				{
 					// Reuse closed survey
 
@@ -362,7 +362,7 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 			// Create and fill new survey for the file just opened
 			survey.timeFirstOpened = survey.timeOpened = activity->time_start();
 			survey.fileName = attFileName->value.str();
-			survey.userID = userID;
+			//survey.userID = userID;
 			survey.timeTotalOpen += activity->time_stop() - activity->time_start();
 
 			openFileSurveys[ activity->aid() ] = survey;
@@ -696,7 +696,7 @@ const FileSurvey FileSurveyorPlugin::aggregateSurveys()
 		for(auto survey : closedFileSurveys){
 
 			total.fileName = "(Aggregated over all files)";
-			total.userID = "(Aggregated over all users)";
+			//total.userID = "(Aggregated over all users)";
 			if (survey.timeFirstOpened < total.timeFirstOpened)
 				total.timeFirstOpened = survey.timeFirstOpened;
 			// timeOpened = 0;
