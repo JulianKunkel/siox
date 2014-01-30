@@ -23,6 +23,8 @@ namespace core {
 		RegisteredComponent * rc = new RegisteredComponent( nr, section, moduleName, component );
 		list.push_back( rc );
 		map[nr] = rc;
+
+		maxComponentNumber = (maxComponentNumber >= nr) ? maxComponentNumber : nr;
 	}
 
 

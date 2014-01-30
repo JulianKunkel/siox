@@ -150,6 +150,15 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+'guardErrno': {
+	'variables': 'Name=guard',
+	'global': '''''',
+	'init': '''''',
+	'before': '''\t int errsv; if( monitoring_namespace_deactivated() && layer_initialized && siox_is_monitoring_enabled() ){ ''',
+	'after': '''''',
+	'cleanup': '',
+	'final': ''
+},
 'guardEnd': {
 	'variables': 'Name=guard FC=%(FUNCTION_CALL)s',
 	'global': '''''',
@@ -159,7 +168,15 @@ template = {
 	'cleanup': '\t}else{\n\t\t%(FC)s \t}',
 	'final': ''
 },
-
+'guardEndErrno': {
+	'variables': 'Name=guard FC=%(FUNCTION_CALL)s',
+	'global': '''''',
+	'init': '''''',
+	'before': '''''',
+	'after': '''''',
+	'cleanup': '\t}else{\n\t\t%(FC)s \t}\n\t errno = errsv;',
+	'final': ''
+},
 
 # activity with hints
 #
@@ -444,6 +461,22 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
+'errorErrno': {
+        'variables': 'Condition="ret<0" Activity=sioxActivity',
+        'global': '''''',
+        'init': '''''',
+        'before': '''''',
+        'after': '''errsv = errno;
+		    if ( %(Condition)s ){
+                      siox_activity_report_error( %(Activity)s, errsv );
+                    }''',
+        'cleanup': '',
+        'final': ''
+},
+'restoreErrno': {
+        'after': ''' errno = errsv; '''
+},
+
 # remote_call_start
 #
 # Initiates a new remote call

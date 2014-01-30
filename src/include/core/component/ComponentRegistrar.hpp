@@ -81,8 +81,8 @@ namespace core {
 			}
 
 
-			const int numberOfRegisteredComponents() {
-				return list.size();
+			const int getMaximumComponentNumber() {
+				return maxComponentNumber;
 			}
 
 			/*
@@ -91,6 +91,7 @@ namespace core {
 			void shutdown();
 
 		private:
+			int maxComponentNumber = 0;
 			std::map<ComponentReferenceID, RegisteredComponent*> map;
 			std::list<RegisteredComponent*> list;
 	};

@@ -104,7 +104,7 @@ namespace core {
 		vector<Component *> components;
 
 		registrarMutex.lock();
-		autoConfiguratorOffset = registrar->numberOfRegisteredComponents();
+		autoConfiguratorOffset = registrar->getMaximumComponentNumber();
 		autoConfiguratorRegistrar = registrar;
 
 		ContainerSerializer cs = ContainerSerializer();
