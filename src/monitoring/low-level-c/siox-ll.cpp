@@ -114,6 +114,10 @@ void siox_enable_monitoring(){
 	monitoringDisabled = SIOX_MONITORING_ENABLED;
 }
 
+int siox_monitoring_namespace_deactivated(){
+	return monitoring_namespace_deactivated();
+}
+
 
 //////////////////////////////////////////////////////////
 

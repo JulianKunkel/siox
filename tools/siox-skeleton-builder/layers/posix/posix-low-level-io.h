@@ -35,7 +35,7 @@
 
 //@register_attribute fileMemoryRegions "POSIX" "quantity/memoryRegions" SIOX_STORAGE_32_BIT_INTEGER
 
-//@register_attribute fileFopenFlags "POSIX" "descriptor/fopenFlags" SIOX_STORAGE_STRING
+//@register_attribute fileOpenFlags "POSIX" "hints/openFlags" SIOX_STORAGE_32_BIT_UINTEGER
 
 //@register_attribute fileName "POSIX" "descriptor/filename" SIOX_STORAGE_STRING
 //@register_attribute fileSystem "Global" "descriptor/filesystem" SIOX_STORAGE_32_BIT_UINTEGER
@@ -71,10 +71,10 @@ End of global part
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-////@splice_before uint32_t translatedFlags = translatePOSIXFlagsToSIOX(flags);
-////@activity_attribute fileOpenFlags translatedFlags
+//@splice_before uint32_t translatedFlags = translatePOSIXFlagsToSIOX(flags);
+//@activity_attribute fileOpenFlags translatedFlags
 //@splice_before SET_FILENAME(pathname)
-//@activity_attribute_u32 fileHandle ret
+//@activity_attribute_late fileHandle ret
 //@horizontal_map_put_int ret
 //@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
 int open( const char * pathname, int flags, ... );
@@ -84,7 +84,7 @@ int open( const char * pathname, int flags, ... );
 //@activity
 //@horizontal_map_put_int ret
 //@splice_before SET_FILENAME(pathname)
-//@activity_attribute_u32 fileHandle ret
+//@activity_attribute_late fileHandle ret
 int creat( const char * pathname, mode_t mode );
 
 //@splice_before mode_t mode = va_arg(valist,mode_t);
@@ -92,10 +92,10 @@ int creat( const char * pathname, mode_t mode );
 //@errorErrno ''ret<0''
 //@activity open
 //@splice_before SET_FILENAME(pathname)
-//@activity_attribute_u32 fileHandle ret
-////@splice_before uint32_t translatedFlags = translatePOSIXFlagsToSIOX(flags);
-////@activity_attribute fileOpenFlags translatedFlags
+//@splice_before uint32_t translatedFlags = translatePOSIXFlagsToSIOX(flags);
+//@activity_attribute fileOpenFlags translatedFlags
 //@horizontal_map_put_int ret
+//@activity_attribute_late fileHandle ret
 //@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
 int open64( const char * pathname, int flags, ... );
 
@@ -104,20 +104,20 @@ int open64( const char * pathname, int flags, ... );
 //@activity creat
 //@horizontal_map_put_int ret
 //@splice_before SET_FILENAME(pathname)
-//@activity_attribute_u32 fileHandle ret
+//@activity_attribute_late fileHandle ret
 int creat64( const char * pathname, mode_t mode );
 //@guard
 //@errorErrno ''ret<0''
 //@activity
 //@activity_link_int fd
 //@horizontal_map_remove_int fd
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 int close( int fd );
 
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_lookup_ID_int fd ActivityID=ParentID
 //@horizontal_map_put_int_ID ret ActivityID=ParentID
 int dup( int fd );
@@ -126,7 +126,7 @@ int dup( int fd );
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute_u32 fileHandle oldfd
+//@activity_attribute fileHandle oldfd
 //@activity_lookup_ID_int oldfd ActivityID=ParentID
 //@horizontal_map_put_int_ID newfd ActivityID=ParentID
 int dup2( int oldfd, int newfd );
@@ -136,7 +136,7 @@ int dup2( int oldfd, int newfd );
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute_u32 fileHandle oldfd
+//@activity_attribute fileHandle oldfd
 //@activity_lookup_ID_int oldfd ActivityID=ParentID
 //@horizontal_map_put_int_ID newfd ActivityID=ParentID
 int dup3( int oldfd, int newfd, int flags );
@@ -145,34 +145,34 @@ int dup3( int oldfd, int newfd, int flags );
 //@errorErrno ''ret<0''
 //@activity
 //@activity_attribute bytesToWrite count
-//@activity_attribute bytesWritten ret
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
+//@activity_attribute_late bytesWritten ret
 //@activity_link_int fd
 ssize_t write( int fd, const void * buf, size_t count );
 
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute bytesRead ret
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute_late bytesRead ret
+//@activity_attribute fileHandle fd
 //@activity_link_int fd
 ssize_t read( int fd, void * buf, size_t count );
 
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute bytesWritten ret
-//@activity_attribute_u32 fileHandle fd
-//@activity_attribute_u32 fileMemoryRegions iovcnt
+//@activity_attribute fileHandle fd
+//@activity_attribute fileMemoryRegions iovcnt
+//@activity_attribute_late bytesWritten ret
 //@activity_link_int fd
 ssize_t writev( int fd, const struct iovec * iov, int iovcnt );
 
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute bytesRead ret
-//@activity_attribute_u32 fileMemoryRegions iovcnt
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute_late bytesRead ret
+//@activity_attribute fileMemoryRegions iovcnt
+//@activity_attribute fileHandle fd
 //@activity_link_int fd
 ssize_t readv( int fd, const struct iovec * iov, int iovcnt );
 
@@ -180,9 +180,9 @@ ssize_t readv( int fd, const struct iovec * iov, int iovcnt );
 //@errorErrno ''ret==(size_t)-1''
 //@activity
 //@activity_attribute bytesToWrite count
-//@activity_attribute bytesWritten ret
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
+//@activity_attribute_late bytesWritten ret
 //@activity_link_int fd
 ssize_t pwrite( int fd, const void * buf, size_t count, off_t offset );
 
@@ -190,8 +190,8 @@ ssize_t pwrite( int fd, const void * buf, size_t count, off_t offset );
 //@errorErrno ''ret==(size_t)-1''
 //@activity
 //@activity_attribute bytesToRead count
-//@activity_attribute bytesRead ret
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute_late bytesRead ret
+//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
 ssize_t pread( int fd, void * buf, size_t count, off_t offset );
@@ -200,9 +200,9 @@ ssize_t pread( int fd, void * buf, size_t count, off_t offset );
 //@errorErrno ''ret==(size_t)-1''
 //@activity
 //@activity_attribute bytesToWrite count
-//@activity_attribute bytesWritten ret
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
+//@activity_attribute_late bytesWritten ret
 //@activity_link_int fd
 ssize_t pwrite64( int fd, const void * buf, size_t count, off_t offset );
 
@@ -210,8 +210,8 @@ ssize_t pwrite64( int fd, const void * buf, size_t count, off_t offset );
 //@errorErrno ''ret==(size_t)-1''
 //@activity
 //@activity_attribute bytesToRead count
-//@activity_attribute bytesRead ret
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute_late bytesRead ret
+//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
 ssize_t pread64( int fd, void * buf, size_t count, off_t offset );
@@ -219,19 +219,19 @@ ssize_t pread64( int fd, void * buf, size_t count, off_t offset );
 //@guard
 //@errorErrno ''ret==(size_t)-1''
 //@activity
-//@activity_attribute bytesWritten ret
-//@activity_attribute_u32 fileMemoryRegions iovcnt
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileMemoryRegions iovcnt
+//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
+//@activity_attribute_late bytesWritten ret
 //@activity_link_int fd
 ssize_t pwritev( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
 //@activity
-//@activity_attribute bytesRead ret
-//@activity_attribute_u32 fileMemoryRegions iovcnt
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute_late bytesRead ret
+//@activity_attribute fileMemoryRegions iovcnt
+//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
 ssize_t preadv( int fd, const struct iovec * iov, int iovcnt, off_t offset );
@@ -239,19 +239,19 @@ ssize_t preadv( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 //@guard
 //@errorErrno ''ret==(size_t)-1''
 //@activity
-//@activity_attribute bytesWritten ret
-//@activity_attribute_u32 fileMemoryRegions iovcnt
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileMemoryRegions iovcnt
+//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
+//@activity_attribute_late bytesWritten ret
 //@activity_link_int fd
 ssize_t pwritev64( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
 //@activity
-//@activity_attribute bytesRead ret
-//@activity_attribute_u32 fileMemoryRegions iovcnt
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute_late bytesRead ret
+//@activity_attribute fileMemoryRegions iovcnt
+//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_link_int fd
 ssize_t preadv64( int fd, const struct iovec * iov, int iovcnt, off_t offset );
@@ -264,21 +264,21 @@ void sync( void );
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_link_int fd
 int fsync( int fd );
 
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_link_int fd
 int fdatasync( int fd );
 
 //@guard
 //@errorErrno ''ret == (off_t) -1''
 //@activity
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_link_int fd
 //@activity_attribute filePosition ret
 off_t lseek(int fd, off_t offset, int whence);
@@ -291,7 +291,7 @@ off_t lseek(int fd, off_t offset, int whence);
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_attribute fileAdviseExtent len
 //@activity_attribute fileAdvise advise
@@ -344,7 +344,7 @@ int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 //@guard
 //@errorErrno ''ret<0''
 //@activity Name=fstat
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_link_int fd
 int __fxstat64( int __ver, int fd, struct stat64 * buf );
 
@@ -365,7 +365,7 @@ int __fxstat64( int __ver, int fd, struct stat64 * buf );
 //@guard
 //@errorErrno ''ret<0''
 //@activity Name=fstat
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_link_int fd
 int __fxstat( int __ver, int fd, struct stat * buf );
 
@@ -377,19 +377,24 @@ int __fxstat( int __ver, int fd, struct stat * buf );
 //@guard
 //@errorErrno ''ret<0''
 //@activity
-//@activity_attribute_u32 fileHandle fd
+//@activity_attribute fileHandle fd
 //@activity_attribute fileExtent length
 //@activity_attribute filePosition offset
 //@activity_link_int fd
 void * mmap( void * address, size_t length, int protect, int flags, int fd, off_t offset );
 
+//@guard
+//@errorErrno ''ret<0''
+//@activity
+//@activity_attribute fileHandle fd
+//@activity_attribute fileExtent length
+//@activity_attribute filePosition offset
+//@activity_link_int fd
+void * mmap64( void * address, size_t length, int protect, int flags, int fd, off_t offset );
+
 //void * mremap (void *address, size_t length, size_t new_length, int flag);
 //int munmap (void *addr, size_t length);
 //int madvise (void *addr, size_t length, int advice);
-
-
-//On success, the function returns zero.
-/ is set to a platform-specific positive value.
 
 /*
 Opens the file whose name is specified in the parameter filename and associates it with a stream that can be identified in future operations by the FILE pointer returned.
@@ -402,26 +407,11 @@ On most library implementations, the variable is also set to a system-specific e
 //@errorErrno ''ret<0''
 //@activity
 //@splice_before SET_FILENAME(filename)
-//@activity_attribute_pointer fileFopenFlags mode
+//@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
+//@activity_attribute fileOpenFlags translatedFlags
 //@horizontal_map_put_size ret
 FILE * fopen( const char * filename, const char * mode );
 
-//@guard
-//@errorErrno ''ret<0''
-//@activity
-//@activity_attribute_u32 fileHandle fd
-//@activity_attribute fileExtent length
-//@activity_attribute filePosition offset
-//@activity_link_int fd
-void * mmap64( void * address, size_t length, int protect, int flags, int fd, off_t offset );
-
-//void * mremap (void *address, size_t length, size_t new_length, int flag);
-//int munmap (void *addr, size_t length);
-//int madvise (void *addr, size_t length, int advice);
-
-
-//On success, the function returns zero.
-/ is set to a platform-specific positive value.
 
 /*
 Opens the file whose name is specified in the parameter filename and associates it with a stream that can be identified in future operations by the FILE pointer returned.
@@ -434,7 +424,8 @@ On most library implementations, thesave variable is also set to a system-specif
 //@errorErrno ''ret<0''
 //@activity
 //@splice_before SET_FILENAME(filename)
-//@activity_attribute_pointer fileFopenFlags mode
+//@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
+//@activity_attribute fileOpenFlags translatedFlags
 //@horizontal_map_put_size ret
 FILE * fopen64( const char * filename, const char * mode );
 /*
@@ -448,7 +439,8 @@ stream created by fdopen() is closed.
 //@errorErrno ''ret<0''
 //@activity
 //@activity_link_int fd
-//@activity_attribute_pointer fileFopenFlags mode
+//@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
+//@activity_attribute fileOpenFlags translatedFlags
 //@horizontal_map_put_size ret
 FILE * fdopen( int fd, const char * mode );
 
@@ -476,7 +468,8 @@ On most library implementations, the variable is also set to a system-specific e
 //@errorErrno ''ret<0''
 //@activity
 //@splice_before SET_FILENAME(filename)
-//@activity_attribute_pointer fileFopenFlags mode
+//@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
+//@activity_attribute fileOpenFlags translatedFlags
 //@horizontal_map_remove_size stream
 //@horizontal_map_put_size ret
 //@activity_link_size stream
@@ -578,7 +571,7 @@ If either size or count is zero, the function returns zero and both the stream s
 //@activity
 //@activity_link_size stream
 //@splice_after ''uint64_t posDelta = ret*size;''
-//@activity_attribute bytesRead posDelta
+//@activity_attribute_late bytesRead posDelta
 size_t fread( void * ptr, size_t size, size_t count, FILE * stream );
 
 /*
@@ -593,7 +586,7 @@ If either size or count is zero, the function returns zero and the error indicat
 //@activity
 //@activity_link_size stream
 //@splice_after ''uint64_t posDelta = ret*size;''
-//@activity_attribute bytesWritten posDelta
+//@activity_attribute_late bytesWritten posDelta
 size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
 
 
@@ -602,7 +595,7 @@ size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
 //@activity
 //@activity_link_size stream
 //@splice_after ''uint64_t pos = (uint64_t) ftell(stream);''
-//@activity_attribute filePosition pos
+//@activity_attribute_late filePosition pos
 int fseeko(FILE *stream, off_t offset, int whence);
 
 
@@ -639,7 +632,7 @@ If a multibyte character encoding error occurs while writing wide characters, is
 //@errorErrno ''ret < 0''
 //@activity
 //@activity_link_size stream
-//@activity_attribute bytesWritten ret
+//@activity_attribute_late bytesWritten ret
 int vfprintf( FILE * stream, const char * format, va_list arg );
 
 /*

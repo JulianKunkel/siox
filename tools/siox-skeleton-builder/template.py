@@ -145,7 +145,7 @@ template = {
 	'variables': 'Name=guard FC=%(FUNCTION_CALL)s',
 	'global': '''''',
 	'init': '''''',
-	'before': '''\tif( monitoring_namespace_deactivated() && layer_initialized && siox_is_monitoring_enabled() ){ ''',
+	'before': '''\tif( siox_monitoring_namespace_deactivated() && layer_initialized && siox_is_monitoring_enabled() ){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'cleanupLast': '\t}else{\n\t\t%(FC)s \t}',
@@ -162,32 +162,31 @@ template = {
 # Activity: The activity; defaults to sioxActivity
 'activity_attribute': {
 	'variables': 'Attribute Value Activity=sioxActivity',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
-	'cleanup': '',
-	'final': ''
+	'before': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
 },
-
 'activity_attribute_pointer': {
 	'variables': 'Attribute Value Activity=sioxActivity',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
-	'cleanup': '',
-	'final': ''
+	'before': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
 },
-
+'activity_attribute_str': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'before': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
+},
 'activity_attribute_u32': {
 	'variables': 'Attribute Value Activity=sioxActivity',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
+	'before': ' {uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
+},
+'activity_attribute_late': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
+},
+'activity_attribute_late_pointer': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
+},
+'activity_attribute_late_u32': {
+	'variables': 'Attribute Value Activity=sioxActivity',
 	'after': ' {uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
-	'cleanup': '',
-	'final': ''
 },
 # horizontal_map_put_int
 #
@@ -329,8 +328,7 @@ template = {
 	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-    'before': '''''',
-	'after': '''
+	'before': '''
 		g_rw_lock_reader_lock(& lock_%(MapName)s); 
 		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);
@@ -345,8 +343,7 @@ template = {
 	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-    'before': '''''',
-	'after': '''
+	'before': '''
 		g_rw_lock_reader_lock(& lock_%(MapName)s);
 		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);
@@ -561,4 +558,4 @@ globalOnce = ""
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<stdlib.h>', '<util/threadSafety.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']
+includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']

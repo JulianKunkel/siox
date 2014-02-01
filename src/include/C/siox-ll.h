@@ -132,7 +132,7 @@ void siox_initialize_monitoring();
 // this internal function allows to check if we are calling a function within SIOX
 //@test
 //@null 1
-int monitoring_namespace_deactivated();
+int siox_monitoring_namespace_deactivated();
 
 //////////////////////////////////////////////////////////////////////////////
 /// Retrieve the node id object for a given hardware component.

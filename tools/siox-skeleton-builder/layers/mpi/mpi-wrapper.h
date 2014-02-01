@@ -127,12 +127,12 @@ int MPI_Finalize( void );
 //@activity
 //@splice_before uint32_t translatedFlags = translateMPIOpenFlagsToSIOX(amode);
 //@activity_attribute fileOpenFlags translatedFlags
-//@activity_attribute fileHandle *fh
-//@activity_attribute_pointer fileName filename
+//@activity_attribute_str fileName filename
 //@splice_after setFileInfo(*fh, info);
 //@horizontal_map_put_size *fh
 //@splice_after recordFileInfo(sioxActivity, *fh);
 //@error ''ret != MPI_SUCCESS '' ret
+//@activity_attribute_late fileHandle *fh
 int MPI_File_open( MPI_Comm comm, OPTIONAL_CONST char * filename, int amode, MPI_Info info, MPI_File * fh );
 
 //It is required to save the value of *fh prior to calling MPI_File_close, because some MPI implementations will set it to zero, so that we cannot use *fh afterwards to lookup the parent in the hash table or to link the close activity to its parent.
@@ -144,7 +144,7 @@ int MPI_File_open( MPI_Comm comm, OPTIONAL_CONST char * filename, int amode, MPI
 int MPI_File_close( MPI_File * fh );
 
 //@activity
-//@activity_attribute_pointer fileName filename
+//@activity_attribute_str fileName filename
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_delete( OPTIONAL_CONST char * filename, MPI_Info info );
 
@@ -320,7 +320,7 @@ int MPI_File_get_info( MPI_File fh, MPI_Info * info_used );
 //@splice_after recordDatatype(sioxActivity, attribute_filetype, filetype);
 //@splice_after recordDatatype(sioxActivity, attribute_etype, etype);
 //@activity_attribute filePosition disp
-//@activity_attribute_pointer fileDatarepresentation datarep
+//@activity_attribute_str fileDatarepresentation datarep
 //@error ''ret!=MPI_SUCCESS'' ret
 int MPI_File_set_view( MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype, OPTIONAL_CONST char * datarep, MPI_Info info );
 
