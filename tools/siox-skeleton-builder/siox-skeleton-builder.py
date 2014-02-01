@@ -151,9 +151,10 @@ class Function():
         for t in self.usedTemplateList:
             if(t.name == "rewriteCall"):
                 self.rewriteCall = t.parameterList['functionName']
-                self.rewriteCallArguments = t.parameterList['arguments']
-                self.rewriteCallParams = t.parameterList['parameters']
-
+                if t.parameterList['arguments'] != "":
+                    self.rewriteCallArguments = t.parameterList['arguments']
+                if t.parameterList['parameters'] != "":
+                    self.rewriteCallParams = t.parameterList['parameters']
 
     #
     # @brief Generate the function call.
@@ -187,7 +188,7 @@ class Function():
 
         if self.definition == '':
             return '%s %s(%s)' % (self.type, self.name,
-                                  ', '.join(' '.join([parameter.type, parameter.name])
+                                  ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType])
                                             for parameter in self.parameterList))
 
         else:
@@ -231,7 +232,7 @@ class Function():
         if self.rewriteCallParams:
             arguments = self.rewriteCallParams
         else:
-            arguments = ', '.join(' '.join([parameter.type, parameter.name])
+            arguments = ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType])
                                                    for parameter in self.parameterList)
 
 
@@ -254,7 +255,7 @@ class Function():
 
         if self.definition == '':
             return '%s __wrap_%s(%s)' % (self.type, self.name,
-                                         ', '.join(' '.join([parameter.type, parameter.name])
+                                         ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType])
                                                    for parameter in self.parameterList))
 
         else:
@@ -295,7 +296,7 @@ class Function():
         if self.rewriteCallParams:
             parameters = self.rewriteCallParams
         else:
-            parameters = ', '.join(' '.join([parameter.type, parameter.name]) for parameter in self.parameterList)
+            parameters = ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType]) for parameter in self.parameterList)
 
         if self.definition == '':
 
@@ -323,7 +324,7 @@ class Function():
 
         if self.definition == '':
 
-            parameters = ', '.join(' '.join([parameter.type, parameter.name])
+            parameters = ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType])
                                    for parameter in self.parameterList)
 
 
@@ -364,6 +365,8 @@ class Parameter():
         self.type = ''
         # The name of the parameter.
         self.name = ''
+        # If the parameter is an array such as [2] the type and length is specified here
+        self.arrayType = ''
 
 
 #
@@ -414,8 +417,7 @@ class FunctionParser():
         # parameters because a regex must have a fixed number of groups to
         # match.
         self.regexFunctionDefinition = re.compile(
-            '(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].()]*)\)[\w+]*?;',
-            re.S | re.M)
+            '(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].()]*)\)[\w+]*?;', re.S | re.M)
 
         # This regular expression matches parameter type and name.
         # The Parameter which is matched needs to have a type and a name and is
@@ -426,8 +428,8 @@ class FunctionParser():
         # (?:\*\s*|\s+) matches the last * or blank
         # ([\w]+ matches the parameter name
         # (?:\s*\[\s*\])? matches array [] if exist
-        self.regexParamterDefinition = re.compile(
-            '([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[\s*\])?)')
+        self.regexParameterDefinition = re.compile(
+            '([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[[\s0-9]*\])?)')
 
         self.regexFunctionParameterDefinition = re.compile(
             '([\w*\s]+(?:\*\s*|\s+))\(\s*[*]\s*([\w]+)\s*\)\s*(.*)')
@@ -499,7 +501,6 @@ class FunctionParser():
                         continue
                     m = re.match('[a-zA-Z].*[ \t][a-zA-Z0-9]+[ \t]*$', parameter)
                     if m:
-                        print(parameter)
                         parameterOutList.append(parameter)
                     else:
                         parameterOutList.append(parameter + " var" + str(curParam))
@@ -519,9 +520,8 @@ class FunctionParser():
                         parameterName = ''
                         parameterType = parameter
 
-                    else:
-                        parameterMatch = self.regexParamterDefinition.match(
-                            parameter)
+                    else:                        
+                        parameterMatch = self.regexParameterDefinition.match(parameter)
 
                         if not parameterMatch:
                             parameterMatch = self.regexFunctionParameterDefinition.match(parameter)
@@ -533,11 +533,11 @@ class FunctionParser():
 
                         # Search for something like 'int list[]' and convert it to
                         # 'int* list'
-                        regexBracketes = re.compile('\[\s*\]')
-                        if regexBracketes.search(parameterName):
-                            parameterName = regexBracketes.sub(
-                                '', parameterName)
-                            parameterType += '*'
+                        regexBracketes = re.compile('\[[\s0-9]*\]+')
+                        bracketsMatch = regexBracketes.search(parameterName)
+                        if bracketsMatch != None:
+                            parameterName = regexBracketes.sub('', parameterName)
+                            parameterObject.arrayType = bracketsMatch.group(0)
 
                     parameterObject.name = parameterName
                     parameterObject.type = parameterType
@@ -977,8 +977,7 @@ class Writer():
                     exit(1)
 
                 print('\tva_list valist;', file=output)
-                print(
-                    '\tva_start(valist, %s);' % function.parameterList[-2].name,
+                print('\tva_start(valist, %s);' % function.parameterList[-2].name,
                     file=output)
                 #print( '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type,  function.parameterList[-2].type), file=output)
 
@@ -1056,9 +1055,7 @@ class Writer():
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
                 print('\tva_list valist;', file=output)
-                print(
-                    '\tva_start(valist, %s);' % function.parameterList[-2].name,
-                    file=output)
+                print('\tva_start(valist, %s);' % function.parameterList[-2].name, file=output)
                 #print(                    '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type,function.parameterList[-2].type), file=output)
                 # set the name to args
                 function.parameterList[-1].name = "val"

@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dlfcn.h>
-//#include <fcntl.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -65,7 +65,6 @@
 /*------------------------------------------------------------------------------
 End of global part
 ------------------------------------------------------------------------------*/
-
 
 //@splice_before mode_t mode = va_arg(valist,mode_t);
 //@guard
@@ -140,6 +139,20 @@ int dup2( int oldfd, int newfd );
 //@activity_lookup_ID_int oldfd ActivityID=ParentID
 //@horizontal_map_put_int_ID newfd ActivityID=ParentID
 int dup3( int oldfd, int newfd, int flags );
+
+
+#include <sys/sendfile.h>
+//@guard
+//@errorErrno ''ret<0''
+//@activity
+//@activity_attribute bytesToWrite count
+//@activity_attribute fileHandle out_fd
+//@activity_attribute fileHandle in_fd
+//@activity_attribute_late bytesWritten ret
+//@activity_link_int out_fd
+//@activity_link_int in_fd
+ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
+
 
 //@guard
 //@errorErrno ''ret<0''
@@ -409,6 +422,8 @@ On most library implementations, the variable is also set to a system-specific e
 //@splice_before SET_FILENAME(filename)
 //@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
 //@activity_attribute fileOpenFlags translatedFlags
+//@splice_after int fd = (ret != 0) ? fileno(ret) : 0;
+//@activity_attribute_late fileHandle fd
 //@horizontal_map_put_size ret
 FILE * fopen( const char * filename, const char * mode );
 
@@ -427,6 +442,8 @@ On most library implementations, thesave variable is also set to a system-specif
 //@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
 //@activity_attribute fileOpenFlags translatedFlags
 //@horizontal_map_put_size ret
+//@splice_after int fd = (ret != 0) ? fileno(ret) : 0;
+//@activity_attribute_late fileHandle fd
 FILE * fopen64( const char * filename, const char * mode );
 /*
 The  fdopen()  function  associates a stream with the existing file descriptor, fd.  The mode of the stream (one of the
@@ -452,6 +469,7 @@ FILE * fdopen( int fd, const char * mode );
 //@activity
 //@activity_link_size stream
 //@horizontal_map_put_int ret
+//@activity_attribute_late fileHandle ret
 int fileno( FILE * stream );
 
 /*
@@ -473,12 +491,16 @@ On most library implementations, the variable is also set to a system-specific e
 //@horizontal_map_remove_size stream
 //@horizontal_map_put_size ret
 //@activity_link_size stream
+//@splice_after int fd = (ret != 0) ? fileno(ret) : 0;
+//@activity_attribute_late fileHandle fd
 FILE * freopen( const char * filename, const char * mode, FILE * stream );
 
 //@guard
 //@errorErrno ''ret<0''
 //@activity
 //@horizontal_map_put_size ret
+//@splice_after int fd = (ret != 0) ? fileno(ret) : 0;
+//@activity_attribute_late fileHandle fd
 FILE * tmpfile( void );
 
 //@guard
@@ -657,7 +679,7 @@ If an encoding error happens interpreting wide characters, the function sets to 
 //@errorErrno ''ret < 0''
 //@activity
 //@activity_link_size stream
-//@rewriteCall vfscanf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
+//@rewriteCall vfscanf ''stream,format,valist'' 
 int fscanf( FILE * stream, const char * format, ... );
 
 /*
@@ -666,7 +688,7 @@ int fscanf( FILE * stream, const char * format, ... );
 //@errorErrno ''ret < 0''
 //@activity
 //@activity_link_size stream
-//@rewriteCall vfprintf ''stream,format,valist'' FILE*stream,const char*format,va_list arg
+//@rewriteCall vfprintf ''stream,format,valist'' 
 int fprintf( FILE * stream, const char * format, ... );
 
 
@@ -727,3 +749,83 @@ int aio_cancel( int fd, struct aiocb * aiocbp );
 //@splice_after siox_initialize_monitoring();
 pid_t fork( void );
 
+
+// An FD might be involved in inter-process communication and not only in file I/O.
+// Actually, do we really want to monitor socket I/O with SIOX ? 
+// We want to distinguish file I/O from socket I/O, though!
+
+// FILE LOCKING STUFF
+
+int lockf(int fd, int cmd, off_t len);
+
+#include <sys/file.h>
+int flock(int fd, int operation);
+
+// Special commands
+
+// int fcntl(int fd, int cmd, ...);
+
+// #include <sys/ioctl.h>
+// int ioctl(int d, int request, ...);
+
+
+#define INSTRUMENT_POSIX_COMMUNICATION
+
+#ifdef INSTRUMENT_POSIX_COMMUNICATION
+
+#include <sys/types.h>
+#include <sys/socket.h>
+//@guard
+//@errorErrno ''ret < 0''
+//@activity
+//@activity_attribute_late fileHandle ret
+//@horizontal_map_put_int ret
+int socket(int domain, int type, int protocol);
+
+//@guard
+//@errorErrno ''ret < 0''
+//@activity
+//@horizontal_map_put_int pipefd[0]
+//@horizontal_map_put_int pipefd[1]
+//@activity_attribute_late fileHandle pipefd[0]
+//@activity_attribute_late fileHandle pipefd[1]
+int pipe(int pipefd[2]);
+
+//@guard
+//@errorErrno ''ret < 0''
+//@activity
+//@horizontal_map_put_int pipefd[0]
+//@horizontal_map_put_int pipefd[1]
+//@activity_attribute_late fileHandle pipefd[0]
+//@activity_attribute_late fileHandle pipefd[1]
+int pipe2(int pipefd[2], int flags);
+
+//@guard
+//@errorErrno ''ret < 0''
+//@activity
+//@horizontal_map_put_int sv[0]
+//@horizontal_map_put_int sv[1]
+//@activity_attribute_late fileHandle sv[0]
+//@activity_attribute_late fileHandle sv[1]
+int socketpair(int domain, int type, int protocol, int sv[2]);
+
+//@guard
+//@errorErrno ''ret < 0''
+//@activity
+//@horizontal_map_put_int ret
+//@activity_attribute_late fileHandle sockfd
+int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+
+//@guard
+//@errorErrno ''ret < 0''
+//@activity
+//@horizontal_map_put_int ret
+//@activity_attribute_late fileHandle sockfd
+int accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags);
+
+
+//ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+//ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
+//ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
+
+#endif

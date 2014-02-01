@@ -329,10 +329,12 @@ template = {
 	'global': '''''',
 	'init': '''''',
 	'before': '''
+		{
 		g_rw_lock_reader_lock(& lock_%(MapName)s); 
 		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);
         siox_activity_link_to_parent( %(Activity)s, Parent ); 
+      }
 			  ''',
 	'cleanup': '',
 	'final': ''
@@ -540,7 +542,7 @@ template = {
         'final': ''
 },
 'rewriteCall': { # This is a special template, interpreted by the skeleton-builder !
-        'variables': 'functionName arguments="" parameters=""',
+        'variables': 'functionName arguments= parameters=',
         'global': '',
         'init': '',
         'before': '',
