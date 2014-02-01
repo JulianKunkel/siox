@@ -513,6 +513,8 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 
 		// check loaded components and assign them to the right struct elements.
 		siox_component * result = new siox_component();
+		assert( result != nullptr );
+
 		result->cid.id = ++process_data.last_componentID;
 		result->cid.pid = process_data.pid;
 		result->uid = uid;
@@ -532,7 +534,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 			assert( result->amux != nullptr );
 		}
 
-		assert( result != nullptr );
+		result->preCallAmux = process_data.configurator->searchFor<ActivityMultiplexerSync>( loadedComponents );
 
 		return result;
 	}
@@ -610,6 +612,14 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 
 		FUNCTION_BEGIN
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
+		// Find component's amux
+		siox_component * component = activity->component;
+		assert( component != nullptr );
+
+		// Send the activity to it
+		if ( ! monitoringDisabled && component->preCallAmux ){
+			component->preCallAmux->Log( activity->shrdPtr );
+		}
 		ab->startActivity( activity->activity, siox_gettime() );
 	}
 
@@ -673,10 +683,9 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		siox_component * component = activity->component;
 		assert( component != nullptr );
 
-		// Send activity to it
-		shared_ptr<Activity> activity_shared_ptr (activity->activity);
+		// Send the activity to it
 		if ( ! monitoringDisabled ){ 
-			component-> amux->Log( activity_shared_ptr );
+			component-> amux->Log( activity->shrdPtr );
 		}
 
 		delete( activity );

@@ -38,6 +38,11 @@ namespace monitoring {
 			virtual void unregisterListener( ActivityMultiplexerListener * listener ) = 0;
 	};
 
+	// An ActivityMultiplexer which is called before a call completed, thus it may be incompleted.
+	class ActivityMultiplexerSync : public ActivityMultiplexer{
+
+	};
+
 
 #define ACTIVITY_MULTIPLEXER_INTERFACE "monitoring_activitymultiplexer"
 
