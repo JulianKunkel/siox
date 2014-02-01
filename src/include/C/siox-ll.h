@@ -593,6 +593,15 @@ int siox_suggest_optimal_value( siox_component * component, siox_attribute * att
 //@null 0
 int siox_suggest_optimal_value_str( siox_component * component, siox_attribute * attribute, char * target_str, int maxLength );
 
+
+// This function is usefull to give the optimizer more insight what is going on.
+// Especially, if parameters need to be changed for the call/activity to make.
+// If the out_value is of type string, a pointer of type char** must be provided. The ownership is given to the callee.
+// return true if an optimal value is found
+//@test ''%p,%p,%p'' component,attribute,out_value
+//@null 0
+int siox_suggest_optimal_value_for( siox_component * component, siox_attribute * attribute, siox_activity * activity, void * out_value );
+
 //////////////////////////////////////////////////////////////////////////////
 /// Report that a local activity was initiated via a remote call.
 /// While during a single activity, many remote calls may be sent, only one

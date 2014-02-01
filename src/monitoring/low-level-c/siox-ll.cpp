@@ -437,6 +437,37 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		return "";
 	}
 
+	static bool convert_attribute_back( OntologyAttribute & oa, const VariableDatatype & val, void * out_value ){
+		switch( val.type() ) {
+			case VariableDatatype::Type::INT32:
+				*((int32_t*) out_value) = val.int32();
+				return true;
+			case VariableDatatype::Type::UINT32:
+				*((uint32_t*) out_value) = val.uint32();
+				return true;
+			case VariableDatatype::Type::INT64:
+				*((int64_t*) out_value) = val.int64();
+				return true;
+			case VariableDatatype::Type::UINT64:
+				*((uint64_t*) out_value) = val.uint64();
+				return true;
+			case VariableDatatype::Type::FLOAT:
+				*((float*) out_value) = val.flt();
+				return true;
+			case VariableDatatype::Type::DOUBLE:
+				*((double*) out_value) = val.dbl();
+				return true;
+			case VariableDatatype::Type::STRING: {
+				*(char**) out_value = strdup(val.str());
+				return true;
+			}
+			case VariableDatatype::Type::INVALID:
+			default:
+				assert(0 && "tried to optimize for a VariableDatatype of invalid type");
+				return false;
+		}
+	}	
+
 
 	void siox_process_set_attribute( siox_attribute * attribute, const void * value )
 	{
@@ -865,46 +896,35 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 	}
 
 	int siox_suggest_optimal_value( siox_component * component, siox_attribute * attribute, void * out_value ){
-		if ( process_data.optimizer == nullptr ){
-			return 0;
-		}
 		FUNCTION_BEGIN
+		if ( process_data.optimizer == nullptr ){
+			return false;
+		}		
 
 		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
 
 		try{
 			OntologyValue val(process_data.optimizer->optimalParameter(oa));
-			switch( val.type() ) {
-				case VariableDatatype::Type::INT32:
-					*((int32_t*) out_value) = val.int32();
-					break;
-				case VariableDatatype::Type::UINT32:
-					*((uint32_t*) out_value) = val.uint32();
-					break;
-				case VariableDatatype::Type::INT64:
-					*((int64_t*) out_value) = val.int64();
-					break;
-				case VariableDatatype::Type::UINT64:
-					*((uint64_t*) out_value) = val.uint64();
-					break;
-				case VariableDatatype::Type::FLOAT:
-					*((float*) out_value) = val.flt();
-					break;
-				case VariableDatatype::Type::DOUBLE:
-					*((double*) out_value) = val.dbl();
-					break;
-				case VariableDatatype::Type::STRING: {
-					*(char**) out_value = strdup(val.str());
-					break;
-				}
-				case VariableDatatype::Type::INVALID:
-				default:
-					assert(0 && "tried to optimize for a VariableDatatype of invalid type");
-					return 1;
-			}
-			return 1;
+			return convert_attribute_back(oa, val, out_value);
 		}catch ( NotFoundError & e ){
-			return 0;
+			return false;
+		}		
+	}
+
+	int siox_suggest_optimal_value_for( siox_component * component, siox_attribute * attribute, siox_activity * activity, void * out_value ){
+		FUNCTION_BEGIN
+
+		if ( process_data.optimizer == nullptr ){
+			return false;
+		}
+
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+
+		try{
+			OntologyValue val(process_data.optimizer->optimalParameterFor(oa, activity->activity));
+			return convert_attribute_back(oa, val, out_value);
+		}catch ( NotFoundError & e ){
+			return false;
 		}		
 	}
 

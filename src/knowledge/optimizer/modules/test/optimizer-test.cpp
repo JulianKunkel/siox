@@ -22,7 +22,7 @@ class OptimizerTestPlugin: public OptimizerInterface {
 		mutable uint64_t fix = 42;
 	public:
 
-		OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
+		OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override {
 			if( attribute == att1 )
 				return OntologyValue( fix );
 			if( attribute == att2 )
@@ -30,6 +30,13 @@ class OptimizerTestPlugin: public OptimizerInterface {
 			throw NotFoundError( "Illegal attribute!" );
 		}
 
+	  OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) override {
+			if( attribute == att1 )
+				return OntologyValue( fix );
+			if( attribute == att2 )
+				return OntologyValue( count++ );
+			throw NotFoundError( "Illegal attribute!" );
+		}
 };
 
 

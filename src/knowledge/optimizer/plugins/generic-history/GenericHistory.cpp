@@ -84,9 +84,13 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 		void Notify( shared_ptr<Activity> activity ) override;
 
-		virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
+		OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
 
-		virtual ComponentReport prepareReport() override;
+		OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) override{
+			return optimalParameter(attribute);
+		}
+
+		ComponentReport prepareReport() override;
 
 		~GenericHistoryPlugin();
 
