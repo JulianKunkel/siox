@@ -30,14 +30,6 @@ using namespace core;
 using namespace monitoring;
 using namespace util;
 
-// define all types for CPP
-struct siox_attribute{
-	OntologyAttribute o;
-
-	siox_attribute(const OntologyAttribute & o) : o(o) {}
-};
-
-
 typedef RemoteCall siox_remote_call;
 
 

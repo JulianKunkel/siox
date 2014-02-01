@@ -89,11 +89,11 @@
 // We hide all types from the implementation
 #ifndef SIOX_INTERNAL_USAGE
 typedef void siox_activity;
-typedef void siox_attribute;
 typedef void siox_component;
 typedef void siox_remote_call;
 #endif
 
+typedef void siox_attribute;
 typedef void siox_component_activity;
 typedef void siox_node;
 typedef void siox_associate;

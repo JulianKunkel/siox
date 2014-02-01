@@ -425,7 +425,7 @@ void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, cons
 	const vector<Attribute>& attributes = activity->attributeArray();
 	size_t hintCount = 0;
 	for( size_t i = attributes.size(); i--; ) {
-		OntologyAttribute curAttribute = facade->lookup_attribute_by_ID( attributes[i].id );
+		OntologyAttributeFull curAttribute = facade->lookup_attribute_by_ID( attributes[i].id );
 		IGNORE_EXCEPTIONS(
 			hintTypes.at( attributes[i].id );
 			outHintVector->emplace_back( attributes[i] );

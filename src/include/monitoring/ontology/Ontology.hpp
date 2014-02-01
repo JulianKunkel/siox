@@ -101,7 +101,7 @@ namespace monitoring {
 
 			virtual const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0;
 
-			virtual const OntologyAttribute lookup_attribute_by_ID( const OntologyAttributeID aID ) const throw( NotFoundError ) = 0;
+			virtual const OntologyAttributeFull lookup_attribute_by_ID( const OntologyAttributeID aID ) const throw( NotFoundError ) = 0;
 
 			virtual const vector<OntologyAttributeID> enumerate_meta_attributes( const OntologyAttribute & attribute ) const = 0;
 
