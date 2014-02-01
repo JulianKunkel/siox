@@ -24,8 +24,7 @@
 
 #include <util/autoLoadModules.hpp>
 #include <util/ReporterHelper.hpp>
-
-
+#include <util/time.h>
 
 #include "siox-ll-internal.hpp"
 
@@ -579,7 +578,7 @@ void siox_finalize_monitoring(){
 // HM: After calling siox_activity_end(), the Activity object (siox_activity * == Activity *) is complete and may be handed over elsewhere.
 
 
-	siox_activity * siox_activity_start( siox_component * component, siox_component_activity * activity )
+	siox_activity * siox_activity_begin( siox_component * component, siox_component_activity * activity )
 	{
 		assert( component != nullptr );
 		assert( activity != nullptr );
@@ -589,9 +588,18 @@ void siox_finalize_monitoring(){
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
 		//cout << "START: " << ab << endl;
 
-		a = ab->startActivity( component->cid, P_TO_U32( activity ), nullptr );
+		a = ab->beginActivity( component->cid, P_TO_U32( activity ) );
 
 		return new siox_activity( a, component );
+	}
+
+	void siox_activity_start( siox_activity * activity )
+	{
+		assert( activity != nullptr );
+
+		FUNCTION_BEGIN
+		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
+		ab->startActivity( activity->activity, siox_gettime() );
 	}
 
 
@@ -601,7 +609,7 @@ void siox_finalize_monitoring(){
 
 		FUNCTION_BEGIN
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
-		ab->stopActivity( activity->activity, nullptr );
+		ab->stopActivity( activity->activity, siox_gettime() );
 	}
 
 
@@ -740,7 +748,7 @@ void siox_finalize_monitoring(){
 		Activity * a;
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
 
-		a = ab->startActivity( component->cid, P_TO_U32( activity ), P_TO_U32( caller_node ), P_TO_U32( caller_unique_interface ), P_TO_U32( caller_associate ), nullptr );
+		a = ab->beginActivity( component->cid, P_TO_U32( activity ), P_TO_U32( caller_node ), P_TO_U32( caller_unique_interface ), P_TO_U32( caller_associate ) );
 
 		return new siox_activity( a, component );
 	}

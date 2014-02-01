@@ -248,11 +248,6 @@ int siox_ontology_set_meta_attribute( siox_attribute * parent_attribute, siox_at
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name );
 
 /*
- Destroy the attribute.
- */
-void siox_ontology_free_attribute(siox_attribute * attribute);
-
-/*
  * Example: interface_name POSIX, MPI, MPIv3 ...
  * Interface is "POSIX"
  * Implementation could be MPICHv3 (major number, please ensure compatibility)
@@ -420,9 +415,8 @@ void siox_component_unregister( siox_component * component );
 /**
  * Report the start of an activity.
  *
- * This will mark the time stamp given as the beginning of the activity, influencing any
- * performance metrics associated that are measured over time.
- *
+ * You may report attributes such as function parameters then.
+ * 
  * SIOX will use the @em siox_activity to correctly assign attributes used and performance
  * metrics influenced by this activity.
  * As any activity is linked to its component by SIOX, functions supplied with a
@@ -436,7 +430,14 @@ void siox_component_unregister( siox_component * component );
  */
 //@test ''%p,%p'' component,activity
 //@null
-siox_activity * siox_activity_start( siox_component * component, siox_component_activity * activity );
+siox_activity * siox_activity_begin( siox_component * component, siox_component_activity * activity );
+
+/**
+ * Report the start of an activity's active phase, beginning time measurement.
+ * @param[in]   activity    The activity.
+ */
+//@test ''%p'' activity
+void siox_activity_start( siox_activity * activity );
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.

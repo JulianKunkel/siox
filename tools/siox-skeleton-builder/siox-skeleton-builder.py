@@ -100,10 +100,16 @@ from a other header file.''')
                 entries["initLast"] = ""
             if not "before" in entries:
                 entries["before"] = ""
+            if not "beforeLast" in entries:
+                entries["beforeLast"] = ""
             if not "after" in entries:
                 entries["after"] = ""
+            if not "afterLast" in entries:
+                entries["afterLast"] = ""                 
             if not "cleanup" in entries:
                 entries["cleanup"] = ""
+            if not "cleanupLast" in entries:
+                entries["cleanupLast"] = ""                
             if not "final" in entries:
                 entries["final"] = ""
 
@@ -757,14 +763,6 @@ class Template():
         self.valueRegex = re.compile(
             '\s*(\w+=)?(([-\w%_\(\)\[\]&*]+)|(\".*?\")|(\'.+?\'+))\s*', re.S | re.M)
 
-        # Remember template-access for easier usage
-        self.world = self.templateDict['global']
-        self.init = self.templateDict['init']
-        self.initLast = self.templateDict['initLast']
-        self.before = self.templateDict['before']
-        self.after = self.templateDict['after']
-        self.final = self.templateDict['final']
-        self.cleanup = self.templateDict['cleanup']
         self.currentParameterIndex = 0
         self.containsNamedParameters = False
         self.insideString = False
@@ -839,20 +837,8 @@ class Template():
     #
     # @return The requested string from the template
     def output(self, type):
-        if (type == 'global'):
-            return self.cleanOutput(self.world)
-        elif (type == 'init'):
-            return self.cleanOutput(self.init)
-        elif (type == 'initLast'):
-            return self.cleanOutput(self.initLast)
-        elif (type == 'before'):
-            return self.cleanOutput(self.before)
-        elif (type == 'after'):
-            return self.cleanOutput(self.after) 
-        elif (type == 'final'):
-            return self.cleanOutput(self.final) 
-        elif (type == 'cleanup'):
-            return self.cleanOutput(self.cleanup)
+        if (type in self.templateDict):
+            return self.cleanOutput(self.templateDict[type])
         else:
             # Error
             print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
@@ -1004,26 +990,12 @@ class Writer():
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
 
-            # write the before-template for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('before').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            self.writeBefore(function, output)
 
             # write the function call
             print(functionCall, file=output)
-
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('after').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-
-            # write all cleanup-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('cleanup').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            
+            self.writeAfter(function, output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
@@ -1098,17 +1070,9 @@ class Writer():
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
 
-            # write the before-template for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('before').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
 
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('after').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            self.writeBefore(function, output)
+            self.writeAfter(function, output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
@@ -1122,6 +1086,41 @@ class Writer():
                 print('\n}', end='\n\n', file=output)
         # close the file
         output.close()
+    
+    def writeBefore(self, function, output):
+            # write the before-template for this function
+            for templ in function.usedTemplateList:
+                outputString = templ.output('before').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+            # write the beforeLast-template for this function
+            for templ in reversed(function.usedTemplateList):
+                outputString = templ.output('beforeLast').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+    
+    def writeAfter(self, function, output):
+            # write all after-templates for this function
+            for templ in function.usedTemplateList:
+                outputString = templ.output('after').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+            for templ in reversed(function.usedTemplateList):
+                outputString = templ.output('afterLast').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+
+            # write all after-templates for this function
+            for templ in function.usedTemplateList:
+                outputString = templ.output('cleanup').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+            for templ in reversed(function.usedTemplateList):
+                outputString = templ.output('cleanupLast').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+
+
     #
     # @brief Write a source file
     #
@@ -1225,26 +1224,12 @@ class Writer():
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
 
-            # write the before-template for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('before').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            self.writeBefore(function, output)
 
             # write the function call
             print(functionCall, file=output)
 
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('after').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('cleanup').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            self.writeAfter(function, output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
