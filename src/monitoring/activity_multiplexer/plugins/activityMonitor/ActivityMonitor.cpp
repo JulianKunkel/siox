@@ -7,6 +7,7 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
+#include <util/threadSafety.h>
 
 #include "ActivityMonitorOptions.hpp"
 
@@ -29,6 +30,8 @@ class ActivityMonitor: public ActivityMultiplexerPlugin {
 	atomic<uint64_t> observedAsyncActivities;
 
 	void reporterThreadFunc(){
+		monitoring_namespace_protect_thread();
+		
 		uint64_t o[3] = {0,0,0};
 
 		while(! terminate){
