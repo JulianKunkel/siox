@@ -118,7 +118,7 @@ static const char * findStrAttributeByID( const Activity * a, OntologyAttributeI
 class FadviseReadAheadPlugin: public ActivityMultiplexerPlugin, public ComponentReportInterface, public AnomalyPlugin {
 	public:
 		void initPlugin() override;		
-		void Notify( shared_ptr<Activity> activity ) override;
+		void Notify( const shared_ptr<Activity> & activity ) override;
 		ComponentReport prepareReport() override;
 
 		ComponentOptions * AvailableOptions() override;
@@ -312,7 +312,7 @@ void FadviseReadAheadPlugin::addActivityHandler(ActivityPluginDereferencing * f,
 	}
 }
 
-void FadviseReadAheadPlugin::Notify( shared_ptr<Activity> activity ) {
+void FadviseReadAheadPlugin::Notify( const shared_ptr<Activity> & activity ) {
 	auto both = activityHandlers.find(activity->ucaid_);
 
 	if ( both != activityHandlers.end() ){

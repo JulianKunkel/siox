@@ -294,7 +294,7 @@ namespace monitoring {
 			 *
 			 * @param	activity	logged activity
 			 */
-			virtual void Log( shared_ptr<Activity> activity ){
+			void Log( const shared_ptr<Activity> & activity ) override {
 				processed_activities++;
 				assert( activity != nullptr );
 
@@ -318,7 +318,7 @@ namespace monitoring {
 			 * @param	lost	lost activtiy count
 			 * @param	work	activtiy as void pointer to support abstract notifier
 			 */
-			virtual void Dispatch(int lost, void * work) {				
+			void Dispatch(int lost, void * work) override { 	
 				shared_ptr<Activity> activity = *(shared_ptr<Activity>*) work;
 				assert( activity != nullptr );
 				//boost::shared_lock<boost::shared_mutex> lock( asyncQueueMutex );
@@ -334,7 +334,7 @@ namespace monitoring {
 			 *
 			 * @param	listener	listener to be registered
 			 */
-			virtual void registerListener( ActivityMultiplexerListener * listener ){
+			void registerListener( ActivityMultiplexerListener * listener ) override {
 				boost::unique_lock<boost::shared_mutex> lock( asyncQueueMutex );			
 				listeners.push_back(listener);
 
@@ -351,7 +351,7 @@ namespace monitoring {
 			 *
 			 * @param	listener	listener to be unregistered
 			 */
-			virtual void unregisterListener( ActivityMultiplexerListener * listener ){
+			void unregisterListener( ActivityMultiplexerListener * listener ) override {
 				boost::unique_lock<boost::shared_mutex> lock( asyncQueueMutex );
 				listeners.remove(listener);
 			}

@@ -62,7 +62,7 @@ struct ActivityTimeStatistics{
 class HistogramAdpiPlugin: public ActivityMultiplexerPlugin, public ComponentReportInterface, public AnomalyPlugin {
 	public:
 		void initPlugin() override;		
-		void Notify( shared_ptr<Activity> activity ) override;
+		void Notify( const shared_ptr<Activity> & activity ) override;
 		ComponentReport prepareReport() override;
 
 		ComponentOptions * AvailableOptions() override;
@@ -114,7 +114,7 @@ static string convertAIDToString(UniqueComponentActivityID aid){
 	return s.str();
 }
 
-void HistogramAdpiPlugin::Notify( shared_ptr<Activity> activity ) {
+void HistogramAdpiPlugin::Notify( const shared_ptr<Activity> & activity ) {
 	const HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
 	unique_lock<mutex> lock( giant_mutex );
 	

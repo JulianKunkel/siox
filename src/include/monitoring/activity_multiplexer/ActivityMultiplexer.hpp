@@ -20,7 +20,7 @@ namespace monitoring {
 			 *
 			 * @param	activity	logged activity
 			 */
-			virtual void Log( shared_ptr<Activity> activity ) = 0;
+			virtual void Log( const shared_ptr<Activity> & activity ) = 0;
 
 			/**
 			 * Register listener to multiplexer

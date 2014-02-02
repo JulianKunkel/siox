@@ -25,7 +25,7 @@ public:
 
 	shared_ptr<Activity> logged_activity = nullptr;
 
-	virtual void Log( shared_ptr<Activity> activity ){
+	void Log( const shared_ptr<Activity> & activity ) override{
 		cout << "Logging: " << activity->ucaid_ << endl;
 
 		logged_activity = activity;
@@ -33,16 +33,16 @@ public:
 		sthHappens();
 	}
 
-	virtual void registerListener( ActivityMultiplexerListener * listener ){}
+	void registerListener( ActivityMultiplexerListener * listener ) override {}
 
 
-	virtual void unregisterListener( ActivityMultiplexerListener * listener ){}
+	void unregisterListener( ActivityMultiplexerListener * listener ) override {}
 
-	virtual core::ComponentOptions* AvailableOptions(){
+	core::ComponentOptions* AvailableOptions() override{
 		return nullptr;
 	}
 
-	virtual void init(){
+	void init() override{
 
 	}
 };

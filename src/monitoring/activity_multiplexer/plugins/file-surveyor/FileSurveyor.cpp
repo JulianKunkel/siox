@@ -102,7 +102,7 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		void initPlugin() override;
 		ComponentOptions * AvailableOptions() override;
 
-		void Notify( shared_ptr<Activity> activity ) override;
+		void Notify( const shared_ptr<Activity> & activity ) override;
 
 		virtual ComponentReport prepareReport() override;
 
@@ -261,7 +261,7 @@ void FileSurveyorPlugin::initPlugin() {
 }
 
 
-void FileSurveyorPlugin::Notify( shared_ptr<Activity> activity ) {
+void FileSurveyorPlugin::Notify( const shared_ptr<Activity> & activity ) {
 	//OUTPUT( "received " << activity );
 	if( !tryEnsureInitialization() ) return;
 

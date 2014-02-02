@@ -82,7 +82,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		void initPlugin() override;
 		ComponentOptions * AvailableOptions() override;
 
-		void Notify( shared_ptr<Activity> activity ) override;
+		void Notify( const shared_ptr<Activity> & activity ) override;
 
 		OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
 
@@ -134,7 +134,7 @@ ComponentOptions * GenericHistoryPlugin::AvailableOptions() {
 	return new GenericHistoryOptions();
 }
 
-void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
+void GenericHistoryPlugin::Notify( const shared_ptr<Activity> & activity ) {
 	TRACK_FUNCTION_CALLS
 	//cout <<"[GenericHistory]: " << "received " << activity << endl;
 	if( ! tryEnsureInitialization() ) return;

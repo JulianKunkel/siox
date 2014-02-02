@@ -30,7 +30,7 @@ namespace monitoring {
 		 *
 		 * @param	activity	logged activity
 		 */
-		virtual void Log( shared_ptr<Activity> activity ){
+		void Log( const shared_ptr<Activity> & activity ) override{
 			assert( activity != nullptr );
 
 			for(auto l = listeners.begin(); l != listeners.end() ; l++){
@@ -39,15 +39,15 @@ namespace monitoring {
 		}
 
 
-		virtual void registerListener( ActivityMultiplexerListener * listener ){
+		void registerListener( ActivityMultiplexerListener * listener ) override{
 			listeners.push_back(listener);
 		}
 
-		virtual void unregisterListener( ActivityMultiplexerListener * listener ){
+		void unregisterListener( ActivityMultiplexerListener * listener ) override{
 			listeners.remove(listener);
 		}
 
-		ComponentOptions * AvailableOptions() {
+		ComponentOptions * AvailableOptions() override {
 			return new ActivityMultiplexerSyncOptions();
 		}
 
