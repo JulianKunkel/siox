@@ -15,7 +15,7 @@ class ActivityForwarder: public ActivityMultiplexerPlugin {
 		/**
 		 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 		 */
-		virtual void Notify( shared_ptr<Activity> element ) {
+		void Notify( const shared_ptr<Activity> & element ) override {
 			out->Log( element );
 		}
 
