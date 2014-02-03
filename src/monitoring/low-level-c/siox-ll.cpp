@@ -945,7 +945,7 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 
 		try{
 			OntologyValue val( process_data.optimizer->optimalParameter(oa) );
-			strncpy( target_str, val.str(), maxLength );
+			strncpy( target_str, val.toStr().c_str(), maxLength );
 			return 1;
 		}catch ( NotFoundError & e ){
 			return 0;
