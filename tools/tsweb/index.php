@@ -10,7 +10,7 @@ require_once("header.php");
 
 <?php $page_size = 200; ?>
 <?php $total_activities = Activity::get_count(); ?>
-<?php $total_pages = ceil($total_activities / $page_size); ?>
+<?php $total_pages = max(ceil($total_activities / $page_size), 1); ?>
 <?php $current_page = isset($_GET['page']) ? $_GET['page'] : $total_pages; ?>
 <?php $activities = Activity::get_list($current_page, $page_size); ?>
 
@@ -37,6 +37,11 @@ require_once("header.php");
 	</tr>
 </thead>
 <tbody>
+<?php if (count($activities) == 0): ?>
+	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>" onclick="window.location='activity.php?unique_id=<?=$a->unique_id?>'">
+		<td colspan="6" style="text-align: center;">The activity database is empty.</td>
+	</tr>
+<?php endif ?>
 <?php $i = 0; ?>
 <?php foreach ($activities as $a): ?>
 	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>" onclick="window.location='activity.php?unique_id=<?=$a->unique_id?>'">

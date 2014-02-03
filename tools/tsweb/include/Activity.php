@@ -14,8 +14,10 @@ static function get_list($page = 1, $page_size = 200)
 	$stmt->bindParam(':page_size', $page_size);
 	$stmt->bindValue(':offset', $page_size*($page-1));
 
-	if (!$stmt->execute())
+	if (!$stmt->execute()) {
+		print_r($dbcon->errorInfo());
 		die("Error querying activity list.");
+	}
 
 	$list = array();
 
