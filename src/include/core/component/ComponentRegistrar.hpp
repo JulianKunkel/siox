@@ -81,7 +81,7 @@ namespace core {
 			}
 
 
-			const int getMaximumComponentNumber() {
+			const uint32_t getMaximumComponentNumber() {
 				return maxComponentNumber;
 			}
 
@@ -91,7 +91,7 @@ namespace core {
 			void shutdown();
 
 		private:
-			int maxComponentNumber = 0;
+			uint32_t maxComponentNumber = 0;
 			std::map<ComponentReferenceID, RegisteredComponent*> map;
 			std::list<RegisteredComponent*> list;
 	};

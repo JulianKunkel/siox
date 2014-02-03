@@ -15,6 +15,9 @@ int main( int argc, char * argv[] )
 	char* buf;
 	MPI_Info info;
 
+#ifdef DEBUG
+	sleep(5);
+#endif
 	pid_t pid = getpid();
 
 	//printf( "==========MPI_Init()==========\n" );

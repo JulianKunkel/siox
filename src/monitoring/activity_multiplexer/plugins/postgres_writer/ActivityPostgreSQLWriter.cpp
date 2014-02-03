@@ -25,7 +25,7 @@ private:
 	PGconn *dbconn_;
 public:
 
-	void Notify(shared_ptr<Activity> activity) 
+	void Notify(const shared_ptr<Activity> & activity) override
 	{
 		querier_->insert_activity(*activity);
 	}
@@ -35,7 +35,7 @@ public:
 		return new PostgreSQLWriterPluginOptions();
 	}
 
-	void initPlugin( ) 
+	void initPlugin() override
 	{
 		PostgreSQLWriterPluginOptions &o = getOptions<PostgreSQLWriterPluginOptions>();
 		

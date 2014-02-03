@@ -82,7 +82,7 @@ public:
 		return report;
 	}
 
-	void Notify( shared_ptr<Activity> element ) override {
+	void Notify( const shared_ptr<Activity> & element ) override {
 		if ( forwardAllActivities ){
 
 			if ( pendingActivities.load() < max_pending_ops ){
@@ -97,7 +97,7 @@ public:
 	/**
 	 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 	 */
-	void NotifyAsync( int lostActivitiesCount, shared_ptr<Activity> element ) override {	
+	void NotifyAsync( int lostActivitiesCount, const shared_ptr<Activity> & element ) override {	
 		if ( forwardAllActivities ) return;
 
 		if ( anomalyStatus ){

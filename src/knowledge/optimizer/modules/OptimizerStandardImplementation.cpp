@@ -64,6 +64,17 @@ namespace knowledge {
 				}
 			}
 
+			OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) override {
+				///@todo Check for registered plug-in?
+				auto res = expert.find( attribute.aID );
+
+				if( res != expert.end() ) {
+					return res->second->optimalParameterFor( attribute, activityToStart );
+				} else {
+					throw NotFoundError( "Illegal attribute!" );
+				}
+			}
+
 
 			virtual void init() {
 

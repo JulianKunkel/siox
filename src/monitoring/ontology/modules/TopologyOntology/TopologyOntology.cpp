@@ -74,7 +74,7 @@ namespace monitoring {
 					 	throw IllegalStateError("Existing storage type is not compatible in attribute " + domain + "/" + name);
 					 }
 
-	 				return OntologyAttribute(obj.id(), domain, name, storage_type);
+	 				return OntologyAttribute(obj.id(), storage_type);
 				}
 				
 				// store domain, name and storage type as attribute.				
@@ -82,7 +82,7 @@ namespace monitoring {
 				topology->setAttribute(objID, nameID, name);
 				topology->setAttribute(objID, typeID, (uint32_t) storage_type);
 				
-				return OntologyAttribute(obj.id(), domain, name, storage_type);
+				return OntologyAttribute(obj.id(), storage_type);
 			}
 
 			const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) override {
@@ -95,11 +95,11 @@ namespace monitoring {
 				
 				assert(existingStorageType);
 
-				OntologyAttribute oa(obj.id(), domain, name, (VariableDatatype::Type) existingStorageType.value().uint32());
+				OntologyAttribute oa(obj.id(), (VariableDatatype::Type) existingStorageType.value().uint32());
 				return oa;
 			}
 
-			const OntologyAttribute lookup_attribute_by_ID( OntologyAttributeID aID ) const throw( NotFoundError ) override {
+			const OntologyAttributeFull lookup_attribute_by_ID( OntologyAttributeID aID ) const throw( NotFoundError ) override {
 				TopologyObjectId objID = aID;
 
 				TopologyValue existingStorageType = topology->getAttribute(objID, typeID);
@@ -108,7 +108,7 @@ namespace monitoring {
 					throw NotFoundError();
 				}
 
-				return OntologyAttribute(aID, 
+				return OntologyAttributeFull(aID, 
 					topology->getAttribute(objID, domainID).value().str(), 
 					topology->getAttribute(objID, nameID).value().str(), 
 					(VariableDatatype::Type) existingStorageType.value().uint32());

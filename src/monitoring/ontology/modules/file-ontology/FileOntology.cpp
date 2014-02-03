@@ -33,7 +33,7 @@ namespace monitoring {
 
 	class AttributeWithValues {
 		public:
-			OntologyAttribute attribute;
+			OntologyAttributeFull attribute;
 			vector<OntologyAttributeID> meta_attributes;
 			vector<OntologyValue> values;
 	};
@@ -169,7 +169,6 @@ namespace monitoring {
 			const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) override {
 				stringstream unique;
 				unique << domain << "|" << name;
-				string fqn( unique.str() );
 
 				auto res = domain_name_map.find( unique.str() );
 
@@ -180,7 +179,7 @@ namespace monitoring {
 				}
 			}
 
-			const OntologyAttribute lookup_attribute_by_ID( OntologyAttributeID aID ) const throw( NotFoundError ) override {
+			const OntologyAttributeFull lookup_attribute_by_ID( OntologyAttributeID aID ) const throw( NotFoundError ) override {
 
 				auto res = attribute_map.find( aID );
 
@@ -253,7 +252,7 @@ namespace boost {
 		}
 
 		template<class Archive>
-		void serialize( Archive & ar, OntologyAttribute & g, const unsigned int version )
+		void serialize( Archive & ar, OntologyAttributeFull & g, const unsigned int version )
 		{
 			ar & boost::serialization::make_nvp( "id", g.aID );
 			ar & boost::serialization::make_nvp( "name", g.name );
@@ -264,7 +263,7 @@ namespace boost {
 	}
 }
 CREATE_SERIALIZEABLE_CLS_EXTERNAL( AttributeWithValues )
-CREATE_SERIALIZEABLE_CLS_EXTERNAL( OntologyAttribute )
+CREATE_SERIALIZEABLE_CLS_EXTERNAL( OntologyAttributeFull )
 
 extern "C" {
 	void * MONITORING_ONTOLOGY_INSTANCIATOR_NAME()

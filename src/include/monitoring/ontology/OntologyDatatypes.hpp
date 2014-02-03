@@ -15,18 +15,9 @@ namespace monitoring {
 
 	typedef VariableDatatype OntologyValue;
 
-	class OntologyAttribute {
-		public:
+	struct OntologyAttribute {
 			OntologyAttributeID aID;
 
-			/**
-			 * Reserved domains:
-			 * - unit
-			 *  for units of attribute values
-			 *  (attach the unit as meta attribute of type SIOX_STORAGE_STRING to base attribute)
-			 */
-			string domain;
-			string name;
 			enum VariableDatatype::Type storage_type;
 			//OntologyAttribute(OntologyAttributeID aid, string & name, enum siox_ont_storage_type storage_type) : aID(aid), name(name), storage_type(storage_type) {}
 
@@ -38,7 +29,24 @@ namespace monitoring {
 				return !( a.aID == this->aID );
 			}
 
-			OntologyAttribute & operator=( OntologyAttribute const & a ) {
+			OntologyAttribute() : aID(0), storage_type(VariableDatatype::Type::INVALID) {}
+			OntologyAttribute(OntologyAttributeID aID, enum VariableDatatype::Type storage_type) : aID(aID), storage_type(storage_type){
+				
+			}
+	};
+
+
+	struct OntologyAttributeFull : public OntologyAttribute {
+			/**
+			 * Reserved domains:
+			 * - unit
+			 *  for units of attribute values
+			 *  (attach the unit as meta attribute of type SIOX_STORAGE_STRING to base attribute)
+			 */
+			string domain;
+			string name;
+
+			OntologyAttributeFull & operator=( OntologyAttributeFull const & a ) {
 				this->aID = a.aID;
 				this->domain = a.domain;
 				this->name = a.name;
@@ -46,11 +54,11 @@ namespace monitoring {
 				return *this;
 			}
 
-			OntologyAttribute() : aID(0), domain(), name(), storage_type(VariableDatatype::Type::INVALID) {}
-			OntologyAttribute(OntologyAttributeID aID, const string & domain, const string & name, enum VariableDatatype::Type storage_type) : aID(aID), domain(domain), name(name), storage_type(storage_type){
+			OntologyAttributeFull() : OntologyAttribute(), domain(), name() {}
+			OntologyAttributeFull(OntologyAttributeID aID, const string & domain, const string & name, enum VariableDatatype::Type storage_type): OntologyAttribute(aID, storage_type), domain(domain), name(name){
 				
 			}
-	};
+	};	
 }
 
 #endif

@@ -82,11 +82,15 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		void initPlugin() override;
 		ComponentOptions * AvailableOptions() override;
 
-		void Notify( shared_ptr<Activity> activity ) override;
+		void Notify( const shared_ptr<Activity> & activity ) override;
 
-		virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
+		OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
 
-		virtual ComponentReport prepareReport() override;
+		OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) override{
+			return optimalParameter(attribute);
+		}
+
+		ComponentReport prepareReport() override;
 
 		~GenericHistoryPlugin();
 
@@ -130,7 +134,7 @@ ComponentOptions * GenericHistoryPlugin::AvailableOptions() {
 	return new GenericHistoryOptions();
 }
 
-void GenericHistoryPlugin::Notify( shared_ptr<Activity> activity ) {
+void GenericHistoryPlugin::Notify( const shared_ptr<Activity> & activity ) {
 	TRACK_FUNCTION_CALLS
 	//cout <<"[GenericHistory]: " << "received " << activity << endl;
 	if( ! tryEnsureInitialization() ) return;
@@ -425,7 +429,7 @@ void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, cons
 	const vector<Attribute>& attributes = activity->attributeArray();
 	size_t hintCount = 0;
 	for( size_t i = attributes.size(); i--; ) {
-		OntologyAttribute curAttribute = facade->lookup_attribute_by_ID( attributes[i].id );
+		OntologyAttributeFull curAttribute = facade->lookup_attribute_by_ID( attributes[i].id );
 		IGNORE_EXCEPTIONS(
 			hintTypes.at( attributes[i].id );
 			outHintVector->emplace_back( attributes[i] );

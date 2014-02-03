@@ -73,7 +73,7 @@ static inline void strdelta( Timestamp t, stringstream & s )
 
 void TraceReader::strattribute( const Attribute & a, stringstream & s ) throw( NotFoundError )
 {
-	const OntologyAttribute & oa = o->lookup_attribute_by_ID( a.id );
+	OntologyAttributeFull oa = o->lookup_attribute_by_ID( a.id );
 	s << oa.domain << "/" << oa.name << "=";
 	if( a.value.type() == VariableDatatype::Type::STRING){
 		s << '"' << a.value << '"' ;

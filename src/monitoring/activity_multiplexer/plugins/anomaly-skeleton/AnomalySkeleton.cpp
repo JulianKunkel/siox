@@ -33,7 +33,7 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public AnomalyPlugin {
 		OntologyAttribute filename;
 
 	public:
-		void Notify( shared_ptr<Activity> activity ) override {
+		void Notify( const shared_ptr<Activity> & activity ) override {
 			cout << "Notified: type: " ;// << sys->activity_name(activity->aid())   << endl;
 			// check for a specific attribute.
 			vector<Attribute> attributes = activity->attributeArray();
@@ -47,7 +47,7 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public AnomalyPlugin {
 			}
 		}
 
-		void NotifyAsync( int lost_count, shared_ptr<Activity> activity ) override {
+		void NotifyAsync( int lost_count, const shared_ptr<Activity> & activity ) override {
 		}
 
 		ComponentOptions * AvailableOptions() {

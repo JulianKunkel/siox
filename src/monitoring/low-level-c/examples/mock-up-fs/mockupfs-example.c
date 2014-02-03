@@ -158,7 +158,8 @@ main()
 	 */
 
 	// Notify SIOX that we are starting an activity of the type we previously declared.
-	siox_act_write = siox_activity_start( siox_our_component, siox_act_type_write );
+	siox_act_write = siox_activity_begin( siox_our_component, siox_act_type_write );
+	siox_activity_start(siox_act_write);
 
 	// Report the imminent (possibly remote) call (and its attributes) of a component with
 	// the interface name "MUFS".

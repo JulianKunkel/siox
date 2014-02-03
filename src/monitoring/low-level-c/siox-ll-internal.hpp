@@ -30,14 +30,6 @@ using namespace core;
 using namespace monitoring;
 using namespace util;
 
-// define all types for CPP
-struct siox_attribute{
-	OntologyAttribute o;
-
-	siox_attribute(const OntologyAttribute & o) : o(o) {}
-};
-
-
 typedef RemoteCall siox_remote_call;
 
 
@@ -46,16 +38,20 @@ struct siox_component {
 	UniqueInterfaceID uid;
 	AssociateID instance_associate;
 
+	// Amux to which activities must be forward after they have been completed
 	ActivityMultiplexer * amux;
-	// We need one ActivityBuilder per thread, independent of component
+
+	/// ActivityMultiplexer which is invoked prior function invocation (thus it lacks start/end times).
+	ActivityMultiplexerSync * preCallAmux;	
 };
 
 
 struct siox_activity {
 	Activity * activity;
 	siox_component * component;
+	shared_ptr<Activity> shrdPtr;
 
-	siox_activity( Activity * a, siox_component * c ) : activity( a ), component( c ) {}
+	siox_activity( Activity * a, siox_component * c ) : activity( a ), component( c ), shrdPtr(a) {}
 };
 
 struct process_info {
@@ -72,7 +68,7 @@ struct process_info {
 	/// Optional: the optimizer.
 	knowledge::Optimizer * optimizer;
 
-	/// Loaded activity multiplexer implementation
+	/// Loaded activity multiplexer implementation, each *completed* activity will be handed over to the amux. Thus plug-ins are notified *after* completion of a function etc.
 	ActivityMultiplexer * amux;
 
 	/// Contains all components

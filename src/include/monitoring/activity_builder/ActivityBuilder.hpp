@@ -35,9 +35,18 @@ namespace monitoring {
 			~ActivityBuilder();
 
 			// Local activities
-			Activity * startActivity( const ComponentID & cid, UniqueComponentActivityID ucaid, const Timestamp * t );
-			Activity * startActivity( const ComponentID & cid, UniqueComponentActivityID ucaid, NodeID caller_node_id, UniqueInterfaceID caller_unique_interface_id, AssociateID caller_associate_id, const Timestamp * t );
-			void stopActivity( Activity * a, const Timestamp * t );
+			Activity * beginActivity( const ComponentID & cid, UniqueComponentActivityID ucaid );
+			Activity * beginActivity( const ComponentID & cid, UniqueComponentActivityID ucaid, NodeID caller_node_id, UniqueInterfaceID caller_unique_interface_id, AssociateID caller_associate_id );
+			void startActivity( Activity * a, const Timestamp & t ){
+				a->time_start_ = t;
+			}
+			void stopActivity( Activity * a, const Timestamp & t ){
+				a->time_stop_ = t;
+
+				assert( a == activity_stack.back() );
+				activity_stack.pop_back();
+			}
+
 			void endActivity( Activity * a );
 			void setActivityAttribute( Activity * a, const Attribute & attribute );
 			void reportActivityError( Activity * a, ActivityError error );

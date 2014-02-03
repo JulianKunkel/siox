@@ -9,6 +9,7 @@
 #define KNOWLEDGE_OPTIMIZER_PLUGIN_HPP
 
 #include <core/component/Component.hpp>
+#include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 #include <monitoring/datatypes/Exceptions.hpp>
 
@@ -70,6 +71,7 @@ namespace knowledge {
 			 *      The best value for attribute, as judged by the plugin.
 			 */
 			virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) = 0;
+			virtual OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) = 0;
 	};
 
 }

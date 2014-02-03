@@ -29,7 +29,7 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin {
 		mutex motify_mutex;
 	public:
 
-		void Notify( shared_ptr<Activity> activity ) {
+		void Notify( const shared_ptr<Activity> & activity ) override {
 			//cout << "NOTIFY" << facade->get_system_information()->lookup_activity_name( activity->ucaid_) << endl;
 			//if (  activity->attributeArray().begin() != activity->attributeArray().end() )
 			//	cout << activity->attributeArray().begin()->value << endl;
@@ -41,11 +41,11 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin {
 				file.flush();
 		}
 
-		ComponentOptions * AvailableOptions() {
+		ComponentOptions * AvailableOptions() override {
 			return new FileWriterPluginOptions();
 		}
 
-		void initPlugin( ) {
+		void initPlugin( ) override {
 			FileWriterPluginOptions & o = getOptions<FileWriterPluginOptions>();
 			file.open( o.filename );
 			oa = new boost::archive::text_oarchive( file, boost::archive::no_header | boost::archive::no_codecvt );

@@ -24,8 +24,7 @@
 
 #include <util/autoLoadModules.hpp>
 #include <util/ReporterHelper.hpp>
-
-
+#include <util/time.h>
 
 #include "siox-ll-internal.hpp"
 
@@ -113,6 +112,10 @@ void siox_disable_monitoring(){
 void siox_enable_monitoring(){
 	if ( monitoringDisabled == SIOX_MONITORING_DISABLED_BY_USER ) return;
 	monitoringDisabled = SIOX_MONITORING_ENABLED;
+}
+
+int siox_monitoring_namespace_deactivated(){
+	return monitoring_namespace_deactivated();
 }
 
 
@@ -388,8 +391,16 @@ void siox_finalize_monitoring(){
 //############################################################################
 
 /// Variant datatype to uniformly represent the multitude of different attibutes
-	typedef VariableDatatype AttributeValue;
+typedef VariableDatatype AttributeValue;
 
+// we stuff inside the siox_attribute pointer the type (first 32 Bits) and the ID
+static OntologyAttribute convertPtrToOntologyAttribute(siox_attribute * ptr){
+	return OntologyAttribute((uint32_t)(size_t) ptr, (VariableDatatype::Type) ((size_t)ptr>>32));
+}
+
+static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & oa){
+	return (void *) (oa.aID + (((uint64_t)oa.storage_type)<<32));
+}
 
 //////////////////////////////////////////////////////////////////////////////
 /// Convert an attribute's value to the generic datatype used in the ontology.
@@ -399,10 +410,11 @@ void siox_finalize_monitoring(){
 //////////////////////////////////////////////////////////////////////////////
 /// @return
 //////////////////////////////////////////////////////////////////////////////
-	static VariableDatatype convert_attribute( siox_attribute * attribute, const void * value )
+	static VariableDatatype convert_attribute( OntologyAttribute & oa, const void * value )
 	{
 		AttributeValue v;
-		switch( attribute->o.storage_type ) {
+
+		switch( oa.storage_type ) {
 			case( VariableDatatype::Type::UINT32 ):
 				return *( ( uint32_t * ) value );
 			case( VariableDatatype::Type::INT32 ): {
@@ -429,14 +441,46 @@ void siox_finalize_monitoring(){
 		return "";
 	}
 
+	static bool convert_attribute_back( OntologyAttribute & oa, const VariableDatatype & val, void * out_value ){
+		switch( val.type() ) {
+			case VariableDatatype::Type::INT32:
+				*((int32_t*) out_value) = val.int32();
+				return true;
+			case VariableDatatype::Type::UINT32:
+				*((uint32_t*) out_value) = val.uint32();
+				return true;
+			case VariableDatatype::Type::INT64:
+				*((int64_t*) out_value) = val.int64();
+				return true;
+			case VariableDatatype::Type::UINT64:
+				*((uint64_t*) out_value) = val.uint64();
+				return true;
+			case VariableDatatype::Type::FLOAT:
+				*((float*) out_value) = val.flt();
+				return true;
+			case VariableDatatype::Type::DOUBLE:
+				*((double*) out_value) = val.dbl();
+				return true;
+			case VariableDatatype::Type::STRING: {
+				*(char**) out_value = strdup(val.str());
+				return true;
+			}
+			case VariableDatatype::Type::INVALID:
+			default:
+				assert(0 && "tried to optimize for a VariableDatatype of invalid type");
+				return false;
+		}
+	}	
+
 
 	void siox_process_set_attribute( siox_attribute * attribute, const void * value )
 	{
 		assert( attribute != nullptr );
 		assert( value != nullptr );
 		FUNCTION_BEGIN
-		AttributeValue val = convert_attribute( attribute, value );
-		process_data.association_mapper->set_process_attribute( process_data.pid, attribute->o, val );
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+		AttributeValue val = convert_attribute( oa, value );
+		process_data.association_mapper->set_process_attribute( process_data.pid, oa, val );
 	}
 
 
@@ -504,6 +548,8 @@ void siox_finalize_monitoring(){
 
 		// check loaded components and assign them to the right struct elements.
 		siox_component * result = new siox_component();
+		assert( result != nullptr );
+
 		result->cid.id = ++process_data.last_componentID;
 		result->cid.pid = process_data.pid;
 		result->uid = uid;
@@ -523,7 +569,7 @@ void siox_finalize_monitoring(){
 			assert( result->amux != nullptr );
 		}
 
-		assert( result != nullptr );
+		result->preCallAmux = process_data.configurator->searchFor<ActivityMultiplexerSync>( loadedComponents );
 
 		return result;
 	}
@@ -536,8 +582,9 @@ void siox_finalize_monitoring(){
 		assert( value != nullptr );
 		assert( component != nullptr );
 
-		OntologyValue val = convert_attribute( attribute, value );
-		process_data.association_mapper->set_component_attribute( ( component->cid ), attribute->o, val );
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+		OntologyValue val = convert_attribute( oa, value );		
+		process_data.association_mapper->set_component_attribute( ( component->cid ), oa, val );
 	}
 
 
@@ -579,7 +626,7 @@ void siox_finalize_monitoring(){
 // HM: After calling siox_activity_end(), the Activity object (siox_activity * == Activity *) is complete and may be handed over elsewhere.
 
 
-	siox_activity * siox_activity_start( siox_component * component, siox_component_activity * activity )
+	siox_activity * siox_activity_begin( siox_component * component, siox_component_activity * activity )
 	{
 		assert( component != nullptr );
 		assert( activity != nullptr );
@@ -589,9 +636,26 @@ void siox_finalize_monitoring(){
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
 		//cout << "START: " << ab << endl;
 
-		a = ab->startActivity( component->cid, P_TO_U32( activity ), nullptr );
+		a = ab->beginActivity( component->cid, P_TO_U32( activity ) );
 
 		return new siox_activity( a, component );
+	}
+
+	void siox_activity_start( siox_activity * activity )
+	{
+		assert( activity != nullptr );
+
+		FUNCTION_BEGIN
+		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
+		// Find component's amux
+		siox_component * component = activity->component;
+		assert( component != nullptr );
+
+		// Send the activity to it
+		if ( ! monitoringDisabled && component->preCallAmux ){
+			component->preCallAmux->Log( activity->shrdPtr );
+		}
+		ab->startActivity( activity->activity, siox_gettime() );
 	}
 
 
@@ -601,7 +665,7 @@ void siox_finalize_monitoring(){
 
 		FUNCTION_BEGIN
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
-		ab->stopActivity( activity->activity, nullptr );
+		ab->stopActivity( activity->activity, siox_gettime() );
 	}
 
 
@@ -617,7 +681,8 @@ void siox_finalize_monitoring(){
 		FUNCTION_BEGIN
 
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
-		Attribute attr( attribute->o.aID, convert_attribute( attribute, value ) );
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+		Attribute attr( oa.aID, convert_attribute( oa, value ) );
 
 		ab->setActivityAttribute( activity->activity, attr );
 
@@ -653,10 +718,9 @@ void siox_finalize_monitoring(){
 		siox_component * component = activity->component;
 		assert( component != nullptr );
 
-		// Send activity to it
-		shared_ptr<Activity> activity_shared_ptr (activity->activity);
+		// Send the activity to it
 		if ( ! monitoringDisabled ){ 
-			component-> amux->Log( activity_shared_ptr );
+			component-> amux->Log( activity->shrdPtr );
 		}
 
 		delete( activity );
@@ -714,7 +778,9 @@ void siox_finalize_monitoring(){
 		assert( value != nullptr );
 		FUNCTION_BEGIN
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
-		Attribute attr( attribute->o.aID, convert_attribute( attribute, value ) );
+
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+		Attribute attr( oa.aID, convert_attribute( oa, value ) );
 
 		ab->setRemoteCallAttribute( remote_call, attr );
 
@@ -740,7 +806,7 @@ void siox_finalize_monitoring(){
 		Activity * a;
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
 
-		a = ab->startActivity( component->cid, P_TO_U32( activity ), P_TO_U32( caller_node ), P_TO_U32( caller_unique_interface ), P_TO_U32( caller_associate ), nullptr );
+		a = ab->beginActivity( component->cid, P_TO_U32( activity ), P_TO_U32( caller_node ), P_TO_U32( caller_unique_interface ), P_TO_U32( caller_associate ) );
 
 		return new siox_activity( a, component );
 	}
@@ -758,8 +824,7 @@ void siox_finalize_monitoring(){
 		FUNCTION_BEGIN
 		try {
 			OntologyAttribute ret = process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
-
-			return new siox_attribute(ret);
+			return convertOntologyAttributeToPtr(ret);
 		} catch( IllegalStateError & e ) {
 			return nullptr;
 		}
@@ -774,9 +839,12 @@ void siox_finalize_monitoring(){
 		assert( value != nullptr );
 
 		FUNCTION_BEGIN
-		AttributeValue val = convert_attribute( meta_attribute, value );
+		OntologyAttribute oa_meta = convertPtrToOntologyAttribute(meta_attribute);
+		OntologyAttribute oa_parent = convertPtrToOntologyAttribute(parent_attribute);
+
+		AttributeValue val = convert_attribute( oa_meta, value );
 		try {			
-			process_data.ontology->attribute_set_meta_attribute( parent_attribute->o, meta_attribute->o, val );
+			process_data.ontology->attribute_set_meta_attribute( oa_parent, oa_meta, val );
 		} catch( IllegalStateError & e ) {
 			return 0;
 		}
@@ -797,7 +865,7 @@ void siox_finalize_monitoring(){
 			const OntologyAttribute attribute = process_data.ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
 			process_data.ontology->attribute_set_meta_attribute( attribute, meta, unit );
 
-			return new siox_attribute(attribute);
+			return convertOntologyAttributeToPtr(attribute);
 		} catch( IllegalStateError & e ) {
 			return nullptr;
 		}
@@ -810,16 +878,12 @@ void siox_finalize_monitoring(){
 		assert( name != nullptr );
 		try {			
 			auto ret = process_data.ontology->lookup_attribute_by_name( domain, name );
-			return new siox_attribute(ret);
+			return convertOntologyAttributeToPtr(ret);
 		} catch( NotFoundError & e ) {
 			return nullptr;
 		}
 	}
 
-	void siox_ontology_free_attribute(siox_attribute * attribute){
-		assert(attribute);
-		delete(attribute);
-	}
 
 	siox_unique_interface * siox_system_information_lookup_interface_id( const char * interface_name, const char * implementation_identifier )
 	{
@@ -836,44 +900,35 @@ void siox_finalize_monitoring(){
 	}
 
 	int siox_suggest_optimal_value( siox_component * component, siox_attribute * attribute, void * out_value ){
-		if ( process_data.optimizer == nullptr ){
-			return 0;
-		}
 		FUNCTION_BEGIN
+		if ( process_data.optimizer == nullptr ){
+			return false;
+		}		
+
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
 
 		try{
-			OntologyValue val(process_data.optimizer->optimalParameter(attribute->o));
-			switch( val.type() ) {
-				case VariableDatatype::Type::INT32:
-					*((int32_t*) out_value) = val.int32();
-					break;
-				case VariableDatatype::Type::UINT32:
-					*((uint32_t*) out_value) = val.uint32();
-					break;
-				case VariableDatatype::Type::INT64:
-					*((int64_t*) out_value) = val.int64();
-					break;
-				case VariableDatatype::Type::UINT64:
-					*((uint64_t*) out_value) = val.uint64();
-					break;
-				case VariableDatatype::Type::FLOAT:
-					*((float*) out_value) = val.flt();
-					break;
-				case VariableDatatype::Type::DOUBLE:
-					*((double*) out_value) = val.dbl();
-					break;
-				case VariableDatatype::Type::STRING: {
-					*(char**) out_value = strdup(val.str());
-					break;
-				}
-				case VariableDatatype::Type::INVALID:
-				default:
-					assert(0 && "tried to optimize for a VariableDatatype of invalid type");
-					return 1;
-			}
-			return 1;
+			OntologyValue val(process_data.optimizer->optimalParameter(oa));
+			return convert_attribute_back(oa, val, out_value);
 		}catch ( NotFoundError & e ){
-			return 0;
+			return false;
+		}		
+	}
+
+	int siox_suggest_optimal_value_for( siox_component * component, siox_attribute * attribute, siox_activity * activity, void * out_value ){
+		FUNCTION_BEGIN
+
+		if ( process_data.optimizer == nullptr ){
+			return false;
+		}
+
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+
+		try{
+			OntologyValue val(process_data.optimizer->optimalParameterFor(oa, activity->activity));
+			return convert_attribute_back(oa, val, out_value);
+		}catch ( NotFoundError & e ){
+			return false;
 		}		
 	}
 
@@ -881,11 +936,15 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 		if ( process_data.optimizer == nullptr ){
 			return 0;
 		}
-		string what("siox_suggest_optimal_value_str(" + attribute->o.domain + "," + attribute->o.name + ")");
+
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+		char buff[100];
+		sprintf(buff, "siox_suggest_optimal_value_str(%d)", oa.aID);
+		string what(buff);
 		PERF_MEASURE_START( what.c_str() )
 
 		try{
-			OntologyValue val( process_data.optimizer->optimalParameter(attribute->o) );
+			OntologyValue val( process_data.optimizer->optimalParameter(oa) );
 			strncpy( target_str, val.str(), maxLength );
 			return 1;
 		}catch ( NotFoundError & e ){

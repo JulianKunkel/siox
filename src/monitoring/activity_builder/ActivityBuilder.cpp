@@ -2,8 +2,6 @@
 
 #include <monitoring/activity_builder/ActivityBuilder.hpp>
 
-#include <util/time.h>
-
 using namespace std;
 
 
@@ -49,7 +47,7 @@ namespace monitoring {
 		return myAB;
 	}
 
-	Activity * ActivityBuilder::startActivity( const ComponentID & cid, UniqueComponentActivityID ucaid, const Timestamp * t )
+	Activity * ActivityBuilder::beginActivity( const ComponentID & cid, UniqueComponentActivityID ucaid )
 	{
 		Activity * a = new Activity();
 
@@ -75,37 +73,18 @@ namespace monitoring {
 		}
 		activity_stack.push_back( a );
 
-		if( t != nullptr ) {
-			a->time_start_ = *t;
-		} else {
-			a->time_start_ = siox_gettime();
-		}
 		return a;
 	}
 
-	Activity * ActivityBuilder::startActivity( const ComponentID & cid, UniqueComponentActivityID ucaid, NodeID caller_node_id, UniqueInterfaceID caller_unique_interface_id, AssociateID caller_associate_id, const Timestamp * t )
+	Activity * ActivityBuilder::beginActivity( const ComponentID & cid, UniqueComponentActivityID ucaid, NodeID caller_node_id, UniqueInterfaceID caller_unique_interface_id, AssociateID caller_associate_id)
 	{
 		// REMARK: If t == nullptr, then startActivity will draw the current timestamp and all code in this function will count towards the time of the activity. As of now, it will be left this way for the sake of simplicity.
 
 		Activity * a;
-		a = startActivity( cid, ucaid, t );
+		a = beginActivity( cid, ucaid );
 		a->remoteInvoker_ = new RemoteCallIdentifier( caller_node_id, caller_unique_interface_id, caller_associate_id );
 
 		return a;
-	}
-
-	void ActivityBuilder::stopActivity( Activity * a, const Timestamp * t )
-	{
-		assert( a != nullptr );
-
-		if( t != nullptr ) {
-			a->time_stop_ = *t;
-		} else {
-			a->time_stop_ = siox_gettime();
-		}
-
-		assert( a == activity_stack.back() );
-		activity_stack.pop_back();
 	}
 
 	/* endActivity: All data for this activity has been collected.

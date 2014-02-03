@@ -100,10 +100,16 @@ from a other header file.''')
                 entries["initLast"] = ""
             if not "before" in entries:
                 entries["before"] = ""
+            if not "beforeLast" in entries:
+                entries["beforeLast"] = ""
             if not "after" in entries:
                 entries["after"] = ""
+            if not "afterLast" in entries:
+                entries["afterLast"] = ""                 
             if not "cleanup" in entries:
                 entries["cleanup"] = ""
+            if not "cleanupLast" in entries:
+                entries["cleanupLast"] = ""                
             if not "final" in entries:
                 entries["final"] = ""
 
@@ -145,9 +151,10 @@ class Function():
         for t in self.usedTemplateList:
             if(t.name == "rewriteCall"):
                 self.rewriteCall = t.parameterList['functionName']
-                self.rewriteCallArguments = t.parameterList['arguments']
-                self.rewriteCallParams = t.parameterList['parameters']
-
+                if t.parameterList['arguments'] != "":
+                    self.rewriteCallArguments = t.parameterList['arguments']
+                if t.parameterList['parameters'] != "":
+                    self.rewriteCallParams = t.parameterList['parameters']
 
     #
     # @brief Generate the function call.
@@ -181,7 +188,7 @@ class Function():
 
         if self.definition == '':
             return '%s %s(%s)' % (self.type, self.name,
-                                  ', '.join(' '.join([parameter.type, parameter.name])
+                                  ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType])
                                             for parameter in self.parameterList))
 
         else:
@@ -225,7 +232,7 @@ class Function():
         if self.rewriteCallParams:
             arguments = self.rewriteCallParams
         else:
-            arguments = ', '.join(' '.join([parameter.type, parameter.name])
+            arguments = ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType])
                                                    for parameter in self.parameterList)
 
 
@@ -248,7 +255,7 @@ class Function():
 
         if self.definition == '':
             return '%s __wrap_%s(%s)' % (self.type, self.name,
-                                         ', '.join(' '.join([parameter.type, parameter.name])
+                                         ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType])
                                                    for parameter in self.parameterList))
 
         else:
@@ -289,7 +296,7 @@ class Function():
         if self.rewriteCallParams:
             parameters = self.rewriteCallParams
         else:
-            parameters = ', '.join(' '.join([parameter.type, parameter.name]) for parameter in self.parameterList)
+            parameters = ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType]) for parameter in self.parameterList)
 
         if self.definition == '':
 
@@ -317,7 +324,7 @@ class Function():
 
         if self.definition == '':
 
-            parameters = ', '.join(' '.join([parameter.type, parameter.name])
+            parameters = ', '.join(' '.join([parameter.type, parameter.name, parameter.arrayType])
                                    for parameter in self.parameterList)
 
 
@@ -358,6 +365,8 @@ class Parameter():
         self.type = ''
         # The name of the parameter.
         self.name = ''
+        # If the parameter is an array such as [2] the type and length is specified here
+        self.arrayType = ''
 
 
 #
@@ -408,8 +417,7 @@ class FunctionParser():
         # parameters because a regex must have a fixed number of groups to
         # match.
         self.regexFunctionDefinition = re.compile(
-            '(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].()]*)\)[\w+]*?;',
-            re.S | re.M)
+            '(?:([\w*\s]+?)(?=\s*\w+\s*\())\s*(\w+)\s*\(([,\w*\s\[\].()]*)\)[\w+]*?;', re.S | re.M)
 
         # This regular expression matches parameter type and name.
         # The Parameter which is matched needs to have a type and a name and is
@@ -420,8 +428,8 @@ class FunctionParser():
         # (?:\*\s*|\s+) matches the last * or blank
         # ([\w]+ matches the parameter name
         # (?:\s*\[\s*\])? matches array [] if exist
-        self.regexParamterDefinition = re.compile(
-            '([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[\s*\])?)')
+        self.regexParameterDefinition = re.compile(
+            '([\w*\s]+(?:\*\s*|\s+))([\w]+(?:\s*\[[\s0-9]*\])?)')
 
         self.regexFunctionParameterDefinition = re.compile(
             '([\w*\s]+(?:\*\s*|\s+))\(\s*[*]\s*([\w]+)\s*\)\s*(.*)')
@@ -493,7 +501,6 @@ class FunctionParser():
                         continue
                     m = re.match('[a-zA-Z].*[ \t][a-zA-Z0-9]+[ \t]*$', parameter)
                     if m:
-                        print(parameter)
                         parameterOutList.append(parameter)
                     else:
                         parameterOutList.append(parameter + " var" + str(curParam))
@@ -513,9 +520,8 @@ class FunctionParser():
                         parameterName = ''
                         parameterType = parameter
 
-                    else:
-                        parameterMatch = self.regexParamterDefinition.match(
-                            parameter)
+                    else:                        
+                        parameterMatch = self.regexParameterDefinition.match(parameter)
 
                         if not parameterMatch:
                             parameterMatch = self.regexFunctionParameterDefinition.match(parameter)
@@ -527,11 +533,11 @@ class FunctionParser():
 
                         # Search for something like 'int list[]' and convert it to
                         # 'int* list'
-                        regexBracketes = re.compile('\[\s*\]')
-                        if regexBracketes.search(parameterName):
-                            parameterName = regexBracketes.sub(
-                                '', parameterName)
-                            parameterType += '*'
+                        regexBracketes = re.compile('\[[\s0-9]*\]+')
+                        bracketsMatch = regexBracketes.search(parameterName)
+                        if bracketsMatch != None:
+                            parameterName = regexBracketes.sub('', parameterName)
+                            parameterObject.arrayType = bracketsMatch.group(0)
 
                     parameterObject.name = parameterName
                     parameterObject.type = parameterType
@@ -757,14 +763,6 @@ class Template():
         self.valueRegex = re.compile(
             '\s*(\w+=)?(([-\w%_\(\)\[\]&*]+)|(\".*?\")|(\'.+?\'+))\s*', re.S | re.M)
 
-        # Remember template-access for easier usage
-        self.world = self.templateDict['global']
-        self.init = self.templateDict['init']
-        self.initLast = self.templateDict['initLast']
-        self.before = self.templateDict['before']
-        self.after = self.templateDict['after']
-        self.final = self.templateDict['final']
-        self.cleanup = self.templateDict['cleanup']
         self.currentParameterIndex = 0
         self.containsNamedParameters = False
         self.insideString = False
@@ -839,20 +837,8 @@ class Template():
     #
     # @return The requested string from the template
     def output(self, type):
-        if (type == 'global'):
-            return self.cleanOutput(self.world)
-        elif (type == 'init'):
-            return self.cleanOutput(self.init)
-        elif (type == 'initLast'):
-            return self.cleanOutput(self.initLast)
-        elif (type == 'before'):
-            return self.cleanOutput(self.before)
-        elif (type == 'after'):
-            return self.cleanOutput(self.after) 
-        elif (type == 'final'):
-            return self.cleanOutput(self.final) 
-        elif (type == 'cleanup'):
-            return self.cleanOutput(self.cleanup)
+        if (type in self.templateDict):
+            return self.cleanOutput(self.templateDict[type])
         else:
             # Error
             print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
@@ -991,8 +977,7 @@ class Writer():
                     exit(1)
 
                 print('\tva_list valist;', file=output)
-                print(
-                    '\tva_start(valist, %s);' % function.parameterList[-2].name,
+                print('\tva_start(valist, %s);' % function.parameterList[-2].name,
                     file=output)
                 #print( '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type,  function.parameterList[-2].type), file=output)
 
@@ -1004,26 +989,12 @@ class Writer():
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
 
-            # write the before-template for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('before').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            self.writeBefore(function, output)
 
             # write the function call
             print(functionCall, file=output)
-
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('after').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-
-            # write all cleanup-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('cleanup').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            
+            self.writeAfter(function, output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
@@ -1084,9 +1055,7 @@ class Writer():
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
                 print('\tva_list valist;', file=output)
-                print(
-                    '\tva_start(valist, %s);' % function.parameterList[-2].name,
-                    file=output)
+                print('\tva_start(valist, %s);' % function.parameterList[-2].name, file=output)
                 #print(                    '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type,function.parameterList[-2].type), file=output)
                 # set the name to args
                 function.parameterList[-1].name = "val"
@@ -1098,17 +1067,9 @@ class Writer():
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
 
-            # write the before-template for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('before').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
 
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('after').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            self.writeBefore(function, output)
+            self.writeAfter(function, output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
@@ -1122,6 +1083,41 @@ class Writer():
                 print('\n}', end='\n\n', file=output)
         # close the file
         output.close()
+    
+    def writeBefore(self, function, output):
+            # write the before-template for this function
+            for templ in function.usedTemplateList:
+                outputString = templ.output('before').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+            # write the beforeLast-template for this function
+            for templ in reversed(function.usedTemplateList):
+                outputString = templ.output('beforeLast').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+    
+    def writeAfter(self, function, output):
+            # write all after-templates for this function
+            for templ in function.usedTemplateList:
+                outputString = templ.output('after').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+            for templ in reversed(function.usedTemplateList):
+                outputString = templ.output('afterLast').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+
+            # write all after-templates for this function
+            for templ in function.usedTemplateList:
+                outputString = templ.output('cleanup').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+            for templ in reversed(function.usedTemplateList):
+                outputString = templ.output('cleanupLast').strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+
+
     #
     # @brief Write a source file
     #
@@ -1225,26 +1221,12 @@ class Writer():
                 print('\t', returnType, ' ret;', end='\n', sep='',
                       file=output)
 
-            # write the before-template for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('before').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            self.writeBefore(function, output)
 
             # write the function call
             print(functionCall, file=output)
 
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('after').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('cleanup').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
+            self.writeAfter(function, output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":

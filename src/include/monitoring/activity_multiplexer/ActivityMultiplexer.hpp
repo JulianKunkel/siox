@@ -20,7 +20,7 @@ namespace monitoring {
 			 *
 			 * @param	activity	logged activity
 			 */
-			virtual void Log( shared_ptr<Activity> activity ) = 0;
+			virtual void Log( const shared_ptr<Activity> & activity ) = 0;
 
 			/**
 			 * Register listener to multiplexer
@@ -36,6 +36,11 @@ namespace monitoring {
 			 * @param   listener    listener to remove
 			 */
 			virtual void unregisterListener( ActivityMultiplexerListener * listener ) = 0;
+	};
+
+	// An ActivityMultiplexer which is called before a call completed, thus it may be incompleted.
+	class ActivityMultiplexerSync : public ActivityMultiplexer{
+
 	};
 
 

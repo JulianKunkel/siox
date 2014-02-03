@@ -7,6 +7,7 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
 
+#include <util/threadSafety.h>
 
 #include "ActivityMonitorOptions.hpp"
 
@@ -29,6 +30,8 @@ class ActivityMonitor: public ActivityMultiplexerPlugin {
 	atomic<uint64_t> observedAsyncActivities;
 
 	void reporterThreadFunc(){
+		monitoring_namespace_protect_thread();
+		
 		uint64_t o[3] = {0,0,0};
 
 		while(! terminate){
@@ -48,11 +51,11 @@ class ActivityMonitor: public ActivityMultiplexerPlugin {
 	}
 
 	public:
-		void Notify( shared_ptr<Activity> activity ) override {
+		void Notify( const shared_ptr<Activity> & activity ) override {
 			observedActivities++;
 		}
 
-		void NotifyAsync( int lost_count, shared_ptr<Activity> activity ) override {
+		void NotifyAsync( int lost_count, const shared_ptr<Activity> & activity ) override {
 			observedAsyncActivities++;
 			if( lost_count > 0 ){
 				droppedActivities.fetch_add(lost_count);

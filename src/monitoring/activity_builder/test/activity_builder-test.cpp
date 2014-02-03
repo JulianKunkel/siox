@@ -18,8 +18,9 @@ static void test_single_activity( ActivityBuilder * ab, ComponentID & cid, Uniqu
 	Activity * a;
 	Attribute attr, attr2;
 
-	a = ab->startActivity( cid, ucaid, nullptr );
-	ab->stopActivity( a, nullptr );
+	a = ab->beginActivity( cid, ucaid );
+	ab->startActivity( a, 0 );
+	ab->stopActivity( a, 1 );
 
 	attr.id = 1;
 	attr.value = 3.2;
@@ -38,7 +39,8 @@ static void test_remote_call( ActivityBuilder * ab, ComponentID & cid, UniqueCom
 	RemoteCall * rc;
 	Attribute attr, attr2;
 
-	a = ab->startActivity( cid, ucaid, nullptr );
+	a = ab->beginActivity( cid, ucaid );
+	ab->startActivity(a, 0);
 	rc = ab->setupRemoteCall( a, 1, 1, 1 );
 
 	attr.id = 13;
@@ -49,7 +51,7 @@ static void test_remote_call( ActivityBuilder * ab, ComponentID & cid, UniqueCom
 	ab->setRemoteCallAttribute( rc, attr2 );
 	ab->startRemoteCall( rc, nullptr );
 
-	ab->stopActivity( a, nullptr );
+	ab->stopActivity( a, 1 );
 	ab->endActivity( a );
 	a->print();
 }
@@ -59,7 +61,8 @@ static void test_remote_activity( ActivityBuilder * ab, ComponentID & cid, Uniqu
 	Activity * a;
 	Attribute attr, attr2;
 
-	a = ab->startActivity( cid, ucaid, 1, 1, 1, nullptr );
+	a = ab->beginActivity( cid, ucaid, 1, 1, 1 );
+	ab->startActivity( a, 1);
 
 	attr.id = 30;
 	attr.value = 31.1;
@@ -68,7 +71,7 @@ static void test_remote_activity( ActivityBuilder * ab, ComponentID & cid, Uniqu
 	attr2.value = -31.1;
 	ab->setActivityAttribute( a, attr2 );
 
-	ab->stopActivity( a, nullptr );
+	ab->stopActivity( a, 2 );
 	ab->endActivity( a );
 	a->print();
 }

@@ -16,7 +16,7 @@ namespace monitoring {
 			 *
 			 * @param    activity	a logged Activity
 			 */
-			virtual void Notify(shared_ptr<Activity> activity ){};
+			virtual void Notify(const shared_ptr<Activity> & activity ){};
 
 			/*
 			 * lost activities counts the of activities which have been lost before processing the activity.
@@ -24,7 +24,7 @@ namespace monitoring {
 			 * @param	lostActivitiesCount	numbers of activities lost before this activity came through
 			 * @param	activtiy	a logged activity
 			 */
-			virtual void NotifyAsync( int lostActivitiesCount, shared_ptr<Activity> activity ){	};
+			virtual void NotifyAsync( int lostActivitiesCount, const shared_ptr<Activity> & activity ){	};
 	};
 }
 

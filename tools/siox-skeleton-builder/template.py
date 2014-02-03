@@ -134,73 +134,21 @@ template = {
     	'before': '''
     		assert(global_component);
 	    	assert(%(ComponentVariable)s);
-	    	siox_activity * %(ActivityVariable)s = siox_activity_start( global_component, %(ComponentVariable)s );''',
+	    	siox_activity * %(ActivityVariable)s = siox_activity_begin( global_component, %(ComponentVariable)s );''',
+	   'beforeLast': '''siox_activity_start(%(ActivityVariable)s);''',
 	'after': '''
 			siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
 },
-
 'guard': {
-	'variables': 'Name=guard',
-	'global': '''''',
-	'init': '''''',
-	'before': '''\tif( monitoring_namespace_deactivated() && layer_initialized && siox_is_monitoring_enabled() ){ ''',
-	'after': '''''',
-	'cleanup': '',
-	'final': ''
-},
-'guardErrno': {
-	'variables': 'Name=guard',
-	'global': '''''',
-	'init': '''''',
-	'before': '''\t int errsv; if( monitoring_namespace_deactivated() && layer_initialized && siox_is_monitoring_enabled() ){ ''',
-	'after': '''''',
-	'cleanup': '',
-	'final': ''
-},
-'guardEnd': {
 	'variables': 'Name=guard FC=%(FUNCTION_CALL)s',
 	'global': '''''',
 	'init': '''''',
-	'before': '''''',
+	'before': '''\tif( siox_monitoring_namespace_deactivated() && layer_initialized && siox_is_monitoring_enabled() ){ ''',
 	'after': '''''',
-	'cleanup': '\t}else{\n\t\t%(FC)s \t}',
-	'final': ''
-},
-'guardEndErrno': {
-	'variables': 'Name=guard FC=%(FUNCTION_CALL)s',
-	'global': '''''',
-	'init': '''''',
-	'before': '''''',
-	'after': '''''',
-	'cleanup': '\t}else{\n\t\t%(FC)s \t}\n\t errno = errsv;',
-	'final': ''
-},
-
-# activity with hints
-#
-# Starts (at the beginning) and stops (at the end) a new
-# activity in the current function and transfer the MPI hints to SIOX activity
-# Any metrics resulting from the activity still need to be reported via activity_report!
-#
-# Name: Short description of the activity
-# Activity: Name of the variable to store the activity in; defaults to sioxActivity
-# TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
-# TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
-'activity_with_hints': {
-	'variables': 'Attribute Value Name=G_STRFUNC Activity=sioxActivity TimeStart=NULL TimeStop=NULL',
-	'global': '''''',
-	'init': '''''',
-	'before': '''siox_activity * %(Activity)s = siox_activity_start( global_component, %(TimeStart)s, %(Name)s );''',
-	'after': '''MPI_Info * info_used;
-	__real_MPI_File_get_info(fh, &info_used);
-	printf("TODO: here should be a function to convert the info_used to Attribute:Value tuple in order to transfer the Hints to siox.");
-	printf("TODO: before sending the Hints to siox, a checkout function should be called to filter the duplicated Hints.");
-	printf("TODO: or shall we just leave the checkout to the siox activity?");
-	__real_MPI_Info_free(&info_used);
-	siox_activity_stop( %(Activity)s, %(TimeStop)s );''',
-	'cleanup': 'siox_activity_end( %(Activity)s );',
+	'cleanup': '',
+	'cleanupLast': '\t}else{\n\t\t%(FC)s \t}',
 	'final': ''
 },
 # activity_attribute
@@ -214,32 +162,31 @@ template = {
 # Activity: The activity; defaults to sioxActivity
 'activity_attribute': {
 	'variables': 'Attribute Value Activity=sioxActivity',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
-	'cleanup': '',
-	'final': ''
+	'before': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
 },
-
 'activity_attribute_pointer': {
 	'variables': 'Attribute Value Activity=sioxActivity',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
-	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
-	'cleanup': '',
-	'final': ''
+	'before': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
 },
-
+'activity_attribute_str': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'before': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
+},
 'activity_attribute_u32': {
 	'variables': 'Attribute Value Activity=sioxActivity',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
+	'before': ' {uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
+},
+'activity_attribute_late': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
+},
+'activity_attribute_late_pointer': {
+	'variables': 'Attribute Value Activity=sioxActivity',
+	'after': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, %(Value)s );',
+},
+'activity_attribute_late_u32': {
+	'variables': 'Attribute Value Activity=sioxActivity',
 	'after': ' {uint32_t u64_tmp_1 = (uint32_t) %(Value)s ; \n\tsiox_activity_set_attribute( %(Activity)s, %(Attribute)s, & u64_tmp_1 );}',
-	'cleanup': '',
-	'final': ''
 },
 # horizontal_map_put_int
 #
@@ -381,12 +328,13 @@ template = {
 	'variables': 'Key MapName=activityHashTable_int Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-    'before': '''''',
-	'after': '''
+	'before': '''
+		{
 		g_rw_lock_reader_lock(& lock_%(MapName)s); 
 		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);
         siox_activity_link_to_parent( %(Activity)s, Parent ); 
+      }
 			  ''',
 	'cleanup': '',
 	'final': ''
@@ -397,8 +345,7 @@ template = {
 	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
 	'global': '''''',
 	'init': '''''',
-    'before': '''''',
-	'after': '''
+	'before': '''
 		g_rw_lock_reader_lock(& lock_%(MapName)s);
 		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);
@@ -466,11 +413,12 @@ template = {
         'global': '''''',
         'init': '''''',
         'before': '''''',
-        'after': '''errsv = errno;
+        'after': ''' int errsv = errno;
 		    if ( %(Condition)s ){
                       siox_activity_report_error( %(Activity)s, errsv );
                     }''',
         'cleanup': '',
+        'cleanupLast': '''errno = errsv;''',        
         'final': ''
 },
 'restoreErrno': {
@@ -594,7 +542,7 @@ template = {
         'final': ''
 },
 'rewriteCall': { # This is a special template, interpreted by the skeleton-builder !
-        'variables': 'functionName arguments="" parameters=""',
+        'variables': 'functionName arguments= parameters=',
         'global': '',
         'init': '',
         'before': '',
@@ -612,4 +560,4 @@ globalOnce = ""
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
-includes = ['<stdlib.h>', '<util/threadSafety.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']
+includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']

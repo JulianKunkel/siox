@@ -25,7 +25,7 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 			return ontology->lookup_attribute_by_name( domain, name );
 		}
 
-		virtual const OntologyAttribute lookup_attribute_by_ID( const OntologyAttributeID aID ) const throw( NotFoundError ) {
+		virtual const OntologyAttributeFull lookup_attribute_by_ID( const OntologyAttributeID aID ) const throw( NotFoundError ) {
 			return ontology->lookup_attribute_by_ID( aID );
 		}
 

@@ -89,11 +89,11 @@
 // We hide all types from the implementation
 #ifndef SIOX_INTERNAL_USAGE
 typedef void siox_activity;
-typedef void siox_attribute;
 typedef void siox_component;
 typedef void siox_remote_call;
 #endif
 
+typedef void siox_attribute;
 typedef void siox_component_activity;
 typedef void siox_node;
 typedef void siox_associate;
@@ -132,7 +132,7 @@ void siox_initialize_monitoring();
 // this internal function allows to check if we are calling a function within SIOX
 //@test
 //@null 1
-int monitoring_namespace_deactivated();
+int siox_monitoring_namespace_deactivated();
 
 //////////////////////////////////////////////////////////////////////////////
 /// Retrieve the node id object for a given hardware component.
@@ -246,11 +246,6 @@ int siox_ontology_set_meta_attribute( siox_attribute * parent_attribute, siox_at
 //@test ''%s,%s'' domain,name
 //@null  (siox_attribute*) name
 siox_attribute * siox_ontology_lookup_attribute_by_name( const char * domain, const char * name );
-
-/*
- Destroy the attribute.
- */
-void siox_ontology_free_attribute(siox_attribute * attribute);
 
 /*
  * Example: interface_name POSIX, MPI, MPIv3 ...
@@ -420,9 +415,8 @@ void siox_component_unregister( siox_component * component );
 /**
  * Report the start of an activity.
  *
- * This will mark the time stamp given as the beginning of the activity, influencing any
- * performance metrics associated that are measured over time.
- *
+ * You may report attributes such as function parameters then.
+ * 
  * SIOX will use the @em siox_activity to correctly assign attributes used and performance
  * metrics influenced by this activity.
  * As any activity is linked to its component by SIOX, functions supplied with a
@@ -436,7 +430,14 @@ void siox_component_unregister( siox_component * component );
  */
 //@test ''%p,%p'' component,activity
 //@null
-siox_activity * siox_activity_start( siox_component * component, siox_component_activity * activity );
+siox_activity * siox_activity_begin( siox_component * component, siox_component_activity * activity );
+
+/**
+ * Report the start of an activity's active phase, beginning time measurement.
+ * @param[in]   activity    The activity.
+ */
+//@test ''%p'' activity
+void siox_activity_start( siox_activity * activity );
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.
@@ -591,6 +592,15 @@ int siox_suggest_optimal_value( siox_component * component, siox_attribute * att
 //@test ''%p,%p,%s,%d'' component,attribute,target_str,maxLength
 //@null 0
 int siox_suggest_optimal_value_str( siox_component * component, siox_attribute * attribute, char * target_str, int maxLength );
+
+
+// This function is usefull to give the optimizer more insight what is going on.
+// Especially, if parameters need to be changed for the call/activity to make.
+// If the out_value is of type string, a pointer of type char** must be provided. The ownership is given to the callee.
+// return true if an optimal value is found
+//@test ''%p,%p,%p'' component,attribute,out_value
+//@null 0
+int siox_suggest_optimal_value_for( siox_component * component, siox_attribute * attribute, siox_activity * activity, void * out_value );
 
 //////////////////////////////////////////////////////////////////////////////
 /// Report that a local activity was initiated via a remote call.

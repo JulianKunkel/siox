@@ -12,6 +12,7 @@
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 #include <knowledge/optimizer/OptimizerPluginInterface.hpp>
 #include <monitoring/datatypes/Exceptions.hpp>
+#include <monitoring/datatypes/Activity.hpp>
 
 using namespace monitoring;
 
@@ -100,6 +101,19 @@ namespace knowledge {
 			 *      upon current system statistics and activities.
 			 */
 			virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) = 0;
+
+			/**
+			 * Ask the optimizer to suggest a parameter for @a attribute.
+			 *
+			 * @param attribute [in]
+			 *      The attribute in question
+			 *
+			 * @return
+			 *      The best value for attribute, as judged by the plugin
+			 *      registered for attribute with the optimizer, based
+			 *      upon current system statistics and activities.
+			 */
+			virtual OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) = 0;			
 	};
 
 }

@@ -40,7 +40,7 @@ class AnomalyInjectorPlugin: public ActivityMultiplexerPlugin, public ComponentR
 		void initPlugin() override;
 		ComponentOptions * AvailableOptions() override;
 
-		void Notify( shared_ptr<Activity> activity ) override;
+		void Notify( const shared_ptr<Activity> & activity ) override;
 
 		virtual ComponentReport prepareReport() override;
 
@@ -138,7 +138,7 @@ AnomalyInjectorPlugin::~AnomalyInjectorPlugin()
 }
 
 
-void AnomalyInjectorPlugin::Notify( shared_ptr<Activity> activity ) {
+void AnomalyInjectorPlugin::Notify( const shared_ptr<Activity> & activity ) {
 	// Ignore any activities seen; we're creating our own problems! ;)
 	return;
 }
