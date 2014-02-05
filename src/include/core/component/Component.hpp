@@ -41,6 +41,13 @@ namespace core {
 
 			}
 
+			// stop processing of threads
+			virtual void stop() {}
+
+			// start processing of threads
+			virtual void start() {}
+
+
 			inline ComponentOptions & getOptions() {
 				if( options == nullptr ) {
 					options = AvailableOptions();
@@ -57,8 +64,6 @@ namespace core {
 				}
 				return *dynamic_cast<TYPE *>( options );
 			}
-
-			//virtual void shutdown() = 0; // Shutdown is merged into the destructor.
 
 			virtual ~Component() {
 				if( options != nullptr ){

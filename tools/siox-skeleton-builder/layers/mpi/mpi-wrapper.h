@@ -61,6 +61,7 @@ End of global part
 #define  OPTIONAL_CONST
 #endif
 
+//@callLibraryInitialize
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
 //@component_attribute commSize mpi_sz  int mpi_sz; PMPI_Comm_size(MPI_COMM_WORLD, & mpi_sz);
@@ -68,6 +69,7 @@ End of global part
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); PMPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 int MPI_Init( int * argc, char ** *argv );
 
+//@callLibraryInitialize
 //@activity
 //@error ''ret!=MPI_SUCCESS'' ret
 //@component_attribute commSize mpi_sz  int mpi_sz; MPI_Comm_size(MPI_COMM_WORLD, & mpi_sz);
@@ -78,9 +80,8 @@ int MPI_Init( int * argc, char ** *argv );
 int MPI_Init_thread( int *argc, char ** *argv, int required, int *provided );
 
 //@splice_before siox_register_termination_complete_signal( (void (*)(void)) PMPI_Finalize);
-//@splice_before return MPI_SUCCESS; // we do not execute MPI_Finalize()!
-//@activity
-//@error ''ret!=MPI_SUCCESS'' ret
+//@callLibraryFinalizeBefore
+//@splice_before return MPI_SUCCESS; // we do not execute MPI_Finalize() here but defer it.
 int MPI_Finalize( void );
 
 /*

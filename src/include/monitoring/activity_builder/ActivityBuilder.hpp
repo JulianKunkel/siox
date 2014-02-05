@@ -42,9 +42,6 @@ namespace monitoring {
 			}
 			void stopActivity( Activity * a, const Timestamp & t ){
 				a->time_stop_ = t;
-
-				assert( a == activity_stack.back() );
-				activity_stack.pop_back();
 			}
 
 			void endActivity( Activity * a );

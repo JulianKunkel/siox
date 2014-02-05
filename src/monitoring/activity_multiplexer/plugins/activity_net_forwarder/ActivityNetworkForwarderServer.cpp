@@ -23,19 +23,26 @@ class ActivityNetworkServerForwarder: public NetworkService, public ServerCallba
 		return new ActivityNetworkForwarderServerOptions();
 	}
 
-	void init() {
+	void stop() override{
+		delete(server);
+	}
+
+	void start() override{
 		ActivityNetworkForwarderServerOptions & options = getOptions<ActivityNetworkForwarderServerOptions>();
 		CommunicationModule * comm =  GET_INSTANCE(CommunicationModule, options.comm);
-		target =  GET_INSTANCE(ActivityMultiplexer, options.target_multiplexer);
-
-		assert(target != nullptr);
-		assert(comm != nullptr);
-
 		server = comm->startServerService(options.serviceAddress, this);
 	}
 
+	void init() override{
+		ActivityNetworkForwarderServerOptions & options = getOptions<ActivityNetworkForwarderServerOptions>();
+		target =  GET_INSTANCE(ActivityMultiplexer, options.target_multiplexer);
+		assert(target != nullptr);
+
+		start();
+   }
+
 	~ActivityNetworkServerForwarder(){
-		delete(server);
+		stop();
 	}
 
 

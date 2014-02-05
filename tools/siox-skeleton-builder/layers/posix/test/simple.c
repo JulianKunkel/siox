@@ -31,6 +31,8 @@ int main( int argc, char const * argv[] )
 		if( ret != 0 ) {
 			fprintf( stderr, "Error while closing file 'tmp_posix_test'\n" );
 		}
+	}else{
+		int ret = close(4855);
 	}
 
 
