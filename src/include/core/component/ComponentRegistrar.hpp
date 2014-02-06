@@ -90,7 +90,14 @@ namespace core {
 			 */
 			void shutdown();
 
+			// stop processing of threads
+			void stop();
+
+			// start processing processing of threads
+			void start();
+
 		private:
+			bool stopped = false;
 			uint32_t maxComponentNumber = 0;
 			std::map<ComponentReferenceID, RegisteredComponent*> map;
 			std::list<RegisteredComponent*> list;

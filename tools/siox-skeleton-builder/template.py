@@ -6,24 +6,47 @@ template = {
 #
 # SWID: The name (software id) for this component
 'component': {
-	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" SpliceCode=',
-	'global': '''static siox_component * global_component = NULL;
-		     static siox_unique_interface * global_uid = NULL;
-                     static int layer_initialized = FALSE;
-				''',
+	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" ComponentVariable=global SpliceCode=',
+	'global': '''
+		static siox_component * %(ComponentVariable)s_component = NULL;
+      static siox_unique_interface * %(ComponentVariable)s_uid = NULL;
+      static int %(ComponentVariable)s_layer_initialized = FALSE;
+		''',
     'init': ''' 
-    		  siox_register_initialization_signal(sioxInit);
-    		  siox_register_termination_signal(sioxFinal);
-    		  
-    		  if ( siox_is_monitoring_permanently_disabled() || global_component ) return; 
-    		  %(SpliceCode)s
-    		  global_uid = siox_system_information_lookup_interface_id(%(InterfaceName)s, %(ImplementationIdentifier)s);
-              global_component = siox_component_register(global_uid, %(InstanceName)s);''',
-        'initLast': 'layer_initialized = TRUE;',
+		if ( siox_is_monitoring_permanently_disabled() || %(ComponentVariable)s_component ){
+				return; 
+		}		
+      %(SpliceCode)s
+		%(ComponentVariable)s_uid = siox_system_information_lookup_interface_id("%(InterfaceName)s", "%(ImplementationIdentifier)s");
+
+		// avoid double instrumentation with DLSYM and LD_PRELOAD
+		if ( siox_component_is_registered( %(ComponentVariable)s_uid ) ){
+			fprintf(stderr, "WARNING: layer '%%s/%%s' is already instrumented, do not use LD_PRELOAD again! Most likely the application breaks.\\n", "%(InterfaceName)s", "%(ImplementationIdentifier)s");
+			return;
+		}
+		%(ComponentVariable)s_component = siox_component_register(%(ComponentVariable)s_uid, "%(InstanceName)s");
+		siox_register_initialization_signal(sioxInit);
+      siox_register_termination_signal(sioxFinal);
+		
+		''',
+        'initLast': '%(ComponentVariable)s_layer_initialized = TRUE;',
 	'before': '',
 	'after': '',
 	'cleanup': '',
-	'final': 'if (layer_initialized) { siox_component_unregister(global_component); global_component = NULL; layer_initialized = FALSE; }'
+	'final': '''
+		if (%(ComponentVariable)s_layer_initialized) { siox_component_unregister(%(ComponentVariable)s_component); %(ComponentVariable)s_component = NULL; %(ComponentVariable)s_layer_initialized = FALSE; }'''
+},
+'autoInitializeLibrary':{
+	# this hint is interpreted by the wrapper itself.
+},
+'callLibraryFinalize':{
+	'after' : 'sioxFinal();'
+},
+'callLibraryFinalizeBefore':{
+	'before' : 'sioxFinal();'
+},
+'callLibraryInitialize':{
+	'before' : 'sioxInit();'
 },
 # register_attribute
 #
@@ -38,7 +61,7 @@ template = {
 'register_attribute': {
 	'variables': 'AttributeVariable Domain Name StorageType',
 	'global': '''static siox_attribute * %(AttributeVariable)s;''',
-	'init': '''%(AttributeVariable)s = siox_ontology_register_attribute( %(Domain)s, %(Name)s, %(StorageType)s ); assert(%(AttributeVariable)s != NULL);''',
+	'init': '''%(AttributeVariable)s = siox_ontology_register_attribute( "%(Domain)s", "%(Name)s", %(StorageType)s ); assert(%(AttributeVariable)s != NULL);''',
     'before': '''''',
 	'after': '',
 	'cleanup': '',
@@ -128,24 +151,66 @@ template = {
 # TimeStart: Start time to be reported; defaults to NULL, which will draw a current time stamp
 # TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
 'activity': {
-	'variables': 'Name=%(FUNCTION_NAME)s ComponentVariable=cv%(FUNCTION_NAME)s ActivityVariable=sioxActivity',
-	'global': '''static siox_component_activity * %(ComponentVariable)s;''',
-	'init': '''%(ComponentVariable)s = siox_component_register_activity( global_uid, "%(Name)s" );''',
+	'variables': 'Name=%(FUNCTION_NAME)s ComponentActivity=cv%(FUNCTION_NAME)s ComponentVariable=global ActivityVariable=sioxActivity',
+	'global': '''static siox_component_activity * %(ComponentActivity)s;''',
+	'init': '''%(ComponentActivity)s = siox_component_register_activity( %(ComponentVariable)s_uid, "%(Name)s" );''',
     	'before': '''
-    		assert(global_component);
-	    	assert(%(ComponentVariable)s);
-	    	siox_activity * %(ActivityVariable)s = siox_activity_begin( global_component, %(ComponentVariable)s );''',
+	    	assert(%(ComponentVariable)s_component);
+	    	assert(%(ComponentActivity)s);
+	    	siox_activity * %(ActivityVariable)s = siox_activity_begin( %(ComponentVariable)s_component, %(ComponentActivity)s );''',
 	   'beforeLast': '''siox_activity_start(%(ActivityVariable)s);''',
 	'after': '''
 			siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
 },
+# This template allows to inject an activity into a component in which it belongs to.
+'activityComponentSwitcher2BasedOnParent': {
+	'variables': 'Name=%(FUNCTION_NAME)s Key=unknown ComponentVariable1=global ComponentVariable2=global MapName1=activityHashTable_int MapName2=activityHashTable_int2 ActivityVariable=sioxActivity ActivityParentVar=parent',
+	'global': '''
+				static siox_component_activity * %(Name)s_%(ComponentVariable1)s;
+				static siox_component_activity * %(Name)s_%(ComponentVariable2)s;
+					''',
+	'init': '''
+	%(Name)s_%(ComponentVariable1)s = siox_component_register_activity( %(ComponentVariable1)s_uid, "%(Name)s" );
+	%(Name)s_%(ComponentVariable2)s = siox_component_register_activity( %(ComponentVariable2)s_uid, "%(Name)s" );''',
+
+    	'before': '''
+    		g_rw_lock_reader_lock(& lock_%(MapName1)s); 
+			siox_activity_ID * %(ActivityParentVar)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName1)s, GINT_TO_POINTER(%(Key)s) ); 
+			g_rw_lock_reader_unlock(& lock_%(MapName1)s);
+			// now decide to which component the activity parent belongs to
+			// we expect it is likely to belong to the first component
+			siox_activity * %(ActivityVariable)s = NULL;
+			
+			if ( %(ActivityParentVar)s == NULL ){
+				// check if it belongs to the other component
+				g_rw_lock_reader_lock(& lock_%(MapName2)s); 
+			   %(ActivityParentVar)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName2)s, GINT_TO_POINTER(%(Key)s) ); 
+				g_rw_lock_reader_unlock(& lock_%(MapName2)s);
+
+				if( %(ActivityParentVar)s != NULL ){
+					%(ActivityVariable)s = siox_activity_begin( %(ComponentVariable2)s_component, %(Name)s_%(ComponentVariable2)s );					
+				}else{
+				   // unknown so we keep the first component
+					%(ActivityVariable)s = siox_activity_begin( %(ComponentVariable1)s_component, %(Name)s_%(ComponentVariable1)s );
+				}
+			}else{
+				%(ActivityVariable)s = siox_activity_begin( %(ComponentVariable1)s_component, %(Name)s_%(ComponentVariable1)s );
+			}
+
+	    	
+	    	siox_activity_link_to_parent( %(ActivityVariable)s, %(ActivityParentVar)s );
+	    	''',
+	   'beforeLast': '''siox_activity_start(%(ActivityVariable)s);''',
+	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
+	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
+},
 'guard': {
-	'variables': 'Name=guard FC=%(FUNCTION_CALL)s',
+	'variables': 'Name=guard FC=%(FUNCTION_CALL)s ComponentVariable=global',
 	'global': '''''',
 	'init': '''''',
-	'before': '''\tif( siox_monitoring_namespace_deactivated() && layer_initialized && siox_is_monitoring_enabled() ){ ''',
+	'before': '''\tif( siox_monitoring_namespace_deactivated() && %(ComponentVariable)s_layer_initialized && siox_is_monitoring_enabled() ){ ''',
 	'after': '''''',
 	'cleanup': '',
 	'cleanupLast': '\t}else{\n\t\t%(FC)s \t}',
@@ -224,7 +289,6 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-
 'horizontal_map_put_size': {
 	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
 	'global': '''''',
@@ -339,8 +403,6 @@ template = {
 	'cleanup': '',
 	'final': ''
 },
-
-
 'activity_link_size': {
 	'variables': 'Key MapName=activityHashTable_size Activity=sioxActivity',
 	'global': '''''',
@@ -355,19 +417,24 @@ template = {
 	'final': ''
 },
 
-
+# This template allows to lookup a parent based on the integer key.
 'activity_lookup_ID_int': {
 	'variables': 'Key ActivityID=Parent MapName=activityHashTable_int',
-	'global': '''''',
-	'init': '''''',
-    'before': '''''',
 	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); 
 		siox_activity_ID * %(ActivityID)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) ); 
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);''',
-	'cleanup': '',
-	'final': ''
 },
-
+'activity_lookup_ID_before_int': {
+	'variables': 'Key ActivityID=Parent MapName=activityHashTable_int',
+   'before': '''g_rw_lock_reader_lock(& lock_%(MapName)s); 
+		siox_activity_ID * %(ActivityID)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) ); 
+		g_rw_lock_reader_unlock(& lock_%(MapName)s);''',
+},
+# Link an already known parent
+'activity_link_parent': {
+	'variables': 'Parent=Parent Activity=sioxActivity',
+	'before': '''siox_activity_link_to_parent( %(Activity)s, %(Parent)s ); ''',
+},
 
 # activity_link_str
 #
@@ -404,6 +471,9 @@ template = {
     	'before': '''''',
 	'after': '''if ( %(Condition)s ){
                       siox_activity_report_error( %(Activity)s, %(Error)s );
+                      siox_activity_stop(%(Activity)s);
+                      siox_activity_end(%(Activity)s);
+                      return ret;
 		    }''',
 	'cleanup': '',
 	'final': ''
@@ -416,9 +486,13 @@ template = {
         'after': ''' int errsv = errno;
 		    if ( %(Condition)s ){
                       siox_activity_report_error( %(Activity)s, errsv );
+                      siox_activity_stop(%(Activity)s);
+                      siox_activity_end(%(Activity)s);
+							 errno = errsv;
+							 return ret;
                     }''',
         'cleanup': '',
-        'cleanupLast': '''errno = errsv;''',        
+        #'cleanupLast': '''errno = errsv;''',        
         'final': ''
 },
 'restoreErrno': {
@@ -525,7 +599,7 @@ template = {
 
 'include': {
 	'variables': 'what',
-	'global': '#include %(what)s',
+	'global': '#include "%(what)s"',
 	'init': '',
 	'before': '',
 	'after': '',

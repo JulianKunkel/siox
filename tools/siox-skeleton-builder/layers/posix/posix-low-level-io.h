@@ -24,7 +24,9 @@
 // TODO: Generall aproach to handle errors: How do we convert them to the platform dependent error message.
 
 /* Set the interface name for the library*/
+//@autoInitializeLibrary
 //@component "POSIX" ""
+//@component "POSIX_Network" "" ComponentVariable=network
 
 /* Register the data types for the descriptors */
 //@register_attribute bytesToRead "POSIX" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
@@ -54,6 +56,7 @@
    The map and all other functions using it default to the same built-in name,
    so it can usually be omitted. */
 //@horizontal_map_create_int
+//@horizontal_map_create_int MapName=activityHashTable_network_int
 //@horizontal_map_create_size
 
 
@@ -105,39 +108,34 @@ int open64( const char * pathname, int flags, ... );
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_late fileHandle ret
 int creat64( const char * pathname, mode_t mode );
+
 //@guard
 //@errorErrno ''ret<0''
-//@activity
-//@activity_link_int fd
-//@horizontal_map_remove_int fd
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute fileHandle fd
+//@horizontal_map_remove_int fd
+//@horizontal_map_remove_int fd MapName=activityHashTable_network_int
 int close( int fd );
 
 //@guard
 //@errorErrno ''ret<0''
-//@activity
-//@activity_attribute fileHandle fd
-//@activity_lookup_ID_int fd ActivityID=ParentID
-//@horizontal_map_put_int_ID ret ActivityID=ParentID
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
+//@horizontal_map_put_int_ID ret ActivityID=parent
 int dup( int fd );
 
 //This code is actually not completely correct, dup2 may close newfd:
 //@guard
 //@errorErrno ''ret<0''
-//@activity
-//@activity_attribute fileHandle oldfd
-//@activity_lookup_ID_int oldfd ActivityID=ParentID
-//@horizontal_map_put_int_ID newfd ActivityID=ParentID
+//@activityComponentSwitcher2BasedOnParent Key=oldfd ComponentVariable2=network MapName2=activityHashTable_network_int
+//@horizontal_map_put_int_ID newfd ActivityID=parent
 int dup2( int oldfd, int newfd );
 
 
 //This code is actually not completely correct, dup3 may close newfd:
 //@guard
 //@errorErrno ''ret<0''
-//@activity
-//@activity_attribute fileHandle oldfd
-//@activity_lookup_ID_int oldfd ActivityID=ParentID
-//@horizontal_map_put_int_ID newfd ActivityID=ParentID
+//@activityComponentSwitcher2BasedOnParent Key=oldfd ComponentVariable2=network MapName2=activityHashTable_network_int
+//@horizontal_map_put_int_ID newfd ActivityID=parent
 int dup3( int oldfd, int newfd, int flags );
 
 
@@ -153,120 +151,105 @@ int dup3( int oldfd, int newfd, int flags );
 //@activity_link_int in_fd
 ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 
-
 //@guard
 //@errorErrno ''ret<0''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute bytesToWrite count
 //@activity_attribute fileHandle fd
 //@activity_attribute_late bytesWritten ret
-//@activity_link_int fd
 ssize_t write( int fd, const void * buf, size_t count );
 
 //@guard
 //@errorErrno ''ret<0''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute_late bytesRead ret
 //@activity_attribute fileHandle fd
-//@activity_link_int fd
 ssize_t read( int fd, void * buf, size_t count );
 
 //@guard
 //@errorErrno ''ret<0''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute fileHandle fd
 //@activity_attribute fileMemoryRegions iovcnt
 //@activity_attribute_late bytesWritten ret
-//@activity_link_int fd
 ssize_t writev( int fd, const struct iovec * iov, int iovcnt );
 
 //@guard
 //@errorErrno ''ret<0''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute_late bytesRead ret
 //@activity_attribute fileMemoryRegions iovcnt
 //@activity_attribute fileHandle fd
-//@activity_link_int fd
 ssize_t readv( int fd, const struct iovec * iov, int iovcnt );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute bytesToWrite count
-//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_attribute_late bytesWritten ret
-//@activity_link_int fd
 ssize_t pwrite( int fd, const void * buf, size_t count, off_t offset );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute bytesToRead count
 //@activity_attribute_late bytesRead ret
-//@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
-//@activity_link_int fd
 ssize_t pread( int fd, void * buf, size_t count, off_t offset );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
-//@activity
-//@activity_attribute bytesToWrite count
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute fileHandle fd
+//@activity_attribute bytesToWrite count
 //@activity_attribute filePosition offset
 //@activity_attribute_late bytesWritten ret
-//@activity_link_int fd
 ssize_t pwrite64( int fd, const void * buf, size_t count, off_t offset );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute bytesToRead count
 //@activity_attribute_late bytesRead ret
 //@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
-//@activity_link_int fd
 ssize_t pread64( int fd, void * buf, size_t count, off_t offset );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute fileMemoryRegions iovcnt
 //@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_attribute_late bytesWritten ret
-//@activity_link_int fd
 ssize_t pwritev( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute_late bytesRead ret
 //@activity_attribute fileMemoryRegions iovcnt
 //@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
-//@activity_link_int fd
 ssize_t preadv( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute fileMemoryRegions iovcnt
 //@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
 //@activity_attribute_late bytesWritten ret
-//@activity_link_int fd
 ssize_t pwritev64( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 //@guard
 //@errorErrno ''ret==(size_t)-1''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute_late bytesRead ret
 //@activity_attribute fileMemoryRegions iovcnt
 //@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
-//@activity_link_int fd
 ssize_t preadv64( int fd, const struct iovec * iov, int iovcnt, off_t offset );
 
 
@@ -389,20 +372,18 @@ int __fxstat( int __ver, int fd, struct stat * buf );
 
 //@guard
 //@errorErrno ''ret<0''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute fileHandle fd
 //@activity_attribute fileExtent length
 //@activity_attribute filePosition offset
-//@activity_link_int fd
 void * mmap( void * address, size_t length, int protect, int flags, int fd, off_t offset );
 
 //@guard
 //@errorErrno ''ret<0''
-//@activity
+//@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute fileHandle fd
 //@activity_attribute fileExtent length
 //@activity_attribute filePosition offset
-//@activity_link_int fd
 void * mmap64( void * address, size_t length, int protect, int flags, int fd, off_t offset );
 
 //void * mremap (void *address, size_t length, size_t new_length, int flag);
@@ -417,7 +398,7 @@ Otherwise, a null pointer is returned.
 On most library implementations, the variable is also set to a system-specific error code on failure.
  */
 //@guard
-//@errorErrno ''ret<0''
+//@errorErrno ''ret==NULL''
 //@activity
 //@splice_before SET_FILENAME(filename)
 //@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
@@ -436,7 +417,7 @@ Otherwise, a null pointer is returned.
 On most library implementations, thesave variable is also set to a system-specific ercode on failure.
  */
 //@guard
-//@errorErrno ''ret<0''
+//@errorErrno ''ret==NULL''
 //@activity
 //@splice_before SET_FILENAME(filename)
 //@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
@@ -453,7 +434,7 @@ Modes "w" or "w+" do not cause truncation of the file.  The file descriptor is n
 stream created by fdopen() is closed.
  */
 //@guard
-//@errorErrno ''ret<0''
+//@errorErrno ''ret==NULL''
 //@activity
 //@activity_link_int fd
 //@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
@@ -465,7 +446,7 @@ FILE * fdopen( int fd, const char * mode );
 // Function does not fail, only if stream is invalid.
 
 //@guard
-//@errorErrno ''ret<0''
+//@errorErrno ''ret==-1''
 //@activity
 //@activity_link_size stream
 //@horizontal_map_put_int ret
@@ -483,7 +464,7 @@ Otherwise, a null pointer is returned.
 On most library implementations, the variable is also set to a system-specific error code on failure.
  */
 //@guard
-//@errorErrno ''ret<0''
+//@errorErrno ''ret==NULL''
 //@activity
 //@splice_before SET_FILENAME(filename)
 //@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
@@ -496,7 +477,7 @@ On most library implementations, the variable is also set to a system-specific e
 FILE * freopen( const char * filename, const char * mode, FILE * stream );
 
 //@guard
-//@errorErrno ''ret<0''
+//@errorErrno ''ret==NULL''
 //@activity
 //@horizontal_map_put_size ret
 //@splice_after int fd = (ret != 0) ? fileno(ret) : 0;
@@ -504,15 +485,19 @@ FILE * freopen( const char * filename, const char * mode, FILE * stream );
 FILE * tmpfile( void );
 
 //@guard
-//@errorErrno ''ret<0''
+//@errorErrno ''ret == EOF''
 //@activity
 //@activity_link_size stream
 //@horizontal_map_remove_size stream
+//@splice_before int fd = fileno(stream);
+//@activity_attribute fileHandle fd
+//@horizontal_map_remove_int fd
+//@horizontal_map_remove_int fd MapName=activityHashTable_network_int
 int fclose( FILE * stream );
 
 //  If an error occurs, EOF is returned and the error indicator is set (see ferror).
 //@guard
-//@errorErrno ''ret<0''
+//@errorErrno ''ret == EOF''
 //@activity
 //@activity_link_size stream
 int fflush( FILE * stream );
@@ -737,28 +722,36 @@ int aio_cancel( int fd, struct aiocb * aiocbp );
 
 #include <sched.h>
 
-//http://stackoverflow.com/questions/14407544/mixing-threads-fork-and-mutexes-what-should-i-watch-out-for
-
+// http://stackoverflow.com/questions/14407544/mixing-threads-fork-and-mutexes-what-should-i-watch-out-for
+// Tracking parent file descriptors for parent/child process throughout fork() is possible, but requires modifications.
 //splice_before ''printf("Warning clone() called, statistics are re-initialized !\n");''
 //splice_before siox_finalize_monitoring();
 //splice_after siox_initialize_monitoring();
 //int clone( int ( *fn )( void * ), void * child_stack, int flags, void * arg, pid_t * ptid, struct user_desc * tls, pid_t * ctid );
 
-//@splice_before ''printf("Warning fork() called, statistics are re-initialized !\n");''
-//@splice_before siox_finalize_monitoring();
-//@splice_after siox_initialize_monitoring();
+// special care must be taken in functions which use the SIOX low-level API monitoring but also call siox_finalize_monitoring.
+
+//@splice_before ''printf("Warning fork() called!\n");''
+//@splice_before siox_handle_prepare_fork();
+//@splice_after siox_handle_fork_complete(ret != 0);
 pid_t fork( void );
 
 
-// An FD might be involved in inter-process communication and not only in file I/O.
-// Actually, do we really want to monitor socket I/O with SIOX ? 
-// We want to distinguish file I/O from socket I/O, though!
-
 // FILE LOCKING STUFF
 
+//@guard
+//@errorErrno ''ret<0''
+//@activity
+//@activity_attribute fileHandle fd
+//@activity_link_int fd
 int lockf(int fd, int cmd, off_t len);
 
 #include <sys/file.h>
+//@guard
+//@errorErrno ''ret<0''
+//@activity
+//@activity_attribute fileHandle fd
+//@activity_link_int fd
 int flock(int fd, int operation);
 
 // Special commands
@@ -769,58 +762,74 @@ int flock(int fd, int operation);
 // int ioctl(int d, int request, ...);
 
 
+
+// An FD might be involved in inter-process communication and not only in file I/O.
+// Actually, do we really want to monitor socket I/O with SIOX ? 
+// We want to distinguish file I/O from socket I/O, though!
+
 #define INSTRUMENT_POSIX_COMMUNICATION
 
 #ifdef INSTRUMENT_POSIX_COMMUNICATION
 
 #include <sys/types.h>
 #include <sys/socket.h>
-//@guard
+//@guard ComponentVariable=network
 //@errorErrno ''ret < 0''
-//@activity
+//@activity ComponentVariable=network
 //@activity_attribute_late fileHandle ret
-//@horizontal_map_put_int ret
+//@horizontal_map_put_int ret MapName=activityHashTable_network_int
 int socket(int domain, int type, int protocol);
 
-//@guard
+//@guard ComponentVariable=network
+//@errorErrno ''ret == -1''
+//@activity ComponentVariable=network
+//@activity_attribute_late fileHandle sockfd
+int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
+
+
+//This is not expected to survive fork() for which it is used for (see comment at fork()), but we start with this partial instrumentation.
+
+//@guard ComponentVariable=network
 //@errorErrno ''ret < 0''
-//@activity
-//@horizontal_map_put_int pipefd[0]
-//@horizontal_map_put_int pipefd[1]
+//@activity ComponentVariable=network
+//@horizontal_map_put_int pipefd[0] MapName=activityHashTable_network_int
+//@horizontal_map_put_int pipefd[1] MapName=activityHashTable_network_int
 //@activity_attribute_late fileHandle pipefd[0]
 //@activity_attribute_late fileHandle pipefd[1]
 int pipe(int pipefd[2]);
 
-//@guard
+//@guard ComponentVariable=network
 //@errorErrno ''ret < 0''
-//@activity
-//@horizontal_map_put_int pipefd[0]
-//@horizontal_map_put_int pipefd[1]
+//@activity ComponentVariable=network
+//@horizontal_map_put_int pipefd[0] MapName=activityHashTable_network_int
+//@horizontal_map_put_int pipefd[1] MapName=activityHashTable_network_int
 //@activity_attribute_late fileHandle pipefd[0]
 //@activity_attribute_late fileHandle pipefd[1]
 int pipe2(int pipefd[2], int flags);
 
-//@guard
+//@guard ComponentVariable=network
 //@errorErrno ''ret < 0''
-//@activity
-//@horizontal_map_put_int sv[0]
-//@horizontal_map_put_int sv[1]
+//@activity ComponentVariable=network
+//@horizontal_map_put_int sv[0] MapName=activityHashTable_network_int
+//@horizontal_map_put_int sv[1] MapName=activityHashTable_network_int
 //@activity_attribute_late fileHandle sv[0]
 //@activity_attribute_late fileHandle sv[1]
 int socketpair(int domain, int type, int protocol, int sv[2]);
 
-//@guard
+//@guard ComponentVariable=network
 //@errorErrno ''ret < 0''
-//@activity
-//@horizontal_map_put_int ret
-//@activity_attribute_late fileHandle sockfd
+//@activity ComponentVariable=network
+//@horizontal_map_put_int ret MapName=activityHashTable_network_int
+//@activity_attribute fileHandle sockfd
+//@activity_attribute_late fileHandle ret
 int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 
-//@guard
+//@guard ComponentVariable=network
 //@errorErrno ''ret < 0''
-//@activity
-//@horizontal_map_put_int ret
-//@activity_attribute_late fileHandle sockfd
+//@activity ComponentVariable=network
+//@horizontal_map_put_int ret MapName=activityHashTable_network_int
+//@activity_attribute fileHandle sockfd
+//@activity_attribute_late fileHandle ret
 int accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags);
 
 

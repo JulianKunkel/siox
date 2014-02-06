@@ -1,4 +1,8 @@
 #include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+
 #include <fstream>
 #include <algorithm>
 #include <vector>
@@ -76,9 +80,22 @@ void ConsoleReporter::processReports(ostream & out, const std::list< pair<Regist
 }
 
 void ConsoleReporter::processFinalReport(const std::list< pair<RegisteredComponent*, ComponentReport> > & reports){
-	char * outputFilename = getenv("SIOX_REPORTING_FILENAME");
+	stringstream s;
 
-	processReport(outputFilename, reports);
+
+	if (getenv("SIOX_REPORTING_FILENAME")){
+		s << getenv("SIOX_REPORTING_FILENAME");
+
+	}
+	if (getenv("SIOX_REPORTING_FILENAME_APPEND_PID")){
+		s << "pid-" << (long long unsigned) getpid() << ".txt";
+	}
+
+	if (s.str() != ""){
+		processReport( s.str().c_str(), reports);
+	}else{
+		processReport( nullptr, reports);
+	}
 }
 
 void ConsoleReporter::processReport(const char * outputFilename, const std::list< pair<RegisteredComponent*, ComponentReport> > & reports){
@@ -86,7 +103,7 @@ void ConsoleReporter::processReport(const char * outputFilename, const std::list
 	if( outputFilename != nullptr ){
 		ofstream file( outputFilename );
  		if ( file.fail() ) {
- 			cerr << "SIOX Reporting could not open file: \"" << outputFilename << "\" (environment variable SIOX_REPORTING_FILENAME)" << endl;
+ 			cerr << "SIOX Reporting could not open file: \"" << outputFilename << "\" (environment variable SIOX_REPORTING_FILENAME and SIOX_REPORTING_FILENAME_APPEND_PID)" << endl;
  			return;
  		}
 

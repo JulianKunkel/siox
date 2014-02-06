@@ -165,6 +165,18 @@ public:
 		return new ActivityNetworkForwarderClientOptions();
 	}
 
+	void stop() override{
+		delete(client);		
+	}
+
+	void start() override{
+		ActivityNetworkForwarderClientOptions & options = getOptions<ActivityNetworkForwarderClientOptions>();
+		CommunicationModule * comm =  GET_INSTANCE(CommunicationModule, options.comm);
+
+		client = comm->startClientService(options.targetAddress, & connCallback, this);
+	}
+
+
 	/**
 	 * Forwarder setup:
 	 * Register this to a already created multiplexer
@@ -178,14 +190,14 @@ public:
 		droppedActivitiesDuringAnomaly = 0;
 
 		ActivityNetworkForwarderClientOptions & options = getOptions<ActivityNetworkForwarderClientOptions>();
-		CommunicationModule * comm =  GET_INSTANCE(CommunicationModule, options.comm);
-		client = comm->startClientService(options.targetAddress, & connCallback, this);
 
 		Reasoner * reasoner =  GET_INSTANCE(Reasoner, options.reasoner);
 		this->ringBufferSize = options.ringBufferSize;
 		this->forwardAllActivities = options.forwardAllActivities;
 
 		this->ringBuffer.resize(ringBufferSize);
+
+		start();
 
 		if ( reasoner != nullptr ){
 			reasoner->connectTrigger(this);
@@ -215,7 +227,7 @@ public:
 	}
 
 	~ActivityNetworkForwarderClient(){
-		delete(client);
+		stop();
 	}
 
 	private:

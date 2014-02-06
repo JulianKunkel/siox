@@ -92,11 +92,15 @@ namespace monitoring {
 	void ActivityBuilder::endActivity( Activity * a )
 	{
 		assert( a != nullptr );
+		assert( a->time_stop_ > 0 );
 
 		//printf( "ActivityBuilder %p end %p.\n", this, a);
 
 		// Remove Activity from in-flight list
 		//activities_in_flight.erase(a->aid_.id);
+		// printf("endActivity %d %p\n", activity_stack.size(), a );
+		assert( a == activity_stack.back() );
+		activity_stack.pop_back();
 	}
 
 	void ActivityBuilder::setActivityAttribute( Activity * a, const Attribute & attribute )

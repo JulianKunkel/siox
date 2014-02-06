@@ -73,15 +73,24 @@ class ActivityMonitor: public ActivityMultiplexerPlugin {
 			droppedActivities = 0;
 			observedAsyncActivities = 0;
 
-			reporterThread = new thread( & ActivityMonitor::reporterThreadFunc, this);
+			start();
 		}
 
 		~ActivityMonitor(){
+			stop();
+		}
+
+		void stop() override{
 			if(reporterThread){
 				terminate = true;
 				reporterThread->join();
 				delete(reporterThread);
+				reporterThread = nullptr;
 			}
+		}
+
+		void start() override{
+			reporterThread = new thread( & ActivityMonitor::reporterThreadFunc, this);
 		}
 };
 
