@@ -411,15 +411,25 @@ void ReasonerStandardImplementation::PeriodicRun(){
 	// cout << "PeriodicRun finished" << endl;
 }
 
-
-
-ReasonerStandardImplementation::~ReasonerStandardImplementation() {
+void ReasonerStandardImplementation::stop(){
 	recentIssuesMutex.lock();
 	terminated = true;
 	running_condition.notify_one();
 	recentIssuesMutex.unlock();
 	periodicThread.join();
 	delete(comm);
+}
+
+void ReasonerStandardImplementation::start(){
+	ReasonerStandardImplementationOptions & options = getOptions<ReasonerStandardImplementationOptions>();
+	comm = new ReasonerCommunication(*this);
+	comm->init( options.communicationOptions );
+
+	periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
+}
+
+ReasonerStandardImplementation::~ReasonerStandardImplementation() {
+	stop();
 
 	if (childProcessesHealthMap) delete(childProcessesHealthMap);
 	if (childNodesHealthMap) delete(childNodesHealthMap);
@@ -447,13 +457,9 @@ void ReasonerStandardImplementation::init(){
 	}
 
 	update_intervall_ms = options.update_intervall_ms;
-
-	comm = new ReasonerCommunication(*this);
-
-	comm->init( options.communicationOptions );
 	upstreamReasonerExists = (options.communicationOptions.upstreamReasoner != "");
 
-	periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
+	start();
 }
 
 

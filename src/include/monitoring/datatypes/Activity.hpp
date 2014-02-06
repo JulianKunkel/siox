@@ -117,11 +117,7 @@ namespace monitoring {
 				attributeArray_( std:: move( attributeArray ) ),
 				remoteInvoker_( remoteInvoker ), errorValue_( errorValue ) {}
 
-			Activity() {
-				memset(this, 0, sizeof(Activity));
-				//remoteInvoker_ = nullptr;
-				//errorValue_ = 0;
-			}
+			Activity() : remoteInvoker_(nullptr), errorValue_(0) {}
 
 			void print() {
 				/// @todo: Really need reflection - have a look at Boost :-)

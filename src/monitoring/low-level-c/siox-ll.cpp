@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include <unordered_map>
 #include <sstream>
 #include <fstream>
 #include <pwd.h>
@@ -50,6 +51,9 @@ using namespace monitoring;
 /// Flag indiciating whether SIOX is finalized and needing initalization.
 static bool finalized = true;
 
+/// Number of times SIOX is initalized
+static int initalizationCounter = 0;
+
 /// Struct to hold references to global objects needed.
 static struct process_info process_data;
 
@@ -57,6 +61,7 @@ static list<void (*)(void)> terminate_cbs;
 static list<void (*)(void)> initialization_cbs;
 static list<void (*)(void)> terminate_complete_cbs;
 
+static unordered_map<UniqueInterfaceID, siox_component*> registeredComponents;
 
 struct FUNCTION_CLASS{
 	FUNCTION_CLASS(){
@@ -262,6 +267,7 @@ static void add_program_information()
 	process_data.association_mapper->set_process_attribute( process_data.pid, description, read );
 }
 
+
 extern "C" {
 
 // Constructor for the shared library
@@ -286,6 +292,8 @@ __attribute__( ( constructor ) ) void siox_ctor()
 			PERF_MEASURE_START("INIT")
 			string hostname = util::getHostname();
 			try {
+				initalizationCounter++;
+
 				// Load required modules and pull the interfaces into global datastructures
 				// Use an environment variable and/or configuration files in <DIR> or /etc/siox.conf
 				process_data.registrar = new ComponentRegistrar();
@@ -297,7 +305,6 @@ __attribute__( ( constructor ) ) void siox_ctor()
 				process_data.system_information_manager = process_data.configurator->searchFor<SystemInformationGlobalIDManager>( loadedComponents );
 				process_data.association_mapper =  process_data.configurator->searchFor<AssociationMapper>( loadedComponents );
 				process_data.amux = process_data.configurator->searchFor<ActivityMultiplexer>( loadedComponents );
-
 				process_data.optimizer = process_data.configurator->searchFor<knowledge::Optimizer>( loadedComponents );
 
 				assert( process_data.ontology );
@@ -309,7 +316,7 @@ __attribute__( ( constructor ) ) void siox_ctor()
 				process_data.nid = lookup_node_id( hostname );
 				process_data.pid = create_process_id( process_data.nid );
 				process_data.association_mapper->setLocalInformation(hostname, process_data.pid);
-			
+
 			} catch( exception & e ) {
 				cerr << "Received exception of type " << typeid( e ).name() << " message: " << e.what() << endl;
 				// SIOX will be disabled !
@@ -324,6 +331,10 @@ __attribute__( ( constructor ) ) void siox_ctor()
 		}		
 	}
 
+int siox_initialization_count(){
+	return initalizationCounter;
+}
+
 void siox_initialize_monitoring(){
 	siox_ctor();
 
@@ -332,6 +343,7 @@ void siox_initialize_monitoring(){
 		(*itr)();
 	}
 }
+
 
 
 static void finalizeSIOX(int print){
@@ -379,11 +391,22 @@ __attribute__( ( destructor ) ) void siox_ll_dtor()
 	}
 }
 
-
 void siox_finalize_monitoring(){
 	monitoringDisabled = SIOX_MONITORING_PERMANENTLY_DISABLED;
 	finalizeSIOX(0);
 }
+
+void siox_handle_prepare_fork(){
+	// we have to shutdown all the threads as fork() does not copy them leading to errors of all kind.	
+	process_data.registrar->stop();
+}
+
+void siox_handle_fork_complete(int im_the_child){
+	// we may re-initialize the child from scratch with new statistics etc.?
+	process_data.registrar->start();
+}
+
+
 
 
 //############################################################################
@@ -507,11 +530,24 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		return ret;
 	}
 
+   int siox_component_is_registered( siox_unique_interface * uiid ){
+		assert( uiid != SIOX_INVALID_ID );
+
+   	FUNCTION_BEGIN
+
+   	boost::shared_lock<boost::shared_mutex> lock( process_data.critical_mutex );
+		UniqueInterfaceID uid = P_TO_U32( uiid );
+
+		return registeredComponents.count(uid) > 0;
+   }
+
 
 	siox_component * siox_component_register( siox_unique_interface * uiid, const char * instance_name )
 	{
 		assert( uiid != SIOX_INVALID_ID );
 		assert( instance_name != nullptr );
+
+		assert( siox_component_is_registered(uiid) == 0 );
 
 		FUNCTION_BEGIN
 
@@ -553,6 +589,8 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		result->cid.id = ++process_data.last_componentID;
 		result->cid.pid = process_data.pid;
 		result->uid = uid;
+
+		registeredComponents[uid] = result;
 
 		string instance_str( instance_name );
 
@@ -602,7 +640,16 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 	void siox_component_unregister( siox_component * component )
 	{	
 		FUNCTION_BEGIN
+		boost::unique_lock<boost::shared_mutex> lock( process_data.critical_mutex );
+
+		if ( ! registeredComponents.count(component->uid) ){
+			return;
+		}
+
+		registeredComponents.erase(component->uid);
+
 		assert( component != nullptr );
+
 		// Simple implementation: rely on ComponentRegistrar for shutdown.
 		delete( component );
 	}

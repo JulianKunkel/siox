@@ -2,7 +2,15 @@
 # encoding: utf-8
 from __future__ import print_function
 
+global globalOnce
 globalOnce = ""
+
+global debug
+debug = False
+
+global autoInitializeSet
+autoInitializeSet = False
+
 
 import re
 import sys
@@ -62,6 +70,8 @@ from a other header file.''')
                                action='store', default='./template.py', dest='template',
                                help='Provide an alternative template.')
         args = argParser.parse_args()
+
+        debug = args.debug
 
         if args.outputFile:
             args.outputFile = args.outputFile[0]
@@ -134,12 +144,6 @@ class Function():
         # A list of templates associated with the function.
         self.definition = ''
         self.usedTemplateList = []
-        # Indicates that the function is the first called function of the
-        # library and initialize SIOX.
-        self.init = False
-        # Indicates that the function is the last called function of the
-        # library.
-        self.final = False        
         self.rewriteCall = False
         self.rewriteCallParams = False
         self.rewriteCallArguments = False
@@ -589,7 +593,6 @@ class CommandParser():
         self.inputFile = options.inputFile
         # This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*@\s*(\w+)\s*(.*)')
-        self.includeRegex = re.compile('^\s*#\s*include\s*([-.<>\"\w\'/]+)\s*')
         self.precompilerRegex = re.compile('^\s*#\s*(.*)\s*')
         
         self.options = options
@@ -621,8 +624,6 @@ class CommandParser():
         # Strip commentsq
         inputString = re.sub('/\*.*?\*/', '', inputString, flags=re.M | re.S)
 
-        #inputString = re.sub('#(?!include ).*', '', inputString)
-
         inputLineList = inputString.split('\n')
         # Iterate over every line and search for instrumentation instructions.
         i = 0
@@ -630,17 +631,6 @@ class CommandParser():
         while i < len(inputLineList):
             commandFinished = False
             currentFunction = Function()
-
-            # match the line against the include regex
-            include = self.matchInclude(inputLineList[i])
-            if include:
-                if include not in includes:
-                    if self.options.debug:
-                        print("New include '%s' at line %i" % (include, i))
-                    includes.append(include)
-                    functionString = ""
-                i += 1
-                continue
 
             precompilerMatch = self.matchPrecompiler(inputLineList[i])
             if precompilerMatch:
@@ -678,14 +668,6 @@ class CommandParser():
 at the end of """)
         return functionList
 
-    def matchInclude(self, inputLine):
-
-        match = self.includeRegex.match(inputLine)
-        if match:
-            return match.group(1).strip()
-        else:
-            return False
-
     def matchPrecompiler(self, inputLine):
         match = self.precompilerRegex.match(inputLine)
         if match:            
@@ -697,7 +679,7 @@ at the end of """)
     # @brief This function matches a instruction command with the prefix //@
     #
     def matchCommand(self, inputLine, templateList):
-
+        global autoInitializeSet
         match = self.commandRegex.match(inputLine)
 
         if (match):
@@ -705,15 +687,11 @@ at the end of """)
             commandName = match.group(1)
             commandArgs = match.group(2) + " "
 
-
             # Search for init or final sections to define init or final
             # functions
-            if commandName == 'init':
-                currentFunction.init = True
 
-            elif commandName == 'final':
-                currentFunction.fnal = True
-
+            if commandName == 'autoInitializeLibrary':
+                autoInitializeSet = True
             # If the current instrumentation command is available in the template
             # create a new template object and fill it with the command data
             elif commandName in availableCommands:
@@ -762,6 +740,7 @@ class Template():
         # <variableName>=
         self.valueRegex = re.compile(
             '\s*(\w+=)?(([-\w%_\(\)\[\]&*]+)|(\".*?\")|(\'.+?\'+))\s*', re.S | re.M)
+        self.cleanOutputRegex = re.compile("\n\s\s+", re.M)
 
         self.currentParameterIndex = 0
         self.containsNamedParameters = False
@@ -809,7 +788,9 @@ class Template():
                # Set the matched value
                valueString = value.group(2).strip()
                if(valueString.startswith("''")):
-                      valueString = valueString.strip("'")
+                    valueString = valueString.strip("'")
+               if(valueString.startswith('"')):
+                    valueString = valueString.strip('"')
                self.parameterList[name] = valueString.strip();
 
                # Truncate the found value from the value string
@@ -827,6 +808,8 @@ class Template():
        ret = output  % self.parameterList
        for key in genericVariablesForTemplates:
             ret = ret.replace( "%(" +  key + ")s",  genericVariablesForTemplates[key] );
+       ret = ret.strip()
+       #ret = self.cleanOutputRegex.sub("\n", ret)#.replace(";", ";\n")
        return ret
 
 
@@ -838,7 +821,10 @@ class Template():
     # @return The requested string from the template
     def output(self, type):
         if (type in self.templateDict):
-            return self.cleanOutput(self.templateDict[type])
+            text = self.cleanOutput(self.templateDict[type])
+            if debug and text != "":
+                return "// @" + self.name + " " + str(self.parameterList).strip("{}").replace("': '", "=").replace("'", "") + "\n" + text
+            return text;
         else:
             # Error
             print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
@@ -891,18 +877,16 @@ class Writer():
         # close the file
         output.close()
 
-    #
-    # @brief Write a source file
-    #
-    # @param functions A list of function-objects to write
-    def sourceFileWrap(self, functionList):
+    def writeHeaderBegin(self, functionList):
+
         # open the output file for writing
         output = open(self.outputFile, 'w')
 
         # write all needed includes
         for match in precompiler:
-            print('#', match, end='\n', file=output)
+            print('#' + match, end='\n', file=output)
 
+        print("// global includes: ", file=output)
         for match in includes:
             print('#include ', match, end='\n', file=output)
         print('\n', file=output)
@@ -915,11 +899,24 @@ class Writer():
                     print(templ.output('global'), file=output)
         print("", file=output)
 
+
         # write global once from template
         print(globalOnce, file=output)
 
-        print("static void sioxFinal() __attribute__((destructor));", file=output)
-        print("static void sioxInit() __attribute__((constructor));", file=output)
+        if autoInitializeSet :
+            print("static void sioxFinal() __attribute__((destructor));", file=output)
+            print("static void sioxInit() __attribute__((constructor));", file=output)
+        else:
+            print("static void sioxFinal();", file=output)
+            print("static void sioxInit();", file=output)
+        return output
+
+    #
+    # @brief Write a source file
+    #
+    # @param functions A list of function-objects to write
+    def sourceFileWrap(self, functionList):
+        output = self.writeHeaderBegin(functionList);
 
         # write all function redefinitions
         for function in functionList:
@@ -1123,33 +1120,11 @@ class Writer():
     #
     # @param functions A list of function-objects to write
     def sourceFileDLSym(self, functionList):
+        precompiler.insert(0, "define _GNU_SOURCE")
+        output = self.writeHeaderBegin(functionList);
 
-        # open the output file for writing
-        output = open(self.outputFile, 'w')
 
-        print('#define _GNU_SOURCE', file=output)
-        for match in precompiler:
-            print('#', match, end='\n', file=output)
         print('#include <dlfcn.h>\n', file=output)
-
-        # write all needed includes
-        for match in includes:
-            print('#include ', match, end='\n', file=output)
-        print('\n', file=output)
-
-        print("static void sioxFinal() __attribute__((destructor));", file=output)
-        print("static void sioxInit() __attribute__((constructor));", file=output)
-
-        # write all global-Templates
-        for function in functionList:
-            prepareGenericVariablesForTemplates(function)
-            for templ in function.usedTemplateList:
-                if templ.output('global') != '':
-                    print(templ.output('global'), file=output)
-        print("", file=output)
-
-        # write global once from template
-        print(globalOnce, file=output)
 
         print("static char* dllib = RTLD_NEXT;", file=output)
 

@@ -51,4 +51,24 @@ namespace core {
 			delete( *it );
 		}
 	}
+
+	void ComponentRegistrar::stop()
+	{
+		if( stopped ) return;
+		for( auto it = list.rbegin(); it != list.rend(); it++ ) {
+			//cout << "Shutting down " << (*it)->moduleName << endl;
+			const_cast<Component*>((*it)->component)->stop();
+		}
+		stopped = true;
+	}
+
+	void ComponentRegistrar::start()
+	{
+		if( ! stopped ) return;
+		for( auto it = list.rbegin(); it != list.rend(); it++ ) {
+			//cout << "Shutting down " << (*it)->moduleName << endl;
+			const_cast<Component*>((*it)->component)->start();
+		}
+		stopped = false;
+	}
 };

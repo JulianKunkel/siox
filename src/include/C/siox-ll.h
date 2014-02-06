@@ -128,6 +128,15 @@ void siox_enable_monitoring();
 void siox_finalize_monitoring();
 //@test
 void siox_initialize_monitoring();
+//@test
+void siox_handle_prepare_fork();
+//@test
+void siox_handle_fork_complete(int im_the_child);
+
+// Return the number of times SIOX has been initialized, this is useful to detect fork().
+//@test
+//@null 1
+int siox_initialization_count();
 
 // this internal function allows to check if we are calling a function within SIOX
 //@test
@@ -349,6 +358,8 @@ siox_associate * siox_associate_instance( const char * instance_information );
 //@test ''%p,%s'' uiid,instance_name
 //@null  (siox_component*) instance_name
 siox_component * siox_component_register( siox_unique_interface * uiid, const char * instance_name );
+
+int siox_component_is_registered( siox_unique_interface * uiid );
 
 /**
  * Report an attribute of this component to SIOX.

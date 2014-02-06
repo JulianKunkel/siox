@@ -100,9 +100,9 @@ def build(bld):
 	bld.shlib(includes="",  use = "GLIB DL SIOX_LL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
 
 	# build tests if a dummy implementation has been selected
-	bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,
-			linkflags=wrap_linkerflags,  install_path = None)
-	bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
+	#bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,
+	#		linkflags=wrap_linkerflags,  install_path = None)
+	#bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
 
 	try:
 		os.symlink(bld.path.abspath() + "/test/siox.conf", "build/siox.conf")
@@ -111,7 +111,7 @@ def build(bld):
 
         bld.install_files("${PREFIX}/include", "siox-datatypes-helper-" + LAYERPLAIN +".h")
 
-	from waflib.Tools import waf_unit_test
-	bld.add_post_fun(waf_unit_test.summary)
+	##from waflib.Tools import waf_unit_test
+	##bld.add_post_fun(waf_unit_test.summary)
 
 

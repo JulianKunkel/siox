@@ -107,6 +107,9 @@ public:
 	virtual shared_ptr<SystemHealth> getSystemHealth() override;
 	virtual shared_ptr<ProcessHealth> getProcessHealth() override;
 
+	void stop() override;
+	void start() override;
+
 	ReasonerStandardImplementation() : gatheredStatistics(new HealthStatistics) {
 		terminated = false;
 		upstreamReasonerExists = false;
