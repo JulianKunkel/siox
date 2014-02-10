@@ -51,11 +51,11 @@ class ActivityMonitor: public ActivityMultiplexerPlugin {
 	}
 
 	public:
-		void Notify( const shared_ptr<Activity> & activity ) override {
+		void Notify( const shared_ptr<Activity> & activity, int ) {
 			observedActivities++;
 		}
 
-		void NotifyAsync( int lost_count, const shared_ptr<Activity> & activity ) override {
+		void NotifyAsync( const shared_ptr<Activity> & activity, int lost_count ) {
 			observedAsyncActivities++;
 			if( lost_count > 0 ){
 				droppedActivities.fetch_add(lost_count);
@@ -66,14 +66,23 @@ class ActivityMonitor: public ActivityMultiplexerPlugin {
 			return new ActivityMonitorOptions();
 		}
 
-		void initPlugin() {			
+		void initPlugin() {
 			if (reporterThread) return;
 
 			observedActivities = 0;
 			droppedActivities = 0;
 			observedAsyncActivities = 0;
 
+			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityMonitor::Notify ), false );
+			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityMonitor::NotifyAsync ), true );
+
 			start();
+		}
+
+		void finalize() override {
+			multiplexer->unregisterCatchall( this, false );
+			multiplexer->unregisterCatchall( this, true );
+			ActivityMultiplexerPlugin::finalize();
 		}
 
 		~ActivityMonitor(){

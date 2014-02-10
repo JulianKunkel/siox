@@ -40,7 +40,7 @@ class AnomalyInjectorPlugin: public ActivityMultiplexerPlugin, public ComponentR
 		void initPlugin() override;
 		ComponentOptions * AvailableOptions() override;
 
-		void Notify( const shared_ptr<Activity> & activity ) override;
+		//No notify functions as this plugin can create its own problems.
 
 		virtual ComponentReport prepareReport() override;
 
@@ -135,12 +135,6 @@ AnomalyInjectorPlugin::~AnomalyInjectorPlugin()
 	generatorMutex.unlock();
 	generatorThread.join();
 	// cout << "Generator stopped!" << endl;
-}
-
-
-void AnomalyInjectorPlugin::Notify( const shared_ptr<Activity> & activity ) {
-	// Ignore any activities seen; we're creating our own problems! ;)
-	return;
 }
 
 

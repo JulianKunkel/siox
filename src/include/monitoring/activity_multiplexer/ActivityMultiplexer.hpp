@@ -15,6 +15,9 @@ namespace monitoring {
 	 */
 	class ActivityMultiplexer : public core::Component {
 		public:
+			//The same callback type is used for synchronous and asynchronous handlers to allow a listener to install the same handler both for a synchronous and an asynchronous callback. This might even be configurable via the siox.conf. Also, it avoids unnecessary code duplication. If the callback is registered synchronously, it will just always get a `lostActivityCount` of zero.
+			typedef void ( ActivityMultiplexerListener::*Callback )( const shared_ptr<Activity>& activity, int lostActivitiesCount);
+
 			/**
 			 * Notify ActivityMultiplexer that an activity needs to be passed to listerns
 			 *
@@ -22,20 +25,10 @@ namespace monitoring {
 			 */
 			virtual void Log( const shared_ptr<Activity> & activity ) = 0;
 
-			/**
-			 * Register listener to multiplexer
-			 *
-			 * @param   listener    listener to notify in the future
-			 */
-			virtual void registerListener( ActivityMultiplexerListener * listener ) = 0;
-
-
-			/**
-			 * Unregister listener from multiplexer
-			 *
-			 * @param   listener    listener to remove
-			 */
-			virtual void unregisterListener( ActivityMultiplexerListener * listener ) = 0;
+			virtual void registerForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener* listener, Callback handler, bool async ) = 0;
+			virtual void unregisterForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener* listener, bool async ) = 0;
+			virtual void registerCatchall( ActivityMultiplexerListener* listener, Callback handler, bool async ) = 0;
+			virtual void unregisterCatchall( ActivityMultiplexerListener* listener, bool async ) = 0;
 	};
 
 	// An ActivityMultiplexer which is called before a call completed, thus it may be incompleted.

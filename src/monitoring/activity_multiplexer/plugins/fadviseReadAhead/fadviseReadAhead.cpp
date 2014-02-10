@@ -51,7 +51,7 @@ using namespace knowledge;
 
 
 #define OUTPUT(...) do { cout << "[fadviseReadAhead] " << __VA_ARGS__ << "\n"; } while(0)
-//#define OUTPUT(...) 
+//#define OUTPUT(...)
 
 #define IGNORE_ERROR(x) try{ x } catch(NotFoundError & e){}
 #define INVALID_UINT64 ((uint64_t) -1)
@@ -61,7 +61,7 @@ struct FileStatistics{
 	FileStatistics(){}
 	FileStatistics(string filename) : filename(filename){}
 
-	string filename; 
+	string filename;
 
 	uint64_t correctPredictions = 0;
 	uint64_t missPredictions = 0;
@@ -81,8 +81,8 @@ struct FileStatistics{
 };
 
 static const uint32_t findUINT32AttributeByID( const Activity * a, OntologyAttributeID oaid )
-{	
- 	const vector<Attribute> & attributes = a->attributeArray();
+{
+	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
 
 		if( itr->id == oaid ){
@@ -95,7 +95,7 @@ static const uint32_t findUINT32AttributeByID( const Activity * a, OntologyAttri
 
 static const uint64_t findUINT64AttributeByID( const Activity * a, OntologyAttributeID oaid )
 {
- 	const vector<Attribute> & attributes = a->attributeArray();
+	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
 		if( itr->id == oaid )
 			return itr->value.uint64();
@@ -106,7 +106,7 @@ static const uint64_t findUINT64AttributeByID( const Activity * a, OntologyAttri
 
 static const char * findStrAttributeByID( const Activity * a, OntologyAttributeID oaid )
 {
- 	const vector<Attribute> & attributes = a->attributeArray();
+	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
 		if( itr->id == oaid )
 			return itr->value.str();
@@ -117,11 +117,12 @@ static const char * findStrAttributeByID( const Activity * a, OntologyAttributeI
 
 class FadviseReadAheadPlugin: public ActivityMultiplexerPlugin, public ComponentReportInterface, public AnomalyPlugin {
 	public:
-		void initPlugin() override;		
-		void Notify( const shared_ptr<Activity> & activity ) override;
+		void initPlugin() override;
+		void Notify( const shared_ptr<Activity> & activity, int lost );
 		ComponentReport prepareReport() override;
 
 		ComponentOptions * AvailableOptions() override;
+		void finalize() override;
 	private:
 		mutex giant_mutex;
 		
@@ -211,17 +212,19 @@ void FadviseReadAheadPlugin::initPlugin() {
 	//addActivityHandler(f, "POSIX", "", "lseek", & FadviseReadAheadPlugin::handlePOSIXSeek);
 
 		fhID = f->lookup_attribute_by_name( "POSIX", "descriptor/filehandle" ).aID;
-		fname = f->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;	
+		fname = f->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;
 		positionID = f->lookup_attribute_by_name( "POSIX", "file/position" ).aID;
-		bytesReadID = f->lookup_attribute_by_name( "POSIX", "quantity/BytesRead" ).aID;	
+		bytesReadID = f->lookup_attribute_by_name( "POSIX", "quantity/BytesRead" ).aID;
 		bytesWrittenID = f->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;
 	}catch(const NotFoundError & e){
 		cerr << "Warning, disabling FadviseReadAheadPlugin because some attributes could not be fetched. error: " << e.what() << endl;
 	}
+
+	if( multiplexer ) multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &FadviseReadAheadPlugin::Notify ), false );
 }
 
 
-void FadviseReadAheadPlugin::handlePOSIXWrite(Activity * a){	
+void FadviseReadAheadPlugin::handlePOSIXWrite(Activity * a){
 	uint64_t bytes = findUINT64AttributeByID(a, bytesWrittenID);
 	uint64_t position = findUINT64AttributeByID(a, positionID);
 
@@ -241,7 +244,7 @@ void FadviseReadAheadPlugin::handlePOSIXWrite(Activity * a){
 	}
 }
 
-void FadviseReadAheadPlugin::handlePOSIXRead(Activity * a){	
+void FadviseReadAheadPlugin::handlePOSIXRead(Activity * a){
 	uint64_t bytes = findUINT64AttributeByID(a, bytesReadID);
 	uint32_t fh = findUINT32AttributeByID(a, fhID);
 	uint64_t position = findUINT64AttributeByID(a, positionID);
@@ -250,9 +253,9 @@ void FadviseReadAheadPlugin::handlePOSIXRead(Activity * a){
 	FileStatistics * fs = findParentFileByFh(a);
 
 	uint64_t realPosition = position;
-	if ( position == INVALID_UINT64){		
+	if ( position == INVALID_UINT64){
 		realPosition = lseek(fh, 0, SEEK_CUR);
-	}	
+	}
 
 	// check if the read is EXACTLY the predicted region to read-ahead
 	if ( realPosition == fs->nextPredictionOffset && bytes == fs->nextPredictionSize ){
@@ -293,7 +296,8 @@ void FadviseReadAheadPlugin::handlePOSIXOpen(Activity * a){
 void FadviseReadAheadPlugin::handlePOSIXClose(Activity * a){
 	// unique_lock<mutex> lock( giant_mutex );
 	FileStatistics * parent = findParentFileByFh(a);
-	// TODO we could remove the statistics theoretically. 
+	(void)parent;
+	// TODO we could remove the statistics theoretically.
 	// Shall we remember states between different open's
 }
 
@@ -302,7 +306,7 @@ void FadviseReadAheadPlugin::addActivityHandler(ActivityPluginDereferencing * f,
 {
 	SystemInformationGlobalIDManager * s = f->get_system_information();
 
-	UniqueInterfaceID uiid = s->lookup_interfaceID( interface, impl );	
+	UniqueInterfaceID uiid = s->lookup_interfaceID( interface, impl );
 	
 	try{
 		UniqueComponentActivityID  ucaid = s->lookup_activityID( uiid, a );
@@ -312,7 +316,7 @@ void FadviseReadAheadPlugin::addActivityHandler(ActivityPluginDereferencing * f,
 	}
 }
 
-void FadviseReadAheadPlugin::Notify( const shared_ptr<Activity> & activity ) {
+void FadviseReadAheadPlugin::Notify( const shared_ptr<Activity> & activity, int lost ) {
 	auto both = activityHandlers.find(activity->ucaid_);
 
 	if ( both != activityHandlers.end() ){
@@ -325,7 +329,7 @@ void FadviseReadAheadPlugin::addReport(ComponentReport & report, FileStatistics 
 		report.addEntry( new GroupEntry( "prefetchedData", ge ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( fs.prefetchedData ) ));
 		report.addEntry( new GroupEntry( "correctPredictions", ge ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( fs.correctPredictions ) ));
 		report.addEntry( new GroupEntry( "missPredictions", ge ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( fs.missPredictions ) ));
-		report.addEntry( new GroupEntry( "prefetchesDone", ge ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( fs.prefetchesConducted ) ));		
+		report.addEntry( new GroupEntry( "prefetchesDone", ge ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( fs.prefetchesConducted ) ));
 }
 
 ComponentReport FadviseReadAheadPlugin::prepareReport()
@@ -351,6 +355,11 @@ ComponentReport FadviseReadAheadPlugin::prepareReport()
 	}
 
 	return report;
+}
+
+void FadviseReadAheadPlugin::finalize() {
+	if( multiplexer ) multiplexer->unregisterCatchall( this, false );
+	ActivityMultiplexerPlugin::finalize();
 }
 
 

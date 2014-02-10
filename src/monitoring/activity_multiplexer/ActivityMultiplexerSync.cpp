@@ -12,7 +12,7 @@
 using namespace core;
 using namespace monitoring;
 
-namespace monitoring {
+namespace {
 
 	/**
 	 * ActivityMultiplexerSync
@@ -31,21 +31,18 @@ namespace monitoring {
 		 * @param	activity	logged activity
 		 */
 		void Log( const shared_ptr<Activity> & activity ) override{
-			assert( activity != nullptr );
-
-			for(auto l = listeners.begin(); l != listeners.end() ; l++){
-				(*l)->Notify(activity);
-			}
+//			assert( activity != nullptr );
+//
+//			for(auto l = listeners.begin(); l != listeners.end() ; l++){
+//				(*l)->Notify(activity);
+//			}
 		}
 
 
-		void registerListener( ActivityMultiplexerListener * listener ) override{
-			listeners.push_back(listener);
-		}
-
-		void unregisterListener( ActivityMultiplexerListener * listener ) override{
-			listeners.remove(listener);
-		}
+		void registerForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener * listener, Callback handler, bool async ) override;
+		void unregisterForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener * listener, bool async ) override;
+		void registerCatchall( ActivityMultiplexerListener * listener, Callback handler, bool async ) override;
+		void unregisterCatchall( ActivityMultiplexerListener * listener, bool async ) override;
 
 		ComponentOptions * AvailableOptions() override {
 			return new ActivityMultiplexerSyncOptions();
@@ -57,6 +54,25 @@ namespace monitoring {
 
 }
 
+
+void ActivityMultiplexerSyncImpl1::registerForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener * listener, ActivityMultiplexer::Callback handler, bool async ) {
+	assert( 0 && "TODO" ), abort();	///@todo
+}
+
+
+void ActivityMultiplexerSyncImpl1::unregisterForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener * listener, bool async ) {
+	assert( 0 && "TODO" ), abort();	///@todo
+}
+
+
+void ActivityMultiplexerSyncImpl1::registerCatchall( ActivityMultiplexerListener * listener, ActivityMultiplexer::Callback handler, bool async ) {
+	assert( 0 && "TODO" ), abort();	///@todo
+}
+
+
+void ActivityMultiplexerSyncImpl1::unregisterCatchall( ActivityMultiplexerListener * listener, bool async ) {
+	assert( 0 && "TODO" ), abort();	///@todo
+}
 
 extern "C" {
 	void * MONITORING_ACTIVITY_MULTIPLEXER_INSTANCIATOR_NAME()

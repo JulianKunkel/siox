@@ -33,7 +33,7 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public AnomalyPlugin {
 		OntologyAttribute filename;
 
 	public:
-		void Notify( const shared_ptr<Activity> & activity ) override {
+		void Notify( const shared_ptr<Activity> & activity, int lost ) {
 			cout << "Notified: type: " ;// << sys->activity_name(activity->aid())   << endl;
 			// check for a specific attribute.
 			vector<Attribute> attributes = activity->attributeArray();
@@ -45,9 +45,6 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public AnomalyPlugin {
 					cout << "Filesize: " << att.value << endl;
 				}
 			}
-		}
-
-		void NotifyAsync( int lost_count, const shared_ptr<Activity> & activity ) override {
 		}
 
 		ComponentOptions * AvailableOptions() {
@@ -75,6 +72,12 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public AnomalyPlugin {
 			}
 
 			facade->registerAnomalyPlugin( this );
+			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &AnomalySkeleton::Notify ), false );
+		}
+
+		void finalize() override {
+			multiplexer->unregisterCatchall( this, false );
+			ActivityMultiplexerPlugin::finalize();
 		}
 };
 
