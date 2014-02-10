@@ -10,6 +10,7 @@
 
 extern "C" {
 #include "php.h"
+#include "php_ini.h"
 }
 
 extern zend_module_entry siox_module_entry;

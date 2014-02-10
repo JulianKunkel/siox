@@ -34,7 +34,8 @@ zend_object_value siox_engine_create_handler(zend_class_entry *type TSRMLS_DC)
 	zend_hash_init(obj->std.properties, 0, NULL, ZVAL_PTR_DTOR, 0);
 	zend_hash_copy(obj->std.properties, &type->default_properties, (copy_ctor_func_t) zval_add_ref, (void *) &tmp, sizeof(zval *));
 	
-	retval.handle = zend_objects_store_put(obj, NULL, siox_engine_free_storage, NULL, TSRMLS_CC);
+//	retval.handle = zend_objects_store_put(obj, NULL, siox_engine_free_storage, NULL, TSRMLS_CC);
+	retval.handle = zend_objects_store_put(obj, NULL, siox_engine_free_storage, NULL);
 	retval.handlers = &siox_engine_object_handlers;
 	
 	return retval;
@@ -70,7 +71,8 @@ PHP_MINIT_FUNCTION(siox)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, "SIOX_Engine", siox_engine_methods);
-	siox_engine_ce = zend_register_internal_class(&ce, TSRMLS_CC);
+// 	siox_engine_ce = zend_register_internal_class(&ce, TSRMLS_CC);
+	siox_engine_ce = zend_register_internal_class(&ce);
 	siox_engine_ce->create_object = siox_engine_create_handler;
 	memcpy(&siox_engine_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
 	siox_engine_object_handlers.clone_obj = NULL;
