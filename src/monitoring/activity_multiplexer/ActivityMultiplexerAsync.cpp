@@ -24,6 +24,7 @@
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
+#include <monitoring/activity_multiplexer/Dispatcher.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 #include <util/ExceptionHandling.hpp>
 
@@ -79,8 +80,8 @@ namespace {
 
 	class ActivityMultiplexerNotifier {
 		public:
-			ActivityMultiplexerNotifier( ActivityMultiplexerAsync * dispatcher, ActivityMultiplexerQueue * queue ) :
-				dispatcher( dispatcher ),
+			ActivityMultiplexerNotifier( ActivityMultiplexerAsync * multiplexer, ActivityMultiplexerQueue * queue ) :
+				multiplexer( multiplexer ),
 				queue( queue ),
 				worker( &ActivityMultiplexerNotifier::Run, this )
 			{};
@@ -91,30 +92,11 @@ namespace {
 			~ActivityMultiplexerNotifier () { worker.join(); };
 
 		private:
-			ActivityMultiplexerAsync * dispatcher = nullptr;
+			ActivityMultiplexerAsync * multiplexer = nullptr;
 			ActivityMultiplexerQueue * queue = nullptr;
 
 			std::thread worker;
 			uint64_t lostActivities = 0;
-	};
-
-	/**
-	 * Dispatcher
-	 *
-	 * A simple means to dispatch an activity to a number of listeners.
-	 */
-
-	class Dispatcher {
-		public:
-			void add( ActivityMultiplexerListener* listener, ActivityMultiplexer::Callback function );
-			void remove( ActivityMultiplexerListener* listener );
-			void dispatch( const shared_ptr<Activity>& activity, int lostActivityCount );
-		private:
-			typedef struct CallbackSpec {
-				ActivityMultiplexerListener* listener;
-				ActivityMultiplexer::Callback function;
-			} CallbackSpec;
-			vector<CallbackSpec> listeners;
 	};
 
 	/**
@@ -250,32 +232,9 @@ void ActivityMultiplexerNotifier::Run() {
 		uint64_t lost = queue->checkOverflowMode();
 		lostActivities += lost;
 		events++;
-		dispatcher->dispatch( lost, activity );
+		multiplexer->dispatch( lost, activity );
 	}
 	//cout << "Caught: " << events << endl;
-}
-
-
-void Dispatcher::add( ActivityMultiplexerListener* listener, ActivityMultiplexer::Callback function ) {
-	listeners.push_back( ( CallbackSpec ){
-		.listener = listener,
-		.function = function
-	} );
-}
-
-
-void Dispatcher::remove( ActivityMultiplexerListener* listener ) {
-	for( size_t i = listeners.size(); i--; ) {
-		if( listeners[i].listener == listener ) {
-			listeners[i] = listeners.back();
-			listeners.pop_back();
-		}
-	}
-}
-
-
-void Dispatcher::dispatch( const shared_ptr<Activity>& activity, int lostActivityCount ) {
-	for( size_t i = listeners.size(); i--; ) ( listeners[i].listener->*listeners[i].function )( activity, lostActivityCount );
 }
 
 
