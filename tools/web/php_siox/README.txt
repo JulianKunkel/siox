@@ -4,7 +4,7 @@
 4. make install
 
 You can see if the module is loaded with:
-$php -d"extension=vehicles.so" -m
+$php -d"extension=siox.so" -m
 
 
 
