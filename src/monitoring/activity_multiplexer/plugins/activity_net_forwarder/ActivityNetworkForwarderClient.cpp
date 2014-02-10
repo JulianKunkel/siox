@@ -32,7 +32,7 @@ public:
 	}
 
 	void connectionErrorCB(ServiceClient & connection, CommunicationError error){
-		connectionErrors++;		
+		connectionErrors++;
 		sleep( 1 );
 
 		connection.ireconnect();
@@ -76,13 +76,13 @@ public:
 		report.addEntry( new GroupEntry( "activitiesReceptionConfirmed" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesReceptionConfirmed ) ));
 		report.addEntry( new GroupEntry( "activitySendErrors" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( activitiesErrorCount ) ));
 		report.addEntry( new GroupEntry( "activitiesDroppedDueToOverflow" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( droppedActivities.load() ) ));
-		report.addEntry( new GroupEntry( "activitiesAsyncDroppedDueToOverflowWhileAnomaly" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( droppedActivitiesDuringAnomaly.load() ) ));		
-		report.addEntry( new GroupEntry( "connectionErrors" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( connCallback.connectionErrors.load() ) ));		
+		report.addEntry( new GroupEntry( "activitiesAsyncDroppedDueToOverflowWhileAnomaly" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( droppedActivitiesDuringAnomaly.load() ) ));
+		report.addEntry( new GroupEntry( "connectionErrors" ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( connCallback.connectionErrors.load() ) ));
 		
 		return report;
 	}
 
-	void Notify( const shared_ptr<Activity> & element ) override {
+	void Notify( const shared_ptr<Activity> & element, int lost ) {
 		if ( forwardAllActivities ){
 
 			if ( pendingActivities.load() < max_pending_ops ){
@@ -91,13 +91,13 @@ public:
 			}else{
 				droppedActivities++;
 			}
-		}		
+		}
 	}
 
 	/**
 	 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 	 */
-	void NotifyAsync( int lostActivitiesCount, const shared_ptr<Activity> & element ) override {	
+	void NotifyAsync( const shared_ptr<Activity> & element, int lostActivitiesCount ) {
 		if ( forwardAllActivities ) return;
 
 		if ( anomalyStatus ){
@@ -110,7 +110,7 @@ public:
 		}else{
 			lock_guard<mutex> lock(ringBuffMutex);
 
-			//cout << "Adding " << curPos << " " << element->ucaid_ << " " << sendPos << endl;		
+			//cout << "Adding " << curPos << " " << element->ucaid_ << " " << sendPos << endl;
 
 			if ( curPos == sendPos && ringBuffer[curPos] != nullptr ) {
 				sendPos = (sendPos + 1) % ringBufferSize;
@@ -127,7 +127,7 @@ public:
 
 	// It is expected that this function is not called concurrently.
 	void triggerResponseForAnomaly(bool anomalyStillOngoing){
-		// if we overtook the buffer, then everything must be send...		
+		// if we overtook the buffer, then everything must be send...
 		// Send the current ringbuffer away iff the activities have not been send so far.
 		
 		lock_guard<mutex> lock(ringBuffMutex);
@@ -153,7 +153,7 @@ public:
 			if ( pendingActivities.load() < max_pending_ops ){
 				pendingActivities++;
 				client->isend(&*data);
-			}			
+			}
 		}
 		this->sendPos = curPos;
 	}
@@ -166,7 +166,7 @@ public:
 	}
 
 	void stop() override{
-		delete(client);		
+		delete(client);
 	}
 
 	void start() override{
@@ -197,14 +197,19 @@ public:
 
 		this->ringBuffer.resize(ringBufferSize);
 
+		if( multiplexer ) {
+			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityNetworkForwarderClient::Notify ), false );
+			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityNetworkForwarderClient::NotifyAsync ), true );
+		}
+
 		start();
 
 		if ( reasoner != nullptr ){
 			reasoner->connectTrigger(this);
-		}		
+		}
 	}
 
-	virtual void messageSendCB(BareMessage * msg){ 
+	virtual void messageSendCB(BareMessage * msg){
 		activitiesSendCount++;
 	}
 
@@ -213,7 +218,7 @@ public:
 		pendingActivities--;
 	}
 
-	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error){  
+	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error){ 
 		activitiesErrorCount++;
 		pendingActivities--;
 	}
@@ -224,6 +229,14 @@ public:
 
 	virtual void serializeMessage(const void * msgObject, char * buffer, uint64_t & pos){
 		j_serialization::serialize(* (Activity*) msgObject, buffer, pos);
+	}
+
+	void finalize() override {
+		if( multiplexer ) {
+			multiplexer->unregisterCatchall( this, false );
+			multiplexer->unregisterCatchall( this, true );
+		}
+		ActivityMultiplexerPlugin::finalize();
 	}
 
 	~ActivityNetworkForwarderClient(){

@@ -82,7 +82,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		void initPlugin() override;
 		ComponentOptions * AvailableOptions() override;
 
-		void Notify( const shared_ptr<Activity> & activity ) override;
+		void Notify( const shared_ptr<Activity> & activity, int lost );
 
 		OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
 
@@ -91,7 +91,7 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 		}
 
 		ComponentReport prepareReport() override;
-
+		void finalize() override;
 		~GenericHistoryPlugin();
 
 	private:
@@ -134,7 +134,7 @@ ComponentOptions * GenericHistoryPlugin::AvailableOptions() {
 	return new GenericHistoryOptions();
 }
 
-void GenericHistoryPlugin::Notify( const shared_ptr<Activity> & activity ) {
+void GenericHistoryPlugin::Notify( const shared_ptr<Activity> & activity, int lost ) {
 	TRACK_FUNCTION_CALLS
 	//cout <<"[GenericHistory]: " << "received " << activity << endl;
 	if( ! tryEnsureInitialization() ) return;
@@ -296,6 +296,7 @@ void GenericHistoryPlugin::initPlugin() {
 		case 8:
 			// Find and remember various other OAIDs
 			RETURN_ON_EXCEPTION( uidAttID = facade->lookup_attribute_by_name("program","description/user-id").aID; );
+			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &GenericHistoryPlugin::Notify ), false );
 			initLevel = 9;
 	}
 	initLevel = initializedLevel;
@@ -438,6 +439,11 @@ void GenericHistoryPlugin::rememberHints( vector<Attribute>* outHintVector, cons
 	}
 	///@todo TODO: this is costly if Attributes contain strings since every assignment requires a free() and strdup()
 	sort( outHintVector->begin(), outHintVector->end(), [](const Attribute& a, const Attribute& b){ return a.id < b.id; } );
+}
+
+void GenericHistoryPlugin::finalize() {
+	multiplexer->unregisterCatchall( this, false );
+	ActivityMultiplexerPlugin::finalize();
 }
 
 

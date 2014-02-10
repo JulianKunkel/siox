@@ -46,17 +46,9 @@ namespace monitoring {
 				facade = GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade);
 
 				initPlugin();
-
-				if ( multiplexer != nullptr ){
-					multiplexer->registerListener( this );
-				}
 			}
 
-			void finalize() override {
-				if ( multiplexer != nullptr ){
-					multiplexer->unregisterListener( this );	
-				}
-			}
+			void finalize() override {}
 	};
 
 }

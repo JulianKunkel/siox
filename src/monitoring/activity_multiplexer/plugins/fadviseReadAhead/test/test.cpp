@@ -91,47 +91,47 @@ int main( int argc, char const * argv[] )
 	write(fd, buff, 10000);
 	free(buff);
 
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidOpen, 0, time++, aaidOpen, {}, {{.id = filenameAttr, .value = VariableDatatype( "julian/data.nc4" )}}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidOpen, 0, time++, aaidOpen, {}, {{.id = filenameAttr, .value = VariableDatatype( "julian/data.nc4" )}}, {}, NULL, 0 ) ), 0 );
 
 	// Read 6 times 100 bytes from position 0, 200, 400, ... 1000
 
 	// try with ucaidPRead
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 0}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 0}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ), 0 );
 
 	// try with ucaidPRead
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 200}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 200}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ), 0 );
 
 	// try with ucaidPRead
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 400}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 400}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ), 0 );
 
 	// try with ucaidPRead
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 600}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 600}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ), 0 );
 
 	// try with ucaidPRead
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 800}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 800}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ), 0 );
 
 	// try with ucaidPRead
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 1000}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 1000}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ), 0 );
 
 	// try with ucaidPRead
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 1200}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 1200}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ), 0 );
 
 
 	// see if a write resets the counter
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidWrite, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesWrittenAttr, .value = (uint64_t) 1000}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidWrite, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesWrittenAttr, .value = (uint64_t) 1000}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ), 0 );
 
 	// go to position 0
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 0}}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidPRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 100}, {.id = fileposAttr, .value = (uint64_t) 0}}, {}, NULL, 0 ) ), 0 );
 
 	// check if we use lseek properly
 	lseek(fd, 0, SEEK_CUR);
 
 	// try with ucaidRead
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 1000}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidRead, 0, time++, aaidOthers, {aaidOpen}, {{.id = bytesReadAttr, .value = (uint64_t) 1000}, {.id = fhAttr, .value = fd }}, {}, NULL, 0 ) ), 0 );
 
 
 	// try with ucaidClose
-	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidClose, 0, time++, aaidOthers, {aaidOpen}, {}, {}, NULL, 0 ) ) );
+	plugin->Notify( shared_ptr<Activity>( new Activity( ucaidClose, 0, time++, aaidOthers, {aaidOpen}, {}, {}, NULL, 0 ) ), 0 );
 
 	RuntimeReporter * reporter = core::module_create_instance<RuntimeReporter>( "", "siox-core-reporting-ConsoleReporter", CORE_REPORTER_INTERFACE );
 

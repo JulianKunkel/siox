@@ -25,18 +25,15 @@ private:
 	PGconn *dbconn_;
 public:
 
-	void Notify(const shared_ptr<Activity> & activity) override
-	{
+	void Notify( const shared_ptr<Activity> & activity, int lost ) {
 		querier_->insert_activity(*activity);
 	}
 
-	ComponentOptions *AvailableOptions() 
-	{
+	ComponentOptions *AvailableOptions() {
 		return new PostgreSQLWriterPluginOptions();
 	}
 
-	void initPlugin() override
-	{
+	void initPlugin() override {
 		PostgreSQLWriterPluginOptions &o = getOptions<PostgreSQLWriterPluginOptions>();
 		
 		dbconn_ = PQconnectdb(o.dbinfo.c_str());
@@ -48,10 +45,15 @@ public:
 		}
 		
 		querier_ = new PostgreSQLQuerier(*dbconn_);
+		multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &PostgreSQLWriterPlugin::Notify ), false );
 	}
 
-	~PostgreSQLWriterPlugin() 
-	{
+	void finalize() override {
+		multiplexer->unregisterCatchall( this, false );
+		ActivityMultiplexerPlugin::finalize();
+	}
+
+	~PostgreSQLWriterPlugin() {
 		PQfinish(dbconn_);
 	}
 };

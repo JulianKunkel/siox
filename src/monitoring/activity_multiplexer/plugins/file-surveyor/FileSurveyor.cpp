@@ -102,10 +102,10 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		void initPlugin() override;
 		ComponentOptions * AvailableOptions() override;
 
-		void Notify( const shared_ptr<Activity> & activity ) override;
+		void Notify( const shared_ptr<Activity> & activity, int lost );
 
 		virtual ComponentReport prepareReport() override;
-
+		void finalize() override;
 		//~FileSurveyorPlugin() { }
 
 	private:
@@ -255,13 +255,14 @@ void FileSurveyorPlugin::initPlugin() {
 			RETURN_ON_EXCEPTION( fpAttID = facade->lookup_attribute_by_name(interface,"file/position").aID; );
 			RETURN_ON_EXCEPTION( btrAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesToRead").aID; );
 			RETURN_ON_EXCEPTION( btwAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesToWrite").aID; );
+			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::Notify ), false );
 			initLevel = 8;
 	}
 	initLevel = initializedLevel;
 }
 
 
-void FileSurveyorPlugin::Notify( const shared_ptr<Activity> & activity ) {
+void FileSurveyorPlugin::Notify( const shared_ptr<Activity> & activity, int lost ) {
 	//OUTPUT( "received " << activity );
 	if( !tryEnsureInitialization() ) return;
 
@@ -739,6 +740,11 @@ const string FileSurveyorPlugin::findFileNameExtension( const string & fileName 
 	    return fileName.substr( position + 1 );
 	else
 		return "";
+}
+
+void FileSurveyorPlugin::finalize() {
+	multiplexer->unregisterCatchall( this, false );
+	ActivityMultiplexerPlugin::finalize();
 }
 
 
