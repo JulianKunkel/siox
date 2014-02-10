@@ -54,6 +54,7 @@ static inline const uint64_t absu64( uint64_t a, uint64_t b )
 
 enum TokenType {
 	OPEN = 0,
+	SEEK,
 	READ,
 	WRITE,
 	CLOSE,
@@ -75,6 +76,7 @@ class FileSurvey {
 		uint64_t filePosition = 0;
 		// Aggregated statistics over all cycles
 		Timestamp timeTotalOpen = 0;
+		// Timestamp timeTotalSeek = 0; // TODO!
 		Timestamp timeTotalRead = 0;
 		Timestamp timeTotalWrite = 0;
 		Timestamp timeTotalClose = 0;
@@ -88,12 +90,11 @@ class FileSurvey {
 		uint64_t nAccessesWriteRandomLong = 0;
 		uint64_t nBytesRead = 0;
 		uint64_t nBytesWrite = 0;
+		// uint64_t nSeeks = 0;	// TODO!
 		uint64_t nTotalSeekDistanceRead = 0;
 		uint64_t nTotalSeekDistanceWrite = 0;
 };
 
-// TODO: Aggregate over all files
-// TODO: Total access time
 
 class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentReportInterface {
 	public:
@@ -216,46 +217,54 @@ void FileSurveyorPlugin::initPlugin() {
 			initLevel = 3;
 
 		case 3:
-			// Second: READ calls
+			// Second: SEEK calls
 			RETURN_ON_EXCEPTION(
 				for( auto token : o.readTokens )
-					types[sysinfo->lookup_activityID(uiid,token)] = READ;
+					types[sysinfo->lookup_activityID(uiid,token)] = SEEK;
 			);
 			initLevel = 4;
 
 		case 4:
-			// Third: WRITE calls
+			// Third: READ calls
 			RETURN_ON_EXCEPTION(
-				for( auto token : o.writeTokens )
-					types[sysinfo->lookup_activityID(uiid,token)] = WRITE;
+				for( auto token : o.readTokens )
+					types[sysinfo->lookup_activityID(uiid,token)] = READ;
 			);
 			initLevel = 5;
 
 		case 5:
-			// Fourth: CLOSE calls
+			// Fourth: WRITE calls
 			RETURN_ON_EXCEPTION(
-				for( auto token : o.closeTokens )
-					types[sysinfo->lookup_activityID(uiid,token)] = CLOSE;
+				for( auto token : o.writeTokens )
+					types[sysinfo->lookup_activityID(uiid,token)] = WRITE;
 			);
 			initLevel = 6;
 
 		case 6:
+			// Fifth: CLOSE calls
+			RETURN_ON_EXCEPTION(
+				for( auto token : o.closeTokens )
+					types[sysinfo->lookup_activityID(uiid,token)] = CLOSE;
+			);
+			initLevel = 7;
+
+		case 7:
 			// Gather the list of file extensions we are to watch into a map (for easy reference)
 			for( auto extension : o.fileExtensionsToWatch ){
 				string ext = extension;
 				toUpper(ext);
 				fileExtensionsToWatch.emplace(ext);
 			}
-			initLevel = 7;
+			initLevel = 8;
 
-		case 7:
+		case 8:
 			// Find and remember various other OAIDs
 			RETURN_ON_EXCEPTION( uidAttID = facade->lookup_attribute_by_name("program","description/user-id").aID; );
 			RETURN_ON_EXCEPTION( fnAttID = facade->lookup_attribute_by_name(interface,"descriptor/filename").aID; );
 			RETURN_ON_EXCEPTION( fpAttID = facade->lookup_attribute_by_name(interface,"file/position").aID; );
 			RETURN_ON_EXCEPTION( btrAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesToRead").aID; );
 			RETURN_ON_EXCEPTION( btwAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesToWrite").aID; );
-			initLevel = 8;
+			initLevel = 9;
 	}
 	initLevel = initializedLevel;
 }
@@ -277,6 +286,7 @@ void FileSurveyorPlugin::Notify( const shared_ptr<Activity> & activity ) {
 			openSurvey( activity );
 			break;
 
+		case SEEK:
 		case READ:
 		case WRITE: {
 			//OUTPUT( "access[" << activity->aid() << "]\n" );
@@ -340,7 +350,7 @@ void FileSurveyorPlugin::openSurvey( shared_ptr<Activity> activity )
 			// See whether there is a survey for this user and file already that can be reopened
 			for(auto candidate=closedFileSurveys.begin(); candidate != closedFileSurveys.end(); candidate++)
 			{
-				if( //candidate->userID == attUserID->value.str() && 
+				if( //candidate->userID == attUserID->value.str() &&
 				   candidate->fileName == attFileName->value.str())
 				{
 					// Reuse closed survey
