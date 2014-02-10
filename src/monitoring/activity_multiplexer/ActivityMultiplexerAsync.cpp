@@ -185,8 +185,8 @@ shared_ptr<Activity> ActivityMultiplexerQueue::Pop() {
 		notified = false;	//But first tell the writers that they must wake us again!
 		std::unique_lock<std::mutex> l(lock);	//Only needed for the condition variable.
 
-		if ( isEmpty() && ! terminate ){
-			not_empty.wait(l, [=](){ return ( ! this->isEmpty() || terminate); });
+		while( isEmpty() && ! terminate ){
+			not_empty.wait_for(l, std::chrono::milliseconds(100), [=](){ return ( ! this->isEmpty() || terminate); });
 		}
 	}
 	//We might just be woken up to be able to die...
@@ -198,7 +198,7 @@ shared_ptr<Activity> ActivityMultiplexerQueue::Pop() {
 
 	std::atomic_thread_fence( std::memory_order_acquire );
 	shared_ptr<Activity> result = buffer[indexMask & readIndex];
-	buffer[indexMask & readIndex];	//This has two effects: a) it ensures that the Activity can be destructed, and b) it ensures that `result` is actually read before `readIndex` is incremented.
+	buffer[indexMask & readIndex] = NULL;	//This has two effects: a) it ensures that the Activity can be destructed, and b) it ensures that `result` is actually read before `readIndex` is incremented.
 	std::atomic_thread_fence( std::memory_order_release );
 	readIndex++;
 	return result;
