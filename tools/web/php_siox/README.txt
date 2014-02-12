@@ -7,7 +7,7 @@ Inside the php_siox directory, execute the following commands:
 4. make install
 
 You can see if the module is loaded with:
-$php -d"extension=siox.so" -m
+$php -d"extension=modules/siox.so" -m
 
 
 
