@@ -11,9 +11,6 @@ namespace monitoring {
 
 	class ActivityMultiplexerListener {
 		//Just an empty interface because, instead of registering listeners with a predefined interface, we are now registering listener - member function pointer combinations with the multiplexer. Thus, we still need a common type for the listeners, but there are no fixed function names anymore.
-		public:
-			virtual void Notify( const shared_ptr<Activity>&, int ) {}	//This is for transition purposes only and should be eliminated asap.
-			virtual void NotifyAsync( const shared_ptr<Activity>&, int ) {}	//This is for transition purposes only and should be eliminated asap.
 	};
 }
 
