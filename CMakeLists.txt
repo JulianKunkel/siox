@@ -69,7 +69,9 @@ set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYP
 find_package(PythonInterp 2.7 REQUIRED)
 set_package_properties(PythonInterp PROPERTIES URL "http://www.python.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
-feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
+find_package(LIKWID)
+
+feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following mandatory packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
 
 add_subdirectory(src)
 

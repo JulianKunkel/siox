@@ -28,3 +28,9 @@ add_subdirectory(provider-skeleton)
 add_subdirectory(provider-skeleton-minimal)
 add_subdirectory(qualitativeUtilization)
 
+
+IF ( LIKWID_FOUND )
+	# We need a patched likwid version to use the likwid plugin
+	add_subdirectory(likwid)
+ENDIF ( LIKWID_FOUND )
+

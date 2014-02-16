@@ -5,7 +5,7 @@ echo $0 $* > configure.log
 CMAKEFLAGS=
 srcdir="../"
 
-set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,srcdir:,build-wrappers" hV "$@"`
+set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,srcdir:,with-likwid:,build-wrappers" hV "$@"`
 test $# -lt 1  && exit 1
 while test $# -gt 0 
 do
@@ -22,6 +22,7 @@ do
 		--with-mpicxx) mpicxx="$2"; shift;;
 		--with-python) python="$2"; shift;;
 		--with-libpq) libpq="$2"; shift;;
+		--with-likwid) likwid="$2"; shift;;
 		--build-wrappers) buildWrappers="YES";;
 		--) shift; break;;
 	esac
@@ -71,6 +72,10 @@ fi
 if test -n "$python"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPYTHON_EXECUTABLE:FILEPATH=$python"
 fi
+if test -n "$likwid"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_DIR:PATH=\"$likwid\""
+	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_link_DIR:PATH=\"$likwid/lib\""
+fi
 if test -n "$libpq"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_TYPE_INCLUDE_DIR=$libpq/include" # this is probably a bug in some FindPostgreSQL.cmake
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_INCLUDE_DIR:PATH=$libpq/include"
@@ -91,6 +96,7 @@ echo "--with-boost=<dir>       : path to the boost library root directory"
 echo "--with-cc=<file>         : path to the C compiler"
 echo "--with-cxx=<file>        : path to the C++ compiler"
 echo "--with-glib=<dir>        : path to the GLIB2 installation"
+echo "--with-likwid=<dir>      : path to the patched LIKWID version"
 echo "--with-python=<file>     : path to the Python interpreter"
 echo "--with-postgresql=<dir>  : path to PostgreSQL's libpq"
 echo "--build-wrappers         : build the wrappers for MPI, POSIX, etc. that is in the path"
