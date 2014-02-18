@@ -1,7 +1,7 @@
 ﻿Requirements
 ============
 
-The communication code requires the components especified in the CMakeLists.txt 
+The communication code requires cmake 2.8 and the components especified in the CMakeLists.txt 
 file, that is:
 
 * Boost library (threads, system, regex, unit_test_framework)
@@ -9,9 +9,13 @@ file, that is:
 
 During development the following versions were used:
 
+* cmake 2.8
 * Boost 1.49
 * GCC 4.7 (for C++0x support)
 * PostgreSQL 9.2
+
+Optionally a patched version of Likwid can be used to obtain CPU counters and RAPL energy counters.
+See the manual installation.
 
 Additional requirements for the wrappers are found under tools/siox-skeleton-builder/layers
 
@@ -26,20 +30,49 @@ libpqxx3-dev postgresql-common postgresql
 
 In CMAKE set the type folder to: /usr/share/postgresql-common/t
 
+
+Manual installation of requirements
+===================================
+
+To manually install required dependencies download the following software and install it.
+The following commands install the dependencies with the default options.
+
+* cmake 2.8.12 
+	$ ./configure --prefix=$SIOXDEPS 
+	$ make install
+* gcc 4.8.2
+	$ bash ./contrib/download_prerequisites
+	$ ./configure --prefix=$SIOXDEPS 
+	$ make && make install
+	# If you get the error: "fatal error: gnu/stubs-32.h: No such file or directory" then you must install the 32 bit libc dev package.
+* boost 1.55
+   $ ./bootstrap.sh
+   $ ./b2 install --prefix=$SIOXDEPS
+* likwid
+	$ hg clone https://code.google.com/p/likwid/ 
+	$ cd likwid ; patch -p 1 < ./src/monitoring/statistics/collector/plugins/likwid/likwid-mod.patch
+	edit config.mk and adjust prefix
+	$ make && make install 
+	# Note that make install must be called as root because the permissions of likwid's access deamon  must be setuid
+
 Compilation
 ===========
 By utilizing CMake we can either use the traditional make tool or ninja which has a faster build process (Ubuntu package ninja-build).
 
-To compile create a "build" directory and run cmake to create the required files:
+Configuration:
+We provide a configure script for convenient setting of important CMake variables. So instead of using the options above you may use:
+$ ./configure --prefix=/usr/local/siox
 
-$ mkdir build
-$ cd build
-$ cmake -DBOOST_ROOT=/opt/siox/boost/1.54 -DBOOST_INCLUDEDIR=/opt/siox/boost/1.54/include -DBOOST_LIBRARYDIR=/opt/siox/boost/1.54/lib -DBoost_NO_SYSTEM_PATHS=ON ..
+The script outputs the command line to execute.
+
+After the installation you must adjust the environment variables LD_LIBRARY_PATH and if you like PATH to allow convenient access, for example for bash do:
+$ export LD_LIBRARY_PATH=/usr/local/siox/lib:$LD_LIBRARY_PATH
+$ export PATH=/usr/local/siox/bin:$PATH
 
 Then you can compile SIOX:
 
 make -j 4
-sudo make install
+make install
 
 To use ninja instead of make run:
 $ cmake -GNinja ../
@@ -49,23 +82,12 @@ Note that C++ takes a considerable amount of memory to compile, parallel builds 
 
 ccmake is a graphical frontend to cmake which allows easy configuration of the project.
 
-Configure convenient script
-===========================
-
-We also provide a configure script for convenient setting of important CMake variables. So instead of using the options above you may use:
-$ ./configure --prefix=/usr/local/siox
-
-The script outputs the command line to execute.
-
-After the installation you must adjust the environment variables LD_LIBRARY_PATH and if you like PATH to allow convenient access, for example for bash do:
-$ export LD_LIBRARY_PATH=/usr/local/siox/lib:$LD_LIBRARY_PATH
-$ export PATH=/usr/local/siox/bin:$PATH
 
 
 Testing
 ===========
 
-To execute the unit tests, run :
+To execute the unit tests, go into the build dir and run :
 make test 
   or
 ctest
@@ -79,6 +101,8 @@ sets the required LD_LIBRARY_PATH and other environment variables to ease manual
 To set the variables correctly run in (the bash)
 on level of README.txt:
 source ./devel/scripts/set_ld_path.sh
+
+
 
 
 Building, testing & installing the wrappers
