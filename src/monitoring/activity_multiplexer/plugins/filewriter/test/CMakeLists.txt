@@ -14,6 +14,7 @@ target_link_libraries(
 	siox-core-ModuleLoader 
 	siox-monitoring-ActivityMultiplexerAsync
 	siox-monitoring-activityPlugin-ActivityFileWriter
+	siox-util
 )
 
 add_test(core-activity_multiplexer-filewriter-ActivityFileWriterTest ActivityFileWriterTest)

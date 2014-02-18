@@ -2,8 +2,9 @@
 #include <util/time.h>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
+#include <monitoring/activity_multiplexer/plugins/binwriter/ActivityBinWriter.hpp>
 
-#include "../ActivityFileWriterOptions.hpp"
+#include <monitoring/activity_multiplexer/plugins/binwriter/ActivityBinWriterPluginOptions.hpp>
 
 using namespace std;
 
@@ -15,12 +16,12 @@ int main( int argc, char const * argv[] )
 	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>( "", "siox-monitoring-ActivityMultiplexerAsync", "monitoring_activitymultiplexer" );
 
 	// wir registrieren das Plugin (normal geschieht dies automatisch)
-	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>( "", "siox-monitoring-activityPlugin-ActivityFileWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
+	ActivityBinWriterPlugin * ap = core::module_create_instance<ActivityBinWriterPlugin>( "", "siox-monitoring-activityPlugin-ActivityBinWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
 
 	// init plugin
 	// not necessary, but for testing...
-	FileWriterPluginOptions & op = ( FileWriterPluginOptions & ) ap->getOptions();
-	op.filename = "activities.txt";
+	ActivityBinWriterPluginOptions & op = ( ActivityBinWriterPluginOptions & ) ap->getOptions();
+	op.filename = "activities.bin";
 	op.multiplexer.componentPointer = m1;
 
 	m1->init();
@@ -48,6 +49,7 @@ int main( int argc, char const * argv[] )
 			break;
 		}
 	}
+
 	//sleep(1);
 
 	delete( ap );

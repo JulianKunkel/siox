@@ -13,6 +13,7 @@ During development the following versions were used:
 * Boost 1.49
 * GCC 4.7 (for C++0x support)
 * PostgreSQL 9.2
+* Berkeley DB 12.1.6.0.20
 
 Optionally a patched version of Likwid can be used to obtain CPU counters and RAPL energy counters.
 See the manual installation.
@@ -54,6 +55,11 @@ The following commands install the dependencies with the default options.
 	edit config.mk and adjust prefix
 	$ make && make install 
 	# Note that make install must be called as root because the permissions of likwid's access deamon  must be setuid
+* Berkeley DB
+	$ wget http://download.oracle.com/berkeley-db/db-6.0.20.tar.gz
+	$ tar -xf db-*.tar.gz
+	$ cd db*.20/build_unix ; ../dist/configure --prefix=$SIOXDEPS LDFLAGS=-ldl
+	$ make && make install
 
 Compilation
 ===========
