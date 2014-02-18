@@ -42,7 +42,7 @@ Set variables, this will ensure that the right dependencies are used:
 $ export SIOXDEPS=<WHERE YOU WANT TO INSTALL THE DEPS INTO>
 $ export PATH=$SIOXDEPS/bin:$PATH
 $ export PKG_CONFIG_PATH=$SIOXDEPS/lib/pkgconfig/:$PKG_CONFIG_PATH
-$ export LD_LIBRARY_PATH=$SIOXDEPS/bin:$LD_LIBRARY_PATH
+$ export LD_LIBRARY_PATH=$SIOXDEPS/lib64:$SIOXDEPS/lib:$LD_LIBRARY_PATH
 
 # build in the following order:
 * gcc 4.8.2
