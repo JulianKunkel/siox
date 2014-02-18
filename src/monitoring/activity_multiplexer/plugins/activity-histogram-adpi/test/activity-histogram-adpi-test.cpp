@@ -13,7 +13,7 @@
 #include <monitoring/system_information/modules/filebased-system-information/FileBasedSystemInformationOptions.hpp>
 #include <knowledge/activity_plugin/DereferencingFacadeOptions.hpp>
 
-
+#include "../HistogramAdpi.hpp"
 #include "../HistogramAdpiOptions.hpp"
 #include <monitoring/topology/Topology.hpp>
 
@@ -30,7 +30,7 @@ using namespace knowledge;
 
 int main( int argc, char const * argv[] )
 {
-	ActivityMultiplexerPlugin * adpi = core::module_create_instance<ActivityMultiplexerPlugin>( "", "siox-monitoring-activityPlugin-histogramAdpi", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
+	HistogramAdpiPlugin * adpi = core::module_create_instance<HistogramAdpiPlugin>( "", "siox-monitoring-activityPlugin-histogramAdpi", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
 
 	ActivityPluginDereferencing * facade = core::module_create_instance<ActivityPluginDereferencing>( "", "siox-knowledge-DereferencingFacade", ACTIVITY_DEREFERENCING_FACADE_INTERFACE );
 
@@ -56,8 +56,8 @@ int main( int argc, char const * argv[] )
 
    // register a topology entry with pre-filled data for ucaid3 to test if we read it properly
    {
-  	TopologyType dataType = topology->registerType("ADPIPlugin");
-  	TopologyObject ucaid3data = topology->registerObjectByPath( {{ "AMUXPluginName", "ADPIPlugin", "AMUXPlugin" }, {"data", ucaid3 , "data"}} );
+	TopologyType dataType = topology->registerType("ADPIPlugin");
+	TopologyObject ucaid3data = topology->registerObjectByPath( {{ "AMUXPluginName", "ADPIPlugin", "AMUXPlugin" }, {"data", ucaid3 , "data"}} );
 	
 	TopologyAttribute bucketMinAttribute = topology->registerAttribute( dataType.id(), "min", VariableDatatype::Type::UINT64 );
 	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( dataType.id(), "max", VariableDatatype::Type::UINT64 );
@@ -72,8 +72,8 @@ int main( int argc, char const * argv[] )
 	options.dereferenceFacade = facade;
 
 	options.buckets = 10;
-	options.extremeBucketCount = 1; 
-	options.slowFastBucketCount = 3; 
+	options.extremeBucketCount = 1;
+	options.slowFastBucketCount = 3;
 
 	adpi->init();
 
@@ -101,7 +101,7 @@ int main( int argc, char const * argv[] )
 	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid2, 0, 1000, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 
 
-	// try to rate a few activities:	
+	// try to rate a few activities:
 	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 2000, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 
 	{
@@ -168,7 +168,7 @@ int main( int argc, char const * argv[] )
 
 	RegisteredComponent * me = new RegisteredComponent( 1, "test", "histogramADPI", adpi );
 
-	lst.push_back( { me, dynamic_cast<ComponentReportInterface*>(adpi)->prepareReport()} ); 
+	lst.push_back( { me, dynamic_cast<ComponentReportInterface*>(adpi)->prepareReport()} );
 
 	reporter->processFinalReport( lst );
 

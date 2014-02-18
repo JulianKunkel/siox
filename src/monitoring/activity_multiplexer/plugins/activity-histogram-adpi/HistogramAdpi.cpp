@@ -16,23 +16,12 @@
 
 #include <iostream>
 #include <sstream>
-#include <unordered_map>
-#include <vector>
-#include <limits>
 #include <cmath>
-#include <mutex>
 
-#include <core/reporting/ComponentReportInterface.hpp>
-
-#include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
-#include <monitoring/datatypes/Activity.hpp>
 
-#include <knowledge/reasoner/AnomalyPlugin.hpp>
-
-#include <monitoring/topology/Topology.hpp>
-
+#include "HistogramAdpi.hpp"
 #include "HistogramAdpiOptions.hpp"
 
 
@@ -47,36 +36,6 @@ using namespace knowledge;
 #define OUTPUT(...)
 
 
-struct ActivityTimeStatistics{
-	uint64_t minTimeS = numeric_limits<uint64_t>::max();
-	Timestamp maxTimeS = 0;
-	Timestamp histogramBucketWidth = 0; // (max - min) / binSize
-
-	uint64_t totalOperationCount = 0;
-
-	vector<uint64_t> histogram;
-};
-
-
-
-class HistogramAdpiPlugin: public ActivityMultiplexerPlugin, public ComponentReportInterface, public AnomalyPlugin {
-	public:
-		void initPlugin() override;
-		void Notify( const shared_ptr<Activity> & activity, int lost );
-		ComponentReport prepareReport() override;
-
-		ComponentOptions * AvailableOptions() override;
-		void finalize() override;
-	private:
-		mutex giant_mutex;
-		unordered_map<UniqueComponentActivityID, ActivityTimeStatistics> statistics;
-		TopologyTypeId   pluginTopoTypeID;
-		TopologyObjectId pluginTopoObjectID;
-
-		TopologyAttributeId bucketMinAttributID;
-		TopologyAttributeId bucketMaxAttributID;
-		Topology * topology;
-};
 
 
 

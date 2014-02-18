@@ -10,6 +10,7 @@
 
 #include <util/TestHelper.hpp>
 
+#include "../ActivityNetworkForwarderClient.hpp"
 #include "../ActivityNetworkForwarderOptions.hpp"
 
 using namespace std;
@@ -55,7 +56,7 @@ void test2(){
 	CommunicationModule * comm = core::module_create_instance<CommunicationModule>( "", "siox-core-comm-gio", CORE_COMM_INTERFACE );
 
 	NetworkService * server = core::module_create_instance<NetworkService>( "", "siox-monitoring-activityPlugin-ActivityNetworkForwarder", NETWORK_SERVICE_INTERFACE );
-	ActivityMultiplexerPlugin * client = core::module_create_instance<ActivityMultiplexerPlugin>( "", "siox-monitoring-activityPlugin-ActivityNetworkForwarder", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
+	ActivityNetworkForwarderClient * client = core::module_create_instance<ActivityNetworkForwarderClient>( "", "siox-monitoring-activityPlugin-ActivityNetworkForwarder", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
 
 	// now wire the tests together.
 	ActivityNetworkForwarderServerOptions * so = new ActivityNetworkForwarderServerOptions();
@@ -125,7 +126,7 @@ void test(){
 	MyTargetMuxStub mySourceMux;
 
 	NetworkService * server = core::module_create_instance<NetworkService>( "", "siox-monitoring-activityPlugin-ActivityNetworkForwarder", NETWORK_SERVICE_INTERFACE );
-	ActivityMultiplexerPlugin * client = core::module_create_instance<ActivityMultiplexerPlugin>( "", "siox-monitoring-activityPlugin-ActivityNetworkForwarder", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
+	ActivityNetworkForwarderClient * client = core::module_create_instance<ActivityNetworkForwarderClient>( "", "siox-monitoring-activityPlugin-ActivityNetworkForwarder", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
 
 	// now wire the tests together.
 	ActivityNetworkForwarderServerOptions * so = new ActivityNetworkForwarderServerOptions();

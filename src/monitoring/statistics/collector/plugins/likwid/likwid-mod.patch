@@ -1,0 +1,643 @@
+diff --git a/Makefile b/Makefile
+index b04b60b..8042ab1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -85,7 +85,9 @@ endif
+ endif
+ 
+ ifeq ($(SHARED_LIBRARY),true)
+-CFLAGS += $(SHARED_CFLAGS)
++CFLAGS += $(SHARED_CFLAGS) -ggdb
++LIBS += -L . -llikwid 
++SHARED_LFLAGS += -lm -lpthread
+ DYNAMIC_TARGET_LIB := liblikwid.so
+ else
+ STATIC_TARGET_LIB := liblikwid.a
+@@ -183,7 +185,7 @@ $(STATIC_TARGET_LIB): $(OBJ)
+ 
+ $(DYNAMIC_TARGET_LIB): $(OBJ)
+ 	@echo "===>  CREATE SHARED LIB  $(DYNAMIC_TARGET_LIB)"
+-	$(Q)${CC} $(SHARED_LFLAGS) $(SHARED_CFLAGS) -o $(DYNAMIC_TARGET_LIB) $(OBJ)
++	$(Q)${CC} $(SHARED_CFLAGS) -o $(DYNAMIC_TARGET_LIB) $(OBJ) $(SHARED_LFLAGS) 
+ 
+ $(DAEMON_TARGET): $(SRC_DIR)/access-daemon/accessDaemon.c
+ 	@echo "===>  Build access daemon likwid-accessD"
+@@ -272,8 +274,10 @@ install:
+ 	@sed -e "s/<VERSION>/$(VERSION)/g" -e "s/<DATE>/$(DATE)/g" < $(DOC_DIR)/likwid-pin.1 > $(MANPREFIX)/man1/likwid-pin.1
+ 	@chmod 644 $(MANPREFIX)/man1/likwid-*
+ 	@echo "===> INSTALL headers to $(PREFIX)/include"
+-	@mkdir -p $(PREFIX)/include
++	@mkdir -p $(PREFIX)/include/likwid
+ 	@cp -f src/includes/likwid*.h  $(PREFIX)/include/
++	@cp -f src/includes/*  $(PREFIX)/include/likwid
++	@cp -f GCC/perfmon_group_types.h  $(PREFIX)/include/likwid
+ 	$(FORTRAN_INSTALL)
+ 	@echo "===> INSTALL libraries to $(PREFIX)/lib"
+ 	@mkdir -p $(PREFIX)/lib
+@@ -283,6 +287,8 @@ install:
+ 	@mkdir -p $(LIKWIDFILTERPATH)
+ 	@cp -f filters/*  $(LIKWIDFILTERPATH)
+ 	@chmod 755 $(LIKWIDFILTERPATH)/*
++	@chown root $(PREFIX)/bin/likwid-accessD
++	@chmod u+s $(PREFIX)/bin/likwid-accessD
+ 
+ uninstall:
+ 	@echo "===> REMOVING applications from $(PREFIX)/bin"
+diff --git a/config.mk b/config.mk
+index e05abfb..545f4f5 100644
+--- a/config.mk
++++ b/config.mk
+@@ -9,7 +9,7 @@ COMPILER = GCC#NO SPACE
+ COLOR = BLUE#NO SPACE
+ 
+ # Path were to install likwid
+-PREFIX = /usr/local#NO SPACE
++PREFIX = /opt/likwidl#NO SPACE
+ MANPREFIX = $(PREFIX)/man#NO SPACE
+ 
+ # For the daemon based secure msr/pci access configure
+@@ -26,7 +26,7 @@ BUILDDAEMON = true#NO SPACE
+ ACCESSMODE = accessdaemon#NO SPACE
+ 
+ # Change to true to a build shared library instead of a static one
+-SHARED_LIBRARY = false#NO SPACE
++SHARED_LIBRARY = true#NO SPACE
+ 
+ # Build Fortran90 module interface for marker API. Adopt Fortran compiler
+ # in ./make/include_<COMPILER>.mk if necessary. Default: ifort .
+diff --git a/likwid-test.c b/likwid-test.c
+new file mode 100644
+index 0000000..60ce3c4
+--- /dev/null
++++ b/likwid-test.c
+@@ -0,0 +1,74 @@
++#include <stdio.h>
++#include <unistd.h>
++#include <stdlib.h>
++
++#include <likwid/perfmon.h>
++#include <likwid/cpuid.h>
++#include <likwid/numa.h>
++#include <likwid/accessClient.h>
++#include <likwid/timer.h>
++
++static void init(){
++	if (cpuid_init() == EXIT_FAILURE){
++		// TODO
++	}
++	numa_init();
++	timer_init();
++
++	const int numThreads = cpuid_topology.numSockets * cpuid_topology.numCoresPerSocket * cpuid_topology.numThreadsPerCore;
++	int * threads = malloc(sizeof(int) * numThreads);
++	for(int i=0; i < numThreads; i++){
++		threads[i] = i;
++	}
++
++	// 0 or 1 at the moment
++	accessClient_setaccessmode(1);
++
++	FILE * nullFD = fopen("/dev/null", "w");
++	nullFD = stdout;
++	perfmon_init(numThreads, threads, nullFD);
++}
++
++
++int main(){
++	init();
++
++	EventSetup set = perfmon_prepareEventSetup("VIEW");
++	EventSetup set2 = perfmon_prepareEventSetup("MEM");
++	EventSetup set3 = perfmon_prepareEventSetup("CACHE");
++	
++	perfmon_setupCountersForEventSet(& set);
++
++	perfmon_startCounters();
++	usleep(1000);
++	perfmon_stopCounters();	
++
++	{
++	uint64_t * avg_values = malloc(set.numberOfEvents * sizeof(uint64_t));
++	uint64_t * min_values = malloc(set.numberOfEvents * sizeof(uint64_t));
++	uint64_t * max_values = malloc(set.numberOfEvents * sizeof(uint64_t));
++	perfmon_getEventCounterValues(avg_values, min_values, max_values);	
++
++	for( int i=0; i < set.numberOfEvents; i++ ){
++		printf("%s %lld\n", set.eventNames[i], (long long int) avg_values[i]);
++	}
++	}
++
++	{
++	float * avg_values = malloc(set.numberOfDerivedCounters * sizeof(float));
++	float * min_values = malloc(set.numberOfDerivedCounters * sizeof(float));
++	float * max_values = malloc(set.numberOfDerivedCounters * sizeof(float));
++	perfmon_getDerivedCounterValues(avg_values, min_values, max_values);	
++
++	for( int i=0; i < set.numberOfDerivedCounters; i++ ){
++		printf("%s %f\n", set.derivedNames[i],  avg_values[i]);
++	}
++
++	}
++
++	perfmon_printCounterResults();
++
++
++
++	perfmon_finalize();
++}
+\ No newline at end of file
+diff --git a/make/include_GCC.mk b/make/include_GCC.mk
+index 8076a96..140dcdb 100644
+--- a/make/include_GCC.mk
++++ b/make/include_GCC.mk
+@@ -12,7 +12,7 @@ ANSI_CFLAGS   = -std=c99
+ #ANSI_CFLAGS += -Wextra
+ #ANSI_CFLAGS += -Wall
+ 
+-CFLAGS   =  -O2  -Wno-format
++CFLAGS   =  -O0  -Wno-format
+ FCFLAGS  = -module ./  # ifort
+ #FCFLAGS  = -J ./  -fsyntax-only  #gfortran
+ PASFLAGS  = x86-64
+diff --git a/make/include_GCCX86.mk b/make/include_GCCX86.mk
+index 2d44301..658e249 100644
+--- a/make/include_GCCX86.mk
++++ b/make/include_GCCX86.mk
+@@ -11,7 +11,7 @@ ANSI_CFLAGS   = -std=c99
+ #ANSI_CFLAGS += -Wextra
+ #ANSI_CFLAGS += -Wall
+ 
+-CFLAGS   =  -O2 -g -m32 -Wno-format
++CFLAGS   =  -O0 -g -m32 -Wno-format
+ FCFLAGS  = -J ./  -fsyntax-only
+ PASFLAGS  = x86
+ ASFLAGS  = --32 -g
+diff --git a/perl/templates/group.tt b/perl/templates/group.tt
+index 43ae7c3..2122caf 100644
+--- a/perl/templates/group.tt
++++ b/perl/templates/group.tt
+@@ -2,14 +2,65 @@
+ 
+ #define NUM_GROUPS_[% arch FILTER upper %] [% numGroups %]
+ 
++[% FOREACH group IN groups %]
++static const char* group_names_[% arch FILTER ucfirst %]_[% group.name %] [] = {[% FOREACH metric IN group.metrics %] "[% metric.label %]", [% END %] NULL};
++[% END %]
++
+ static PerfmonGroupMap [% arch %]_group_map[NUM_GROUPS_[% arch FILTER upper %]] = {
+ [% FOREACH group IN groups %]
+-    {"[% group.name %]",[% group.name %],[% group.isUncore %],"[% group.shortHelp %]","[% group.eventSet %]"},
++    {"[% group.name %]",[% group.name %],[% group.isUncore %],"[% group.shortHelp %]","[% group.eventSet %]", 0 [% FOREACH metric IN group.metrics %] +1 [% END %], group_names_[% arch FILTER ucfirst %]_[% group.name %]
++    },
+ [% END %]
+ };
+ 
++void perfmon_getDerivedCounterValues[% arch FILTER ucfirst %](PerfmonGroup group, float * values, float * out_max, float * out_min){
++    double time = rdtscTime;
++    double inverseClock = 1.0 /(double) timer_getCpuClock();
++
++    values[0] = time;
++    out_min[0] = time;
++    out_max[0] = time;
++
++    switch ( group ) {
++    [% FOREACH group IN groups %]
++        case [% group.name %]:{
++            int threadId;
++            int counter = 0;
++            double sum,min,max;
++
++        [% FOREACH metric IN group.metrics %]
++            sum = 0;
++            min = 1e300;
++            max = 0;
++
++            for(threadId=0; threadId < perfmon_numThreads; threadId++)
++            {
++                double cur = [% metric.rule %];
++                cur = isnan(cur) ? 0.0 : cur;
++                sum += cur;
++                max = max > cur ? max : cur;
++                min = min < cur ? min : cur;                        
++            }
++
++            values[counter] = (float) sum / perfmon_numThreads;
++            out_min[counter] = (float) min;
++            out_max[counter] = (float) max;
++            counter++;
++        [% END %]
++        return;        
++        }
++    [% END %]
++
++        default:
++            fprintf (stderr, "perfmon_getDerivedCounterValues[% arch %]: Unknown group! Exiting!\n" );
++            exit (EXIT_FAILURE);
++            break;
++    }
++}
++
++
+ void
+-perfmon_printDerivedMetrics[% arch FILTER ucfirst %](PerfmonGroup group)
++perfmon_printDerivedMetrics[% arch FILTER ucfirst %](PerfmonGroup groupId)
+ {
+     int threadId;
+     double time = rdtscTime;
+@@ -25,7 +76,7 @@ perfmon_printDerivedMetrics[% arch FILTER ucfirst %](PerfmonGroup group)
+     uint64_t cpi_cyc  = 0;
+     int cpi_index = 0;
+ 
+-    switch ( group ) 
++    switch ( groupId ) 
+     {
+ [% FOREACH group IN groups %]
+         case [% group.name %]:
+diff --git a/src/accessClient.c b/src/accessClient.c
+index 1d14779..a179a57 100644
+--- a/src/accessClient.c
++++ b/src/accessClient.c
+@@ -85,7 +85,7 @@ static int startDaemon(void)
+     size_t address_length;
+     int  ret;
+     pid_t pid;
+-    int timeout = 10;
++    int timeout = 1000;
+     int socket_fd = -1;
+ 
+     if (accessClient_mode == DAEMON_AM_ACCESS_D)
+@@ -122,7 +122,7 @@ static int startDaemon(void)
+     while (timeout > 0)
+     {
+         int res;
+-        sleep(1);
++        usleep(1000);
+         res = connect(socket_fd, (struct sockaddr *) &address, address_length);
+ 
+         if (res == 0)
+diff --git a/src/includes/error.h b/src/includes/error.h
+index f33f558..e86f709 100644
+--- a/src/includes/error.h
++++ b/src/includes/error.h
+@@ -31,6 +31,18 @@
+ #ifndef ERROR_H
+ #define ERROR_H
+ 
++#ifdef PURGE_OUTPUT
++#ifdef fprintf
++#undef fprintf
++#endif
++#define fprintf(...)
++#endif
++
++#ifdef printf
++#undef printf
++#endif
++#define printf(...)
++
+ #include <errno.h>
+ #include <string.h>
+ #include <msr.h>
+diff --git a/src/includes/perfmon.h b/src/includes/perfmon.h
+index 5f6f0db..11c4590 100644
+--- a/src/includes/perfmon.h
++++ b/src/includes/perfmon.h
+@@ -53,6 +53,46 @@ extern void perfmon_finalize(void);
+ extern void perfmon_setupEventSet(bstring eventString, BitMask* mask);
+ extern double perfmon_getEventResult(int thread, int index);
+ extern int perfmon_setupEventSetC(char* eventCString, const char*** eventnames);
++
++
++/*
++The following structure and set of functions provide an efficient and easy interface to
++access counters from different groups and switch between them.
++
++TODO: The internals need some cleanup, but the interface should remain rather stable.
++
++Usage:
++setup = perfmon_prepareEventSetup("VIEW"), etc..
++Whenever you want to use one of the prepared setups call:
++perfmon_setupCountersForEventSet(setup)
++
++then you can startCounters, stopCounters and then
++perfmon_getEventCounterValues() and/or
++perfmon_getDerivedCounterValues()
++ */
++typedef struct {
++	const char * groupName;
++	int numberOfEvents;
++	const char ** eventNames;
++	int numberOfDerivedCounters;
++	const char ** derivedNames;	
++
++	// Internal structures DO NOT ACCESS THEM, they need cleanup.
++	StrUtilEventSet* eventSetConfig;
++	PerfmonEventSet* perfmon_set;
++	PerfmonGroup groupSet;
++	int groupIndex;
++} EventSetup;
++
++
++extern EventSetup perfmon_prepareEventSetup(char* eventGroupString);
++extern void perfmon_setupCountersForEventSet(EventSetup * setup);
++
++// obtain values for all cores, average, min and max for the cores.
++extern void perfmon_getEventCounterValues(uint64_t * avg_values, uint64_t * max, uint64_t * min);
++extern void perfmon_getDerivedCounterValues(float * avg_values, float * max, float * min);
++/////////////////////////
++
+ extern void perfmon_setupCounters(void);
+ extern void perfmon_startCounters(void);
+ extern void perfmon_stopCounters(void);
+@@ -61,6 +101,8 @@ extern double perfmon_getResult(int threadId, char* counterString);
+ extern void perfmon_printMarkerResults(bstring filepath);
+ extern void perfmon_logCounterResults(double time);
+ extern void perfmon_printCounterResults(void);
++
++
+ extern void perfmon_printCounters(void);
+ extern void perfmon_printEvents(void);
+ 
+diff --git a/src/includes/perfmon_types.h b/src/includes/perfmon_types.h
+index 55d86f7..71324b9 100644
+--- a/src/includes/perfmon_types.h
++++ b/src/includes/perfmon_types.h
+@@ -101,11 +101,13 @@ typedef struct {
+ } PerfmonCounterMap;
+ 
+ typedef struct {
+-    char* key;
++    const char* key;
+     PerfmonGroup index;
+     int isUncore;
+-    char* info;
+-    char* config;
++    const char* info;
++    const char* config;
++    int derivedCounters;
++    const char ** derivedCounterNames;
+ } PerfmonGroupMap;
+ 
+ typedef struct {
+diff --git a/src/perfmon.c b/src/perfmon.c
+index 3d20d20..0305b18 100644
+--- a/src/perfmon.c
++++ b/src/perfmon.c
+@@ -37,6 +37,7 @@
+ #include <float.h>
+ #include <unistd.h>
+ #include <sys/types.h>
++#include <assert.h>
+ 
+ #include <types.h>
+ #include <bitUtil.h>
+@@ -71,6 +72,7 @@ static PerfmonEvent* eventHash;
+ static PerfmonCounterMap* counter_map;
+ static PerfmonGroupMap* group_map;
+ static PerfmonGroupHelp* group_help;
++static EventSetup * eventSetup;
+ 
+ static TimerData timeData;
+ static double rdtscTime;
+@@ -154,6 +156,8 @@ void (*perfmon_setupCounterThread) (int thread_id,
+         PerfmonEvent* event, PerfmonCounterIndex index);
+ void (*printDerivedMetrics) (PerfmonGroup group);
+ void (*logDerivedMetrics) (PerfmonGroup group, double time, double timeStamp);
++void (*perfmon_getDerivedCounterValuesArch)(PerfmonGroup group, float * values, float * out_max, float * out_min);
++
+ 
+ /* #####   FUNCTION POINTERS  -  LOCAL TO THIS SOURCE FILE ################ */
+ 
+@@ -175,6 +179,7 @@ static int getIndex (bstring reg, PerfmonCounterIndex* index)
+     return FALSE;
+ }
+ 
++
+ static int
+ getEvent(bstring event_str, PerfmonEvent* event)
+ {
+@@ -911,6 +916,79 @@ perfmon_getEventResult(int thread, int index)
+     return (double) perfmon_threadData[thread].counters[perfmon_set.events[index].index].counterData;
+ }
+ 
++EventSetup perfmon_prepareEventSetup(char* eventGroupString){
++     EventSetup setup;
++     bstring eventString = bfromcstr(eventGroupString);
++
++     setup.eventSetConfig = malloc(sizeof(setup.eventSetConfig));
++     setup.perfmon_set = malloc(sizeof(setup.perfmon_set));
++
++     int groupId = getGroupId(eventString, & setup.groupSet);
++     setup.groupName = strdup(eventGroupString);
++     setup.groupIndex = groupId;
++     if (setup.groupSet == _NOGROUP)
++     {
++        /* eventString is a custom eventSet */
++        bstr_to_eventset(setup.eventSetConfig, eventString);
++     }
++     else
++     {
++        /* eventString is a group */
++        eventString = bfromcstr(group_map[groupId].config);
++        bstr_to_eventset(setup.eventSetConfig, eventString);
++     }
++
++     perfmon_initEventSet(setup.eventSetConfig, setup.perfmon_set);
++     bdestroy(eventString);
++
++     setup.eventNames = (const char**) malloc(setup.perfmon_set->numberOfEvents * sizeof(const char*));
++
++     setup.numberOfEvents = setup.perfmon_set->numberOfEvents;
++     for (int i=0; i< setup.perfmon_set->numberOfEvents; i++)
++     {
++        setup.eventNames[i] = setup.perfmon_set->events[i].event.name;
++     }
++
++     setup.numberOfDerivedCounters = group_map[groupId].derivedCounters;
++     setup.derivedNames = (const char**) malloc(setup.numberOfDerivedCounters * sizeof(const char*));
++
++     for(int i=0; i < group_map[groupId].derivedCounters; i++){
++        setup.derivedNames[i] = group_map[groupId].derivedCounterNames[i];
++     }
++
++     return setup;
++}
++
++
++void perfmon_setupCountersForEventSet(EventSetup * setup){    
++    perfmon_set = *setup->perfmon_set;
++    groupSet = setup->groupSet;
++    eventSetup = setup;
++    perfmon_setupCounters();
++}
++
++void perfmon_getEventCounterValues(uint64_t * values, uint64_t * out_max, uint64_t * out_min){
++    
++    for(int e = 0; e < perfmon_set.numberOfEvents; e++ ){
++        uint64_t sum = 0;
++        uint64_t min = (uint64_t) -1;
++        uint64_t max = 0;
++
++        for(int i = 0; i < perfmon_numThreads; i++){
++            uint64_t cur = perfmon_threadData[i].counters[e].counterData;
++            sum += cur;
++            max = max > cur ? max : cur;
++            min = min < cur ? min : cur;
++        }
++        values[e] = sum / perfmon_numThreads;
++        out_min[e] = min;
++        out_max[e] = max;
++    }
++}
++
++void perfmon_getDerivedCounterValues(float * values, float * out_max, float * out_min){
++    perfmon_getDerivedCounterValuesArch(eventSetup->groupSet, values, out_max, out_min);
++}
+ 
+ int
+ perfmon_setupEventSetC(char* eventCString, const char*** eventnames)
+@@ -1121,10 +1199,10 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+             malloc(NUM_PMC * sizeof(double));
+     }
+ 
+-    for(int i=0; i<MAX_NUM_NODES; i++) socket_lock[i] = LOCK_INIT;
+-
+     OUTSTREAM = outstream;
+ 
++    for(int i=0; i<MAX_NUM_NODES; i++) socket_lock[i] = LOCK_INIT;
++
+     if (accessClient_mode != DAEMON_AM_DIRECT)
+     {
+         accessClient_init(&socket_fd);
+@@ -1154,6 +1232,7 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+                     initThreadArch = perfmon_init_pm;
+                     printDerivedMetrics = perfmon_printDerivedMetrics_pm;
++                    assert(FALSE && "NOT SUPPORTED");
+                     perfmon_startCountersThread = perfmon_startCountersThread_pm;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_pm;
+                     perfmon_setupCounterThread = perfmon_setupCounterThread_pm;
+@@ -1179,6 +1258,7 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+                     initThreadArch = perfmon_init_core2;
+                     printDerivedMetrics = perfmon_printDerivedMetricsAtom;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesAtom;
+                     perfmon_startCountersThread = perfmon_startCountersThread_core2;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_core2;
+                     perfmon_setupCounterThread = perfmon_setupCounterThread_core2;
+@@ -1207,6 +1287,8 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+                     initThreadArch = perfmon_init_core2;
+                     printDerivedMetrics = perfmon_printDerivedMetricsCore2;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesCore2;
++
+                     logDerivedMetrics = perfmon_logDerivedMetricsCore2;
+                     perfmon_startCountersThread = perfmon_startCountersThread_core2;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_core2;
+@@ -1224,10 +1306,11 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+                     perfmon_numGroups = perfmon_numGroupsNehalemEX;
+ 
+                     counter_map = westmereEX_counter_map;
+-                    perfmon_numCounters = perfmon_numCountersWestmereEX;
++                    perfmon_numCounters = perfmon_numCountersWestmereEX;                    
+ 
+                     initThreadArch = perfmon_init_westmereEX;
+                     printDerivedMetrics = perfmon_printDerivedMetricsNehalemEX;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesNehalemEX;
+                     logDerivedMetrics = perfmon_logDerivedMetricsNehalemEX;
+                     perfmon_startCountersThread = perfmon_startCountersThread_westmereEX;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_westmereEX;
+@@ -1247,8 +1330,9 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+                     counter_map = westmereEX_counter_map;
+                     perfmon_numCounters = perfmon_numCountersWestmereEX;
+ 
+-                    initThreadArch = perfmon_init_westmereEX;
++                    initThreadArch = perfmon_init_westmereEX;                    
+                     printDerivedMetrics = perfmon_printDerivedMetricsWestmereEX;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesWestmereEX;
+                     logDerivedMetrics = perfmon_logDerivedMetricsWestmereEX;
+                     perfmon_startCountersThread = perfmon_startCountersThread_westmereEX;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_westmereEX;
+@@ -1274,6 +1358,8 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+                     initThreadArch = perfmon_init_nehalem;
+                     printDerivedMetrics = perfmon_printDerivedMetricsNehalem;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesNehalem;
++
+                     logDerivedMetrics = perfmon_logDerivedMetricsNehalem;
+                     perfmon_startCountersThread = perfmon_startCountersThread_nehalem;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_nehalem;
+@@ -1299,6 +1385,8 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+                     initThreadArch = perfmon_init_nehalem;
+                     printDerivedMetrics = perfmon_printDerivedMetricsWestmere;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesWestmere;
++
+                     logDerivedMetrics = perfmon_logDerivedMetricsWestmere;
+                     perfmon_startCountersThread = perfmon_startCountersThread_nehalem;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_nehalem;
+@@ -1326,6 +1414,8 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+                     initThreadArch = perfmon_init_ivybridge;
+                     printDerivedMetrics = perfmon_printDerivedMetricsIvybridge;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesIvybridge;
++
+                     logDerivedMetrics = perfmon_logDerivedMetricsIvybridge;
+                     perfmon_startCountersThread = perfmon_startCountersThread_ivybridge;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_ivybridge;
+@@ -1356,6 +1446,7 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+                     initThreadArch = perfmon_init_haswell;
+                     printDerivedMetrics = perfmon_printDerivedMetricsHaswell;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesHaswell;
+                     logDerivedMetrics = perfmon_logDerivedMetricsHaswell;
+                     perfmon_startCountersThread = perfmon_startCountersThread_haswell;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_haswell;
+@@ -1383,6 +1474,7 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+                     initThreadArch = perfmon_init_sandybridge;
+                     printDerivedMetrics = perfmon_printDerivedMetricsSandybridge;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesSandybridge;
+                     logDerivedMetrics = perfmon_logDerivedMetricsSandybridge;
+                     perfmon_startCountersThread = perfmon_startCountersThread_sandybridge;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_sandybridge;
+@@ -1414,6 +1506,7 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+                     initThreadArch = perfmon_init_phi;
+                     printDerivedMetrics = perfmon_printDerivedMetricsPhi;
++                    perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesPhi;
+                     logDerivedMetrics = perfmon_logDerivedMetricsPhi;
+                     perfmon_startCountersThread = perfmon_startCountersThread_phi;
+                     perfmon_stopCountersThread = perfmon_stopCountersThread_phi;
+@@ -1440,6 +1533,7 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+             initThreadArch = perfmon_init_k10;
+             printDerivedMetrics = perfmon_printDerivedMetricsK8;
++            perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesK8;
+             logDerivedMetrics = perfmon_logDerivedMetricsK8;
+             perfmon_startCountersThread = perfmon_startCountersThread_k10;
+             perfmon_stopCountersThread = perfmon_stopCountersThread_k10;
+@@ -1460,6 +1554,7 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+             initThreadArch = perfmon_init_k10;
+             printDerivedMetrics = perfmon_printDerivedMetricsK10;
++            perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesK10;
+             logDerivedMetrics = perfmon_logDerivedMetricsK10;
+             perfmon_startCountersThread = perfmon_startCountersThread_k10;
+             perfmon_stopCountersThread = perfmon_stopCountersThread_k10;
+@@ -1480,6 +1575,7 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+             initThreadArch = perfmon_init_interlagos;
+             printDerivedMetrics = perfmon_printDerivedMetricsInterlagos;
++            perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesInterlagos;
+             logDerivedMetrics = perfmon_logDerivedMetricsInterlagos;
+             perfmon_startCountersThread = perfmon_startCountersThread_interlagos;
+             perfmon_stopCountersThread = perfmon_stopCountersThread_interlagos;
+@@ -1500,6 +1596,7 @@ perfmon_init(int numThreads_local, int threads[], FILE* outstream)
+ 
+             initThreadArch = perfmon_init_kabini;
+             printDerivedMetrics = perfmon_printDerivedMetricsKabini;
++            perfmon_getDerivedCounterValuesArch = perfmon_getDerivedCounterValuesKabini;
+             logDerivedMetrics = perfmon_logDerivedMetricsKabini;
+             perfmon_startCountersThread = perfmon_startCountersThread_kabini;
+             perfmon_stopCountersThread = perfmon_stopCountersThread_kabini;

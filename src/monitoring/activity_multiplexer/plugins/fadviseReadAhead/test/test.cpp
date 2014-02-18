@@ -14,7 +14,7 @@
 #include <monitoring/system_information/modules/filebased-system-information/FileBasedSystemInformationOptions.hpp>
 #include <knowledge/activity_plugin/DereferencingFacadeOptions.hpp>
 
-
+#include "../fadviseReadAhead.hpp"
 #include <monitoring/activity_multiplexer/plugins/fadviseReadAhead/fadviseReadAheadOptions.hpp>
 #include <monitoring/topology/Topology.hpp>
 #include <monitoring/ontology/Ontology.hpp>
@@ -33,7 +33,7 @@ using namespace knowledge;
 
 int main( int argc, char const * argv[] )
 {
-	ActivityMultiplexerPlugin * plugin = core::module_create_instance<ActivityMultiplexerPlugin>( "", "siox-monitoring-activityPlugin-fadviseReadAhead", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
+	FadviseReadAheadPlugin * plugin = core::module_create_instance<FadviseReadAheadPlugin>( "", "siox-monitoring-activityPlugin-fadviseReadAhead", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
 
 	ActivityPluginDereferencing * facade = core::module_create_instance<ActivityPluginDereferencing>( "", "siox-knowledge-DereferencingFacade", ACTIVITY_DEREFERENCING_FACADE_INTERFACE );
 
