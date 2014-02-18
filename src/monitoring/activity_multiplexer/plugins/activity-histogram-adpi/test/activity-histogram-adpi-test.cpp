@@ -89,20 +89,20 @@ int main( int argc, char const * argv[] )
 	const ComponentID cid = {.pid = {2, 3, 4}, .id = 1};
 	const ActivityID aaid = {.cid = cid, .id = 2};
 	
-	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 100, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 100, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 
-	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 1100, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 1100, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 
-	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 550, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 550, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 
 	// learn phase is finished now for ucaid1.
 
 	// try with ucaid2
-	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid2, 0, 1000, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid2, 0, 1000, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 
 
 	// try to rate a few activities:	
-	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 2000, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 2000, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 
 	{
 	unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> aphsMap = dynamic_cast<AnomalyPlugin*>(adpi)->queryRecentObservations();
@@ -119,7 +119,7 @@ int main( int argc, char const * argv[] )
 	}
 
 
-	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 10, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 10, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 	{
 	unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> aphsMap = dynamic_cast<AnomalyPlugin*>(adpi)->queryRecentObservations();
 
@@ -134,7 +134,7 @@ int main( int argc, char const * argv[] )
 	assert( aph.occurrences[HealthState::ABNORMAL_FAST ] == 1 );
 	}
 
-	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 400, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 400, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 	{
 	unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> aphsMap = dynamic_cast<AnomalyPlugin*>(adpi)->queryRecentObservations();
 
@@ -147,7 +147,7 @@ int main( int argc, char const * argv[] )
 	assert( aph.occurrences[HealthState::OK ] == 1 );
 	}
 
-	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 999, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 999, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 	{
 	unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> aphsMap = dynamic_cast<AnomalyPlugin*>(adpi)->queryRecentObservations();
 
@@ -195,7 +195,7 @@ int main( int argc, char const * argv[] )
 	assert(stored3 != nullptr);
 	}
 
-	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid3, 0, 1000, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ) );
+	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid3, 0, 1000, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 
 	{
 	unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> aphsMap = dynamic_cast<AnomalyPlugin*>(adpi)->queryRecentObservations();

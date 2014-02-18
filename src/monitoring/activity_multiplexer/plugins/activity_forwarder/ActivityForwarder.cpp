@@ -15,7 +15,7 @@ class ActivityForwarder: public ActivityMultiplexerPlugin {
 		/**
 		 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
 		 */
-		void Notify( const shared_ptr<Activity> & element ) override {
+		void Notify( const shared_ptr<Activity> & element, int lostCount ) {
 			out->Log( element );
 		}
 
@@ -36,6 +36,12 @@ class ActivityForwarder: public ActivityMultiplexerPlugin {
 		void initPlugin() {
 			ActivityForwarderOptions & options = getOptions<ActivityForwarderOptions>();
 			out = GET_INSTANCE(ActivityMultiplexer, options.target_multiplexer);
+			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityForwarder::Notify ), false );
+		}
+
+		void finalize() {
+			multiplexer->unregisterCatchall( this, false );
+			ActivityMultiplexerPlugin::finalize();
 		}
 
 	private:

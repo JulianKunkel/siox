@@ -29,7 +29,7 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin {
 		mutex motify_mutex;
 	public:
 
-		void Notify( const shared_ptr<Activity> & activity ) override {
+		void Notify( const shared_ptr<Activity> & activity, int lost ) {
 			//cout << "NOTIFY" << facade->get_system_information()->lookup_activity_name( activity->ucaid_) << endl;
 			//if (  activity->attributeArray().begin() != activity->attributeArray().end() )
 			//	cout << activity->attributeArray().begin()->value << endl;
@@ -51,6 +51,12 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin {
 			oa = new boost::archive::text_oarchive( file, boost::archive::no_header | boost::archive::no_codecvt );
 
 			synchronize = o.synchronize;
+			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &FileWriterPlugin::Notify ), false );
+		}
+
+		void finalize() override {
+			multiplexer->unregisterCatchall( this, false );
+			ActivityMultiplexerPlugin::finalize();
 		}
 
 		~FileWriterPlugin() {

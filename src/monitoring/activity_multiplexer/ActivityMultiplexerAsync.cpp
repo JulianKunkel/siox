@@ -24,7 +24,9 @@
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerImplementation.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerListener.hpp>
+#include <monitoring/activity_multiplexer/Dispatcher.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
+#include <util/ExceptionHandling.hpp>
 
 
 #include "ActivityMultiplexerAsyncOptions.hpp"
@@ -42,6 +44,7 @@ namespace {
 	 * A threadsafe (many producers, one consumer) queue implementation for the multiplexer to use
 	 * The queue is also responsible for counting discarded activities.
 	 */
+
 	class ActivityMultiplexerQueue {
 		public:
 			ActivityMultiplexerQueue () : writeIndex(0), readIndex(0), lost(0), notified(false), terminate(false), terminated(false) {};
@@ -74,10 +77,11 @@ namespace {
 	/**
 	 * Just an encapsulation of the worker thread that waits on the ActivityMultiplexerQueue.
 	 */
+
 	class ActivityMultiplexerNotifier {
 		public:
-			ActivityMultiplexerNotifier( ActivityMultiplexerAsync * dispatcher, ActivityMultiplexerQueue * queue ) :
-				dispatcher( dispatcher ),
+			ActivityMultiplexerNotifier( ActivityMultiplexerAsync * multiplexer, ActivityMultiplexerQueue * queue ) :
+				multiplexer( multiplexer ),
 				queue( queue ),
 				worker( &ActivityMultiplexerNotifier::Run, this )
 			{};
@@ -88,7 +92,7 @@ namespace {
 			~ActivityMultiplexerNotifier () { worker.join(); };
 
 		private:
-			ActivityMultiplexerAsync * dispatcher = nullptr;
+			ActivityMultiplexerAsync * multiplexer = nullptr;
 			ActivityMultiplexerQueue * queue = nullptr;
 
 			std::thread worker;
@@ -100,14 +104,17 @@ namespace {
 	 * Forwards logged activities to registered listeners (e.g. Plugins) either
 	 * in an syncronised or asyncronous manner.
 	 */
+
 	class ActivityMultiplexerAsync : public ActivityMultiplexer, public ComponentReportInterface {
 		public:
-			ActivityMultiplexerAsync() : processed_activities(0) {}
-			void init();
+			ActivityMultiplexerAsync() : notifier( this, &queue ), lost_events(0), processed_activities(0) {}
+			void init() {}
 			ComponentOptions * AvailableOptions() { return new ActivityMultiplexerAsyncOptions(); }
 
-			void registerListener( ActivityMultiplexerListener * listener ) override;
-			void unregisterListener( ActivityMultiplexerListener * listener ) override;
+			void registerForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener* listener, Callback handler, bool async ) override;
+			void unregisterForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener* listener, bool async ) override;
+			void registerCatchall( ActivityMultiplexerListener* listener, Callback handler, bool async ) override;
+			void unregisterCatchall( ActivityMultiplexerListener* listener, bool async ) override;
 
 			void Log( const shared_ptr<Activity> & activity ) override;
 			void dispatch(int lost, const shared_ptr<Activity>& work);
@@ -116,15 +123,16 @@ namespace {
 			~ActivityMultiplexerAsync();
 
 		private:
-			vector<ActivityMultiplexerListener *> listeners;
+			boost::shared_mutex syncDispatchersLock;
+			unordered_map<UniqueComponentActivityID, Dispatcher> syncDispatchers;	//protected by syncDispatchersLock
+			boost::shared_mutex asyncDispatchersLock;
+			unordered_map<UniqueComponentActivityID, Dispatcher> asyncDispatchers;	//protected by asyncDispatchersLock
 
-			ActivityMultiplexerQueue * queue = nullptr;
-			ActivityMultiplexerNotifier * notifier = nullptr;
-
-			boost::shared_mutex  asyncQueueMutex;
+			ActivityMultiplexerQueue queue;
+			ActivityMultiplexerNotifier notifier;
 
 			// statistics about operation:
-			uint64_t lost_events = 0;
+			std::atomic<uint64_t> lost_events;
 			std::atomic<uint64_t> processed_activities;
 			uint64_t processed_events_in_async = 0;
 	};
@@ -139,6 +147,7 @@ namespace {
  *
  * @param   activity     an activity that need to be dispatched in the future
  */
+
 void ActivityMultiplexerQueue::Push( shared_ptr<Activity> activity ) {
 	if( overloaded ) {
 		lost++;
@@ -169,14 +178,15 @@ void ActivityMultiplexerQueue::Push( shared_ptr<Activity> activity ) {
  *
  * @return	Activity	an activity that needs to be dispatched to async listeners, or NULL if the queue has been finalized.
  */
+
 shared_ptr<Activity> ActivityMultiplexerQueue::Pop() {
 	if( isEmpty() ) {
 		//The queue is empty. Sleep until it's not.
 		notified = false;	//But first tell the writers that they must wake us again!
 		std::unique_lock<std::mutex> l(lock);	//Only needed for the condition variable.
 
-		if ( isEmpty() && ! terminate ){
-			not_empty.wait(l, [=](){ return ( ! this->isEmpty() || terminate); });
+		while( isEmpty() && ! terminate ){
+			not_empty.wait_for(l, std::chrono::milliseconds(100), [=](){ return ( ! this->isEmpty() || terminate); });
 		}
 	}
 	//We might just be woken up to be able to die...
@@ -188,12 +198,13 @@ shared_ptr<Activity> ActivityMultiplexerQueue::Pop() {
 
 	std::atomic_thread_fence( std::memory_order_acquire );
 	shared_ptr<Activity> result = buffer[indexMask & readIndex];
-	buffer[indexMask & readIndex];	//This has two effects: a) it ensures that the Activity can be destructed, and b) it ensures that `result` is actually read before `readIndex` is incremented.
+	buffer[indexMask & readIndex] = NULL;	//This has two effects: a) it ensures that the Activity can be destructed, and b) it ensures that `result` is actually read before `readIndex` is incremented.
 	std::atomic_thread_fence( std::memory_order_release );
 	readIndex++;
 	return result;
 }
 
+
 uint64_t ActivityMultiplexerQueue::checkOverflowMode() {
 	if( !overloaded || !isEmpty() ) return 0;
 	uint64_t result = lost;
@@ -202,6 +213,7 @@ uint64_t ActivityMultiplexerQueue::checkOverflowMode() {
 	return result;
 }
 
+
 void ActivityMultiplexerQueue::finalize() {
 	terminate = true;
 	// this is important to wake up waiting pop/notifier
@@ -209,8 +221,8 @@ void ActivityMultiplexerQueue::finalize() {
 	while( !terminated ) ;	//Spin until we can safely destruct the object!
 }
 
+
 void ActivityMultiplexerNotifier::Run() {
-	assert(queue);
 	// call dispatch of ActivityMultiplexerAsync
 	static uint64_t events = 0;
 
@@ -220,26 +232,21 @@ void ActivityMultiplexerNotifier::Run() {
 		uint64_t lost = queue->checkOverflowMode();
 		lostActivities += lost;
 		events++;
-		dispatcher->dispatch( lost, activity );
+		multiplexer->dispatch( lost, activity );
 	}
 	//cout << "Caught: " << events << endl;
 }
 
+
 ActivityMultiplexerAsync::~ActivityMultiplexerAsync() {
-	if ( notifier ) {
-		notifier->finalize();
-		delete notifier;
-	}
-
-	if ( queue )
-		delete queue;
-
+	notifier.finalize();
 }
 
+
 ComponentReport ActivityMultiplexerAsync::prepareReport(){
 	ComponentReport rep;
 
-	rep.addEntry("ASYNC_DROPPED_ACTIVITIES", {ReportEntry::Type::SIOX_INTERNAL_CRITICAL, lost_events});
+	rep.addEntry("ASYNC_DROPPED_ACTIVITIES", {ReportEntry::Type::SIOX_INTERNAL_CRITICAL, (uint64_t)lost_events});
 	rep.addEntry("PROCESSED_ACTIVITIES", {ReportEntry::Type::SIOX_INTERNAL_INFO, (uint64_t)processed_activities});
 	rep.addEntry("PROCESSED_ACTIVITIES_ASYNC", {ReportEntry::Type::SIOX_INTERNAL_INFO, processed_events_in_async});
 
@@ -251,13 +258,16 @@ ComponentReport ActivityMultiplexerAsync::prepareReport(){
  *
  * @param	activity	logged activity
  */
+
 void ActivityMultiplexerAsync::Log( const shared_ptr<Activity> & activity ) {
 	processed_activities++;
 	assert( activity != nullptr );
 
-	if ( queue ) {
-		queue->Push(activity);
-	}
+	syncDispatchersLock.lock_shared();
+	IGNORE_EXCEPTIONS( syncDispatchers.at( activity->ucaid() ).dispatch( activity, 0 ); );
+	IGNORE_EXCEPTIONS( syncDispatchers.at( 0 ).dispatch( activity, 0 ); );
+	syncDispatchersLock.unlock_shared();
+	queue.Push(activity);
 }
 
 /**
@@ -266,57 +276,53 @@ void ActivityMultiplexerAsync::Log( const shared_ptr<Activity> & activity ) {
  * @param	lost	lost activtiy count
  * @param	work	activtiy as void pointer to support abstract notifier
  */
+
 void ActivityMultiplexerAsync::dispatch(int lost, const shared_ptr<Activity>& work) {
-	shared_ptr<Activity> activity = work;
-	assert( activity != nullptr );
-	//boost::shared_lock<boost::shared_mutex> lock( asyncQueueMutex );
-	for(auto l = listeners.begin(); l != listeners.end() ; l++){
-		(*l)->NotifyAsync(lost, activity);
-	}
+	asyncDispatchersLock.lock_shared();
+	IGNORE_EXCEPTIONS( asyncDispatchers.at( work->ucaid() ).dispatch( work, lost ); );
+	IGNORE_EXCEPTIONS( asyncDispatchers.at( 0 ).dispatch( work, lost ); );
+	asyncDispatchersLock.unlock_shared();
 	processed_events_in_async++;
 	lost_events += lost;
 }
 
-/**
- * Register Listener to sync path
- *
- * @param	listener	listener to be registered
- */
-void ActivityMultiplexerAsync::registerListener( ActivityMultiplexerListener * listener ) {
-	boost::unique_lock<boost::shared_mutex> lock( asyncQueueMutex );
-	listeners.push_back(listener);
-
-	// snipped conserved for later use
-	//boost::upgrade_lock<boost::shared_mutex> lock( asyncQueueMutex );
-	// if () {
-	//     boost::upgrade_to_unique_lock<boost::shared_mutex> lock( asyncQueueMutex );
-	// }
-}
-
-
-/**
- * Unegister Listener from sync path
- *
- * @param	listener	listener to be unregistered
- */
-void ActivityMultiplexerAsync::unregisterListener( ActivityMultiplexerListener * listener ) {
-	boost::unique_lock<boost::shared_mutex> lock( asyncQueueMutex );
-	for(size_t i = listeners.size(); i--; ) {
-		if(listeners[i] == listener) {
-			listeners[i] = listeners.back();
-			listeners.pop_back();
-		}
+
+void ActivityMultiplexerAsync::registerForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener* listener, ActivityMultiplexer::Callback handler, bool async ) {
+	if( async ) {
+		asyncDispatchersLock.lock();
+		asyncDispatchers[ucaid].add( listener, handler );
+		asyncDispatchersLock.unlock();
+	} else {
+		syncDispatchersLock.lock();
+		syncDispatchers[ucaid].add( listener, handler );
+		syncDispatchersLock.unlock();
 	}
 }
 
-void ActivityMultiplexerAsync::init() {
-//		ActivityMultiplexerAsyncOptions & options = getOptions<ActivityMultiplexerAsyncOptions>();
-
-	queue = new ActivityMultiplexerQueue();
-	notifier = new ActivityMultiplexerNotifier( this, queue );
+
+void ActivityMultiplexerAsync::unregisterForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener* listener, bool async ) {
+	if( async ) {
+		asyncDispatchersLock.lock();
+		IGNORE_EXCEPTIONS( asyncDispatchers.at( ucaid ).remove( listener ); );
+		asyncDispatchersLock.unlock();
+	} else {
+		syncDispatchersLock.lock();
+		IGNORE_EXCEPTIONS( syncDispatchers.at( ucaid ).remove( listener ); );
+		syncDispatchersLock.unlock();
+	}
 }
 
+
+void ActivityMultiplexerAsync::registerCatchall( ActivityMultiplexerListener* listener, ActivityMultiplexer::Callback handler, bool async ) {
+	registerForUcaid( 0, listener, handler, async );
+}
 
+
+void ActivityMultiplexerAsync::unregisterCatchall( ActivityMultiplexerListener* listener, bool async ) {
+	unregisterForUcaid( 0, listener, async );
+}
+
+
 extern "C" {
 	void * MONITORING_ACTIVITY_MULTIPLEXER_INSTANCIATOR_NAME()
 	{

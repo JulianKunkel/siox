@@ -1,16 +1,16 @@
 /**
- * An ActivityMultiplexerPlugin which watches the incoming activities and 
+ * An ActivityMultiplexerPlugin which watches the incoming activities and
  * creates a histogram by which the quality of further activities is judged.
  *
  * For each activity type it works in two phases:
  * 1) It learns the typical range the response time of the activities are in (min, max).
- *   After N activities have been seen the first histogram is build by splitting the observed 
- *   range into B buckets of which the first A% and last A% of the buckets are considered to be abnormal 
+ *   After N activities have been seen the first histogram is build by splitting the observed
+ *   range into B buckets of which the first A% and last A% of the buckets are considered to be abnormal
  *   fast/slow, the middle M% are considered to be OK while P% are just marked as fast/slow.
  *   (This information should be stored in a configuration file)
  * 2) New activities are rated based on the bucket in the histogram.
  * 3) The histogram information is output at the end.
- * 
+ *
  * @author JK
  */
 
@@ -44,7 +44,7 @@ using namespace knowledge;
 
 
 //#define OUTPUT(...) do { cout << "[HistogramAdpi] " << __VA_ARGS__ << "\n"; } while(0)
-#define OUTPUT(...) 
+#define OUTPUT(...)
 
 
 struct ActivityTimeStatistics{
@@ -54,18 +54,19 @@ struct ActivityTimeStatistics{
 
 	uint64_t totalOperationCount = 0;
 
-	vector<uint64_t> histogram;	
+	vector<uint64_t> histogram;
 };
 
 
 
 class HistogramAdpiPlugin: public ActivityMultiplexerPlugin, public ComponentReportInterface, public AnomalyPlugin {
 	public:
-		void initPlugin() override;		
-		void Notify( const shared_ptr<Activity> & activity ) override;
+		void initPlugin() override;
+		void Notify( const shared_ptr<Activity> & activity, int lost );
 		ComponentReport prepareReport() override;
 
 		ComponentOptions * AvailableOptions() override;
+		void finalize() override;
 	private:
 		mutex giant_mutex;
 		unordered_map<UniqueComponentActivityID, ActivityTimeStatistics> statistics;
@@ -106,6 +107,8 @@ void HistogramAdpiPlugin::initPlugin() {
 
 	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( adpiType.id(), "max", VariableDatatype::Type::UINT64 );
 	bucketMaxAttributID = bucketMaxAttribute.id();
+
+	if( multiplexer ) multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &HistogramAdpiPlugin::Notify ), false );
 }
 
 static string convertAIDToString(UniqueComponentActivityID aid){
@@ -114,18 +117,18 @@ static string convertAIDToString(UniqueComponentActivityID aid){
 	return s.str();
 }
 
-void HistogramAdpiPlugin::Notify( const shared_ptr<Activity> & activity ) {
+void HistogramAdpiPlugin::Notify( const shared_ptr<Activity> & activity, int lost ) {
 	const HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
 	unique_lock<mutex> lock( giant_mutex );
 	
-	auto itr = statistics.find(activity->ucaid_);	
+	auto itr = statistics.find(activity->ucaid_);
 	if ( itr == statistics.end() ){
 		statistics[activity->ucaid_] = {};
 		itr = statistics.find(activity->ucaid_);
 
 		ActivityTimeStatistics & mats = itr->second;
 
-		// try to load the data object from a persistent representation		
+		// try to load the data object from a persistent representation
 		const string name = convertAIDToString( activity->ucaid_ );
 		TopologyRelation tr = topology->lookupRelation( pluginTopoObjectID, pluginTopoTypeID, name );
 		if (tr != nullptr){
@@ -135,14 +138,14 @@ void HistogramAdpiPlugin::Notify( const shared_ptr<Activity> & activity ) {
 			TopologyValue min = topology->getAttribute( storedObjectID, bucketMinAttributID );
 			if (min != nullptr){
 				TopologyValue max = topology->getAttribute( storedObjectID, bucketMaxAttributID );
-				// cout << "reading values : " << min.value() << " - " << max.value() << endl;			
+				// cout << "reading values : " << min.value() << " - " << max.value() << endl;
 				mats.minTimeS = min.value().uint64();
 				mats.maxTimeS = max.value().uint64();
 
-				// we have to create the bins			
+				// we have to create the bins
 				mats.histogramBucketWidth = ( mats.maxTimeS - mats.minTimeS ) / o.buckets;
 
-				mats.histogram.resize( o.buckets );				
+				mats.histogram.resize( o.buckets );
 			}
 		}
 
@@ -187,11 +190,11 @@ void HistogramAdpiPlugin::Notify( const shared_ptr<Activity> & activity ) {
 	}else{
 		// we are learning
 		ats.minTimeS = ats.minTimeS < duration ? ats.minTimeS : duration;
-		ats.maxTimeS = ats.maxTimeS > duration ? ats.maxTimeS : duration;		
+		ats.maxTimeS = ats.maxTimeS > duration ? ats.maxTimeS : duration;
 
 		if ( ats.totalOperationCount == o.learnCount && ( ats.maxTimeS != ats.minTimeS ) ){
 
-			// we have to create the bins			
+			// we have to create the bins
 			ats.histogramBucketWidth = ( ats.maxTimeS - ats.minTimeS ) / o.buckets;
 
 			// assert( ats.histogramBucketWidth > 0 )
@@ -230,7 +233,7 @@ ComponentReport HistogramAdpiPlugin::prepareReport()
 			stringstream name;
 			name << itr->first;
 			ge = new GroupEntry( name.str() );
-		}	
+		}
 
 		result.addEntry( new GroupEntry( "OpCount", ge ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( ats.totalOperationCount ) ));
 		result.addEntry( new GroupEntry( "HistBucketWidth", ge ), ReportEntry( ReportEntry::Type::APPLICATION_INFO, VariableDatatype( ats.histogramBucketWidth ) ));
@@ -254,6 +257,11 @@ ComponentReport HistogramAdpiPlugin::prepareReport()
 	}
 
 	return result;
+}
+
+void HistogramAdpiPlugin::finalize() {
+	if( multiplexer ) multiplexer->unregisterCatchall( this, false );
+	ActivityMultiplexerPlugin::finalize();
 }
 
 

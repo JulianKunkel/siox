@@ -33,10 +33,10 @@ public:
 		sthHappens();
 	}
 
-	void registerListener( ActivityMultiplexerListener * listener ) override {}
-
-
-	void unregisterListener( ActivityMultiplexerListener * listener ) override {}
+	void registerForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener* listener, Callback handler, bool async ) override {}
+	void unregisterForUcaid( UniqueComponentActivityID ucaid, ActivityMultiplexerListener* listener, bool async ) override {}
+	void registerCatchall( ActivityMultiplexerListener* listener, Callback handler, bool async ) override {}
+	void unregisterCatchall( ActivityMultiplexerListener* listener, bool async ) override {}
 
 	core::ComponentOptions* AvailableOptions() override{
 		return nullptr;
@@ -67,7 +67,7 @@ void test2(){
 	ActivityNetworkForwarderClientOptions * co = new ActivityNetworkForwarderClientOptions();
 	co->multiplexer.componentPointer = & mySourceMux;
 	co->comm.componentPointer = comm;
-	co->targetAddress = "localhost:3032";	
+	co->targetAddress = "localhost:3032";
 	co->forwardAllActivities = false;
 	co->ringBufferSize = 4;
 	((Component*) client)->init(co);
@@ -78,12 +78,12 @@ void test2(){
 	shared_ptr<Activity> activity2 (new Activity());
 	activity2->ucaid_ = 4712;
 
-	client->NotifyAsync(0, activity);
-	client->NotifyAsync(0, activity);
-	client->NotifyAsync(0, activity);
-	client->NotifyAsync(0, activity);
-	client->NotifyAsync(0, activity);
-	client->NotifyAsync(0, activity2);
+	client->NotifyAsync( activity, 0 );
+	client->NotifyAsync( activity, 0 );
+	client->NotifyAsync( activity, 0 );
+	client->NotifyAsync( activity, 0 );
+	client->NotifyAsync( activity, 0 );
+	client->NotifyAsync( activity2, 0 );
 
 	assert(! myTargetMux.hasSthHappened());
 
@@ -97,9 +97,9 @@ void test2(){
 		count ++;
 		assert (count < 5);
 	}
-	assert( myTargetMux.logged_activity->ucaid_ == activity2->ucaid_ );	
+	assert( myTargetMux.logged_activity->ucaid_ == activity2->ucaid_ );
 	
-	client->NotifyAsync(0, activity);
+	client->NotifyAsync( activity, 0 );
 	atrigger->triggerResponseForAnomaly(false);
 
 	myTargetMux.waitUntilSthHappened();
@@ -111,7 +111,7 @@ void test2(){
 	delete(client);
 
 	delete(server);
-	delete(comm);	
+	delete(comm);
 }
 
 void test(){
@@ -146,7 +146,7 @@ void test(){
 	shared_ptr<Activity> activity (new Activity());
 	activity->ucaid_ = 4711;
 
-	client->NotifyAsync(0, activity);
+	client->NotifyAsync( activity, 0 );
 
 	myTargetMux.waitUntilSthHappened();
 
