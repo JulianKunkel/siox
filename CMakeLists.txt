@@ -19,7 +19,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-as-needed")
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SIOX_SOURCES}/devel/cmake)
+set(CMAKE_MODULE_PATH ${SIOX_SOURCES}/devel/cmake ${CMAKE_MODULE_PATH})
 
 set(BUILD_SHARED_LIBS ON)
 
@@ -71,7 +71,7 @@ find_package(PythonInterp 2.7 REQUIRED)
 set_package_properties(PythonInterp PROPERTIES URL "http://www.python.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
 find_package(LIKWID)
-set_package_properties(LIKWID PROPERTIES URL "see Readme.md" PURPOSE "CPU counters")
+set_package_properties(LIKWID PROPERTIES URL "see Readme.md" TYPE OPTIONAL PURPOSE "CPU counters")
 
 
 find_package(BDB)
