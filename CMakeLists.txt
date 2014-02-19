@@ -70,6 +70,13 @@ find_package(PythonInterp 2.7 REQUIRED)
 set_package_properties(PythonInterp PROPERTIES URL "http://www.python.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
 find_package(LIKWID)
+set_package_properties(LIKWID PROPERTIES URL "see Readme.md" PURPOSE "CPU counters")
+
+
+find_package(BDB)
+set_package_properties(LIKWID PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" PURPOSE "Alternative backend for activities")
+
+
 
 feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following mandatory packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
 

@@ -10,7 +10,12 @@ add_subdirectory(activity-histogram-adpi)
 add_subdirectory(anomaly-injector)
 add_subdirectory(activityMonitor)
 
+add_subdirectory(binwriter)
+
 if (PostgreSQL_FOUND)
 	add_subdirectory(postgres_writer)
 endif (PostgreSQL_FOUND)
 
+if (BDB_FOUND)
+	add_subdirectory(bdbwriter)
+endif (BDB_FOUND)

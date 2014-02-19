@@ -2,8 +2,9 @@
 #include <util/time.h>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
+#include <monitoring/activity_multiplexer/plugins/bdbwriter/ActivityBDBWriter.hpp>
 
-#include "../ActivityFileWriterOptions.hpp"
+#include <monitoring/activity_multiplexer/plugins/bdbwriter/ActivityBDBWriterPluginOptions.hpp>
 
 using namespace std;
 
@@ -15,12 +16,12 @@ int main( int argc, char const * argv[] )
 	ActivityMultiplexer * m1 = core::module_create_instance<ActivityMultiplexer>( "", "siox-monitoring-ActivityMultiplexerAsync", "monitoring_activitymultiplexer" );
 
 	// wir registrieren das Plugin (normal geschieht dies automatisch)
-	ActivityMultiplexerPlugin * ap = core::module_create_instance<ActivityMultiplexerPlugin>( "", "siox-monitoring-activityPlugin-ActivityFileWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
+	ActivityBDBWriterPlugin * ap = core::module_create_instance<ActivityBDBWriterPlugin>( "", "siox-monitoring-activityPlugin-ActivityBDBWriter", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE );
 
 	// init plugin
 	// not necessary, but for testing...
-	FileWriterPluginOptions & op = ( FileWriterPluginOptions & ) ap->getOptions();
-	op.filename = "activities.txt";
+	ActivityBDBWriterPluginOptions & op = ( ActivityBDBWriterPluginOptions & ) ap->getOptions();
+	op.dirname = "db";
 	op.multiplexer.componentPointer = m1;
 
 	m1->init();
@@ -48,6 +49,7 @@ int main( int argc, char const * argv[] )
 			break;
 		}
 	}
+
 	//sleep(1);
 
 	delete( ap );
