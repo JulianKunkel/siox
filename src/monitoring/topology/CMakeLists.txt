@@ -3,7 +3,6 @@ project(SIOX)
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIR}
-	${PostgreSQL_INCLUDE_DIR}
 )
 
 add_library(
@@ -17,7 +16,6 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	siox-util
 	${Boost_LIBRARIES}
-	${PostgreSQL_LIBRARIES}
 )
 
 
@@ -32,7 +30,6 @@ target_link_libraries(
 	siox-monitoring-Topology
 	siox-util
 	${Boost_LIBRARIES}
-	${PostgreSQL_LIBRARIES}
 )
 
 siox_run_serializer(RamTopologyOptions.hpp RamTopologyOptions.cpp)
