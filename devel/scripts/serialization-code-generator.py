@@ -75,7 +75,7 @@ class Option():
             args.outputFile = filename.group(1) + args.outputSuffix
 
         if args.debug:	
-		print ("Creating " + args.outputFile);
+            print ("Creating " + args.outputFile);
 
         return args
 
