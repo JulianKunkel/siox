@@ -75,7 +75,7 @@ set_package_properties(LIKWID PROPERTIES URL "see Readme.md" PURPOSE "CPU counte
 
 
 find_package(BDB)
-set_package_properties(LIKWID PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" PURPOSE "Alternative backend for activities")
+set_package_properties(BDB PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" PURPOSE "Alternative backend for activities")
 
 
 
