@@ -98,7 +98,7 @@ echo "--with-cxx=<file>        : path to the C++ compiler"
 echo "--with-glib=<dir>        : path to the GLIB2 installation"
 echo "--with-likwid=<dir>      : path to the patched LIKWID version"
 echo "--with-python=<file>     : path to the Python interpreter"
-echo "--with-postgresql=<dir>  : path to PostgreSQL's libpq"
+echo "--with-libpq=<dir>       : path to PostgreSQL's libpq"
 echo "--build-wrappers         : build the wrappers for MPI, POSIX, etc. that is in the path"
 echo
 echo "For each version of MPI, etc. you may need a wrapper library compiled against this version."
