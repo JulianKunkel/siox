@@ -17,9 +17,9 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	siox-monitoring-Topology
 	${Boost_LIBRARIES}
-	${libpqxx_LDFLAGS}
-	pq
+	pqxx
 )
+
 
 siox_run_serializer(DatabaseTopologyOptions.hpp DatabaseTopologyOptions.cpp)
 
