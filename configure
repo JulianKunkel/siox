@@ -80,7 +80,7 @@ if test -n "$libpq"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_TYPE_INCLUDE_DIR=$libpq/include" # this is probably a bug in some FindPostgreSQL.cmake
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_INCLUDE_DIR:PATH=$libpq/include"
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_LIBRARY_DIR:PATH=$libpq/lib"
-	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_LIBRARY:PATH=$libpq/lib"
+	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_ROOT:PATH=$libpq"
 	CMAKEFLAGS="$CMAKEFLAGS -Dlibpqxx_INCLUDE_DIRS:PATH=$libpq/include"
 	CMAKEFLAGS="$CMAKEFLAGS -Dlibpqxx_LIBRARIES:PATH=$libpq/lib"
 fi
