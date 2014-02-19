@@ -13,12 +13,13 @@ add_library(
 	ActivityPostgreSQLWriterOptions.cpp
 )
 
+
 target_link_libraries(
 	siox-monitoring-activityPlugin-ActivityPostgreSQLWriter
 	siox-core-ContainerSerializer
 	siox-core-AutoConfigurator
 	${Boost_LIBRARIES}
-	${PostgreSQL_LIBRARIES}
+	${PostgreSQL_LIBRARY}
 )
 
 siox_run_serializer(ActivityPostgreSQLWriterOptions.hpp ActivityPostgreSQLWriterOptions.cpp)
