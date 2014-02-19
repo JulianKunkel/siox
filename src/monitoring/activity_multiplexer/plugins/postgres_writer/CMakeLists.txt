@@ -1,7 +1,5 @@
 project(SIOX)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpq")
-
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${PostgreSQL_INCLUDE_DIR}
