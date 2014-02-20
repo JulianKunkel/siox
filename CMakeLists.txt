@@ -19,7 +19,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-as-needed")
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SIOX_SOURCES}/devel/cmake)
+set(CMAKE_MODULE_PATH ${SIOX_SOURCES}/devel/cmake ${CMAKE_MODULE_PATH})
 
 set(BUILD_SHARED_LIBS ON)
 
@@ -61,7 +61,8 @@ set_package_properties(GIOUNIX2 PROPERTIES URL "http://www.gtk.org" TYPE OPTIONA
 find_package(GMODULE2 REQUIRED)
 set_package_properties(GMODULE2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
-find_package(libpqxx 3.0 REQUIRED)
+find_package(Pqxx 3.0)
+set_package_properties(Pqxx PROPERTIES URL "http://pqxx.org" TYPE OPTIONAL PURPOSE "PostgreSQL Backend.")
 
 find_package(PostgreSQL)
 set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYPE OPTIONAL PURPOSE "SIOX PostgreSQL backend support.")
@@ -70,11 +71,11 @@ find_package(PythonInterp 2.7 REQUIRED)
 set_package_properties(PythonInterp PROPERTIES URL "http://www.python.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
 find_package(LIKWID)
-set_package_properties(LIKWID PROPERTIES URL "see Readme.md" PURPOSE "CPU counters")
+set_package_properties(LIKWID PROPERTIES URL "see Readme.md" TYPE OPTIONAL PURPOSE "CPU counters")
 
 
 find_package(BDB)
-set_package_properties(LIKWID PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" PURPOSE "Alternative backend for activities")
+set_package_properties(BDB PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" PURPOSE "Alternative backend for activities")
 
 
 

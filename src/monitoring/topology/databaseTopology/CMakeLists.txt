@@ -3,7 +3,7 @@ project(SIOX)
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIR}
-	${libpqxx_INCLUDE_DIRS}
+	${PQXX_INCLUDE_DIRS}
 )
 
 add_library(
@@ -17,9 +17,9 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	siox-monitoring-Topology
 	${Boost_LIBRARIES}
-	${libpqxx_LDFLAGS}
-	pq
+	${PQXX_LIBRARIES}	
 )
+
 
 siox_run_serializer(DatabaseTopologyOptions.hpp DatabaseTopologyOptions.cpp)
 

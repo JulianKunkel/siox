@@ -73,13 +73,16 @@ if test -n "$python"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPYTHON_EXECUTABLE:FILEPATH=$python"
 fi
 if test -n "$likwid"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_DIR:PATH=\"$likwid\""
-	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_link_DIR:PATH=\"$likwid/lib\""
+	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_INCLUDE_DIRS:PATH=\"$likwid/include\""
+	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_LIBRARIES:PATH=\"$likwid/lib\""
 fi
 if test -n "$libpq"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_TYPE_INCLUDE_DIR=$libpq/include" # this is probably a bug in some FindPostgreSQL.cmake
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_INCLUDE_DIR:PATH=$libpq/include"
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_LIBRARY_DIR:PATH=$libpq/lib"
+	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_ROOT:PATH=$libpq"
+	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_INCLUDE_DIR:PATH=$libpq/include"
+	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_LIBRARY_DIR:PATH=$libpq/lib"
 fi
 if test -n "$buildWrappers"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DBUILD_WRAPPERS:BOOL=ON"
@@ -98,7 +101,7 @@ echo "--with-cxx=<file>        : path to the C++ compiler"
 echo "--with-glib=<dir>        : path to the GLIB2 installation"
 echo "--with-likwid=<dir>      : path to the patched LIKWID version"
 echo "--with-python=<file>     : path to the Python interpreter"
-echo "--with-postgresql=<dir>  : path to PostgreSQL's libpq"
+echo "--with-libpq=<dir>       : path to PostgreSQL's libpq"
 echo "--build-wrappers         : build the wrappers for MPI, POSIX, etc. that is in the path"
 echo
 echo "For each version of MPI, etc. you may need a wrapper library compiled against this version."
