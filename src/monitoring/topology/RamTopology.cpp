@@ -358,8 +358,10 @@ bool RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId att
 	objectsLock.unlock_shared();
 	if( !attributeMap ) return false;
 
-	TopologyAttribute attribute = lookupAttributeById( attributeId );
-	if( attribute.dataType() != value.type() ) return false;
+	if ( false ){
+		TopologyAttribute attribute = lookupAttributeById( attributeId );
+		if( attribute.dataType() != value.type() ) return false;
+	}
 
 	TopologyValue result;
 	attributeMap->lock_shared();
