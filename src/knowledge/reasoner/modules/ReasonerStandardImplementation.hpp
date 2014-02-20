@@ -59,8 +59,19 @@ private:
 		// Fields used for communicatiion
 		ReasonerCommunication * comm;
 		bool upstreamReasonerExists = false;
+
+		// how often did we send or receive a node count
 		uint64_t nPushesSent = 0;
 		uint64_t nPushesReceived = 0;
+
+		// internal statistics
+		// total number of intervals an anomaly has been triggered
+		uint64_t anomaliesTriggered = 0;
+		uint64_t cyclesTriggered = 0;
+
+		array<uint64_t, NODE_STATISTIC_COUNT> node_statistics;
+
+
 
 		// for each host (by ID) we store the latest observation
 		// unordered_map<string, pair<Timestamp, set<HealthStatistics>> > remoteIssues;
@@ -126,19 +137,24 @@ public:
 			observationRatios[i] = 0;
 			oldObservationRatios[i] = 0;
 		}
+
+		for (int i = 0; i < NODE_STATISTIC_COUNT; ++i){
+			node_statistics[i] = 0;
+		}
+
 		observationTotal = 0;
 		oldObservationTotal = 0;
 	}
 
 	~ReasonerStandardImplementation();
 
-	virtual void init() override;
+	void init() override;
 
-	virtual shared_ptr<HealthStatistics> queryRuntimePerformanceIssues() override;
+	shared_ptr<HealthStatistics> queryRuntimePerformanceIssues() override;
 
-	virtual ComponentReport prepareReport() override;
+	ComponentReport prepareReport() override;
 
-	virtual void connectAnomalyPlugin( AnomalyPlugin * plugin ) override {
+	void connectAnomalyPlugin( AnomalyPlugin * plugin ) override {
 		unique_lock<mutex> pluginLock( pluginMutex );
 		// Element should not be in the list yet
 		assert( std::find( adpis.begin(), adpis.end(), plugin ) ==  adpis.end() );
@@ -146,7 +162,7 @@ public:
 		// cout << "ADPIs: " << adpis.size() << endl;
 	}
 
-	virtual void connectUtilization( QualitativeUtilization * plugin ) override {
+	void connectUtilization( QualitativeUtilization * plugin ) override {
 		unique_lock<mutex> pluginLock( pluginMutex );
 		// There can be only one!
 		assert( utilization == nullptr );
@@ -154,7 +170,7 @@ public:
 		// cout << "Utilization: " << ((utilization != nullptr) ? "TRUE" : "FALSE") << endl;
 	}
 
-	virtual void connectTrigger( AnomalyTrigger * trigger ) override {
+	void connectTrigger( AnomalyTrigger * trigger ) override {
 		unique_lock<mutex> pluginLock( pluginMutex );
 		// Element should not be in the list yet
 		assert( std::find( triggers.begin(), triggers.end(), trigger ) ==  triggers.end() );

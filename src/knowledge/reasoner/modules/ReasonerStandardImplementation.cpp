@@ -97,6 +97,7 @@ shared_ptr<SystemHealth> ReasonerStandardImplementation::getSystemHealth(){
 
 void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessageReceived & data, ProcessHealth & health){
 	{	// Disallow other access to aggregated data fields
+
 		unique_lock<mutex> dataLock( dataMutex );
 
 		// Only Node level reasoners should receive process level reports; others ignore them
@@ -124,7 +125,13 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 		}
 		else if ( role == ReasonerStandardImplementationOptions::Role::PROCESS ){
 			nodeHealth = make_shared<NodeHealth>(health);
-			// cout << id << " received status from node reasoner " << data.reasonerID << endl;
+
+			// aggregate statistics
+			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
+				node_statistics[i] += health.statistics[i];
+			}
+
+			//cout << id << " received status from node reasoner " << data.reasonerID << endl;
 		}
 		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
 			nodeHealth = make_shared<NodeHealth>( health );
@@ -162,6 +169,8 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		// cout << "PeriodicRun started" << endl;
 
 		auto timeout = chrono::system_clock::now() + chrono::milliseconds( update_intervall_ms );
+
+		cyclesTriggered++;
 
 		persistingAnomaly = anomalyDetected;
 		anomalyDetected = false;
@@ -385,7 +394,11 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		// Update knownIssues based on recentIssues
 		// TODO
 
+		if (anomalyDetected){
+			anomaliesTriggered++;
+		}
 		// Trigger anomaly if any:
+
 		{	// Disallow changes in registered plugins while cycling through triggers
 			unique_lock<mutex> pluginLock( pluginMutex );
 
@@ -475,10 +488,23 @@ ComponentReport ReasonerStandardImplementation::prepareReport() {
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		ostringstream reportText;
+		result.addEntry( "ANOMAL_RUNTIME_MS", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( anomaliesTriggered * update_intervall_ms )));
+		result.addEntry( "OBSERVED_RUNTIME_MS", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( cyclesTriggered * update_intervall_ms )));		
 
+		result.addEntry( "STATES_SENT_UPSTREAM", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesSent));
+		result.addEntry( "STATES_RECEIVED", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesReceived));		
+
+		if ( nPushesReceived > 0 ){
+			const char * text [] = {"CPU_SECONDS", "ENERGY_JOULE", "MEMORY_BYTES", "NETWORK_BYTES", "IO_BYTES"};
+			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
+				result.addEntry( text[i], ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE,  node_statistics[i] ));		
+			}
+		}
+
+		// for debugging
+		ostringstream reportText;
 		reportText << this;
-		result.addEntry( id, ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( reportText.str() )));
+		result.addEntry( "TEXT_STATE", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_DEBUG, VariableDatatype( reportText.str() )));
 	}
 
 	return result;

@@ -58,7 +58,7 @@ void ReasonerCommunication::pushProcessStateUpstream(shared_ptr<ProcessHealth> &
 	assert( upstreamReasoner );
 	ReasonerMessageData data;
 
-	data.reasonerID = this->reasonerID;
+	data.reasonerID = this->reasonerID;	
 	data.containedData = ReasonerMessageDataType::PROCESS;
 	data.messagePayload = &* health;
 
