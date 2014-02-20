@@ -73,7 +73,7 @@ if test -n "$python"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPYTHON_EXECUTABLE:FILEPATH=$python"
 fi
 if test -n "$likwid"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_INCLUDE_DIRS:PATH=\"$likwid\""
+	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_INCLUDE_DIRS:PATH=\"$likwid/include\""
 	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_LIBRARIES:PATH=\"$likwid/lib\""
 fi
 if test -n "$libpq"; then
