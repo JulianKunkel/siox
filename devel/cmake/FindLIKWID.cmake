@@ -27,7 +27,7 @@ find_path(LIKWID_INCLUDE_DIRS
 
 find_library(LIKWID_LIBRARIES 
         NAMES 
-                likwid
+                likwid likwidpin
         PATHS
                 ${LIKWID_LIBRARY_DIR}
         DOC
@@ -35,6 +35,8 @@ find_library(LIKWID_LIBRARIES
 )
 
 include(FindPackageHandleStandardArgs)
+
+set(LIKWID_INCLUDE_DIRS ${LIKWID_INCLUDE_DIRS} ${LIKWID_INCLUDE_DIRS}/likwid)
 
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(LIKWID DEFAULT_MSG LIKWID_INCLUDE_DIRS LIKWID_LIBRARIES)
 
