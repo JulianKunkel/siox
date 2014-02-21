@@ -25,9 +25,10 @@ class ReasonerStandardImplementationOptions: public core::ComponentOptions {
 		ReasonerCommunicationOptions communicationOptions;
 
 		enum class Role : uint8_t{
-			PROCESS = 0,
-			NODE = 1,
-			SYSTEM = 2,
+			NONE = 0,
+			PROCESS = 1,
+			NODE = 2,
+			SYSTEM = 3,
 		};
 
 		Role role = Role::PROCESS ;		

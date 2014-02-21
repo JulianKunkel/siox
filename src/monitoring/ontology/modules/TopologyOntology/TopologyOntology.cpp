@@ -116,17 +116,8 @@ namespace monitoring {
 
 			void attribute_set_meta_attribute( const OntologyAttribute & att, const OntologyAttribute & meta, const OntologyValue & value ) throw( IllegalStateError ) override {
 
-				stringstream s;
-				s << meta.aID;
-
-				TopologyObject obj = topology->registerObject( att.aID, metaAttributeTypeID, s.str(), metaAttributeTypeID);
-				if ( ! obj ){
-					throw IllegalStateError("Could not register attribute: " + s.str());
-				}
-				const uint32_t objID = obj.id();
-
 				// query existing value if any.
-				TopologyValue existingValue = topology->getAttribute( objID, metaValueID[(int) meta.storage_type] );
+				TopologyValue existingValue = topology->getAttribute( att.aID, meta.aID );
 				if ( existingValue ){
 					if ( existingValue.value() == value ){
 						// it is valid to set the identical value again
@@ -136,7 +127,7 @@ namespace monitoring {
 				}
 				
 				// store domain, name and storage type as attribute.
-				if ( ! topology->setAttribute(objID, metaValueID[(int) meta.storage_type], value) ){
+				if ( ! topology->setAttribute(att.aID, meta.aID, value) ){
 					throw IllegalStateError("Could not set the attribute");
 				}
 			}
@@ -145,9 +136,12 @@ namespace monitoring {
 			{
 				vector<OntologyAttributeID> ret;
 
-				TopologyRelationList childs = topology->enumerateChildren( attribute.aID, metaAttributeTypeID );
+				TopologyValueList childs = topology->enumerateAttributes( attribute.aID );
 				for(auto itr = childs.begin(); itr != childs.end(); itr++){
-					ret.push_back( itr->child() );
+					OntologyAttributeID attribute = itr->attribute();
+					if(attribute != domainID && attribute != nameID  && attribute != typeID ){
+						ret.push_back( attribute );
+					}
 				}
 
 				return ret;
@@ -155,17 +149,8 @@ namespace monitoring {
 
 			const OntologyValue lookup_meta_attribute( const OntologyAttribute & att, const OntologyAttribute & meta ) const throw( NotFoundError ) override {
 				
-				stringstream s;
-				s << meta.aID;
-
-				TopologyRelation tr = topology->lookupRelation( att.aID, metaAttributeTypeID, s.str());
-				if ( ! tr ){
-					throw NotFoundError();
-				}
-				const uint32_t objID = tr.child();
-
 				// query existing value if any.
-				TopologyValue existingValue = topology->getAttribute( objID, metaValueID[(int) meta.storage_type] );
+				TopologyValue existingValue = topology->getAttribute( att.aID, meta.aID );
 				if ( ! existingValue ){
 					throw NotFoundError();
 				}

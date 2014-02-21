@@ -8,6 +8,7 @@ include_directories(
 add_library(
 	siox-monitoring-statisticsPlugin-likwid
 	likwid-plugin.cpp
+	ProviderLikwidOptions.cpp
 )
 
 target_link_libraries(
@@ -17,5 +18,8 @@ target_link_libraries(
 )
 
 add_subdirectory(test)
+
+siox_run_serializer(ProviderLikwidOptions.hpp ProviderLikwidOptions.cpp)
+
 
 install(TARGETS siox-monitoring-statisticsPlugin-likwid LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
