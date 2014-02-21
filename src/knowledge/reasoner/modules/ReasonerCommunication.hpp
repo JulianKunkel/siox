@@ -7,7 +7,6 @@
 #include <knowledge/reasoner/modules/ReasonerStandardImplementationOptions.hpp>
 
 using namespace std;
-using namespace core;
 
 namespace knowledge {
 
@@ -27,7 +26,7 @@ struct ReasoningDataReceivedCB{
 	virtual shared_ptr<ProcessHealth> getProcessHealth() = 0;
 };
 
-class ReasonerCommunication : ServerCallback, MessageCallback, ConnectionCallback{
+class ReasonerCommunication : core::ServerCallback, core::MessageCallback, core::ConnectionCallback{
 public:
 	void init(ReasonerCommunicationOptions & options);
 
@@ -46,29 +45,29 @@ private:
 	ReasonerMessageDataType parseReceivedData(const char * buffer, uint64_t buffer_size);
 
 	// Server implementation
-	virtual void messageReceivedCB(std::shared_ptr<ServerClientMessage> msg, const char * message_data, uint64_t buffer_size) override;
+	virtual void messageReceivedCB(std::shared_ptr<core::ServerClientMessage> msg, const char * message_data, uint64_t buffer_size) override;
 
-	virtual uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType) override;
+	virtual uint64_t serializeResponseMessageLen(const core::ServerClientMessage * msg, const void * responseType) override;
 
-	virtual void serializeResponseMessage(const ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos) override;
+	virtual void serializeResponseMessage(const core::ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos) override;
 
-	virtual void messageSendCB(BareMessage * msg) override{ /* do nothing */ }
+	virtual void messageSendCB(core::BareMessage * msg) override{ /* do nothing */ }
 
-	virtual void messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size) override;
+	virtual void messageResponseCB(core::BareMessage * msg, char * buffer, uint64_t buffer_size) override;
 
-	virtual void messageTransferErrorCB(BareMessage * msg, CommunicationError error) override;
+	virtual void messageTransferErrorCB(core::BareMessage * msg, core::CommunicationError error) override;
 
 	virtual uint64_t serializeMessageLen(const void * msgObject) override;
 
 	virtual void serializeMessage(const void * msgObject, char * buffer, uint64_t & pos) override;
 
 	// client connection callback
-	virtual void connectionErrorCB(ServiceClient & client, CommunicationError error) override;
+	virtual void connectionErrorCB(core::ServiceClient & client, core::CommunicationError error) override;
 
-	virtual void connectionSuccessfullCB(ServiceClient & client) override;
+	virtual void connectionSuccessfullCB(core::ServiceClient & client) override;
 
-	ServiceServer * server = nullptr;
-	ServiceClient * upstreamReasoner = nullptr;
+	core::ServiceServer * server = nullptr;
+	core::ServiceClient * upstreamReasoner = nullptr;
 };
 }
 

@@ -17,7 +17,9 @@
 #include <utility>
 #include <string>
 #include <mutex>
-#include <shared_ptr>
+#include <memory>
+ 
+#include <monitoring/statistics/StatisticsTypes.hpp>
 
 namespace monitoring {
 	class Statistic;

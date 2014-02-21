@@ -10,7 +10,6 @@
 
 #include <knowledge/reasoner/AnomalyPlugin.hpp>
 #include <knowledge/reasoner/AnomalyTrigger.hpp>
-#include <knowledge/reasoner/QualitativeUtilization.hpp>
 #include <knowledge/reasoner/ReasoningDatatypes.hpp>
 
 
@@ -260,11 +259,6 @@ namespace knowledge {
 			 A daemon maintains statistics for its life-time (until daemon is stopped).
 			 */
 			virtual shared_ptr<HealthStatistics> queryRuntimePerformanceIssues() = 0;
-
-			// Register the presence of a statistics which can be queried to ask the current utilization.
-			// Internally, the relative utilization of such a statistics helps finding the reasons.
-			// There can be only one such plugin.
-			virtual void connectUtilization( QualitativeUtilization * plugin ) = 0;
 
 			// Register an anomaly trigger, all anomaly triggers are notified when an anomaly occurs.
 			virtual void connectTrigger( AnomalyTrigger * trigger ) = 0;

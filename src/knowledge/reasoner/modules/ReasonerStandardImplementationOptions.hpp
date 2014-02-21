@@ -31,7 +31,9 @@ class ReasonerStandardImplementationOptions: public core::ComponentOptions {
 			SYSTEM = 3,
 		};
 
-		Role role = Role::PROCESS ;		
+		Role role = Role::PROCESS;
+
+		core::ComponentReference statisticsCollector; // if available
 };
 
 #endif

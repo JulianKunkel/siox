@@ -1,62 +1,13 @@
 #include <knowledge/reasoner/modules/ReasonerStandardImplementation.hpp>
+#include <monitoring/statistics/collector/StatisticsCollector.hpp>
+
 #include <iostream>
 
 using namespace std;
 using namespace core;
+using namespace monitoring;
 
 namespace knowledge {
-
-
-	string toString(HealthState s){
-		switch(s){
-			case ABNORMAL_SLOW:
-				return "ABNORMAL_SLOW";
-			case ABNORMAL_FAST:
-				return "ABNORMAL_FAST";
-			case ABNORMAL_OTHER:
-				return "ABNORMAL_OTHER";
-			case FAST:
-				return "FAST";
-			case OK:
-				return "OK";
-			case SLOW:
-				return "SLOW";
-			default:
-				return "UNKNOWN";
-		}
-	}
-/*
-	#include <iostream>
-	#include <cassert>
-
-	enum X { a, b };
-
-	std::ostream& operator<<(std::ostream& os, X x)
-	{
-	    switch (x) {
-	        case a: return os << "a";
-	        case b: return os << "b";
-	    }
-	    assert(false && "wrong enum value");
-	}
-*/
-
-	string toString(UtilizationIndex s){
-		switch(s){
-			case CPU:
-				return "CPU";
-			case MEMORY:
-				return "MEMORY";
-			case IO:
-				return "IO";
-			case NETWORK:
-				return "NETWORK";
-			default:
-				return "UNKNOWN";
-		}
-	}
-
-
 
 shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
 	{	// Disallow other access to aggregated data fields
@@ -384,8 +335,8 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		// Determine local performance issues based on recent observations and remote issues.
 		// TODO
 
-		if( utilization != nullptr ) {
-						// StatisticObservation so = utilization->lastObservation( 4711 );
+		if( nodeStatistics != nullptr ) {
+				//StatisticObservation so = utilization->lastObservation( 4711 );
 		}
 
 		// Save recentIssues
@@ -467,10 +418,18 @@ void ReasonerStandardImplementation::init(){
 			nodeHealth = make_shared<NodeHealth>();
 			processHealth = make_shared<ProcessHealth>();
 			break;
+		case ReasonerStandardImplementationOptions::Role::NONE:
+			break;
 	}
 
 	update_intervall_ms = options.update_intervall_ms;
 	upstreamReasonerExists = (options.communicationOptions.upstreamReasoner != "");
+
+	StatisticsCollector * statColl = GET_INSTANCE(StatisticsCollector, options.statisticsCollector);
+	if ( statColl != nullptr ){
+		nodeStatistics = StatisticsCollection::makeCollection(statColl, {{}}, true);
+	}
+
 
 	start();
 }
