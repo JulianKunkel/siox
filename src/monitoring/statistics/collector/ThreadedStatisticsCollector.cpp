@@ -140,6 +140,7 @@ Implementation details for the requirements of a StatisticsCollector:
 #include <core/component/Component.hpp>
 #include <monitoring/statistics/collector/StatisticsCollectorImplementation.hpp>
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
+#include <monitoring/statistics/StatisticsCollection.hpp>
 #include "ThreadedStatisticsOptions.hpp"
 
 #include <thread>
@@ -214,6 +215,7 @@ class ThreadedStatisticsCollector : public StatisticsCollector, public Component
 		StatisticsMultiplexer* smux = 0;
 
 		vector<StatisticsProviderPlugin*> plugins;	//protected by sourcesLock
+		vector<StatisticsCollection*> collections;	//protected by sourcesLock
 		vector<shared_ptr<Statistic> > statistics;	//protected by sourcesLock
 		vector<StatisticsProviderPlugin*> pluginPerStatistics; //protected by sourcesLock
 		unordered_map<pair<OntologyAttributeID, TopologyObjectId>, shared_ptr<Statistic> > index;	//protected by sourcesLock
@@ -314,7 +316,7 @@ void ThreadedStatisticsCollector::unregisterPlugin( StatisticsProviderPlugin * p
 	}
 
 	// Remove the dependent Statistics from the statistics list.
-	for( int i = statistics.size() ; i--; ){
+	for( int i = statistics.size(); i--; ){
 		if( pluginPerStatistics[i] == plugin ){
 			pair<OntologyAttributeID, TopologyObjectId> key( statistics[i]->ontologyId, statistics[i]->topologyId);
 			index.erase(key);
@@ -336,15 +338,51 @@ vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::availableMetrics() t
 }
 
 std::shared_ptr<Statistic> ThreadedStatisticsCollector::getStatistic( const std::string& ontologyAttribute, const std::string& topologyPath ) throw() {
-	assert(0 && "TODO");
+	#define empty std::shared_ptr<Statistic>()
+	TopologyObject object = facade->topology()->lookupObjectByPath( topologyPath );
+	if( !object ) return empty;
+	TopologyObjectId objectId = object.id();
+
+	OntologyAttributeID ontologyId = 0;
+	IGNORE_EXCEPTIONS( ontologyId = ontology->lookup_attribute_by_name( kStatisticsDomain, ontologyAttribute ).aID; );
+	if( !ontologyId ) return empty;
+
+	sourcesLock.lock_shared();
+	std::shared_ptr<Statistic> result;
+	for( size_t i = statistics.size(); i--; ) {
+		shared_ptr<Statistic>& curStatistic = statistics[i];
+		if( curStatistic->ontologyId == ontologyId && curStatistic->topologyId == objectId ) {
+			result = curStatistic;
+			break;
+		}
+	}
+	sourcesLock.unlock_shared();
+	return result;
+	#undef empty
 }
 
 void ThreadedStatisticsCollector::registerCollection( StatisticsCollection* collection ) throw() {
-	assert(0 && "TODO");
+	sourcesLock.lock();
+	//sanity check
+	for( size_t i = collections.size(); i--; ) {
+		if( collections[i] == collection ) assert( 0 && "StatisticsCollections may only be registered with a StatisticsCollector once." ), abort();
+	}
+	//add the collection
+	collections.push_back( collection );
+	sourcesLock.unlock();
 }
 
 void ThreadedStatisticsCollector::unregisterCollection( StatisticsCollection* collection ) throw() {
-	assert(0 && "TODO");
+	sourcesLock.lock();
+	for( size_t i = collections.size(); i--; ) {
+		if( collections[i] == collection ) {
+			collections.erase( collections.begin() + i );
+			goto success;
+		}
+	}
+	assert( 0 && "Couldn't find collection." ), abort();
+success:
+	sourcesLock.unlock();
 }
 
 
@@ -416,6 +454,10 @@ void ThreadedStatisticsCollector::pollingThreadMain() throw() {
 		//bring the histories of the Statistics up to date
 		for( size_t i = statistics.size(); i--; ) {
 			statistics[i]->update(measurementTime);
+		}
+		//bring the collections up to date
+		for( size_t i = collections.size(); i--; ) {
+			collections[i]->pushValues();
 		}
 		//reset the change flags
 		bool hadAdditions = statisticsAdded, hadDeletions = statisticsRemoved;
