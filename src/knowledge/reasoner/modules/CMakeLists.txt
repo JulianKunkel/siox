@@ -17,6 +17,7 @@ target_link_libraries(
 	siox-knowledge-ReasonerStandardImplementation
 	siox-core-AutoConfigurator
 	siox-core-comm
+	siox-monitoring-ThreadedStatisticsCollector
 )
 
 siox_run_binary_serializer( ReasonerCommunicationMessage.hpp ReasoningDatatypesSerializable.hpp )

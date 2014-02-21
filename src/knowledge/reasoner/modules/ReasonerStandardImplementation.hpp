@@ -12,6 +12,8 @@
 #include <core/component/Component.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 
+#include <monitoring/statistics/StatisticsCollection.hpp>
+
 #include <knowledge/reasoner/ReasonerImplementation.hpp>
 #include <knowledge/reasoner/modules/ReasonerStandardImplementationOptions.hpp>
 #include <knowledge/reasoner/modules/ReasonerCommunication.hpp>
@@ -19,6 +21,7 @@
 
 using namespace std;
 using namespace core;
+
 
 /*
  Data is pushed into a set of recent PerformanceIssues.
@@ -43,7 +46,8 @@ private:
 		list<AnomalyPlugin *>  adpis;
 		list<Reasoner *>  reasoners; // remote reasoners
 
-		QualitativeUtilization * utilization;
+
+		monitoring::StatisticsCollection * nodeStatistics = nullptr;
 
 		// Fields to coordinate threaded behaviour
 		thread                  periodicThread;
@@ -57,7 +61,7 @@ private:
 		uint32_t update_intervall_ms = -1;
 
 		// Fields used for communicatiion
-		ReasonerCommunication * comm;
+		ReasonerCommunication * comm = nullptr;
 		bool upstreamReasonerExists = false;
 
 		// how often did we send or receive a node count
@@ -122,12 +126,6 @@ public:
 	void start() override;
 
 	ReasonerStandardImplementation() : gatheredStatistics(new HealthStatistics) {
-		terminated = false;
-		upstreamReasonerExists = false;
-
-		utilization = nullptr;
-		comm = nullptr;
-
 		childProcessesHealthMap = nullptr;
 		childNodesHealthMap = nullptr;
 
@@ -160,14 +158,6 @@ public:
 		assert( std::find( adpis.begin(), adpis.end(), plugin ) ==  adpis.end() );
 		adpis.push_back( plugin );
 		// cout << "ADPIs: " << adpis.size() << endl;
-	}
-
-	void connectUtilization( QualitativeUtilization * plugin ) override {
-		unique_lock<mutex> pluginLock( pluginMutex );
-		// There can be only one!
-		assert( utilization == nullptr );
-		utilization = plugin;
-		// cout << "Utilization: " << ((utilization != nullptr) ? "TRUE" : "FALSE") << endl;
 	}
 
 	void connectTrigger( AnomalyTrigger * trigger ) override {

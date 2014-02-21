@@ -13,13 +13,13 @@
 #ifndef INCLUDE_GUARD_MONITORING_STATISTICS_STATISTICS_COLLECTION
 #define INCLUDE_GUARD_MONITORING_STATISTICS_STATISTICS_COLLECTION
 
-#include <monitoring/statistics/StatisticsTypes.hpp>
-
 #include <vector>
 #include <utility>
 #include <string>
 #include <mutex>
 #include <memory>
+ 
+#include <monitoring/statistics/StatisticsTypes.hpp>
 
 namespace monitoring {
 	class Statistic;

@@ -9,8 +9,6 @@
 #include <sstream>
 #include <iostream>
 
-using namespace monitoring;
-
 namespace knowledge{
 
 
@@ -326,6 +324,40 @@ struct NodeHealth : public Health{
 
 // May be a good idea to provide an overloaded outputstream for the enums to make them "human" readable.
 // TODO: Offer a CPP for this reason.
+
+inline string toString(HealthState s){
+	switch(s){
+		case ABNORMAL_SLOW:
+			return "ABNORMAL_SLOW";
+		case ABNORMAL_FAST:
+			return "ABNORMAL_FAST";
+		case ABNORMAL_OTHER:
+			return "ABNORMAL_OTHER";
+		case FAST:
+			return "FAST";
+		case OK:
+			return "OK";
+		case SLOW:
+			return "SLOW";
+		default:
+			return "UNKNOWN";
+	}
+}
+
+inline string toString(UtilizationIndex s){
+	switch(s){
+		case CPU:
+			return "CPU";
+		case MEMORY:
+			return "MEMORY";
+		case IO:
+			return "IO";
+		case NETWORK:
+			return "NETWORK";
+		default:
+			return "UNKNOWN";
+	}
+}
 
 } // namespace knowledge
 
