@@ -105,11 +105,9 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 			for( unsigned i = 0; i < cpuStatistics.size(); i++ ) {
 				Cpu& curCpu = cpuStatistics[i];
 				ostringstream topologyPathStream;
-				topologyPathStream << "@localhost/cpu:";
-				if( curCpu.id < 0 ) {
-					topologyPathStream << "all";
-				} else {
-					topologyPathStream << curCpu.id;
+				topologyPathStream << "@localhost";
+				if( curCpu.id >= 0 ) {
+					topologyPathStream << "/cpu:" << curCpu.id;
 				}
 				string topologyPathString = topologyPathStream.str();	//we need to keep the string around as long as we use the char*
 				const char* topologyPath = topologyPathString.c_str();

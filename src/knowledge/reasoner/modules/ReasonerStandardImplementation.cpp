@@ -9,6 +9,21 @@ using namespace monitoring;
 
 namespace knowledge {
 
+enum DataIndex{
+	UTILIZATION_CPU = 0,
+	UTILIZATION_MEMORY = 1,
+	UTILIZATION_IO = 2,
+	UTILIZATION_NETWORK = 3,
+
+	CONSUMED_CPU_SECONDS = 4,
+	CONSUMED_ENERGY_JOULE = 5,
+	CONSUMED_MEMORY_BYTES = 6,
+	CONSUMED_NETWORK_BYTES = 7,
+	CONSUMED_IO_BYTES = 8,
+
+	DATA_INDEX_COUNT
+};
+
 shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
@@ -427,7 +442,21 @@ void ReasonerStandardImplementation::init(){
 
 	StatisticsCollector * statColl = GET_INSTANCE(StatisticsCollector, options.statisticsCollector);
 	if ( statColl != nullptr ){
-		nodeStatistics = StatisticsCollection::makeCollection(statColl, {{}}, true);
+		// request everything we'll need.
+
+		// TODO
+		nodeStatistics = StatisticsCollection::makeCollection(statColl, {{
+			{"utilization/cpu", "@localhost"},
+			{"utilization/memory", "@localhost"}, // Alternative: {"utilization/memory/vm", "@localhost"},
+			{"utilization/io", "@localhost"},
+			{"utilization/network", "@localhost"},
+			{"CONSUMED_CPU_SECONDS", "@localhost"},
+			{"power/rapl", "@localhost"},
+			{"CONSUMED_MEMORY_BYTES", "@localhost"},
+			{"CONSUMED_NETWORK_BYTES", "@localhost"},
+			{"CONSUMED_IO_BYTES", "@localhost"},
+			
+		}}, true);
 	}
 
 

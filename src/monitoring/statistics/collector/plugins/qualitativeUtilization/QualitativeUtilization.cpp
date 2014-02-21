@@ -40,6 +40,8 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		OntologyAttributeID bandwidthBytesAttribute = 0;
 		OntologyAttributeID bytesSentAttribute = 0;
 		OntologyAttributeID bytesRecievedAttribute = 0;
+		OntologyAttributeID likwidMemoryBandwidth = 0;
+
 		TopologyTypeId blockDeviceType = 0;
 		TopologyTypeId ethType = 0;
 		TopologyObjectId localhostObject = 0, allCpusObject = 0;
@@ -50,6 +52,8 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		std::vector<std::shared_ptr<Statistic> > busyCpuStatistics;
 		uint64_t lastBusyCpuTime = 0;
 		std::shared_ptr<Statistic> idleCpuStatistic;
+		const StatisticsValue * likwidMemoryBandwithStatistic;
+
 		uint64_t lastIdleCpuTime = 0;
 		std::shared_ptr<Statistic> totalMemoryStatistic, activeMemoryStatistic, inactiveMemoryStatistic;
 		std::vector<std::shared_ptr<Statistic> > bandwidthStatistics;
@@ -60,6 +64,7 @@ class QualitativeUtilization : public StatisticsIntegrator {
 
 		StatisticsValue cpuUtilization = 0.0;
 		StatisticsValue networkUtilization = 0.0;	//XXX: Should we split this into an upstream and a downstream utilization?
+		StatisticsValue memoryUtilizationVM = 0.0;
 		StatisticsValue memoryUtilization = 0.0;
 		StatisticsValue ioUtilization = 0.0;
 };
@@ -76,14 +81,15 @@ void QualitativeUtilization::nextTimestep() throw() {
 
 
 vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() throw() {
-	vector<StatisticsProviderDatatypes> result;
+	vector<StatisticsProviderDatatypes> r;
 
-	result.push_back( {CPU, NODE, "utilization/cpu", "@localhost/utilization:cpu:percentage", cpuUtilization, GAUGE, "", "average cpu utilization on a node", 0, 0} );
-	result.push_back( {MEMORY, NODE, "utilization/memory", "@localhost/utilization:memory:percentage", memoryUtilization, GAUGE, "", "memory utilization on a node", 0, 0} );
-	result.push_back( {NETWORK, NODE, "utilization/network", "@localhost/utilization:network:percentage", networkUtilization, GAUGE, "", "average network utilization across all links of a node", 0, 0} );
-	result.push_back( {INPUT_OUTPUT, NODE, "utilization/io", "@localhost/utilization:io:percentage", ioUtilization, GAUGE, "", "percentage of available I/O bandwidth used", 0, 0} );
+	r.push_back( {CPU, NODE, "utilization/cpu", "@localhost", cpuUtilization, GAUGE, "", "average cpu utilization on a node", 0, 0} );
+	r.push_back( {MEMORY, NODE, "utilization/memory/vm", "@localhost", memoryUtilizationVM, GAUGE, "", "memory utilization on a node computed using the virtual machine's stats", 0, 0} );
+	r.push_back( {MEMORY, NODE, "utilization/memory", "@localhost", memoryUtilization, GAUGE, "", "memory utilization on a node", 0, 0} );	
+	r.push_back( {NETWORK, NODE, "utilization/network", "@localhost", networkUtilization, GAUGE, "", "average network utilization across all links of a node", 0, 0} );
+	r.push_back( {INPUT_OUTPUT, NODE, "utilization/io", "@localhost", ioUtilization, GAUGE, "", "percentage of available I/O bandwidth used", 0, 0} );
 
-	return result;
+	return r;
 }
 
 
@@ -143,7 +149,13 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 		} else if( bytesRecievedAttribute == curAttribute && curTopologyType == ethType ) {
 			bytesRecievedStatistics.push_back( curStatistic );
 			lastBytesRecieved += curStatistic->curValue.uint64();
+		} else if( likwidMemoryBandwidth == curAttribute && curTopology == localhostObject ) {
+			if ( removedStatistics )
+				likwidMemoryBandwithStatistic = nullptr;
+			else
+				likwidMemoryBandwithStatistic = & curStatistic->curValue;
 		}
+
 	}
 }
 
@@ -159,13 +171,13 @@ void QualitativeUtilization::newDataAvailable() throw() {
 
 	ioUtilization = options->ioBlockSize * ( curIoBlockCount - lastIoBlockCount ) / options->availableIoBandwidth;
 	cpuUtilization = ( curBusyCpuTime - lastBusyCpuTime ) / ( double )( curBusyCpuTime - lastBusyCpuTime + curIdleCpuTime - lastIdleCpuTime );
-	memoryUtilization = 0.0;
+	memoryUtilizationVM = 0.0;
 	if( totalMemoryStatistic && activeMemoryStatistic && inactiveMemoryStatistic) {
 		//There is unfortunately not a right way to calculate memory consumption. The approach used here tries to assess the danger of thrashing: If we have a high amount of inactive pages, there is no danger of thrashing. Likewise, if we have a low number of active one, danger is low, even if there are few inactive pages. To reflect that both measures are important, we just use the average between active and not inactive pages as the memory that is currently used. However, it might turn out that the plain average is not good enough, that a weighted average is required, or some other, more complex formula is needed. So, feel free to correct me.
 		uint64_t total = totalMemoryStatistic->curValue.uint64();
 		uint64_t lowUsage = activeMemoryStatistic->curValue.uint64();
 		uint64_t highUsage = total - inactiveMemoryStatistic->curValue.uint64();
-		memoryUtilization = ( lowUsage + highUsage ) / ( 2.0 * total );
+		memoryUtilizationVM = ( lowUsage + highUsage ) / ( 2.0 * total );
 	}
 	networkUtilization = ( curBytesSent - lastBytesSent + curBytesRecieved - lastBytesRecieved ) / ( 2.0 * curBandwidth / 10 );	//*2 for duplex, /10 for 100ms poll interval
 
@@ -174,6 +186,10 @@ void QualitativeUtilization::newDataAvailable() throw() {
 	lastIdleCpuTime = curIdleCpuTime;
 	lastBytesSent = curBytesSent;
 	lastBytesRecieved = curBytesRecieved;
+
+	if ( likwidMemoryBandwithStatistic != nullptr ){
+		memoryUtilization = likwidMemoryBandwithStatistic->flt() / options->availableMemoryBandwidth;
+	}
 }
 
 
@@ -206,6 +222,7 @@ void QualitativeUtilization::fetchAttributeIds() throw() {
 	fetchOntologyAttribute( bandwidthBytesAttribute, "quantity/bandwidthBytes" );
 	fetchOntologyAttribute( bytesSentAttribute, "quantity/bytesSent" );
 	fetchOntologyAttribute( bytesRecievedAttribute, "quantity/bytesRecieved" );
+	fetchOntologyAttribute( likwidMemoryBandwidth, "throughput/memory/bandwidth" );
 
 	#define fetchTopologyId( idVariable, topologyFunction, argument ) do { \
 		if( !idVariable ) { \
@@ -219,7 +236,7 @@ void QualitativeUtilization::fetchAttributeIds() throw() {
 	fetchTopologyId( blockDeviceType, registerType, "block-device" );
 	fetchTopologyId( ethType, registerType, "eth" );
 	fetchTopologyId( localhostObject, registerObjectByPath, "@localhost" );
-	fetchTopologyId( allCpusObject, registerObjectByPath, "@localhost/cpu:all" );
+	fetchTopologyId( allCpusObject, registerObjectByPath, "@localhost" );
 }
 
 

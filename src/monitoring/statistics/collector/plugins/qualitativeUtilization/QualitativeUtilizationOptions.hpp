@@ -7,6 +7,7 @@
 class QualitativeUtilizationOptions : public monitoring::StatisticsIntegratorOptions {
 	public:
 		double availableIoBandwidth;
+		double availableMemoryBandwidth;
 		uint64_t ioBlockSize;
 };
 

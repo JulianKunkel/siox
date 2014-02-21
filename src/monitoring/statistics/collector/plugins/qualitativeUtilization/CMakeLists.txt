@@ -8,12 +8,16 @@ include_directories(
 add_library(
 	siox-monitoring-statisticsPlugin-qualitativeUtilization
 	QualitativeUtilization.cpp
+	QualitativeUtilizationOptions.cpp
 )
 
 target_link_libraries(
 	siox-monitoring-statisticsPlugin-qualitativeUtilization
 	siox-monitoring-statisticsPluginGeneric
 )
+
+siox_run_serializer(QualitativeUtilizationOptions.hpp QualitativeUtilizationOptions.cpp)
+
 
 add_subdirectory(test)
 
