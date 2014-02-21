@@ -73,8 +73,8 @@ if test -n "$python"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPYTHON_EXECUTABLE:FILEPATH=$python"
 fi
 if test -n "$likwid"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_INCLUDE_DIRS:PATH=\"$likwid/include\""
-	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_LIBRARIES:PATH=\"$likwid/lib\""
+	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_INCLUDE_DIR:PATH=\"$likwid/include\""
+	CMAKEFLAGS="$CMAKEFLAGS -DLIKWID_LIBRARY_DIR:PATH=\"$likwid/lib\""
 fi
 if test -n "$libpq"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_TYPE_INCLUDE_DIR=$libpq/include" # this is probably a bug in some FindPostgreSQL.cmake

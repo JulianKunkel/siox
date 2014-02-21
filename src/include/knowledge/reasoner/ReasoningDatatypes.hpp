@@ -35,6 +35,17 @@ enum UtilizationIndex{
 	UTILIZATION_STATISTIC_COUNT = 4
 };
 
+//Additional statistics of the node we would like to transfer to processes.
+//@serializable
+enum NodeStatisticsIndex{
+	CPU_SECONDS = 0,
+	ENERGY_JOULE = 1,
+	MEMORY_BYTES = 2,
+	NETWORK_BYTES = 3,
+	IO_BYTES = 4,
+	NODE_STATISTIC_COUNT = 5
+};
+
 
 //@serializable
 struct HealthIssue{
@@ -256,11 +267,16 @@ typedef Health ProcessHealth;
 //@serializable
 struct NodeHealth : public Health{
 	array<uint8_t, UTILIZATION_STATISTIC_COUNT> utilization; // UtilizationIndex
+	
+	// the following elements account for consumed resources
+	array<uint64_t, NODE_STATISTIC_COUNT> statistics;
 
 	NodeHealth(){
-
 		for ( int i = 0; i < UTILIZATION_STATISTIC_COUNT; ++i ){
 			utilization[i] = 0;
+		}
+		for ( int i = 0; i < NODE_STATISTIC_COUNT; ++i ){
+			statistics[i] = 0;
 		}
 	}
 
