@@ -17,6 +17,7 @@
 #include <utility>
 #include <string>
 #include <mutex>
+#include <shared_ptr>
 
 namespace monitoring {
 	class Statistic;
@@ -26,7 +27,7 @@ namespace monitoring {
 		public:
 			static StatisticsCollection* makeCollection( StatisticsCollector* collector, const std::vector<std::pair<std::string, std::string> >& ontologyAttributeTopologyPathPairs, bool threadSafe = true );
 
-			StatisticsCollection( StatisticsCollector* collector, size_t statisticsCount, Statistic** statisticsArray, bool threadSafe = true );
+			StatisticsCollection( StatisticsCollector* collector, size_t statisticsCount, shared_ptr<Statistic>* statisticsArray, bool threadSafe = true );
 
 			void pushValues();	//To be called by the StatisticsCollector when new values are available. Serializes with fetchValues() to ensure that fetchValues() sees a consistent state.
 			void fetchValues();	//To be called by the consumer interested in the values of the statistics. Will copy the current values into the internal storage.
@@ -35,10 +36,11 @@ namespace monitoring {
 			~StatisticsCollection();
 
 		private:
+			StatisticsCollector* collector;
 			size_t statisticsCount;
-			StatisticsValue* internalCopies;
-			bool threadSafe;
-			std::mutex pushFetchLock;
+			shared_ptr<Statistic>* statistics;
+			StatisticsValue* communicationBuffer, *readBuffer;	//communicationBuffer is protected by communicationsLock
+			std::mutex communicationLock;	//protects communicationBuffer (if it exists)
 	};
 }
 
