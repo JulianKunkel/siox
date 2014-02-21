@@ -190,6 +190,10 @@ class ThreadedStatisticsCollector : public StatisticsCollector, public Component
 		virtual void unregisterPlugin( StatisticsProviderPlugin * plugin ) throw();
 
 		virtual vector<shared_ptr<Statistic> > availableMetrics() throw();
+		virtual std::shared_ptr<Statistic> getStatistic( const std::string& ontologyAttribute, const std::string& topologyPath ) throw();
+
+		virtual void registerCollection( StatisticsCollection* collection ) throw();
+		virtual void unregisterCollection( StatisticsCollection* collection ) throw();
 
 		virtual array<StatisticsValue, Statistic::kHistorySize> getStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw();
 		virtual StatisticsValue getRollingStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & stat ) throw();
@@ -330,6 +334,19 @@ vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::availableMetrics() t
 	sourcesLock.unlock_shared();
 	return result;
 }
+
+std::shared_ptr<Statistic> ThreadedStatisticsCollector::getStatistic( const std::string& ontologyAttribute, const std::string& topologyPath ) throw() {
+	assert(0 && "TODO");
+}
+
+void ThreadedStatisticsCollector::registerCollection( StatisticsCollection* collection ) throw() {
+	assert(0 && "TODO");
+}
+
+void ThreadedStatisticsCollector::unregisterCollection( StatisticsCollection* collection ) throw() {
+	assert(0 && "TODO");
+}
+
 
 array<StatisticsValue, Statistic::kHistorySize> ThreadedStatisticsCollector::getStatistics( StatisticsReduceOperator reductionOp, StatisticsInterval interval, const StatisticsDescription & description ) throw() {
 	array<StatisticsValue, Statistic::kHistorySize> result;

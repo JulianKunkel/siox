@@ -9,6 +9,7 @@ add_library(
 	siox-monitoring-ThreadedStatisticsCollector
 	ThreadedStatisticsCollector.cpp
 	Statistic.cpp
+	StatisticsCollection.cpp
 	ThreadedStatisticsOptions.cpp
 )
 

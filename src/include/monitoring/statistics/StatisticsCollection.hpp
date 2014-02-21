@@ -27,20 +27,20 @@ namespace monitoring {
 
 	class StatisticsCollection {
 		public:
-			static StatisticsCollection* makeCollection( StatisticsCollector* collector, const std::vector<std::pair<std::string, std::string> >& ontologyAttributeTopologyPathPairs, bool threadSafe = true );
+			static StatisticsCollection* makeCollection( StatisticsCollector* collector, const std::vector<std::pair<std::string, std::string> >& ontologyAttributeTopologyPathPairs, bool threadSafe = true ) throw();
 
-			StatisticsCollection( StatisticsCollector* collector, size_t statisticsCount, shared_ptr<Statistic>* statisticsArray, bool threadSafe = true );
+			StatisticsCollection( StatisticsCollector* collector, size_t statisticsCount, std::shared_ptr<Statistic>* statisticsArray, bool threadSafe = true ) throw();
 
-			void pushValues();	//To be called by the StatisticsCollector when new values are available. Serializes with fetchValues() to ensure that fetchValues() sees a consistent state.
-			void fetchValues();	//To be called by the consumer interested in the values of the statistics. Will copy the current values into the internal storage.
-			StatisticsValue& operator[]( size_t index );	//Returns a reference to the copy of the StatisticsValue in the internal storage.
+			void pushValues() throw();	//To be called by the StatisticsCollector when new values are available. Serializes with fetchValues() to ensure that fetchValues() sees a consistent state.
+			void fetchValues() throw();	//To be called by the consumer interested in the values of the statistics. Will copy the current values into the internal storage.
+			StatisticsValue& operator[]( size_t index ) throw();	//Returns a reference to the copy of the StatisticsValue in the internal storage.
 
-			~StatisticsCollection();
+			~StatisticsCollection() throw();
 
 		private:
 			StatisticsCollector* collector;
 			size_t statisticsCount;
-			shared_ptr<Statistic>* statistics;
+			std::shared_ptr<Statistic>* statistics;
 			StatisticsValue* communicationBuffer, *readBuffer;	//communicationBuffer is protected by communicationsLock
 			std::mutex communicationLock;	//protects communicationBuffer (if it exists)
 	};
