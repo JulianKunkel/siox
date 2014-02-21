@@ -49,7 +49,7 @@ private:
 
 		monitoring::StatisticsCollection * nodeStatistics = nullptr;
 
-		// Fields to coordinate threaded behaviour
+		// Fields to coordinate threaded behavior
 		thread                  periodicThread;
 		mutex 					pluginMutex; // To protect state of registered plugins
 		mutex 					dataMutex; // To protect state of aggregated data

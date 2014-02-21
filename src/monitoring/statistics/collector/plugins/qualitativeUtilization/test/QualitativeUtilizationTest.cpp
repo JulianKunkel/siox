@@ -73,7 +73,6 @@ int main( int argc, char const * argv[] ) throw() {
 	integratorOptions->multiplexer.componentPointer = multiplexer;
 	integratorOptions->dereferencingFacade.componentPointer = facade;
 	integratorOptions->availableIoBandwidth = 100ull << 20;
-	integratorOptions->ioBlockSize = 512;
 
 	topology->init();
 	ontology->init();

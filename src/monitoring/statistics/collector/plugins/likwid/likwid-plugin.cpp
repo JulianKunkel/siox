@@ -26,7 +26,7 @@ namespace {
 
 	class LikwidPlugin : public StatisticsProviderPlugin {
 		public:
-			void init( StatisticsProviderPluginOptions & options ) override;
+			void init( StatisticsProviderPluginOptions * options ) override;
 			void finalize() override;
 
 			ComponentOptions * AvailableOptions() override{
@@ -49,8 +49,8 @@ namespace {
 		perfmon_finalize();
 	}
 
-	void LikwidPlugin::init( StatisticsProviderPluginOptions& sp_options ) {
-		ProviderLikwidOptions & options = dynamic_cast<ProviderLikwidOptions&>(sp_options);
+	void LikwidPlugin::init( StatisticsProviderPluginOptions * sp_options ) {
+		ProviderLikwidOptions * options = dynamic_cast<ProviderLikwidOptions*>( sp_options);
 
 		if (cpuid_init() == EXIT_FAILURE){
 			assert(FALSE && "CPUID_INIT");
@@ -71,8 +71,8 @@ namespace {
 		FILE * nullFD = fopen("/dev/null", "w");
 		perfmon_init(numThreads, threads, nullFD);
 		
-		int groupCount = options.groups.length() > 0 ? 1 : 0;
-		const char * cur = options.groups.c_str();
+		int groupCount = options->groups.length() > 0 ? 1 : 0;
+		const char * cur = options->groups.c_str();
 		while( *cur != '\0'){
 			if ( *cur == ',') groupCount++;
 			cur++;
@@ -81,7 +81,7 @@ namespace {
 		// create all groups
 		// TODO support multiple groups properly
 		assert(groupCount == 1);
-		likwidSetup = perfmon_prepareEventSetup( (char*) options.groups.c_str());
+		likwidSetup = perfmon_prepareEventSetup( (char*) options->groups.c_str());
 
 		values = (float*) malloc( likwidSetup.numberOfDerivedCounters * sizeof(float) * 3);
 		statisticsValues.resize(likwidSetup.numberOfDerivedCounters);

@@ -11,15 +11,16 @@ namespace knowledge {
 
 enum DataIndex{
 	UTILIZATION_CPU = 0,
-	UTILIZATION_MEMORY = 1,
-	UTILIZATION_IO = 2,
-	UTILIZATION_NETWORK = 3,
+	UTILIZATION_MEMORY,
+	UTILIZATION_IO,
+	UTILIZATION_NETWORK_SEND,
+	UTILIZATION_NETWORK_RECEIVE,
 
-	CONSUMED_CPU_SECONDS = 4,
-	CONSUMED_ENERGY_JOULE = 5,
-	CONSUMED_MEMORY_BYTES = 6,
-	CONSUMED_NETWORK_BYTES = 7,
-	CONSUMED_IO_BYTES = 8,
+	CONSUMED_CPU_SECONDS,
+	CONSUMED_ENERGY_JOULE,
+	CONSUMED_MEMORY_BYTES,
+	CONSUMED_NETWORK_BYTES,
+	CONSUMED_IO_BYTES,
 
 	DATA_INDEX_COUNT
 };
@@ -351,7 +352,10 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		// TODO
 
 		if( nodeStatistics != nullptr ) {
-				//StatisticObservation so = utilization->lastObservation( 4711 );
+			nodeStatistics->fetchValues();
+			for(int i=0; i < DATA_INDEX_COUNT ; i++){
+				cout << "CurrentNodeStatistics: " << i << " " << (*nodeStatistics)[i] << endl;
+			}
 		}
 
 		// Save recentIssues
@@ -444,18 +448,18 @@ void ReasonerStandardImplementation::init(){
 	if ( statColl != nullptr ){
 		// request everything we'll need.
 
-		// TODO
 		nodeStatistics = StatisticsCollection::makeCollection(statColl, {{
 			{"utilization/cpu", "@localhost"},
 			{"utilization/memory", "@localhost"}, // Alternative: {"utilization/memory/vm", "@localhost"},
 			{"utilization/io", "@localhost"},
-			{"utilization/network", "@localhost"},
-			{"CONSUMED_CPU_SECONDS", "@localhost"},
-			{"power/rapl", "@localhost"},
-			{"CONSUMED_MEMORY_BYTES", "@localhost"},
-			{"CONSUMED_NETWORK_BYTES", "@localhost"},
-			{"CONSUMED_IO_BYTES", "@localhost"},
-			
+			{"utilization/network/send", "@localhost"},
+			{"utilization/network/receive", "@localhost"},
+			// TODO
+			{"utilization/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
+			{"utilization/cpu", "@localhost"}, // power/rapl
+			{"utilization/cpu", "@localhost"}, // CONSUMED_MEMORY_BYTES
+			{"utilization/cpu", "@localhost"}, // CONSUMED_NETWORK_BYTES
+			{"utilization/cpu", "@localhost"}, // CONSUMED_IO_BYTES
 		}}, true);
 	}
 

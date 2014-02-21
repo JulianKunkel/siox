@@ -20,8 +20,8 @@ namespace monitoring {
 				StatisticsProviderPlugin::init();
 			}
 
-			void init( StatisticsProviderPluginOptions& options ) override {
-				StatisticsIntegratorOptions* o = &getOptions<StatisticsIntegratorOptions>();
+			void init( StatisticsProviderPluginOptions * options ) override {
+				StatisticsIntegratorOptions* o = dynamic_cast<StatisticsIntegratorOptions*>(options);
 				assert( o && "either no options were set, or they are of the wrong type" );
 
 				StatisticsMultiplexer* multiplexer = GET_INSTANCE( StatisticsMultiplexer, o->multiplexer );

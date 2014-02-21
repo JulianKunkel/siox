@@ -6,9 +6,9 @@
 //@serializable
 class QualitativeUtilizationOptions : public monitoring::StatisticsIntegratorOptions {
 	public:
-		double availableIoBandwidth;
-		double availableMemoryBandwidth;
-		uint64_t ioBlockSize;
+		float availableIoBandwidth;
+		float availableMemoryBandwidth;
+		float availableNetworkBandwidth;
 };
 
 #endif

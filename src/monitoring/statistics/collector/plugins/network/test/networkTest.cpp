@@ -18,7 +18,7 @@ int main( int argc, char const * argv[] )
 	                                    "siox-monitoring-statisticsPlugin-network" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 
 	StatisticsProviderPluginOptions options;
-	plugin->init(options);
+	plugin->init(& options);
 
 	auto list = plugin->availableMetrics();
 

@@ -28,7 +28,7 @@ namespace monitoring {
 			StatisticsCollector * collector;
 		protected:
 
-			virtual core::ComponentOptions * AvailableOptions() {
+			core::ComponentOptions * AvailableOptions() override{
 				return new StatisticsProviderPluginOptions();
 			}
 		public:
@@ -38,15 +38,15 @@ namespace monitoring {
 			}
 
 			///@todo TODO: This is crazy: Here we use `init()`, and `init( Options& )`, StatisticsMultiplexerPlugin uses `initPlugin()`, core::Component uses `init( Options* )`. We should really amend this by having only one virtual `init()` method, and having all `init()` methods in derived classes call the appropriate base class versions.
-			virtual void init( StatisticsProviderPluginOptions & options ) {
+			virtual void init( StatisticsProviderPluginOptions * options ) {
 				// default implementation is empty.
 				// Override it to provide additional module-specific options.
 			}
 
-			virtual void init() {
-				StatisticsProviderPluginOptions o = getOptions<StatisticsProviderPluginOptions>();
+			void init() override {
+				StatisticsProviderPluginOptions & o = getOptions<StatisticsProviderPluginOptions>();
 
-				init( o );	// call the plugin-specific method
+				init( & o );	// call the plugin-specific method
 
 				// now register this plugin on the collector
 				collector = GET_INSTANCE( StatisticsCollector, o.statisticsCollector );

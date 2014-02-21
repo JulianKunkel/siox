@@ -62,11 +62,12 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		std::vector<std::shared_ptr<Statistic> > bytesRecievedStatistics;
 		uint64_t lastBytesRecieved;
 
-		StatisticsValue cpuUtilization = 0.0;
-		StatisticsValue networkUtilization = 0.0;	//XXX: Should we split this into an upstream and a downstream utilization?
-		StatisticsValue memoryUtilizationVM = 0.0;
-		StatisticsValue memoryUtilization = 0.0;
-		StatisticsValue ioUtilization = 0.0;
+		StatisticsValue cpuUtilization = 0.0f;
+		StatisticsValue networkUtilizationTX = 0.0f;
+		StatisticsValue networkUtilizationRX = 0.0f;
+		StatisticsValue memoryUtilizationVM = 0.0f;
+		StatisticsValue memoryUtilization = 0.0f;
+		StatisticsValue ioUtilization = 0.0f;
 };
 
 
@@ -86,7 +87,8 @@ vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() t
 	r.push_back( {CPU, NODE, "utilization/cpu", "@localhost", cpuUtilization, GAUGE, "", "average cpu utilization on a node", 0, 0} );
 	r.push_back( {MEMORY, NODE, "utilization/memory/vm", "@localhost", memoryUtilizationVM, GAUGE, "", "memory utilization on a node computed using the virtual machine's stats", 0, 0} );
 	r.push_back( {MEMORY, NODE, "utilization/memory", "@localhost", memoryUtilization, GAUGE, "", "memory utilization on a node", 0, 0} );	
-	r.push_back( {NETWORK, NODE, "utilization/network", "@localhost", networkUtilization, GAUGE, "", "average network utilization across all links of a node", 0, 0} );
+	r.push_back( {NETWORK, NODE, "utilization/network/send", "@localhost", networkUtilizationTX, GAUGE, "", "average network utilization across all links of a node", 0, 0} );
+	r.push_back( {NETWORK, NODE, "utilization/network/receive", "@localhost", networkUtilizationRX, GAUGE, "", "average network utilization across all links of a node", 0, 0} );	
 	r.push_back( {INPUT_OUTPUT, NODE, "utilization/io", "@localhost", ioUtilization, GAUGE, "", "percentage of available I/O bandwidth used", 0, 0} );
 
 	return r;
@@ -169,17 +171,21 @@ void QualitativeUtilization::newDataAvailable() throw() {
 	for( size_t i = bytesSentStatistics.size(); i--; ) curBytesSent += bytesSentStatistics[i]->curValue.uint64();
 	for( size_t i = bytesRecievedStatistics.size(); i--; ) curBytesRecieved += bytesRecievedStatistics[i]->curValue.uint64();
 
-	ioUtilization = options->ioBlockSize * ( curIoBlockCount - lastIoBlockCount ) / options->availableIoBandwidth;
-	cpuUtilization = ( curBusyCpuTime - lastBusyCpuTime ) / ( double )( curBusyCpuTime - lastBusyCpuTime + curIdleCpuTime - lastIdleCpuTime );
-	memoryUtilizationVM = 0.0;
+	// TODO use blockdev --getbsz /dev/sda1 to determine block size
+	ioUtilization = (float) ((uint64_t) 512) * ( curIoBlockCount - lastIoBlockCount ) / options->availableIoBandwidth;
+   float deltaCPU = ( curBusyCpuTime - lastBusyCpuTime + curIdleCpuTime - lastIdleCpuTime );
+	cpuUtilization = (deltaCPU == 0.0f) ? 0.0f : ( curBusyCpuTime - lastBusyCpuTime ) / deltaCPU;
+	memoryUtilizationVM = 0.0f;
+
 	if( totalMemoryStatistic && activeMemoryStatistic && inactiveMemoryStatistic) {
 		//There is unfortunately not a right way to calculate memory consumption. The approach used here tries to assess the danger of thrashing: If we have a high amount of inactive pages, there is no danger of thrashing. Likewise, if we have a low number of active one, danger is low, even if there are few inactive pages. To reflect that both measures are important, we just use the average between active and not inactive pages as the memory that is currently used. However, it might turn out that the plain average is not good enough, that a weighted average is required, or some other, more complex formula is needed. So, feel free to correct me.
 		uint64_t total = totalMemoryStatistic->curValue.uint64();
 		uint64_t lowUsage = activeMemoryStatistic->curValue.uint64();
 		uint64_t highUsage = total - inactiveMemoryStatistic->curValue.uint64();
-		memoryUtilizationVM = ( lowUsage + highUsage ) / ( 2.0 * total );
+		memoryUtilizationVM = (float) ( lowUsage + highUsage ) / ( 2.0 * total );
 	}
-	networkUtilization = ( curBytesSent - lastBytesSent + curBytesRecieved - lastBytesRecieved ) / ( 2.0 * curBandwidth / 10 );	//*2 for duplex, /10 for 100ms poll interval
+	networkUtilizationTX = (float) ( curBytesSent - lastBytesSent) /  options->availableNetworkBandwidth;
+	networkUtilizationRX = (float) ( curBytesRecieved - lastBytesRecieved ) /  options->availableNetworkBandwidth;
 
 	lastIoBlockCount = curIoBlockCount;
 	lastBusyCpuTime = curBusyCpuTime;
@@ -188,7 +194,7 @@ void QualitativeUtilization::newDataAvailable() throw() {
 	lastBytesRecieved = curBytesRecieved;
 
 	if ( likwidMemoryBandwithStatistic != nullptr ){
-		memoryUtilization = likwidMemoryBandwithStatistic->flt() / options->availableMemoryBandwidth;
+		memoryUtilization =  (float) likwidMemoryBandwithStatistic->flt() / options->availableMemoryBandwidth;
 	}
 }
 

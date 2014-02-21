@@ -20,7 +20,7 @@ int main( int argc, char const * argv[] )
 
 	ProviderLikwidOptions options;
 	options.groups = "MEM";
-	plugin->init(options);
+	plugin->init(& options);
 
 	auto list = plugin->availableMetrics();
 

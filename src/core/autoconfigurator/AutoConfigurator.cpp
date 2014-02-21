@@ -134,7 +134,7 @@ namespace core {
 				throw InvalidConfiguration( "Error while parsing module configuration", "");
 			}
 
-			cout << "[AC] Module config: "  << module->name << "-" << module->interface << endl;
+			cout << "[AC] Module config: "  << module->name << " (" << module->interface << ")" << endl;
 			component = module_create_instance<Component>( module->path, module->name, module->interface );
 			//cout << DumpConfiguration(component->get_options()) << endl;
 
@@ -158,7 +158,7 @@ namespace core {
 
 				string  str = cs.serialize( options );
 				cerr << "Configuration values: " << str << endl;
-				throw InvalidConfiguration( string( "Error during initialization: " ) + e.what(), module->name );
+				throw InvalidConfiguration( string( "Error during initialization of " ) + e.what(), module->name );
 			}
 			registrar->registerComponent( module->componentID + autoConfiguratorOffset, type + " " + matchingRules, module->name, component );
 

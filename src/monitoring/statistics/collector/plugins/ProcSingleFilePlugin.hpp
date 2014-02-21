@@ -81,7 +81,7 @@ class ProcSingleFilePlugin: public StatisticsProviderPlugin {
 		}
 	public:
 
-		void init( StatisticsProviderPluginOptions & options ) {
+		void init( StatisticsProviderPluginOptions * options ) override {
 			cout << "[SP] " << filename() << endl;
 			re = initRegex();
 			parseProcLine<1>( filename() );

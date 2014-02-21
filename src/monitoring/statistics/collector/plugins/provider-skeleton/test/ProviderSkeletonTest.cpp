@@ -72,7 +72,7 @@ int main( int argc, char const * argv[] )
 	ps->getOptions<ProviderSkeletonOptions>().statisticsCollector.componentPointer = new StatisticsCollectorTester();
 
 	StatisticsProviderPluginOptions options;
-	ps->init(options);
+	ps->init(& options);
 
 	delete( ps );
 
