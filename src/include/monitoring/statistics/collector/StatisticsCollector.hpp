@@ -115,6 +115,7 @@ Implementation deviations and rationales:
 
 namespace monitoring {
 
+	class StatisticsCollection;
 	class StatisticsProviderPlugin;
 
 	class StatisticsCollector : public core::Component {
@@ -130,7 +131,11 @@ namespace monitoring {
 			/* D10
 			 * What are the available source metrics and available sources for metrics if they are combined ones?
 			 */
-			virtual std::vector<std::shared_ptr<Statistic> > availableMetrics() throw()  = 0;
+			virtual std::vector<std::shared_ptr<Statistic> > availableMetrics() throw() = 0;
+			virtual std::shared_ptr<Statistic> getStatistic( const std::string& ontologyAttribute, const std::string& topologyPath ) throw() = 0;
+
+			virtual void registerCollection( StatisticsCollection* collection ) throw() = 0;
+			virtual void unregisterCollection( StatisticsCollection* collection ) throw() = 0;
 
 			//TODO: I think, we should replace the following three methods by one method to look up a statistic from a given StatisticsDescription.
 			/*
