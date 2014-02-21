@@ -4,6 +4,7 @@
 
 #include <monitoring/statistics/collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
+#include <monitoring/statistics/collector/plugins/likwid/ProviderLikwidOptions.hpp>
 
 
 using namespace std;
@@ -17,7 +18,8 @@ int main( int argc, char const * argv[] )
 	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>( "",
 	                                    "siox-monitoring-statisticsPlugin-likwid" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 
-	StatisticsProviderPluginOptions options;
+	ProviderLikwidOptions options;
+	options.groups = "MEM";
 	plugin->init(options);
 
 	auto list = plugin->availableMetrics();
