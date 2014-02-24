@@ -455,11 +455,11 @@ void ReasonerStandardImplementation::init(){
 			{"utilization/network/send", "@localhost"},
 			{"utilization/network/receive", "@localhost"},
 			// TODO
-			{"utilization/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
+			{"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
 			{"utilization/cpu", "@localhost"}, // power/rapl
-			{"utilization/cpu", "@localhost"}, // CONSUMED_MEMORY_BYTES
-			{"utilization/cpu", "@localhost"}, // CONSUMED_NETWORK_BYTES
-			{"utilization/cpu", "@localhost"}, // CONSUMED_IO_BYTES
+			{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
+			{"quantity/network/volume", "@localhost"}, // CONSUMED_NETWORK_BYTES
+			{"quantity/io/volume", "@localhost"}, // CONSUMED_IO_BYTES
 		}}, true);
 	}
 

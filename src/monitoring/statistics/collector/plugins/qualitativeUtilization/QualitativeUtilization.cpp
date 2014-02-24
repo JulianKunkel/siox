@@ -25,15 +25,8 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		bool AttributesComplete = false;
 		OntologyAttributeID readDataAttribute = 0;
 		OntologyAttributeID writtenDataAttribute = 0;
-		OntologyAttributeID userTimeAttribute = 0;
-		OntologyAttributeID niceTimeAttribute = 0;
-		OntologyAttributeID systemTimeAttribute = 0;
-		OntologyAttributeID idleTimeAttribute = 0;
-		OntologyAttributeID iowaitTimeAttribute = 0;
-		OntologyAttributeID interruptsTimeAttribute = 0;
-		OntologyAttributeID softirqTimeAttribute = 0;
-		OntologyAttributeID vmsTimeAttribute = 0;
-		OntologyAttributeID vmsOsTimeAttribute = 0;
+		OntologyAttributeID cpuTimeAttribute = 0;
+		OntologyAttributeID cpuIdleTimeAttribute = 0;
 		OntologyAttributeID totalMemoryAttribute = 0;
 		OntologyAttributeID activeMemoryAttribute = 0;
 		OntologyAttributeID inactiveMemoryAttribute = 0;
@@ -44,17 +37,16 @@ class QualitativeUtilization : public StatisticsIntegrator {
 
 		TopologyTypeId blockDeviceType = 0;
 		TopologyTypeId ethType = 0;
-		TopologyObjectId localhostObject = 0, allCpusObject = 0;
+		TopologyObjectId localhostObject = 0, allCpusObject = 0;		
 
 		///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
 		std::vector<std::shared_ptr<Statistic> > ioStatistics;
 		uint64_t lastIoBlockCount = 0;
-		std::vector<std::shared_ptr<Statistic> > busyCpuStatistics;
-		uint64_t lastBusyCpuTime = 0;
-		std::shared_ptr<Statistic> idleCpuStatistic;
 		const StatisticsValue * likwidMemoryBandwithStatistic;
 
-		uint64_t lastIdleCpuTime = 0;
+		std::shared_ptr<Statistic> cpuStatistic;
+		std::shared_ptr<Statistic> cpuIdleStatistic;
+
 		std::shared_ptr<Statistic> totalMemoryStatistic, activeMemoryStatistic, inactiveMemoryStatistic;
 		std::vector<std::shared_ptr<Statistic> > bandwidthStatistics;
 		std::vector<std::shared_ptr<Statistic> > bytesSentStatistics;
@@ -62,12 +54,17 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		std::vector<std::shared_ptr<Statistic> > bytesRecievedStatistics;
 		uint64_t lastBytesRecieved;
 
+		uint64_t lastCPUtimeconsumed = 0;
+		uint64_t lastCPUIdletime = 0;
+
 		StatisticsValue cpuUtilization = 0.0f;
 		StatisticsValue networkUtilizationTX = 0.0f;
 		StatisticsValue networkUtilizationRX = 0.0f;
 		StatisticsValue memoryUtilizationVM = 0.0f;
 		StatisticsValue memoryUtilization = 0.0f;
 		StatisticsValue ioUtilization = 0.0f;
+		StatisticsValue ioVolume = (uint64_t) 0.0;
+		StatisticsValue networkVolume = (uint64_t) 0.0;
 };
 
 
@@ -91,6 +88,9 @@ vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() t
 	r.push_back( {NETWORK, NODE, "utilization/network/receive", "@localhost", networkUtilizationRX, GAUGE, "", "average network utilization across all links of a node", 0, 0} );	
 	r.push_back( {INPUT_OUTPUT, NODE, "utilization/io", "@localhost", ioUtilization, GAUGE, "", "percentage of available I/O bandwidth used", 0, 0} );
 
+	r.push_back( {NETWORK, NODE, "quantity/network/volume", "@localhost", networkVolume, GAUGE, "", "Amount of data transferred over the network", 0, 0} );
+	r.push_back( {INPUT_OUTPUT, NODE, "quantity/io/volume", "@localhost", ioVolume, GAUGE, "", "Amount of data accessed on an I/O system", 0, 0} );	
+
 	return r;
 }
 
@@ -106,10 +106,6 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 
 	ioStatistics.clear();
 	lastIoBlockCount = 0;
-	busyCpuStatistics.clear();
-	lastBusyCpuTime = 0;
-	idleCpuStatistic = NULL;
-	lastIdleCpuTime = 0;
 	bandwidthStatistics.clear();
 	bytesSentStatistics.clear();
 	lastBytesSent = 0;
@@ -126,17 +122,14 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 			if( curTopologyType == blockDeviceType ) {
 				ioStatistics.push_back( curStatistic );
 				lastIoBlockCount += curStatistic->curValue.uint64();
+				// TODO use blockdev --getbsz /dev/sda1 to determine block size
 			}
-		} else if( userTimeAttribute == curAttribute || niceTimeAttribute == curAttribute || systemTimeAttribute == curAttribute || iowaitTimeAttribute == curAttribute || interruptsTimeAttribute == curAttribute || softirqTimeAttribute == curAttribute || vmsTimeAttribute == curAttribute || vmsOsTimeAttribute == curAttribute ) {
-			if( curTopology == allCpusObject ) {
-				busyCpuStatistics.push_back( curStatistic );
-				lastBusyCpuTime += curStatistic->curValue.uint64();
-			}
-		} else if( idleTimeAttribute == curAttribute ) {
-			if( curTopology == allCpusObject ) {
-				idleCpuStatistic = curStatistic;
-				lastIdleCpuTime = curStatistic->curValue.uint64();
-			}
+		} else if( cpuIdleTimeAttribute == curAttribute && curTopology == allCpusObject ) {
+			lastCPUIdletime = curStatistic->curValue.uint64();
+			cpuIdleStatistic = curStatistic;
+		} else if( cpuTimeAttribute == curAttribute && curTopology == allCpusObject ) {
+			cpuStatistic = curStatistic;
+			lastCPUtimeconsumed = curStatistic->curValue.uint64();
 		} else if( totalMemoryAttribute == curAttribute && curTopology == localhostObject ) {
 			totalMemoryStatistic = curStatistic;
 		} else if( activeMemoryAttribute == curAttribute && curTopology == localhostObject ) {
@@ -163,18 +156,23 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 
 
 void QualitativeUtilization::newDataAvailable() throw() {
-	uint64_t curIoBlockCount = 0, curBusyCpuTime = 0, curIdleCpuTime = 0, curBandwidth = 0, curBytesSent = 0, curBytesRecieved = 0;
+	uint64_t curIoBlockCount = 0, curIdleCpuTime = 0, curBandwidth = 0, curBytesSent = 0, curBytesRecieved = 0;
 	for( size_t i = ioStatistics.size(); i--; ) curIoBlockCount += ioStatistics[i]->curValue.uint64();
-	for( size_t i = busyCpuStatistics.size(); i--; ) curBusyCpuTime += busyCpuStatistics[i]->curValue.uint64();
-	if( idleCpuStatistic ) curIdleCpuTime = idleCpuStatistic->curValue.uint64();
 	for( size_t i = bandwidthStatistics.size(); i--; ) curBandwidth += bandwidthStatistics[i]->curValue.uint64();
 	for( size_t i = bytesSentStatistics.size(); i--; ) curBytesSent += bytesSentStatistics[i]->curValue.uint64();
 	for( size_t i = bytesRecievedStatistics.size(); i--; ) curBytesRecieved += bytesRecievedStatistics[i]->curValue.uint64();
 
 	// TODO use blockdev --getbsz /dev/sda1 to determine block size
 	ioUtilization = (float) ((uint64_t) 512) * ( curIoBlockCount - lastIoBlockCount ) / options->availableIoBandwidth;
-   float deltaCPU = ( curBusyCpuTime - lastBusyCpuTime + curIdleCpuTime - lastIdleCpuTime );
-	cpuUtilization = (deltaCPU == 0.0f) ? 0.0f : ( curBusyCpuTime - lastBusyCpuTime ) / deltaCPU;
+
+	curIdleCpuTime = cpuIdleStatistic->curValue.uint64();
+	uint64_t curCPUConsumed = cpuStatistic->curValue.uint64();
+
+	float deltaCPU = ( curCPUConsumed - lastCPUtimeconsumed + curIdleCpuTime - lastCPUIdletime);	
+	cpuUtilization = (deltaCPU == 0.0f) ? 0.0f : ( curCPUConsumed - lastCPUtimeconsumed ) / deltaCPU;
+	lastCPUtimeconsumed = curCPUConsumed;
+	lastCPUIdletime = curIdleCpuTime;
+
 	memoryUtilizationVM = 0.0f;
 
 	if( totalMemoryStatistic && activeMemoryStatistic && inactiveMemoryStatistic) {
@@ -187,9 +185,10 @@ void QualitativeUtilization::newDataAvailable() throw() {
 	networkUtilizationTX = (float) ( curBytesSent - lastBytesSent) /  options->availableNetworkBandwidth;
 	networkUtilizationRX = (float) ( curBytesRecieved - lastBytesRecieved ) /  options->availableNetworkBandwidth;
 
+	networkVolume = (uint64_t) ( curBytesSent - lastBytesSent) + ( curBytesRecieved - lastBytesRecieved ) ;
+	ioVolume = ((uint64_t) 512) * ( curIoBlockCount - lastIoBlockCount );
+
 	lastIoBlockCount = curIoBlockCount;
-	lastBusyCpuTime = curBusyCpuTime;
-	lastIdleCpuTime = curIdleCpuTime;
 	lastBytesSent = curBytesSent;
 	lastBytesRecieved = curBytesRecieved;
 
@@ -213,15 +212,8 @@ void QualitativeUtilization::fetchAttributeIds() throw() {
 	} while( 0 )
 	fetchOntologyAttribute( readDataAttribute, "quantity/block/dataRead" );
 	fetchOntologyAttribute( writtenDataAttribute, "quantity/block/dataWritten" );
-	fetchOntologyAttribute( userTimeAttribute, "time/user" );
-	fetchOntologyAttribute( niceTimeAttribute, "time/nice" );
-	fetchOntologyAttribute( systemTimeAttribute, "time/system" );
-	fetchOntologyAttribute( idleTimeAttribute, "time/idle" );
-	fetchOntologyAttribute( iowaitTimeAttribute, "time/iowait" );
-	fetchOntologyAttribute( interruptsTimeAttribute, "time/interrupts" );
-	fetchOntologyAttribute( softirqTimeAttribute, "time/softirq" );
-	fetchOntologyAttribute( vmsTimeAttribute, "time/vms" );
-	fetchOntologyAttribute( vmsOsTimeAttribute, "time/vmsOS" );
+	fetchOntologyAttribute( cpuTimeAttribute, "time/cpu" );
+	fetchOntologyAttribute( cpuIdleTimeAttribute, "time/idle" );
 	fetchOntologyAttribute( totalMemoryAttribute, "quantity/memory/MemTotal" );
 	fetchOntologyAttribute( activeMemoryAttribute, "quantity/memory/Active" );
 	fetchOntologyAttribute( inactiveMemoryAttribute, "quantity/memory/Inactive" );

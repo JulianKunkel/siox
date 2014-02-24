@@ -31,8 +31,8 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 		typedef struct Cpu {
 			int sourceLine;	//the number of the line that contains the information for this cpu
 			int id;	//the aggregated field has the id -1
-			StatisticsValue user, nice, system, idle, iowait, irq, softirq, virtualSystems, virtualOs;
-			Cpu( int sourceLine, int id ) : sourceLine(sourceLine), id(id), user( ( uint64_t )0 ), nice( ( uint64_t )0 ), system( ( uint64_t )0 ), idle( ( uint64_t )0 ), iowait( ( uint64_t )0 ), irq( ( uint64_t )0 ), softirq( ( uint64_t )0 ), virtualSystems( ( uint64_t )0 ), virtualOs( ( uint64_t )0 ) {}
+			StatisticsValue user, nice, system, idle, iowait, irq, softirq, virtualSystems, virtualOs, consumed;
+			Cpu( int sourceLine, int id ) : sourceLine(sourceLine), id(id), user( ( uint64_t )0 ), nice( ( uint64_t )0 ), system( ( uint64_t )0 ), idle( ( uint64_t )0 ), iowait( ( uint64_t )0 ), irq( ( uint64_t )0 ), softirq( ( uint64_t )0 ), virtualSystems( ( uint64_t )0 ), virtualOs( ( uint64_t )0 ), consumed((uint64_t)(0)) {}
 		} Cpu;
 
 		long tickLen;
@@ -67,6 +67,8 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 				statistics->softirq = ( uint64_t )atoll( entries[7].c_str() ) * tickLen;
 				statistics->virtualSystems = ( uint64_t )atoll( entries[8].c_str() ) * tickLen;
 				statistics->virtualOs = ( uint64_t )atoll( entries[9].c_str() ) * tickLen;
+
+				statistics->consumed = statistics->user.uint64() + statistics->nice.uint64() + statistics->system.uint64() + statistics->irq.uint64() + statistics->softirq.uint64() + statistics->virtualSystems.uint64() + statistics->virtualOs.uint64();
 			} else if( name == "intr" ) {
 				interrupts = ( uint64_t ) atoll( entries[1].c_str() );
 			} else if( name == "ctxt" ) {
@@ -113,6 +115,7 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 				const char* topologyPath = topologyPathString.c_str();
 				StatisticsScope type = NODE;
 
+				result.push_back( {CPU, type, "time/cpu", topologyPath, curCpu.consumed , INCREMENTAL, "ms", "Consumed CPU time", overflow_value, 0} );
 				result.push_back( {CPU, type, "time/user", topologyPath, curCpu.user , INCREMENTAL, "ms", "Time spend in user mode", overflow_value, 0} );
 				result.push_back( {CPU, type, "time/nice", topologyPath, curCpu.nice , INCREMENTAL, "ms", "Time spend for niced processes", overflow_value, 0} );
 				result.push_back( {CPU, type, "time/system", topologyPath, curCpu.system , INCREMENTAL, "ms", "Time spend in system mode", overflow_value, 0} );
