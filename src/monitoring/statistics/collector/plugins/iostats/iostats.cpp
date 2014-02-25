@@ -10,7 +10,8 @@ enum DeviceType {
 	DEVICE_TYPE_MEMORY,
 	DEVICE_TYPE_PHYSICAL,
 	DEVICE_TYPE_VIRTUAL,
-	DEVICE_TYPE_COUNT
+	DEVICE_TYPE_COUNT,
+	DEVICE_TYPE_PHYSICAL_INDIVIDUAL_IGNORE // e.g. ignore sda1 because its statistics are already in sda 
 };
 
 struct StorageDevice{
@@ -69,8 +70,10 @@ void IOstats::timestepLine( int lineNr,  vector<string> & entries ) {
 		cur[i] = ( uint64_t ) atoll( entries[i + 3].c_str() );
 	}
 
-	auto & ag = aggregated[dev.type].currentValues;
-	for( size_t i = 11; i--; ) ag[i] += cur[i];
+	if ( dev.type != DEVICE_TYPE_PHYSICAL_INDIVIDUAL_IGNORE ){
+		auto & ag = aggregated[dev.type].currentValues;
+		for( size_t i = 11; i--; ) ag[i] += cur[i];
+	}
 }
 
 void IOstats::initLine( int lineNr, vector<string> & entries ) {
@@ -109,12 +112,14 @@ static string deviceName2topologyPath( string device, enum DeviceType & outType 
 		assert( device.size() >= 3 && device[2] >= 'a' && device[2] <= 'z' );
 		std::ostringstream path;
 		path << "@localhost/" << device[0] << "d:" << device[2] << ":block-device";
+		outType = DEVICE_TYPE_PHYSICAL;
+
 		if( device.size() == 3 ) return path.str();	//It's a whole device
 		//It's a partition
 		for( size_t i = device.size(); i-->3; ) assert( device[i] >= '0' && device[i] <= '9' );
-		path << "/partition:" << &device.c_str()[3];
+		path << "/partition:" << &device.c_str()[3];		
 
-		outType = DEVICE_TYPE_PHYSICAL;
+		outType = DEVICE_TYPE_PHYSICAL_INDIVIDUAL_IGNORE;
 		return path.str();
 	}
 
