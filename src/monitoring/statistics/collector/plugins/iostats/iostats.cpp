@@ -70,22 +70,21 @@ vector<StatisticsProviderDatatypes> IOstats::availableMetrics() throw() {
 		string topologyPath = deviceName2topologyPath( name );
 		//cout << name << endl;
 		//Add the 11 metrics
-		uint64_t overflow_value = ( uint64_t ) 1 << 63; //TODO CHECK ME, we expect 64 Bit...
 
 		std::array<StatisticsValue, 11> & cur = currentValues[name];
-		result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/reads", topologyPath, cur[0], INCREMENTAL, "", "Field 1 -- # of reads issued", overflow_value, 0} );
-		result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/reads/merged", topologyPath, cur[1], INCREMENTAL, "", "Field 2 -- # of reads merged", overflow_value, 0} );
-		result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/dataRead", topologyPath, cur[2], INCREMENTAL, "Bytes", "Data read based on Field 3 -- # of sectors read", overflow_value, 0} );
-		result.push_back( {INPUT_OUTPUT, NODE, "time/block/reads", topologyPath, cur[3], INCREMENTAL, "ms", "Field 4 -- # of milliseconds spent reading", overflow_value, 0} );
+		result.push_back( {"quantity/block/reads", topologyPath, cur[0], INCREMENTAL, "", "Field 1 -- # of reads issued"} );
+		result.push_back( {"quantity/block/reads/merged", topologyPath, cur[1], INCREMENTAL, "", "Field 2 -- # of reads merged"} );
+		result.push_back( {"quantity/block/dataRead", topologyPath, cur[2], INCREMENTAL, "Bytes", "Data read based on Field 3 -- # of sectors read"} );
+		result.push_back( {"time/block/reads", topologyPath, cur[3], INCREMENTAL, "ms", "Field 4 -- # of milliseconds spent reading"} );
 
-		result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/writes", topologyPath, cur[4], INCREMENTAL, "", "Field 5 -- # of writes completed", overflow_value, 0} );
-		result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/writes/merged", topologyPath, cur[5], INCREMENTAL, "", "Field 6 -- # of writes merged", overflow_value, 0} );
-		result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/dataWritten", topologyPath, cur[6], INCREMENTAL, "Bytes", "Data written based on Field 7 -- # of sectors written", overflow_value, 0} );
-		result.push_back( {INPUT_OUTPUT, NODE, "time/block/writes", topologyPath, cur[7], INCREMENTAL, "ms", "Field 8 -- # of milliseconds spent writing", overflow_value, 0} );
+		result.push_back( {"quantity/block/writes", topologyPath, cur[4], INCREMENTAL, "", "Field 5 -- # of writes completed"} );
+		result.push_back( {"quantity/block/writes/merged", topologyPath, cur[5], INCREMENTAL, "", "Field 6 -- # of writes merged"} );
+		result.push_back( {"quantity/block/dataWritten", topologyPath, cur[6], INCREMENTAL, "Bytes", "Data written based on Field 7 -- # of sectors written"} );
+		result.push_back( {"time/block/writes", topologyPath, cur[7], INCREMENTAL, "ms", "Field 8 -- # of milliseconds spent writing"} );
 
-		result.push_back( {INPUT_OUTPUT, NODE, "quantity/block/pendingIOs", topologyPath, cur[8], SAMPLED, "", "Field 9 -- # of I/Os currently in progress", 0, 0} );
-		result.push_back( {INPUT_OUTPUT, NODE, "time/block/access", topologyPath, cur[9], INCREMENTAL, "ms", "Field 10 -- # of milliseconds spent doing I/Os", overflow_value, 0} );
-		result.push_back( {INPUT_OUTPUT, NODE, "time/block/weighted", topologyPath, cur[10], INCREMENTAL, "ms", "Field 11 -- weighted # of milliseconds spent doing I/Os", overflow_value, 0} );
+		result.push_back( {"quantity/block/pendingIOs", topologyPath, cur[8], SAMPLED, "", "Field 9 -- # of I/Os currently in progress"} );
+		result.push_back( {"time/block/access", topologyPath, cur[9], INCREMENTAL, "ms", "Field 10 -- # of milliseconds spent doing I/Os"} );
+		result.push_back( {"time/block/weighted", topologyPath, cur[10], INCREMENTAL, "ms", "Field 11 -- weighted # of milliseconds spent doing I/Os"} );
 	}
 
 	return result;

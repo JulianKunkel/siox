@@ -75,10 +75,10 @@ namespace {
 			topologyPath = "@localhost/eth:" + string( interfaceName, 3, interfaceName.size() - 3 );
 		}
 		#define addGaugeMetric( variableName, unitString, descriptionString ) do { \
-			metricsList->push_back( {NETWORK, DEVICE, "quantity/" #variableName, topologyPath, variableName, GAUGE, unitString, descriptionString, 0, 0} ); \
+			metricsList->push_back( {"quantity/" #variableName, topologyPath, variableName, GAUGE, unitString, descriptionString, 0, 0} ); \
 		} while(0)
 		#define addIncrementalMetric( variableName, unitString, descriptionString ) do { \
-			metricsList->push_back( {NETWORK, DEVICE, "quantity/" #variableName, topologyPath, variableName, INCREMENTAL, unitString, descriptionString, overflow_value, 0} ); \
+			metricsList->push_back( {"quantity/" #variableName, topologyPath, variableName, INCREMENTAL, unitString, descriptionString, overflow_value, 0} ); \
 		} while(0)
 		addGaugeMetric( bandwidthBytes, "B/s", "theoretical link speed" );
 		addIncrementalMetric( bytesSent, "B", "total bytes sent over this network interface" );

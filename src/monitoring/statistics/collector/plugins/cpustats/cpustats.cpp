@@ -113,26 +113,25 @@ class CPUstats: public ProcSingleFilePlugin<12> {
 				}
 				string topologyPathString = topologyPathStream.str();	//we need to keep the string around as long as we use the char*
 				const char* topologyPath = topologyPathString.c_str();
-				StatisticsScope type = NODE;
 
-				result.push_back( {CPU, type, "time/cpu", topologyPath, curCpu.consumed , INCREMENTAL, "ms", "Consumed CPU time", overflow_value, 0} );
-				result.push_back( {CPU, type, "time/user", topologyPath, curCpu.user , INCREMENTAL, "ms", "Time spend in user mode", overflow_value, 0} );
-				result.push_back( {CPU, type, "time/nice", topologyPath, curCpu.nice , INCREMENTAL, "ms", "Time spend for niced processes", overflow_value, 0} );
-				result.push_back( {CPU, type, "time/system", topologyPath, curCpu.system , INCREMENTAL, "ms", "Time spend in system mode", overflow_value, 0} );
-				result.push_back( {CPU, type, "time/idle", topologyPath, curCpu.idle , INCREMENTAL, "ms", "Idle time", overflow_value, 0} );
-				result.push_back( {CPU, type, "time/iowait", topologyPath, curCpu.iowait , INCREMENTAL, "ms", "Time spend waiting for IO", overflow_value, 0} );
-				result.push_back( {CPU, type, "time/interrupts", topologyPath, curCpu.irq , INCREMENTAL, "ms", "Time spend for IRQ", overflow_value, 0} );
-				result.push_back( {CPU, type, "time/softirq", topologyPath, curCpu.softirq , INCREMENTAL, "ms", "Time spend for softIRQ ", overflow_value, 0} );
-				result.push_back( {CPU, type, "time/vms", topologyPath, curCpu.virtualSystems , INCREMENTAL, "ms", "Time spend executing virtual hosts", overflow_value, 0} );
-				result.push_back( {CPU, type, "time/vmsOS", topologyPath, curCpu.virtualOs , INCREMENTAL, "ms", "Time spend for guest operating systems", overflow_value, 0} );
+				result.push_back( {"time/cpu", topologyPath, curCpu.consumed , INCREMENTAL, "ms", "Consumed CPU time", overflow_value, 0} );
+				result.push_back( {"time/user", topologyPath, curCpu.user , INCREMENTAL, "ms", "Time spend in user mode", overflow_value, 0} );
+				result.push_back( {"time/nice", topologyPath, curCpu.nice , INCREMENTAL, "ms", "Time spend for niced processes", overflow_value, 0} );
+				result.push_back( {"time/system", topologyPath, curCpu.system , INCREMENTAL, "ms", "Time spend in system mode", overflow_value, 0} );
+				result.push_back( {"time/idle", topologyPath, curCpu.idle , INCREMENTAL, "ms", "Idle time", overflow_value, 0} );
+				result.push_back( {"time/iowait", topologyPath, curCpu.iowait , INCREMENTAL, "ms", "Time spend waiting for IO", overflow_value, 0} );
+				result.push_back( {"time/interrupts", topologyPath, curCpu.irq , INCREMENTAL, "ms", "Time spend for IRQ", overflow_value, 0} );
+				result.push_back( {"time/softirq", topologyPath, curCpu.softirq , INCREMENTAL, "ms", "Time spend for softIRQ ", overflow_value, 0} );
+				result.push_back( {"time/vms", topologyPath, curCpu.virtualSystems , INCREMENTAL, "ms", "Time spend executing virtual hosts", overflow_value, 0} );
+				result.push_back( {"time/vmsOS", topologyPath, curCpu.virtualOs , INCREMENTAL, "ms", "Time spend for guest operating systems", overflow_value, 0} );
 			}
 
-			result.push_back( {OS, NODE, "quantity/hwInterrupts", "@localhost", interrupts, INCREMENTAL, "", "Serviced interrupts", overflow_value, 0} );
-			result.push_back( {OS, NODE, "quantity/swInterrupts", "@localhost", sw_interrupts , INCREMENTAL, "", "Serviced software interrupts", overflow_value, 0} );
-			result.push_back( {OS, NODE, "quantity/contextSwitches", "@localhost", contextSwitches , INCREMENTAL, "", "The total number of context switches across all CPUs.", overflow_value, 0} );
-			result.push_back( {OS, NODE, "quantity/threadsCreated", "@localhost", threadsCreated , INCREMENTAL, "", "The number of processes and threads created", overflow_value, 0} );
-			result.push_back( {OS, NODE, "quantity/procs/running", "@localhost", curProcsRunning , SAMPLED, "", "The number of processes currently running on all CPUs.", 0, 0} );
-			result.push_back( {OS, NODE, "quantity/procs/blocked", "@localhost", curProcsBlocked , SAMPLED, "", "The the number of processes currently blocked.", 0, 0} );
+			result.push_back( {"quantity/hwInterrupts", "@localhost", interrupts, INCREMENTAL, "", "Serviced interrupts", overflow_value, 0} );
+			result.push_back( {"quantity/swInterrupts", "@localhost", sw_interrupts , INCREMENTAL, "", "Serviced software interrupts", overflow_value, 0} );
+			result.push_back( {"quantity/contextSwitches", "@localhost", contextSwitches , INCREMENTAL, "", "The total number of context switches across all CPUs.", overflow_value, 0} );
+			result.push_back( {"quantity/threadsCreated", "@localhost", threadsCreated , INCREMENTAL, "", "The number of processes and threads created", overflow_value, 0} );
+			result.push_back( {"quantity/procs/running", "@localhost", curProcsRunning , SAMPLED, "", "The number of processes currently running on all CPUs.", 0, 0} );
+			result.push_back( {"quantity/procs/blocked", "@localhost", curProcsBlocked , SAMPLED, "", "The the number of processes currently blocked.", 0, 0} );
 
 			return result;
 		}

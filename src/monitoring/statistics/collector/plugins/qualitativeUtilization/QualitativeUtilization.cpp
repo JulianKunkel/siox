@@ -81,15 +81,15 @@ void QualitativeUtilization::nextTimestep() throw() {
 vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() throw() {
 	vector<StatisticsProviderDatatypes> r;
 
-	r.push_back( {CPU, NODE, "utilization/cpu", "@localhost", cpuUtilization, GAUGE, "", "average cpu utilization on a node", 0, 0} );
-	r.push_back( {MEMORY, NODE, "utilization/memory/vm", "@localhost", memoryUtilizationVM, GAUGE, "", "memory utilization on a node computed using the virtual machine's stats", 0, 0} );
-	r.push_back( {MEMORY, NODE, "utilization/memory", "@localhost", memoryUtilization, GAUGE, "", "memory utilization on a node", 0, 0} );	
-	r.push_back( {NETWORK, NODE, "utilization/network/send", "@localhost", networkUtilizationTX, GAUGE, "", "average network utilization across all links of a node", 0, 0} );
-	r.push_back( {NETWORK, NODE, "utilization/network/receive", "@localhost", networkUtilizationRX, GAUGE, "", "average network utilization across all links of a node", 0, 0} );	
-	r.push_back( {INPUT_OUTPUT, NODE, "utilization/io", "@localhost", ioUtilization, GAUGE, "", "percentage of available I/O bandwidth used", 0, 0} );
+	r.push_back( {"utilization/cpu", "@localhost", cpuUtilization, GAUGE, "", "average cpu utilization on a node"} );
+	r.push_back( {"utilization/memory/vm", "@localhost", memoryUtilizationVM, GAUGE, "", "memory utilization on a node computed using the virtual machine's stats"} );
+	r.push_back( {"utilization/memory", "@localhost", memoryUtilization, GAUGE, "", "memory utilization on a node"} );	
+	r.push_back( {"utilization/network/send", "@localhost", networkUtilizationTX, GAUGE, "", "average network utilization across all links of a node"} );
+	r.push_back( {"utilization/network/receive", "@localhost", networkUtilizationRX, GAUGE, "", "average network utilization across all links of a node"} );	
+	r.push_back( {"utilization/io", "@localhost", ioUtilization, GAUGE, "", "percentage of available I/O bandwidth used"} );
 
-	r.push_back( {NETWORK, NODE, "quantity/network/volume", "@localhost", networkVolume, GAUGE, "", "Amount of data transferred over the network", 0, 0} );
-	r.push_back( {INPUT_OUTPUT, NODE, "quantity/io/volume", "@localhost", ioVolume, GAUGE, "", "Amount of data accessed on an I/O system", 0, 0} );	
+	r.push_back( {"quantity/network/volume", "@localhost", networkVolume, GAUGE, "", "Amount of data transferred over the network"} );
+	r.push_back( {"quantity/io/volume", "@localhost", ioVolume, GAUGE, "", "Amount of data accessed on an I/O system"} );	
 
 	return r;
 }

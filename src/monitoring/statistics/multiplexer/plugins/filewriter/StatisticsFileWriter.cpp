@@ -1,10 +1,3 @@
-/**
- * @file TestListener.cpp
- *
- * @author Nathanael Hübbe
- * @date 2013
- */
-
 #include <iostream>
 #include <fstream>
 #include <boost/archive/text_oarchive.hpp>

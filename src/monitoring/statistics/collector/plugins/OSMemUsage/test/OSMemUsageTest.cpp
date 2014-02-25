@@ -27,9 +27,7 @@ int main( int argc, char const * argv[] )
 	plugin->nextTimestep();
 	for( auto it = list.begin() ; it != list.end(); it ++ ) {
 		StatisticsProviderDatatypes & stat = *it;
-		if( stat.scope == DEVICE ) {
-			cout << stat.topologyPath << " ";
-		}
+		cout << stat.topologyPath << " ";
 		cout << stat.metrics << ": " << stat.value << " " << stat.si_unit << endl;
 	}
 
