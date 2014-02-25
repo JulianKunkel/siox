@@ -331,6 +331,68 @@ CREATE TABLE value (
 COMMENT ON TABLE value IS 'Value';
 ALTER TABLE ONLY value ADD CONSTRAINT value_objectid_attributeid_key UNIQUE (objectid, attributeid);
 
+CREATE OR REPLACE FUNCTION topology.get_type_by_name(name IN text)
+RETURNS SETOF topology.type AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.type AS t WHERE t.name = get_type_by_name.name;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_type_by_name(name IN text)  IS 'Returns type given its name.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_type_by_id(id IN integer)
+RETURNS SETOF topology.type AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.type AS t WHERE t.id = get_type_by_id.id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_type_by_id(id IN integer)  IS 'Returns type given its ID.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_object_by_id(id IN integer)
+RETURNS SETOF topology.object AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.object AS o WHERE o.id = get_object_by_id.id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_object_by_id(id IN integer)  IS 'Returns object given its ID.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_relation(obj_id IN integer, type_id IN integer, name IN text)
+RETURNS SETOF topology.relation AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.relation WHERE childName = get_relation.name AND parentObjectId = get_relation.obj_id AND relationType = get_relation.type_id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_relation(obj_id IN integer, type_id IN integer, name IN text) IS 'Returns relation.';
+
+CREATE OR REPLACE FUNCTION topology.get_attribute_by_name(type_id IN integer, name IN text)
+RETURNS SETOF topology.attribute AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.attribute WHERE name = get_attribute_by_name.name AND domainTypeId = get_attribute_by_name.type_id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_attribute_by_name(type_id IN integer, name IN text) IS 'Returns attribute given name and domain ID.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_attribute_by_id(id IN integer)
+RETURNS SETOF topology.attribute AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.attribute WHERE id = get_attribute_by_id.id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_attribute_by_id(id IN integer) IS 'Returns attribute given its numeric ID.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_attribute_by_object(obj_id IN integer, attr_id IN integer)
+RETURNS SETOF topology.attribute AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.attribute WHERE objectId = get_attribute_by_object.obj_id AND attributeId = get_attribute_by_object.attr_id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_attribute_by_object(obj_id IN integer, attr_id IN integer) IS 'Returns attribute given an object id and attribute-id.';
+
+
 CREATE OR REPLACE FUNCTION topology.reset_all() 
 RETURNS void AS $$
 	TRUNCATE topology.attribute, topology.object, topology.relation, topology.type, topology.value;
