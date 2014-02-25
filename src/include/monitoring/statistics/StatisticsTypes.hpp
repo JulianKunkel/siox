@@ -69,22 +69,22 @@ namespace monitoring {
 
 	typedef VariableDatatype StatisticsValue;
 
-	enum StatisticsEntity {
-		NETWORK,
-		INPUT_OUTPUT,
-		CPU,
-		MEMORY,
-		OS,
-		HARDWARE_SPECIFIC,
-		SOFTWARE_SPECIFIC
-	};
+	// enum StatisticsEntity {
+	// 	NETWORK,
+	// 	INPUT_OUTPUT,
+	// 	CPU,
+	// 	MEMORY,
+	// 	OS,
+	// 	HARDWARE_SPECIFIC,
+	// 	SOFTWARE_SPECIFIC
+	// };
 
-	enum StatisticsScope {
-		GLOBAL,
-		NODE,
-		DEVICE,
-		COMPONENT
-	};
+	// enum StatisticsScope {
+	// 	GLOBAL,
+	// 	NODE,
+	// 	DEVICE,
+	// 	COMPONENT
+	// };
 
 	typedef enum StatisticsInterval {
 		HUNDRED_MILLISECONDS = 0,

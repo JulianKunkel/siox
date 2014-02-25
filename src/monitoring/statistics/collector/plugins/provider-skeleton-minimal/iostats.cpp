@@ -21,9 +21,9 @@ class IOstats: public StatisticsProviderPlugin {
 		virtual vector<StatisticsProviderDatatypes> availableMetrics() throw() override {
 			vector<StatisticsProviderDatatypes> result;
 
-			result.push_back( {SOFTWARE_SPECIFIC, GLOBAL, "test/metrics", "@localhost", i, GAUGE, "%", "test desc", 0, 0} );
-			result.push_back( {HARDWARE_SPECIFIC, NODE, "test/weather", "@localhost/weather-station:1", f, INCREMENTAL, "uhh", "desc2",  0, 0} );
-			result.push_back( {HARDWARE_SPECIFIC, DEVICE, "test/metric", "@localhost/sda:1", f, INCREMENTAL, "GB/s", "Throughput", 0, 0} );
+			result.push_back( { "test/metrics", "@localhost", i, GAUGE, "%", "test desc"} );
+			result.push_back( { "test/weather", "@localhosbt/weather-station:1", f, INCREMENTAL, "uhh", "desc2"} );
+			result.push_back( { "test/metric", "@localhost/sda:1", f, INCREMENTAL, "GB/s", "Throughput"} );
 
 			return result;
 		}
