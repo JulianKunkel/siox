@@ -47,8 +47,8 @@ namespace monitoring {
 			string description;
 
 			// These counters are used for INCREMENTAL intervalType only.
-			StatisticsValue overflow_max_value;  // maximum value of the counter
-			StatisticsValue overflow_next_value; // if the value overflows we begin with this value.
+			uint64_t overflow_max_value;  // maximum value of the counter
+			uint64_t overflow_next_value; // if the value overflows we begin with this value.
 
 			StatisticsProviderDatatypes(
 			    const string& metrics,

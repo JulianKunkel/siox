@@ -291,7 +291,12 @@ void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plu
 		OntologyAttributeID ontologyId = ontology->register_attribute( kStatisticsDomain, metrics[i].metrics , metrics[i].value.type() ).aID;
 		if( TopologyObject device = topology->registerObjectByPath( metrics[i].topologyPath ) ) {
 			TopologyObjectId topologyId = device.id();
-			shared_ptr<Statistic> curStatistic( new Statistic( metrics[i].value, ontologyId, topologyId ) );
+			shared_ptr<Statistic> curStatistic;
+			if( metrics[i].intervalType == INCREMENTAL ) {
+				curStatistic = shared_ptr<Statistic>( new IncrementalStatistic( metrics[i].value, ontologyId, topologyId, metrics[i].overflow_next_value, metrics[i].overflow_max_value ) );
+			} else {
+				curStatistic = shared_ptr<Statistic>( new Statistic( metrics[i].value, ontologyId, topologyId ) );
+			}
 			pair<OntologyAttributeID, TopologyObjectId> curKey( ontologyId, topologyId );
 			statistics.emplace_back( curStatistic );
 			pluginPerStatistics.emplace_back( plugin );

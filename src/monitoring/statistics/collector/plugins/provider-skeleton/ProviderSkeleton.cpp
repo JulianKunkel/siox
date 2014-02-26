@@ -28,8 +28,8 @@ class ProviderSkeleton: public StatisticsProviderPlugin {
 			vector<StatisticsProviderDatatypes> result;
 
 			result.push_back( {"test/metrics", "@localhost", i, GAUGE, "%", "test desc", 0, 0} );
-			result.push_back( {"test/weather", "@localhost/weather-station:0", f, INCREMENTAL, "unit", "desc2", 0, 0} );
-			result.push_back( {"test/hdd", "@localhost/sda:1", f, INCREMENTAL, "GB/s", "Throughput", 0, 0} );
+			result.push_back( {"test/weather", "@localhost/weather-station:0", f, SAMPLED, "unit", "desc2", 0, 0} );
+			result.push_back( {"test/hdd", "@localhost/sda:1", f, SAMPLED, "GB/s", "Throughput", 0, 0} );
 
 			return result;
 		}
