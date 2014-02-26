@@ -26,6 +26,9 @@ class ProcSingleFilePlugin: public StatisticsProviderPlugin {
 				// TODO add error value.
 				return;
 			}
+			if( ! INIT ){
+				timestepStarts();
+			}
 			int lineNr = 0;
 			while( ! file.eof() ) {
 				// cout << "lineNr" << lineNr << endl;
@@ -69,6 +72,10 @@ class ProcSingleFilePlugin: public StatisticsProviderPlugin {
 		}
 
 	protected:
+		virtual void timestepStarts(){
+
+		}
+
 		virtual void timestepLine( int lineNr, vector<string> & entries ) = 0;
 		virtual const string filename() = 0;
 

@@ -52,6 +52,9 @@ namespace monitoring {
 					archive >> boost::serialization::make_nvp( "MAX_VALUE", nextID );
 					archive >> boost::serialization::make_nvp( "map", attribute_map );
 
+					loadedID = nextID;
+
+
 					// recreate domain_name_map
 					for( auto itr = attribute_map.begin(); itr != attribute_map.end(); itr++ ) {
 						auto pair = *itr;
@@ -74,6 +77,8 @@ namespace monitoring {
 			}
 
 			void save( string filename ) {
+				if ( loadedID == nextID ) return;
+				
 				ofstream file( filename );
 				if( ! file.good() ){
 					cerr << "Could not store ontology in file: " << filename << endl;
@@ -211,6 +216,7 @@ namespace monitoring {
 
 		private:
 			OntologyAttributeID nextID = 1;
+			OntologyAttributeID loadedID = 1;
 
 			mutex attributeMutex;
 

@@ -48,6 +48,7 @@ namespace monitoring {
 					archive >> boost::serialization::make_nvp( "activityInterfaceIDMap", activityInterfaceIDMap );
 					archive >> boost::serialization::make_nvp( "activityMap", activityMap );
 
+					loadedNextID = nextID;
 				} catch( boost::archive::archive_exception e ) {
 					cerr << "Input file " << filename << " is damaged, recreating system info!" << endl;
 					//domain_name_map.clear();
@@ -59,6 +60,8 @@ namespace monitoring {
 			}
 
 			void save( string filename ) {
+				if (loadedNextID == nextID) return;
+				
 				ofstream file( filename );
 				boost::archive::xml_oarchive archive( file, boost::archive::no_header | boost::archive::no_codecvt );
 				archive << boost::serialization::make_nvp( "nextID", nextID );
@@ -289,6 +292,7 @@ namespace monitoring {
 			mutex m;
 
 			uint32_t nextID = 1;
+			uint32_t loadedNextID = 1;
 
 			map<uint32_t, string> valueStringMap;
 

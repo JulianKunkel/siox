@@ -35,13 +35,13 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		OntologyAttributeID bytesRecievedAttribute = 0;
 		OntologyAttributeID likwidMemoryBandwidth = 0;
 
-		TopologyTypeId blockDeviceType = 0;
 		TopologyTypeId ethType = 0;
 		TopologyObjectId localhostObject = 0, allCpusObject = 0;		
 
 		///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
-		std::vector<std::shared_ptr<Statistic> > ioStatistics;
-		uint64_t lastIoBlockCount = 0;
+		std::shared_ptr<Statistic> ioStatisticsRead;
+		std::shared_ptr<Statistic> ioStatisticsWrite;
+		uint64_t lastIoVolume = 0;
 		const StatisticsValue * likwidMemoryBandwithStatistic;
 
 		std::shared_ptr<Statistic> cpuStatistic;
@@ -104,8 +104,9 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 	if( !readDataAttribute ) fetchAttributeIds();
 	Topology* topology = GET_INSTANCE( ActivityPluginDereferencing, options->dereferencingFacade )->topology();
 
-	ioStatistics.clear();
-	lastIoBlockCount = 0;
+	ioStatisticsRead = nullptr;
+	ioStatisticsWrite = nullptr;
+	lastIoVolume = 0;
 	bandwidthStatistics.clear();
 	bytesSentStatistics.clear();
 	lastBytesSent = 0;
@@ -118,12 +119,12 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 		TopologyObjectId curTopology = curStatistic->topologyId;
 		TopologyTypeId curTopologyType = topology->lookupTypeById( topology->lookupObjectById( curTopology ).type() ).id();
 		if( !curAttribute ) continue;
-		if( readDataAttribute == curAttribute || writtenDataAttribute == curAttribute ) {
-			if( curTopologyType == blockDeviceType ) {
-				ioStatistics.push_back( curStatistic );
-				lastIoBlockCount += curStatistic->curValue.uint64();
-				// TODO use blockdev --getbsz /dev/sda1 to determine block size
-			}
+		if( readDataAttribute == curAttribute && curTopology == allCpusObject ) {
+			ioStatisticsRead = curStatistic ;
+			lastIoVolume += curStatistic->curValue.uint64();
+		} else if( writtenDataAttribute == curAttribute && curTopology == allCpusObject ) {
+			ioStatisticsWrite = curStatistic ;
+			lastIoVolume += curStatistic->curValue.uint64();
 		} else if( cpuIdleTimeAttribute == curAttribute && curTopology == allCpusObject ) {
 			lastCPUIdletime = curStatistic->curValue.uint64();
 			cpuIdleStatistic = curStatistic;
@@ -156,14 +157,15 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 
 
 void QualitativeUtilization::newDataAvailable() throw() {
-	uint64_t curIoBlockCount = 0, curIdleCpuTime = 0, curBandwidth = 0, curBytesSent = 0, curBytesRecieved = 0;
-	for( size_t i = ioStatistics.size(); i--; ) curIoBlockCount += ioStatistics[i]->curValue.uint64();
+	uint64_t curIOvolume = 0, curIdleCpuTime = 0, curBandwidth = 0, curBytesSent = 0, curBytesRecieved = 0;
+	curIOvolume = ioStatisticsRead->curValue.uint64() + ioStatisticsWrite->curValue.uint64();
+
 	for( size_t i = bandwidthStatistics.size(); i--; ) curBandwidth += bandwidthStatistics[i]->curValue.uint64();
 	for( size_t i = bytesSentStatistics.size(); i--; ) curBytesSent += bytesSentStatistics[i]->curValue.uint64();
 	for( size_t i = bytesRecievedStatistics.size(); i--; ) curBytesRecieved += bytesRecievedStatistics[i]->curValue.uint64();
 
 	// TODO use blockdev --getbsz /dev/sda1 to determine block size
-	ioUtilization = (float) ((uint64_t) 512) * ( curIoBlockCount - lastIoBlockCount ) / options->availableIoBandwidth;
+	ioUtilization = (float) (uint64_t)( curIOvolume - lastIoVolume ) / options->availableIoBandwidth;
 
 	curIdleCpuTime = cpuIdleStatistic->curValue.uint64();
 	uint64_t curCPUConsumed = cpuStatistic->curValue.uint64();
@@ -186,9 +188,9 @@ void QualitativeUtilization::newDataAvailable() throw() {
 	networkUtilizationRX = (float) ( curBytesRecieved - lastBytesRecieved ) /  options->availableNetworkBandwidth;
 
 	networkVolume = (uint64_t) ( curBytesSent - lastBytesSent) + ( curBytesRecieved - lastBytesRecieved ) ;
-	ioVolume = ((uint64_t) 512) * ( curIoBlockCount - lastIoBlockCount );
+	ioVolume = ((uint64_t) 512) * ( curIOvolume - lastIoVolume );
 
-	lastIoBlockCount = curIoBlockCount;
+	lastIoVolume = curIOvolume;
 	lastBytesSent = curBytesSent;
 	lastBytesRecieved = curBytesRecieved;
 
@@ -231,7 +233,6 @@ void QualitativeUtilization::fetchAttributeIds() throw() {
 			} \
 		} \
 	} while( 0 )
-	fetchTopologyId( blockDeviceType, registerType, "block-device" );
 	fetchTopologyId( ethType, registerType, "eth" );
 	fetchTopologyId( localhostObject, registerObjectByPath, "@localhost" );
 	fetchTopologyId( allCpusObject, registerObjectByPath, "@localhost" );

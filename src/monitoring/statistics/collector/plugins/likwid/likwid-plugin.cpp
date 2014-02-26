@@ -150,7 +150,7 @@ namespace {
 		vector<StatisticsProviderDatatypes> result;
 
 		#define addGaugeMetric( name, variableName, unitString, descriptionString ) \
-			result.push_back( {StatisticsEntity::CPU, StatisticsScope::NODE, name, "@localhost", variableName, GAUGE, unitString, descriptionString, 0, 0} ); 
+			result.push_back( {name, "@localhost", variableName, GAUGE, unitString, descriptionString, 0, 0} ); 
 		
 		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){			
 			// extract correct unit from likwid
