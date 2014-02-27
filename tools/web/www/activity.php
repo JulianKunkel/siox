@@ -64,7 +64,7 @@ $pid_secs %= 60;
 		<th>duration</th><td class="odd"><?=round(($act->time_stop - $act->time_start) / 1000, 3)?> µs</td>
 	</tr>
 	<tr>
-		<th>attributes</th><td class="even"><?=$act->attributes?></td>
+		<th>attributes</th><td class="even"><?php foreach ($act->attributes as $k => $v):?><?=$k?> = <?=$v?><br /><?php endforeach?></td>
 	</tr>
 	<tr>
 		<th>remote_calls</th><td class="odd"><?=implode(', ', hyperlink_ids('remote_call.php?unique_id=', $act->remote_calls));?></td>

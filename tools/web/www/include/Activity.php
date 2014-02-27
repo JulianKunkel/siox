@@ -2,6 +2,28 @@
 
 class Activity {
 
+
+static function get_attribute_name($attr_id)
+{
+	global $dbcon;
+
+	$sql = "SELECT * FROM topology.get_attribute_by_id(:attr_id)";
+
+	$stmt = $dbcon->prepare($sql);
+	$stmt->bindParam(':attr_id', $attr_id);
+
+	if (!$stmt->execute()) {
+		print_r($dbcon->errorInfo());
+		die("Error querying attribute name.");
+	}
+
+	$row = $stmt->fetch(PDO::FETCH_OBJ);
+
+	return $row->childname;
+
+}
+
+
 static function get_list($page = 1, $page_size = 200)
 {
 	global $dbcon;
@@ -57,6 +79,17 @@ static function get_activity($unique_id)
 		die("Error querying activity.");
 
 	$act = $stmt->fetch(PDO::FETCH_OBJ);
+
+	$named_attributes = array();
+	$attributes = explode(';', $act->attributes);
+
+	foreach ($attributes as $kv_pair) {
+		$kv = explode(",", trim($kv_pair, '"'));
+		$attr_name = self::get_attribute_name($kv[0]);
+		$named_attributes[$attr_name] = $kv[1];
+	}
+
+	$act->attributes = $named_attributes;
 
 	$act->parents = self::get_parents($unique_id);
 	$act->children = self::get_children($unique_id);
