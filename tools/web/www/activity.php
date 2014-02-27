@@ -22,7 +22,7 @@ require_once "header.php";
 
 <table cellspacing="0" cellpadding="0">
 	<tr>
-		<th>name</th><td class="odd"><?=$act->activity_name?>()</td>
+		<th>name</th><td class="odd"><?=$act->childname?>()</td>
 	</tr>
 	<tr>
 		<th>unique_id</th><td class="even"><?=$act->unique_id?></td>
