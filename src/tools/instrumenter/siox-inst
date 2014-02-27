@@ -4,8 +4,9 @@
 
 function ABORT(){
 	echo "Syntax:"
-	echo "	$0 <LAYER1_TO_INSTRUMENT,LAYER2,...> <TYPE:dlsym|wrap> <ORIGINAL_PROGRAMM>"
-	echo "	e.g. $0 posix,hdf5 wrap gcc test.c -o test.o"
+	echo "	$0 [-h | --help | -q | --quiet | -v | --verbose ] <LAYER1_TO_INSTRUMENT,LAYER2,...> [dlsym | wrap] <ORIGINAL_PROGRAMM>"
+	echo "	e.g. $0 --help"
+	echo "	e.g. $0 -q posix,hdf5 wrap gcc test.c -o test.o"
 	echo "	e.g. $0 posix,hdf5 dlsym ls /home"
 	echo
 	echo "Instrumention for the following layers is available:"
@@ -24,16 +25,20 @@ pushd $LIBDIR >/dev/null
 AVAILABLE_WRAPPERS=$(ls libsiox-*dlsym* | sed "s/libsiox-//g" | sed "s/-dlsym.*//" )
 popd >/dev/null
 
-# Verbosity level
-VERBOSE=
-if [[ "$1" == "-h" ]];then
-	ABORT
-fi
-
-if [[ "$1" == "-v" ]];	then
-	VERBOSE=1
-	shift
-fi
+# The verbosity level may be -1 (quiet), 0 (normal), or 1 (verbose)
+VERBOSE_LEVEL=0
+DONE=
+until [ $DONE ] ; do
+	case "$1" in
+		(-h) ABORT ;;
+		(--help) ABORT ;;
+		(-v) VERBOSE_LEVEL=1 ; shift ;;
+		(--verbose) VERBOSE_LEVEL=1 ; shift ;;
+		(-q) VERBOSE_LEVEL=-1 ; shift ;;
+		(--quit) VERBOSE_LEVEL=-1 ; shift ;;
+		(*) DONE=true ;;
+	esac
+done
 
 # Layers to instrument are specified by the user
 LAYERS="$1"
@@ -55,7 +60,7 @@ if [[ "$1" == "" ]] ; then
 	ABORT
 fi
 
-if [ $VERBOSE ];then
+if (( $VERBOSE_LEVEL >= 1 )) ; then
 	echo "INFO: $AVAILABLE_WRAPPERS"
 fi
 
@@ -77,20 +82,24 @@ done
 
 if [[ $TYPE == "dlsym" ]] ; then
 	
-	if [ $VERBOSE ];then
+	if (( $VERBOSE_LEVEL >= 1 )) ; then
 		echo "INFO: LD_PRELOAD=\"$LDSTRING\" $@"
 	fi
 
-	echo "[EXE] $LAYERS \"$@\" "
+	if (( $VERBOSE_LEVEL >= 0 )) ; then
+		echo "[EXE] $LAYERS \"$@\" "
+	fi
 	export LD_LIBRARY_PATH=$LIBDIR:$LD_LIBRARY_PATH
 
 	LD_PRELOAD="$LDSTRING" $@
 else
 
-	if [ $VERBOSE ];then
+	if (( $VERBOSE_LEVEL >= 1 )) ; then
 		echo "INFO: $@ $WRAPSTRING $WRAPLIBS"
 	fi
 
-	echo "[CC] $LAYERS \"$@\""
+	if (( $VERBOSE_LEVEL >= 0 )) ; then
+		echo "[CC] $LAYERS \"$@\""
+	fi
 	$@ $WRAPSTRING $WRAPLIBS
 fi
