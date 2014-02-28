@@ -7,8 +7,7 @@ static function get_list($page = 1, $page_size = 200)
 	global $dbcon;
 
 	$sql_join  = "LEFT JOIN activity.activity_ids AS b ON a.unique_id = b.unique_id ";
-	$sql_join .= "LEFT JOIN sysinfo.activities AS c ON a.ucaid = c.ucaid";
-	$sql       = "SELECT a.*, b.*, c.activity_name FROM activity.activities AS a $sql_join ORDER BY a.time_start ASC LIMIT :page_size OFFSET :offset";
+	$sql       = "SELECT a.*, b.* FROM activity.activities AS a $sql_join ORDER BY a.time_start ASC LIMIT :page_size OFFSET :offset";
 
 	$stmt = $dbcon->prepare($sql);
 	$stmt->bindParam(':page_size', $page_size);
@@ -31,14 +30,14 @@ static function get_count()
 {
 	global $dbcon;
 
-	$sql_join  = "LEFT JOIN activity.activity_ids AS b ON a.unique_id = b.unique_id ";
-	$sql_join .= "LEFT JOIN sysinfo.activities AS c ON a.ucaid = c.ucaid";
-	$sql       = "SELECT count(*) AS count FROM activity.activities AS a $sql_join";
+	$sql = "SELECT count(*) AS count FROM activity.activities";
 
 	$stmt = $dbcon->prepare($sql);
 
-	if (!$stmt->execute())
+	if (!$stmt->execute()) {
+		print_r($dbcon->errorInfo());
 		die("Error querying activity list.");
+	}
 
 	$row = $stmt->fetch(PDO::FETCH_OBJ);
 
