@@ -14,7 +14,7 @@ static function get_attribute_name($attr_id)
 
 	if (!$stmt->execute()) {
 		print_r($dbcon->errorInfo());
-		die("Error querying attribute name.");
+		die("Error querying attribute name. Id=$attr_id.");
 	}
 
 	$row = $stmt->fetch(PDO::FETCH_OBJ);
@@ -75,13 +75,16 @@ static function get_activity($unique_id)
 	$stmt = $dbcon->prepare($sql);
 	$stmt->bindParam(':unique_id', $unique_id);
 
-	if (!$stmt->execute())
+	if (!$stmt->execute()) {
+		print_r($dbcon->errorInfo());
 		die("Error querying activity.");
+	}
 
 	$act = $stmt->fetch(PDO::FETCH_OBJ);
 
 	$named_attributes = array();
-	$attributes = explode(';', $act->attributes);
+	if (!empty($act->attributes))
+		$attributes = explode(';', $act->attributes);
 
 	foreach ($attributes as $kv_pair) {
 		$kv = explode(",", trim($kv_pair, '"'));
@@ -90,7 +93,6 @@ static function get_activity($unique_id)
 	}
 
 	$act->attributes = $named_attributes;
-
 	$act->parents = self::get_parents($unique_id);
 	$act->children = self::get_children($unique_id);
 	$act->remote_calls = self::get_remote_calls($unique_id);
@@ -108,7 +110,7 @@ static function get_remote_calls($unique_id)
 	$stmt->bindParam(':unique_id', $unique_id);
 
 	if (!$stmt->execute())
-		die("Error querying activity.");
+		die("Error querying remote calls.");
 
 	$remote_calls = array();
 
@@ -151,18 +153,19 @@ static function get_parents($unique_id)
 {
 	global $dbcon;
 
-	$sql = "SELECT p.parent_id AS unique_id, b.activity_name AS name 
+	$sql = "SELECT p.parent_id AS unique_id, t.childName AS name 
 			FROM activity.parents AS p 
 			LEFT JOIN activity.activities AS a ON p.parent_id = a.unique_id
-			LEFT JOIN sysinfo.activities  AS b ON a.ucaid = b.ucaid
+			LEFT JOIN topology.relation AS t ON t.childobjectid = a.ucaid
 			WHERE p.child_id = :unique_id";
 
 	$stmt = $dbcon->prepare($sql);
 	$stmt->bindParam(':unique_id', $unique_id);
 
-	if (!$stmt->execute())
+	if (!$stmt->execute()) {
+		print_r($dbcon->errorInfo());
 		die("Error querying parent list.");
-
+	}
 	$parents = array();
 
 	while ($row = $stmt->fetch(PDO::FETCH_OBJ))
@@ -182,8 +185,10 @@ static function get_parent_ids($unique_id)
 
 	$parents = array();
 
-	if (!$stmt->execute())
-		die("Error querying parent list.");
+	if (!$stmt->execute()) {
+		print_r($dbcon->errorInfo());
+		die("Error querying parent-id list.");
+	}
 
 	while ($row = $stmt->fetch(PDO::FETCH_OBJ))
 		$parents[] = $row->parent_id;
@@ -197,18 +202,19 @@ static function get_children($unique_id)
 {
 	global $dbcon;
 
-	$sql = "SELECT p.child_id AS unique_id, b.activity_name AS name
+	$sql = "SELECT p.child_id AS unique_id, b.childName AS name
 			FROM activity.parents AS p 
 			LEFT JOIN activity.activities AS a ON p.child_id = a.unique_id
-			LEFT JOIN sysinfo.activities  AS b ON a.ucaid = b.ucaid
+			LEFT JOIN topology.relation AS b ON b.childobjectid = a.ucaid
 			WHERE p.parent_id = :unique_id";
 
 	$stmt = $dbcon->prepare($sql);
 	$stmt->bindParam(':unique_id', $unique_id);
 
-	if (!$stmt->execute())
-		die("Error querying parent list.");
-
+	if (!$stmt->execute()) {
+		print_r($dbcon->errorInfo());
+		die("Error querying children list.");
+	}
 	$children = array();
 
 	while ($row = $stmt->fetch(PDO::FETCH_OBJ))
@@ -263,7 +269,7 @@ static function add_child_edges(&$gv, $children, $parent, $min_max_d = 0)
 static function add_parent_edges(&$gv, $parents, $child, $min_max_d = 0)
 {
 	foreach ($parents as $parent) {
-		$p = self::get_activity($parent->unique_id, true);
+		$p = self::get_activity($parent->unique_id);
 
 		$duration = $p->time_stop - $p->time_start;
 		$scale = $duration / ($min_max_d["max"] - $min_max_d["min"]);
@@ -272,7 +278,6 @@ static function add_parent_edges(&$gv, $parents, $child, $min_max_d = 0)
 		$height = 0.5 + $scale;
 
 		$gv->addNode($parent->unique_id, array('style' => 'filled', 'width' => $width, 'height' => $height, 'URL' => "activity.php?unique_id=$parent->unique_id", 'label' => "#$parent->unique_id: $p->childname()"));
-
 		$gv->addEdge(array($parent->unique_id => $child->unique_id));
 		if (!empty($parent->parents))
 			self::add_parent_edges($gv, $parent->parents, $parent, $min_max_d);
@@ -286,11 +291,10 @@ static function print_dot($unique_id)
 
 	$act = self::get_activity($unique_id);
 	$aid = self::get_activity_id($unique_id, 3);
-	
+
 	$gv = new Image_GraphViz();
 
 	$min_max_d = self::get_min_max_duration($unique_id);
-
 	$duration = $act->time_stop - $act->time_start;
 	$delta = $min_max_d["max"] - $min_max_d["min"];
 
