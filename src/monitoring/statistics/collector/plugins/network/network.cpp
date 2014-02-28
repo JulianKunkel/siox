@@ -17,10 +17,10 @@ namespace {
 
 	class NetworkStatisticsPlugin : public StatisticsProviderPlugin {
 		public:
-			virtual void init( StatisticsProviderPluginOptions & options );
+			void init( StatisticsProviderPluginOptions * options )  override;
 
-			virtual void nextTimestep() throw();
-			virtual vector<StatisticsProviderDatatypes> availableMetrics() throw();
+			void nextTimestep() throw()  override;
+			vector<StatisticsProviderDatatypes> availableMetrics() throw() override;
 		private:
 			class InterfaceData {
 				public:
@@ -29,12 +29,16 @@ namespace {
 					StatisticsValue packetsSent = ( uint64_t )0, packetsRecieved = ( uint64_t )0;
 					string interfaceName, speedPath, bytesSentPath, bytesRecievedPath, packetsSentPath, packetsRecievedPath;
 
+					InterfaceData(){}
 					InterfaceData( string interfaceName );
 					void nextTimestep() throw();
 					void addMetricsToList( vector<StatisticsProviderDatatypes>* metricsList ) throw();
 			};
 
 			vector<InterfaceData> interfaces;
+
+			// aggregated information for the full node
+			InterfaceData nodeDate;
 	};
 
 
@@ -68,17 +72,18 @@ namespace {
 	}
 
 
-	void NetworkStatisticsPlugin::InterfaceData::addMetricsToList( vector<StatisticsProviderDatatypes>* metricsList ) throw() {
-		uint64_t overflow_value = ( uint64_t )-1;
+	void NetworkStatisticsPlugin::InterfaceData::addMetricsToList( vector<StatisticsProviderDatatypes>* metricsList ) throw() {	
 		string topologyPath = "@localhost/networkInterface:" + interfaceName;
-		if( interfaceName.size() >= 4 && string( interfaceName, 0, 3 ) == "eth" ) {
+		if ( interfaceName == "" ){ // the global name
+			topologyPath = "@localhost/network:kernel";
+		}else if( interfaceName.size() >= 4 && string( interfaceName, 0, 3 ) == "eth" ) {
 			topologyPath = "@localhost/eth:" + string( interfaceName, 3, interfaceName.size() - 3 );
 		}
 		#define addGaugeMetric( variableName, unitString, descriptionString ) do { \
-			metricsList->push_back( {NETWORK, DEVICE, "quantity/" #variableName, topologyPath, variableName, GAUGE, unitString, descriptionString, 0, 0} ); \
+			metricsList->push_back( {"quantity/network/" #variableName, topologyPath, variableName, GAUGE, unitString, descriptionString} ); \
 		} while(0)
 		#define addIncrementalMetric( variableName, unitString, descriptionString ) do { \
-			metricsList->push_back( {NETWORK, DEVICE, "quantity/" #variableName, topologyPath, variableName, INCREMENTAL, unitString, descriptionString, overflow_value, 0} ); \
+			metricsList->push_back( {"quantity/network/" #variableName, topologyPath, variableName, INCREMENTAL, unitString, descriptionString} ); \
 		} while(0)
 		addGaugeMetric( bandwidthBytes, "B/s", "theoretical link speed" );
 		addIncrementalMetric( bytesSent, "B", "total bytes sent over this network interface" );
@@ -89,7 +94,7 @@ namespace {
 	}
 
 
-	void NetworkStatisticsPlugin::init( StatisticsProviderPluginOptions& options ) {
+	void NetworkStatisticsPlugin::init( StatisticsProviderPluginOptions * options ) {
 		if( DIR* directory = opendir( "/sys/class/net" ) ) {
 			union {	//this is for portability
 				struct dirent64 data;
@@ -108,13 +113,28 @@ namespace {
 
 
 	void NetworkStatisticsPlugin::nextTimestep() throw() {
-		for( size_t i = interfaces.size(); i--; ) interfaces[i].nextTimestep();
+		nodeDate.bandwidthBytes = (uint64_t) 0;
+		nodeDate.bytesSent = (uint64_t) 0;
+		nodeDate.packetsSent = (uint64_t) 0;
+		nodeDate.bytesRecieved = (uint64_t) 0;
+		nodeDate.packetsRecieved = (uint64_t) 0;
+
+		for( size_t i = interfaces.size(); i--; ){
+			interfaces[i].nextTimestep();
+
+			nodeDate.bandwidthBytes += interfaces[i].bandwidthBytes;
+			nodeDate.bytesSent += interfaces[i].bytesSent;
+			nodeDate.packetsSent += interfaces[i].packetsSent;
+			nodeDate.bytesRecieved += interfaces[i].bytesRecieved;
+			nodeDate.packetsRecieved += interfaces[i].packetsRecieved;
+		}
 	}
 
 
 	vector<StatisticsProviderDatatypes> NetworkStatisticsPlugin::availableMetrics() throw() {
 		vector<StatisticsProviderDatatypes> result;
 		for( size_t i = interfaces.size(); i--; ) interfaces[i].addMetricsToList( &result );
+		nodeDate.addMetricsToList( & result );		
 		return result;
 	}
 }

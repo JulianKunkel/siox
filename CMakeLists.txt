@@ -75,9 +75,7 @@ set_package_properties(LIKWID PROPERTIES URL "see Readme.md" TYPE OPTIONAL PURPO
 
 
 find_package(BDB)
-set_package_properties(BDB PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" PURPOSE "Alternative backend for activities")
-
-
+set_package_properties(BDB PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" TYPE OPTIONAL PURPOSE "Alternative backend for activities")
 
 feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following mandatory packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
 

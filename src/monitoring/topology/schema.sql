@@ -1,3 +1,11 @@
+# Run as postgres user
+# CREATE USER siox WITH PASSWORD 'siox';
+# GRANT ALL PRIVILEGES ON DATABASE topology to siox;
+# CREATE DATABASE topology;
+# NOW reconnect as user siox
+# \connect topology
+
+
 drop table attribute;
 
 CREATE TABLE attribute

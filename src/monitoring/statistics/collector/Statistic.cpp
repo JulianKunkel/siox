@@ -121,3 +121,24 @@ void monitoring::Statistic::update( Timestamp time ) throw() {
 	std::atomic_thread_fence( std::memory_order_release );
 	lastIndex = newIndex;
 }
+
+monitoring::IncrementalStatistic::IncrementalStatistic( const StatisticsValue& value, const OntologyAttributeID attribute, TopologyObjectId topologyId, uint64_t minValue, uint64_t maxValue ) throw() :
+	Statistic( gaugeValue, attribute, topologyId ),
+	incrementalValue( value ),
+	gaugeValue( (uint64_t)0 ),
+	minValue( minValue ),
+	maxValue( maxValue ),
+	lastValue( value.uint64() )
+{}
+
+void monitoring::IncrementalStatistic::update( Timestamp time ) throw() {
+	uint64_t newValue = incrementalValue.uint64();
+	if( newValue < lastValue ) {
+		//handle a wrap around
+		gaugeValue = newValue - lastValue + maxValue - minValue + 1;
+	} else {
+		gaugeValue = newValue - lastValue;
+	}
+	lastValue = newValue;
+	Statistic::update( time );
+}

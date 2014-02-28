@@ -22,9 +22,6 @@ namespace monitoring {
 
 	class StatisticsProviderDatatypes {
 		public:
-			StatisticsEntity entity;
-			StatisticsScope  scope;
-
 			string metrics;
 
 			/*
@@ -50,24 +47,20 @@ namespace monitoring {
 			string description;
 
 			// These counters are used for INCREMENTAL intervalType only.
-			StatisticsValue overflow_max_value;  // maximum value of the counter
-			StatisticsValue overflow_next_value; // if the value overflows we begin with this value.
+			uint64_t overflow_max_value;  // maximum value of the counter
+			uint64_t overflow_next_value; // if the value overflows we begin with this value.
 
 			StatisticsProviderDatatypes(
-			    StatisticsEntity entity,
-			    StatisticsScope  scope,
 			    const string& metrics,
 			    const string& topologyPath,
 			    StatisticsValue & value,
 			    enum StatisticIntervalType intervalType,
 			    const string& si_unit,
 			    const string& description,
-			    uint64_t overflow_max_value,
-			    uint64_t overflow_next_value
+			    uint64_t overflow_max_value = 0,
+			    uint64_t overflow_next_value = 0
 			)
 				:
-				entity( entity ),
-				scope( scope ),
 				metrics( metrics ),
 				topologyPath( topologyPath ),
 				value( value ),

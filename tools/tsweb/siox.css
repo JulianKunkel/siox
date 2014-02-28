@@ -1,5 +1,0 @@
-table th { background-color: #a1b92e; font-weight: bold; }
-table td, table th { padding: 4px 8px; }
-.odd { background-color: #e3fb71; }
-.even { background-color: #ccf600;}
-table tr.odd:hover, table tr.even:hover { background-color: #85a000; cursor: pointer; }

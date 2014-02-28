@@ -4,6 +4,7 @@
 
 #include <knowledge/reasoner/modules/ReasoningDatatypesSerializable.hpp>
 
+using namespace core;
 
 namespace knowledge{
 ReasonerCommunication::~ReasonerCommunication(){

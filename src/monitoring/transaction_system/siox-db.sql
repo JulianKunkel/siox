@@ -127,11 +127,11 @@ CREATE OR REPLACE VIEW activity.child       AS SELECT * FROM activity.activity A
 --
 
 CREATE OR REPLACE FUNCTION activity.get_activity_by_uid(uid IN bigint) 
-RETURNS activity.activity AS $$ 
-DECLARE act activity.activity%ROWTYPE;
+RETURNS activity.activity_detail AS $$ 
+DECLARE act activity.activity_detail%ROWTYPE;
 BEGIN
 	SELECT * INTO act 
-	FROM activity.activity AS a
+	FROM activity.activity_detail AS a
 	WHERE a.unique_id = get_activity_by_uid.uid LIMIT 1;
 	RETURN act;
 END
@@ -181,6 +181,16 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION activity.get_activity_children(activity_unique_id IN bigint) IS 'Returns the children for an activity given the activity unique ID.';
+
+
+CREATE OR REPLACE FUNCTION activity.get_activity_list(page_size IN integer, page_offset IN integer)
+RETURNS SETOF activity.activity_list AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM activity.activity_list ORDER BY time_start ASC LIMIT get_activity_list.page_size OFFSET get_activity_list.page_offset;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION activity.get_activity_list(page_size IN integer, page_offset IN integer) IS 'Returns all activitities sorted by time_start between page_size and page_size + page_offset.';
+
 
 
 CREATE OR REPLACE FUNCTION activity.get_remote_call_uid(nid IN integer, uuid IN integer, inst IN integer, act_uid IN bigint) 
@@ -250,7 +260,6 @@ CREATE SCHEMA topology;
 SET search_path = topology, pg_catalog;
 SET default_tablespace = '';
 SET default_with_oids = false;
-
 
 CREATE TABLE attribute (
     id integer NOT NULL,
@@ -330,6 +339,73 @@ CREATE TABLE value (
 
 COMMENT ON TABLE value IS 'Value';
 ALTER TABLE ONLY value ADD CONSTRAINT value_objectid_attributeid_key UNIQUE (objectid, attributeid);
+
+
+CREATE OR REPLACE VIEW topology.activity_names AS SELECT * FROM topology.attribute AS a, topology.value AS v, topology.object AS o, topology.type AS t WHERE a.id=v.attributeid AND v.objectid=o.id AND o.typeid=t.id AND a.name='Name' AND t.name='Activity';
+
+
+
+CREATE OR REPLACE FUNCTION topology.get_type_by_name(name IN text)
+RETURNS SETOF topology.type AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.type AS t WHERE t.name = get_type_by_name.name;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_type_by_name(name IN text)  IS 'Returns type given its name.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_type_by_id(id IN integer)
+RETURNS SETOF topology.type AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.type AS t WHERE t.id = get_type_by_id.id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_type_by_id(id IN integer)  IS 'Returns type given its ID.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_object_by_id(id IN integer)
+RETURNS SETOF topology.object AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.object AS o WHERE o.id = get_object_by_id.id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_object_by_id(id IN integer)  IS 'Returns object given its ID.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_relation(obj_id IN integer, type_id IN integer, name IN text)
+RETURNS SETOF topology.relation AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.relation WHERE childName = get_relation.name AND parentObjectId = get_relation.obj_id AND relationType = get_relation.type_id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_relation(obj_id IN integer, type_id IN integer, name IN text) IS 'Returns relation.';
+
+CREATE OR REPLACE FUNCTION topology.get_attribute_by_name(type_id IN integer, name IN text)
+RETURNS SETOF topology.attribute AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.attribute WHERE name = get_attribute_by_name.name AND domainTypeId = get_attribute_by_name.type_id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_attribute_by_name(type_id IN integer, name IN text) IS 'Returns attribute given name and domain ID.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_attribute_by_id(id IN integer)
+RETURNS SETOF topology.relation AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.relation WHERE childobjectid = get_attribute_by_id.id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_attribute_by_id(id IN integer) IS 'Returns attribute given its numeric ID.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_attribute_by_object(obj_id IN integer, attr_id IN integer)
+RETURNS SETOF topology.attribute AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.attribute WHERE objectId = get_attribute_by_object.obj_id AND attributeId = get_attribute_by_object.attr_id;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_attribute_by_object(obj_id IN integer, attr_id IN integer) IS 'Returns attribute given an object id and attribute-id.';
+
 
 CREATE OR REPLACE FUNCTION topology.reset_all() 
 RETURNS void AS $$
@@ -443,3 +519,7 @@ RETURNS void AS $$
 	ALTER SEQUENCE sysinfo.object_id_seq RESTART WITH 1;
 	ALTER SEQUENCE sysinfo.type_id_seq RESTART WITH 1;
 $$ LANGUAGE sql;
+
+
+CREATE OR REPLACE VIEW activity.activity_list   AS SELECT a.unique_id, t.childname AS name, a.time_start, a.time_stop, a.error_value FROM activity.activities AS a, topology.relation AS t WHERE a.ucaid=t.childobjectid;
+CREATE OR REPLACE VIEW activity.activity_detail AS SELECT * FROM activity.activity AS a, topology.relation AS t WHERE t.childobjectid = a.ucaid;

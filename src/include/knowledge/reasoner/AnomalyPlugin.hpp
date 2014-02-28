@@ -28,7 +28,7 @@ namespace knowledge {
  * Aggregate of a component's health report, as compiled by an ADPI.
  */
 struct AnomalyPluginHealthStatistic{
-	ComponentID cid;
+	monitoring::ComponentID cid;
 
 	array<uint32_t, HEALTH_STATE_COUNT> occurrences;
 
@@ -60,8 +60,8 @@ struct AnomalyPluginHealthStatistic{
  * Maps components' CIDs to an ADPI-generated health status report for each.
  */
 struct HealthStatistics{
-	// TODO: Any reason not to use the full CID as a key but only ComponentID.id? Any problems resulting?
-	unordered_map<ComponentID, AnomalyPluginHealthStatistic> map;
+	// TODO: Any reason not to use the full CID as a key but only monitoring::ComponentID.id? Any problems resulting?
+	unordered_map<monitoring::ComponentID, AnomalyPluginHealthStatistic> map;
 
 
 	friend std::ostream & operator<<( std::ostream & os, const HealthStatistics & hs )
@@ -85,22 +85,22 @@ class AnomalyPlugin {
 
 		// After executing this call, the plugin iterates to the next timestep.
 		// Ownership of the pointer is transferred to the caller.
-		virtual unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>> queryRecentObservations()
+		virtual unique_ptr<unordered_map<monitoring::ComponentID, AnomalyPluginHealthStatistic>> queryRecentObservations()
 		{
 			// Disallow other access to aggregated data fields
-			unordered_map<ComponentID, AnomalyPluginHealthStatistic> * tmp;
+			unordered_map<monitoring::ComponentID, AnomalyPluginHealthStatistic> * tmp;
 			{
 				unique_lock<mutex> dataLock( dataMutex );
 				tmp = recentObservations;
-				recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
+				recentObservations = new unordered_map<monitoring::ComponentID, AnomalyPluginHealthStatistic>();
 			}
 
-			return unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>(tmp);
+			return unique_ptr<unordered_map<monitoring::ComponentID, AnomalyPluginHealthStatistic>>(tmp);
 		}
 
 
 		AnomalyPlugin() {
-			recentObservations = new unordered_map<ComponentID, AnomalyPluginHealthStatistic>();
+			recentObservations = new unordered_map<monitoring::ComponentID, AnomalyPluginHealthStatistic>();
 		}
 
 		~AnomalyPlugin(){
@@ -111,7 +111,7 @@ class AnomalyPlugin {
 	private:
 
 		mutex	dataMutex; // To protect access to aggregated data
-		unordered_map<ComponentID, AnomalyPluginHealthStatistic> * recentObservations;
+		unordered_map<monitoring::ComponentID, AnomalyPluginHealthStatistic> * recentObservations;
 
 		/**
 		 * Adds an issue to the local aggregate, assuming mutex protection
@@ -137,11 +137,11 @@ class AnomalyPlugin {
 
 	protected:
 
-		void addObservation( ComponentID cid, HealthState state,  const string & issue, int32_t delta_time_ms )
+		void addObservation( monitoring::ComponentID cid, HealthState state,  const string & issue, int32_t delta_time_ms )
 		{	// Disallow other access to aggregated data fields
 			lock_guard<mutex> dataLock( dataMutex );
 
-			unordered_map<ComponentID, AnomalyPluginHealthStatistic>::iterator find = recentObservations->find( cid );
+			unordered_map<monitoring::ComponentID, AnomalyPluginHealthStatistic>::iterator find = recentObservations->find( cid );
 
 			if( find == recentObservations->end() ) {
 				// append an empty health state

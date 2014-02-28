@@ -30,8 +30,6 @@ namespace monitoring {
 		public:
 			const static size_t kHistorySize = 10;
 
-			//const StatisticsProviderPlugin* const provider;
-
 			Statistic( const StatisticsValue & value, const OntologyAttributeID attribute, TopologyObjectId topologyId ) throw();
 
 			void requestReduction( StatisticsReduceOperator reductionOp ) throw();	///< Tell the Statistic object that it should calculate the given reductionOp. Each call must be matched with a call to cancelReductionRequest().
@@ -42,8 +40,10 @@ namespace monitoring {
 
 			Timestamp curTimestamp();
 
-			void update(Timestamp time) throw();	//The StatisticsCollector is expected to call this ten times per second.
+			virtual void update( Timestamp time ) throw();	//The StatisticsCollector is expected to call this ten times per second.
 			static size_t measurementIncrement( StatisticsInterval pollInterval ) throw();
+
+			virtual ~Statistic() = default;
 
 		private:
 			size_t lastIndex;
@@ -57,6 +57,17 @@ namespace monitoring {
 			Statistic() = delete;
 			Statistic(const Statistic&) = delete;
 			Statistic& operator=(const Statistic&) = delete;
+	};
+
+	///This class converts an incremental source statistic into a gauge statistic. I. e. whatever code uses a Statistic, sees only gauge or sampled statistics, whenever a StatisticsProvider provides an incremental statistic, the StatisticsCollector will use this subclass to convert the statistic transparently to any StatisticsMultiplexerListeners.
+	class IncrementalStatistic : public Statistic {
+		public:
+			IncrementalStatistic( const StatisticsValue& value, const OntologyAttributeID attribute, TopologyObjectId topologyId, uint64_t minValue, uint64_t maxValue ) throw();	///< value must be of type uint64_t
+			virtual void update( Timestamp ) throw() override;
+		private:
+			const StatisticsValue& incrementalValue;
+			StatisticsValue gaugeValue;
+			uint64_t minValue, maxValue, lastValue;
 	};
 
 	inline size_t Statistic::measurementIncrement( StatisticsInterval pollInterval ) throw() {

@@ -61,15 +61,6 @@ class TestAnomalyTrigger : public AnomalyTrigger {
 		}
 };
 
-class TestQualitativeUtilization : public QualitativeUtilization {
-	public:
-		uint8_t nextValue = 0;
-
-		uint8_t lastUtilization( monitoring::OntologyAttributeID id ) const throw( NotFoundError ){
-			return nextValue;
-		}
-};
-
 class TestAnomalyPlugin : public AnomalyPlugin {
 	public:
 		void injectObservation( ComponentID cid, HealthState state,  const string & issue, int32_t delta_time_ms ) {
@@ -91,41 +82,6 @@ void accumulate(const list<HealthIssue> & src, unordered_map<string, HealthIssue
 		}
 	}
 }
-
-string toString(HealthState s){
-	switch(s){
-		case ABNORMAL_SLOW:
-			return "ABNORMAL_SLOW";
-		case ABNORMAL_FAST:
-			return "ABNORMAL_FAST";
-		case ABNORMAL_OTHER:
-			return "ABNORMAL_OTHER";
-		case FAST:
-			return "FAST";
-		case OK:
-			return "OK";
-		case SLOW:
-			return "SLOW";
-		default:
-			return "UNKNOWN";
-	}
-}
-
-string toString(UtilizationIndex s){
-	switch(s){
-		case CPU:
-			return "CPU";
-		case MEMORY:
-			return "MEMORY";
-		case IO:
-			return "IO";
-		case NETWORK:
-			return "NETWORK";
-		default:
-			return "UNKNOWN";
-	}
-}
-
 
 void mergeOutput(list<ProcessHealth> & l, Health & health, array<uint8_t, HEALTH_STATE_COUNT> & operationRatio, uint64_t & totalOpCount){
 	// aggregate the results of the individual processes
@@ -361,8 +317,7 @@ void testReasonerAnomalies(){
 
 	TestAnomalyTrigger at1;
 	TestAnomalyTrigger at2;
-	TestQualitativeUtilization qu;
-
+	
 	TestAnomalyPlugin adpi1;
 
 	{
@@ -375,7 +330,6 @@ void testReasonerAnomalies(){
 	r->connectTrigger( & at1 );
 	r->connectTrigger( & at2 );
 
-	r->connectUtilization( & qu );
 	r->connectAnomalyPlugin( & adpi1 );
 
 	// in this initial test we have no anomaly:

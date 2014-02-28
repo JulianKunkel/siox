@@ -17,7 +17,7 @@ int main( int argc, char const * argv[] )
 	StatisticsProviderPlugin * plugin = module_create_instance<StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-CPUstats" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 
 	StatisticsProviderPluginOptions options;
-	plugin->init(options);
+	plugin->init(& options);
 
 	auto list = plugin->availableMetrics();
 
@@ -27,9 +27,7 @@ int main( int argc, char const * argv[] )
 	plugin->nextTimestep();
 	for( auto it = list.begin() ; it != list.end(); it ++ ) {
 		StatisticsProviderDatatypes & stat = *it;
-		if( stat.scope == DEVICE ) {
-			cout << stat.topologyPath << " ";
-		}
+		cout << stat.topologyPath << " ";
 		cout << stat.metrics << ": " << stat.value << " " << stat.si_unit << endl;
 	}
 

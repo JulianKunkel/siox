@@ -62,56 +62,12 @@ class TestAnomalyTrigger : public AnomalyTrigger {
 		}
 };
 
-class TestQualitativeUtilization : public QualitativeUtilization {
-	public:
-		uint8_t nextValue = 0;
-
-		uint8_t lastUtilization( monitoring::OntologyAttributeID id ) const throw( NotFoundError ){
-			return nextValue;
-		}
-};
-
 class TestAnomalyPlugin : public AnomalyPlugin {
 	public:
 		void injectObservation( ComponentID cid, HealthState state,  const string & issue, int32_t delta_time_ms ) {
 			addObservation(cid, state, issue, delta_time_ms);
 		}
 };
-
-
-string toString(HealthState s){
-	switch(s){
-		case ABNORMAL_SLOW:
-			return "ABNORMAL_SLOW";
-		case ABNORMAL_FAST:
-			return "ABNORMAL_FAST";
-		case ABNORMAL_OTHER:
-			return "ABNORMAL_OTHER";
-		case FAST:
-			return "FAST";
-		case OK:
-			return "OK";
-		case SLOW:
-			return "SLOW";
-		default:
-			return "UNKNOWN";
-	}
-}
-
-string toString(UtilizationIndex s){
-	switch(s){
-		case CPU:
-			return "CPU";
-		case MEMORY:
-			return "MEMORY";
-		case IO:
-			return "IO";
-		case NETWORK:
-			return "NETWORK";
-		default:
-			return "UNKNOWN";
-	}
-}
 
 
 class MyReasoningDataReceivedCB : public ReasoningDataReceivedCB, public ProtectRaceConditions{
