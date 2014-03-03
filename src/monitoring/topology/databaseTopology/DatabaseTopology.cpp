@@ -77,7 +77,7 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "registerType");
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT id FROM type WHERE name='" + selectAction.esc(name) + "'"));
+    result resultSelect = selectAction.exec(("SELECT id FROM topology.type WHERE name='" + selectAction.esc(name) + "'"));
 
     // Check if there is only one result, if so -> return the object
     if (resultSelect.size() == 1) {
@@ -100,7 +100,7 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
     }
 
     // It's not in the database, perform an insert
-    resultSelect = selectAction.exec("INSERT INTO type (name) VALUES ('"+selectAction.esc(name)+"') returning id");
+    resultSelect = selectAction.exec("INSERT INTO topology.type (name) VALUES ('"+selectAction.esc(name)+"') returning id");
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
@@ -128,7 +128,7 @@ TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw() {
     work selectAction(*conn, "lookupTypeByName");
 
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT id FROM Type WHERE name='" + selectAction.esc(name) + "'"));
+    result resultSelect = selectAction.exec(("SELECT id FROM topology.Type WHERE name='" + selectAction.esc(name) + "'"));
     selectAction.commit();
 
     // Check if there is only one result
@@ -158,7 +158,7 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
     work selectAction(*conn, "lookupTypeById");
 
     // Perform a select
-    result resultSelect = selectAction.exec("SELECT name FROM Type WHERE id='"+to_string(anId)+"'");
+    result resultSelect = selectAction.exec("SELECT name FROM topology.Type WHERE id='"+to_string(anId)+"'");
     selectAction.commit();
 
     // Check if there is only one result
@@ -184,7 +184,7 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
 
     work selectAction(*conn, "registerObject");
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT childObjectId FROM relation WHERE childName='" + selectAction.esc(childName) + "' AND parentObjectId = '"+to_string(parentId)+"' AND relationTypeId = '"+to_string(relationType)+"'"));
+    result resultSelect = selectAction.exec(("SELECT childObjectId FROM topology.relation WHERE childName='" + selectAction.esc(childName) + "' AND parentObjectId = '"+to_string(parentId)+"' AND relationTypeId = '"+to_string(relationType)+"'"));
 
     // Check if there is only one result, if so -> return the object
     if (resultSelect.size() == 1) {
@@ -208,7 +208,7 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
     }
 
     // Perform the insert
-    resultSelect = selectAction.exec("INSERT INTO Object (typeId) VALUES ('"+to_string(objectType)+"') returning id" );
+    resultSelect = selectAction.exec("INSERT INTO topology.Object (typeId) VALUES ('"+to_string(objectType)+"') returning id" );
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
@@ -241,7 +241,7 @@ TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw
     work selectAction(*conn, "lookupObjectById");
 
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT typeId FROM Object WHERE id='" + to_string(anId) + "'"));
+    result resultSelect = selectAction.exec(("SELECT typeId FROM topology.Object WHERE id='" + to_string(anId) + "'"));
     selectAction.commit();
 
     // Check if there is only one result
@@ -267,7 +267,7 @@ TopologyRelation DatabaseTopology::registerRelation( TopologyObjectId parent, To
     work insertAction(*conn, "registerRelation");
 
     stringstream buff;
-    buff << "SELECT childObjectID FROM Relation WHERE childName='" << insertAction.esc(childName) << "' AND parentObjectId = '" << parent << "' AND relationTypeId='" << relationType << "'";
+    buff << "SELECT childObjectID FROM topology.Relation WHERE childName='" << insertAction.esc(childName) << "' AND parentObjectId = '" << parent << "' AND relationTypeId='" << relationType << "'";
     // Perform a select
     result resultSelect = insertAction.exec(buff.str());
     // Check if there is only one result
@@ -279,7 +279,7 @@ TopologyRelation DatabaseTopology::registerRelation( TopologyObjectId parent, To
     }
     else {
         // Perform another insert
-        insertAction.exec("INSERT INTO Relation (parentObjectId, childName, childObjectId, relationTypeId) VALUES ('"+to_string(parent)+"','"+insertAction.esc(childName)+"','"+to_string(child)+"','"+to_string(relationType)+"')");
+        insertAction.exec("INSERT INTO topology.Relation (parentObjectId, childName, childObjectId, relationTypeId) VALUES ('"+to_string(parent)+"','"+insertAction.esc(childName)+"','"+to_string(child)+"','"+to_string(relationType)+"')");
         insertAction.commit();
 
         Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
@@ -295,7 +295,7 @@ TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, Topo
     work selectAction(*conn, "lookupRelation");
 
     stringstream buff;
-    buff << "SELECT childObjectID FROM Relation WHERE childName='" << selectAction.esc(childName) << "' AND parentObjectId = '" << parent << "' AND relationTypeId='" << relationType << "'";
+    buff << "SELECT childObjectID FROM topology.Relation WHERE childName='" << selectAction.esc(childName) << "' AND parentObjectId = '" << parent << "' AND relationTypeId='" << relationType << "'";
     // Perform a select
     result resultSelect = selectAction.exec(buff.str());
     selectAction.commit();
@@ -392,7 +392,7 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
     work selectAction(*conn, "registerAttribute");
 
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT id, dataType FROM Attribute WHERE name='" + selectAction.esc(name) + "' AND domainTypeId = '"+to_string(domain)+"'"));
+    result resultSelect = selectAction.exec(("SELECT id, dataType FROM topology.Attribute WHERE name='" + selectAction.esc(name) + "' AND domainTypeId = '"+to_string(domain)+"'"));
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
@@ -421,7 +421,7 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
     }
 
     // Dataset not found -> Perform an insert
-    resultSelect = selectAction.exec("INSERT INTO Attribute (name, domainTypeId, dataType) VALUES ('"+selectAction.esc(name)+"','"+to_string(domain)+"','"+to_string((intmax_t) datatype)+"') returning id");
+    resultSelect = selectAction.exec("INSERT INTO topology.Attribute (name, domainTypeId, dataType) VALUES ('"+selectAction.esc(name)+"','"+to_string(domain)+"','"+to_string((intmax_t) datatype)+"') returning id");
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
@@ -452,7 +452,7 @@ TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain
     intmax_t tmpInt;
 
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT id, dataType FROM Attribute WHERE name='" + selectAction.esc(name) + "' AND domainTypeId = '"+to_string(domain)+"'"));
+    result resultSelect = selectAction.exec(("SELECT id, dataType FROM topology.Attribute WHERE name='" + selectAction.esc(name) + "' AND domainTypeId = '"+to_string(domain)+"'"));
     selectAction.commit();
 
     // Check if there is only one result
@@ -487,7 +487,7 @@ TopologyAttribute DatabaseTopology::lookupAttributeById( TopologyAttributeId att
     intmax_t tmpInt;
 
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT name, domaintypeid, dataType FROM Attribute WHERE id='" + to_string(attributeId) + "'"));
+    result resultSelect = selectAction.exec(("SELECT name, domaintypeid, dataType FROM topology.Attribute WHERE id='" + to_string(attributeId) + "'"));
     selectAction.commit();
 
     // Check if there is only one result
@@ -519,7 +519,7 @@ bool DatabaseTopology::setAttribute( TopologyObjectId objectId, TopologyAttribut
     // Perform an insert OR update the existing value
     stringstream buff;
 
-    buff << "UPDATE Value SET value='" << value.toStr() << "' WHERE objectid=" << objectId << " AND attributeid=" << attributeId << " returning objectid"; // returning objectid is a trick to get a row back
+    buff << "UPDATE topology.Value SET value='" << value.toStr() << "' WHERE objectid=" << objectId << " AND attributeid=" << attributeId << " returning objectid"; // returning objectid is a trick to get a row back
 
     result resultSelect = insertAction.exec(buff.str() );
     if (resultSelect.size() == 1) {
@@ -529,7 +529,7 @@ bool DatabaseTopology::setAttribute( TopologyObjectId objectId, TopologyAttribut
     }
 
     stringstream insert;
-    insert << "INSERT INTO Value (objectId, attributeId, type, value) VALUES ('" << objectId << "','" << attributeId << "','" << ((int) value.type()) << "','" << value.toStr() << "')";
+    insert << "INSERT INTO topology.Value (objectId, attributeId, type, value) VALUES ('" << objectId << "','" << attributeId << "','" << ((int) value.type()) << "','" << value.toStr() << "')";
     insertAction.exec(insert.str() );
     insertAction.commit();
 
@@ -540,7 +540,7 @@ TopologyValue DatabaseTopology::getAttribute( TopologyObjectId object, TopologyA
     work selectAction(*conn, "getAttribute");
 
     // Perform a select
-    result resultSelect = selectAction.exec(("SELECT value, type FROM Value WHERE objectId='" + to_string(object) + "' AND attributeId = '"+to_string(attribute)+"'"));
+    result resultSelect = selectAction.exec(("SELECT value, type FROM topology.Value WHERE objectId='" + to_string(object) + "' AND attributeId = '"+to_string(attribute)+"'"));
     selectAction.commit();
 
     // Check if there is only one result
