@@ -400,11 +400,13 @@ void siox_finalize_monitoring(){
 }
 
 void siox_handle_prepare_fork(){
+	FUNCTION_BEGIN
 	// we have to shutdown all the threads as fork() does not copy them leading to errors of all kind.	
 	process_data.registrar->stop();
 }
 
 void siox_handle_fork_complete(int im_the_child){
+	FUNCTION_BEGIN
 	// we may re-initialize the child from scratch with new statistics etc.?
 	process_data.registrar->start();
 }
