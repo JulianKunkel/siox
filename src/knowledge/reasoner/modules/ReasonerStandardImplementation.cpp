@@ -401,11 +401,13 @@ void ReasonerStandardImplementation::stop(){
 	recentIssuesMutex.unlock();
 	periodicThread.join();
 	delete(comm);
+
+	Reasoner::stop();
 }
 
 void ReasonerStandardImplementation::start(){
 	ReasonerStandardImplementationOptions & options = getOptions<ReasonerStandardImplementationOptions>();
-	
+
 	StatisticsCollector * statColl = GET_INSTANCE(StatisticsCollector, options.statisticsCollector);
 	if ( statColl != nullptr ){
 		// request everything we'll need.
@@ -429,6 +431,8 @@ void ReasonerStandardImplementation::start(){
 	comm->init( options.communicationOptions );
 
 	periodicThread = thread( & ReasonerStandardImplementation::PeriodicRun, this );
+
+	Reasoner::start();
 }
 
 ReasonerStandardImplementation::~ReasonerStandardImplementation() {
