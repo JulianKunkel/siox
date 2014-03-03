@@ -56,7 +56,13 @@ namespace {
 			uint64_t checkOverflowMode();	//Returns a count of lost activities.
 
 			void finalize();
-
+			void start() {
+				terminate = false;
+				terminated = false;
+			}
+			void stop() { 
+				finalize();
+			};
 		private:
 			std::mutex lock;
 			std::condition_variable not_empty;
@@ -147,12 +153,15 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ActivityMultiplexerAsync::start(){
+	queue.start();
 	notifier.start();
 
 	ActivityMultiplexer::start();
 }
 
 void ActivityMultiplexerAsync::stop(){
+	queue.stop();
+
 	notifier.stop();
 
 	ActivityMultiplexer::stop();
