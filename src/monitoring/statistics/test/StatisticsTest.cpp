@@ -58,7 +58,7 @@ int main( int argc, char const * argv[] ) throw() {
 	facadeOptions->topology.componentPointer = topology;
 	ontologyOptions->filename = "optimizer-ontology-example.dat";
 	providerOptions->statisticsCollector.componentPointer = collector;
-	collectorOptions->dereferencingFacade.componentPointer = facade;
+	collectorOptions->topology = topology;
 	collectorOptions->ontology.componentPointer = ontology;
 	collectorOptions->smux.componentPointer = multiplexer;
 	(void)multiplexerOptions;	//avoid warning about unused variable

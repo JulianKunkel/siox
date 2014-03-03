@@ -405,6 +405,26 @@ void ReasonerStandardImplementation::stop(){
 
 void ReasonerStandardImplementation::start(){
 	ReasonerStandardImplementationOptions & options = getOptions<ReasonerStandardImplementationOptions>();
+	
+	StatisticsCollector * statColl = GET_INSTANCE(StatisticsCollector, options.statisticsCollector);
+	if ( statColl != nullptr ){
+		// request everything we'll need.
+
+		nodeStatistics = StatisticsCollection::makeCollection(statColl, {{
+			{"utilization/cpu", "@localhost"},
+			{"utilization/memory", "@localhost"}, // Alternative: {"utilization/memory/vm", "@localhost"},
+			{"utilization/io", "@localhost"},
+			{"utilization/network/send", "@localhost"},
+			{"utilization/network/receive", "@localhost"},
+			// TODO
+			{"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
+			{"utilization/cpu", "@localhost"}, // power/rapl
+			{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
+			{"quantity/network/volume", "@localhost"}, // CONSUMED_NETWORK_BYTES
+			{"quantity/io/volume", "@localhost"}, // CONSUMED_IO_BYTES
+		}}, true);
+	}
+
 	comm = new ReasonerCommunication(*this);
 	comm->init( options.communicationOptions );
 
@@ -441,25 +461,6 @@ void ReasonerStandardImplementation::init(){
 
 	update_intervall_ms = options.update_intervall_ms;
 	upstreamReasonerExists = (options.communicationOptions.upstreamReasoner != "");
-
-	StatisticsCollector * statColl = GET_INSTANCE(StatisticsCollector, options.statisticsCollector);
-	if ( statColl != nullptr ){
-		// request everything we'll need.
-
-		nodeStatistics = StatisticsCollection::makeCollection(statColl, {{
-			{"utilization/cpu", "@localhost"},
-			{"utilization/memory", "@localhost"}, // Alternative: {"utilization/memory/vm", "@localhost"},
-			{"utilization/io", "@localhost"},
-			{"utilization/network/send", "@localhost"},
-			{"utilization/network/receive", "@localhost"},
-			// TODO
-			{"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
-			{"utilization/cpu", "@localhost"}, // power/rapl
-			{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
-			{"quantity/network/volume", "@localhost"}, // CONSUMED_NETWORK_BYTES
-			{"quantity/io/volume", "@localhost"}, // CONSUMED_IO_BYTES
-		}}, true);
-	}
 }
 
 
