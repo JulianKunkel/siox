@@ -19,6 +19,8 @@ namespace core {
 
 			// This function returns the available options of this component.
 			virtual ComponentOptions * AvailableOptions() = 0;
+
+			bool started = false;
 		public:
 			// The init method uses the configuration options to configure the component.
 			// It is responsible to delete the options if the options are not relevant any more after the initalization.
@@ -42,11 +44,18 @@ namespace core {
 			}
 
 			// stop processing of threads
-			virtual void stop() {}
+			virtual void stop() {
+				started = false; 
+			}
 
 			// start processing of threads
-			virtual void start() {}
+			virtual void start() {
+				started = true;
+			}
 
+			bool isStarted() const{
+				return started;
+			}
 
 			inline ComponentOptions & getOptions() {
 				if( options == nullptr ) {

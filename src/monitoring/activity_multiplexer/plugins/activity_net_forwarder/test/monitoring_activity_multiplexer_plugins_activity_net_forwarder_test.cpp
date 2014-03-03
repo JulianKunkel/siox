@@ -64,6 +64,7 @@ void test2(){
 	so->comm.componentPointer = comm;
 	so->serviceAddress = "localhost:3032";
 	server->init(so);
+	server->start();
 
 	ActivityNetworkForwarderClientOptions * co = new ActivityNetworkForwarderClientOptions();
 	co->multiplexer.componentPointer = & mySourceMux;
@@ -72,6 +73,7 @@ void test2(){
 	co->forwardAllActivities = false;
 	co->ringBufferSize = 4;
 	((Component*) client)->init(co);
+	client->start();
 
 	shared_ptr<Activity> activity (new Activity());
 	activity->ucaid_ = 4711;
@@ -109,8 +111,10 @@ void test2(){
 
 	assert( myTargetMux.logged_activity->ucaid_ == activity->ucaid_ );
 
+	client->stop();
 	delete(client);
 
+	server->stop();
 	delete(server);
 	delete(comm);
 }
@@ -134,6 +138,7 @@ void test(){
 	so->comm.componentPointer = comm;
 	so->serviceAddress = "localhost:3032";
 	server->init(so);
+	server->start();
 
 	ActivityNetworkForwarderClientOptions * co = new ActivityNetworkForwarderClientOptions();
 	co->multiplexer.componentPointer = & mySourceMux;
@@ -141,22 +146,23 @@ void test(){
 	co->forwardAllActivities = true;
 	co->targetAddress = "localhost:3032";
 	((Component*) client)->init(co);
-
+	client->start();
 
 	// begin the test
 	shared_ptr<Activity> activity (new Activity());
 	activity->ucaid_ = 4711;
 
-	client->NotifyAsync( activity, 0 );
+	client->Notify( activity, 0 );
 
 	myTargetMux.waitUntilSthHappened();
 
 	assert( myTargetMux.logged_activity->ucaid_ == 4711 );
 	cout << "Received activity with UCAID: " << myTargetMux.logged_activity->ucaid_ << endl;
 
+	client->stop();
 	delete(client);
 
-
+	server->stop();
 	delete(server);
 	delete(comm);
 }

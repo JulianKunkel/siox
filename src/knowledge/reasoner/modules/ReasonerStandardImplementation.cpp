@@ -412,8 +412,6 @@ void ReasonerStandardImplementation::start(){
 }
 
 ReasonerStandardImplementation::~ReasonerStandardImplementation() {
-	stop();
-
 	if (childProcessesHealthMap) delete(childProcessesHealthMap);
 	if (childNodesHealthMap) delete(childNodesHealthMap);
 }
@@ -462,9 +460,6 @@ void ReasonerStandardImplementation::init(){
 			{"quantity/io/volume", "@localhost"}, // CONSUMED_IO_BYTES
 		}}, true);
 	}
-
-
-	start();
 }
 
 

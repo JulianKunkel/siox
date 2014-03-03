@@ -5,12 +5,12 @@ include_directories(
 )
 
 add_executable(
-	QualitativeUtilizationTest
+	monitoring_statistics_collector_plugins_qualitativeUtilization_test
 	QualitativeUtilizationTest.cpp
 )
 
 target_link_libraries(
-	QualitativeUtilizationTest
+	monitoring_statistics_collector_plugins_qualitativeUtilization_test
 	siox-core-AutoConfigurator
 
 	siox-monitoring-statisticsPlugin-qualitativeUtilization
@@ -26,4 +26,4 @@ target_link_libraries(
 	siox-monitoring-statisticsPlugin-qualitativeUtilization
 )
 
-add_test(monitoring_statistics_collector_plugins_qualitativeUtilization_test QualitativeUtilizationTest)
+add_test(monitoring_statistics_collector_plugins_qualitativeUtilization_test monitoring_statistics_collector_plugins_qualitativeUtilization_test)

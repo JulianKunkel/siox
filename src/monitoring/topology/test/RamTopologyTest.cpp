@@ -199,7 +199,7 @@ int main( int argc, char const * argv[] ) throw() {
 
 	TopologyVariable value1(1.0f);
 	TopologyValue value2;
-	assert( ! topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable(1) ) );
+	// assert( ! topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable(1) ) );
 	assert( topology->setAttribute( object1.id(), attribute1.id(), value1) );
 	value2 = topology->getAttribute( object2.id(), attribute1.id() );
 	assert( !value2 );

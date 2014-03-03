@@ -75,18 +75,12 @@ class ActivityMonitor: public ActivityMultiplexerPlugin {
 
 			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityMonitor::Notify ), false );
 			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityMonitor::NotifyAsync ), true );
-
-			start();
 		}
 
 		void finalize() override {
 			multiplexer->unregisterCatchall( this, false );
 			multiplexer->unregisterCatchall( this, true );
 			ActivityMultiplexerPlugin::finalize();
-		}
-
-		~ActivityMonitor(){
-			stop();
 		}
 
 		void stop() override{
@@ -96,10 +90,14 @@ class ActivityMonitor: public ActivityMultiplexerPlugin {
 				delete(reporterThread);
 				reporterThread = nullptr;
 			}
+
+			ActivityMultiplexerPlugin::stop();
 		}
 
 		void start() override{
 			reporterThread = new thread( & ActivityMonitor::reporterThreadFunc, this);
+
+			ActivityMultiplexerPlugin::start();
 		}
 };
 

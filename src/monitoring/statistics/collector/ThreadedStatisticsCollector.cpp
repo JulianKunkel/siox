@@ -209,6 +209,9 @@ class ThreadedStatisticsCollector : public StatisticsCollector, public Component
 		 */
 		virtual ComponentOptions * AvailableOptions() throw();
 
+		void stop() override;
+		void start() override;
+
 	private:
 		ActivityPluginDereferencing* facade = 0;
 		Ontology* ontology = 0;
@@ -248,6 +251,25 @@ ComponentReport ThreadedStatisticsCollector::prepareReport(){
 	return rep;
 }
 
+void ThreadedStatisticsCollector::stop() {
+	terminated = true;
+	atomic_thread_fence( memory_order_release );
+	pollingThread.join();
+	if( !sourcesLock.try_lock() ) {
+		assert(0 && "Someone tried to destruct a ThreadedStatisticsCollector while another thread is still using it!"), abort();
+	}
+	sourcesLock.unlock();
+
+	StatisticsCollector::stop();
+}
+
+void ThreadedStatisticsCollector::start(){
+	pollingThread = thread( &ThreadedStatisticsCollector::pollingThreadMain, this );
+
+	StatisticsCollector::start();
+}
+
+
 void ThreadedStatisticsCollector::init() throw() {
 	ThreadedStatisticsOptions& o = getOptions<ThreadedStatisticsOptions>();
 	facade = GET_INSTANCE(ActivityPluginDereferencing, o.dereferencingFacade);
@@ -272,7 +294,6 @@ void ThreadedStatisticsCollector::init() throw() {
 		}
 	}
 	pollCount = 0;
-	pollingThread = thread( &ThreadedStatisticsCollector::pollingThreadMain, this );
 }
 
 void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plugin ) throw() {
@@ -421,13 +442,7 @@ StatisticsValue ThreadedStatisticsCollector::getReducedStatistics( StatisticsRed
 }
 
 ThreadedStatisticsCollector::~ThreadedStatisticsCollector() throw() {
-	terminated = true;
-	atomic_thread_fence( memory_order_release );
-	pollingThread.join();
-	if( !sourcesLock.try_lock() ) {
-		assert(0 && "Someone tried to destruct a ThreadedStatisticsCollector while another thread is still using it!"), abort();
-	}
-	sourcesLock.unlock();
+
 }
 
 ComponentOptions * ThreadedStatisticsCollector::AvailableOptions() throw() {

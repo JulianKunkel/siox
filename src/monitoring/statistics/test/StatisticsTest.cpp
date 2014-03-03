@@ -73,6 +73,7 @@ int main( int argc, char const * argv[] ) throw() {
 	facade->init();
 	multiplexer->init();
 	collector->init();
+	collector->start();
 	provider->init();
 	listener->init();
 	writer->init();
@@ -122,6 +123,7 @@ int main( int argc, char const * argv[] ) throw() {
 	delete provider;
 	delete listener;
 	delete writer;
+	collector->stop();
 	delete collector;
 	delete multiplexer;
 	delete ontology;

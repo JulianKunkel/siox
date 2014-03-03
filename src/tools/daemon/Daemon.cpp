@@ -100,14 +100,19 @@ int main( int argc, char ** argv )
 	        close(STDERR_FILENO);
 		}
 
+		registrar->start();
+
 		// wait until SIGINT is received
 		while(! terminated){
 			unique_lock<mutex> lock(finish_mutex);
 			finish_condition.wait(lock);
 		}
 
+		registrar->stop();
+
 		// shutdown operation
 		util::invokeAllReporters( registrar );
+
 		registrar->shutdown();
 	} catch( std::exception & e ) {
 		cerr << e.what() << endl;
