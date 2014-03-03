@@ -217,7 +217,7 @@ shared_ptr<Activity> ActivityMultiplexerQueue::Pop() {
 		}
 	}
 	//We might just be woken up to be able to die...
-	if ( terminate ) {
+	if ( isEmpty() && terminate ) {
 		terminated = true;
 		return nullptr;
 	}
