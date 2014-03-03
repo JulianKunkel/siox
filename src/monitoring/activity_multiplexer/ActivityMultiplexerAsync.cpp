@@ -82,20 +82,22 @@ namespace {
 		public:
 			ActivityMultiplexerNotifier( ActivityMultiplexerAsync * multiplexer, ActivityMultiplexerQueue * queue ) :
 				multiplexer( multiplexer ),
-				queue( queue ),
-				worker( &ActivityMultiplexerNotifier::Run, this )
-			{};
+				queue( queue )	{};
 
 			void Run();
 
 			void finalize() { queue->finalize(); }
-			~ActivityMultiplexerNotifier () { worker.join(); };
+
+			void start() {
+				worker = new std::thread( & ActivityMultiplexerNotifier::Run, this );
+			}
+			void stop() { worker->join(); };
 
 		private:
 			ActivityMultiplexerAsync * multiplexer = nullptr;
 			ActivityMultiplexerQueue * queue = nullptr;
 
-			std::thread worker;
+			std::thread * worker = nullptr;
 			uint64_t lostActivities = 0;
 	};
 
@@ -122,6 +124,9 @@ namespace {
 			ComponentReport prepareReport();
 			~ActivityMultiplexerAsync();
 
+			void start() override;
+			void stop() override;
+
 		private:
 			boost::shared_mutex syncDispatchersLock;
 			unordered_map<UniqueComponentActivityID, Dispatcher> syncDispatchers;	//protected by syncDispatchersLock
@@ -140,6 +145,19 @@ namespace {
 }	//namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void ActivityMultiplexerAsync::start(){
+	notifier.start();
+
+	ActivityMultiplexer::start();
+}
+
+void ActivityMultiplexerAsync::stop(){
+	notifier.stop();
+
+	ActivityMultiplexer::stop();
+}
+
 
 /**
  * Add an activity to the queue if there is capacity, set overload flag
