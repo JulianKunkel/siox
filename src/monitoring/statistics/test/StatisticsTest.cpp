@@ -58,7 +58,7 @@ int main( int argc, char const * argv[] ) throw() {
 	facadeOptions->topology.componentPointer = topology;
 	ontologyOptions->filename = "optimizer-ontology-example.dat";
 	providerOptions->statisticsCollector.componentPointer = collector;
-	collectorOptions->dereferencingFacade.componentPointer = facade;
+	collectorOptions->topology = topology;
 	collectorOptions->ontology.componentPointer = ontology;
 	collectorOptions->smux.componentPointer = multiplexer;
 	(void)multiplexerOptions;	//avoid warning about unused variable
@@ -73,6 +73,7 @@ int main( int argc, char const * argv[] ) throw() {
 	facade->init();
 	multiplexer->init();
 	collector->init();
+	collector->start();
 	provider->init();
 	listener->init();
 	writer->init();
@@ -122,6 +123,7 @@ int main( int argc, char const * argv[] ) throw() {
 	delete provider;
 	delete listener;
 	delete writer;
+	collector->stop();
 	delete collector;
 	delete multiplexer;
 	delete ontology;

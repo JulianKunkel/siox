@@ -480,6 +480,9 @@ uint64_t PostgreSQLQuerier::insert_activity_id(const ActivityID &aid)
 	}
 
 	char *unique_id_ptr = PQgetvalue(res, 0, 0);
+	if ( unique_id_ptr == nullptr ){
+		return 0;
+	}
 	unique_id = util::ntohll(*((uint64_t *) unique_id_ptr));
 	
 	PQclear(res);
@@ -492,6 +495,7 @@ uint64_t PostgreSQLQuerier::insert_activity_id(const ActivityID &aid)
 uint64_t PostgreSQLQuerier::insert_activity(const Activity &act)
 {
 	uint64_t uid = insert_activity_id(act.aid());
+	if( uid == 0 ) return 0;
 	
 	insert_activity_parents(uid, act.parentArray());
 	vector<uint64_t> *rcids = insert_remote_calls(act.remoteCallsArray(), uid);

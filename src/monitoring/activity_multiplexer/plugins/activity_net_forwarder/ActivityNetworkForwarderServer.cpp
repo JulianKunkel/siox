@@ -25,25 +25,23 @@ class ActivityNetworkServerForwarder: public NetworkService, public ServerCallba
 
 	void stop() override{
 		delete(server);
+
+		NetworkService::stop();
 	}
 
 	void start() override{
 		ActivityNetworkForwarderServerOptions & options = getOptions<ActivityNetworkForwarderServerOptions>();
 		CommunicationModule * comm =  GET_INSTANCE(CommunicationModule, options.comm);
 		server = comm->startServerService(options.serviceAddress, this);
+
+		NetworkService::start();
 	}
 
 	void init() override{
 		ActivityNetworkForwarderServerOptions & options = getOptions<ActivityNetworkForwarderServerOptions>();
 		target =  GET_INSTANCE(ActivityMultiplexer, options.target_multiplexer);
 		assert(target != nullptr);
-
-		start();
    }
-
-	~ActivityNetworkServerForwarder(){
-		stop();
-	}
 
 
 	virtual void messageReceivedCB(std::shared_ptr<ServerClientMessage> msg, const char * message_data, uint64_t buffer_size){

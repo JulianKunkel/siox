@@ -25,6 +25,10 @@ int main( int argc, char const * argv[] )
 
 	vector<Component *> components = a->LoadConfiguration( "skeletonTest", "" );
 	cout << "Loaded: " << components.size() << " Components/Plugins" << endl;
+
+
+	registrar.start();
+
 	// the activity multiplexer is expected to be first:
 	ActivityMultiplexer * m1 = a->searchFor<ActivityMultiplexer>( components );
 	assert( m1 != nullptr );
@@ -54,6 +58,7 @@ int main( int argc, char const * argv[] )
 
 	sleep(1);
 
+	registrar.stop();
 	registrar.shutdown();
 
 	cout << "OK" << endl;

@@ -54,21 +54,23 @@ namespace core {
 
 	void ComponentRegistrar::stop()
 	{
-		if( stopped ) return;
 		for( auto it = list.rbegin(); it != list.rend(); it++ ) {
+			Component* c = const_cast<Component*>((*it)->component);
 			//cout << "Shutting down " << (*it)->moduleName << endl;
-			const_cast<Component*>((*it)->component)->stop();
+			if (c->isStarted()){
+				c->stop();
+			}
 		}
-		stopped = true;
 	}
 
 	void ComponentRegistrar::start()
 	{
-		if( ! stopped ) return;
 		for( auto it = list.rbegin(); it != list.rend(); it++ ) {
 			//cout << "Shutting down " << (*it)->moduleName << endl;
-			const_cast<Component*>((*it)->component)->start();
+			Component* c = const_cast<Component*>((*it)->component);
+			if (! c->isStarted()){
+				c->start();
+			}
 		}
-		stopped = false;
 	}
 };

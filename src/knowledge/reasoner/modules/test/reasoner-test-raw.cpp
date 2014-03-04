@@ -261,6 +261,7 @@ void testReasonerAssessment(){
 	r_options.communicationOptions.serviceAddress = "ipc://reasoner1";
 	r->init(); // This will start a separate Reasoner thread
 	}
+	r->start();
 	ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
 	ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
 	ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
@@ -293,6 +294,7 @@ void testReasonerAssessment(){
 	assert(nh != nullptr);
 	cout << "Node health: " << (*nh) << endl;
 
+	r->stop();
 	delete(r);
 	delete(comm);
 }
@@ -326,6 +328,7 @@ void testReasonerAnomalies(){
 	r_options.communicationOptions.serviceAddress = "ipc://reasoner1";
 	r->init(); // This will start a separate Reasoner thread
 	}
+	r->start();
 
 	r->connectTrigger( & at1 );
 	r->connectTrigger( & at2 );
@@ -354,6 +357,7 @@ void testReasonerAnomalies(){
 	cout << "Anomalies at AT1: " << at1.anomaliesTriggered << endl;
 	cout << "Anomalies at AT2: " << at2.anomaliesTriggered << endl;
 
+	r->stop();
 	delete(r);
 	delete(comm);
 }

@@ -182,6 +182,7 @@ void testReasoner(){
 		r_options.communicationOptions.reasonerID = "node1";
 		rN1->init(); // This will start a separate Reasoner thread
 	}
+
 	TestAnomalyTrigger atN1a;
 	rN1->connectTrigger( & atN1a );
 	TestAnomalyTrigger atN1b;
@@ -231,6 +232,7 @@ void testReasoner(){
 		r_options.communicationOptions.reasonerID = "process12";
 		rP12->init(); // This will start a separate Reasoner thread
 	}
+
 	TestAnomalyTrigger atP12a;
 	rP12->connectTrigger( & atP12a );
 	TestAnomalyPlugin adpiP12a;
@@ -292,6 +294,12 @@ void testReasoner(){
 	((ReasonerStandardImplementation *) rP13)->receivedReasonerProcessHealth( rmrInject, p3 );
 	cout << ((ReasonerStandardImplementation *) rP13) << endl;
 */
+	rP13->start();
+	rP12->start();
+	rP11->start();
+	rN1->start();
+	rS->start();
+
 	// We begin with a clean slate
 	assert( atS.waitForAnomalyCount( 0 ) );
 	assert( atN1a.waitForAnomalyCount( 0 ) );
@@ -346,6 +354,12 @@ void testReasoner(){
 	/*
 	 * Cleaning up
 	 */
+	rP13->stop();
+	rP12->stop();
+	rP11->stop();
+	rN1->stop();
+	rS->stop();
+
 	delete(rP13);
 	delete(rP12);
 	delete(rP11);

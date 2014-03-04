@@ -65,7 +65,7 @@ int main( int argc, char const * argv[] ) throw() {
 	networkProviderOptions->statisticsCollector.componentPointer = collector;
 	ioProviderOptions->statisticsCollector.componentPointer = collector;
 	ramProviderOptions->statisticsCollector.componentPointer = collector;
-	collectorOptions->dereferencingFacade.componentPointer = facade;
+	collectorOptions->topology = topology;
 	collectorOptions->ontology.componentPointer = ontology;
 	collectorOptions->smux.componentPointer = multiplexer;
 	(void)multiplexerOptions;	//avoid warning about unused variable

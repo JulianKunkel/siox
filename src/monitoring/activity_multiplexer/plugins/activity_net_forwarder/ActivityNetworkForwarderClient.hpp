@@ -58,7 +58,6 @@ class ActivityNetworkForwarderClient : public monitoring::ActivityMultiplexerPlu
 
 		void stop() override;
 		void finalize() override;
-		~ActivityNetworkForwarderClient();
 
 	private:
 		// the ringBuffer

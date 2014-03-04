@@ -161,7 +161,6 @@ Implementation details for the requirements of a StatisticsCollector:
 #include <util/ExceptionHandling.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
 
-#include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
 #include <monitoring/statistics/Statistic.hpp>
 #include <monitoring/statistics/collector/StatisticsProviderDatatypes.hpp>
 #include <monitoring/statistics/collector/StatisticsProviderPlugin.hpp>
@@ -209,8 +208,11 @@ class ThreadedStatisticsCollector : public StatisticsCollector, public Component
 		 */
 		virtual ComponentOptions * AvailableOptions() throw();
 
+		void stop() override;
+		void start() override;
+
 	private:
-		ActivityPluginDereferencing* facade = 0;
+		Topology* topology = 0;
 		Ontology* ontology = 0;
 		StatisticsMultiplexer* smux = 0;
 
@@ -248,14 +250,32 @@ ComponentReport ThreadedStatisticsCollector::prepareReport(){
 	return rep;
 }
 
+void ThreadedStatisticsCollector::stop() {
+	terminated = true;
+	atomic_thread_fence( memory_order_release );
+	pollingThread.join();
+	if( !sourcesLock.try_lock() ) {
+		assert(0 && "Someone tried to destruct a ThreadedStatisticsCollector while another thread is still using it!"), abort();
+	}
+	sourcesLock.unlock();
+
+	StatisticsCollector::stop();
+}
+
+void ThreadedStatisticsCollector::start(){
+	pollingThread = thread( &ThreadedStatisticsCollector::pollingThreadMain, this );
+
+	StatisticsCollector::start();
+}
+
+
 void ThreadedStatisticsCollector::init() throw() {
 	ThreadedStatisticsOptions& o = getOptions<ThreadedStatisticsOptions>();
-	facade = GET_INSTANCE(ActivityPluginDereferencing, o.dereferencingFacade);
+	topology = GET_INSTANCE(Topology, o.topology);
 	ontology =  GET_INSTANCE(Ontology, o.ontology);
 	smux = GET_INSTANCE(StatisticsMultiplexer, o.smux);
 	{
 		//Setup the alias for the localhost in the topology.
-		Topology* topology = facade->topology();
 		char hostname[HOST_NAME_MAX + 1];
 		if( gethostname( hostname, sizeof( hostname ) ) ) {
 			cerr << "Fatal error: gethostname() is not POSIX.1-2001 compliant on this system. Aborting.\n";
@@ -272,12 +292,10 @@ void ThreadedStatisticsCollector::init() throw() {
 		}
 	}
 	pollCount = 0;
-	pollingThread = thread( &ThreadedStatisticsCollector::pollingThreadMain, this );
 }
 
 void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plugin ) throw() {
 	assert( plugin );
-	Topology* topology = facade->topology();
 	sourcesLock.lock();
 	// Check whether this plugin is alread registered.
 	if(find(plugins.begin(), plugins.end(), plugin) != plugins.end()) {
@@ -344,7 +362,7 @@ vector<shared_ptr<Statistic> > ThreadedStatisticsCollector::availableMetrics() t
 
 std::shared_ptr<Statistic> ThreadedStatisticsCollector::getStatistic( const std::string& ontologyAttribute, const std::string& topologyPath ) throw() {
 	#define empty std::shared_ptr<Statistic>()
-	TopologyObject object = facade->topology()->lookupObjectByPath( topologyPath );
+	TopologyObject object = topology->lookupObjectByPath( topologyPath );
 	if( !object ) return empty;
 	TopologyObjectId objectId = object.id();
 
@@ -421,13 +439,7 @@ StatisticsValue ThreadedStatisticsCollector::getReducedStatistics( StatisticsRed
 }
 
 ThreadedStatisticsCollector::~ThreadedStatisticsCollector() throw() {
-	terminated = true;
-	atomic_thread_fence( memory_order_release );
-	pollingThread.join();
-	if( !sourcesLock.try_lock() ) {
-		assert(0 && "Someone tried to destruct a ThreadedStatisticsCollector while another thread is still using it!"), abort();
-	}
-	sourcesLock.unlock();
+
 }
 
 ComponentOptions * ThreadedStatisticsCollector::AvailableOptions() throw() {

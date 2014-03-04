@@ -317,6 +317,8 @@ __attribute__( ( constructor ) ) void siox_ctor()
 				process_data.pid = create_process_id( process_data.nid );
 				process_data.association_mapper->setLocalInformation(hostname, process_data.pid);
 
+				process_data.registrar->start();
+
 			} catch( exception & e ) {
 				cerr << "Received exception of type " << typeid( e ).name() << " message: " << e.what() << endl;
 				// SIOX will be disabled !
@@ -357,22 +359,23 @@ static void finalizeSIOX(int print){
 			(*itr)();
 		}
 
-		{
+		{			
 			PERF_MEASURE_START("FINALIZE")
 
-			if( print ){
-				OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
-				process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
-				util::invokeAllReporters( process_data.registrar );
-			}
-			//process_data.registrar->unregisterComponent( -1 );
-
-			// cleanup data structures by using the component registrar:
-			process_data.registrar->shutdown();
-
-			delete( process_data.registrar );
-			delete( process_data.configurator );
+			process_data.registrar->stop();
 		}
+
+		if( print ){
+			OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
+			process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
+			util::invokeAllReporters( process_data.registrar );
+		}
+
+		// cleanup data structures by using the component registrar:
+		process_data.registrar->shutdown();
+
+		delete( process_data.registrar );
+		delete( process_data.configurator );
 
 		delete( process_data.overhead );
 
@@ -397,11 +400,13 @@ void siox_finalize_monitoring(){
 }
 
 void siox_handle_prepare_fork(){
+	FUNCTION_BEGIN
 	// we have to shutdown all the threads as fork() does not copy them leading to errors of all kind.	
 	process_data.registrar->stop();
 }
 
 void siox_handle_fork_complete(int im_the_child){
+	FUNCTION_BEGIN
 	// we may re-initialize the child from scratch with new statistics etc.?
 	process_data.registrar->start();
 }
@@ -574,6 +579,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 				/// @todo Use FATAL function somehow?
 				//exit(1);
 			}
+			process_data.registrar->start();
 		} catch( InvalidConfiguration & e ) {
 			cerr << "WARNING Invalid configuration: \"" << configName << "\"" << endl;
 			cerr << e.what() << endl;

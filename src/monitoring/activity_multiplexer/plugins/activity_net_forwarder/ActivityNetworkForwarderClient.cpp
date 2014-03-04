@@ -111,6 +111,8 @@ ComponentOptions * ActivityNetworkForwarderClient::AvailableOptions(){
 
 void ActivityNetworkForwarderClient::stop() {
 	delete(client);
+
+	ActivityMultiplexerPlugin::stop();
 }
 
 void ActivityNetworkForwarderClient::start() {
@@ -118,6 +120,8 @@ void ActivityNetworkForwarderClient::start() {
 	CommunicationModule * comm =  GET_INSTANCE(CommunicationModule, options.comm);
 
 	client = comm->startClientService(options.targetAddress, & connCallback, this);
+
+	ActivityMultiplexerPlugin::start();
 }
 
 
@@ -145,8 +149,6 @@ void ActivityNetworkForwarderClient::initPlugin() {
 		multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityNetworkForwarderClient::Notify ), false );
 		multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityNetworkForwarderClient::NotifyAsync ), true );
 	}
-
-	start();
 
 	if ( reasoner != nullptr ){
 		reasoner->connectTrigger(this);
@@ -183,9 +185,6 @@ void ActivityNetworkForwarderClient::finalize() {
 	ActivityMultiplexerPlugin::finalize();
 }
 
-ActivityNetworkForwarderClient::~ActivityNetworkForwarderClient(){
-	stop();
-}
 
 extern "C" {
 	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME()
