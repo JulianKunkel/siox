@@ -44,7 +44,7 @@ require_once("header.php");
 <?php endif ?>
 <?php $i = 0; ?>
 <?php foreach ($activities as $a): ?>
-	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>" onclick="window.location='activity.php?unique_id=<?=$a->unique_id?>'">
+	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?> <?=$a->error_value != 0 ? "error" : ""?>" onclick="window.location='activity.php?unique_id=<?=$a->unique_id?>'">
 		<td><?=$a->unique_id?></td>
 		<td><?=$a->name?></td>
 		<td><?=date("d.m.Y H:i:s", floor($a->time_start / 1000000000)).".<b>".($a->time_start % 1000000000)."</b>"?></td>
