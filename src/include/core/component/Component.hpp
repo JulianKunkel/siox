@@ -12,6 +12,7 @@ namespace core {
 
 	typedef Container ComponentOptions;
 
+
 	class Component : public ModuleInterface {
 		private:
 			ComponentOptions * options = nullptr;
@@ -46,6 +47,11 @@ namespace core {
 			// stop processing of threads
 			virtual void stop() {
 				started = false; 
+			}
+
+			// if this module is mandatory, then it will only be stopped for fork()
+			virtual bool isMandatoryModule(){ 
+				return false;
 			}
 
 			// start processing of threads

@@ -362,6 +362,8 @@ static void finalizeSIOX(int print){
 		{			
 			PERF_MEASURE_START("FINALIZE")
 
+			process_data.registrar->stopNonMandatoryModules();			
+
 			if( print ){
 				OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
 				process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
