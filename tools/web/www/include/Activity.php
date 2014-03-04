@@ -349,21 +349,6 @@ static function get_min_max_duration($unique_id)
 }
 
 
-static function purge()
-{
-	global $dbcon;
-
-	$sql  = "SELECT activity.reset_all()";
-	$stmt = $dbcon->prepare($sql);
-
-	if (!$stmt->execute()) {
-		print_r($dbcon->errorInfo());
-		die("Error purging activities.");
-	}
-		
-}
-
-
 }
 
 ?>

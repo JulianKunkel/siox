@@ -113,6 +113,10 @@ void ActivityNetworkForwarderClient::stop() {
 	delete(client);
 
 	ActivityMultiplexerPlugin::stop();
+
+	// free pending messages
+	sendPos = 0;
+	curPos = 0;
 }
 
 void ActivityNetworkForwarderClient::start() {

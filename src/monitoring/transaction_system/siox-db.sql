@@ -415,111 +415,35 @@ RETURNS void AS $$
 	ALTER SEQUENCE topology.type_id_seq      RESTART WITH 1;
 $$ LANGUAGE sql;
 
---
--- SYSINFO
---
 
-CREATE SCHEMA sysinfo;
-COMMENT ON SCHEMA sysinfo IS 'This schema and its contents are probably deprecated. ';
 
-SET search_path = sysinfo, pg_catalog;
-SET default_tablespace = '';
-SET default_with_oids = false;
-
-CREATE TABLE activities (
-    unique_id bigint NOT NULL,
-    interface_id bigint NOT NULL,
-    activity_name character varying(255) NOT NULL,
-    ucaid bigint NOT NULL
-);
-
-CREATE SEQUENCE activities_unique_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE activities_unique_id_seq OWNED BY activities.unique_id;
-ALTER TABLE ONLY activities ALTER COLUMN unique_id SET DEFAULT nextval('activities_unique_id_seq'::regclass);
-ALTER TABLE ONLY activities ADD CONSTRAINT activities_pkey PRIMARY KEY (unique_id);
-
-CREATE TABLE file_systems (
-    unique_id bigint NOT NULL,
-    name character varying(255) NOT NULL
-);
-
-CREATE SEQUENCE file_system_unique_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE file_system_unique_id_seq OWNED BY file_systems.unique_id;
-ALTER TABLE ONLY file_systems ALTER COLUMN unique_id SET DEFAULT nextval('file_system_unique_id_seq'::regclass);
-ALTER TABLE ONLY file_systems ADD CONSTRAINT file_system_pkey PRIMARY KEY (unique_id);
-
-CREATE TABLE interfaces (
-    unique_id bigint NOT NULL,
-    name character varying(256) NOT NULL,
-    implementation character varying(255) NOT NULL
-);
-
-CREATE SEQUENCE interfaces_unique_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE interfaces_unique_id_seq OWNED BY interfaces.unique_id;
-ALTER TABLE ONLY interfaces ALTER COLUMN unique_id SET DEFAULT nextval('interfaces_unique_id_seq'::regclass);
-ALTER TABLE ONLY interfaces ADD CONSTRAINT interfaces_pkey PRIMARY KEY (unique_id);
-
-CREATE TABLE nodes (
-    unique_id bigint NOT NULL,
-    hostname character varying(255) NOT NULL
-);
-
-CREATE SEQUENCE nodes_unique_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE nodes_unique_id_seq OWNED BY nodes.unique_id;
-ALTER TABLE ONLY nodes ALTER COLUMN unique_id SET DEFAULT nextval('nodes_unique_id_seq'::regclass);
-ALTER TABLE ONLY nodes ADD CONSTRAINT nodes_pkey PRIMARY KEY (unique_id);
-
-CREATE TABLE storage_devices (
-    unique_id bigint NOT NULL,
-    device_id bigint NOT NULL,
-    node_id bigint NOT NULL,
-    model_name character varying(255),
-    local_address character varying(255)
-);
-
-CREATE SEQUENCE storage_device_unique_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE storage_device_unique_id_seq OWNED BY storage_devices.unique_id;
-ALTER TABLE ONLY storage_devices ALTER COLUMN unique_id SET DEFAULT nextval('storage_device_unique_id_seq'::regclass);
-ALTER TABLE ONLY storage_devices ADD CONSTRAINT storage_device_pkey PRIMARY KEY (unique_id);
-
-CREATE OR REPLACE FUNCTION reset_all() 
+CREATE FUNCTION public.reset_all_tables() 
 RETURNS void AS $$
-	TRUNCATE sysinfo.activities, sysinfo.file_systems, sysinfo.interfaces, sysinfo.nodes, sysinfo.storage_devices;
-	ALTER SEQUENCE sysinfo.attribute_id_seq RESTART WITH 1;
-	ALTER SEQUENCE sysinfo.object_id_seq RESTART WITH 1;
-	ALTER SEQUENCE sysinfo.type_id_seq RESTART WITH 1;
+	SELECT * FROM activity.reset_all();
+	SELECT * FROM topology.reset_all();
 $$ LANGUAGE sql;
+COMMENT ON FUNCTION public.reset_all_tables() IS 'Truncate all tables and resets all sequences in the SIOX database.';
 
+CREATE OR REPLACE FUNCTION public.get_program_list()
+RETURNS SETOF topology.relation AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.relation WHERE relationtypeid = (SELECT id FROM topology.type WHERE name='ProcessID');
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION public.get_program_list() IS 'Returns a list with all the program runs stored in the database.';
 
 CREATE OR REPLACE VIEW activity.activity_list   AS SELECT a.unique_id, t.childname AS name, a.time_start, a.time_stop, a.error_value FROM activity.activities AS a, topology.relation AS t WHERE a.ucaid=t.childobjectid;
 CREATE OR REPLACE VIEW activity.activity_detail AS SELECT * FROM activity.activity AS a, topology.relation AS t WHERE t.childobjectid = a.ucaid;
+
+CREATE TYPE keyval_pair AS (key text, val text);
+
+CREATE OR REPLACE FUNCTION topology.get_attributes_by_proc_number(p IN integer) 
+RETURNS SETOF keyval_pair 
+AS $$
+BEGIN
+	RETURN QUERY SELECT c.childname AS attribute, d.value AS value 
+	FROM topology.relation AS a, topology.relation AS b, topology.relation AS c, topology.value AS d
+	WHERE a.parentobjectid = get_attributes_by_proc_number.p AND b.childobjectid = a.childobjectid AND c.childobjectid = a.childname::integer AND d.objectid = a.childobjectid;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_attributes_by_proc_number(p IN integer)  IS 'Returns a list with the attribute-value pairs for a given process number.';

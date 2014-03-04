@@ -407,6 +407,10 @@ void siox_handle_prepare_fork(){
 
 void siox_handle_fork_complete(int im_the_child){
 	FUNCTION_BEGIN
+
+	process_data.pid = create_process_id( process_data.nid );
+	process_data.association_mapper->setLocalInformation(process_data.association_mapper->localHostname(), process_data.pid);
+
 	// we may re-initialize the child from scratch with new statistics etc.?
 	process_data.registrar->start();
 }
