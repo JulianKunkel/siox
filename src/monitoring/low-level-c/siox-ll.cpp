@@ -362,6 +362,8 @@ static void finalizeSIOX(int print){
 		{			
 			PERF_MEASURE_START("FINALIZE")
 
+			process_data.registrar->stopNonMandatoryModules();			
+
 			if( print ){
 				OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
 				process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
@@ -409,6 +411,12 @@ void siox_handle_fork_complete(int im_the_child){
 
 	process_data.pid = create_process_id( process_data.nid );
 	process_data.association_mapper->setLocalInformation(process_data.association_mapper->localHostname(), process_data.pid);
+
+	// fix the pid() in the existing components
+	for(auto itr = registeredComponents.begin(); itr != registeredComponents.end(); itr++ ){
+		itr->second->cid.pid.pid = process_data.pid.pid;
+	}
+	
 
 	// we may re-initialize the child from scratch with new statistics etc.?
 	process_data.registrar->start();

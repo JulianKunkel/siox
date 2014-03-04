@@ -48,6 +48,11 @@ class DatabaseTopology : public Topology {
         virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw();
         virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
+        // this module is mandatory! => it will only be stopped for fork()
+        bool isMandatoryModule() override{ 
+                return true;
+        }
+
         void start() override;
         void stop() override;
 
