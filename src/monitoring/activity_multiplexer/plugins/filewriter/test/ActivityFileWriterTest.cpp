@@ -25,6 +25,8 @@ int main( int argc, char const * argv[] )
 
 	m1->init();
 	ap->init();
+	m1->start();
+	ap->start();
 
 	auto parentArray = vector<ActivityID> {  {.cid = {.pid = {2, 3, 4}, .id = 1}, .id = 1} };
 	auto attributeArray = vector<Attribute> {{.id = 111, .value = VariableDatatype( "myData" )}, {.id = 3, . value = ( uint64_t ) 4711}};
@@ -49,6 +51,9 @@ int main( int argc, char const * argv[] )
 		}
 	}
 	//sleep(1);
+
+	m1->stop();
+	ap->stop();
 
 	delete( ap );
 
