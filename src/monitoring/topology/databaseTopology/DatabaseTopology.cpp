@@ -24,8 +24,6 @@ using namespace boost;
 
 class DatabaseTopology : public Topology {
     public:
-        ~DatabaseTopology();
-
         virtual void init();
         virtual ComponentOptions * AvailableOptions();
 
@@ -50,20 +48,29 @@ class DatabaseTopology : public Topology {
         virtual TopologyValue getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw();
         virtual TopologyValueList enumerateAttributes( TopologyObjectId object ) throw();
 
+        void start() override;
+        void stop() override;
+
     private:
         connection* conn;
 };
 
-DatabaseTopology::~DatabaseTopology() {
-    conn->disconnect();
-}
-
-void DatabaseTopology::init() {
+void DatabaseTopology::start(){
+    Topology::start();
     DatabaseTopologyOptions & o = getOptions<DatabaseTopologyOptions>();
     stringstream endpoint;
     endpoint << "hostaddr=" << o.hostaddress << " port=" << o.port << " user=" << o.username << " password=" << o.password << " dbname=" << o.dbname;
 
     conn = new connection(endpoint.str());
+}
+
+void DatabaseTopology::stop(){
+    conn->disconnect();
+    Topology::stop();
+}
+
+
+void DatabaseTopology::init() {
 }
 
 ComponentOptions* DatabaseTopology::AvailableOptions() {
