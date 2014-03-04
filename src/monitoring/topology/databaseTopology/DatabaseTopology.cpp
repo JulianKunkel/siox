@@ -57,6 +57,9 @@ class DatabaseTopology : public Topology {
 
 void DatabaseTopology::start(){
     Topology::start();
+
+    if (conn) return;
+
     DatabaseTopologyOptions & o = getOptions<DatabaseTopologyOptions>();
     stringstream endpoint;
     endpoint << "hostaddr=" << o.hostaddress << " port=" << o.port << " user=" << o.username << " password=" << o.password << " dbname=" << o.dbname;
@@ -65,12 +68,16 @@ void DatabaseTopology::start(){
 }
 
 void DatabaseTopology::stop(){
-    conn->disconnect();
+    if (conn){
+      conn->disconnect();
+      conn = nullptr;  
+    } 
     Topology::stop();
 }
 
 
 void DatabaseTopology::init() {
+    start();
 }
 
 ComponentOptions* DatabaseTopology::AvailableOptions() {
