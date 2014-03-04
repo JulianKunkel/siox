@@ -33,7 +33,16 @@ public:
 		return new PostgreSQLWriterPluginOptions();
 	}
 
-	void initPlugin() override {
+	void initPlugin() override {		
+		multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &PostgreSQLWriterPlugin::Notify ), false );
+	}
+
+	void finalize() override {
+		multiplexer->unregisterCatchall( this, false );
+		ActivityMultiplexerPlugin::finalize();
+	}
+
+	void start() override{
 		PostgreSQLWriterPluginOptions &o = getOptions<PostgreSQLWriterPluginOptions>();
 		
 		dbconn_ = PQconnectdb(o.dbinfo.c_str());
@@ -43,18 +52,13 @@ public:
 			std::cerr << "Connection to database failed: " << PQerrorMessage(dbconn_) << std::endl;
 			
 		}
-		
+
 		querier_ = new PostgreSQLQuerier(*dbconn_);
-		multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &PostgreSQLWriterPlugin::Notify ), false );
 	}
 
-	void finalize() override {
-		multiplexer->unregisterCatchall( this, false );
-		ActivityMultiplexerPlugin::finalize();
-	}
-
-	~PostgreSQLWriterPlugin() {
+	void stop() override{
 		PQfinish(dbconn_);
+		delete(querier_);
 	}
 };
 
