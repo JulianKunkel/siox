@@ -47,7 +47,7 @@ namespace {
 
 	class ActivityMultiplexerQueue {
 		public:
-			ActivityMultiplexerQueue () : writeIndex(0), readIndex(0), lost(0), notified(false), terminate(false), terminated(false) {};
+			ActivityMultiplexerQueue () : writeIndex(0), readIndex(0), lost(0), notified(false), terminate(true), terminated(true) {};
 
 			bool isEmpty() { return !(indexMask & (writeIndex - readIndex)); };
 
@@ -56,10 +56,12 @@ namespace {
 			uint64_t checkOverflowMode();	//Returns a count of lost activities.
 
 			void finalize();
+
 			void start() {
 				terminate = false;
 				terminated = false;
 			}
+
 			void stop() { 
 				finalize();
 			};
@@ -245,7 +247,7 @@ void ActivityMultiplexerQueue::finalize() {
 	terminate = true;
 	// this is important to wake up waiting pop/notifier
 	not_empty.notify_one();
-	while( !terminated ) ;	//Spin until we can safely destruct the object!
+	while( ! terminated ) usleep(10);	//Spin until we can safely destruct the object! 
 }
 
 
