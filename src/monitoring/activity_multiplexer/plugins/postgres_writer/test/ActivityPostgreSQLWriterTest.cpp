@@ -22,10 +22,16 @@ int main(int argc, char const *argv[])
 
 	m1->init();
 	ap->init();
+	m1->start();
+	ap->start();
+
  
 	srand(time(NULL));
 	Activity *act = rnd::activity();
 	m1->Log( shared_ptr<Activity>(act));
+
+	m1->stop();
+	ap->stop();
 
 	delete(ap);
 	delete(m1);
