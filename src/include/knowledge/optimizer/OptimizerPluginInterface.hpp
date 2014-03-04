@@ -70,8 +70,8 @@ namespace knowledge {
 			 * @return
 			 *      The best value for attribute, as judged by the plugin.
 			 */
-			virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) = 0;
-			virtual OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) = 0;
+			virtual OntologyValue optimalParameter( OntologyAttributeID aid ) const throw( NotFoundError ) = 0;
+			virtual OntologyValue optimalParameterFor( OntologyAttributeID aid, const Activity * activityToStart ) const throw( NotFoundError ) = 0;
 	};
 
 }

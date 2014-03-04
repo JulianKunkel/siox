@@ -972,7 +972,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
 
 		try{
-			OntologyValue val(process_data.optimizer->optimalParameter(oa));
+			OntologyValue val(process_data.optimizer->optimalParameter(oa.aID));
 			return convert_attribute_back(oa, val, out_value);
 		}catch ( NotFoundError & e ){
 			return false;
@@ -989,7 +989,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
 
 		try{
-			OntologyValue val(process_data.optimizer->optimalParameterFor(oa, activity->activity));
+			OntologyValue val(process_data.optimizer->optimalParameterFor(oa.aID, activity->activity));
 			return convert_attribute_back(oa, val, out_value);
 		}catch ( NotFoundError & e ){
 			return false;
@@ -1008,7 +1008,7 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 		PERF_MEASURE_START( what.c_str() )
 
 		try{
-			OntologyValue val( process_data.optimizer->optimalParameter(oa) );
+			OntologyValue val( process_data.optimizer->optimalParameter(oa.aID) );
 			strncpy( target_str, val.toStr().c_str(), maxLength );
 			return 1;
 		}catch ( NotFoundError & e ){
