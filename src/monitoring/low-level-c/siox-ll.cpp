@@ -362,17 +362,16 @@ static void finalizeSIOX(int print){
 		{			
 			PERF_MEASURE_START("FINALIZE")
 
+			if( print ){
+				OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
+				process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
+				util::invokeAllReporters( process_data.registrar );
+			}
+
+			// stop all threads and cleanup memory
 			process_data.registrar->stop();
+			process_data.registrar->shutdown();
 		}
-
-		if( print ){
-			OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
-			process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
-			util::invokeAllReporters( process_data.registrar );
-		}
-
-		// cleanup data structures by using the component registrar:
-		process_data.registrar->shutdown();
 
 		delete( process_data.registrar );
 		delete( process_data.configurator );
