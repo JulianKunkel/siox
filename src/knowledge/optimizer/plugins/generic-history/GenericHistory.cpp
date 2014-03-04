@@ -84,10 +84,10 @@ class GenericHistoryPlugin: public ActivityMultiplexerPlugin, public OptimizerIn
 
 		void Notify( const shared_ptr<Activity> & activity, int lost );
 
-		OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override;
+		OntologyValue optimalParameter( OntologyAttributeID aid ) const throw( NotFoundError ) override;
 
-		OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) override{
-			return optimalParameter(attribute);
+		OntologyValue optimalParameterFor( OntologyAttributeID aid, const Activity * activityToStart ) const throw( NotFoundError ) override{
+			return optimalParameter(aid);
 		}
 
 		ComponentReport prepareReport() override;
@@ -286,7 +286,7 @@ void GenericHistoryPlugin::initPlugin() {
 					string attribute = itr->second;
 
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
-					optimizer->registerPlugin( ontatt, this );
+					optimizer->registerPlugin( ontatt.aID, this );
 				}
 			} catch(...) {
 				assert(0 && "Fatal error, cannot look up an attribute that could be looked up previously. Please report this bug."), abort();
@@ -309,20 +309,12 @@ GenericHistoryPlugin::~GenericHistoryPlugin() {
 	Optimizer * optimizer = GET_INSTANCE(Optimizer, o.optimizer);
 	// Unregister all attributes we claimed as optimizable with the optimizer
 	for( auto itr = hintTypes.begin(); itr != hintTypes.end(); itr++ ) {
-		OntologyAttribute ontatt;
-		try {
-			ontatt = facade->lookup_attribute_by_ID(itr->first);
-		}
-		catch( NotFoundError ) {
-			cerr << "[GenericHistory]: " << "Could not find attribute # \"" << itr->first << "\" - continuing." << endl;
-			continue; // As we're closing down at any rate, this is not too dramatic
-		}
-		optimizer->unregisterPlugin( ontatt );	// Tell the optimizer not to ask us for this attribute any more
+		optimizer->unregisterPlugin( itr->first );	// Tell the optimizer not to ask us for this attribute any more
 	}
 }
 
 
-OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
+OntologyValue GenericHistoryPlugin::optimalParameter( OntologyAttributeID aid ) const throw( NotFoundError ) {
 	TRACK_FUNCTION_CALLS
 	if( initLevel != initializedLevel ) throw( NotFoundError() );	// Need to be initialized
 	if( lastActionType == HINT ) throw( NotFoundError() );	// The user is king => don't override his choices
@@ -341,7 +333,7 @@ OntologyValue GenericHistoryPlugin::optimalParameter( const OntologyAttribute & 
 	// Find the parameter for the requested hint.
 	if( result && result->hints.size() ) {
 		for( size_t i = result->hints.size(); i--; ) {
-			if( result->hints[i].id == attribute.aID) return result->hints[i].value;
+			if( result->hints[i].id == aid) return result->hints[i].value;
 		}
 	}
 	throw( NotFoundError() );
