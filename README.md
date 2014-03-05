@@ -197,11 +197,11 @@ If that is not the case, you might end up in a situation where the linker silent
 	$ gcc -o myCoolApp ... -L$INSTALL/lib -lsiox-netcdf-dlsym -lnetcdf ...
 	$ ./myCoolApp
 
-4.3 siox-inst
+4.3 Simplified instrumentation using siox-inst.
+
 This tool is provided to simplify the task of setting the appropriate flags.
 You can invoke it like:
 siox-inst [LIST of LAYERS] [wrap|dlsym] [Command]
-
 Specification of dlsym is optional.
 
 For example to achieve LD_PRELOAD linking:
@@ -210,8 +210,29 @@ siox-inst posix,mpi dlsym ./testbinary [options]
 To achieve compilation at link-time (especially useful for debugging sessions):
 siox-inst posix,mpi wrap mpicc -Wall [FILES] -o ./testbinary
 
+In detail it supports the two scenarios (link-time instrumentation and run-time instrumentation):
 
-5 Reading a trace
+1) link-time compilation & instrumentation
+1.1) compile with SIOX instrumentation (ld --wrap method)
+	$ siox-inst posix,mpi wrap mpicc --show -std=c99 -o mpi-test.siox test.c -g
+
+1.2) Run the application as ANY regular application
+	$ ./mpi-test.siox
+	Since it is instrumented, it will check for siox.conf etc.
+	
+2) dynamic run-time instrumentation
+2.1) compile your application as usual, without siox specific stuff.
+	$ mpicc --show -std=c99 -o mpi-test test.c -g
+
+2.2) Run the application with siox-inst to instrument it on the fly (using LD_PRELOAD)
+	If you run your application normally like this
+	$ ./mpi-test <ARGUMENTS>
+	
+	Then you can use siox-inst to create the appropriate LD_PRELOAD environment variable for you:
+	$ siox-inst posix,mpi ./mpi-test <ARGUMENTS>
+
+
+5. Reading a trace
 When an instrumented application is executed, four files will be created in the current working directory: activities.dat, association.dat, ontology.dat, and system-info.dat
 To display the information in a somewhat more human readable format use the siox-trace-reader:
 
