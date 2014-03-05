@@ -261,7 +261,7 @@ uint64_t PostgreSQLQuerier::query_activity_unique_id(const ActivityID &aid)
 {
 	uint32_t id = htonl(aid.id);
 	uint32_t thread = htonl(aid.thread);
-	uint32_t cid = htonl(aid.cid.id);
+	uint16_t cid = htonl(aid.cid.id);
 	uint32_t nid = htonl(aid.cid.pid.nid);
 	uint32_t pid = htonl(aid.cid.pid.pid);
 	uint32_t time = htonl(aid.cid.pid.time);
@@ -277,7 +277,7 @@ uint64_t PostgreSQLQuerier::query_activity_unique_id(const ActivityID &aid)
 		 FROM activity.activity_ids                                    \
 		 WHERE                                                         \
 			id = $1::int4 AND thread_id = $2::int4                 \
-			AND cid_id = $3::int4 AND cid_pid_nid = $4::int4       \
+			AND cid_id = $3::int2 AND cid_pid_nid = $4::int4       \
 			AND cid_pid_pid = $5::int4 AND cid_pid_time = $6::int4";
 		
 
@@ -428,12 +428,13 @@ uint64_t PostgreSQLQuerier::insert_activity_id(const ActivityID &aid)
 {
 	uint64_t unique_id = query_activity_unique_id(aid);
 
-	if (unique_id != 0)
+	if (unique_id > 0) {
 		return unique_id;
+	}
 
 	uint32_t       id = htonl(aid.id);
 	uint32_t   thread = htonl(aid.thread);
-	uint32_t   cid_id = htonl(aid.cid.id);
+	uint16_t   cid_id = htonl(aid.cid.id);
 	uint32_t  cid_nid = htonl(aid.cid.pid.nid);
 	uint32_t  cid_pid = htonl(aid.cid.pid.pid);
 	uint32_t cid_time = htonl(aid.cid.pid.time);
@@ -466,14 +467,15 @@ uint64_t PostgreSQLQuerier::insert_activity_id(const ActivityID &aid)
 			cid_id, cid_pid_nid, cid_pid_pid, cid_pid_time         \
 		) VALUES (                                                     \
 			$1::int4, $2::int4,                                    \
-			$3::int4, $4::int4, $5::int4, $6::int4                 \
+			$3::int2, $4::int4, $5::int4, $6::int4                 \
 		) RETURNING unique_id";
 
 	PGresult *res = PQexecParams(dbconn_, command, nparams, NULL, param_values, param_lengths, param_formats, result_format);
 
 	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
 		
-		std::cout << "Error inserting activity: " << PQresultErrorMessage(res) << std::endl;
+		std::cerr << "Error inserting activity id: " << PQresultErrorMessage(res) << std::endl;
+		std::cerr << "ActivityID: " << aid << std::endl;
 		PQclear(res);
 		return 0;
 		
@@ -483,8 +485,11 @@ uint64_t PostgreSQLQuerier::insert_activity_id(const ActivityID &aid)
 	if ( unique_id_ptr == nullptr ){
 		return 0;
 	}
+
 	unique_id = util::ntohll(*((uint64_t *) unique_id_ptr));
 	
+	assert(unique_id > 0);
+		
 	PQclear(res);
 
 	return unique_id;
@@ -495,7 +500,12 @@ uint64_t PostgreSQLQuerier::insert_activity_id(const ActivityID &aid)
 uint64_t PostgreSQLQuerier::insert_activity(const Activity &act)
 {
 	uint64_t uid = insert_activity_id(act.aid());
-	if( uid == 0 ) return 0;
+
+	if (uid <= 0) {
+		std::cerr << "Activity-ID could not be inserted! : " << act.aid() << std::endl;
+	}
+
+	assert(uid > 0);
 	
 	insert_activity_parents(uid, act.parentArray());
 	vector<uint64_t> *rcids = insert_remote_calls(act.remoteCallsArray(), uid);
@@ -582,6 +592,7 @@ void PostgreSQLQuerier::insert_activity_parent(uint64_t child_uid, const Activit
 	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
 		
 		std::cerr << "Error inserting parent: " << PQresultErrorMessage(res) << std::endl;
+		std::cerr << "    parent_uid: " << parent_uid << " child_uid: " << child_uid << std::endl;
 	}
 
 	PQclear(res);
@@ -645,7 +656,7 @@ uint64_t PostgreSQLQuerier::insert_remote_call(const RemoteCall &rc, const uint6
 
 	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
 		
-		std::cerr << "Error inserting parent: " << PQresultErrorMessage(res) << std::endl;
+		std::cerr << "Error inserting remote call: " << PQresultErrorMessage(res) << std::endl;
 	}
 
 	PQclear(res);

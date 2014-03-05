@@ -2,6 +2,7 @@
 #include <fstream>
 #include <list>
 #include <mutex>
+#include <sstream>
 
 #include <boost/archive/text_oarchive.hpp>
 
@@ -47,7 +48,13 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin {
 
 		void initPlugin( ) override {
 			FileWriterPluginOptions & o = getOptions<FileWriterPluginOptions>();
-			file.open( o.filename );
+   	 	
+   	 	stringstream buff;
+   	 	buff<< o.filename;
+   	 	if (! getenv("SIOX_ACTIVITY_WRITER_FILENAME_DONT_APPEND_PID")){
+    			buff << (long long unsigned) getpid();
+     		}			
+			file.open( buff.str() );
 			oa = new boost::archive::text_oarchive( file, boost::archive::no_header | boost::archive::no_codecvt );
 
 			synchronize = o.synchronize;
