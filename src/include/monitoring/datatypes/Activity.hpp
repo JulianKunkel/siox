@@ -126,6 +126,7 @@ namespace monitoring {
 				cout << "t_start = " << time_start_ << endl;
 				cout << "t_stop  = " << time_stop_ << endl;
 				cout << "ActivityID = " << aid_ << endl;
+				cout << "ActivityID.id = " << aid_.id << endl;
 				cout << "ActivityID.thread = " << aid_.thread << endl;
 				cout << "ActivityID.ComponentID.num = " << aid_.cid.id << endl;
 				cout << "ActivityID.ComponentID.ProcessID.NodeID = " << aid_.cid.pid.nid << endl;
