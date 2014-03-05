@@ -199,7 +199,7 @@ If that is not the case, you might end up in a situation where the linker silent
 
 4.3 Simplified instrumentation using siox-inst.
 
-This tool is provided to simplify the task of setting the appropriate flags.
+This tool is provided to simplify the task of setting the appropriate flags (as listed in 4.1 and 4.2).
 You can invoke it like:
 siox-inst [LIST of LAYERS] [wrap|dlsym] [Command]
 Specification of dlsym is optional.
@@ -214,7 +214,7 @@ In detail it supports the two scenarios (link-time instrumentation and run-time 
 
 1) link-time compilation & instrumentation
 1.1) compile with SIOX instrumentation (ld --wrap method)
-	$ siox-inst posix,mpi wrap mpicc --show -std=c99 -o mpi-test.siox test.c -g
+	$ siox-inst posix,mpi wrap mpicc -std=c99 -o mpi-test.siox test.c -g
 
 1.2) Run the application as ANY regular application
 	$ ./mpi-test.siox
@@ -222,7 +222,7 @@ In detail it supports the two scenarios (link-time instrumentation and run-time 
 	
 2) dynamic run-time instrumentation
 2.1) compile your application as usual, without siox specific stuff.
-	$ mpicc --show -std=c99 -o mpi-test test.c -g
+	$ mpicc -std=c99 -o mpi-test test.c -g
 
 2.2) Run the application with siox-inst to instrument it on the fly (using LD_PRELOAD)
 	If you run your application normally like this
