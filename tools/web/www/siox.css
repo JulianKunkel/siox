@@ -5,3 +5,4 @@ table td, table th { padding: 4px 8px; }
 .even.error { background-color: #ff3333; }
 .odd.error { background-color: #ff8585; }
 table tr.odd:hover, table tr.even:hover { background-color: #85a000; cursor: pointer; }
+table tr.error:hover { color: white; background-color: #610000; cursor: pointer; }
