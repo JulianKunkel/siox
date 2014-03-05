@@ -1,3 +1,7 @@
+#include <sys/types.h>
+#include <unistd.h>
+
+
 #include <monitoring/activity_multiplexer/plugins/bdbwriter/ActivityBDBWriter.hpp>
 
 #include <monitoring/activity_multiplexer/plugins/bdbwriter/ActivityBDBWriterPluginOptions.hpp>
@@ -40,10 +44,18 @@ void ActivityBDBWriterPlugin::initPlugin( ) {
 
 	int ret;
 
+ 	stringstream buff;
+ 	buff<< o.dirname;
+ 	if (! getenv("SIOX_ACTIVITY_WRITER_FILENAME_DONT_APPEND_PID")){
+			buff << (long long unsigned) getpid();
+	}			
+
+	const char * dirname = buff.str().c_str();
+
 	struct stat sb;
-	if (stat(o.dirname.c_str(), &sb) != 0){
-		if (mkdir(o.dirname.c_str(), S_IRWXU) != 0) { 
-			fprintf(stderr, "DB error mkdir: %s: %s\n", o.dirname.c_str(), strerror(errno)); 
+	if (stat(dirname, &sb) != 0){
+		if (mkdir(dirname, S_IRWXU) != 0) { 
+			fprintf(stderr, "DB error mkdir: %s: %s\n", dirname, strerror(errno)); 
 			exit (1);
 		}
 	}
@@ -65,10 +77,10 @@ void ActivityBDBWriterPlugin::initPlugin( ) {
 		exit (1);
 	}
 
-	if ((ret = dbenv->open(dbenv, o.dirname.c_str(), DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG |
+	if ((ret = dbenv->open(dbenv, dirname, DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG |
 	    DB_INIT_MPOOL | DB_INIT_TXN | DB_RECOVER | DB_THREAD,  S_IRUSR | S_IWUSR)) != 0) {
 		dbenv->close(dbenv, 0);
-		dbenv->err(dbenv, ret, "dbenv->open: %s", o.dirname.c_str());
+		dbenv->err(dbenv, ret, "dbenv->open: %s", dirname);
 		exit (1);
 	}
 

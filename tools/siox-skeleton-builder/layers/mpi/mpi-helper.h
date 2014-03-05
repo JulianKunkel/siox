@@ -93,19 +93,20 @@ static const char * getDistributeConstantName(int constant)
 	}
 }
 
-#define APPEND_STR(myStr, count) if(*length < *pos + count ){ if (! *malloced){ *str = (char*)  malloc(2 * *length);}  else{ *str = (char*) realloc(*str, 2 * *length); } *length = 2 * *length; } *pos += sprintf(*str + *pos, "%s", myStr);
+#define APPEND_STR(myStr, count) if(*length < *pos + count ){ *str = (char*) realloc(*str, 2 * *length);  *length = 2 * *length; } *pos += sprintf(*str + *pos, "%s", myStr);
 
-#define APPEND_INT(myInt) if(*length < *pos + 10 ){ if (! *malloced){ *str = (char*)  malloc(2 * *length);}  else{ *str = (char*)  realloc(*str, 2 * *length); } *length = 2 * *length; } *pos += sprintf(*str + *pos, "%lld,", (long long int) myInt);
+#define APPEND_STRSEP(myStr, count) if(*length < *pos + count + 1 ){ *str = (char*) realloc(*str, 2 * *length); *length = 2 * *length; } *pos = (((*str)[*pos-1] == ',') ? *pos - 1 : *pos); *pos += sprintf(*str + *pos, ";%s", myStr);
+
+#define APPEND_INT(myInt) if(*length < *pos + 10 ){ *str = (char*)  realloc(*str, 2 * *length); *length = 2 * *length; } *pos += sprintf(*str + *pos, "%lld,", (long long int) myInt);
 
 #define APPEND_COMMA *pos += sprintf(*str + *pos, ",");
 
 
-static inline void datatypeToString(char ** str, int * pos, int * length, int * malloced, MPI_Datatype type){
+static inline void datatypeToString(char ** str, int * pos, int * length, MPI_Datatype type){
 	// this routine is partly taken from PIOSIM, write_info.c, author Paul Mueller
 	int max_integers,	max_addresses, max_datatypes,	combiner;
 
 	PMPI_Type_get_envelope(type, &max_integers, &max_addresses, &max_datatypes, &combiner);
-
 
 	APPEND_STR(getCombinerName(combiner), 20);
 	APPEND_STR("(", 1);
@@ -131,29 +132,29 @@ static inline void datatypeToString(char ** str, int * pos, int * length, int * 
 
 			APPEND_STR("SIZE=", 5);
 			APPEND_INT(integers[0]);
-			APPEND_STR("RANK=", 5);
+			APPEND_STRSEP("RANK=", 5);
 			APPEND_INT(integers[1]);
-			APPEND_STR("DIM=", 5);
+			APPEND_STRSEP("DIM=", 5);
 			APPEND_INT(integers[2]);
 
 			int dims = integers[2];
 
-			APPEND_STR("GS=", 5);
+			APPEND_STRSEP("GS=", 5);
 			int i = 3;
 			for(; i < dims + 3; ++i){
 				APPEND_INT(integers[i]);
 			}
 
-			APPEND_STR("D=", 5);
+			APPEND_STRSEP("D=", 5);
 			for(; i < dims * 2 + 3; ++i){
 				APPEND_STR( getDistributeConstantName(integers[i]), 20 );
 				APPEND_COMMA
 			}
-			APPEND_STR("A=", 5);
+			APPEND_STRSEP("A=", 5);
 			for(; i < dims * 3 + 3; ++i){
 				APPEND_INT(integers[i]);
 			}
-			APPEND_STR("P=", 5);
+			APPEND_STRSEP("P=", 5);
 			for(; i < dims * 3 + 3; ++i){
 				APPEND_INT(integers[i]);
 			}
@@ -170,33 +171,29 @@ static inline void datatypeToString(char ** str, int * pos, int * length, int * 
 			APPEND_STR("BLOCKS=", 10);
 			APPEND_INT(integers[0]);
 
-			APPEND_STR("BL=", 4);
+			APPEND_STRSEP("BL=", 4);
 			for(int i = 1; i < max_integers; ++i)
 			{
 				APPEND_INT(integers[i]);
 			}
-			*pos = *pos -1;
-
 		}else{
 			for(int i = 0; i < max_integers; ++i)
 			{
 				APPEND_INT(integers[i]);
 			}
-			*pos = *pos -1;
 		}
 
-		APPEND_STR(",ADDR=", 8);
+		APPEND_STRSEP("ADDR=", 8);
 
 		for(int i = 0; i < max_addresses; ++i)
 		{
 			APPEND_INT(addresses[i]);
 		}
-		*pos = *pos -1;
 
-		APPEND_STR(",TYPES=", 10);
+		APPEND_STRSEP("TYPES=", 10);
 		for(int i = 0; i < max_datatypes; ++i)
 		{
-			datatypeToString(str, pos, length, malloced, datatypes[i]);
+			datatypeToString(str, pos, length, datatypes[i]);
 			APPEND_COMMA
 		}
 		*pos = *pos -1;
@@ -215,17 +212,13 @@ static inline void recordDatatype(siox_activity * sioxActivity, siox_attribute *
 	// we assume this size suffices
 	int max_length = 2048;
 	int pos = 0;
-	int mallocedBuffer = FALSE;
-	char buff[max_length];
-	char * type_str = buff;
+	char * type_str = malloc(max_length);
 
-	datatypeToString(& type_str, & pos, & max_length, & mallocedBuffer, type);
+	datatypeToString(& type_str, & pos, & max_length, type);
 
 	siox_activity_set_attribute( sioxActivity, attribute, type_str );
 
-	if (mallocedBuffer){
-		free(type_str);
-	}
+	free(type_str);
 }
 
 /*

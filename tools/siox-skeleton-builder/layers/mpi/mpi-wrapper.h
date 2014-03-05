@@ -23,6 +23,8 @@
 
 //@register_attribute attribute_etype "MPI" "description/etype" SIOX_STORAGE_STRING
 //@register_attribute attribute_filetype "MPI" "description/filetype" SIOX_STORAGE_STRING
+//@register_attribute attribute_filetype_extent "MPI" "description/filetype/extent" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute attribute_filetype_size "MPI" "description/filetype/size" SIOX_STORAGE_32_BIT_UINTEGER
 
 
 //@register_attribute infoBuffSize "MPI" "hints/cbBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
@@ -318,8 +320,11 @@ int MPI_File_get_info( MPI_File fh, MPI_Info * info_used );
 //@activity
 //@activity_link_size fh
 //@splice_after if(info != MPI_INFO_NULL) { recordFileInfo(sioxActivity, fh); }
-//@splice_after recordDatatype(sioxActivity, attribute_filetype, filetype);
-//@splice_after recordDatatype(sioxActivity, attribute_etype, etype);
+//@splice_before recordDatatype(sioxActivity, attribute_filetype, filetype);
+//@splice_before recordDatatype(sioxActivity, attribute_etype, etype);
+//@splice_before MPI_Aint tmp1, tmp2; uint32_t type_size; uint64_t type_extent; MPI_Type_get_extent(filetype, & tmp1, & tmp2); type_extent = (uint64_t) tmp2; int t1; MPI_Type_size(filetype, & t1); type_size = (uint32_t) t1;
+//@activity_attribute attribute_filetype_size type_size
+//@activity_attribute attribute_filetype_extent type_extent
 //@activity_attribute filePosition disp
 //@activity_attribute_str fileDatarepresentation datarep
 //@error ''ret!=MPI_SUCCESS'' ret

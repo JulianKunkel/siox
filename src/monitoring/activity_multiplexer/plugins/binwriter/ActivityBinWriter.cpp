@@ -1,5 +1,10 @@
+#include <sys/types.h>
+#include <unistd.h>
+
+
 #include <stdio.h>
 #include <string.h>
+#include <sstream>
 
 #include <monitoring/activity_multiplexer/plugins/binwriter/ActivityBinWriter.hpp>
 #include <monitoring/activity_multiplexer/plugins/binwriter/ActivityBinWriterPluginOptions.hpp>
@@ -31,7 +36,13 @@ ComponentOptions * ActivityBinWriterPlugin::AvailableOptions() {
 void ActivityBinWriterPlugin::initPlugin( ) {
 	ActivityBinWriterPluginOptions & o = getOptions<ActivityBinWriterPluginOptions>();
 
-	file = fopen(o.filename.c_str(), "ab");
+ 	stringstream buff;
+ 	buff<< o.filename;
+ 	if (! getenv("SIOX_ACTIVITY_WRITER_FILENAME_DONT_APPEND_PID")){
+			buff << (long long unsigned) getpid();
+	}			
+
+	file = fopen(buff.str().c_str(), "ab");
 	if (! file)	{
 		printf("Error in %s %s, disabling plugin \n", __FILE__, strerror(errno));
 	}
