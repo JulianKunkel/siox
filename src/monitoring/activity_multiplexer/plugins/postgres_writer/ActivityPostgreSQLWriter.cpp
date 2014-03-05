@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <thread>
 #include <mutex>
-
 #include "libpq-fe.h"
 
 #include <monitoring/datatypes/Activity.hpp>
@@ -23,10 +23,13 @@ class PostgreSQLWriterPlugin : public ActivityMultiplexerPlugin {
 private:
 	PostgreSQLQuerier *querier_;
 	PGconn *dbconn_;
+	mutex mtx_;
 public:
 
-	void Notify( const shared_ptr<Activity> & activity, int lost ) {
+	void Notify(const shared_ptr<Activity> & activity, int lost) {
+		mtx_.lock();
 		querier_->insert_activity(*activity);
+		mtx_.unlock();
 	}
 
 	ComponentOptions *AvailableOptions() {
@@ -34,29 +37,32 @@ public:
 	}
 
 	void initPlugin() override {		
-		multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &PostgreSQLWriterPlugin::Notify ), false );
+		std::cout << "PostgreSQL Plug-in initializing..." << std::endl;
+		multiplexer->registerCatchall(this, static_cast<ActivityMultiplexer::Callback>( &PostgreSQLWriterPlugin::Notify ), false);
 	}
 
 	void finalize() override {
-		multiplexer->unregisterCatchall( this, false );
+		std::cout << "PostgreSQL Plug-in finalizing..." << std::endl;
+		multiplexer->unregisterCatchall(this, false);
 		ActivityMultiplexerPlugin::finalize();
 	}
 
-	void start() override{
+	void start() override {
+		std::cout << "PostgreSQL Plug-in starting..." << std::endl;
+
 		PostgreSQLWriterPluginOptions &o = getOptions<PostgreSQLWriterPluginOptions>();
 		
 		dbconn_ = PQconnectdb(o.dbinfo.c_str());
 		
 		if (PQstatus(dbconn_) != CONNECTION_OK) {
-			
 			std::cerr << "Connection to database failed: " << PQerrorMessage(dbconn_) << std::endl;
-			
 		}
 
 		querier_ = new PostgreSQLQuerier(*dbconn_);
 	}
 
-	void stop() override{
+	void stop() override {
+		std::cout << "PostgreSQL Plug-in stopping..." << std::endl;
 		PQfinish(dbconn_);
 		delete(querier_);
 	}
