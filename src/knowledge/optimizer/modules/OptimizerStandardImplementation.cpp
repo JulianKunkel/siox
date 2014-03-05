@@ -35,41 +35,41 @@ namespace knowledge {
 
 		public:
 
-			virtual void registerPlugin( const OntologyAttribute & attribute, const OptimizerInterface * plugin ) {
+			 void registerPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) override {
 				assert( plugin != nullptr );
-				assert( expert[attribute.aID] == nullptr );
+				assert( expert[aid] == nullptr );
 
-				expert[attribute.aID] = ( OptimizerInterface * ) plugin;
+				expert[aid] = ( OptimizerInterface * ) plugin;
 			}
 
 
-			virtual bool isPluginRegistered( const OntologyAttribute & attribute ) const {
-				return ( expert.find( attribute.aID ) != expert.end() );
+			bool isPluginRegistered( OntologyAttributeID aid ) const override{
+				return ( expert.find( aid ) != expert.end() );
 			}
 
 
-			virtual void unregisterPlugin( const OntologyAttribute & attribute ) {
-				expert.erase( attribute.aID );
+			void unregisterPlugin( OntologyAttributeID aid ) override {
+				expert.erase( aid );
 			}
 
 
-			virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) {
+			OntologyValue optimalParameter( OntologyAttributeID aid ) const throw( NotFoundError ) override{
 				///@todo Check for registered plug-in?
-				auto res = expert.find( attribute.aID );
+				auto res = expert.find( aid );
 
 				if( res != expert.end() ) {
-					return res->second->optimalParameter( attribute );
+					return res->second->optimalParameter( aid );
 				} else {
 					throw NotFoundError( "Illegal attribute!" );
 				}
 			}
 
-			OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) override {
+			OntologyValue optimalParameterFor( OntologyAttributeID aid, const Activity * activityToStart ) const throw( NotFoundError ) override {
 				///@todo Check for registered plug-in?
-				auto res = expert.find( attribute.aID );
+				auto res = expert.find( aid );
 
 				if( res != expert.end() ) {
-					return res->second->optimalParameterFor( attribute, activityToStart );
+					return res->second->optimalParameterFor( aid, activityToStart );
 				} else {
 					throw NotFoundError( "Illegal attribute!" );
 				}

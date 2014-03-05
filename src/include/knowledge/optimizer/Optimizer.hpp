@@ -65,7 +65,7 @@ namespace knowledge {
 			 * @param plugin [in]
 			 *      The plugin that will provide suggestions
 			 */
-			virtual void registerPlugin( const OntologyAttribute & attribute, const OptimizerInterface * plugin ) = 0;
+			virtual void registerPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) = 0;
 
 			/**
 			 * Is there a plug-in registered that can provide suggestions for
@@ -78,7 +78,7 @@ namespace knowledge {
 			 *      @c true if there is a plug-in regiestered for attribute;
 			 *      otherwise @c false.
 			 */
-			virtual bool isPluginRegistered( const OntologyAttribute & attribute ) const = 0;
+			virtual bool isPluginRegistered( OntologyAttributeID aid ) const = 0;
 
 			/**
 			 * Remove @a attribute from the optimizer's list of attributes for
@@ -87,7 +87,7 @@ namespace knowledge {
 			 * @param attribute [in]
 			 *      The attribute to remove from the list
 			 */
-			virtual void unregisterPlugin( const OntologyAttribute & attribute ) = 0;
+			virtual void unregisterPlugin( OntologyAttributeID aid ) = 0;
 
 			/**
 			 * Ask the optimizer to suggest a parameter for @a attribute.
@@ -100,7 +100,7 @@ namespace knowledge {
 			 *      registered for attribute with the optimizer, based
 			 *      upon current system statistics and activities.
 			 */
-			virtual OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) = 0;
+			virtual OntologyValue optimalParameter( OntologyAttributeID aid ) const throw( NotFoundError ) = 0;
 
 			/**
 			 * Ask the optimizer to suggest a parameter for @a attribute.
@@ -113,7 +113,7 @@ namespace knowledge {
 			 *      registered for attribute with the optimizer, based
 			 *      upon current system statistics and activities.
 			 */
-			virtual OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) = 0;			
+			virtual OntologyValue optimalParameterFor( OntologyAttributeID aid, const Activity * activityToStart ) const throw( NotFoundError ) = 0;			
 	};
 
 }

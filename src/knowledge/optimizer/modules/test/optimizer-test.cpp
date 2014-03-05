@@ -11,8 +11,8 @@
 using namespace std;
 using namespace knowledge;
 
-OntologyAttribute att1;
-OntologyAttribute att2;
+OntologyAttributeID att1;
+OntologyAttributeID att2;
 
 
 class OptimizerTestPlugin: public OptimizerInterface {
@@ -22,7 +22,7 @@ class OptimizerTestPlugin: public OptimizerInterface {
 		mutable uint64_t fix = 42;
 	public:
 
-		OntologyValue optimalParameter( const OntologyAttribute & attribute ) const throw( NotFoundError ) override {
+		OntologyValue optimalParameter( OntologyAttributeID attribute ) const throw( NotFoundError ) override {
 			if( attribute == att1 )
 				return OntologyValue( fix );
 			if( attribute == att2 )
@@ -30,7 +30,7 @@ class OptimizerTestPlugin: public OptimizerInterface {
 			throw NotFoundError( "Illegal attribute!" );
 		}
 
-	  OntologyValue optimalParameterFor( const OntologyAttribute & attribute, const Activity * activityToStart ) const throw( NotFoundError ) override {
+	  OntologyValue optimalParameterFor( OntologyAttributeID attribute, const Activity * activityToStart ) const throw( NotFoundError ) override {
 			if( attribute == att1 )
 				return OntologyValue( fix );
 			if( attribute == att2 )
@@ -56,11 +56,11 @@ int main( int argc, char const * argv[] )
 	string domain( "test" );
 	string s_att1( "Attribute 1" );
 	string s_att2( "Attribute 2" );
-	att1 = ont->register_attribute( domain, s_att1, VariableDatatype::Type::UINT32 );
-	assert( att1.aID != 0 );
-	att2 = ont->register_attribute( domain, s_att2, VariableDatatype::Type::UINT32 );
-	assert( att2.aID != 0 );
-	assert( att1.aID != att2.aID );
+	att1 = ont->register_attribute( domain, s_att1, VariableDatatype::Type::UINT32 ).aID;
+	assert( att1 != 0 );
+	att2 = ont->register_attribute( domain, s_att2, VariableDatatype::Type::UINT32 ).aID;
+	assert( att2 != 0 );
+	assert( att1 != att2 );
 
 
 	// Obtain an Optimizer instance from module loader

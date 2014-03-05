@@ -34,6 +34,7 @@ void workerFunc(int i) {
 	o.dbname = "siox";
 
 	topology->init();
+	topology->start();
 
 	//Test types
 	TopologyType type1, type2;
@@ -193,6 +194,7 @@ void workerFunc(int i) {
 	assert( value2.value() == "/home/test/fritz@schuh:/"+to_string(i) );
 	#endif
 
+	topology->stop();
 	delete topology;
 }
 

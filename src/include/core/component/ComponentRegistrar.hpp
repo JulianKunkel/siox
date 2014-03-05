@@ -93,6 +93,9 @@ namespace core {
 			// stop processing of threads
 			void stop();
 
+			// stop all modules EXCEPT for mandatory modules, these can be stopped calling stop()
+			void stopNonMandatoryModules();
+
 			// start processing processing of threads
 			void start();
 

@@ -362,17 +362,18 @@ static void finalizeSIOX(int print){
 		{			
 			PERF_MEASURE_START("FINALIZE")
 
+			process_data.registrar->stopNonMandatoryModules();			
+
+			if( print ){
+				OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
+				process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
+				util::invokeAllReporters( process_data.registrar );
+			}
+
+			// stop all threads and cleanup memory
 			process_data.registrar->stop();
+			process_data.registrar->shutdown();
 		}
-
-		if( print ){
-			OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data.overhead );
-			process_data.registrar->registerComponent( -1 , "GENERIC", "SIOX_LL", dummyComponent );
-			util::invokeAllReporters( process_data.registrar );
-		}
-
-		// cleanup data structures by using the component registrar:
-		process_data.registrar->shutdown();
 
 		delete( process_data.registrar );
 		delete( process_data.configurator );
@@ -410,6 +411,12 @@ void siox_handle_fork_complete(int im_the_child){
 
 	process_data.pid = create_process_id( process_data.nid );
 	process_data.association_mapper->setLocalInformation(process_data.association_mapper->localHostname(), process_data.pid);
+
+	// fix the pid() in the existing components
+	for(auto itr = registeredComponents.begin(); itr != registeredComponents.end(); itr++ ){
+		itr->second->cid.pid.pid = process_data.pid.pid;
+	}
+	
 
 	// we may re-initialize the child from scratch with new statistics etc.?
 	process_data.registrar->start();
@@ -965,7 +972,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
 
 		try{
-			OntologyValue val(process_data.optimizer->optimalParameter(oa));
+			OntologyValue val(process_data.optimizer->optimalParameter(oa.aID));
 			return convert_attribute_back(oa, val, out_value);
 		}catch ( NotFoundError & e ){
 			return false;
@@ -982,7 +989,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
 
 		try{
-			OntologyValue val(process_data.optimizer->optimalParameterFor(oa, activity->activity));
+			OntologyValue val(process_data.optimizer->optimalParameterFor(oa.aID, activity->activity));
 			return convert_attribute_back(oa, val, out_value);
 		}catch ( NotFoundError & e ){
 			return false;
@@ -1001,7 +1008,7 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 		PERF_MEASURE_START( what.c_str() )
 
 		try{
-			OntologyValue val( process_data.optimizer->optimalParameter(oa) );
+			OntologyValue val( process_data.optimizer->optimalParameter(oa.aID) );
 			strncpy( target_str, val.toStr().c_str(), maxLength );
 			return 1;
 		}catch ( NotFoundError & e ){

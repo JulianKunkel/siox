@@ -46,6 +46,8 @@ int main( int argc, char const * argv[] )
 	SystemInformationGlobalIDManager * sys = a->searchFor<SystemInformationGlobalIDManager>( components );
 	assert( sys != nullptr );
 
+	registrar.start();
+
 	UniqueInterfaceID uid = sys->register_interfaceID( "test", "impl1" );
 	UniqueComponentActivityID aid = sys->register_activityID( uid, "open" );
 	OntologyAttribute o1 = o->register_attribute( "test", "filesize", VariableDatatype::Type::UINT64 );
@@ -63,6 +65,7 @@ int main( int argc, char const * argv[] )
 
 	m1->Log( activity );
 
+	registrar.stop();
 	registrar.shutdown();
 
 	cout << "OK" << endl;

@@ -63,6 +63,17 @@ namespace core {
 		}
 	}
 
+	void ComponentRegistrar::stopNonMandatoryModules()
+	{
+		for( auto it = list.rbegin(); it != list.rend(); it++ ) {
+			Component* c = const_cast<Component*>((*it)->component);
+			//cout << "Shutting down " << (*it)->moduleName << endl;
+			if (c->isStarted() && ! c->isMandatoryModule() ){
+				c->stop();
+			}
+		}
+	}
+
 	void ComponentRegistrar::start()
 	{
 		for( auto it = list.rbegin(); it != list.rend(); it++ ) {
