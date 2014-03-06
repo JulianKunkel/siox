@@ -1,5 +1,7 @@
 <?php
 
+require_once("SIOX.php");
+
 class Program {
 
 static function get_count()
@@ -63,6 +65,12 @@ static function get_list($page = 1, $page_size = 200)
 
 	while ($row = $stmt->fetch(PDO::FETCH_OBJ)) {
 		$row->attributes = self::get_attributes($row->childobjectid);
+		$trimmed_id  = trim($row->childname, "()");
+		$exploded_id = explode(',', $trimmed_id);
+		$row->nid  = $exploded_id[0];
+		$row->pid  = $exploded_id[1];
+		$row->time = $exploded_id[2];
+		$row->node = SIOX::get_node_name($row->nid);
 		$list[] = $row;
 	}
 

@@ -16,7 +16,7 @@ require_once("header.php");
 <?php $runs = Program::get_list($current_page, $page_size); ?>
 
 <form name="purge_frm" method="post" action="purge.php">
-	<input type="submit" value="Purge database" onclick="return confirm('Dude, you are gonna delete all data. Are you sure?')" />
+	<input type="submit" value="Purge database" onclick="return confirm('You are about to delete all data. Are you sure?')" />
 </form>
 
 <br /><br />
@@ -24,13 +24,13 @@ require_once("header.php");
 <table cellspacing="0" cellpadding="0">
 <thead>
 	<tr>
-		<th colspan="2" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
-		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="2" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
+		<th colspan="1" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
+		<th colspan="3" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
+		<th colspan="1" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
 	</tr>
 	<tr>
 		<th>Start</th>
-		<th colspan="2">Command</th>
+		<th>Command</th>
 		<th>Duration</th>
 		<th>Node</th>
 		<th>User</th>
@@ -43,21 +43,21 @@ require_once("header.php");
 	</tr>
 <?php endif ?>
 <?php $i = 0; ?>
-<?php foreach ($runs as $a): ?>
-	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>" onclick="window.location='run.php?childobjectid==<?=$a->childobjectid?>'">
+<?php foreach ($runs as $r): ?>
+	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>" onclick="window.location='activities.php?nid=<?=$r->nid?>&amp;pid=<?=$r->pid?>&amp;time=<?=$r->time?>'">
 		<td></td>
-		<td colspan="2"><?=$a->attributes['description/commandLine'];?></td>
+		<td><?=$r->attributes['description/commandLine'];?></td>
 		<td></td>
-		<td></td>
-		<td><?=$a->attributes['description/user-name'];?></td>
+		<td><?=$r->node?></td>
+		<td><?=$r->attributes['description/user-name'];?></td>
 	</tr>
 <?php endforeach ?>
 </tbody>
 <tfoot>
 	<tr>
-		<th colspan="2" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
-		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="2" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
+		<th colspan="1" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
+		<th colspan="3" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
+		<th colspan="1" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
 	</tr>
 </tfoot>
 </table>
