@@ -12,6 +12,15 @@ require_once "header.php";
 
 <h1>Detail of Activity <?=$_GET["unique_id"]?></h1>
 
+<form name="runs_frm" method="post" action="index.php" style="float: left;">
+	<input type="submit" value="Execution Overview" />
+</form>
+<form name="acts_frm" method="post" action="activities.php" style="float: left">
+	<input type="submit" value="Activities Overview" />
+</form>
+
+<br /><br />
+
 <h2>Causal Chain</h2>
 
 <img src="causal_chain.php?unique_id=<?=$_GET["unique_id"]?>" />

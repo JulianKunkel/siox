@@ -24,13 +24,16 @@ static function get_attribute_name($attr_id)
 }
 
 
-static function get_list($page = 1, $page_size = 200)
+static function get_list($nid, $pid, $time, $page = 1, $page_size = 200)
 {
 	global $dbcon;
 
-	$sql = "SELECT * FROM activity.get_activity_list(:page_size, :page_offset)";
+	$sql = "SELECT * FROM activity.get_activity_list(:nid, :pid, :time, :page_size, :page_offset)";
 
 	$stmt = $dbcon->prepare($sql);
+	$stmt->bindParam(':nid', $nid);
+	$stmt->bindParam(':pid', $pid);
+	$stmt->bindParam(':time', $time);
 	$stmt->bindParam(':page_size', $page_size);
 	$stmt->bindValue(':page_offset', $page_size*($page-1));
 
@@ -47,13 +50,16 @@ static function get_list($page = 1, $page_size = 200)
 	return $list;
 }
 
-static function get_count()
+static function get_count($nid, $pid, $time)
 {
 	global $dbcon;
 
-	$sql = "SELECT count(*) AS count FROM activity.activities";
+	$sql = "SELECT count(*) AS count FROM activity.activity_ids WHERE cid_pid_nid = :nid AND cid_pid_pid = :pid AND cid_pid_time = :time";
 
 	$stmt = $dbcon->prepare($sql);
+	$stmt->bindParam(':nid', $nid);
+	$stmt->bindParam(':pid', $pid);
+	$stmt->bindParam(':time', $time);
 
 	if (!$stmt->execute()) {
 		print_r($dbcon->errorInfo());
