@@ -183,13 +183,13 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION activity.get_activity_children(activity_unique_id IN bigint) IS 'Returns the children for an activity given the activity unique ID.';
 
 
-CREATE OR REPLACE FUNCTION activity.get_activity_list(page_size IN integer, page_offset IN integer)
+CREATE OR REPLACE FUNCTION activity.get_activity_list(pid_nid IN integer, pid_pid IN integer, pid_time IN integer, page_size IN integer, page_offset IN integer)
 RETURNS SETOF activity.activity_list AS $$
 BEGIN
-	RETURN QUERY SELECT * FROM activity.activity_list ORDER BY time_start ASC LIMIT get_activity_list.page_size OFFSET get_activity_list.page_offset;
+	RETURN QUERY SELECT * FROM activity.activity_list WHERE cid_pid_nid = get_activity_list.pid_nid AND cid_pid_pid = get_activity_list.pid_pid AND cid_pid_time = get_activity_list.pid_time ORDER BY time_start ASC LIMIT get_activity_list.page_size OFFSET get_activity_list.page_offset;
 END
 $$ LANGUAGE plpgsql;
-COMMENT ON FUNCTION activity.get_activity_list(page_size IN integer, page_offset IN integer) IS 'Returns all activitities sorted by time_start between page_size and page_size + page_offset.';
+COMMENT ON FUNCTION activity.get_activity_list(pid_nid IN integer, pid_pid IN integer, pid_time IN integer, page_size IN integer, page_offset IN integer) IS 'Returns all activitities sorted by time_start between page_size and page_size + page_offset.';
 
 
 
@@ -432,7 +432,7 @@ END
 $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION public.get_program_list() IS 'Returns a list with all the program runs stored in the database.';
 
-CREATE OR REPLACE VIEW activity.activity_list   AS SELECT a.unique_id, t.childname AS name, a.time_start, a.time_stop, a.error_value FROM activity.activities AS a, topology.relation AS t WHERE a.ucaid=t.childobjectid;
+CREATE OR REPLACE VIEW activity.activity_list   AS SELECT a.unique_id, t.childname AS name, a.time_start, a.time_stop, a.error_value, b.cid_pid_nid, b.cid_pid_pid, b.cid_pid_time FROM activity.activities AS a, activity.activity_ids AS b, topology.relation AS t WHERE a.ucaid=t.childobjectid AND a.unique_id = b.unique_id;
 CREATE OR REPLACE VIEW activity.activity_detail AS SELECT * FROM activity.activity AS a, topology.relation AS t WHERE t.childobjectid = a.ucaid;
 
 CREATE TYPE keyval_pair AS (key text, val text);
@@ -447,3 +447,15 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION topology.get_attributes_by_proc_number(p IN integer)  IS 'Returns a list with the attribute-value pairs for a given process number.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_node_by_id(nid IN integer) 
+RETURNS topology.value
+AS $$
+DECLARE node topology.value%ROWTYPE;
+BEGIN
+	SELECT * INTO node FROM topology.value WHERE objectid = get_node_by_id.nid;
+	RETURN node;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_node_by_id(nid IN integer) IS 'Returns the node information given its numeric ID.';

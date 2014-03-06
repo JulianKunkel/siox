@@ -20,9 +20,9 @@ struct FileSurveyorOptions : public ActivityMultiplexerPluginOptions{
 	vector<string> fileExtensionsToWatch;
 
 	// The lists of activity domains and names belonging to each of these groups
-	// (open calls, file access calls, close calls)
+	// (open calls, seek calls, file access calls, close calls)
 	vector<string> openTokens;
-	//vector<string> seekTokens; // TODO Recognize and process seek() calls!
+	vector<string> seekTokens;
 	vector<string> readTokens;
 	vector<string> writeTokens;
 	vector<string> closeTokens;
