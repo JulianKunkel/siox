@@ -21,7 +21,7 @@ require_once("header.php");
 
 <br /><br />
 
-<table cellspacing="0" cellpadding="0">
+<table id="big_list" cellspacing="0" cellpadding="0">
 <thead>
 	<tr>
 		<th colspan="1" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
