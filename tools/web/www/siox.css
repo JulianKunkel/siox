@@ -10,4 +10,4 @@ table td, table th { padding: 4px 8px; }
 .odd.error { background-color: #ff8585; }
 table tr.odd:hover, table tr.even:hover { background-color: #85a000; cursor: pointer; }
 table tr.error:hover { color: white; background-color: #610000; cursor: pointer; }
-#siox_logo { float: right; width: 140px; }}
+#siox_logo { float: right; width: 140px; }
