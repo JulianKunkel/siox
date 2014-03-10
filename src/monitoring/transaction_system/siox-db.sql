@@ -432,6 +432,17 @@ END
 $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION public.get_program_list() IS 'Returns a list with all the program runs stored in the database.';
 
+
+CREATE OR REPLACE FUNCTION public.get_program(pid IN integer)
+RETURNS SETOF topology.relation AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.relation WHERE relationtypeid = (SELECT id FROM topology.type WHERE name='ProcessID') AND childobjectid = get_program.pid;
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION public.get_program(pid IN integer) IS 'Returns a program given its ID.';
+
+
+
 CREATE OR REPLACE VIEW activity.activity_list   AS SELECT a.unique_id, t.childname AS name, a.time_start, a.time_stop, a.error_value, b.cid_pid_nid, b.cid_pid_pid, b.cid_pid_time FROM activity.activities AS a, activity.activity_ids AS b, topology.relation AS t WHERE a.ucaid=t.childobjectid AND a.unique_id = b.unique_id;
 CREATE OR REPLACE VIEW activity.activity_detail AS SELECT * FROM activity.activity AS a, topology.relation AS t WHERE t.childobjectid = a.ucaid;
 
@@ -459,3 +470,13 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION topology.get_node_by_id(nid IN integer) IS 'Returns the node information given its numeric ID.';
+
+
+CREATE OR REPLACE FUNCTION topology.get_statistics()
+RETURNS SETOF topology.relation
+AS $$
+BEGIN
+	RETURN QUERY SELECT * FROM topology.relation WHERE parentobjectid=(SELECT childobjectid FROM topology.relation WHERE childname='statistics');
+END
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION topology.get_statistics() IS 'Returns a list with all the statistics collected."
