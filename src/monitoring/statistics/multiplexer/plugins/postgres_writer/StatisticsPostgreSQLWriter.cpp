@@ -28,7 +28,7 @@ private:
 };
 
 
-StatisticsFileWriter::~StatisticsPostgreSQLWriter()
+StatisticsPostgreSQLWriter::~StatisticsPostgreSQLWriter()
 {
 	std::cout << "PostgreSQL Statistics Writter stopping..." << std::endl;
 // 	PQfinish(dbconn_);
@@ -37,7 +37,7 @@ StatisticsFileWriter::~StatisticsPostgreSQLWriter()
 }
 
 
-void StatisticsFileWriter::initPlugin() throw() 
+void StatisticsPostgreSQLWriter::initPlugin() throw() 
 {
 	std::cout << "PostgreSQL Statistic Writter initializing..." << std::endl;
 	
@@ -76,7 +76,7 @@ void StatisticsPostgreSQLWriter::newDataAvailable() throw()
 	// write out all currently existing statistics
 	for(auto itr = statistics->begin(); itr != statistics->end(); itr++) {
 		StatisticsDescription &sd = **itr;
-		std::cout << "Description: " << sd << std::endl;
+//		std::cout << "Description: " << sd << std::endl;
 		std::cout << "Value: " << (*itr)->curValue << std::endl;
 	}
 }
