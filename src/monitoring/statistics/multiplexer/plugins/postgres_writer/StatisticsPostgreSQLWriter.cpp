@@ -55,7 +55,7 @@ void StatisticsPostgreSQLWriter::initPlugin() throw()
 
 ComponentOptions* StatisticsPostgreSQLWriter::AvailableOptions() 
 {
-	return new StatisticsPostgreSQLOptions();
+	return new StatisticsPostgreSQLWriterOptions();
 }
 
 
