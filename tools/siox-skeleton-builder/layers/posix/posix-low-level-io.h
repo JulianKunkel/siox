@@ -162,6 +162,7 @@ ssize_t write( int fd, const void * buf, size_t count );
 //@guard
 //@errorErrno ''ret<0''
 //@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
+//@activity_attribute bytesToRead count
 //@activity_attribute_late bytesRead ret
 //@activity_attribute fileHandle fd
 ssize_t read( int fd, void * buf, size_t count );
@@ -577,6 +578,8 @@ If either size or count is zero, the function returns zero and both the stream s
 //@errorErrno ''ret != count''
 //@activity
 //@activity_link_size stream
+//@splice_before ''uint64_t payload = count*size;''
+//@activity_attribute bytesToRead payload
 //@splice_after ''uint64_t posDelta = ret*size;''
 //@activity_attribute_late bytesRead posDelta
 size_t fread( void * ptr, size_t size, size_t count, FILE * stream );
@@ -592,6 +595,8 @@ If either size or count is zero, the function returns zero and the error indicat
 //@errorErrno ''ret != count''
 //@activity
 //@activity_link_size stream
+//@splice_before ''uint64_t payload = count*size;''
+//@activity_attribute bytesToWrite payload
 //@splice_after ''uint64_t posDelta = ret*size;''
 //@activity_attribute_late bytesWritten posDelta
 size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
@@ -601,9 +606,17 @@ size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
 //@errorErrno ''ret != 0''
 //@activity
 //@activity_link_size stream
-//@splice_after ''uint64_t pos = (uint64_t) ftell(stream);''
+//@splice_after ''uint64_t pos = (uint64_t) ftello(stream);''
 //@activity_attribute_late filePosition pos
 int fseeko(FILE *stream, off_t offset, int whence);
+
+//@guard
+//@errorErrno ''ret != 0''
+//@activity
+//@activity_link_size stream
+//@splice_after ''uint64_t pos = (uint64_t) ftell(stream);''
+//@activity_attribute_late filePosition pos
+int fseek(FILE *stream, long offset, int whence);
 
 
 
@@ -664,7 +677,7 @@ If an encoding error happens interpreting wide characters, the function sets to 
 //@errorErrno ''ret < 0''
 //@activity
 //@activity_link_size stream
-//@rewriteCall vfscanf ''stream,format,valist'' 
+//@rewriteCall vfscanf ''stream,format,valist''
 int fscanf( FILE * stream, const char * format, ... );
 
 /*
@@ -673,7 +686,7 @@ int fscanf( FILE * stream, const char * format, ... );
 //@errorErrno ''ret < 0''
 //@activity
 //@activity_link_size stream
-//@rewriteCall vfprintf ''stream,format,valist'' 
+//@rewriteCall vfprintf ''stream,format,valist''
 int fprintf( FILE * stream, const char * format, ... );
 
 
@@ -764,7 +777,7 @@ int flock(int fd, int operation);
 
 
 // An FD might be involved in inter-process communication and not only in file I/O.
-// Actually, do we really want to monitor socket I/O with SIOX ? 
+// Actually, do we really want to monitor socket I/O with SIOX ?
 // We want to distinguish file I/O from socket I/O, though!
 
 #define INSTRUMENT_POSIX_COMMUNICATION
