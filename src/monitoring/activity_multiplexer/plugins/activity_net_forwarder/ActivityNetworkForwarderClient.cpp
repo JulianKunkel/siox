@@ -11,7 +11,7 @@ using namespace core;
 using namespace monitoring;
 using namespace knowledge;
 
-#define max_pending_ops 1000
+#define max_pending_ops 10000
 
 ComponentReport ActivityNetworkForwarderClient::prepareReport(){
 	ComponentReport report;

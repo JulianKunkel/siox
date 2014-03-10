@@ -69,7 +69,7 @@ namespace {
 			std::mutex lock;
 			std::condition_variable not_empty;
 
-			const static int capacityExponent = 5;
+			const static int capacityExponent = 8;
 			const static int capacity = 1 << capacityExponent;
 			const static int indexMask = capacity - 1;
 			shared_ptr<Activity> buffer[capacity];	//Writing is protected by `lock`, reading is protected by the values of `writeIndex` and `readIndex`.
