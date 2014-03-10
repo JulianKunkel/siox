@@ -30,6 +30,7 @@ target_link_libraries(
 	siox-monitoring-FileAssociationMapper
 	siox-monitoring-FileOntology
 	siox-monitoring-FileBasedSystemInformation
+	siox-monitoring-activityPlugin-ActivityBinWriter
 	siox-core-ActivitySerializable
 )
 

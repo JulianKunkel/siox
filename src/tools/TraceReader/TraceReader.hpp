@@ -4,12 +4,13 @@
 #include <string>
 #include <sstream>
 
-#include <core/container/container-serializer-text.hpp>
+//#include <core/container/container-serializer-text.hpp>
 
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/datatypes/Activity.hpp>
+#include <monitoring/activity_multiplexer/ActivitySerializationPlugin.hpp>
 
 using namespace std;
 using namespace monitoring;
@@ -36,12 +37,16 @@ class TraceReader {
 
 		SystemInformationGlobalIDManager * getSystemInformationGlobalIDManager() const{
 			return s;
-		}				
+		}
+
+		~TraceReader(){
+			activityDeserializer->closeTrace();
+		}
 	private:
 		AssociationMapper * a;
 		Ontology * o;
 		SystemInformationGlobalIDManager * s;
-		FileDeserializer<Activity> * activityDeserializer;
+		ActivitySerializationPlugin * activityDeserializer;
 
 		void strattribute( const Attribute & a, stringstream & s ) throw( NotFoundError );
 };
