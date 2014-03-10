@@ -10,7 +10,7 @@ using namespace std;
 using namespace monitoring;
 
 //@serializable
-class StatisticsPostgreSQLOptions : public monitoring::StatisticsMultiplexerPluginOptions {
+class StatisticsPostgreSQLWriterOptions : public monitoring::StatisticsMultiplexerPluginOptions {
 public:
 	string dbinfo;
 };
