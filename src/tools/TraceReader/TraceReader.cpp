@@ -11,12 +11,12 @@
 
 #include "TraceReader.hpp"
 
-#include <core/component/ActivitySerializableText.cpp>
+//#include <core/component/ActivitySerializableText.cpp>
 
 Activity * TraceReader::nextActivity() {
 	try{
-	if( activityDeserializer->hasNext() )
-		return activityDeserializer->parseNext();
+	if( activityDeserializer->hasNextActivity() )
+		return activityDeserializer->nextActivity();
 	else
 		return nullptr;
 	}catch(exception & e){
@@ -31,6 +31,14 @@ TraceReader::TraceReader( string activityFile, string systemInfoFile, string ont
 	o = core::module_create_instance<Ontology>( "", "siox-monitoring-FileOntology", ONTOLOGY_INTERFACE );
 	s = core::module_create_instance<SystemInformationGlobalIDManager>( "", "siox-monitoring-FileBasedSystemInformation", SYSTEMINFORMATION_GLOBALID_MANAGER_INTERFACE );
 
+	activityDeserializer = core::module_create_instance<ActivitySerializationPlugin>( "", "siox-monitoring-activityPlugin-ActivityBinWriter", ACTIVITY_SERIALIZATION_PLUGIN_INTERFACE );
+
+	assert( activityDeserializer );
+
+	activityDeserializer->loadTrace(activityFile);
+
+	//activityDeserializer = new FileDeserializer<Activity>( activityFile );
+
 	FileBasedSystemInformationOptions * sop = new FileBasedSystemInformationOptions();
 	sop->filename = systemInfoFile;
 	s->init( sop );
@@ -42,7 +50,7 @@ TraceReader::TraceReader( string activityFile, string systemInfoFile, string ont
 	FileAssociationMapperOptions * aop = new FileAssociationMapperOptions();
 	aop->filename = associationFile;
 	a->init( aop );
-	activityDeserializer = new FileDeserializer<Activity>( activityFile );
+	
 }
 
 static inline void strtime( Timestamp t, stringstream & s )

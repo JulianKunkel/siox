@@ -34,9 +34,9 @@ class FileWriterPlugin: public ActivityMultiplexerPlugin {
 			//cout << "NOTIFY" << facade->get_system_information()->lookup_activity_name( activity->ucaid_) << endl;
 			//if (  activity->attributeArray().begin() != activity->attributeArray().end() )
 			//	cout << activity->attributeArray().begin()->value << endl;
+			Activity * act = &* activity;
 
 			lock_guard<mutex> lock( motify_mutex );
-			Activity * act = &* activity;
 			*oa << act;
 			if( synchronize )
 				file.flush();
