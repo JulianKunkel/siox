@@ -13,6 +13,9 @@ if (!isset($_GET['start']) || !isset($_GET['stop']))
 $start = $_GET['start'];
 $stop  = $_GET['stop'];
 
+$start = 0;
+$stop  = 0;
+
 $nid  = $_GET['nid'];
 $pid  = $_GET['pid'];
 $time = $_GET['time'];
@@ -36,6 +39,7 @@ $stats_list = Stats::get_list();
 
 <h2><?=$stat->childname?></h2>
 
+<img src="plot.php?x=timestamp&amp;y=<?=$stat->childobjectid?>&amp;start=<?=$start?>&amp;stop=<?=$stop?>" />
 
 <?php endforeach ?>
 
