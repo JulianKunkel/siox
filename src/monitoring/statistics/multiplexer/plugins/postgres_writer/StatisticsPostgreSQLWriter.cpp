@@ -94,8 +94,6 @@ void StatisticsPostgreSQLWriter::newDataAvailable() throw()
 		}
 
 		PQclear(res);
-//		std::cout << "Description: " << sd << std::endl;
-//		std::cout << "Value: " << (*itr)->curValue << std::endl;
 	}
 }
 
