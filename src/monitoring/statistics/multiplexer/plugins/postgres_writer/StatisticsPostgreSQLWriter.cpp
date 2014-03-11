@@ -61,12 +61,8 @@ void StatisticsPostgreSQLWriter::notifyAvailableStatisticsChange(const vector<sh
 
 void StatisticsPostgreSQLWriter::newDataAvailable() throw()
 {
-	std::cout << "New data available." << std::endl;
-	
 	uint64_t timestamp = (*statistics->begin())->curTimestamp();
-	std::cout << "Timestmap: " << timestamp << std::endl;
 	uint64_t size = statistics->size();
-	std::cout << "Size: " << size << std::endl;
 	
 	const int nparams = 4;
 	const char *command = 
