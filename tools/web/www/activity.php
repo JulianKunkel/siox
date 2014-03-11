@@ -8,6 +8,10 @@ $site_title = "Causal Chain View";
 $site_description = "Visualization of the causal chain for the activity"; 
 
 require_once "header.php"; 
+
+$pnum = $_GET['pnum'];
+$act = Activity::get_activity($_GET["unique_id"]);
+
 ?>
 
 <h1>Detail of Activity <?=$_GET["unique_id"]?></h1>
@@ -15,7 +19,7 @@ require_once "header.php";
 <form name="runs_frm" method="post" action="index.php" style="float: left;">
 	<input type="submit" value="Execution Overview" />
 </form>
-<form name="acts_frm" method="post" action="activities.php" style="float: left">
+<form name="acts_frm" method="post" action="activities.php?nid=<?=$act->cid_pid_nid?>&amp;pid=<?=$act->cid_pid_pid?>&amp;time=<?=$act->cid_pid_time?>&amp;pnum=<?=$pnum?>" style="float: left">
 	<input type="submit" value="Activities Overview" />
 </form>
 
@@ -25,7 +29,6 @@ require_once "header.php";
 
 <img src="causal_chain.php?unique_id=<?=$_GET["unique_id"]?>" />
 
-<?php $act = Activity::get_activity($_GET["unique_id"]);?>
 
 <h2>Attribute List</h2>
 
@@ -85,7 +88,6 @@ $pid_secs %= 60;
 		<th>error_value</th><td class="odd"><?=$act->error_value?></td>
 	</tr>
 
-</tbody>
 </table>
 
 

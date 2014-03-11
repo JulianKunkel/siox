@@ -1,6 +1,7 @@
 <?php 
 require_once("include/DB.php"); 
 require_once("include/Activity.php"); 
+require_once("include/Program.php"); 
 $site_title = "Activity overview";
 $site_description = "Overview of the stored activities";
 require_once("header.php"); 
@@ -11,22 +12,53 @@ $time = $_GET['time'];
 
 ?>
 
-<h1>Activity List</h1>
+<h1>Activity Overview</h1>
 
-<?php $page_size = 200; ?>
-<?php $total_activities = Activity::get_count($nid, $pid, $time); ?>
-<?php $total_pages = max(ceil($total_activities / $page_size), 1); ?>
-<?php $current_page = isset($_GET['page']) ? $_GET['page'] : $total_pages; ?>
-<?php $activities = Activity::get_list($nid, $pid, $time, $current_page, $page_size); ?>
+<?php 
 
-<form name="runs_frm" method="post" action="index.php" style="float: left;">
-	<input type="submit" value="Execution Overview" />
-</form>
+$page_size = 200; 
+$total_activities = Activity::get_count($nid, $pid, $time); 
+$total_pages = max(ceil($total_activities / $page_size), 1); 
+$current_page = isset($_GET['page']) ? $_GET['page'] : $total_pages; 
+$activities = Activity::get_list($nid, $pid, $time, $current_page, $page_size); 
+
+$pnum = $_GET['pnum']; 
+$p = Program::get($pnum); 
+
+?>
+
 <form name="purge_frm" method="post" action="purge.php" style="float: left">
 	<input type="submit" value="Purge database" onclick="return confirm('You are about to delete all data. Are you sure?')" />
 </form>
+<form name="runs_frm" method="post" action="index.php" style="float: left;">
+	<input type="submit" value="Execution Overview" />
+</form>
+<form name="stats_frm" method="post" action="statistics.php?start=<?=$p->times['start']?>&amp;stop=<?=$p->times['stop']?>&amp;nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;pnum=<?=$pnum?>" style="float: left;">
+	<input type="submit" value="Time frame statistics" />
+</form>
+
 
 <br /><br />
+
+<h2>Execution Context</h2>
+
+
+<table cellspacing="0" cellpadding="0">
+	<tr class="even">
+		<th>program number</th><td><?=$pnum?></td>
+	</tr>
+	<tr class="odd">
+		<th>node (nid, pid, time)</th><td><?="$p->node ($p->nid, $p->pid, $p->time)"?></td>
+	</tr>
+<?php $i = 0; ?>
+<?php foreach ($p->attributes as $k => $v): ?>
+	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd"; ?>">
+		<th style="text-align: left;"><?=$k?></th><td><?=str_replace(" ", "<br />", $v)?></td>
+	</tr>
+<?php endforeach ?>
+</table>
+
+<h2>Activity List</h2>
 
 <table id="big_list" cellspacing="0" cellpadding="0">
 <thead>
@@ -35,7 +67,7 @@ $time = $_GET['time'];
 		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
 		<th colspan="2" style="text-align: right"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$total_pages?>">last ↷</a></th>
 	</tr>
-	<tr>
+<tr>
 		<th>#</th>
 		<th>Function</th>
 		<th>Time start</th>
@@ -52,7 +84,7 @@ $time = $_GET['time'];
 <?php endif ?>
 <?php $i = 0; ?>
 <?php foreach ($activities as $a): ?>
-	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?> <?=$a->error_value != 0 ? "error" : ""?>" onclick="window.location='activity.php?unique_id=<?=$a->unique_id?>'">
+	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?> <?=$a->error_value != 0 ? "error" : ""?>" onclick="window.location='activity.php?unique_id=<?=$a->unique_id?>&amp;pnum=<?=$pnum?>'">
 		<td><?=$a->unique_id?></td>
 		<td><?=$a->name?></td>
 		<td><?=date("d.m.Y H:i:s", floor($a->time_start / 1000000000)).".<b>".($a->time_start % 1000000000)."</b>"?></td>

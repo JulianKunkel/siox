@@ -16,7 +16,8 @@ require_once("header.php");
 <?php $runs = Program::get_list($current_page, $page_size); ?>
 
 <form name="purge_frm" method="post" action="purge.php">
-	<input type="submit" value="Purge database" onclick="return confirm('You are about to delete all data. Are you sure?')" />
+	<input type="submit" value="Purge database"    onclick="return confirm('You are about to delete all data. Are you sure?')" />
+	<input type="submit" value="Topology overview" onclick="return action='topology.php'" />
 </form>
 
 <br /><br />
@@ -29,8 +30,8 @@ require_once("header.php");
 		<th colspan="1" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
 	</tr>
 	<tr>
-		<th>Start</th>
 		<th>Command</th>
+		<th>Start</th>
 		<th>Duration</th>
 		<th>Node</th>
 		<th>User</th>
@@ -44,10 +45,10 @@ require_once("header.php");
 <?php endif ?>
 <?php $i = 0; ?>
 <?php foreach ($runs as $r): ?>
-	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>" onclick="window.location='activities.php?nid=<?=$r->nid?>&amp;pid=<?=$r->pid?>&amp;time=<?=$r->time?>'">
-		<td></td>
+	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>" onclick="window.location='activities.php?nid=<?=$r->nid?>&amp;pid=<?=$r->pid?>&amp;time=<?=$r->time?>&amp;pnum=<?=$r->childobjectid?>'">
 		<td><?=$r->attributes['description/commandLine'];?></td>
-		<td></td>
+		<td><?=date("d.m.Y H:i:s", floor($r->times["start"] / 1000000000)).".".($r->times["start"] % 1000000000)?></td>
+		<td><?=round(($r->times["stop"] - $r->times["start"]) / 1000000000, 3)?> s</td>
 		<td><?=$r->node?></td>
 		<td><?=$r->attributes['description/user-name'];?></td>
 	</tr>
