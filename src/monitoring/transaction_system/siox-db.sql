@@ -479,4 +479,37 @@ BEGIN
 	RETURN QUERY SELECT * FROM topology.relation WHERE parentobjectid=(SELECT childobjectid FROM topology.relation WHERE childname='statistics');
 END
 $$ LANGUAGE plpgsql;
-COMMENT ON FUNCTION topology.get_statistics() IS 'Returns a list with all the statistics collected."
+COMMENT ON FUNCTION topology.get_statistics() IS 'Returns a list with all the statistics collected.';
+
+
+---
+--- Statistics
+---
+
+CREATE SCHEMA statistics;
+ALTER SCHEMA statistics OWNER TO siox;
+
+CREATE TABLE stats (
+    stat_id bigint NOT NULL,
+    topology_id bigint,
+    ontology_id bigint,
+    value text,
+    "timestamp" bigint
+);
+
+ALTER TABLE statistics.stats OWNER TO siox;
+
+CREATE SEQUENCE stats_stat_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE statistics.stats_stat_id_seq OWNER TO siox;
+ALTER SEQUENCE stats_stat_id_seq OWNED BY stats.stat_id;
+
+ALTER TABLE ONLY stats ALTER COLUMN stat_id SET DEFAULT nextval('stats_stat_id_seq'::regclass);
+ALTER TABLE ONLY stats ADD CONSTRAINT stats_pkey PRIMARY KEY (stat_id);
+
+CREATE OR REPLACE VIEW statistics.stats_full AS SELECT * FROM statistics.stats AS s, topology.relation AS r WHERE s.ontology_id = r.childobjectid ORDER BY timestamp ASC;
