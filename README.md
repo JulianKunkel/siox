@@ -52,50 +52,33 @@ Set variables, this will ensure that the right dependencies are used:
 	$ make && make install
 	# If you get the error: "fatal error: gnu/stubs-32.h: No such file or directory" then you must install the 32 bit libc dev package.
 	# if you have exported PATH etc. you will now use the new gcc, check which gcc is used by calling $ which gcc
-
 * cmake 2.8.12 
-
 	$ ./configure --prefix=$SIOXDEPS 
 	$ make install
-
 * boost 1.55
-
 	$ ./bootstrap.sh
 	$ ./b2 install --prefix=$SIOXDEPS
-
 * libffi (required by Glib2)
-
  	$ wget ftp://sourceware.org/pub/libffi/libffi-3.0.13.tar.gz	
 	$ ./configure --prefix=$SIOXDEPS
 	$ make && make install
-
 * Glib2 2.36
-
 	$ ./configure --prefix=$SIOXDEPS
 	$ make && make install
-
 * Python (>= 2.7), here we use 3.3.4
-
 	$ ./configure --prefix=$SIOXDEPS
 	$ make && make install
 	$  ln -s $SIOXDEPS/bin/python3 $SIOXDEPS/bin/python
-
 * MPI (here we use OpenMPI 1.9)
-
 	$ ./configure --prefix=$SIOXDEPS --disable-vt --enable-debug --enable-mem-debug
 	$ make && make install
-
 * likwid 		# if you want to use it
-
 	$ hg clone https://code.google.com/p/likwid/ 
 	$ cd likwid ; patch -p 1 < ./src/monitoring/statistics/collector/plugins/likwid/likwid-mod.patch
-
 	edit config.mk and adjust prefix
-
 	$ make && make install 
 	# Note that make install must be called as root because the permissions of likwid's access deamon  must be setuid
 * Berkeley DB	# if you want to use it
-
 	$ wget http://download.oracle.com/berkeley-db/db-6.0.20.tar.gz
 	$ tar -xf db-*.tar.gz
 	$ cd db*.20/build_unix ; ../dist/configure --prefix=$SIOXDEPS LDFLAGS=-ldl
