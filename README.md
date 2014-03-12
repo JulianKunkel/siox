@@ -39,52 +39,72 @@ To manually install required dependencies download the following software and in
 The following commands install the dependencies with the default options.
 
 Set variables, this will ensure that the right dependencies are used:
-$ export SIOXDEPS=<WHERE YOU WANT TO INSTALL THE DEPS INTO>
-$ export PATH=$SIOXDEPS/bin:$PATH
-$ export PKG_CONFIG_PATH=$SIOXDEPS/lib/pkgconfig/:$PKG_CONFIG_PATH
-$ export LD_LIBRARY_PATH=$SIOXDEPS/lib64:$SIOXDEPS/lib:$LD_LIBRARY_PATH
+	$ export SIOXDEPS=<WHERE YOU WANT TO INSTALL THE DEPS INTO>
+	$ export PATH=$SIOXDEPS/bin:$PATH
+	$ export PKG_CONFIG_PATH=$SIOXDEPS/lib/pkgconfig/:$PKG_CONFIG_PATH
+	$ export LD_LIBRARY_PATH=$SIOXDEPS/lib64:$SIOXDEPS/lib:$LD_LIBRARY_PATH
 
 # build in the following order:
 * gcc 4.8.2
+
 	$ bash ./contrib/download_prerequisites
 	$ ./configure --prefix=$SIOXDEPS 
 	$ make && make install
+
 	# If you get the error: "fatal error: gnu/stubs-32.h: No such file or directory" then you must install the 32 bit libc dev package.
 	# if you have exported PATH etc. you will now use the new gcc, check which gcc is used by calling $ which gcc
 * cmake 2.8.12 
+
 	$ ./configure --prefix=$SIOXDEPS 
 	$ make install
+
 * boost 1.55
+
 	$ ./bootstrap.sh
 	$ ./b2 install --prefix=$SIOXDEPS
+
 * libffi (required by Glib2)
+
  	$ wget ftp://sourceware.org/pub/libffi/libffi-3.0.13.tar.gz	
 	$ ./configure --prefix=$SIOXDEPS
 	$ make && make install
+
 * Glib2 2.36
+
 	$ ./configure --prefix=$SIOXDEPS
 	$ make && make install
+
 * Python (>= 2.7), here we use 3.3.4
+
 	$ ./configure --prefix=$SIOXDEPS
 	$ make && make install
 	$  ln -s $SIOXDEPS/bin/python3 $SIOXDEPS/bin/python
+
 * MPI (here we use OpenMPI 1.9)
+
 	$ ./configure --prefix=$SIOXDEPS --disable-vt --enable-debug --enable-mem-debug
 	$ make && make install
+
 * likwid 		# if you want to use it
+
 	$ hg clone https://code.google.com/p/likwid/ 
 	$ cd likwid ; patch -p 1 < ./src/monitoring/statistics/collector/plugins/likwid/likwid-mod.patch
+
 	edit config.mk and adjust prefix
+
 	$ make && make install 
+
 	# Note that make install must be called as root because the permissions of likwid's access deamon  must be setuid
 * Berkeley DB	# if you want to use it
+
 	$ wget http://download.oracle.com/berkeley-db/db-6.0.20.tar.gz
 	$ tar -xf db-*.tar.gz
 	$ cd db*.20/build_unix ; ../dist/configure --prefix=$SIOXDEPS LDFLAGS=-ldl
 	$ make && make install
 
 Now to compile SIOX follow the instructions given after calling:
-./configure --build-wrappers --with-glib=$SIOXDEPS --with-likwid=$SIOXDEPS --with-boost=$SIOXDEPS --with-cc=$SIOXDEPS --with-cxx=$SIOXDEPS --with-python=$SIOXDEPS
+
+	./configure --build-wrappers --with-glib=$SIOXDEPS --with-likwid=$SIOXDEPS --with-boost=$SIOXDEPS --with-cc=$SIOXDEPS --with-cxx=$SIOXDEPS --with-python=$SIOXDEPS
 
 
 Compilation
@@ -93,22 +113,25 @@ By utilizing CMake we can either use the traditional make tool or ninja which ha
 
 Configuration:
 We provide a configure script for convenient setting of important CMake variables. So instead of using the options above you may use:
-$ ./configure --prefix=/usr/local/siox
+
+	$ ./configure --prefix=/usr/local/siox
 
 The script outputs the command line to execute.
 
 After the installation you must adjust the environment variables LD_LIBRARY_PATH and if you like PATH to allow convenient access, for example for bash do:
-$ export LD_LIBRARY_PATH=/usr/local/siox/lib:$LD_LIBRARY_PATH
-$ export PATH=/usr/local/siox/bin:$PATH
+
+	$ export LD_LIBRARY_PATH=/usr/local/siox/lib:$LD_LIBRARY_PATH
+	$ export PATH=/usr/local/siox/bin:$PATH
 
 Then you can compile SIOX:
 
-make -j 4
-make install
+	make -j 4
+	make install
 
 To use ninja instead of make run:
-$ cmake -GNinja ../
-$ ninja
+
+	$ cmake -GNinja ../
+	$ ninja
 
 Note that C++ takes a considerable amount of memory to compile, parallel builds might exhaust machines with less than 2 GByte of memory.
 
