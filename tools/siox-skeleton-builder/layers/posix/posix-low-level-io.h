@@ -61,7 +61,7 @@
 
 
 //TODO we have to determine the filesystem based on the mountpoint, this is a SIOX helper function.
-//@splice_once ''#define SET_FILENAME(ARG) char fileNamebuffer[PATH_MAX]; char * resPath = realpath(ARG, fileNamebuffer); if ( resPath == NULL ) fileNamebuffer[0] = 0;  siox_activity_set_attribute( sioxActivity, fileName, fileNamebuffer );''
+//@splice_once ''#define SET_FILENAME(ARG) char fileNamebuffer[PATH_MAX]; char * resPath = realpath(ARG, fileNamebuffer); if ( resPath == NULL ) siox_activity_set_attribute( sioxActivity, fileName, ARG ); else siox_activity_set_attribute( sioxActivity, fileName, fileNamebuffer );''
 
 //@include "posix-low-level-io-helper.h"
 
