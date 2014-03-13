@@ -341,7 +341,6 @@ int MPI_File_get_view( MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype, MPI
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_read_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -350,7 +349,6 @@ int MPI_File_read_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_read_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -359,7 +357,6 @@ int MPI_File_read_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count,
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_write_at( MPI_File fh, MPI_Offset offset, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -368,7 +365,6 @@ int MPI_File_write_at( MPI_File fh, MPI_Offset offset, OPTIONAL_CONST void * buf
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_write_at_all( MPI_File fh, MPI_Offset offset, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -377,7 +373,6 @@ int MPI_File_write_at_all( MPI_File fh, MPI_Offset offset, OPTIONAL_CONST void *
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 //@activity
@@ -386,7 +381,6 @@ int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MP
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_iwrite_at( MPI_File fh, MPI_Offset offset, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 
@@ -397,7 +391,6 @@ int MPI_File_iwrite_at( MPI_File fh, MPI_Offset offset, OPTIONAL_CONST void * bu
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_read( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -407,7 +400,6 @@ int MPI_File_read( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MP
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_read_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -417,7 +409,6 @@ int MPI_File_read_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_write( MPI_File fh, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -427,7 +418,6 @@ int MPI_File_write( MPI_File fh, OPTIONAL_CONST void * buf, int count, MPI_Datat
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_write_all( MPI_File fh, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -437,7 +427,6 @@ int MPI_File_write_all( MPI_File fh, OPTIONAL_CONST void * buf, int count, MPI_D
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_iread( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 //@activity
@@ -447,7 +436,6 @@ int MPI_File_iread( MPI_File fh, void * buf, int count, MPI_Datatype datatype, M
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_iwrite( MPI_File fh, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 //@activity
@@ -473,7 +461,6 @@ int MPI_File_get_byte_offset( MPI_File fh, MPI_Offset offset, MPI_Offset * disp 
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_read_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -483,7 +470,6 @@ int MPI_File_read_shared( MPI_File fh, void * buf, int count, MPI_Datatype datat
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_write_shared( MPI_File fh, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status );
 
 //@activity
@@ -493,7 +479,6 @@ int MPI_File_write_shared( MPI_File fh, OPTIONAL_CONST void * buf, int count, MP
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_iread_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 //@activity
@@ -503,7 +488,6 @@ int MPI_File_iread_shared( MPI_File fh, void * buf, int count, MPI_Datatype data
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_iwrite_shared( MPI_File fh, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype, MPI_Request * request );
 
 //@activity
@@ -534,7 +518,6 @@ int MPI_File_get_position_shared( MPI_File fh, MPI_Offset * offset );
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_read_at_all_begin( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype );
 
 //@activity
@@ -549,7 +532,6 @@ int MPI_File_read_at_all_end( MPI_File fh, void * buf, MPI_Status * status );
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_write_at_all_begin( MPI_File fh, MPI_Offset offset, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype );
 
 //@activity
@@ -564,7 +546,6 @@ int MPI_File_write_at_all_end( MPI_File fh, OPTIONAL_CONST void * buf, MPI_Statu
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_read_all_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
 
 //@activity
@@ -579,7 +560,6 @@ int MPI_File_read_all_end( MPI_File fh, void * buf, MPI_Status * status );
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToWrite size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_write_all_begin( MPI_File fh, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype );
 
 //@activity
@@ -596,7 +576,6 @@ int MPI_File_write_all_end( MPI_File fh, OPTIONAL_CONST void * buf, MPI_Status *
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesRead size
 int MPI_File_read_ordered_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype );
 
 //@activity
@@ -611,7 +590,6 @@ int MPI_File_read_ordered_end( MPI_File fh, void * buf, MPI_Status * status );
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute bytesToRead size
 //@error ''ret!=MPI_SUCCESS'' ret
-//@activity_attribute_late bytesWritten size
 int MPI_File_write_ordered_begin( MPI_File fh, OPTIONAL_CONST void * buf, int count, MPI_Datatype datatype );
 
 //@activity
