@@ -40,6 +40,10 @@ ComponentOptions * ActivityBinWriterPlugin::AvailableOptions() {
 }
 
 void ActivityBinWriterPlugin::initPlugin( ) {
+
+}
+
+void ActivityBinWriterPlugin::start( ) {
 	ActivityBinWriterPluginOptions & o = getOptions<ActivityBinWriterPluginOptions>();
 
  	stringstream buff;
@@ -53,21 +57,26 @@ void ActivityBinWriterPlugin::initPlugin( ) {
 		printf("Error in %s %s, disabling plugin \n", __FILE__, strerror(errno));
 	}else{
 		multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( & ActivityBinWriterPlugin::Notify ), false );
-	}
+	}	
+	ActivityMultiplexerPlugin::start();
+}
+
+void ActivityBinWriterPlugin::stop( ) {
+	if ( file != nullptr ){
+		fclose(file);
+		multiplexer->unregisterCatchall( this, false );
+		file = nullptr;
+	}	
+
+	ActivityMultiplexerPlugin::stop();
 }
 
 void ActivityBinWriterPlugin::finalize() {
-	if (file){
-		multiplexer->unregisterCatchall( this, false );
-	}
-
 	ActivityMultiplexerPlugin::finalize();
 }
 
 ActivityBinWriterPlugin::~ActivityBinWriterPlugin() {
-	if ( file != nullptr ){
-		fclose(file);
-	}
+
 }
 
 void ActivityTraceReaderPlugin::loadTrace(string configEntry){

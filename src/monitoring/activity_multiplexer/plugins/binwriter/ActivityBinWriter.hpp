@@ -31,6 +31,9 @@ class ActivityBinWriterPlugin: public ActivityMultiplexerPlugin{
 		void finalize() override;
 
 		~ActivityBinWriterPlugin();
+
+		void start() override;
+		void stop() override;
 };
 
 /*
