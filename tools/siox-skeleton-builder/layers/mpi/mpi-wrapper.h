@@ -11,6 +11,8 @@
 /* Register the data types for the descriptors */
 //@register_attribute bytesToRead "MPI" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesToWrite "MPI" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute bytesWritten "MPI" "quantity/BytesWritten" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute bytesRead "MPI" "quantity/BytesRead" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute filePosition "MPI" "file/position" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute fileExtent "MPI" "file/extent" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute fileHandle "MPI" "descriptor/filehandle" SIOX_STORAGE_64_BIT_UINTEGER
