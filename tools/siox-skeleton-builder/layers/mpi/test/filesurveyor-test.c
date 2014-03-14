@@ -29,13 +29,13 @@ int main( int argc, char * argv[] )
 	/*
 	 * Variables for MPI
 	 */
-	// int 			mpiCommRank;
-	// int 			mpiCommSize;
-	// char		 	mpiFileName[] = "filesurveyor_test_file.mpi";
-	// MPI_File 		mpiFile;
-	// MPI_Datatype 	mpiDataType;
-	// MPI_Status 		mpiStatus;
-	// MPI_Info 		mpiInfo;
+	int 			mpiCommRank;
+	int 			mpiCommSize;
+	char		 	mpiFileName[] = "filesurveyor_test_file.mpi";
+	MPI_File 		mpiFile;
+	MPI_Datatype 	mpiDataType;
+	MPI_Status 		mpiStatus;
+	MPI_Info 		mpiInfo;
 
 
 	/*
@@ -70,7 +70,7 @@ int main( int argc, char * argv[] )
 	{
 		printf("\nFileSurveyor-Test\n");
 		printf("=================\n");
-		printf("Expected values:\n");
+		printf("Expected values for the POSIX layer:\n");
 		printf("Accesses:\t%i\n", (2 * posixBlockNum - 1));
 		printf("Reads:\t%i\n", (posixBlockNum - 1));
 		printf("Writes:\t%i\n", posixBlockNum);
@@ -148,7 +148,6 @@ int main( int argc, char * argv[] )
 	 * MPI (and POSIX)
 	 */
 
-/*
 	//printf( "==========MPI_Init()==========\n" );
 	MPI_Init( &argc, &argv );
 
@@ -171,6 +170,7 @@ int main( int argc, char * argv[] )
 	MPI_File_open( MPI_COMM_WORLD, mpiFileName, MPI_MODE_CREATE | MPI_MODE_RDWR, mpiInfo, &mpiFile );
 
 
+/*
 	//printf( "==========MPI_File_write()==========\n" );
 	{
 		//Tell the GenericHistory what hint combinations it should evaluate.
@@ -211,6 +211,7 @@ int main( int argc, char * argv[] )
 		for(size_t j = 10; j--; ) MPI_File_write( mpiFile, buf, i, mpiDataType, &mpiStatus );
 		free(buf);
 	}
+*/
 
 	MPI_Datatype darray;
 	int array_of_gsizes[4] = {20,20,20,20};
@@ -244,7 +245,6 @@ int main( int argc, char * argv[] )
 
 	printf( "==========MPI_Finalize()==========\n" );
 	MPI_Finalize();
-*/
 
 	return 0;
 }
