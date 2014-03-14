@@ -34,21 +34,21 @@ StatisticsPostgreSQLWriter::~StatisticsPostgreSQLWriter()
 }
 
 
-void StatisticsPostgreSQLWriter::initPlugin() throw() 
+void StatisticsPostgreSQLWriter::initPlugin() throw()
 {
 	std::cout << "PostgreSQL Statistic Writter initializing..." << std::endl;
-	
+
 	StatisticsPostgreSQLWriterOptions &o = getOptions<StatisticsPostgreSQLWriterOptions>();
-		
+
  	dbconn_ = PQconnectdb(o.dbinfo.c_str());
-		
+
  	if (PQstatus(dbconn_) != CONNECTION_OK) {
  		std::cerr << "Connection to database failed: " << PQerrorMessage(dbconn_) << std::endl;
  	}
 }
 
 
-ComponentOptions* StatisticsPostgreSQLWriter::AvailableOptions() 
+ComponentOptions* StatisticsPostgreSQLWriter::AvailableOptions()
 {
 	return new StatisticsPostgreSQLWriterOptions();
 }
@@ -62,10 +62,10 @@ void StatisticsPostgreSQLWriter::notifyAvailableStatisticsChange(const vector<sh
 void StatisticsPostgreSQLWriter::newDataAvailable() throw()
 {
 	uint64_t timestamp = (*statistics->begin())->curTimestamp();
-	uint64_t size = statistics->size();
-	
+	// uint64_t size = statistics->size();
+
 	const int nparams = 4;
-	const char *command = 
+	const char *command =
 		"INSERT INTO statistics.stats (topology_id, ontology_id, value, timestamp) VALUES ($1::int4, $2::int4, $3, $4::int8)";
 
 	uint64_t tim = util::htonll(timestamp);
@@ -86,7 +86,7 @@ void StatisticsPostgreSQLWriter::newDataAvailable() throw()
 		PGresult *res = PQexecParams(dbconn_, command, nparams, NULL, param_values, param_lengths, param_formats, result_format);
 
 		if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-			std::cerr << "Error inserting statistic: " << PQresultErrorMessage(res) << std::endl;	
+			std::cerr << "Error inserting statistic: " << PQresultErrorMessage(res) << std::endl;
 		}
 
 		PQclear(res);

@@ -17,10 +17,10 @@ using namespace core;
 int main( int argc, char const * argv[] )
 {
 	Ontology * o = core::module_create_instance<Ontology>( "", "siox-monitoring-TopologyOntology", ONTOLOGY_INTERFACE );
-	
+
 	Topology* topology = module_create_instance<Topology>( "", "siox-monitoring-RamTopology", MONITORING_TOPOLOGY_INTERFACE );
 	{
-	RamTopologyOptions & o = topology->getOptions<RamTopologyOptions>();
+	// RamTopologyOptions & o = topology->getOptions<RamTopologyOptions>();
 	}
 	topology->init();
 

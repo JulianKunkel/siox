@@ -5,7 +5,7 @@
 #include <algorithm>
 
 // for mkdir()
-#include <sys/stat.h> 
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 
@@ -38,7 +38,7 @@ void AccessInfoPlotter::init(program_options::variables_map * vm, TraceReader * 
 	addActivityHandler("POSIX", "", "write", & AccessInfoPlotter::handlePOSIXWrite);
 	addActivityHandler("POSIX", "", "read", & AccessInfoPlotter::handlePOSIXRead);
 	addActivityHandler("POSIX", "", "pwrite", & AccessInfoPlotter::handlePOSIXWrite);
-	addActivityHandler("POSIX", "", "pread", & AccessInfoPlotter::handlePOSIXRead);	
+	addActivityHandler("POSIX", "", "pread", & AccessInfoPlotter::handlePOSIXRead);
 	addActivityHandler("POSIX", "", "writev", & AccessInfoPlotter::handlePOSIXWrite);
 	addActivityHandler("POSIX", "", "readv", & AccessInfoPlotter::handlePOSIXRead);
 	addActivityHandler("POSIX", "", "close", & AccessInfoPlotter::handlePOSIXClose);
@@ -57,7 +57,7 @@ void AccessInfoPlotter::addActivityHandler(const string & interface, const strin
 {
 	SystemInformationGlobalIDManager * s = tr->getSystemInformationGlobalIDManager();
 
-	UniqueInterfaceID uiid = s->lookup_interfaceID( interface, impl );	
+	UniqueInterfaceID uiid = s->lookup_interfaceID( interface, impl );
 
 	try{
 		UniqueComponentActivityID  ucaid = s->lookup_activityID( uiid, a );
@@ -109,16 +109,16 @@ void AccessInfoPlotter::plotSingleFileAccess(const string & type, const vector<A
 	f << convertTime(accessVector.begin()->endTime - file.openTime);
 	for( auto tupel = ++accessVector.begin(); tupel != accessVector.end(); tupel++ ){
 		f  << "," << convertTime(tupel->endTime - file.openTime);
-	}	
+	}
 	f << "]]" << endl;
-	
+
 	// values
 
 	f << type << "Y = [[" ;
 	f << (accessVector.begin()->offset);
 	for( auto tupel = ++accessVector.begin(); tupel != accessVector.end(); tupel++ ){
 		f  << ","  << tupel->offset;
-	}	
+	}
 	f << "],[";
 	f << (accessVector.begin()->offset + accessVector.begin()->size);
 	for( auto tupel = ++accessVector.begin(); tupel != accessVector.end(); tupel++ ){
@@ -127,8 +127,8 @@ void AccessInfoPlotter::plotSingleFileAccess(const string & type, const vector<A
 	f << "]]" << endl;
 }
 
-void AccessInfoPlotter::plotSingleFileOperation(const string & type, const vector<Operation> & ops, ofstream & f, const OpenFiles & file){	
-	
+void AccessInfoPlotter::plotSingleFileOperation(const string & type, const vector<Operation> & ops, ofstream & f, const OpenFiles & file){
+
 	if ( ops.size() == 0 ){
 		f << type << "X = []" << endl;
 		f << type << "Y = []" << endl;
@@ -144,7 +144,7 @@ void AccessInfoPlotter::plotSingleFileOperation(const string & type, const vecto
 	f << convertTime(ops.begin()->endTime - file.openTime);
 	for( auto tupel = ++ops.begin(); tupel != ops.end(); tupel++ ){
 		f  << "," << convertTime(tupel->endTime - file.openTime);
-	}	
+	}
 	f << "]]" << endl;
 }
 
@@ -167,7 +167,7 @@ void AccessInfoPlotter::plotFileAccess(const OpenFiles & file){
 	f << "filename = \"" << cleanedName << '"' << endl;
 	f << "tOpen =  " << file.openTime << endl;
 	f << "tClose =  " << file.closeTime << endl;
-	
+
 	// convert open time into a readable format
 	time_t t = file.openTime / 1000 / 1000 / 1000;
 	struct tm *tm = localtime(&t);
@@ -270,29 +270,29 @@ void AccessInfoPlotter::handlePOSIXSync(Activity * a){
 	parent->syncOperations.push_back( {a->time_start_, a->time_stop_} );
 }
 
-void AccessInfoPlotter::handlePOSIXWrite(Activity * a){	
+void AccessInfoPlotter::handlePOSIXWrite(Activity * a){
 	uint64_t bytes = findUINT64AttributeByID(a, bytesWrittenID);
 	uint64_t position = findUINT64AttributeByID(a, positionID);
 
 	OpenFiles * parent = findParentFileByFh(a);
-	uint64_t realPosition = position;
+	// uint64_t realPosition = position;
 	if ( position == INVALID_UINT64){
-		realPosition = parent->currentPosition;
+		// realPosition = parent->currentPosition;
 		parent->currentPosition += bytes;
 	}
 	parent->writeAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
 
-void AccessInfoPlotter::handlePOSIXRead(Activity * a){	
+void AccessInfoPlotter::handlePOSIXRead(Activity * a){
 	uint64_t bytes = findUINT64AttributeByID(a, bytesReadID);
 	uint64_t position = findUINT64AttributeByID(a, positionID);
-	
+
 	OpenFiles * parent = findParentFileByFh(a);
-	uint64_t realPosition = position;
+	// uint64_t realPosition = position;
 	if ( position == INVALID_UINT64){
-		realPosition = parent->currentPosition;
+		// realPosition = parent->currentPosition;
 		parent->currentPosition += bytes;
-	}	
+	}
 	parent->readAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
 

@@ -18,7 +18,7 @@ int main( int argc, char * argv[] )
 #ifdef DEBUG
 	sleep(5);
 #endif
-	pid_t pid = getpid();
+	// pid_t pid = getpid();
 
 	//printf( "==========MPI_Init()==========\n" );
 	MPI_Init( &argc, &argv );
