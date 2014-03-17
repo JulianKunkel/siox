@@ -3,8 +3,11 @@ template = {
 #
 # Registers (and unregisters) a new component with SIOX and
 # connects to the ontology.
-#
-# SWID: The name (software id) for this component
+# InterfaceName = Name of interface
+# ImplementationIdentifier ?
+# InstanceName ?
+# ComponentVariable ? ?
+# SpliceCode ? ? ?
 'component': {
 	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" ComponentVariable=global SpliceCode=',
 	'global': '''
@@ -37,7 +40,7 @@ template = {
 		if (%(ComponentVariable)s_layer_initialized) { siox_component_unregister(%(ComponentVariable)s_component); %(ComponentVariable)s_component = NULL; %(ComponentVariable)s_layer_initialized = FALSE; }'''
 },
 'autoInitializeLibrary':{
-	# this hint is interpreted by the wrapper itself.
+	# this hint is interpreted by the wrapper.
 },
 'callLibraryFinalize':{
 	'after' : 'sioxFinal();'
@@ -56,7 +59,7 @@ template = {
 # AttributeVariable: Name of the variable which is used to store the
 #		   			 pointer to the attribute type
 # Name: Name of the attribute
-# MinStorage: The minimum storage type required to store this
+# StorageType: The minimum storage type required to store this
 #			  attribute
 'register_attribute': {
 	'variables': 'AttributeVariable Domain Name StorageType',
@@ -218,7 +221,7 @@ template = {
 },
 # activity_attribute
 #
-# Tie an attibute to an activity.
+# Tie an attribute to an activity.
 # Attributes for activities are either its parameters or other values computed from them.
 # Metrics or statistics resulting from the call use activity_report instead.
 #
@@ -255,7 +258,7 @@ template = {
 },
 # horizontal_map_put_int
 #
-# Tie an attibute serving as a descriptor to an activity.
+# Tie an attribute serving as a descriptor to an activity.
 # Attributes for activities are either its parameters or other values computed from them.
 # Metrics or statistics resulting from the call use activity_report instead
 #
@@ -302,7 +305,7 @@ template = {
 },
 # horizontal_map_put_str
 #
-# Tie an attibute serving as a descriptor to an activity.
+# Tie an attribute serving as a descriptor to an activity.
 # Attributes for activities are either its parameters or other values computed from them.
 # Metrics or statistics resulting from the call use activity_report instead
 #
@@ -324,7 +327,7 @@ template = {
 },
 # horizontal_map_remove_int
 #
-# Clear an attibute serving as a descriptor.
+# Clear an attribute serving as a descriptor.
 # Linking activities by this attribute will now require a new call to horizontal_map_put_int.
 # Attributes for activities are either its parameters or other values computed from them.
 # Metrics or statistics resulting from the call use activity_report instead
@@ -359,7 +362,7 @@ template = {
 },
 # horizontal_map_remove_str
 #
-# Clear an attibute serving as a descriptor.
+# Clear an attribute serving as a descriptor.
 # Linking activities by this attribute will now require a new call to horizontal_map_put_str.
 # Attributes for activities are either its parameters or other values computed from them.
 # Metrics or statistics resulting from the call use activity_report instead
@@ -382,7 +385,7 @@ template = {
 # activity_link_int
 #
 # Horizontally links the current activity (started with activity) to another one via
-# a desctriptor represented as either an int or a long int.
+# a descriptor represented as either an int or a long int.
 #
 # Key: A descriptor linking both activities together (such as a file name),
 #	   in int or long int form
@@ -439,7 +442,7 @@ template = {
 # activity_link_str
 #
 # Horizontally links the current activity (started with activity) to another one via
-# a desctriptor represented as a string.
+# a descriptor represented as a string.
 #
 # Key: A descriptor linking both activities together (such as a file name),
 #	   in string form
@@ -630,7 +633,7 @@ template = {
 # Insert global once
 globalOnce = ""
 
-# Regexes for functions to throw away
+# Regular expressions for functions to throw away
 throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
 
 # Will be included
