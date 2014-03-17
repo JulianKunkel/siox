@@ -27,7 +27,7 @@ StatisticsHealthADPI::~StatisticsHealthADPI(){
 }
 
 void StatisticsHealthADPI::initPlugin() throw() {
-	StatisticsHealthADPIOptions &  o = getOptions<StatisticsHealthADPIOptions>();
+	// StatisticsHealthADPIOptions &  o = getOptions<StatisticsHealthADPIOptions>();
 
 }
 
@@ -48,7 +48,7 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	// for(auto itr = statistics->begin(); itr != statistics->end(); itr++){
 	// 	StatisticsDescription & sd = **itr;
 	// 	*oa << sd;
-	// 	*oa << (*itr)->curValue;		
+	// 	*oa << (*itr)->curValue;
 	// }
 }
 

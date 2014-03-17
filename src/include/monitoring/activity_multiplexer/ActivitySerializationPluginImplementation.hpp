@@ -1,0 +1,9 @@
+#ifndef ACTIVITY_MULTIPLEXER_SERIALIZATION_PLUGIN_IMPL_H
+#define ACTIVITY_MULTIPLEXER_SERIALIZATION_PLUGIN_IMPL_H
+
+#include <monitoring/activity_multiplexer/ActivitySerializationPlugin.hpp>
+
+
+#define MONITORING_ACTIVITY_SERIALIZATION_PLUGIN_INSTANCIATOR_NAME MODULE_INSTANCIATOR_NAME(monitoring_activity_serialization_plugin)
+
+#endif

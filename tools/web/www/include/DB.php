@@ -6,4 +6,5 @@ $db_string = "pgsql:port=$db_port;dbname=$db_name;user=$db_user;password=$db_pas
 
 $dbcon = new PDO($db_string);
 
+
 ?>

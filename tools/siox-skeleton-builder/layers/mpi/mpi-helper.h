@@ -231,27 +231,27 @@ struct known_hint_t{
 
 // Three different types are supported, int32, int64 and strings.
 static struct known_hint_t knownHintValueInt32 [] = {
-	{"mpiio_concurrency", & infoConcurrency}, 
-	{"mpiio_coll_contiguous", & infoCollContiguous}, 
+	{"mpiio_concurrency", & infoConcurrency},
+	{"mpiio_coll_contiguous", & infoCollContiguous},
 	{NULL, NULL}};
 
-static struct known_hint_t knownHintValueInt64 [] = { 
-	{"cb_buffer_size" , & infoBuffSize}, 
-	{"noncoll_read_bufsize" , & infoReadBuffSize}, 
-	{"noncoll_write_bufsize", &infoWriteBuffSize},  
-	{"coll_read_bufsize", & infoCollReadBuffSize}, 
-	{"coll_write_bufsize", & infoCollWriteBuffSize},  
+static struct known_hint_t knownHintValueInt64 [] = {
+	{"cb_buffer_size" , & infoBuffSize},
+	{"noncoll_read_bufsize" , & infoReadBuffSize},
+	{"noncoll_write_bufsize", &infoWriteBuffSize},
+	{"coll_read_bufsize", & infoCollReadBuffSize},
+	{"coll_write_bufsize", & infoCollWriteBuffSize},
 	{NULL, NULL}};
 
-static struct known_hint_t knownHintValueStr [] = { 
-	{"romio_cb_read", & infoROMIOCollReadEnabled}, 
-	{"romio_cb_write", & infoROMIOCollWriteEnabled}, 
+static struct known_hint_t knownHintValueStr [] = {
+	{"romio_cb_read", & infoROMIOCollReadEnabled},
+	{"romio_cb_write", & infoROMIOCollWriteEnabled},
 	{NULL, NULL}};
 
-static struct known_hint_t optimizeHints [] = { 
-	{"cb_buffer_size" , & infoBuffSize}, 
-	{"romio_cb_read", & infoROMIOCollReadEnabled}, 
-	{"romio_cb_write", & infoROMIOCollWriteEnabled}, 
+static struct known_hint_t optimizeHints [] = {
+	{"cb_buffer_size" , & infoBuffSize},
+	{"romio_cb_read", & infoROMIOCollReadEnabled},
+	{"romio_cb_write", & infoROMIOCollWriteEnabled},
 	{NULL, NULL}};
 
 static inline int setOptimalInfo(MPI_Info write, MPI_Info read){
@@ -259,12 +259,13 @@ static inline int setOptimalInfo(MPI_Info write, MPI_Info read){
 	int setHint = 0;
 
 	struct known_hint_t * cur;
-	
+
 	for( cur = optimizeHints; cur->name != NULL; cur ++){
-		int isDefined, ret;
+		int isDefined;
 
 		if ( read != MPI_INFO_NULL ){
-			ret = PMPI_Info_get(read, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
+			// int ret =
+			PMPI_Info_get(read, cur->name, MPI_MAX_INFO_VAL, value, & isDefined);
 			//printf( "GET %s %s %d\n", cur->name, value, isDefined );
 
 			if ( isDefined ){
@@ -284,7 +285,7 @@ static inline void setFileInfo(MPI_File fh, MPI_Info user_info){
 	MPI_Info newInfo;
 	int setHint;
 	if ( user_info == MPI_INFO_NULL ){
-		PMPI_Info_create( & newInfo ); 
+		PMPI_Info_create( & newInfo );
 		setHint = setOptimalInfo( newInfo, MPI_INFO_NULL );
 	}else{
 		setHint = setOptimalInfo( user_info, user_info );
@@ -367,7 +368,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 
 	// check for known hints and record them:
 	struct known_hint_t * cur;
-	
+
 	for( cur = knownHintValueInt32; cur->name != NULL; cur ++){
 		int isDefined, ret;
 		char value[MPI_MAX_INFO_VAL];
@@ -377,7 +378,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 			continue;
 		}
 		int32_t val = (int32_t) atoi(value);
-		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );	
+		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );
 	}
 
 	for( cur = knownHintValueInt64; cur->name != NULL; cur ++){

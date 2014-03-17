@@ -33,7 +33,7 @@ int main( int argc, char const * argv[] )
 		cout << *itr << endl;
 	}
 
-	Reasoner * r1 = a->searchFor<Reasoner>( components );
+	// Reasoner * r1 = a->searchFor<Reasoner>( components );
 	//assert( r1 != nullptr );
 
 	// the activity multiplexer is expected to be first:

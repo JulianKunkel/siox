@@ -39,10 +39,11 @@ To manually install required dependencies download the following software and in
 The following commands install the dependencies with the default options.
 
 Set variables, this will ensure that the right dependencies are used:
-$ export SIOXDEPS=<WHERE YOU WANT TO INSTALL THE DEPS INTO>
-$ export PATH=$SIOXDEPS/bin:$PATH
-$ export PKG_CONFIG_PATH=$SIOXDEPS/lib/pkgconfig/:$PKG_CONFIG_PATH
-$ export LD_LIBRARY_PATH=$SIOXDEPS/lib64:$SIOXDEPS/lib:$LD_LIBRARY_PATH
+
+	$ export SIOXDEPS=<WHERE YOU WANT TO INSTALL THE DEPS INTO>
+	$ export PATH=$SIOXDEPS/bin:$PATH
+	$ export PKG_CONFIG_PATH=$SIOXDEPS/lib/pkgconfig/:$PKG_CONFIG_PATH
+	$ export LD_LIBRARY_PATH=$SIOXDEPS/lib64:$SIOXDEPS/lib:$LD_LIBRARY_PATH
 
 # build in the following order:
 * gcc 4.8.2
@@ -84,7 +85,8 @@ $ export LD_LIBRARY_PATH=$SIOXDEPS/lib64:$SIOXDEPS/lib:$LD_LIBRARY_PATH
 	$ make && make install
 
 Now to compile SIOX follow the instructions given after calling:
-./configure --build-wrappers --with-glib=$SIOXDEPS --with-likwid=$SIOXDEPS --with-boost=$SIOXDEPS --with-cc=$SIOXDEPS --with-cxx=$SIOXDEPS --with-python=$SIOXDEPS
+
+	./configure --build-wrappers --with-glib=$SIOXDEPS --with-likwid=$SIOXDEPS --with-boost=$SIOXDEPS --with-cc=$SIOXDEPS --with-cxx=$SIOXDEPS --with-python=$SIOXDEPS
 
 
 Compilation
@@ -93,22 +95,25 @@ By utilizing CMake we can either use the traditional make tool or ninja which ha
 
 Configuration:
 We provide a configure script for convenient setting of important CMake variables. So instead of using the options above you may use:
-$ ./configure --prefix=/usr/local/siox
+
+	$ ./configure --prefix=/usr/local/siox
 
 The script outputs the command line to execute.
 
 After the installation you must adjust the environment variables LD_LIBRARY_PATH and if you like PATH to allow convenient access, for example for bash do:
-$ export LD_LIBRARY_PATH=/usr/local/siox/lib:$LD_LIBRARY_PATH
-$ export PATH=/usr/local/siox/bin:$PATH
+
+	$ export LD_LIBRARY_PATH=/usr/local/siox/lib:$LD_LIBRARY_PATH
+	$ export PATH=/usr/local/siox/bin:$PATH
 
 Then you can compile SIOX:
 
-make -j 4
-make install
+	make -j 4
+	make install
 
 To use ninja instead of make run:
-$ cmake -GNinja ../
-$ ninja
+
+	$ cmake -GNinja ../
+	$ ninja
 
 Note that C++ takes a considerable amount of memory to compile, parallel builds might exhaust machines with less than 2 GByte of memory.
 

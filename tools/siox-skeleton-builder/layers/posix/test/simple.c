@@ -13,6 +13,8 @@ int main( int argc, char const * argv[] )
 	const char * data = "Somebody had to put all of this confusion here!\n";
 	size_t len = strlen( data ) * sizeof( char );
 
+	int fh = open( "do-not-exist", O_RDWR );
+		
 	pid_t pid = fork();
 
 	if ( pid != 0){
