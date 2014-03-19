@@ -43,12 +43,15 @@
 //@register_attribute infoString "MPI" "hints/info" SIOX_STORAGE_STRING
 
 //@register_attribute fileName "MPI" "descriptor/filename" SIOX_STORAGE_STRING
+/* Attributes for parallel filesystem, if known   ?  */
+/* Attributes exist across layers */
 //@register_attribute fileSystem "Global" "descriptor/filesystem" SIOX_STORAGE_32_BIT_UINTEGER
 
 /* Prepare a (hash) map to link descriptors (in this case, of type int) to their activities.
    This is necessary for the horizontal linking of activities.
    The map and all other functions using it default to the same built-in name,
    so it can usually be omitted. */
+/* Creates Hashmap with filehandles of activities while sizetype is the key in the hashmap. */
 //@horizontal_map_create_size
 
 //@include "mpi-helper.h"
