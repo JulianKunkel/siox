@@ -36,6 +36,8 @@
 //@register_attribute infoCollWriteBuffSize "MPI" "hints/collWriteBuffSize" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute infoROMIOCollReadEnabled "ROMIO" "hints/collRead" SIOX_STORAGE_STRING
 //@register_attribute infoROMIOCollWriteEnabled "ROMIO" "hints/collWrite" SIOX_STORAGE_STRING
+//@register_attribute infoOMPIOCollReadEnabled "OMPIO" "hints/collRead" SIOX_STORAGE_STRING
+//@register_attribute infoOMPIOCollWriteEnabled "OMPIO" "hints/collWrite" SIOX_STORAGE_STRING
 //@register_attribute infoConcurrency "MPI" "hints/ioconcurrency" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute infoCollContiguous "MPI" "hints/collContiguous" SIOX_STORAGE_32_BIT_UINTEGER
 
