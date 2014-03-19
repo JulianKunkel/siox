@@ -21,7 +21,7 @@ $plot->set("set border 3");
 $plot->set("set xtics rotate by -45");
 $plot->set("set key horizontal outside bottom");
 
-$plot_cmd = "'$data_file' u 1:2 w points t \"Title\"";
+$plot_cmd = "'$data_file' u 1:2 w points notitle";
 
 $plot->set("plot $plot_cmd");
 $plot->render();

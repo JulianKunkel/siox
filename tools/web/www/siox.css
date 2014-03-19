@@ -2,12 +2,12 @@ div#content { width: 900px; }
 div#logos {margin: 24px 0 0 32px; }
 div#logos img { margin-right: 32px; }
 table#big_list { width: 100%; }
-table th { background-color: #a1b92e; font-weight: bold; }
+table th { background-color: #b8b8b8; font-weight: bold; }
 table td, table th { padding: 4px 8px; }
-.odd { background-color: #e3fb71; }
-.even { background-color: #ccf600;}
+.odd { background-color: #e6e6e6; }
+.even { background-color: #cfcfcf;}
 .even.error { background-color: #ff3333; }
 .odd.error { background-color: #ff8585; }
-table tr.odd:hover, table tr.even:hover { background-color: #85a000; cursor: pointer; }
+table tr.odd:hover, table tr.even:hover { background-color: white; cursor: pointer; }
 table tr.error:hover { color: white; background-color: #610000; cursor: pointer; }
 #siox_logo { float: right; width: 140px; }

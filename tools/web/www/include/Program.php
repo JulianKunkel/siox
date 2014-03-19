@@ -131,7 +131,7 @@ static function start_stop_times($nid, $pid, $time)
 	$row = $stmt->fetch(PDO::FETCH_OBJ);
 
 	$result['start'] = $row->time_start;	
-	
+
 	$sql = "SELECT time_stop  
 		FROM activity.activity 
 		WHERE time_stop IS NOT NULL AND cid_pid_nid = :nid AND cid_pid_pid = :pid AND cid_pid_time = :time 

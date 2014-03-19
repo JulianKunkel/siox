@@ -58,14 +58,14 @@ $p = Program::get($pnum);
 <?php endforeach ?>
 </table>
 
-<h2>Activity List</h2>
+<h2 id="act_list">Activity List</h2>
 
 <table id="big_list" cellspacing="0" cellpadding="0">
 <thead>
 	<tr>
-		<th colspan="2" style="text-align: left"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=1">↶ first</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
+		<th colspan="2" style="text-align: left"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=1&amp;pnum=<?=$pnum?>#act_list">↶ first</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == 1 ? 1 : $current_page-1?>&amp;pnum=<?=$pnum?>#act_list">← previous</a></th>
 		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="2" style="text-align: right"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$total_pages?>">last ↷</a></th>
+		<th colspan="2" style="text-align: right"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>&amp;pnum=<?=$pnum?>#act_list">next →</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$total_pages?>&amp;pnum=<?=$pnum?>#act_list">last ↷</a></th>
 	</tr>
 <tr>
 		<th>#</th>
@@ -96,9 +96,9 @@ $p = Program::get($pnum);
 </tbody>
 <tfoot>
 	<tr>
-		<th colspan="2" style="text-align: left"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=1">↶ first</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
+		<th colspan="2" style="text-align: left"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=1&amp;pnum=<?=$pnum?>#act_list">↶ first</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == 1 ? 1 : $current_page-1?>&amp;pnum=<?=$pnum?>#act_list">← previous</a></th>
 		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="2" style="text-align: right"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$total_pages?>">last ↷</a></th>
+		<th colspan="2" style="text-align: right"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>&amp;pnum=<?=$pnum?>#act_list">next →</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$total_pages?>&amp;pnum=<?=$pnum?>#act_list">last ↷</a></th>
 	</tr>
 </tfoot>
 </table>
