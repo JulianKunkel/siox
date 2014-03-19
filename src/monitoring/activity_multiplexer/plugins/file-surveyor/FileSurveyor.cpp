@@ -5,6 +5,9 @@
  * It can be applied to any layer that supports the semantics of OPEN, READ, WRITE, SEEK and CLOSE.
  * A configuration file defines the symbols which map to the OPEN etc. semantics
  * and an integer limit to differentiate between short and long SEEKs.
+ * The byte counts refer to byte actually processed; only if no reliable attribute is available,
+ * will the system fall back to the attributes describing the number of bytes that were to be
+ * processed as per the activity's original call.
  *
  * @author Michaela Zimmer, Nathanael Hübbe, Julian Kunkel
  * @date 2014-03-06
@@ -37,6 +40,7 @@ using namespace knowledge;
 
 
 #define OUTPUT(...) do { cout << "[File Surveyor @ " << interface << "] " << __VA_ARGS__ << "\n"; } while(0)
+#define ERROR(...) do { cerr << "[File Surveyor @ " << interface << "] " << __VA_ARGS__ << "!\n"; } while(0)
 
 
 
@@ -73,8 +77,8 @@ class FileSurvey {
 		Timestamp timeFirstOpened = 0;
 		Timestamp timeOpened = 0;
 		Timestamp timeClosed = 0;
-		uint64_t filePositionLast = 0; // fp after last access
-		uint64_t filePositionCurrent = 0; // fp after last seek
+		uint64_t filePositionAfterLastAccess = 0; // Both have to be tracked, as seeks are executed only
+		uint64_t filePositionAfterLastSeek = 0; // virtually, until the next access forces the net sum seek
 		// Aggregated statistics over all cycles
 		Timestamp timeTotalOpen = 0;
 		Timestamp timeTotalSeek = 0;
@@ -133,8 +137,8 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		OntologyAttributeID fpAttID;	// file position
 		OntologyAttributeID btrAttID;	// bytes to read
 		OntologyAttributeID btwAttID;	// bytes to write
-		OntologyAttributeID brAttID;	// bytes read 		// FIXME: Einbauen!!!
-		OntologyAttributeID bwAttID;	// bytes written 	// FIXME: Einbauen!!!
+		OntologyAttributeID brAttID;	// bytes actually read 		// FIXME: Einbauen!!!
+		OntologyAttributeID bwAttID;	// bytes actually written 	// FIXME: Einbauen!!!
 
 		// Map ucaid to type of activity (Open/Read/Write/Close)
 		unordered_map<UniqueComponentActivityID, TokenType> types;
@@ -170,6 +174,7 @@ class FileSurveyorPlugin: public ActivityMultiplexerPlugin, public ComponentRepo
 		const FileSurvey aggregateSurveys();
 		void reportSurvey(ComponentReport & report, const FileSurvey & survey);
 
+		const UniqueComponentActivityID lookupUCAID( const string & activity );
 		const ActivityID * findParentAID( const shared_ptr<Activity>& activity );
 		const Attribute * findAttributeByID( const shared_ptr<Activity>& activity, OntologyAttributeID oaid );
 		const string findFileNameExtension( const string & fileName );
@@ -199,11 +204,11 @@ void FileSurveyorPlugin::initPlugin() {
 
 	switch(initLevel) {
 		case 0:
-			OUTPUT( "Checkpoint " << initLevel );
+			// OUTPUT( "Checkpoint " << initLevel );
 			initLevel = 1;	//Once we are called from outside, there must exist sensible options for us, so if initialization fails now, we can simply retry.
 
 		case 1:
-			OUTPUT( "Checkpoint " << initLevel );
+			// OUTPUT( "Checkpoint " << initLevel );
 			// Retrieve pointers to required modules
 			//optimizer = GET_INSTANCE(Optimizer, o.optimizer);
 			sysinfo = facade->get_system_information();
@@ -222,58 +227,73 @@ void FileSurveyorPlugin::initPlugin() {
 			initLevel = 2;
 
 		case 2:
-			OUTPUT( "Checkpoint " << initLevel );
+			// OUTPUT( "Checkpoint " << initLevel );
 			// Fill the token maps with every known activity's UCAID and type
 			// First: OPEN calls
-			RETURN_ON_EXCEPTION(
-				for( auto token : o.openTokens )
-					multiplexer->registerForUcaid( sysinfo->lookup_activityID(uiid,token), this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::openSurvey ), false );
-					// types[sysinfo->lookup_activityID(uiid,token)] = OPEN;
-			);
+			for( auto token : o.openTokens )
+			{
+				UniqueInterfaceID ucaid = lookupUCAID( token );
+				if ( ucaid != 0 )
+					multiplexer->registerForUcaid( ucaid, this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::openSurvey ), false );
+				else
+					return;
+			}
 			initLevel = 3;
 
 		case 3:
-			OUTPUT( "Checkpoint " << initLevel );
+			// OUTPUT( "Checkpoint " << initLevel );
 			// Second: SEEK calls
-			RETURN_ON_EXCEPTION(
-				for( auto token : o.seekTokens )
-					multiplexer->registerForUcaid( sysinfo->lookup_activityID(uiid,token), this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::updateSurveySeek ), false );
-					// types[sysinfo->lookup_activityID(uiid,token)] = SEEK;
-			);
+			for( auto token : o.seekTokens )
+			{
+				UniqueInterfaceID ucaid = lookupUCAID( token );
+				if ( ucaid != 0 )
+					multiplexer->registerForUcaid( ucaid, this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::updateSurveySeek ), false );
+				else
+					return;
+			}
 			initLevel = 4;
 
 		case 4:
-			OUTPUT( "Checkpoint " << initLevel );
+			// OUTPUT( "Checkpoint " << initLevel );
 			// Third: READ calls
-			RETURN_ON_EXCEPTION(
-				for( auto token : o.readTokens )
-					multiplexer->registerForUcaid( sysinfo->lookup_activityID(uiid,token), this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::updateSurveyRead ), false );
-					// types[sysinfo->lookup_activityID(uiid,token)] = READ;
-			);
+			for( auto token : o.readTokens )
+			{
+				UniqueInterfaceID ucaid = lookupUCAID( token );
+				if ( ucaid != 0 )
+					multiplexer->registerForUcaid( ucaid, this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::updateSurveyRead ), false );
+				else
+					return;
+			}
 			initLevel = 5;
 
 		case 5:
-			OUTPUT( "Checkpoint " << initLevel );
+			// OUTPUT( "Checkpoint " << initLevel );
 			// Fourth: WRITE calls
-			RETURN_ON_EXCEPTION(
-				for( auto token : o.writeTokens )
-					multiplexer->registerForUcaid( sysinfo->lookup_activityID(uiid,token), this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::updateSurveyWrite ), false );
-					// types[sysinfo->lookup_activityID(uiid,token)] = WRITE;
-			);
+			for( auto token : o.writeTokens )
+			{
+				UniqueInterfaceID ucaid = lookupUCAID( token );
+				if ( ucaid != 0 )
+					multiplexer->registerForUcaid( ucaid, this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::updateSurveyWrite ), false );
+				else
+					return;
+			}
 			initLevel = 6;
 
 		case 6:
-			OUTPUT( "Checkpoint " << initLevel );
+			// OUTPUT( "Checkpoint " << initLevel );
 			// Fifth: CLOSE calls
-			RETURN_ON_EXCEPTION(
-				for( auto token : o.closeTokens )
-					multiplexer->registerForUcaid( sysinfo->lookup_activityID(uiid,token), this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::closeSurvey ), false );
-					// types[sysinfo->lookup_activityID(uiid,token)] = CLOSE;
-			);
+			for( auto token : o.closeTokens )
+			{
+				UniqueInterfaceID ucaid = lookupUCAID( token );
+				if ( ucaid != 0 )
+					multiplexer->registerForUcaid( ucaid, this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::closeSurvey ), false );
+				else
+					return;
+			}
 			initLevel = 7;
 
 		case 7:
-			OUTPUT( "Checkpoint " << initLevel );
+			// OUTPUT( "Checkpoint " << initLevel );
 			// Gather the list of file extensions we are to watch into a map (for easy reference)
 			for( auto extension : o.fileExtensionsToWatch ){
 				string ext = extension;
@@ -283,16 +303,15 @@ void FileSurveyorPlugin::initPlugin() {
 			initLevel = 8;
 
 		case 8:
-			OUTPUT( "Checkpoint " << initLevel );
+			// OUTPUT( "Checkpoint " << initLevel );
 			// Find and remember various other OAIDs
 			RETURN_ON_EXCEPTION( uidAttID = facade->lookup_attribute_by_name("program","description/user-id").aID; );
 			RETURN_ON_EXCEPTION( fnAttID = facade->lookup_attribute_by_name(interface,"descriptor/filename").aID; );
-			OUTPUT( "fnAttID = " << fnAttID );
 			RETURN_ON_EXCEPTION( fpAttID = facade->lookup_attribute_by_name(interface,"file/position").aID; );
 			RETURN_ON_EXCEPTION( btrAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesToRead").aID; );
 			RETURN_ON_EXCEPTION( btwAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesToWrite").aID; );
-			// TODO: Register correct callbacks for every single caid we are to watch instead of catchall
-			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &FileSurveyorPlugin::Notify ), false );
+			RETURN_ON_EXCEPTION( brAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesRead").aID; );
+			RETURN_ON_EXCEPTION( bwAttID = facade->lookup_attribute_by_name(interface,"quantity/BytesWritten").aID; );
 			initLevel = 9;
 	}
 	initLevel = initializedLevel;
@@ -354,18 +373,18 @@ void FileSurveyorPlugin::openSurvey( const shared_ptr<Activity> & activity, int 
 {
 	if( !tryEnsureInitialization() ) return;
 
-	OUTPUT( "openSurvey() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
+	// OUTPUT( "openSurvey() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
 
 	// Find file name and check whether extension matches pattern given in configuration
 	const Attribute * attFileName = findAttributeByID( activity, fnAttID );
 	if( attFileName == NULL )
 	{
 		// This should not happen; it is, however, no serious problem; just don't do anything.
-		cerr << "[FileSurvey] No valid file name in activity " << activity->aid() << "!" << endl;
+		ERROR( "No valid file name in activity " << activity->aid() );
 		return;
 	}
 	string fileName = attFileName->value.str();
-	OUTPUT( "File name found: " << fileName );
+	// OUTPUT( "File name found: " << fileName );
 	string fileExtension = findFileNameExtension(fileName);
 	toUpper(fileExtension);
 	// OUTPUT( "File extension found: " << fileExtension );
@@ -377,7 +396,7 @@ void FileSurveyorPlugin::openSurvey( const shared_ptr<Activity> & activity, int 
 		// TODO: Add application name/path (and PID?) to tuple by which to differentiate surveys
 		//const Attribute * attUserID = findAttributeByID( activity, uidAttID );
 		//if ( attUserID == NULL ){
-		//	cerr << "[FileSurvey] No valid user ID in activity" << activity->aid() << "!" << endl;
+		//	ERROR( "No valid user ID in activity" << activity->aid() );
 		//}
 		//else{
 		//	userID = attUserID->value.str();
@@ -401,7 +420,8 @@ void FileSurveyorPlugin::openSurvey( const shared_ptr<Activity> & activity, int 
 					survey = *candidate;
 					survey.nOpens++;
 					survey.timeOpened = activity->time_start();
-					survey.filePositionLast = 0;
+					survey.filePositionAfterLastAccess = 0;
+					survey.filePositionAfterLastSeek = 0;
 					survey.timeTotalOpen += activity->time_stop() - activity->time_start();
 
 					// Move survey back to open collection
@@ -422,8 +442,8 @@ void FileSurveyorPlugin::openSurvey( const shared_ptr<Activity> & activity, int 
 			openFileSurveys[ activity->aid() ] = survey;
 		} // collectionLock
 	}
-	OUTPUT( "openSurveys size = " << openFileSurveys.size() );
-	OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
+	// OUTPUT( "openSurveys size = " << openFileSurveys.size() );
+	// OUTPUT( "closedSurveys size = " << closedFileSurveys.size() );
 }
 
 
@@ -434,7 +454,7 @@ void FileSurveyorPlugin::updateSurveySeek( const shared_ptr<Activity> & activity
 {
 	if( !tryEnsureInitialization() ) return;
 
-	OUTPUT( "updateSurveySeek() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
+	// OUTPUT( "updateSurveySeek() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
 
 	const ActivityID *	parentAID = findParentAID( activity );
 
@@ -452,7 +472,7 @@ void FileSurveyorPlugin::updateSurveySeek( const shared_ptr<Activity> & activity
 				// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost
 				// to SIOX, or when the file name did not match the pattern given in the configuration.
 				// Therefore, disregard all following activities on those files until closed and re-opened.
-				// cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+				// ERROR( "No parent activity found for activity " << activity->aid() << "!" );
 				return;
 			}
 
@@ -463,7 +483,8 @@ void FileSurveyorPlugin::updateSurveySeek( const shared_ptr<Activity> & activity
 			{
 				// Update access counts according to file position
 				uint64_t fp = attFilePointer->value.uint64();
-				uint64_t fpJump = absu64(fp, survey->filePositionCurrent);
+				uint64_t fpJump = absu64(fp, survey->filePositionAfterLastSeek);
+				// OUTPUT( "True seek to " << fp << "(Distance: " << fpJump << ")" );
 
 				if ( fpJump > seekSizeLimit )
 					survey->nSeeksLong++;
@@ -473,13 +494,13 @@ void FileSurveyorPlugin::updateSurveySeek( const shared_ptr<Activity> & activity
 				survey->nTotalSeekDistanceLast += fpJump;
 
 				// Update memorized file position
-				survey->filePositionCurrent = fp;
+				survey->filePositionAfterLastSeek = fp;
 
 				// OUTPUT( "file position = " << fp );
 			}
 			else
 			{
-				cerr << "[FileSurvey] No destination file pointer attribute found in activity " << activity->aid() << "!" << endl;
+				ERROR( "No destination file pointer attribute found in activity " << activity->aid() );
 			}
 
 			// Update statistics
@@ -500,7 +521,7 @@ void FileSurveyorPlugin::updateSurveyRead( const shared_ptr<Activity> & activity
 {
 	if( !tryEnsureInitialization() ) return;
 
-	OUTPUT( "updateSurveyRead() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
+	// OUTPUT( "updateSurveyRead() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
 
 	const ActivityID *	parentAID = findParentAID( activity );
 
@@ -518,7 +539,7 @@ void FileSurveyorPlugin::updateSurveyRead( const shared_ptr<Activity> & activity
 				// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost
 				// to SIOX, or when the file name did not match the pattern given in the configuration.
 				// Therefore, disregard all following activities on those files until closed and re-opened.
-				// cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+				// ERROR( "No parent activity found for activity " << activity->aid() << "!" );
 				return;
 			}
 
@@ -537,21 +558,23 @@ void FileSurveyorPlugin::updateSurveyRead( const shared_ptr<Activity> & activity
 					// Use fp given here
 					fp = attFilePointer->value.uint64();
 					// Update general seek data
-					// FIXME: Insert virtual seek or not?
+					// TODO: Add to the running count of (true) seeks or not?
 				}
 				else
 				{
 					// Use fp resulting from previous seeks
-					fp = survey->filePositionCurrent;
+					fp = survey->filePositionAfterLastSeek;
 				}
 				//OUTPUT( "file position = " << fp );
 
 				// Update access counts according to file position
-				uint64_t fpJump = absu64(fp, survey->filePositionLast);
+				uint64_t fpJump = absu64(fp, survey->filePositionAfterLastAccess);
+				// if( attFilePointer != NULL )
+					// OUTPUT( "Read-implicit seek to " << fp << "(Distance: " << fpJump << ")" );
 
 				if( fpJump > 0 )
 				{
-					survey->filePositionLast = fp;
+					survey->filePositionAfterLastAccess = fp;
 					if ( fpJump > seekSizeLimit )
 						survey->nAccessesReadRandomLong++;
 					else
@@ -562,13 +585,13 @@ void FileSurveyorPlugin::updateSurveyRead( const shared_ptr<Activity> & activity
 					survey->nAccessesReadSequential++;
 
 				// Update memorized file position
-				survey->filePositionLast = fp + nBytesProcessed;
-				survey->filePositionCurrent = survey->filePositionLast;
+				survey->filePositionAfterLastAccess = fp + nBytesProcessed;
+				survey->filePositionAfterLastSeek = survey->filePositionAfterLastAccess;
 			}
 			else
 			{
 				// Empty payload data?
-				cerr << "[FileSurvey] No size of payload data attribute found in activity " << activity->aid() << "!" << endl;
+				ERROR( "No size of payload data attribute found in activity " << activity->aid() );
 			}
 
 			// Update statistics
@@ -589,7 +612,7 @@ void FileSurveyorPlugin::updateSurveyWrite( const shared_ptr<Activity> & activit
 {
 	if( !tryEnsureInitialization() ) return;
 
-	OUTPUT( "updateSurveyWrite() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
+	// OUTPUT( "updateSurveyWrite() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
 
 	const ActivityID *	parentAID = findParentAID( activity );
 
@@ -607,7 +630,7 @@ void FileSurveyorPlugin::updateSurveyWrite( const shared_ptr<Activity> & activit
 				// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost
 				// to SIOX, or when the file name did not match the pattern given in the configuration.
 				// Therefore, disregard all following activities on those files until closed and re-opened.
-				// cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+				// ERROR( "No parent activity found for activity " << activity->aid() );
 				return;
 			}
 
@@ -626,21 +649,23 @@ void FileSurveyorPlugin::updateSurveyWrite( const shared_ptr<Activity> & activit
 					// Use fp given here
 					fp = attFilePointer->value.uint64();
 					// Update general seek data
-					// FIXME: Insert virtual seek or not?
+					// TODO: Add to the running count of (true) seeks or not?
 				}
 				else
 				{
 					// Use fp resulting from previous seeks
-					fp = survey->filePositionCurrent;
+					fp = survey->filePositionAfterLastSeek;
 				}
 				//OUTPUT( "file position = " << fp );
 
 				// Update access counts according to file position
-				uint64_t fpJump = absu64(fp, survey->filePositionLast);
+				uint64_t fpJump = absu64(fp, survey->filePositionAfterLastAccess);
+				// if( attFilePointer != NULL )
+					// OUTPUT( "Write-implicit seek to " << fp << "(Distance: " << fpJump << ")" );
 
 				if( fpJump > 0 )
 				{
-					survey->filePositionLast = fp;
+					survey->filePositionAfterLastAccess = fp;
 					if ( fpJump > seekSizeLimit )
 						survey->nAccessesWriteRandomLong++;
 					else
@@ -651,13 +676,13 @@ void FileSurveyorPlugin::updateSurveyWrite( const shared_ptr<Activity> & activit
 					survey->nAccessesWriteSequential++;
 
 				// Update memorized file position
-				survey->filePositionLast = fp + nBytesProcessed;
-				survey->filePositionCurrent = survey->filePositionLast;
+				survey->filePositionAfterLastAccess = fp + nBytesProcessed;
+				survey->filePositionAfterLastSeek = survey->filePositionAfterLastAccess;
 			}
 			else
 			{
 				// Empty payload data?
-				cerr << "[FileSurvey] No size of payload data attribute found in activity " << activity->aid() << "!" << endl;
+				ERROR( "No size of payload data attribute found in activity " << activity->aid() );
 			}
 
 			// Update statistics
@@ -679,7 +704,7 @@ void FileSurveyorPlugin::closeSurvey( const shared_ptr<Activity> & activity, int
 
 	if( !tryEnsureInitialization() ) return;
 
-	OUTPUT( "closeSurvey() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
+	// OUTPUT( "closeSurvey() received activity " << activity->aid() << ": " << sysinfo->lookup_activity_name( activity->ucaid()) );
 
 	const ActivityID *	parentAID = findParentAID( activity );
 	//OUTPUT( "Parent Array Size = " << activity->parentArray().size() );
@@ -698,7 +723,7 @@ void FileSurveyorPlugin::closeSurvey( const shared_ptr<Activity> & activity, int
 			catch( NotFoundError ) {
 				// May happen whenever SIOX "inherits" open files, e.g., ones whose open() calls were lost to // SIOX, or when the file name did not match the pattern given in the configuration.
 				// Therefore, disregard all following activities on those files until closed and re-opened.
-				//cerr << "[FileSurvey]: No parent activity found for activity " << activity->aid() << "!" << endl;
+				//ERROR( "No parent activity found for activity " << activity->aid() );
 				return;
 			}
 
@@ -740,9 +765,9 @@ ComponentReport FileSurveyorPlugin::prepareReport()
 
 void FileSurveyorPlugin::reportSurvey(ComponentReport & report, const FileSurvey & survey)
 {
-	uint64_t nAccessesReadRandom = survey.nAccessesReadRandomShort + survey.nAccessesReadRandomLong;
+	// uint64_t nAccessesReadRandom = survey.nAccessesReadRandomShort + survey.nAccessesReadRandomLong;
 	// uint64_t nAccessesRead = nAccessesReadRandom + survey.nAccessesReadSequential;
-	uint64_t nAccessesWriteRandom = survey.nAccessesWriteRandomShort + survey.nAccessesWriteRandomLong;
+	// uint64_t nAccessesWriteRandom = survey.nAccessesWriteRandomShort + survey.nAccessesWriteRandomLong;
 	// uint64_t nAccessesWrite = nAccessesWriteRandom + survey.nAccessesWriteSequential;
 	uint64_t nManagement = survey.nOpens + survey.nSeeks + survey.nCloses;
 	uint64_t nAccesses = survey.nAccessesRead + survey.nAccessesWrite;
@@ -847,6 +872,26 @@ bool FileSurveyorPlugin::tryEnsureInitialization()
 
 
 /*
+ * Find the UCAID for an activity of the interface we are to watch.
+ * If no UCAID could be determined, will emit an error message and return 0.
+ * Requires the UIID of the interface to be set!
+ */
+const UniqueComponentActivityID FileSurveyorPlugin::lookupUCAID( const string & activityName )
+{
+	UniqueComponentActivityID ucaid = 0;
+	try{
+		ucaid = sysinfo->lookup_activityID(uiid, activityName);
+	}
+	catch (NotFoundError)
+	{
+		ERROR( "Could not find ID for activity type \"" << activityName << "\"" );
+	}
+
+	return ucaid;
+}
+
+
+/*
  * Find the AID of the activity (if any) the activity is tied to via its parent relationship
  *
  * We can pass on the adress of the parent AID, as activity will keep it valid through its own lifetime
@@ -876,13 +921,13 @@ const ActivityID * FileSurveyorPlugin::findParentAID( const shared_ptr<Activity>
  */
  const Attribute * FileSurveyorPlugin::findAttributeByID( const shared_ptr<Activity> & activity, OntologyAttributeID oaid )
  {
- 	OUTPUT( "Looking for attribute " << oaid << " in " << activity->aid() );
+ 	// OUTPUT( "Looking for attribute " << oaid << " in " << activity->aid() );
 
  	const vector<Attribute> & attributes = activity->attributeArray();
- 	OUTPUT( "Found att array of size " << attributes.size() );
+ 	// OUTPUT( "Found att array of size " << attributes.size() );
 
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
-		OUTPUT( "...id: " << itr->id );
+		// OUTPUT( "...id: " << itr->id );
 		if( itr->id == oaid )
 			return &( *itr );
 	}

@@ -74,8 +74,9 @@ int main()
 	printf( "success!\n" );
 
 	printf( "Provoking error registering invalid component..." );
-	siox_component * c2 = siox_component_register( i2, "" );
-	//assert(c2 == NULL);
+	// siox_component * c2 =
+	siox_component_register( i2, "" );
+	// assert(c2 == NULL);
 	printf( "success!\n" );
 
 
