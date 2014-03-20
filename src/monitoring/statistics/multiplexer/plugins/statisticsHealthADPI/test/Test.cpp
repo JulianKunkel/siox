@@ -5,7 +5,7 @@
 
 #include <util/time.h>
 
-#include <monitoring/statistics/multiplexer/plugins/statisticsHealthADPI/StatisticshealthADPIOptions.hpp>
+#include <monitoring/statistics/multiplexer/plugins/statisticsHealthADPI/StatisticsHealthADPIOptions.hpp>
 
 using namespace std;
 

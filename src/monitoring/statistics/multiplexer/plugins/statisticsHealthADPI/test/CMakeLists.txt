@@ -5,19 +5,20 @@ include_directories(
 )
 
 add_executable(
-	core-statistics-multiplexer-filewriter-statisticsHealthADPI
+	core-statistics-multiplexer-statisticsHealthADPI-statisticsHealthAdpiTest
 	Test.cpp
 )
 
 target_link_libraries(
-	core-statistics-multiplexer-filewriter-statisticsHealthADPI
-	siox-core-ModuleLoader 	
+	core-statistics-multiplexer-statisticsHealthADPI-statisticsHealthAdpiTest
+	siox-core-ModuleLoader
 	siox-monitoring-ThreadedStatisticsCollector
 	siox-monitoring-StatisticsMultiplexerSync
 	siox-monitoring-statisticsMultiplexerPlugin-healthADPI
 )
 
+# symlink(siox.conf siox.conf)
 
 
-add_test(core-statistics-multiplexer-filewriter-statisticsHealthADPI core-statistics-multiplexer-filewriter-statisticsHealthADPI)
+add_test(core-statistics-multiplexer-statisticsHealthADPI-statisticsHealthAdpiTest core-statistics-multiplexer-statisticsHealthADPI-statisticsHealthAdpiTest)
 

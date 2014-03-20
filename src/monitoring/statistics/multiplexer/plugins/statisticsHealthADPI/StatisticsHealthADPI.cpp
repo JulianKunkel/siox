@@ -35,11 +35,17 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin {
 		StatisticsCollector * statisticsCollector = nullptr;
 		// A transfer object used to atomically pass the actual values to us
 		StatisticsCollection * nodeStatistics = nullptr;
+		// A flag to indicate whether we receive the actual values via a StatisticsCollection, or not.
+		bool useCollection = false;
 
-		// Fields to hold the statistics delivered to us
+		/*
+		 * Fields to hold the statistics values delivered to us
+		 */
+		// If using a StatisticsCollection
 		vector<string> statisticsNames; // The names of the statistics to watch
 		vector<StatisticsValue> statisticsValues; // The latest values of the respective statistics
-
+		// If not using a StatisticsCollection
+		vector<shared_ptr<Statistic>> statistics; // Pointers to the statistics, complete with history
 };
 
 
@@ -53,24 +59,36 @@ void StatisticsHealthADPI::initPlugin() throw() {
 
 	// Subscribe to a set of statistics
 	statisticsCollector = GET_INSTANCE( StatisticsCollector, o.statisticsCollector );
-	if ( statisticsCollector != nullptr ){
-		// Request everything we'll need, according to our options
-		nodeStatistics = StatisticsCollection::makeCollection(statisticsCollector, {{
-			{"utilization/cpu", "@localhost"},
-			{"utilization/memory", "@localhost"}, // Alternative: {"utilization/memory/vm", "@localhost"},
-			{"utilization/io", "@localhost"},
-			{"utilization/network/send", "@localhost"},
-			{"utilization/network/receive", "@localhost"},
-			// {"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
-			// {"utilization/cpu", "@localhost"}, // power/rapl
-			// {"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
-			// {"quantity/network/volume", "@localhost"}, // CONSUMED_NETWORK_BYTES
-			// {"quantity/io/volume", "@localhost"}, // CONSUMED_IO_BYTES
-		}}, true);
-	}
+	if ( statisticsCollector != nullptr )
+	{
+		// TODO:
+		// Read the statistics to subscribe to from our options, handling unavailable ones gracefully!
+		// For now, manually set the statistics we subscribe to.
+		const std::vector<std::pair<std::string, std::string>>& ontologyAttributeTopologyPathPairs = {{
+				{"utilization/cpu", "@localhost"},
+				{"utilization/memory", "@localhost"}, // Alternative: {"utilization/memory/vm", "@localhost"},
+				{"utilization/io", "@localhost"},
+				{"utilization/network/send", "@localhost"},
+				{"utilization/network/receive", "@localhost"},
+				// {"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
+				// {"utilization/cpu", "@localhost"}, // power/rapl
+				// {"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
+				// {"quantity/network/volume", "@localhost"}, // CONSUMED_NETWORK_BYTES
+				// {"quantity/io/volume", "@localhost"}, // CONSUMED_IO_BYTES
+			}};
 
-	// TODO:
-	// Read the statistics to subscribe to from our options, handling unavailable ones gracefully!
+		// Subscribe to all statistics we are to watch
+		nodeStatistics = StatisticsCollection::makeCollection(statisticsCollector, ontologyAttributeTopologyPathPairs, true);
+
+		for ( auto statisticsString : ontologyAttributeTopologyPathPairs )
+		{
+			// Add statistic's name and a start value for it to our lists
+			statisticsNames.push_back(statisticsString.first + statisticsString.second);
+			statisticsValues.push_back(StatisticsValue(0.0));
+		}
+
+		useCollection = true;
+	}
 }
 
 
@@ -82,15 +100,33 @@ ComponentOptions* StatisticsHealthADPI::AvailableOptions() {
 /*
  * The set of statistics available to us has changed.
  */
-void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & statistics, bool addedStatistics, bool removedStatistics ) throw(){
-	/*
-	 * Right now, we are not interested in any statistic besides the one we already subscribed to.
-	 */
+void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & offeredStatistics, bool addedStatistics, bool removedStatistics ) throw(){
 
-	// TODO:
-	// Should any statistics our options tell us we should monitor become available after being unavailable,
-	// add them to our collection; should any we subscribed to have become unavailable, unsubscribe.
-	 OUTPUT( "New statistics available!" );
+	if( useCollection )
+	{
+		// TODO:
+		// Should any statistics our options tell us we are to monitor become available after being unavailable,
+		// add them to our collection; should any we subscribed to have become unavailable, unsubscribe.
+		if( addedStatistics )
+		{
+			 OUTPUT( "New statistic(s) became available!" );
+		}
+		if( removedStatistics )
+		{
+			 OUTPUT( "Old statistic(s) became unavailable!" );
+		}
+	}
+	else
+	{
+		// TODO:
+		// Pick only those statistics we are to watch as per our options
+		// For now: Remove all statistics, and start anew with whatever we're offered.
+		statistics.clear();
+		for( auto s : offeredStatistics )
+		{
+			statistics.push_back( s );
+		}
+	}
 }
 
 
@@ -110,11 +146,18 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	OUTPUT( "Received new data!" );
 	// TODO:
 	// Copy values received into local store
-	if( nodeStatistics != nullptr ) {
+	if( useCollection ) {
 		nodeStatistics->fetchValues();
 		for(size_t i=0; i < statisticsValues.size() ; i++){
 			statisticsValues[i] = (*nodeStatistics)[i];
 			OUTPUT( "Current node statistic[" << statisticsNames[i] << "]: " << statisticsValues[i] );
+		}
+	}
+	else
+	{
+		for(size_t i=0; i < statisticsValues.size() ; i++)
+		{
+			statisticsValues[i] = statistics[i]->curValue;
 		}
 	}
 
