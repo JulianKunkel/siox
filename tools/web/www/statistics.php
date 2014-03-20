@@ -7,8 +7,8 @@ $site_title = "Statistics overview";
 $site_description = "Overview of the stored statistics.";
 require_once("header.php"); 
 
-if (!isset($_GET['start']) || !isset($_GET['stop']))
-	die("Undefined time frame.");
+//if (!isset($_GET['start']) || !isset($_GET['stop']))
+//	die("Undefined time frame.");
 
 $start = $_GET['start'];
 $stop  = $_GET['stop'];
