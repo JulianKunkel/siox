@@ -14,39 +14,39 @@ using namespace core;
 
 int main( int argc, char const * argv[] )
 {
-	StatisticsMultiplexer * m1 = core::module_create_instance<StatisticsMultiplexer>( "", "siox-monitoring-StatisticsMultiplexerSync", STATISTICS_MULTIPLEXER_INTERFACE );
+	StatisticsMultiplexer * multiplexer = core::module_create_instance<StatisticsMultiplexer>( "", "siox-monitoring-StatisticsMultiplexerSync", STATISTICS_MULTIPLEXER_INTERFACE );
 
 	// wir registrieren das Plugin (normal geschieht dies automatisch)
-	StatisticsMultiplexerPlugin * ap = core::module_create_instance<StatisticsMultiplexerPlugin>( "", "siox-monitoring-statisticsMultiplexerPlugin-healthADPI", STATISTICS_MULTIPLEXER_PLUGIN_INTERFACE );
+	StatisticsMultiplexerPlugin * adpi = core::module_create_instance<StatisticsMultiplexerPlugin>( "", "siox-monitoring-statisticsMultiplexerPlugin-healthADPI", STATISTICS_MULTIPLEXER_PLUGIN_INTERFACE );
 
 	// init plugin
 	// not necessary, but for testing...
-	StatisticsHealthADPIOptions & op = dynamic_cast<StatisticsHealthADPIOptions &>(ap->getOptions());
-	op.multiplexer.componentPointer = m1;
+	StatisticsHealthADPIOptions & options = dynamic_cast<StatisticsHealthADPIOptions &>(adpi->getOptions());
+	options.multiplexer.componentPointer = multiplexer;
 
-	m1->init();
-	ap->init();
+	multiplexer->init();
+	adpi->init();
 
 	vector<shared_ptr<Statistic> > statistics;
 
 	StatisticsValue value(0);
-	auto stat = shared_ptr<Statistic>(new Statistic(value, 4711, 3));
+	auto statistic = shared_ptr<Statistic>(new Statistic(value, 4711, 3));
 
-	statistics.push_back( stat );
+	statistics.push_back( statistic );
 
-	m1->notifyAvailableStatisticsChange( statistics, true, true );
+	multiplexer->notifyAvailableStatisticsChange( statistics, true, true );
 
 	value = 2;
-	stat->update( siox_gettime() );
-	m1->newDataAvailable();
+	statistic->update( siox_gettime() );
+	multiplexer->newDataAvailable();
 
 	value = 4;
-	stat->update( siox_gettime() );
-	m1->newDataAvailable();
+	statistic->update( siox_gettime() );
+	multiplexer->newDataAvailable();
 
-	delete( ap );
+	delete( adpi );
 
-	delete( m1 );
+	delete( multiplexer );
 	cout << "OK" << endl;
 }
 
