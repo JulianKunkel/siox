@@ -61,6 +61,7 @@ void StatisticsHealthADPI::initPlugin() throw() {
 	statisticsCollector = GET_INSTANCE( StatisticsCollector, o.statisticsCollector );
 	if ( statisticsCollector != nullptr )
 	{
+		OUTPUT( "We have a StatisticsCollector!" );
 		// TODO:
 		// Read the statistics to subscribe to from our options, handling unavailable ones gracefully!
 		// For now, manually set the statistics we subscribe to.
@@ -89,6 +90,10 @@ void StatisticsHealthADPI::initPlugin() throw() {
 
 		useCollection = true;
 	}
+	else
+	{
+		OUTPUT( "We don't have a StatisticsCollector!" );
+	}
 }
 
 
@@ -101,6 +106,8 @@ ComponentOptions* StatisticsHealthADPI::AvailableOptions() {
  * The set of statistics available to us has changed.
  */
 void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & offeredStatistics, bool addedStatistics, bool removedStatistics ) throw(){
+
+	OUTPUT( "Fresh statistics catalogue with " << offeredStatistics.size() << " entries." );
 
 	if( useCollection )
 	{
@@ -121,12 +128,24 @@ void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_
 		// TODO:
 		// Pick only those statistics we are to watch as per our options
 		// For now: Remove all statistics, and start anew with whatever we're offered.
+		if( addedStatistics )
+		{
+			 OUTPUT( "New statistic(s) became available!" );
+		}
+		if( removedStatistics )
+		{
+			 OUTPUT( "Old statistic(s) became unavailable!" );
+		}
 		statistics.clear();
 		for( auto s : offeredStatistics )
 		{
+			OUTPUT( "Adding statistic [ontID=" << s->ontologyId << ",topID=" << s->topologyId << "]." );
 			statistics.push_back( s );
+			statisticsValues.push_back( StatisticsValue(0.0) );
 		}
 	}
+
+	OUTPUT( "Statistics catalogue now holds " << statistics.size() << " entries." );
 }
 
 
@@ -146,6 +165,7 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	OUTPUT( "Received new data!" );
 	// TODO:
 	// Copy values received into local store
+	OUTPUT( "Statistics being watched: " << statisticsValues.size() );
 	if( useCollection ) {
 		nodeStatistics->fetchValues();
 		for(size_t i=0; i < statisticsValues.size() ; i++){
@@ -155,15 +175,16 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	}
 	else
 	{
-		for(size_t i=0; i < statisticsValues.size() ; i++)
+		for(size_t i=0; i < statistics.size() ; i++)
 		{
 			statisticsValues[i] = statistics[i]->curValue;
+			OUTPUT( "Current node statistic[" /*<< statisticsNames[i] <<*/ "]: " << statisticsValues[i] );
 		}
 	}
 
 	// TODO:
 	// Test them for problems
-	// Flag any problems fround to reasoner
+	// Flag any problems found to reasoner
 }
 
 
