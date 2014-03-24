@@ -18,17 +18,26 @@ require_once("header.php");
 <form name="purge_frm" method="post" action="purge.php">
 	<input type="submit" value="Purge database"    onclick="return confirm('You are about to delete all data. Are you sure?')" />
 	<input type="submit" value="Topology overview" onclick="return action='topology.php'" />
+	<input type="submit" value="Statistics" onclick="return action='statistics.php'" />
 </form>
 
 <br /><br />
 
+<?php
+
+	$link_first = "<a href=\"?page=1\">↶ first</a>";
+	$link_prev  = "<a href=\"?page=";
+	$link_prev .= $current_page == 1 ? 1 : $current_page-1;
+	$link_prev .= "\">← previous</a>";
+	$link_next  = "<a href=\"?page=";
+	$link_next .= $current_page == $total_pages ? $current_page : $current_page+1;
+	$link_next .= "\">next →</a>";
+	$link_last .= "<a href=\"?page=$total_pages\">last ↷</a>";
+?>
+
 <table id="big_list" cellspacing="0" cellpadding="0">
 <thead>
-	<tr>
-		<th colspan="1" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
-		<th colspan="3" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="1" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
-	</tr>
+	<tr><?php include("table_nav.php"); ?></tr>
 	<tr>
 		<th>Command</th>
 		<th>Start</th>
@@ -55,11 +64,7 @@ require_once("header.php");
 <?php endforeach ?>
 </tbody>
 <tfoot>
-	<tr>
-		<th colspan="1" style="text-align: left"><a href="?page=1">↶ first</a>&nbsp;&nbsp;<a href="?page=<?=$current_page == 1 ? 1 : $current_page-1?>">← previous</a></th>
-		<th colspan="3" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="1" style="text-align: right"><a href="?page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>">next →</a>&nbsp;&nbsp;<a href="?page=<?=$total_pages?>">last ↷</a></th>
-	</tr>
+	<tr><?php include("table_nav.php"); ?></tr>
 </tfoot>
 </table>
 

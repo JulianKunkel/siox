@@ -25,17 +25,24 @@ static function get_list()
 	return $list;
 }
 
-static function store_data($x, $y, $tmp_dir = '/tmp')
+static function store_data($x, $y, $tmp_dir = '/tmp', $start, $stop)
 {
 	global $dbcon;
 
+	if ($start > 0 && $stop > 0)
+		$where = "AND timestamp BETWEEN :start AND :stop";
+	else
+		$where = "";
 
-	$sql = "SELECT timestamp, value FROM statistics.stats_full WHERE childobjectid = :id AND value IS NOT NULL";
-
+	$sql = "SELECT timestamp, value FROM statistics.stats_full WHERE childobjectid = :id AND value IS NOT NULL $where ORDER BY timestamp ASC";
+	
 	$stmt = $dbcon->prepare($sql);
 	$stmt->bindParam(':id', $y);
-//	$stmt->bindParam(':start', $stop);
-//	$stmt->bindParam(':stop', $start);
+
+	if ($start > 0 && $stop > 0) {
+		$stmt->bindParam(':start', $stop);
+		$stmt->bindParam(':stop', $start);
+	}
 
 	if (!$stmt->execute()) {
 		print_r($dbcon->errorInfo());
@@ -43,9 +50,12 @@ static function store_data($x, $y, $tmp_dir = '/tmp')
 	}
 
 	$data = array();
+	$first_tick = -1;
 
 	while ($row = $stmt->fetch(PDO::FETCH_OBJ)) {
-		$data[$row->$x] = $row->value;
+		if ($first_tick == -1)
+			$first_tick = $row->$x;
+		$data[$row->$x - $first_tick] = $row->value;
 	}
 
 	$data_string = self::tabulate_kv_array($data);
