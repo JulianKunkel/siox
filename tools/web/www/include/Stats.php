@@ -30,7 +30,7 @@ static function store_data($x, $y, $tmp_dir = '/tmp', $start, $stop)
 	global $dbcon;
 
 	if ($start > 0 && $stop > 0)
-		$where = "AND timestamp BETWEEN :start AND :stop";
+		$where = "AND timestamp BETWEEN $start AND $stop";
 	else
 		$where = "";
 
@@ -40,8 +40,8 @@ static function store_data($x, $y, $tmp_dir = '/tmp', $start, $stop)
 	$stmt->bindParam(':id', $y);
 
 	if ($start > 0 && $stop > 0) {
-		$stmt->bindParam(':start', $stop);
-		$stmt->bindParam(':stop', $start);
+//		$stmt->bindParam(':start', $stop, PDO::PARAM_INT);
+//		$stmt->bindParam(':stop',  $start, PDO::PARAM_INT);
 	}
 
 	if (!$stmt->execute()) {

@@ -38,13 +38,7 @@ require_once("header.php");
 <table id="big_list" cellspacing="0" cellpadding="0">
 <thead>
 	<tr><?php include("table_nav.php"); ?></tr>
-	<tr>
-		<th>Command</th>
-		<th>Start</th>
-		<th>Duration</th>
-		<th>Node</th>
-		<th>User</th>
-	</tr>
+	<tr><th>Command</th><th>Start</th><th>Duration</th><th>Node</th><th>User</th></tr>
 </thead>
 <tbody>
 <?php if (count($runs) == 0): ?>
@@ -63,9 +57,7 @@ require_once("header.php");
 	</tr>
 <?php endforeach ?>
 </tbody>
-<tfoot>
-	<tr><?php include("table_nav.php"); ?></tr>
-</tfoot>
+<tfoot><tr><?php include("table_nav.php"); ?></tr></tfoot>
 </table>
 
 <?php require_once("footer.php"); ?>
