@@ -3,6 +3,7 @@
 require_once "include/DB.php";
 require_once "include/Activity.php";
 require_once "include/Util.php";
+require_once "include/Error.php";
 
 $site_title = "Causal Chain View"; 
 $site_description = "Visualization of the causal chain for the activity"; 
@@ -85,7 +86,7 @@ $pid_secs %= 60;
 		<th>parents</th><td class="even"><?=implode(', ', hyperlink_ids('activity.php?unique_id=', $act->parents));?></td>
 	</tr>
 	<tr>
-		<th>error_value</th><td class="odd"><?=$act->error_value?></td>
+		<th>error_value</th><td class="odd"><?=$act->error_value != 0 ? $erno[$act->error_value] : "" ?></td>
 	</tr>
 
 </table>
