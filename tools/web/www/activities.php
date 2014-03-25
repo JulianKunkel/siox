@@ -1,6 +1,7 @@
 <?php 
 require_once("include/DB.php"); 
 require_once("include/Activity.php"); 
+require_once("include/Error.php");
 require_once("include/Program.php"); 
 $site_title = "Activity overview";
 $site_description = "Overview of the stored activities";
@@ -90,7 +91,7 @@ $p = Program::get($pnum);
 		<td><?=date("d.m.Y H:i:s", floor($a->time_start / 1000000000)).".<b>".($a->time_start % 1000000000)."</b>"?></td>
 		<td><?=date("d.m.Y H:i:s", floor($a->time_stop / 1000000000)).".<b>".($a->time_stop % 1000000000)."</b>"?></td>
 		<td align="center"><?=round(($a->time_stop - $a->time_start) / 1000, 3)?></td>
-		<td><?=$a->error_value?></td>
+		<td><?=$a->error_value != 0 ? $erno[$a->error_value] : ""?></td>
 	</tr>
 <?php endforeach ?>
 </tbody>

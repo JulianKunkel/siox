@@ -6,8 +6,8 @@ include_directories(
 
 add_library(
 	siox-monitoring-statisticsMultiplexerPlugin-healthADPI
-	StatisticshealthADPI.cpp
-	StatisticshealthADPIOptions.cpp
+	StatisticsHealthADPI.cpp
+	StatisticsHealthADPIOptions.cpp
 )
 
 target_link_libraries(
@@ -16,7 +16,7 @@ target_link_libraries(
 	siox-monitoring-Statistic
 )
 
-siox_run_serializer(StatisticshealthADPIOptions.hpp StatisticshealthADPIOptions.cpp)
+siox_run_serializer(StatisticsHealthADPIOptions.hpp StatisticsHealthADPIOptions.cpp)
 
 
 install(TARGETS siox-monitoring-statisticsMultiplexerPlugin-healthADPI LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

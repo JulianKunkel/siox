@@ -52,9 +52,9 @@ namespace monitoring {
 
 	    ucaid [label="UniqueComponentActivityID\nuint32_t", URL="\ref UniqueComponentActivityID"]
 
-	    assid [label="AssociatedID\nuint32_t", URL="\ref AssociateID"]
+	    assid [label="AssociateID\nuint32_t", URL="\ref AssociateID"]
 
-	    rcid [label="{RemoteCallIentifier|{<nid>nid\nNodeID|<uiid>uiid\nUniqueInterfaceID|<assid>instance\nAssociatedID}}", URL="\ref RemoteCallIdentifier"]
+	    rcid [label="{RemoteCallIdentifier|{<nid>nid\nNodeID|<uiid>uiid\nUniqueInterfaceID|<assid>instance\nAssociatedID}}", URL="\ref RemoteCallIdentifier"]
 	    nid:n -> rcid:nid:s
 	    uiid:n -> rcid:uiid:s
 	    assid:n -> rcid:assid:s
@@ -244,13 +244,13 @@ namespace monitoring {
 		uint32_t thread;
 
 		inline bool operator==( ActivityID const & b ) const {
-			
+
 			if (id != b.id)
 				return false;
-			
+
 			if (thread != b.thread)
 				return false;
-			
+
 			return cid == b.cid;
 
 		}

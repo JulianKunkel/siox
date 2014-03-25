@@ -1005,6 +1005,10 @@ void FileSurveyorPlugin::finalize() {
 }
 
 
+#undef OUTPUT
+#undef ERROR
+
+
 extern "C" {
 	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME()
 	{

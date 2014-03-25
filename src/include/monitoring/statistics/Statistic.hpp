@@ -1,7 +1,7 @@
 /**
  * @file Statistic.hpp
  *
- * This class is used to add history information to a StatisticsDescription.
+ * This class combines history information with a StatisticsDescription.
  *
  * @author Nathanael Hübbe
  * @date   2013
