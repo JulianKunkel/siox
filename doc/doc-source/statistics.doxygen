@@ -20,27 +20,48 @@ and then talk to that object to obtain the information the user code needs.
 Apart from the class @scoperef{monitoring,Statistic}, the following four SIOX components are involved in the handling of statistics information:
 The @scoperef{monitoring,StatisticsProviderPlugin}, the @scoperef{monitoring,StatisticsCollector}, the @scoperef{monitoring,StatisticsMultiplexer}, and the @scoperef{monitoring,StatisticsMultiplexerPlugin}.
 
-@dot
-digraph StatisticsComponents {
-	node [shape=Mrecord];
-	edge [style=solid];
+@startuml{StatisticsOverview.png}
 
-	provider [label="StatisticsProviderPlugin"]
-	collector [label="StatisticsCollector"]
-	multiplexer [label="StatisticsMultiplexer"]
-	listener [label="StatisticsMultiplexerPlugin"]
-	statistic [label="Statistic"]
+	class StatisticsCollector {
+	}
+	class StatisticsMultiplexer {
+	}
+	class StatisticsProviderPlugin #ccffcc {
+	}
+	class StatisticsMultiplexerListener #ccffcc {
+	}
+	class StatisticsIntegrator #ccffcc {
+	}
+	class Statistic #PaleTurquoise {
+		+curValue
+		+historyInformation
+	}
+	class StatisticsCollection #PaleTurquoise {
+		+consistentSnapshotOfValues
+	}
 
-	provider -> collector [label="register"]
-	collector -> provider [label="polls"]
-	collector -> multiplexer [label="notify"]
-	collector -> statistic [label="builds"]
-	multiplexer -> listener [label="notify"]
-	multiplexer -> statistic [label="forwards"]
-	listener -> multiplexer [label="register"]
-	listener -> statistic [label="interprets"]
-}
-@enddot
+	StatisticsCollector --> StatisticsProviderPlugin : polls
+	StatisticsProviderPlugin --> StatisticsCollector : register
+	StatisticsCollector -> StatisticsMultiplexer : notify
+	StatisticsMultiplexer --> StatisticsMultiplexerListener : notify
+	StatisticsMultiplexerListener --> StatisticsMultiplexer : register
+
+	StatisticsCollector --> StatisticsCollection : updates
+	StatisticsCollector <-- StatisticsCollection : registers
+	StatisticsProviderPlugin <|-- StatisticsIntegrator
+	StatisticsCollector --> Statistic : builds
+	StatisticsMultiplexer --> Statistic : forwards
+	StatisticsCollection -[hidden]> Statistic
+	Statistic <- StatisticsMultiplexerListener : interprets
+	StatisticsMultiplexerListener <|-- StatisticsIntegrator
+	StatisticsCollection <-- StatisticsIntegrator : defines
+	StatisticsCollection <-- StatisticsIntegrator : fetches data
+
+	hide members
+	show Statistic fields
+	show StatisticsCollection fields
+
+@enduml
 
 
 
