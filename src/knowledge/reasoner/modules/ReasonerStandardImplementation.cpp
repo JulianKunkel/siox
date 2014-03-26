@@ -349,12 +349,14 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		} // dataLock
 
 		// Determine local performance issues based on recent observations and remote issues.
-		// TODO
 
+
+		// now retrieve the nodeStatistics.
 		if( nodeStatistics != nullptr ) {
 			nodeStatistics->fetchValues();
-			for(int i=0; i < DATA_INDEX_COUNT ; i++){
-				cout << "CurrentNodeStatistics: " << i << " " << (*nodeStatistics)[i] << endl;
+			for(int i=0; i < DATA_INDEX_COUNT ; i++){				
+				nodeHealth->statistics[i] = (*nodeStatistics)[i].toFloat();
+				cout << "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] << endl;				
 			}
 		}
 
@@ -421,7 +423,9 @@ void ReasonerStandardImplementation::start(){
 			{"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
 			{"power/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
 			// TODO work even if energy metrics power/rapl is not available!
-			{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
+			{"utilization/memory", "@localhost"}, // CONSUMED_MEMORY_BYTES
+			// If likwid is used to observe the memory throughput the correct counter could be used:
+			//{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
 			{"quantity/network/volume", "@localhost"}, // CONSUMED_NETWORK_BYTES
 			{"quantity/io/volume", "@localhost"}, // CONSUMED_IO_BYTES
 		}}, true);

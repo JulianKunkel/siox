@@ -267,7 +267,7 @@ struct NodeHealth : public Health{
 	array<uint8_t, UTILIZATION_STATISTIC_COUNT> utilization; // UtilizationIndex
 	
 	// the following elements account for consumed resources
-	array<uint64_t, NODE_STATISTIC_COUNT> statistics;
+	array<float, NODE_STATISTIC_COUNT> statistics;
 
 	NodeHealth(){
 		for ( int i = 0; i < UTILIZATION_STATISTIC_COUNT; ++i ){
