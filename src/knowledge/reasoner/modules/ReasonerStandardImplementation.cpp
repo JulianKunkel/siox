@@ -424,7 +424,7 @@ void ReasonerStandardImplementation::start(){
 			{"utilization/network/receive", "@localhost"},
 			{"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
 // #ifdef ENABLE_LIKWID_POWER			
-			{"time/cpu/RuntimeUnhalted", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
+			{"power/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
 // #else
 			//{"utilization/cpu", "@localhost"}, // stupid replacement for the energy metric...
 // #endif ENABLE_LIKWID_POWER		
