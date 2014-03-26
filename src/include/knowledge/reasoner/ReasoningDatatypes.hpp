@@ -36,13 +36,21 @@ enum UtilizationIndex{
 //Additional statistics of the node we would like to transfer to processes.
 //@serializable
 enum NodeStatisticsIndex{
-	CPU_SECONDS = 0,
-	ENERGY_JOULE = 1,
-	MEMORY_BYTES = 2,
-	NETWORK_BYTES = 3,
-	IO_BYTES = 4,
-	NODE_STATISTIC_COUNT = 5
+	UTILIZATION_CPU = 0,
+	UTILIZATION_MEMORY,
+	UTILIZATION_IO,
+	UTILIZATION_NETWORK_SEND,
+	UTILIZATION_NETWORK_RECEIVE,
+
+	CONSUMED_CPU_SECONDS,
+	CONSUMED_ENERGY_JOULE,
+	CONSUMED_MEMORY_BYTES,
+	CONSUMED_NETWORK_BYTES,
+	CONSUMED_IO_BYTES,
+
+	NODE_STATISTIC_COUNT
 };
+
 
 
 //@serializable

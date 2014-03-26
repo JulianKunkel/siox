@@ -9,22 +9,6 @@ using namespace monitoring;
 
 namespace knowledge {
 
-enum DataIndex{
-	UTILIZATION_CPU = 0,
-	UTILIZATION_MEMORY,
-	UTILIZATION_IO,
-	UTILIZATION_NETWORK_SEND,
-	UTILIZATION_NETWORK_RECEIVE,
-
-	CONSUMED_CPU_SECONDS,
-	CONSUMED_ENERGY_JOULE,
-	CONSUMED_MEMORY_BYTES,
-	CONSUMED_NETWORK_BYTES,
-	CONSUMED_IO_BYTES,
-
-	DATA_INDEX_COUNT
-};
-
 shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
@@ -357,7 +341,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 			nodeStatistics->fetchValues();
 
 			for(int i=0; i < NODE_STATISTIC_COUNT ; i++){				
-				nodeHealth->statistics[i] = (*nodeStatistics)[i].toFloat();
+				nodeHealth->statistics[i] = (*nodeStatistics)[i].toUint64();
 				//cout << "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] << endl;
 			}
 		}
@@ -496,10 +480,21 @@ ComponentReport ReasonerStandardImplementation::prepareReport() {
 		result.addEntry( "STATES_RECEIVED", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesReceived));
 
 		if ( nPushesReceived > 0 ){
-			const char * text [] = {"CPU_SECONDS", "ENERGY_JOULE", "MEMORY_MIB", "NETWORK_MIB", "IO_MIB"};
-			const float conversionFactor[] = {1.0f, 1.0f, 1.0f/1024/1024, 1.0f/1024/1024, 1.0f/1024/1024};
+			const char * text [] = {
+				"UTILIZATION_CPU",
+				"UTILIZATION_MEMORY",
+				"UTILIZATION_IO",
+				"UTILIZATION_NETWORK_SEND",
+				"UTILIZATION_NETWORK_RECEIVE",
+				"CONSUMED_CPU_SECONDS",
+				"CONSUMED_ENERGY_JOULE",
+				"CONSUMED_MEMORY_BYTES",
+				"CONSUMED_NETWORK_BYTES",
+				"CONSUMED_IO_BYTES",
+			};
+
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
-				result.addEntry( text[i], ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE,  node_statistics[i] * conversionFactor[i] ));		
+				result.addEntry( text[i], ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE,  node_statistics[i] ));		
 			}
 		}
 
