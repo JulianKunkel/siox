@@ -422,7 +422,7 @@ void ReasonerStandardImplementation::start(){
 			{"utilization/io", "@localhost"},
 			{"utilization/network/send", "@localhost"},
 			{"utilization/network/receive", "@localhost"},
-			{"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
+			{"time/cpu/RuntimeUnhalted", "@localhost"}, // CONSUMED_CPU_SECONDS // was time/cpu
 // #ifdef ENABLE_LIKWID_POWER			
 			{"power/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
 // #else
@@ -496,9 +496,10 @@ ComponentReport ReasonerStandardImplementation::prepareReport() {
 		result.addEntry( "STATES_RECEIVED", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesReceived));
 
 		if ( nPushesReceived > 0 ){
-			const char * text [] = {"CPU_SECONDS", "ENERGY_JOULE", "MEMORY_BYTES", "NETWORK_BYTES", "IO_BYTES"};
+			const char * text [] = {"CPU_SECONDS", "ENERGY_JOULE", "MEMORY_MIB", "NETWORK_MIB", "IO_MIB"};
+			const float conversionFactor[] = {1.0f, 1.0f, 1.0f/1024/1024, 1.0f/1024/1024, 1.0f/1024/1024};
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
-				result.addEntry( text[i], ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE,  node_statistics[i] ));		
+				result.addEntry( text[i], ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE,  node_statistics[i] * conversionFactor[i] ));		
 			}
 		}
 

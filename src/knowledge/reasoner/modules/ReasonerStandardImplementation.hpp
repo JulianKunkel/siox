@@ -73,7 +73,7 @@ private:
 		uint64_t anomaliesTriggered = 0;
 		uint64_t cyclesTriggered = 0;
 
-		array<uint64_t, NODE_STATISTIC_COUNT> node_statistics;
+		array<double, NODE_STATISTIC_COUNT> node_statistics;
 
 
 
