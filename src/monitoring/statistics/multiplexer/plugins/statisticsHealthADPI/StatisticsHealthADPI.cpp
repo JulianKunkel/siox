@@ -16,8 +16,14 @@ using namespace std;
 using namespace monitoring;
 using namespace core;
 
+//#define DEBUG
 
+#ifndef DEBUG
+#define OUTPUT(...)
+#else
 #define OUTPUT(...) do { cout << "[Statistics Health ADPI] " << __VA_ARGS__ << "\n"; } while(0)
+#endif
+
 #define ERROR(...) do { cerr << "[Statistics Health ADPI] " << __VA_ARGS__ << "!\n"; } while(0)
 
 

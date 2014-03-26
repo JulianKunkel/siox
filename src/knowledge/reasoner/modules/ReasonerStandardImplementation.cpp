@@ -418,9 +418,9 @@ void ReasonerStandardImplementation::start(){
 			{"utilization/io", "@localhost"},
 			{"utilization/network/send", "@localhost"},
 			{"utilization/network/receive", "@localhost"},
-			// TODO
 			{"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
-			{"utilization/cpu", "@localhost"}, // power/rapl
+			{"power/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
+			// TODO work even if energy metrics power/rapl is not available!
 			{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
 			{"quantity/network/volume", "@localhost"}, // CONSUMED_NETWORK_BYTES
 			{"quantity/io/volume", "@localhost"}, // CONSUMED_IO_BYTES
@@ -484,7 +484,7 @@ ComponentReport ReasonerStandardImplementation::prepareReport() {
 		result.addEntry( "OBSERVED_RUNTIME_MS", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( cyclesTriggered * update_intervall_ms )));		
 
 		result.addEntry( "STATES_SENT_UPSTREAM", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesSent));
-		result.addEntry( "STATES_RECEIVED", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesReceived));		
+		result.addEntry( "STATES_RECEIVED", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesReceived));
 
 		if ( nPushesReceived > 0 ){
 			const char * text [] = {"CPU_SECONDS", "ENERGY_JOULE", "MEMORY_BYTES", "NETWORK_BYTES", "IO_BYTES"};
