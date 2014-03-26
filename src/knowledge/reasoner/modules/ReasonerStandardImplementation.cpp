@@ -353,10 +353,12 @@ void ReasonerStandardImplementation::PeriodicRun(){
 
 		// now retrieve the nodeStatistics.
 		if( nodeStatistics != nullptr ) {
+
 			nodeStatistics->fetchValues();
-			for(int i=0; i < DATA_INDEX_COUNT ; i++){				
+
+			for(int i=0; i < NODE_STATISTIC_COUNT ; i++){				
 				nodeHealth->statistics[i] = (*nodeStatistics)[i].toFloat();
-				cout << "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] << endl;				
+				//cout << "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] << endl;
 			}
 		}
 
@@ -421,8 +423,11 @@ void ReasonerStandardImplementation::start(){
 			{"utilization/network/send", "@localhost"},
 			{"utilization/network/receive", "@localhost"},
 			{"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
-			{"power/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
-			// TODO work even if energy metrics power/rapl is not available!
+// #ifdef ENABLE_LIKWID_POWER			
+			{"time/cpu/RuntimeUnhalted", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
+// #else
+			//{"utilization/cpu", "@localhost"}, // stupid replacement for the energy metric...
+// #endif ENABLE_LIKWID_POWER		
 			{"utilization/memory", "@localhost"}, // CONSUMED_MEMORY_BYTES
 			// If likwid is used to observe the memory throughput the correct counter could be used:
 			//{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
