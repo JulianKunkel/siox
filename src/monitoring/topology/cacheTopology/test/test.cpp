@@ -3,12 +3,17 @@
  *
  * @author Nathanael Hübbe
  * @author Roman Michel
+ * @author Julian Kunkel
  * @date   2014
  */
 
 // Define WRITE_ONLY here to skip reading ops for benchmark reasons
 // Doing so will make the test itself mostly useless
 // #define WRITE_ONLY
+
+// threadcount defines how many times the test will run consecutively
+// It will need one connection per run, so don't set this higher than the number configured in postgresql
+const int threadcount = 100;
 
 #include <iostream>
 
@@ -25,7 +30,12 @@ using namespace monitoring;
 void workerFunc(int i) {
 	Topology* topology = module_create_instance<Topology>( "", "siox-monitoring-cacheTopology", MONITORING_TOPOLOGY_INTERFACE );
 
+	Topology * backend = module_create_instance<Topology>( "", "siox-monitoring-RamTopology", MONITORING_TOPOLOGY_INTERFACE );
+	backend->init();
+	backend->start();
+
 	CacheTopologyOptions & o = topology->getOptions<CacheTopologyOptions>();
+	o.topologyBackend = backend;
 
 	topology->init();
 	topology->start();
@@ -189,45 +199,50 @@ void workerFunc(int i) {
 	#endif
 
 	topology->stop();
+
+	backend->stop();
+	delete backend;
 	delete topology;
 }
 
 int main( int argc, char const * argv[] ) throw() {
-	// threadcount defines how many times the test will run consecutively
-	// It will need one connection per run, so don't set this higher than the number configured in postgresql
-	const int threadcount = 100;
 	uint ops = 0;
-    struct timeval start, end;
+   struct timeval start, end;
 
-    long mtime, seconds, useconds;
+   long mtime, seconds, useconds;
 
 	boost::thread* threads[threadcount];
 
-    gettimeofday(&start, NULL);
+	gettimeofday(&start, NULL);
 
-	for (int i = 0; i<threadcount; i++) {
-		threads[i] = new boost::thread(workerFunc, i);
+	if (threadcount > 1){
+
+		for (int i = 0; i<threadcount; i++) {
+			threads[i] = new boost::thread(workerFunc, i);
+		}
+
+		for (int i = 0; i<threadcount; i++) {
+			threads[i]->join();
+		}
+	}else{
+		workerFunc(1);
 	}
 
-	for (int i = 0; i<threadcount; i++) {
-		threads[i]->join();
-	}
+	gettimeofday(&end, NULL);
 
-    gettimeofday(&end, NULL);
+	// These values need to be adjusted when the test above changes
+	#ifdef WRITE_ONLY
+	ops = 14*threadcount;
+	#else
+	ops = 40*threadcount;
+	#endif
 
-    // These values need to be adjusted when the test above changes
-    #ifdef WRITE_ONLY
-    ops = 14*threadcount;
-    #else
-    ops = 40*threadcount;
-    #endif
+	seconds  = end.tv_sec  - start.tv_sec;
+	useconds = end.tv_usec - start.tv_usec;
 
-    seconds  = end.tv_sec  - start.tv_sec;
-    useconds = end.tv_usec - start.tv_usec;
+	mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
 
-    mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
-
-    printf("%i Ops in %ld milliseconds\n", ops, mtime);
+	printf("%i Ops in %ld milliseconds\n", ops, mtime);
 
 	cerr << "OK" << endl;
 	return 0;

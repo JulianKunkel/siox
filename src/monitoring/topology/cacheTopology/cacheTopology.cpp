@@ -92,7 +92,7 @@ TopologyType CacheTopology::registerType( const string& name ) throw() {
     if (!tmpType) {
         // It isn't in the cache -> invoke other topology
         tmpType = topologyBackend->registerType(name);
-        if (!tmpType) {
+        if (tmpType) {
             // If the other topology successfully returned, insert the object into the cache
             ramCache->registerType(name, tmpType.id());
         }
@@ -109,7 +109,7 @@ TopologyType CacheTopology::lookupTypeByName( const string& name ) throw() {
     if (!tmpType) {
         // It isn't in the cache -> invoke other topology
         tmpType = topologyBackend->lookupTypeByName(name);
-        if (!tmpType) {
+        if (tmpType) {
             // If the other topology successfully returned, insert the object into the cache
             ramCache->registerType(name, tmpType.id());
         }
@@ -126,7 +126,7 @@ TopologyType CacheTopology::lookupTypeById( TopologyTypeId anId ) throw() {
     if (!tmpType) {
         // It isn't in the cache -> invoke other topology
         tmpType = topologyBackend->lookupTypeById(anId);
-        if (!tmpType) {
+        if (tmpType) {
             // If the other topology successfully returned, insert the object into the cache
             ramCache->registerType(tmpType.name(), anId);
         }
@@ -144,7 +144,7 @@ TopologyObject CacheTopology::registerObject( TopologyObjectId parentId, Topolog
     if (!tmpRelation) {
         // No relation available, invoke other topology
         tmpObject = topologyBackend->registerObject(parentId, relationType, childName, objectType);
-        if (!tmpObject) {
+        if (tmpObject) {
             // Insert into cache
             ramCache->registerObject(tmpObject.type(), tmpObject.id());
             ramCache->registerRelation(parentId, relationType, childName, tmpObject.id());
@@ -153,7 +153,7 @@ TopologyObject CacheTopology::registerObject( TopologyObjectId parentId, Topolog
     else {
         // Relation available, return object
         tmpObject = ramCache->lookupObjectById(tmpRelation.child());
-        if (!tmpObject) {
+        if (! tmpObject) {
             // Our cache doesn't have this object, get it out of the other topology
             tmpObject = topologyBackend->registerObject(parentId, relationType, childName, objectType);
         }
@@ -171,7 +171,6 @@ TopologyObject CacheTopology::lookupObjectById( TopologyObjectId anId ) throw() 
         // It's not in the cache -> invoke other topology
         tmpObject = topologyBackend->lookupObjectById(anId);
         if (tmpObject) {
-            // TODO: Macht das schreiben ohne die Relation Sinn?
             // Insert into cache
             ramCache->registerObject(tmpObject.type(), tmpObject.id());
         }
@@ -188,7 +187,7 @@ TopologyRelation CacheTopology::registerRelation( TopologyObjectId parent, Topol
     if (!tmpRelation) {
         // It's not in the cache -> invoke other topology
         tmpRelation = topologyBackend->registerRelation(parent, relationType, childName, child);
-        if (!tmpRelation) {
+        if (tmpRelation) {
             // Insert into cache
             ramCache->registerRelation(parent, relationType, childName, child);
         }
@@ -206,7 +205,7 @@ TopologyRelation CacheTopology::lookupRelation( TopologyObjectId parent, Topolog
         // It's not in the cache -> invoke other topology
         tmpRelation = topologyBackend->lookupRelation(parent, relationType, childName);
 
-        if(!tmpRelation) {
+        if(tmpRelation) {
             // Insert into cache
             ramCache->registerRelation(parent, relationType, childName, tmpRelation.child());
         }
@@ -234,7 +233,7 @@ TopologyAttribute CacheTopology::registerAttribute( TopologyTypeId domain, const
         // It's not in the cache -> invoke other topology
         tmpAttribute = topologyBackend->registerAttribute(domain, name, datatype);
 
-        if(!tmpAttribute) {
+        if(tmpAttribute) {
             // Insert into cache
             ramCache->registerAttribute(domain, name, datatype, tmpAttribute.id());
         }
@@ -251,7 +250,7 @@ TopologyAttribute CacheTopology::lookupAttributeByName( TopologyTypeId domain, c
         // It's not in the cache -> invoke other topology
         tmpAttribute = topologyBackend->lookupAttributeByName(domain, name);
 
-        if(!tmpAttribute) {
+        if(tmpAttribute) {
             // Insert into cache
             ramCache->registerAttribute(domain, name, tmpAttribute.dataType(), tmpAttribute.id());
         }
@@ -268,7 +267,7 @@ TopologyAttribute CacheTopology::lookupAttributeById( TopologyAttributeId attrib
         // It's not in the cache -> invoke other topology
         tmpAttribute = topologyBackend->lookupAttributeById(attributeId);
 
-        if (!tmpAttribute) {
+        if (tmpAttribute) {
             // Insert into cache
             ramCache->registerAttribute(tmpAttribute.domainId(), tmpAttribute.name(), tmpAttribute.dataType(), attributeId);
         }
@@ -280,17 +279,15 @@ bool CacheTopology::setAttribute( TopologyObjectId objectId, TopologyAttributeId
     
     VariableDatatype convertedValue((VariableDatatype::Type) value.type(), value.toStr());
     
-    // Look if it is already in the cache
-    TopologyValue tmpValue = ramCache->registerValue(objectId, attributeId, convertedValue);
-
-    if (!tmpValue) {
-        return false;
-    }
-    
-    if (topologyBackend->setAttribute(objectId, attributeId, value)) {
+    TopologyValue oldValue = ramCache->getValue( objectId, attributeId );
+    if ( oldValue && oldValue.value() == value ){
         return true;
     }
 
+    if( topologyBackend->setAttribute(objectId, attributeId, value) ){
+        ramCache->registerValue(objectId, attributeId, convertedValue);
+        return true;
+    }
     return false;
 }
 
@@ -303,7 +300,7 @@ TopologyValue CacheTopology::getAttribute( TopologyObjectId object, TopologyAttr
         // Not there -> invoke other topology
         value = topologyBackend->getAttribute(object, attribute);
 
-        if (!value) {
+        if (value) {
             // Insert into cache
             VariableDatatype convertedValue((VariableDatatype::Type) value.value().type(), value.value().toStr());
             ramCache->registerValue(object, attribute, convertedValue);
