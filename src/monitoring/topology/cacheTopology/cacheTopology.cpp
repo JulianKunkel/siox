@@ -22,7 +22,7 @@ using namespace core;
 using namespace monitoring;
 using namespace boost;
 
-class cacheTopology : public Topology {
+class CacheTopology : public Topology {
     public:
         virtual void init();
         virtual ComponentOptions * AvailableOptions();
@@ -57,34 +57,34 @@ class cacheTopology : public Topology {
         void stop() override;
 
     private:
-        cacheHelper* ramCache;
+        CacheHelper* ramCache;
         Topology* topologyBackend;
 };
 
-void cacheTopology::start(){
+void CacheTopology::start(){
     Topology::start();
     
-    ramCache = new cacheHelper();
+    ramCache = new CacheHelper();
 }
 
-void cacheTopology::stop(){
+void CacheTopology::stop(){
     // TODO: Destroyed das so?
     ramCache = nullptr;
     Topology::stop();
 }
 
 
-void cacheTopology::init() {
-    cacheTopologyOptions & o = getOptions<cacheTopologyOptions>();
+void CacheTopology::init() {
+    CacheTopologyOptions & o = getOptions<CacheTopologyOptions>();
 
     topologyBackend = GET_INSTANCE(Topology, o.topologyBackend);    
 }
 
-ComponentOptions* cacheTopology::AvailableOptions() {
-    return new cacheTopologyOptions();
+ComponentOptions* CacheTopology::AvailableOptions() {
+    return new CacheTopologyOptions();
 }
 
-TopologyType cacheTopology::registerType( const string& name ) throw() {
+TopologyType CacheTopology::registerType( const string& name ) throw() {
     TopologyType tmpType;
 
     // Look if it is already in the cache
@@ -101,7 +101,7 @@ TopologyType cacheTopology::registerType( const string& name ) throw() {
     return tmpType;
 }
 
-TopologyType cacheTopology::lookupTypeByName( const string& name ) throw() {
+TopologyType CacheTopology::lookupTypeByName( const string& name ) throw() {
     TopologyType tmpType;
 
     // Look if it is already in the cache
@@ -118,7 +118,7 @@ TopologyType cacheTopology::lookupTypeByName( const string& name ) throw() {
     return tmpType;
 }
 
-TopologyType cacheTopology::lookupTypeById( TopologyTypeId anId ) throw() {
+TopologyType CacheTopology::lookupTypeById( TopologyTypeId anId ) throw() {
     TopologyType tmpType;
 
     // Look if it is already in the cache
@@ -135,7 +135,7 @@ TopologyType cacheTopology::lookupTypeById( TopologyTypeId anId ) throw() {
     return tmpType;
 }
 
-TopologyObject cacheTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
+TopologyObject CacheTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
     TopologyObject tmpObject;
     TopologyRelation tmpRelation;
 
@@ -162,7 +162,7 @@ TopologyObject cacheTopology::registerObject( TopologyObjectId parentId, Topolog
     return tmpObject;
 }
 
-TopologyObject cacheTopology::lookupObjectById( TopologyObjectId anId ) throw() {
+TopologyObject CacheTopology::lookupObjectById( TopologyObjectId anId ) throw() {
     TopologyObject tmpObject;
 
     // Look if it is already in the cache
@@ -180,7 +180,7 @@ TopologyObject cacheTopology::lookupObjectById( TopologyObjectId anId ) throw() 
     return tmpObject;
 }
 
-TopologyRelation cacheTopology::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
+TopologyRelation CacheTopology::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
     TopologyRelation tmpRelation;
 
     // Look if it is already in the cache
@@ -197,7 +197,7 @@ TopologyRelation cacheTopology::registerRelation( TopologyObjectId parent, Topol
     return tmpRelation;
 }
 
-TopologyRelation cacheTopology::lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() {
+TopologyRelation CacheTopology::lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() {
     TopologyRelation tmpRelation;
 
     // Look if it is already in the cache
@@ -215,17 +215,17 @@ TopologyRelation cacheTopology::lookupRelation( TopologyObjectId parent, Topolog
     return tmpRelation;
 }
 
-TopologyRelationList cacheTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
+TopologyRelationList CacheTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
     // We can't cache this
     return topologyBackend->enumerateChildren(parent, relationType);
 }
 
-TopologyRelationList cacheTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
+TopologyRelationList CacheTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
     // We can't cache this
     return topologyBackend->enumerateParents(child, relationType);
 }
 
-TopologyAttribute cacheTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
+TopologyAttribute CacheTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
     TopologyAttribute tmpAttribute;
 
     // Look if it is already in the cache
@@ -242,7 +242,7 @@ TopologyAttribute cacheTopology::registerAttribute( TopologyTypeId domain, const
     return tmpAttribute;
 }
 
-TopologyAttribute cacheTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
+TopologyAttribute CacheTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
     TopologyAttribute tmpAttribute;
 
     // Look if it is already in the cache
@@ -259,7 +259,7 @@ TopologyAttribute cacheTopology::lookupAttributeByName( TopologyTypeId domain, c
     return tmpAttribute;
 }
 
-TopologyAttribute cacheTopology::lookupAttributeById( TopologyAttributeId attributeId ) throw() {
+TopologyAttribute CacheTopology::lookupAttributeById( TopologyAttributeId attributeId ) throw() {
     TopologyAttribute tmpAttribute;
 
     // Look if it is already in the cache
@@ -276,7 +276,7 @@ TopologyAttribute cacheTopology::lookupAttributeById( TopologyAttributeId attrib
     return tmpAttribute;
 }
 
-bool cacheTopology::setAttribute( TopologyObjectId objectId, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
+bool CacheTopology::setAttribute( TopologyObjectId objectId, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
     
     VariableDatatype convertedValue((VariableDatatype::Type) value.type(), value.toStr());
     
@@ -294,7 +294,7 @@ bool cacheTopology::setAttribute( TopologyObjectId objectId, TopologyAttributeId
     return false;
 }
 
-TopologyValue cacheTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
+TopologyValue CacheTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
     TopologyValue value;
 
     // Look if it is already in the cache
@@ -313,7 +313,7 @@ TopologyValue cacheTopology::getAttribute( TopologyObjectId object, TopologyAttr
     return value;
 }
 
-TopologyValueList cacheTopology::enumerateAttributes( TopologyObjectId object ) throw() {
+TopologyValueList CacheTopology::enumerateAttributes( TopologyObjectId object ) throw() {
     // We can't cache this
     return topologyBackend->enumerateAttributes(object);
 }
@@ -321,6 +321,6 @@ TopologyValueList cacheTopology::enumerateAttributes( TopologyObjectId object ) 
 extern "C" {
     void* TOPOLOGY_INSTANCIATOR_NAME()
     {
-        return new cacheTopology();
+        return new CacheTopology();
     }
 }
