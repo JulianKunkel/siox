@@ -41,5 +41,6 @@ install(TARGETS siox-monitoring-Topology LIBRARY DESTINATION ${SIOX_INSTALL_LIBR
 
 if (PostgreSQL_FOUND)
 	add_subdirectory(databaseTopology)
+	add_subdirectory(cacheTopology)
 endif (PostgreSQL_FOUND)
 
