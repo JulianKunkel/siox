@@ -32,8 +32,14 @@ class GNUPlot {
 
 		fputs($pgp, implode("\n", $this->plot_commands));
 		pclose($pgp);
-		header("Content-Type: image/png");
-		passthru("cat $this->image_file");
+		if (filesize($this->image_file) > 0) {
+			header("Content-Type: image/png");
+			passthru("cat $this->image_file");
+		} else {
+			header("Content-Type: image/jpg");
+			passthru("cat $this->image_dir/unavail.jpg");
+		}
+
 	}
 }
 

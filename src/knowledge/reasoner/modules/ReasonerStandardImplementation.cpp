@@ -75,12 +75,14 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 			// cout << id << " received status from node reasoner " << data.reasonerID << endl;
 		}
 		else if ( role == ReasonerStandardImplementationOptions::Role::PROCESS ){
-			nodeHealth = make_shared<NodeHealth>(health);
-
 			// aggregate statistics
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
 				node_statistics[i] += health.statistics[i];
 			}
+			cout << "CPU: " << health.statistics[6] << endl;
+			cout << "RAPL: " << health.statistics[7] << endl;
+
+			nodeHealth = make_shared<NodeHealth>(health);
 
 			//cout << id << " received status from node reasoner " << data.reasonerID << endl;
 		}
@@ -341,8 +343,8 @@ void ReasonerStandardImplementation::PeriodicRun(){
 			nodeStatistics->fetchValues();
 
 			for(int i=0; i < NODE_STATISTIC_COUNT ; i++){				
-				nodeHealth->statistics[i] = (*nodeStatistics)[i].toUint64();
-				//cout << "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] << endl;
+				nodeHealth->statistics[i] = (*nodeStatistics)[i].toFloat();
+				cout << "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] << endl;
 			}
 		}
 
@@ -406,7 +408,7 @@ void ReasonerStandardImplementation::start(){
 			{"utilization/io", "@localhost"},
 			{"utilization/network/send", "@localhost"},
 			{"utilization/network/receive", "@localhost"},
-			{"time/cpu/RuntimeUnhalted", "@localhost"}, // CONSUMED_CPU_SECONDS // was time/cpu
+			{"time/cpu/RuntimeUnhalted", "@localhost"}, // CONSUMED_CPU_SECONDS
 // #ifdef ENABLE_LIKWID_POWER			
 			{"power/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
 // #else

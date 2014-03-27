@@ -1,4 +1,4 @@
-div#content { width: 900px; } 
+div#content { width: 1200px; } 
 div#logos {margin: 24px 0 0 32px; }
 div#logos img { margin-right: 32px; }
 table#big_list { width: 100%; }
@@ -8,6 +8,7 @@ table td, table th { padding: 4px 8px; }
 .even { background-color: #cfcfcf;}
 .even.error { background-color: #ff3333; }
 .odd.error { background-color: #ff8585; }
-table tr.odd:hover, table tr.even:hover { background-color: white; cursor: pointer; }
-table tr.error:hover { color: white; background-color: #610000; cursor: pointer; }
+table tr.odd:hover, table tr.even:hover { background-color: white; }
+table tr.error:hover { color: white; background-color: #610000; }
+table td.prog { cursor: pointer; }
 #siox_logo { float: right; width: 140px; }
