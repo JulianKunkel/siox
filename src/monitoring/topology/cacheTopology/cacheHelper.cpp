@@ -33,7 +33,7 @@ struct CompareRelation {
     }
 };
 
-class cacheHelper {
+class CacheHelper {
 	public:
 		TopologyType registerType( const string& name, TopologyTypeId anId ) throw();
 		TopologyType lookupTypeByName( const string& name ) throw();
@@ -64,7 +64,7 @@ class cacheHelper {
 		unordered_map< pair<TopologyObjectId, TopologyAttributeId>, TopologyValue> valuesByPair; // valuesLock
 };
 
-TopologyType cacheHelper::registerType( const string& name, TopologyTypeId anId ) throw() {
+TopologyType CacheHelper::registerType( const string& name, TopologyTypeId anId ) throw() {
 
 	TopologyType result;
 
@@ -90,7 +90,7 @@ TopologyType cacheHelper::registerType( const string& name, TopologyTypeId anId 
 	return result;
 }
 
-TopologyType cacheHelper::lookupTypeByName( const string& name ) throw() {
+TopologyType CacheHelper::lookupTypeByName( const string& name ) throw() {
 	
 	TopologyType result;
 	typesLock.lock_shared();
@@ -100,7 +100,7 @@ TopologyType cacheHelper::lookupTypeByName( const string& name ) throw() {
 }
 
 
-TopologyType cacheHelper::lookupTypeById( TopologyTypeId anId ) throw() {
+TopologyType CacheHelper::lookupTypeById( TopologyTypeId anId ) throw() {
 
 	TopologyType result;
 	typesLock.lock_shared();
@@ -109,7 +109,7 @@ TopologyType cacheHelper::lookupTypeById( TopologyTypeId anId ) throw() {
 	return result;
 }
 
-TopologyObject cacheHelper::registerObject( TopologyTypeId objectType, TopologyObjectId anId ) throw() {
+TopologyObject CacheHelper::registerObject( TopologyTypeId objectType, TopologyObjectId anId ) throw() {
 
 	TopologyObject result;
 
@@ -134,7 +134,7 @@ TopologyObject cacheHelper::registerObject( TopologyTypeId objectType, TopologyO
 	return result;
 }
 
-TopologyObject cacheHelper::lookupObjectById(TopologyObjectId anId) throw() {
+TopologyObject CacheHelper::lookupObjectById(TopologyObjectId anId) throw() {
 
 	TopologyObject result;
 	objectsLock.lock_shared();
@@ -143,7 +143,7 @@ TopologyObject cacheHelper::lookupObjectById(TopologyObjectId anId) throw() {
 	return result;
 }
 
-TopologyRelation cacheHelper::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
+TopologyRelation CacheHelper::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
 	
 	struct CompareRelation tmpCompareRelation = {parent, relationType, childName};
 	TopologyRelation tmpRelation;
@@ -168,7 +168,7 @@ TopologyRelation cacheHelper::registerRelation( TopologyObjectId parent, Topolog
 	return tmpRelation;
 }
 
-TopologyRelation cacheHelper::lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() {
+TopologyRelation CacheHelper::lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() {
 
 	struct CompareRelation tmpCompareRelation = {parent, relationType, childName};
 	TopologyRelation tmpRelation;
@@ -179,7 +179,7 @@ TopologyRelation cacheHelper::lookupRelation( TopologyObjectId parent, TopologyT
 	return tmpRelation;
 }
 
-TopologyAttribute cacheHelper::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype, TopologyAttributeId attrId ) throw() {
+TopologyAttribute CacheHelper::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype, TopologyAttributeId attrId ) throw() {
 
 	TopologyAttribute result;
 	pair<TopologyTypeId, string> comPair (domain, name);
@@ -207,7 +207,7 @@ TopologyAttribute cacheHelper::registerAttribute( TopologyTypeId domain, const s
 	return result;
 }
 
-TopologyAttribute cacheHelper::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
+TopologyAttribute CacheHelper::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
 
 	TopologyAttribute result;
 	pair<TopologyTypeId, string> comPairs (domain, name);
@@ -218,7 +218,7 @@ TopologyAttribute cacheHelper::lookupAttributeByName( TopologyTypeId domain, con
 	return result;
 }
 
-TopologyAttribute cacheHelper::lookupAttributeById( TopologyAttributeId attributeId ) throw() {
+TopologyAttribute CacheHelper::lookupAttributeById( TopologyAttributeId attributeId ) throw() {
 
 	TopologyAttribute result;
 	attributesLock.lock_shared();
@@ -228,7 +228,7 @@ TopologyAttribute cacheHelper::lookupAttributeById( TopologyAttributeId attribut
 }
 
 // Hint: Also updates a value if already there
-TopologyValue cacheHelper::registerValue( TopologyObjectId object, TopologyAttributeId attribute, VariableDatatype myData ) throw() {
+TopologyValue CacheHelper::registerValue( TopologyObjectId object, TopologyAttributeId attribute, VariableDatatype myData ) throw() {
 
 	TopologyValue result;
 	pair<TopologyObjectId, TopologyAttributeId> comPairs (object, attribute);
@@ -240,7 +240,7 @@ TopologyValue cacheHelper::registerValue( TopologyObjectId object, TopologyAttri
 	return result;
 }
 
-TopologyValue cacheHelper::getValue( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
+TopologyValue CacheHelper::getValue( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
 
 	TopologyValue result;
 	pair<TopologyObjectId, TopologyAttributeId> comPairs (object, attribute);

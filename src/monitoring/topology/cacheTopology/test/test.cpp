@@ -25,7 +25,7 @@ using namespace monitoring;
 void workerFunc(int i) {
 	Topology* topology = module_create_instance<Topology>( "", "siox-monitoring-cacheTopology", MONITORING_TOPOLOGY_INTERFACE );
 
-	cacheTopologyOptions & o = topology->getOptions<cacheTopologyOptions>();
+	CacheTopologyOptions & o = topology->getOptions<CacheTopologyOptions>();
 
 	topology->init();
 	topology->start();

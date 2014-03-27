@@ -9,7 +9,7 @@ using namespace core;
 
 namespace monitoring {
 	//@serializable
-	class cacheTopologyOptions : public ComponentOptions {
+	class CacheTopologyOptions : public ComponentOptions {
 		public:
 			ComponentReference topologyBackend;
 	};
