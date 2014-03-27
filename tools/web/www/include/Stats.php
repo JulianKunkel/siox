@@ -34,6 +34,45 @@ static function get_list($names = array())
 	return $list;
 }
 
+static function get_stat_id($name)
+{
+	global $dbcon;
+
+	$sql = "SELECT childobjectid FROM topology.get_statistics() WHERE childname = :name";
+	
+	$stmt = $dbcon->prepare($sql);
+	$stmt->bindParam(':name', $name);
+
+	if (!$stmt->execute()) {
+		print_r($dbcon->errorInfo());
+		die("Error getting stat id. Name=$name");
+	}
+
+	$row = $stmt->fetch(PDO::FETCH_OBJ);
+
+	return $row->childobjectid;	
+}
+
+
+static function get_cumulative($id, $start, $stop)
+{
+	global $dbcon;
+
+	$sql = "SELECT sum(cast(value as double precision)) AS sum FROM statistics.stats_full WHERE value IS NOT NULL AND childobjectid = :id AND timestamp BETWEEN $start AND $stop";
+	
+	$stmt = $dbcon->prepare($sql);
+	$stmt->bindParam(':id', $id);
+
+	if (!$stmt->execute()) {
+		print_r($dbcon->errorInfo());
+		die("Error getting statistic. Id=$id, Start=$start, Stop=$stop");
+	}
+
+	$row = $stmt->fetch(PDO::FETCH_OBJ);
+
+	return $row->sum;
+}
+
 static function store_data($x, $y, $tmp_dir = '/tmp', $start, $stop)
 {
 	global $dbcon;
