@@ -9,22 +9,6 @@ using namespace monitoring;
 
 namespace knowledge {
 
-enum DataIndex{
-	UTILIZATION_CPU = 0,
-	UTILIZATION_MEMORY,
-	UTILIZATION_IO,
-	UTILIZATION_NETWORK_SEND,
-	UTILIZATION_NETWORK_RECEIVE,
-
-	CONSUMED_CPU_SECONDS,
-	CONSUMED_ENERGY_JOULE,
-	CONSUMED_MEMORY_BYTES,
-	CONSUMED_NETWORK_BYTES,
-	CONSUMED_IO_BYTES,
-
-	DATA_INDEX_COUNT
-};
-
 shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
@@ -91,12 +75,14 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 			// cout << id << " received status from node reasoner " << data.reasonerID << endl;
 		}
 		else if ( role == ReasonerStandardImplementationOptions::Role::PROCESS ){
-			nodeHealth = make_shared<NodeHealth>(health);
-
 			// aggregate statistics
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
 				node_statistics[i] += health.statistics[i];
 			}
+			cout << "CPU: " << health.statistics[6] << endl;
+			cout << "RAPL: " << health.statistics[7] << endl;
+
+			nodeHealth = make_shared<NodeHealth>(health);
 
 			//cout << id << " received status from node reasoner " << data.reasonerID << endl;
 		}
@@ -349,12 +335,16 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		} // dataLock
 
 		// Determine local performance issues based on recent observations and remote issues.
-		// TODO
 
+
+		// now retrieve the nodeStatistics.
 		if( nodeStatistics != nullptr ) {
+
 			nodeStatistics->fetchValues();
-			for(int i=0; i < DATA_INDEX_COUNT ; i++){
-				cout << "CurrentNodeStatistics: " << i << " " << (*nodeStatistics)[i] << endl;
+
+			for(int i=0; i < NODE_STATISTIC_COUNT ; i++){				
+				nodeHealth->statistics[i] = (*nodeStatistics)[i].toFloat();
+				cout << "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] << endl;
 			}
 		}
 
@@ -418,10 +408,15 @@ void ReasonerStandardImplementation::start(){
 			{"utilization/io", "@localhost"},
 			{"utilization/network/send", "@localhost"},
 			{"utilization/network/receive", "@localhost"},
-			// TODO
-			{"time/cpu", "@localhost"}, // CONSUMED_CPU_SECONDS
-			{"utilization/cpu", "@localhost"}, // power/rapl
-			{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
+			{"time/cpu/RuntimeUnhalted", "@localhost"}, // CONSUMED_CPU_SECONDS
+// #ifdef ENABLE_LIKWID_POWER			
+			{"power/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
+// #else
+			//{"utilization/cpu", "@localhost"}, // stupid replacement for the energy metric...
+// #endif ENABLE_LIKWID_POWER		
+			{"utilization/memory", "@localhost"}, // CONSUMED_MEMORY_BYTES
+			// If likwid is used to observe the memory throughput the correct counter could be used:
+			//{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
 			{"quantity/network/volume", "@localhost"}, // CONSUMED_NETWORK_BYTES
 			{"quantity/io/volume", "@localhost"}, // CONSUMED_IO_BYTES
 		}}, true);
@@ -484,10 +479,22 @@ ComponentReport ReasonerStandardImplementation::prepareReport() {
 		result.addEntry( "OBSERVED_RUNTIME_MS", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( cyclesTriggered * update_intervall_ms )));		
 
 		result.addEntry( "STATES_SENT_UPSTREAM", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesSent));
-		result.addEntry( "STATES_RECEIVED", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesReceived));		
+		result.addEntry( "STATES_RECEIVED", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesReceived));
 
 		if ( nPushesReceived > 0 ){
-			const char * text [] = {"CPU_SECONDS", "ENERGY_JOULE", "MEMORY_BYTES", "NETWORK_BYTES", "IO_BYTES"};
+			const char * text [] = {
+				"UTILIZATION_CPU",
+				"UTILIZATION_MEMORY",
+				"UTILIZATION_IO",
+				"UTILIZATION_NETWORK_SEND",
+				"UTILIZATION_NETWORK_RECEIVE",
+				"CONSUMED_CPU_SECONDS",
+				"CONSUMED_ENERGY_JOULE",
+				"CONSUMED_MEMORY_BYTES",
+				"CONSUMED_NETWORK_BYTES",
+				"CONSUMED_IO_BYTES",
+			};
+
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
 				result.addEntry( text[i], ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE,  node_statistics[i] ));		
 			}

@@ -84,7 +84,7 @@ int main( int argc, char * argv[] )
 	}
 	oldtypes[2] = darray;
 	MPI_Datatype structType;
-	MPI_Type_struct( 3, blocklens, displs, oldtypes, & structType );
+	MPI_Type_create_struct( 3, blocklens, displs, oldtypes, & structType );
 	MPI_Type_commit(& structType);
 
 	MPI_File_set_view( fh, 30, MPI_INT, structType, "native", MPI_INFO_NULL );

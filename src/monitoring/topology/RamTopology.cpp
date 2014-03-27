@@ -367,19 +367,15 @@ bool RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId att
 	attributeMap->lock_shared();
 	IGNORE_EXCEPTIONS( result = attributeMap->at( attributeId ); );
 	attributeMap->unlock_shared();
-	if( !result ) {
+	if( !result || value != result.value() ) {
 		Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( value, object, attributeId ) );
 		attributeMap->lock();
 		(*attributeMap)[attributeId].setObject( newValue );
 		attributeMap->unlock();
 		return true;
-	}else{
-		//Consistency check if we found a preexisting attributeId value.		
-		if( value != result.value() ){
-			return false;
-		}
-		return true;
 	}
+	//Consistency check if we found a preexisting attributeId value.
+	// TODO removed because we want to alter the data.
 }
 
 TopologyValue RamTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {

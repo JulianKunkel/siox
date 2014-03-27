@@ -213,6 +213,53 @@ class VariableDatatype {
 			}
 		}
 
+		inline double toFloat() const{
+
+			switch( type_ ) {
+				case Type::INT32:
+					return (float) this->data.i32;
+				case Type::UINT32:
+					return (float) this->data.ui32;
+				case Type::INT64:
+					return (float) this->data.i64;
+				case Type::UINT64:
+					return (float) this->data.ui64;
+				case Type::FLOAT:
+					return (float) this->data.f;
+				case Type::DOUBLE:
+					return (float) this->data.d;
+				case Type::STRING:
+					assert(0 && "tried to convert VariableDatatype of string type"), abort();
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to convert VariableDatatype of invalid type"), abort();
+			}
+		}		
+
+		inline double toUint64() const{
+
+			switch( type_ ) {
+				case Type::INT32:
+					return (uint64_t) this->data.i32;
+				case Type::UINT32:
+					return (uint64_t) this->data.ui32;
+				case Type::INT64:
+					return (uint64_t) this->data.i64;
+				case Type::UINT64:
+					return (uint64_t) this->data.ui64;
+				case Type::FLOAT:
+					return (uint64_t) this->data.f;
+				case Type::DOUBLE:
+					return (uint64_t) this->data.d;
+				case Type::STRING:
+					assert(0 && "tried to convert VariableDatatype of string type"), abort();
+				case Type::INVALID:
+				default:
+					assert(0 && "tried to convert VariableDatatype of invalid type"), abort();
+			}
+		}
+
+
 		inline bool isNumeric() const{
 
 			switch( type_ ) {
