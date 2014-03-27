@@ -2,6 +2,7 @@
 require_once("include/DB.php"); 
 require_once("include/Activity.php"); 
 require_once("include/Program.php"); 
+require_once("include/Stats.php"); 
 $site_title = "Program Execution Overview";
 $site_description = "Overview of the stored program runs";
 require_once("header.php"); 
@@ -14,31 +15,37 @@ require_once("header.php");
 <?php $total_pages = max(ceil($total_runs / $page_size), 1); ?>
 <?php $current_page = isset($_GET['page']) ? $_GET['page'] : $total_pages; ?>
 <?php $runs = Program::get_list($current_page, $page_size); ?>
+<?php $stats_avail = Stats::get_list() ?>
 
-<form name="purge_frm" method="post" action="purge.php">
+<form name="prog_list_frm" method="post" action="purge.php">
+
 	<input type="submit" value="Purge database"    onclick="return confirm('You are about to delete all data. Are you sure?')" />
 	<input type="submit" value="Topology overview" onclick="return action='topology.php'" />
-	<input type="submit" value="Statistics" onclick="return action='statistics.php'" />
-</form>
+	<input type="submit" value="General statistics" onclick="return action='statistics.php'" />
+	<input type="submit" value="Compare selected" onclick="return action='comparison.php'" />
+	<select name="stats[]" multiple="multiple" size="4">
+<?php foreach ($stats_avail as $s):?>
+		<option name="<?=$s->childobjectid?>"><?=$s->childname?></option>
+<?php endforeach ?>
+	</select>
 
 <br /><br />
 
 <?php
-
-	$link_first = "<a href=\"?page=1\">↶ first</a>";
-	$link_prev  = "<a href=\"?page=";
-	$link_prev .= $current_page == 1 ? 1 : $current_page-1;
-	$link_prev .= "\">← previous</a>";
-	$link_next  = "<a href=\"?page=";
-	$link_next .= $current_page == $total_pages ? $current_page : $current_page+1;
-	$link_next .= "\">next →</a>";
-	$link_last .= "<a href=\"?page=$total_pages\">last ↷</a>";
+$link_first = "<a href=\"?page=1\">↶ first</a>";
+$link_prev  = "<a href=\"?page=";
+$link_prev .= $current_page == 1 ? 1 : $current_page-1;
+$link_prev .= "\">← previous</a>";
+$link_next  = "<a href=\"?page=";
+$link_next .= $current_page == $total_pages ? $current_page : $current_page+1;
+$link_next .= "\">next →</a>";
+$link_last .= "<a href=\"?page=$total_pages\">last ↷</a>";
 ?>
 
 <table id="big_list" cellspacing="0" cellpadding="0">
 <thead>
 	<tr><?php include("table_nav.php"); ?></tr>
-	<tr><th>Command</th><th>Start</th><th>Duration</th><th>Node</th><th>User</th></tr>
+	<tr><th>Command</th><th>Start</th><th>Duration</th><th>Node</th><th>User</th><th></th></tr>
 </thead>
 <tbody>
 <?php if (count($runs) == 0): ?>
@@ -48,16 +55,19 @@ require_once("header.php");
 <?php endif ?>
 <?php $i = 0; ?>
 <?php foreach ($runs as $r): ?>
-	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>" onclick="window.location='activities.php?nid=<?=$r->nid?>&amp;pid=<?=$r->pid?>&amp;time=<?=$r->time?>&amp;pnum=<?=$r->childobjectid?>'">
-		<td><?=$r->attributes['description/commandLine'];?></td>
+	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>">
+		<td class="prog" onclick="window.location='activities.php?nid=<?=$r->nid?>&amp;pid=<?=$r->pid?>&amp;time=<?=$r->time?>&amp;pnum=<?=$r->childobjectid?>'"><?=$r->attributes['description/commandLine'];?></td>
 		<td><?=date("d.m.Y H:i:s", floor($r->times["start"] / 1000000000)).".".($r->times["start"] % 1000000000)?></td>
 		<td><?=round(($r->times["stop"] - $r->times["start"]) / 1000000000, 3)?> s</td>
 		<td><?=$r->node?></td>
 		<td><?=$r->attributes['description/user-name'];?></td>
+		<td><input type="checkbox" name="progs[]" value="<?=$r->childobjectid?>" /></td>
 	</tr>
 <?php endforeach ?>
 </tbody>
 <tfoot><tr><?php include("table_nav.php"); ?></tr></tfoot>
 </table>
+
+</form>
 
 <?php require_once("footer.php"); ?>

@@ -4,11 +4,20 @@ require_once("SIOX.php");
 
 class Stats {
 
-static function get_list()
+static function get_list($names = array())
 {
 	global $dbcon;
 
-	$sql = "SELECT * FROM topology.get_statistics()";
+	$conditions = array();
+	foreach ($names as $n) {
+		$conditions[] = "childname LIKE '%$n%' ";
+	}
+	$where = "WHERE ". implode("OR ", $conditions);
+
+	if (empty($names))
+		$where = "";
+
+	$sql = "SELECT * FROM topology.get_statistics() $where";
 
 	$stmt = $dbcon->prepare($sql);
 
