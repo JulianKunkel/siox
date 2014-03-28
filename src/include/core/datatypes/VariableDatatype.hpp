@@ -66,7 +66,7 @@ class VariableDatatype {
 				case Type::INVALID:
 					return;
 			}
-		}		
+		}
 
 		VariableDatatype( int64_t i ) {
 			data.i64 = i;
@@ -234,7 +234,7 @@ class VariableDatatype {
 				default:
 					assert(0 && "tried to convert VariableDatatype of invalid type"), abort();
 			}
-		}		
+		}
 
 		inline double toUint64() const{
 
@@ -270,12 +270,12 @@ class VariableDatatype {
 				case Type::FLOAT:
 				case Type::DOUBLE:
 					return true;
-				case Type::STRING:					
+				case Type::STRING:
 				case Type::INVALID:
 				default:
 					return false;
 			}
-		}		
+		}
 
 		//inline long double ldbl() const {
 		//  assert(type_ == LONG_DOUBLE);
@@ -378,8 +378,13 @@ class VariableDatatype {
 			}
 		}
 
-		inline bool operator==( VariableDatatype const & v ) const {
 
+		inline bool operator>( VariableDatatype const & v ) const {
+			return (v < *this);
+		}
+
+
+		inline bool operator==( VariableDatatype const & v ) const {
 			if( v.type_ != type_ )
 				return false;
 
@@ -402,12 +407,23 @@ class VariableDatatype {
 				default:
 					return false;
 			}
-
 		}
+
 
 		inline bool operator!=( VariableDatatype const & v ) const {
 			return !( v == *this );
 		}
+
+
+		inline bool operator>=( VariableDatatype const & v ) const {
+			return ((*this > v) || (*this == v));
+		}
+
+
+		inline bool operator<=( VariableDatatype const & v ) const {
+			return ((*this < v) || (*this == v));
+		}
+
 
 		inline void setMax() {
 			switch( type_ ) {
