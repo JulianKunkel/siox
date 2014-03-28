@@ -287,7 +287,8 @@ class VariableDatatype {
 		}
 
 		inline VariableDatatype& operator+=( VariableDatatype const & v ) {
-			if( v.type_ != type_ ) assert(0 && "tried to add VariableDatatypes of unequal type"), abort();
+			if( v.type_ != type_ )
+				assert(0 && "tried to add VariableDatatypes of unequal types"), abort();
 
 			switch( type_ ) {
 				case Type::INT32:
@@ -320,7 +321,7 @@ class VariableDatatype {
 				}
 				case Type::INVALID:
 				default:
-					assert(0 && "tried to add VariableDatatypes of invalid type"), abort();
+					assert(0 && "tried to add VariableDatatype of invalid type"), abort();
 			}
 			return *this;
 		}
@@ -355,7 +356,8 @@ class VariableDatatype {
 		}
 
 		inline bool operator<( VariableDatatype const & v ) const {
-			if( v.type_ != type_ ) assert(0 && "tried to sort VariableDatatypes of unequal type"), abort();
+			if( v.type_ != type_ )
+				assert(0 && "tried to compare VariableDatatypes of unequal types"), abort();
 
 			switch( type_ ) {
 				case Type::INT32:
@@ -374,7 +376,7 @@ class VariableDatatype {
 					return strcmp( this->data.str, v.data.str ) < 0;
 				case Type::INVALID:
 				default:
-					assert(0 && "tried to sort VariableDatatypes of invalid type"), abort();
+					assert(0 && "tried to compare VariableDatatype of invalid type"), abort();
 			}
 		}
 
@@ -454,6 +456,7 @@ class VariableDatatype {
 			}
 		}
 
+
 		inline void setMin() {
 			switch( type_ ) {
 				case Type::INT32:
@@ -484,6 +487,7 @@ class VariableDatatype {
 			}
 		}
 
+
 		inline void setZero() {
 			switch( type_ ) {
 				case Type::INT32:
@@ -501,6 +505,30 @@ class VariableDatatype {
 				case Type::INVALID:
 				default:
 					assert(0 && "tried to set the value of a VariableDatatype of invalid type"), abort();
+			}
+		}
+
+
+		inline string getTypeAsString() const {
+			switch( type_ ) {
+				case Type::INT32:
+					return "int32";
+				case Type::UINT32:
+					return "uint32";
+				case Type::INT64:
+					return "int64";
+				case Type::UINT64:
+					return "uint64";
+				case Type::FLOAT:
+					return "float";
+				case Type::DOUBLE:
+					return "double";
+				case Type::STRING:
+					return "string";
+				case Type::INVALID:
+					return "(invalid)";
+				default:
+					return "(undefined!)";
 			}
 		}
 };
