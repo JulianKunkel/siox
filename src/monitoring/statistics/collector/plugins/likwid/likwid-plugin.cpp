@@ -128,8 +128,8 @@ namespace {
 			{"Remote Read BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteReadBW"},
 			{"Remote Write BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteWriteBW"},
 			{"Remote BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteBW"},
-			{"Energy [J]", "J", "energy/rapl"},
-			{"Energy DRAM [J]", "J", "energy/rapl/DRAM"},
+			{"Energy [J]", "J", "energy/Socket/rapl"},
+			{"Energy DRAM [J]", "J", "energy/DRAM/rapl"},
 			{"Power [W]", "W", "power/rapl"},
 			{nullptr, nullptr, nullptr} };
 		const LikwidType * check_type = types;
