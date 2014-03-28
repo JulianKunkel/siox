@@ -48,8 +48,9 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin {
 		/*
 		 * Fields to hold information on the statistics we are to watch, as per our options
 		 */
-		// How many percent off highest and lowest value are regarded anomalous?
-		const float kWarnQuantile = 5.0;
+		// How close (relative to total value spread observed up to now) to highest and lowest value
+		// to be regarded anomalous?
+		const float kWarnQuantile = 0.05;
 		// How many values are to be observed before evaluating a statistic's values for anomalies?
 		const uint64_t kMinObservationCount = 10;
 		// Domain string used for all statistics in the ontology
@@ -72,10 +73,10 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin {
 		// The latest values of the respective statistics
 		// vector<StatisticsValue> statisticsValues;
 		// Minimum, maximum and upper and lower quantiles at WARN_PERCENT point
-		vector<StatisticsValue> statisticsValuesMin;
-		vector<StatisticsValue> statisticsValuesMax;
-		vector<StatisticsValue> statisticsValuesQuantileLow;
-		vector<StatisticsValue> statisticsValuesQuantileHigh;
+		vector<float> statisticsValuesMin;
+		vector<float> statisticsValuesMax;
+		vector<float> statisticsValuesQuantileLow;
+		vector<float> statisticsValuesQuantileHigh;
 		// Number of observations for statistic up to now
 		vector<uint64_t> statisticsObservationCount;
 
@@ -122,10 +123,10 @@ void StatisticsHealthADPI::initPlugin() throw() {
 		// Prepare a shared_ptr to reference the actual statistic later on
 		statistics.push_back( shared_ptr<Statistic>( nullptr ) );
 		// Prepare variables to hold the statistic's characteristic values
-		statisticsValuesMin.push_back( StatisticsValue( 0.0 ) );
-		statisticsValuesMax.push_back( StatisticsValue( 0.0 ) );
-		statisticsValuesQuantileLow.push_back( StatisticsValue( 0.0 ) );
-		statisticsValuesQuantileHigh.push_back( StatisticsValue( 0.0 ) );
+		statisticsValuesMin.push_back( 0.0f );
+		statisticsValuesMax.push_back( 0.0f );
+		statisticsValuesQuantileLow.push_back( 0.0f );
+		statisticsValuesQuantileHigh.push_back( 0.0f );
 		statisticsObservationCount.push_back( 0 );
 	}
 }
@@ -141,7 +142,7 @@ ComponentOptions* StatisticsHealthADPI::AvailableOptions() {
  */
 void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & offeredStatistics, bool addedStatistics, bool removedStatistics ) throw(){
 
-	OUTPUT( "Fresh statistics catalogue with " << offeredStatistics.size() << " entries." );
+	// OUTPUT( "Fresh statistics catalogue with " << offeredStatistics.size() << " entries." );
 	if( gotAllRequested && !removedStatistics ) // We're happy - no need for action.
 		return;
 
@@ -156,7 +157,7 @@ void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_
 			if( s->ontologyId == requestedOntologyIDs[i]
 			   && s->topologyId == requestedTopologyIDs[i] )
 			{
-				OUTPUT( "Found a match [ontID=" << s->ontologyId << ",topID=" << s->topologyId << "]!" );
+				// OUTPUT( "Found a match [ontID=" << s->ontologyId << ",topID=" << s->topologyId << ", of type " << s->curValue.getTypeAsString() << "]!" );
 				// Assign the statistic object to the proper index
 				statistics[i] = s;
 				// Remember this statistic's index amongst those being available.
@@ -190,7 +191,7 @@ void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_
 	// 	statisticsValues.push_back( StatisticsValue(0.0) );
 	// }
 
-	OUTPUT( "Statistics catalogue now holds " << statistics.size() << " entries." );
+	// OUTPUT( "Statistics catalogue now holds " << statistics.size() << " entries." );
 
 	gotAllRequested = ( requestedOntologyIDs.size() == availableStatisticsIndices.size() );
 }
@@ -212,22 +213,22 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	// 	*oa << (*itr)->curValue;
 	// }
 
-	OUTPUT( "Received new data!" );
-	OUTPUT( "Statistics being watched: " << availableStatisticsIndices.size() );
+	// OUTPUT( "Received new data!" );
+	// OUTPUT( "Statistics being watched: " << availableStatisticsIndices.size() );
 	// Copy values received into local store
 	for(uint i=0; i < availableStatisticsIndices.size() ; i++)
 	{
 		uint j = availableStatisticsIndices[i];
-		StatisticsValue value = statistics[j]->curValue;
+		float value = statistics[j]->curValue.toFloat();
 		OUTPUT( "Current node statistic[" << statisticsNames[j] << "]: " << value );
 
 		uint64_t count = ++statisticsObservationCount[j];
+		bool updateQuantiles = false;
 
 		if( count > kMinObservationCount )
 		{
 			// TODO:
 			// Test value for problems
-			// FIXME: Write > and < operators for VariableDatatype
 			if( value < statisticsValuesQuantileLow[j] )
 			{
 				// Flag any problems found to reasoner
@@ -242,15 +243,13 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			// Update Min
 			if( value < statisticsValuesMin[j] ){
 				statisticsValuesMin[j] = value;
-				// Update quantile
-				// TODO
+				updateQuantiles = true;
 			}
 			// Update Max
-			if( value < statisticsValuesMax[j] )
+			if( value > statisticsValuesMax[j] )
 			{
 				statisticsValuesMax[j] = value;
-				// Update quantile
-				// TODO
+				updateQuantiles = true;
 			}
 		}
 		else
@@ -267,15 +266,27 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			if( value < statisticsValuesMin[j] )
 				statisticsValuesMin[j] = value;
 			// Update Max
-			if( value < statisticsValuesMax[j] )
+			if( value > statisticsValuesMax[j] )
 				statisticsValuesMax[j] = value;
 
 			// Last value before actual assessment starts?
 			if( count == kMinObservationCount )
 			{
-				// Set quantile values
-				// TODO
+				updateQuantiles = true;
 			}
+		}
+
+		// Update quantiles
+		if( updateQuantiles )
+		{
+			float quantileDelta = (statisticsValuesMax[j] - statisticsValuesMin[j]) * kWarnQuantile;
+			statisticsValuesQuantileLow[j] = statisticsValuesMin[j] + quantileDelta;
+			statisticsValuesQuantileHigh[j] = statisticsValuesMax[j] - quantileDelta;
+			OUTPUT( "New limits set for statistic: ["
+			       << statisticsValuesMin[j] << ","
+			       << statisticsValuesQuantileLow[j] << ","
+			       << statisticsValuesQuantileHigh[j] << ","
+			       << statisticsValuesMax[j] << "]" );
 		}
 	}
 }
