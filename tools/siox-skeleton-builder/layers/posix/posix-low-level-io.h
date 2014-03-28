@@ -644,6 +644,17 @@ Otherwise, a non-zero value is returned; This may be due to an invalid mode para
 int setvbuf( FILE * stream, char * buffer, int mode, size_t size );
 
 /*
+Unlink deletes a name from the file system and possibly but not in all cases the file it refers to 
+It only deletes the file if there are no other processes that have the file open.
+On success zero is returned. On error -1 is returned
+*/
+//@guard
+//@errorErrno ''ret<0''
+//@activity
+//@splice_before SET_PATHNAME(pathname)
+int unlink(const char *pathname); 
+
+/*
 On success, the total number of characters written is returned.
 If a writing error occurs, the error indicator (ferror) is set and a negative number is returned.
 If a multibyte character encoding error occurs while writing wide characters, is set to EILSEQ and a negative number is returned.
