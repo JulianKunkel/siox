@@ -134,6 +134,7 @@ namespace {
 			{nullptr, nullptr, nullptr} };
 		const LikwidType * check_type = types;
 
+		//FIXME: Undefined behaviour when the likwidName is not found in the list (*outName and *outUnit remain uninitialized).
 		while(check_type->Lname != nullptr){
 			if (strcmp(check_type->Lname, likwidName) == 0){
 				*outName = check_type->name;

@@ -41,7 +41,6 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
 		std::shared_ptr<Statistic> ioStatisticsRead;
 		std::shared_ptr<Statistic> ioStatisticsWrite;
-		uint64_t lastIoVolume = 0;
 		const StatisticsValue * likwidMemoryBandwithStatistic;
 
 		std::shared_ptr<Statistic> cpuStatistic;
@@ -50,12 +49,7 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		std::shared_ptr<Statistic> totalMemoryStatistic, activeMemoryStatistic, inactiveMemoryStatistic;
 		std::vector<std::shared_ptr<Statistic> > bandwidthStatistics;
 		std::vector<std::shared_ptr<Statistic> > bytesSentStatistics;
-		uint64_t lastBytesSent;
 		std::vector<std::shared_ptr<Statistic> > bytesRecievedStatistics;
-		uint64_t lastBytesRecieved;
-
-		uint64_t lastCPUtimeconsumed = 0;
-		uint64_t lastCPUIdletime = 0;
 
 		StatisticsValue cpuUtilization = 0.0f;
 		StatisticsValue networkUtilizationTX = 0.0f;
@@ -106,12 +100,9 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 
 	ioStatisticsRead = nullptr;
 	ioStatisticsWrite = nullptr;
-	lastIoVolume = 0;
 	bandwidthStatistics.clear();
 	bytesSentStatistics.clear();
-	lastBytesSent = 0;
 	bytesRecievedStatistics.clear();
-	lastBytesRecieved = 0;
 
 	for( size_t i = statistics.size(); i--; ) {
 		const std::shared_ptr<Statistic>& curStatistic = statistics[i];
@@ -119,18 +110,15 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 		TopologyObjectId curTopology = curStatistic->topologyId;
 		TopologyTypeId curTopologyType = topology->lookupTypeById( topology->lookupObjectById( curTopology ).type() ).id();
 		if( !curAttribute ) continue;
+		//FIXME: Looking I/O statistics up with the topology path allCpusObject looks ... interesting. Check that this all really makes sense!
 		if( readDataAttribute == curAttribute && curTopology == allCpusObject ) {
 			ioStatisticsRead = curStatistic ;
-			lastIoVolume += curStatistic->curValue.uint64();
 		} else if( writtenDataAttribute == curAttribute && curTopology == allCpusObject ) {
 			ioStatisticsWrite = curStatistic ;
-			lastIoVolume += curStatistic->curValue.uint64();
 		} else if( cpuIdleTimeAttribute == curAttribute && curTopology == allCpusObject ) {
-			lastCPUIdletime = curStatistic->curValue.uint64();
 			cpuIdleStatistic = curStatistic;
 		} else if( cpuTimeAttribute == curAttribute && curTopology == allCpusObject ) {
 			cpuStatistic = curStatistic;
-			lastCPUtimeconsumed = curStatistic->curValue.uint64();
 		} else if( totalMemoryAttribute == curAttribute && curTopology == localhostObject ) {
 			totalMemoryStatistic = curStatistic;
 		} else if( activeMemoryAttribute == curAttribute && curTopology == localhostObject ) {
@@ -141,10 +129,8 @@ void QualitativeUtilization::notifyAvailableStatisticsChange( const std::vector<
 			bandwidthStatistics.push_back( curStatistic );
 		} else if( bytesSentAttribute == curAttribute && curTopologyType == ethType ) {
 			bytesSentStatistics.push_back( curStatistic );
-			lastBytesSent += curStatistic->curValue.uint64();
 		} else if( bytesRecievedAttribute == curAttribute && curTopologyType == ethType ) {
 			bytesRecievedStatistics.push_back( curStatistic );
-			lastBytesRecieved += curStatistic->curValue.uint64();
 		} else if( likwidMemoryBandwidth == curAttribute && curTopology == localhostObject ) {
 			if ( removedStatistics )
 				likwidMemoryBandwithStatistic = nullptr;
@@ -165,15 +151,13 @@ void QualitativeUtilization::newDataAvailable() throw() {
 	for( size_t i = bytesRecievedStatistics.size(); i--; ) curBytesRecieved += bytesRecievedStatistics[i]->curValue.uint64();
 
 	// TODO use blockdev --getbsz /dev/sda1 to determine block size
-	ioUtilization = (float) (uint64_t)( curIOvolume - lastIoVolume ) / options->availableIoBandwidth;
+	ioUtilization = (float)curIOvolume / options->availableIoBandwidth;
 
 	curIdleCpuTime = cpuIdleStatistic->curValue.uint64();
-	uint64_t curCPUConsumed = cpuStatistic->curValue.uint64();
+	uint64_t curCpuConsumed = cpuStatistic->curValue.uint64();
 
-	float deltaCPU = ( curCPUConsumed - lastCPUtimeconsumed + curIdleCpuTime - lastCPUIdletime);	
-	cpuUtilization = (deltaCPU == 0.0f) ? 0.0f : ( curCPUConsumed - lastCPUtimeconsumed ) / deltaCPU;
-	lastCPUtimeconsumed = curCPUConsumed;
-	lastCPUIdletime = curIdleCpuTime;
+	uint64_t curCpuTotal = curIdleCpuTime + curCpuConsumed;
+	cpuUtilization = (curCpuTotal == 0.0f) ? 0.0f : curCpuConsumed / curCpuTotal;
 
 	memoryUtilizationVM = 0.0f;
 
@@ -184,15 +168,11 @@ void QualitativeUtilization::newDataAvailable() throw() {
 		uint64_t highUsage = total - inactiveMemoryStatistic->curValue.uint64();
 		memoryUtilizationVM = (float) ( lowUsage + highUsage ) / ( 2.0 * total );
 	}
-	networkUtilizationTX = (float) ( curBytesSent - lastBytesSent) /  options->availableNetworkBandwidth;
-	networkUtilizationRX = (float) ( curBytesRecieved - lastBytesRecieved ) /  options->availableNetworkBandwidth;
+	networkUtilizationTX = (float)curBytesSent/options->availableNetworkBandwidth;
+	networkUtilizationRX = (float)curBytesRecieved/options->availableNetworkBandwidth;
+	networkVolume = curBytesSent + curBytesRecieved;
 
-	networkVolume = (uint64_t) ( curBytesSent - lastBytesSent) + ( curBytesRecieved - lastBytesRecieved ) ;
-	ioVolume = ((uint64_t) 512) * ( curIOvolume - lastIoVolume );
-
-	lastIoVolume = curIOvolume;
-	lastBytesSent = curBytesSent;
-	lastBytesRecieved = curBytesRecieved;
+	ioVolume = ((uint64_t) 512) * curIOvolume;
 
 	if ( likwidMemoryBandwithStatistic != nullptr ){
 		memoryUtilization =  (float) likwidMemoryBandwithStatistic->flt() / options->availableMemoryBandwidth;
@@ -219,9 +199,9 @@ void QualitativeUtilization::fetchAttributeIds() throw() {
 	fetchOntologyAttribute( totalMemoryAttribute, "quantity/memory/MemTotal" );
 	fetchOntologyAttribute( activeMemoryAttribute, "quantity/memory/Active" );
 	fetchOntologyAttribute( inactiveMemoryAttribute, "quantity/memory/Inactive" );
-	fetchOntologyAttribute( bandwidthBytesAttribute, "quantity/bandwidthBytes" );
-	fetchOntologyAttribute( bytesSentAttribute, "quantity/bytesSent" );
-	fetchOntologyAttribute( bytesRecievedAttribute, "quantity/bytesRecieved" );
+	fetchOntologyAttribute( bandwidthBytesAttribute, "quantity/network/bandwidthBytes" );
+	fetchOntologyAttribute( bytesSentAttribute, "quantity/network/bytesSent" );
+	fetchOntologyAttribute( bytesRecievedAttribute, "quantity/network/bytesRecieved" );
 	fetchOntologyAttribute( likwidMemoryBandwidth, "throughput/memory/bandwidth" );
 
 	#define fetchTopologyId( idVariable, topologyFunction, argument ) do { \
