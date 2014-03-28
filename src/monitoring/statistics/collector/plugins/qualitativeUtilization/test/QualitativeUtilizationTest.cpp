@@ -73,6 +73,8 @@ int main( int argc, char const * argv[] ) throw() {
 	integratorOptions->multiplexer.componentPointer = multiplexer;
 	integratorOptions->dereferencingFacade.componentPointer = facade;
 	integratorOptions->availableIoBandwidth = 100ull << 20;
+	integratorOptions->availableMemoryBandwidth = 10ull*1000*1000*1000;
+	integratorOptions->availableNetworkBandwidth = 117ull*1000*1000;
 
 	topology->init();
 	ontology->init();
@@ -85,11 +87,35 @@ int main( int argc, char const * argv[] ) throw() {
 	ramProvider->init();
 	integrator->init();
 
+	collector->start();
+
+	cout << "QualitativeUtilization Plugin" << endl;\
+
+	// output
+	#define OUTPUT_STATS do{ auto list = integrator->availableMetrics();\
+	for( auto it = list.begin() ; it != list.end(); it ++ ) {\
+		StatisticsProviderDatatypes & stat = *it;\
+		cout << stat.topologyPath << " " << stat.metrics << ": " << stat.value << " " << stat.si_unit << endl;\
+	}} while(0);
+
+	OUTPUT_STATS
+
 	cerr << "sleeping\n";
 	sleep( 1 );
 	cerr << "waking up\n";
 
+	OUTPUT_STATS
+
 	//Theoretically, we should be checking the output here for sensibility. But that is hard to do because there is no way to decide if a value is correct, apart from recalculating it. So we only do a functional test here.
+
+	if ( getenv("SIOX_OUTPUT_STATS") ){
+		while(1){
+			usleep(100*1000);
+			OUTPUT_STATS
+		}
+	}
+
+	collector->stop();
 
 	cpuProvider->finalize();
 	networkProvider->finalize();
