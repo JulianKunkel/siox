@@ -14,6 +14,7 @@ using namespace std;
 
 //@serializable
 class StatisticsHealthADPIOptions : public monitoring::StatisticsMultiplexerPluginOptions {
+
 	public:
 
 		vector< pair<string,string> >	requestedStatistics;

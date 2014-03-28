@@ -11,12 +11,14 @@
 
 #include <string>
 
+#include <assert.h>
+
 
 using namespace std;
 using namespace monitoring;
 using namespace core;
 
-//#define DEBUG
+#define DEBUG
 
 #ifndef DEBUG
 #define OUTPUT(...)
@@ -46,17 +48,20 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin {
 		/*
 		 * Fields to hold information on the statistics we are to watch, as per our options
 		 */
+		// How many percent off highest and lowest value are regarded anomalous?
+		const float kWarnQuantile = 5.0;
+		// How many values are to be observed before evaluating a statistic's values for anomalies?
+		const uint64_t kMinObservationCount = 10;
+		// Domain string used for all statistics in the ontology
+		const string kStatisticsDomain = "statistics";
 		// A flag indicating whether all statistics requested are being obtained right now.
-		// Used for easier checking when those available change.
+		// Used for easier checking when the set of available ones changes.
 		bool gotAllRequested = false;
-		// Ontology and topology paths of the statistics to watch
-		vector<string> requestedOntologyPaths;
-		vector<string> requestedTopologyPaths;
+		// The names of the statistics to watch
+		vector<string> 	statisticsNames;
 		// Ontology and topology IDs of the statistics to watch
 		vector<OntologyAttributeID> requestedOntologyIDs;
 		vector<TopologyObjectId> requestedTopologyIDs;
-		// The names of the statistics to watch
-		vector<string> 	statisticsNames;
 		// Pointers to the actual statistics objects currently being watched;
 		// each object comes with a sliding history of values at different granularities
 		vector<shared_ptr<Statistic>> statistics;
@@ -65,10 +70,18 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin {
 		 * Fields to hold the statistics values delivered to us
 		 */
 		// The latest values of the respective statistics
-		vector<StatisticsValue> statisticsValues;
+		// vector<StatisticsValue> statisticsValues;
+		// Minimum, maximum and upper and lower quantiles at WARN_PERCENT point
+		vector<StatisticsValue> statisticsValuesMin;
+		vector<StatisticsValue> statisticsValuesMax;
+		vector<StatisticsValue> statisticsValuesQuantileLow;
+		vector<StatisticsValue> statisticsValuesQuantileHigh;
+		// Number of observations for statistic up to now
+		vector<uint64_t> statisticsObservationCount;
+
 		// A field holding the indices of the statistics that are available at the moment.
-		// Used to facilitate selctive updating of only those values available.
-		vector<size_t> availableStatisticsIndices;
+		// Used to iterate only over those available when updating values.
+		vector<uint> availableStatisticsIndices;
 };
 
 
@@ -79,33 +92,41 @@ StatisticsHealthADPI::~StatisticsHealthADPI(){
 void StatisticsHealthADPI::initPlugin() throw() {
 	// Retrieve options and any other module links necessary
 	StatisticsHealthADPIOptions &  options = getOptions<StatisticsHealthADPIOptions>();
+	assert( &options != nullptr );
+	// OUTPUT( "Got options!" );
 	ActivityPluginDereferencing * facade = GET_INSTANCE( ActivityPluginDereferencing, options.dereferencingFacade );
+	assert( facade != nullptr );
+	// OUTPUT( "Got a dereferencingFacade!" );
 	Topology * topology = facade->topology();
+	assert( topology != nullptr );
+	// OUTPUT( "Got a topology!" );
 
+	OUTPUT( "Got " << options.requestedStatistics.size() << " statistics requests." );
 	for ( auto request : options.requestedStatistics )
 	{
 		/*
 		 * Look up and remember information for all requested statistics
 		 */
-		// Remember the statistics we are requested to watch
-		requestedOntologyPaths.push_back( request.first );
-		requestedTopologyPaths.push_back( request.second );
+		OUTPUT( "Got a statistics request: [" << request.first << "," << request.second << "]" );
 		// Find and remember ontology id
-		int lastSlashPosition = request.first.rfind( "/" );
-		string ontologyDomainName = request.first.substr(0, lastSlashPosition);
-		string ontologyAttributeName = request.first.substr(lastSlashPosition);
-		OUTPUT( "Domain: " << ontologyDomainName );
-		OUTPUT( "Attribute: " << ontologyAttributeName );
-		OntologyAttribute ontologyAttribute = facade->lookup_attribute_by_name( ontologyDomainName, ontologyAttributeName );
+		OntologyAttribute ontologyAttribute = facade->lookup_attribute_by_name( kStatisticsDomain, request.first );
+		OUTPUT( "OntologyID: " << ontologyAttribute.aID );
 		requestedOntologyIDs.push_back( ontologyAttribute.aID );
 		// Find and remember topology id
 		TopologyObject topologyObject = topology->lookupObjectByPath( request.second );
+		OUTPUT( "TopologyID: " << topologyObject.id() );
 		requestedTopologyIDs.push_back( topologyObject.id() );
 		// Remember a handy name for statistic; used for readable output
 		statisticsNames.push_back( request.first + request.second );
 
-		// Prepare a variable to hold the statistic's current values
-		statisticsValues.push_back( StatisticsValue( 0.0 ) );
+		// Prepare a shared_ptr to reference the actual statistic later on
+		statistics.push_back( shared_ptr<Statistic>( nullptr ) );
+		// Prepare variables to hold the statistic's characteristic values
+		statisticsValuesMin.push_back( StatisticsValue( 0.0 ) );
+		statisticsValuesMax.push_back( StatisticsValue( 0.0 ) );
+		statisticsValuesQuantileLow.push_back( StatisticsValue( 0.0 ) );
+		statisticsValuesQuantileHigh.push_back( StatisticsValue( 0.0 ) );
+		statisticsObservationCount.push_back( 0 );
 	}
 }
 
@@ -121,7 +142,6 @@ ComponentOptions* StatisticsHealthADPI::AvailableOptions() {
 void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & offeredStatistics, bool addedStatistics, bool removedStatistics ) throw(){
 
 	OUTPUT( "Fresh statistics catalogue with " << offeredStatistics.size() << " entries." );
-
 	if( gotAllRequested && !removedStatistics ) // We're happy - no need for action.
 		return;
 
@@ -130,21 +150,22 @@ void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_
 	availableStatisticsIndices.clear();
 	for( auto s: offeredStatistics )
 	{
-		OUTPUT( "Checking statistic [ontID=" << s->ontologyId << ",topID=" << s->topologyId << "]." );
-		for( size_t i = 0; i < requestedOntologyIDs.size(); i++ )
+		// OUTPUT( "Checking statistic [ontID=" << s->ontologyId << ",topID=" << s->topologyId << "]." );
+		for( uint i = 0; i < requestedOntologyIDs.size(); i++ )
 		{
 			if( s->ontologyId == requestedOntologyIDs[i]
 			   && s->topologyId == requestedTopologyIDs[i] )
 			{
+				OUTPUT( "Found a match [ontID=" << s->ontologyId << ",topID=" << s->topologyId << "]!" );
 				// Assign the statistic object to the proper index
 				statistics[i] = s;
-				// Remember this statistic as being available
+				// Remember this statistic's index amongst those being available.
+				// Later, we will iterate over the statistics indexed here when updating.
 				availableStatisticsIndices.push_back( i );
 				break;
 			}
 		}
 	}
-
 	// FIXME:
 	// Make the test work again, if possible!
 	//
@@ -192,19 +213,71 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	// }
 
 	OUTPUT( "Received new data!" );
-	OUTPUT( "Statistics being watched: " << statisticsValues.size() );
-
+	OUTPUT( "Statistics being watched: " << availableStatisticsIndices.size() );
 	// Copy values received into local store
-	for(size_t j, i=0; i < availableStatisticsIndices.size() ; i++)
+	for(uint i=0; i < availableStatisticsIndices.size() ; i++)
 	{
-		j = availableStatisticsIndices[i];
-		statisticsValues[j] = statistics[j]->curValue;
-		OUTPUT( "Current node statistic[" << statisticsNames[j] << "]: " << statisticsValues[j] );
-	}
+		uint j = availableStatisticsIndices[i];
+		StatisticsValue value = statistics[j]->curValue;
+		OUTPUT( "Current node statistic[" << statisticsNames[j] << "]: " << value );
 
-	// TODO:
-	// Test them for problems
-	// Flag any problems found to reasoner
+		uint64_t count = ++statisticsObservationCount[j];
+
+		if( count > kMinObservationCount )
+		{
+			// TODO:
+			// Test value for problems
+			// FIXME: Write > and < operators for VariableDatatype
+			if( value < statisticsValuesQuantileLow[j] )
+			{
+				// Flag any problems found to reasoner
+				// TODO
+			}
+			if( value > statisticsValuesQuantileHigh[j] )
+			{
+				// Flag any problems found to reasoner
+				// TODO
+			}
+
+			// Update Min
+			if( value < statisticsValuesMin[j] ){
+				statisticsValuesMin[j] = value;
+				// Update quantile
+				// TODO
+			}
+			// Update Max
+			if( value < statisticsValuesMax[j] )
+			{
+				statisticsValuesMax[j] = value;
+				// Update quantile
+				// TODO
+			}
+		}
+		else
+		{
+			// Very first values?
+			if( count == 0 )
+			{
+				// Set preliminary Min and Max values
+				statisticsValuesMax[j] = value;
+				statisticsValuesMin[j] = value;
+			}
+
+			// Update Min
+			if( value < statisticsValuesMin[j] )
+				statisticsValuesMin[j] = value;
+			// Update Max
+			if( value < statisticsValuesMax[j] )
+				statisticsValuesMax[j] = value;
+
+			// Last value before actual assessment starts?
+			if( count == kMinObservationCount )
+			{
+				// Set quantile values
+				// TODO
+			}
+		}
+	}
 }
 
 

@@ -7,6 +7,18 @@ using namespace std;
 using namespace core;
 using namespace monitoring;
 
+
+#define DEBUG
+
+#ifndef DEBUG
+#define OUTPUT(...)
+#else
+#define OUTPUT(...) do { cout << "[Reasoner, role " << role << "] " << __VA_ARGS__ << "\n"; } while(0)
+#endif
+
+#define ERROR(...) do { cerr << "[Reasoner, role " << role << "] " << __VA_ARGS__ << "!\n"; } while(0)
+
+
 namespace knowledge {
 
 shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
@@ -79,8 +91,8 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
 				node_statistics[i] += health.statistics[i];
 			}
-			cout << "CPU: " << health.statistics[6] << endl;
-			cout << "RAPL: " << health.statistics[7] << endl;
+			cout << "CPU: " << health.statistics[5] << endl;
+			cout << "RAPL: " << health.statistics[6] << endl;
 
 			nodeHealth = make_shared<NodeHealth>(health);
 
@@ -342,7 +354,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 
 			nodeStatistics->fetchValues();
 
-			for(int i=0; i < NODE_STATISTIC_COUNT ; i++){				
+			for(int i=0; i < NODE_STATISTIC_COUNT ; i++){
 				nodeHealth->statistics[i] = (*nodeStatistics)[i].toFloat();
 				cout << "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] << endl;
 			}
@@ -409,11 +421,11 @@ void ReasonerStandardImplementation::start(){
 			{"utilization/network/send", "@localhost"},
 			{"utilization/network/receive", "@localhost"},
 			{"time/cpu/RuntimeUnhalted", "@localhost"}, // CONSUMED_CPU_SECONDS
-// #ifdef ENABLE_LIKWID_POWER			
+// #ifdef ENABLE_LIKWID_POWER
 			{"power/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
 // #else
 			//{"utilization/cpu", "@localhost"}, // stupid replacement for the energy metric...
-// #endif ENABLE_LIKWID_POWER		
+// #endif ENABLE_LIKWID_POWER
 			{"utilization/memory", "@localhost"}, // CONSUMED_MEMORY_BYTES
 			// If likwid is used to observe the memory throughput the correct counter could be used:
 			//{"quantity/memory/volume", "@localhost"}, // CONSUMED_MEMORY_BYTES
@@ -476,7 +488,7 @@ ComponentReport ReasonerStandardImplementation::prepareReport() {
 		unique_lock<mutex> dataLock( dataMutex );
 
 		result.addEntry( "ANOMAL_RUNTIME_MS", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( anomaliesTriggered * update_intervall_ms )));
-		result.addEntry( "OBSERVED_RUNTIME_MS", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( cyclesTriggered * update_intervall_ms )));		
+		result.addEntry( "OBSERVED_RUNTIME_MS", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO, VariableDatatype( cyclesTriggered * update_intervall_ms )));
 
 		result.addEntry( "STATES_SENT_UPSTREAM", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesSent));
 		result.addEntry( "STATES_RECEIVED", ReportEntry( ReportEntry::Type::SIOX_INTERNAL_INFO,  nPushesReceived));
@@ -496,7 +508,7 @@ ComponentReport ReasonerStandardImplementation::prepareReport() {
 			};
 
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
-				result.addEntry( text[i], ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE,  node_statistics[i] ));		
+				result.addEntry( text[i], ReportEntry( ReportEntry::Type::APPLICATION_PERFORMANCE,  node_statistics[i] ));
 			}
 		}
 
@@ -663,6 +675,11 @@ void ReasonerStandardImplementation::assessSystemHealth(){
 
 
 } // namespace knowledge
+
+
+#undef OUTPUT
+#undef ERROR
+
 
 extern "C" {
 	void * KNOWLEDGE_REASONER_INSTANCIATOR_NAME()
