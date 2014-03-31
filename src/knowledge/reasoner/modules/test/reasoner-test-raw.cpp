@@ -132,9 +132,11 @@ void testAssessNodeAggregation(){
 	// Result: node health
 	//SystemHealth sh = { HealthState::OK, {{0,1,5,1,0,0}}, {}, {} };
 
-	ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
+	ProcessHealth p1 = { HealthState::BAD
+, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
 	ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
-	ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
+	ProcessHealth p3 = { HealthState::GOOD
+, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
 
 	list<ProcessHealth> l = {p1, p2, p3};
 
@@ -149,33 +151,43 @@ void testAssessNodeAggregation(){
 	mergeOutput(l, nh, operationRatio, totalOpCount);
 
 	// determine node health based on the historic knowledge AND the statistics
-	if ( nh.occurrences[ABNORMAL_FAST] || nh.occurrences[ABNORMAL_SLOW] || nh.occurrences[ABNORMAL_OTHER] ){
+	if ( nh.occurrences[ABNORMAL_GOOD] || nh.occurrences[ABNORMAL_BAD] || nh.occurrences[ABNORMAL_OTHER] ){
 		// we have an condition in which we must fire the anomaly trigger.
 
-		if ( operationRatio[ABNORMAL_FAST] > 5 &&
-			operationRatio[ABNORMAL_FAST] > 2 * operationRatio[ABNORMAL_SLOW] &&
-			operationRatio[ABNORMAL_FAST] > 2 * operationRatio[ABNORMAL_OTHER] )
+		if ( operationRatio[ABNORMAL_GOOD] > 5 &&
+			operationRatio[ABNORMAL_GOOD] > 2 * operationRatio[ABNORMAL_BAD] &&
+			operationRatio[ABNORMAL_GOOD] > 2 * operationRatio[ABNORMAL_OTHER] )
 		{
-			nh.overallState = HealthState::ABNORMAL_FAST;
-		}else if (operationRatio[ABNORMAL_SLOW] > 5 &&
-			operationRatio[ABNORMAL_SLOW] > 2 * operationRatio[ABNORMAL_FAST] &&
-			operationRatio[ABNORMAL_SLOW] > 2 * operationRatio[ABNORMAL_OTHER] )
+			nh.overallState = HealthState::ABNORMAL_GOOD;
+		}else if (operationRatio[ABNORMAL_BAD] > 5 &&
+			operationRatio[ABNORMAL_BAD] > 2 * operationRatio[ABNORMAL_GOOD] &&
+			operationRatio[ABNORMAL_BAD] > 2 * operationRatio[ABNORMAL_OTHER] )
 		{
-			nh.overallState = HealthState::ABNORMAL_SLOW;
+			nh.overallState = HealthState::ABNORMAL_BAD;
 		}else{
 			nh.overallState = HealthState::ABNORMAL_OTHER;
 		}
 	}else{
 		// normal condition
-		// We have to pick between FAST, OK & SLOW
-		if ( operationRatio[FAST] > 5 &&
-			operationRatio[FAST] > 3*operationRatio[SLOW] )
+		// We have to pick between GOOD
+, OK & BAD
+
+		if ( operationRatio[GOOD
+] > 5 &&
+			operationRatio[GOOD
+] > 3*operationRatio[BAD
+] )
 		{
-			nh.overallState = HealthState::FAST;
-		}else if ( operationRatio[SLOW] > 5 &&
-			operationRatio[SLOW] > 3*operationRatio[FAST] )
+			nh.overallState = HealthState::GOOD
+;
+		}else if ( operationRatio[BAD
+] > 5 &&
+			operationRatio[BAD
+] > 3*operationRatio[GOOD
+] )
 		{
-			nh.overallState = HealthState::SLOW;
+			nh.overallState = HealthState::BAD
+;
 		}else{
 			nh.overallState = HealthState::OK;
 		}
@@ -185,7 +197,8 @@ void testAssessNodeAggregation(){
 	if ( nh.overallState != HealthState::OK ){
 		uint totalUtilization = 0;
 
-		if ( nh.overallState == HealthState::SLOW || nh.overallState == HealthState::ABNORMAL_SLOW || nh.overallState == HealthState::ABNORMAL_OTHER ){
+		if ( nh.overallState == HealthState::BAD
+ || nh.overallState == HealthState::ABNORMAL_BAD || nh.overallState == HealthState::ABNORMAL_OTHER ){
 
 			for(int i=0; i < UTILIZATION_STATISTIC_COUNT; i++ ){
 				totalUtilization += nh.utilization[i];
@@ -262,9 +275,11 @@ void testReasonerAssessment(){
 	r->init(); // This will start a separate Reasoner thread
 	}
 	r->start();
-	ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
+	ProcessHealth p1 = { HealthState::BAD
+, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
 	ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
-	ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
+	ProcessHealth p3 = { HealthState::GOOD
+, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
 
 	ReasonerMessageReceived rmr1 = {"P1"};
 	ReasonerMessageReceived rmr2 = {"P2"};
@@ -319,7 +334,7 @@ void testReasonerAnomalies(){
 
 	TestAnomalyTrigger at1;
 	TestAnomalyTrigger at2;
-	
+
 	TestAnomalyPlugin adpi1;
 
 	{
@@ -340,9 +355,12 @@ void testReasonerAnomalies(){
 	assert( at2.waitForAnomalyCount( 0 ) );
 
 	// Now we inject an observation which will trigger a reaction:
-	adpi1.injectObservation( ComponentID{{1}}, HealthState::SLOW, "SlownessIssue", 10 );
-	adpi1.injectObservation( ComponentID{{1}}, HealthState::SLOW, "Slowness Issue", 10 );
-	adpi1.injectObservation( ComponentID{{1}}, HealthState::ABNORMAL_SLOW, "Standstill Issue", 10 );
+	adpi1.injectObservation( ComponentID{{1}}, HealthState::BAD
+, "SlownessIssue", 10 );
+	adpi1.injectObservation( ComponentID{{1}}, HealthState::BAD
+, "Slowness Issue", 10 );
+	adpi1.injectObservation( ComponentID{{1}}, HealthState::ABNORMAL_BAD
+, "Standstill Issue", 10 );
 
 	assert( at1.waitForAnomalyCount( 1 ) );
 	assert( at2.waitForAnomalyCount( 1 ) );
@@ -536,12 +554,14 @@ void testReasonerCommunicationRaw(){
 		// cout << endl;
 
 		shared_ptr<SystemHealth> sh = shared_ptr<SystemHealth>(new SystemHealth());
-		sh->overallState = HealthState::SLOW;
+		sh->overallState = HealthState::BAD
+;
 		sh->timeLastModified = 4;
 		mCB1.sh = sh;
 
 		shared_ptr<SystemHealth> sh2 = shared_ptr<SystemHealth>(new SystemHealth());
-		sh2->overallState = HealthState::SLOW;
+		sh2->overallState = HealthState::BAD
+;
 		sh2->timeLastModified = 3;
 		r2.pushSystemStateUpstream(sh2);
 
@@ -549,7 +569,8 @@ void testReasonerCommunicationRaw(){
 		// Should be the sh2 that r2 just sent up
 		// cout << "State 1: "<< mCB1.received_sh.overallState << endl;
 		// cout << "Timestamp 1: " << mCB1.received_sh.timeLastModified << endl;
-		assert( mCB1.received_sh.overallState == HealthState::SLOW );
+		assert( mCB1.received_sh.overallState == HealthState::BAD
+ );
 		assert( mCB1.received_sh.timeLastModified == 3);
 		// Should be an untouched default SystemHealth()
 		// cout << "State 2: "<< mCB2.received_sh.overallState << endl;
@@ -568,12 +589,14 @@ void testReasonerCommunicationRaw(){
 		// cout << endl;
 
 		shared_ptr<SystemHealth> sh = shared_ptr<SystemHealth>(new SystemHealth());
-		sh->overallState = HealthState::SLOW;
+		sh->overallState = HealthState::BAD
+;
 		sh->timeLastModified = 2;
 		mCB1.sh = sh;
 
 		shared_ptr<NodeHealth> nh = shared_ptr<NodeHealth>(new NodeHealth());
-		nh->overallState = HealthState::FAST;
+		nh->overallState = HealthState::GOOD
+;
 		nh->timeLastModified = 1;
 		r2.pushNodeStateUpstream(nh);
 
@@ -581,7 +604,8 @@ void testReasonerCommunicationRaw(){
 		// Should be the nh that r2 just sent up
 		// cout << "State 1: "<< mCB1.received_nh.overallState << endl;
 		// cout << "Timestamp 1: " << mCB1.received_nh.timeLastModified << endl;
-		assert( mCB1.received_nh.overallState == HealthState::FAST );
+		assert( mCB1.received_nh.overallState == HealthState::GOOD
+ );
 		assert( mCB1.received_nh.timeLastModified == 1);
 		// Should be an untouched default NodeHealth()
 		// cout << "State 2: "<< mCB2.received_sh.overallState << endl;
@@ -593,12 +617,14 @@ void testReasonerCommunicationRaw(){
 		// Should still be the nh received from r2 before
 		// cout << "State 1: "<< mCB1.received_nh.overallState << endl;
 		// cout << "Timestamp 1: " << mCB1.received_nh.timeLastModified << endl;
-		assert( mCB1.received_nh.overallState == HealthState::FAST );
+		assert( mCB1.received_nh.overallState == HealthState::GOOD
+ );
 		assert( mCB1.received_nh.timeLastModified == 1);
 		// Should now be the sh that r1 just sent back
 		// cout << "State 2: "<< mCB2.received_sh.overallState << endl;
 		// cout << "Timestamp 2: " << mCB2.received_sh.timeLastModified << endl;
-		assert( mCB2.received_sh.overallState == HealthState::SLOW );
+		assert( mCB2.received_sh.overallState == HealthState::BAD
+ );
 		assert( mCB2.received_sh.timeLastModified == 2 );
 
 		cout << " done!" << endl;
@@ -610,12 +636,14 @@ void testReasonerCommunicationRaw(){
 		// cout << endl;
 
 		shared_ptr<NodeHealth> nh = shared_ptr<NodeHealth>(new NodeHealth());
-		nh->overallState = HealthState::SLOW;
+		nh->overallState = HealthState::BAD
+;
 		nh->timeLastModified = 3;
 		mCB1.nh = nh;
 
 		shared_ptr<ProcessHealth> ph = shared_ptr<ProcessHealth>(new ProcessHealth());
-		ph->overallState = HealthState::FAST;
+		ph->overallState = HealthState::GOOD
+;
 		ph->timeLastModified = 2;
 		r2.pushProcessStateUpstream(ph);
 
@@ -623,7 +651,8 @@ void testReasonerCommunicationRaw(){
 		// Should be the ph that r2 just sent up
 		// cout << "State 1: "<< mCB1.received_ph.overallState << endl;
 		// cout << "Timestamp 1: " << mCB1.received_ph.timeLastModified << endl;
-		assert( mCB1.received_ph.overallState == HealthState::FAST );
+		assert( mCB1.received_ph.overallState == HealthState::GOOD
+ );
 		assert( mCB1.received_ph.timeLastModified == 2);
 		// Should be an untouched default NodeHealth()
 		// cout << "State 2: "<< mCB2.received_nh.overallState << endl;
@@ -635,12 +664,14 @@ void testReasonerCommunicationRaw(){
 		// Should still be the ph received from r2 before
 		// cout << "State 1: "<< mCB1.received_ph.overallState << endl;
 		// cout << "Timestamp 1: " << mCB1.received_ph.timeLastModified << endl;
-		assert( mCB1.received_ph.overallState == HealthState::FAST );
+		assert( mCB1.received_ph.overallState == HealthState::GOOD
+ );
 		assert( mCB1.received_ph.timeLastModified == 2);
 		// Should now be the nh that r1 just sent back
 		// cout << "State 2: "<< mCB2.received_sh.overallState << endl;
 		// cout << "Timestamp 2: " << mCB2.received_sh.timeLastModified << endl;
-		assert( mCB2.received_nh.overallState == HealthState::SLOW );
+		assert( mCB2.received_nh.overallState == HealthState::BAD
+ );
 		assert( mCB2.received_nh.timeLastModified == 3);
 
 		cout << " done!" << endl;
