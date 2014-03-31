@@ -103,8 +103,10 @@ namespace {
 		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){
 			statisticsValues[i] = values[i];
 			if ( statisticsTypeIsIncremental[i] ){
+				static float oldValue = values[i];
 				// TODO this is a serious hack!
-				statisticsValues[i] = values[i] * 0.0000153; 
+				statisticsValues[i] = (values[i] - oldValue) * 0.0000153; 
+				oldValue = values[i];
 			}
 		}
 
