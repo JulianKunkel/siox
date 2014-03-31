@@ -3,6 +3,7 @@
 #include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
 #include <monitoring/ontology/OntologyDatatypes.hpp>
 #include <monitoring/datatypes/Topology.hpp>
+#include <knowledge/reasoner/AnomalyPlugin.hpp>
 
 // #include <monitoring/statistics/StatisticsCollection.hpp>
 // #include <monitoring/statistics/collector/StatisticsCollector.hpp>
@@ -16,6 +17,7 @@
 
 using namespace std;
 using namespace monitoring;
+using namespace knowledge;
 using namespace core;
 
 #define DEBUG
@@ -29,7 +31,7 @@ using namespace core;
 #define ERROR(...) do { cerr << "[Statistics Health ADPI] " << __VA_ARGS__ << "!\n"; } while(0)
 
 
-class StatisticsHealthADPI : public StatisticsMultiplexerPlugin {
+class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyPlugin {
 
 	public:
 
@@ -55,6 +57,9 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin {
 		const uint64_t kMinObservationCount = 10;
 		// Domain string used for all statistics in the ontology
 		const string kStatisticsDomain = "statistics";
+		// Stings to use in anomaly reporting
+		const string kIssueHighConsumption = "High power consumption";
+		const string kIssueLowConsumption = "Low power consumption";
 		// A flag indicating whether all statistics requested are being obtained right now.
 		// Used for easier checking when the set of available ones changes.
 		bool gotAllRequested = false;
@@ -157,7 +162,7 @@ void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_
 			if( s->ontologyId == requestedOntologyIDs[i]
 			   && s->topologyId == requestedTopologyIDs[i] )
 			{
-				// OUTPUT( "Found a match [ontID=" << s->ontologyId << ",topID=" << s->topologyId << ", of type " << s->curValue.getTypeAsString() << "]!" );
+				OUTPUT( "Found a match for index " << i << ": " << (uintmax_t)&*s << " [" << statisticsNames[i] << ",ontID=" << s->ontologyId << ",topID=" << s->topologyId << ", of type " << s->curValue.getTypeAsString() << "]!" );
 				// Assign the statistic object to the proper index
 				statistics[i] = s;
 				// Remember this statistic's index amongst those being available.
@@ -220,54 +225,69 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	{
 		uint j = availableStatisticsIndices[i];
 		float value = statistics[j]->curValue.toFloat();
-		OUTPUT( "Current node statistic[" << statisticsNames[j] << "]: " << value );
+		OUTPUT( "Current node statistic[" << j << ": " << statisticsNames[j] << "]: " << value );
+		// FIXME:
+		// Receive *very* strange values here, often 0.
+		// Log file varies dramatically in length.
+		// I presume this is a problem with the Statistic class.
+		// Also, values should be double once taken from the statistic.
 
 		uint64_t count = ++statisticsObservationCount[j];
 		bool updateQuantiles = false;
 
 		if( count > kMinObservationCount )
 		{
-			// TODO:
 			// Test value for problems
 			if( value < statisticsValuesQuantileLow[j] )
 			{
 				// Flag any problems found to reasoner
 				// TODO
+				// addObservation( monitoring::ComponentID cid, HealthState::ABNORMAL_GOOD,  kIssueLowConsumption, 0 )
+				OUTPUT( "Flagging Anomaly for " << value << "<" << statisticsValuesQuantileLow[j] << ": " << toString(HealthState::ABNORMAL_GOOD) );
 			}
 			if( value > statisticsValuesQuantileHigh[j] )
 			{
 				// Flag any problems found to reasoner
 				// TODO
+				// addObservation( monitoring::ComponentID cid, HealthState::ABNORMAL_BAD,  kIssueHighConsumption, 0 )
+				OUTPUT( "Flagging Anomaly: " << toString(HealthState::ABNORMAL_BAD) );
 			}
 
-			// Update Min
+			// Update Min?
 			if( value < statisticsValuesMin[j] ){
 				statisticsValuesMin[j] = value;
 				updateQuantiles = true;
+				OUTPUT( "New minimum: " << value );
 			}
-			// Update Max
+			// Update Max?
 			if( value > statisticsValuesMax[j] )
 			{
 				statisticsValuesMax[j] = value;
 				updateQuantiles = true;
+				OUTPUT( "New maximum: " << value );
 			}
 		}
 		else
 		{
 			// Very first values?
-			if( count == 0 )
+			if( count == 1 )
 			{
 				// Set preliminary Min and Max values
 				statisticsValuesMax[j] = value;
 				statisticsValuesMin[j] = value;
+				OUTPUT( "First value: " << value );
 			}
 
-			// Update Min
+			// Update Min?
 			if( value < statisticsValuesMin[j] )
+			{
 				statisticsValuesMin[j] = value;
-			// Update Max
+			}
+			// Update Max?
 			if( value > statisticsValuesMax[j] )
+			{
 				statisticsValuesMax[j] = value;
+			}
 
 			// Last value before actual assessment starts?
 			if( count == kMinObservationCount )
@@ -276,7 +296,7 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			}
 		}
 
-		// Update quantiles
+		// Update quantiles?
 		if( updateQuantiles )
 		{
 			float quantileDelta = (statisticsValuesMax[j] - statisticsValuesMin[j]) * kWarnQuantile;

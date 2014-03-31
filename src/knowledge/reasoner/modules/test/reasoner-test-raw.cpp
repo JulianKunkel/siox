@@ -169,25 +169,16 @@ void testAssessNodeAggregation(){
 		}
 	}else{
 		// normal condition
-		// We have to pick between GOOD
-, OK & BAD
+		// We have to pick between GOOD, OK & BAD
 
-		if ( operationRatio[GOOD
-] > 5 &&
-			operationRatio[GOOD
-] > 3*operationRatio[BAD
-] )
+		if ( operationRatio[GOOD] > 5 &&
+			operationRatio[GOOD] > 3*operationRatio[BAD] )
 		{
-			nh.overallState = HealthState::GOOD
-;
-		}else if ( operationRatio[BAD
-] > 5 &&
-			operationRatio[BAD
-] > 3*operationRatio[GOOD
-] )
+			nh.overallState = HealthState::GOOD;
+		}else if ( operationRatio[BAD] > 5 &&
+			operationRatio[BAD] > 3*operationRatio[GOOD] )
 		{
-			nh.overallState = HealthState::BAD
-;
+			nh.overallState = HealthState::BAD;
 		}else{
 			nh.overallState = HealthState::OK;
 		}
@@ -197,8 +188,7 @@ void testAssessNodeAggregation(){
 	if ( nh.overallState != HealthState::OK ){
 		uint totalUtilization = 0;
 
-		if ( nh.overallState == HealthState::BAD
- || nh.overallState == HealthState::ABNORMAL_BAD || nh.overallState == HealthState::ABNORMAL_OTHER ){
+		if ( nh.overallState == HealthState::BAD || nh.overallState == HealthState::ABNORMAL_BAD || nh.overallState == HealthState::ABNORMAL_OTHER ){
 
 			for(int i=0; i < UTILIZATION_STATISTIC_COUNT; i++ ){
 				totalUtilization += nh.utilization[i];
@@ -275,11 +265,9 @@ void testReasonerAssessment(){
 	r->init(); // This will start a separate Reasoner thread
 	}
 	r->start();
-	ProcessHealth p1 = { HealthState::BAD
-, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
+	ProcessHealth p1 = { HealthState::BAD, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
 	ProcessHealth p2 = { HealthState::OK, 		{{0,1,5,1,0,0}}, { { "suboptimal access pattern type 1", 2, 10 }, {"cache hits", 2, -1} }, { {"cache misses", 1, +1} } };
-	ProcessHealth p3 = { HealthState::GOOD
-, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
+	ProcessHealth p3 = { HealthState::GOOD, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
 
 	ReasonerMessageReceived rmr1 = {"P1"};
 	ReasonerMessageReceived rmr2 = {"P2"};
@@ -355,12 +343,9 @@ void testReasonerAnomalies(){
 	assert( at2.waitForAnomalyCount( 0 ) );
 
 	// Now we inject an observation which will trigger a reaction:
-	adpi1.injectObservation( ComponentID{{1}}, HealthState::BAD
-, "SlownessIssue", 10 );
-	adpi1.injectObservation( ComponentID{{1}}, HealthState::BAD
-, "Slowness Issue", 10 );
-	adpi1.injectObservation( ComponentID{{1}}, HealthState::ABNORMAL_BAD
-, "Standstill Issue", 10 );
+	adpi1.injectObservation( ComponentID{{1}}, HealthState::BAD, "SlownessIssue", 10 );
+	adpi1.injectObservation( ComponentID{{1}}, HealthState::BAD, "Slowness Issue", 10 );
+	adpi1.injectObservation( ComponentID{{1}}, HealthState::ABNORMAL_BAD, "Standstill Issue", 10 );
 
 	assert( at1.waitForAnomalyCount( 1 ) );
 	assert( at2.waitForAnomalyCount( 1 ) );
@@ -604,8 +589,7 @@ void testReasonerCommunicationRaw(){
 		// Should be the nh that r2 just sent up
 		// cout << "State 1: "<< mCB1.received_nh.overallState << endl;
 		// cout << "Timestamp 1: " << mCB1.received_nh.timeLastModified << endl;
-		assert( mCB1.received_nh.overallState == HealthState::GOOD
- );
+		assert( mCB1.received_nh.overallState == HealthState::GOOD );
 		assert( mCB1.received_nh.timeLastModified == 1);
 		// Should be an untouched default NodeHealth()
 		// cout << "State 2: "<< mCB2.received_sh.overallState << endl;
@@ -617,14 +601,12 @@ void testReasonerCommunicationRaw(){
 		// Should still be the nh received from r2 before
 		// cout << "State 1: "<< mCB1.received_nh.overallState << endl;
 		// cout << "Timestamp 1: " << mCB1.received_nh.timeLastModified << endl;
-		assert( mCB1.received_nh.overallState == HealthState::GOOD
- );
+		assert( mCB1.received_nh.overallState == HealthState::GOOD );
 		assert( mCB1.received_nh.timeLastModified == 1);
 		// Should now be the sh that r1 just sent back
 		// cout << "State 2: "<< mCB2.received_sh.overallState << endl;
 		// cout << "Timestamp 2: " << mCB2.received_sh.timeLastModified << endl;
-		assert( mCB2.received_sh.overallState == HealthState::BAD
- );
+		assert( mCB2.received_sh.overallState == HealthState::BAD );
 		assert( mCB2.received_sh.timeLastModified == 2 );
 
 		cout << " done!" << endl;
@@ -636,14 +618,12 @@ void testReasonerCommunicationRaw(){
 		// cout << endl;
 
 		shared_ptr<NodeHealth> nh = shared_ptr<NodeHealth>(new NodeHealth());
-		nh->overallState = HealthState::BAD
-;
+		nh->overallState = HealthState::BAD;
 		nh->timeLastModified = 3;
 		mCB1.nh = nh;
 
 		shared_ptr<ProcessHealth> ph = shared_ptr<ProcessHealth>(new ProcessHealth());
-		ph->overallState = HealthState::GOOD
-;
+		ph->overallState = HealthState::GOOD;
 		ph->timeLastModified = 2;
 		r2.pushProcessStateUpstream(ph);
 
@@ -651,8 +631,7 @@ void testReasonerCommunicationRaw(){
 		// Should be the ph that r2 just sent up
 		// cout << "State 1: "<< mCB1.received_ph.overallState << endl;
 		// cout << "Timestamp 1: " << mCB1.received_ph.timeLastModified << endl;
-		assert( mCB1.received_ph.overallState == HealthState::GOOD
- );
+		assert( mCB1.received_ph.overallState == HealthState::GOOD );
 		assert( mCB1.received_ph.timeLastModified == 2);
 		// Should be an untouched default NodeHealth()
 		// cout << "State 2: "<< mCB2.received_nh.overallState << endl;
@@ -664,14 +643,12 @@ void testReasonerCommunicationRaw(){
 		// Should still be the ph received from r2 before
 		// cout << "State 1: "<< mCB1.received_ph.overallState << endl;
 		// cout << "Timestamp 1: " << mCB1.received_ph.timeLastModified << endl;
-		assert( mCB1.received_ph.overallState == HealthState::GOOD
- );
+		assert( mCB1.received_ph.overallState == HealthState::GOOD );
 		assert( mCB1.received_ph.timeLastModified == 2);
 		// Should now be the nh that r1 just sent back
 		// cout << "State 2: "<< mCB2.received_sh.overallState << endl;
 		// cout << "Timestamp 2: " << mCB2.received_sh.timeLastModified << endl;
-		assert( mCB2.received_nh.overallState == HealthState::BAD
- );
+		assert( mCB2.received_nh.overallState == HealthState::BAD );
 		assert( mCB2.received_nh.timeLastModified == 3);
 
 		cout << " done!" << endl;
