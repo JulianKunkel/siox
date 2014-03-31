@@ -42,6 +42,7 @@ namespace {
 			// results from likwid
 			float * values;
 			vector<StatisticsValue> statisticsValues;
+			vector<bool> statisticsTypeIsIncremental;
 	};
 
 	void LikwidPlugin::finalize(void){
@@ -101,7 +102,12 @@ namespace {
 		// copy likwid results
 		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){
 			statisticsValues[i] = values[i];
+			if ( statisticsTypeIsIncremental[i] ){
+				// TODO this is a serious hack!
+				statisticsValues[i] = values[i] * 0.0000153; 
+			}
 		}
+
 		perfmon_startCounters();
 	}
 
@@ -152,7 +158,10 @@ namespace {
 
 		#define addGaugeMetric( name, variableName, unitString, descriptionString ) \
 			result.push_back( {name, "@localhost", variableName, GAUGE, unitString, descriptionString, 0, 0} ); 
-		
+		#define addIncrementalMetric( name, variableName, unitString, descriptionString ) \
+			result.push_back( {name, "@localhost", variableName, INCREMENTAL, unitString, descriptionString, 0, 0} ); 
+
+
 		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){			
 			// extract correct unit from likwid
 			const char * name;
@@ -160,7 +169,13 @@ namespace {
 			likwidDerivedEventToOntology(likwidSetup.derivedNames[i], & name, & unit);
 
 			// TODO use correct name for the metric.
-			addGaugeMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
+			if (strcmp(name, "energy/Socket/rapl") == 0 ){
+				addIncrementalMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
+				statisticsTypeIsIncremental.push_back(true);
+			}else{
+				addGaugeMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
+				statisticsTypeIsIncremental.push_back(false);
+			}
 		}
 
 		return result;
