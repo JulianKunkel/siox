@@ -172,7 +172,7 @@ namespace {
 
 			// TODO use correct name for the metric.
 			if (strcmp(name, "energy/Socket/rapl") == 0 ){
-				addIncrementalMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
+				addGaugeMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
 				statisticsTypeIsIncremental.push_back(true);
 			}else{
 				addGaugeMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
