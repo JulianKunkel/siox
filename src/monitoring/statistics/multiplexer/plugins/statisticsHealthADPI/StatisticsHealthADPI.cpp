@@ -22,10 +22,10 @@ using namespace core;
 
 #define DEBUG
 
-#ifndef DEBUG
-#define OUTPUT(...)
-#else
+#ifdef DEBUG
 #define OUTPUT(...) do { cout << "[Statistics Health ADPI] " << __VA_ARGS__ << "\n"; } while(0)
+#else
+#define OUTPUT(...)
 #endif
 
 #define ERROR(...) do { cerr << "[Statistics Health ADPI] " << __VA_ARGS__ << "!\n"; } while(0)
@@ -50,8 +50,10 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		/*
 		 * Fields to hold information on the statistics we are to watch, as per our options
 		 */
+		// Preliminary Component ID
+		ComponentID cid = {{1,2,3},4};
 		// How many percent off highest and lowest value are regarded anomalous?
-		const float kWarnQuantile = 5.0;
+		const double kWarnQuantile = 5.0;
 		// How many values are to be observed before evaluating a statistic's values for anomalies?
 		const uint64_t kMinObservationCount = 10;
 		// Domain string used for all statistics in the ontology
@@ -74,13 +76,11 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		/*
 		 * Fields to hold the statistics values delivered to us
 		 */
-		// The latest values of the respective statistics
-		// vector<StatisticsValue> statisticsValues;
 		// Minimum, maximum and upper and lower quantiles at WARN_PERCENT point
-		vector<StatisticsValue> statisticsValuesMin;
-		vector<StatisticsValue> statisticsValuesMax;
-		vector<StatisticsValue> statisticsValuesQuantileLow;
-		vector<StatisticsValue> statisticsValuesQuantileHigh;
+		vector<double> statisticsValuesMin;
+		vector<double> statisticsValuesMax;
+		vector<double> statisticsValuesQuantileLow;
+		vector<double> statisticsValuesQuantileHigh;
 		// Number of observations for statistic up to now
 		vector<uint64_t> statisticsObservationCount;
 
@@ -127,10 +127,10 @@ void StatisticsHealthADPI::initPlugin() throw() {
 		// Prepare a shared_ptr to reference the actual statistic later on
 		statistics.push_back( shared_ptr<Statistic>( nullptr ) );
 		// Prepare variables to hold the statistic's characteristic values
-		statisticsValuesMin.push_back( StatisticsValue( 0.0 ) );
-		statisticsValuesMax.push_back( StatisticsValue( 0.0 ) );
-		statisticsValuesQuantileLow.push_back( StatisticsValue( 0.0 ) );
-		statisticsValuesQuantileHigh.push_back( StatisticsValue( 0.0 ) );
+		statisticsValuesMin.push_back( 0.0 );
+		statisticsValuesMax.push_back( 0.0 );
+		statisticsValuesQuantileLow.push_back( 0.0 );
+		statisticsValuesQuantileHigh.push_back( 0.0 );
 		statisticsObservationCount.push_back( 0 );
 	}
 }
@@ -223,7 +223,7 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	for(uint i=0; i < availableStatisticsIndices.size() ; i++)
 	{
 		uint j = availableStatisticsIndices[i];
-		float value = statistics[j]->curValue.toFloat();
+		double value = statistics[j]->curValue.toDouble();
 		OUTPUT( "Current node statistic[" << j << ": " << statisticsNames[j] << "]: " << value );
 		// FIXME:
 		// Receive *very* strange values here, often 0.
@@ -232,23 +232,23 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 		// Also, values should be double once taken from the statistic.
 
 		uint64_t count = ++statisticsObservationCount[j];
+		bool updateQuantiles = false;
 
 		if( count > kMinObservationCount )
 		{
 			// Test value for problems
-			// FIXME: Write > and < operators for VariableDatatype
 			if( value < statisticsValuesQuantileLow[j] )
 			{
 				// Flag any problems found to reasoner
 				// TODO
-				// addObservation( monitoring::ComponentID cid, HealthState::ABNORMAL_GOOD,  kIssueLowConsumption, 0 )
+				addObservation( cid, HealthState::ABNORMAL_GOOD,  kIssueLowConsumption, 0 )
 				OUTPUT( "Flagging Anomaly for " << value << "<" << statisticsValuesQuantileLow[j] << ": " << toString(HealthState::ABNORMAL_GOOD) );
 			}
 			if( value > statisticsValuesQuantileHigh[j] )
 			{
 				// Flag any problems found to reasoner
 				// TODO
-				// addObservation( monitoring::ComponentID cid, HealthState::ABNORMAL_BAD,  kIssueHighConsumption, 0 )
+				addObservation( cid, HealthState::ABNORMAL_BAD,  kIssueHighConsumption, 0 )
 				OUTPUT( "Flagging Anomaly: " << toString(HealthState::ABNORMAL_BAD) );
 			}
 
@@ -292,14 +292,14 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			if( count == kMinObservationCount )
 			{
 				// Set quantile values
-				// TODO
+				updateQuantiles = true;
 			}
 		}
 
 		// Update quantiles?
 		if( updateQuantiles )
 		{
-			float quantileDelta = (statisticsValuesMax[j] - statisticsValuesMin[j]) * kWarnQuantile;
+			double quantileDelta = (statisticsValuesMax[j] - statisticsValuesMin[j]) * kWarnQuantile;
 			statisticsValuesQuantileLow[j] = statisticsValuesMin[j] + quantileDelta;
 			statisticsValuesQuantileHigh[j] = statisticsValuesMax[j] - quantileDelta;
 			OUTPUT( "New limits set for statistic: ["
