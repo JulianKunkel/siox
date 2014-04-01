@@ -42,7 +42,6 @@ namespace {
 			// results from likwid
 			float * values;
 			vector<StatisticsValue> statisticsValues;
-			vector<bool> statisticsTypeIsIncremental;
 	};
 
 	void LikwidPlugin::finalize(void){
@@ -102,12 +101,6 @@ namespace {
 		// copy likwid results
 		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){
 			statisticsValues[i] = values[i];
-			if ( statisticsTypeIsIncremental[i] ){
-				static float oldValue = values[i];
-				// TODO this is a serious hack!
-				statisticsValues[i] = (values[i] - oldValue) * 0.0000153; 
-				oldValue = values[i];
-			}
 		}
 
 		perfmon_startCounters();
@@ -171,13 +164,8 @@ namespace {
 			likwidDerivedEventToOntology(likwidSetup.derivedNames[i], & name, & unit);
 
 			// TODO use correct name for the metric.
-			if (strcmp(name, "energy/Socket/rapl") == 0 ){
-				addGaugeMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
-				statisticsTypeIsIncremental.push_back(true);
-			}else{
-				addGaugeMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
-				statisticsTypeIsIncremental.push_back(false);
-			}
+			//if (strcmp(name, "energy/Socket/rapl") == 0 ){			
+			addGaugeMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
 		}
 
 		return result;

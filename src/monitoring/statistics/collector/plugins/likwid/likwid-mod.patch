@@ -641,3 +641,36 @@ index 3d20d20..0305b18 100644
              logDerivedMetrics = perfmon_logDerivedMetricsKabini;
              perfmon_startCountersThread = perfmon_startCountersThread_kabini;
              perfmon_stopCountersThread = perfmon_stopCountersThread_kabini;
+diff --git a/likwid-test.c b/likwid-test.c
+index 60ce3c4..5e09e94 100644
+--- a/likwid-test.c
++++ b/likwid-test.c
+@@ -8,6 +8,8 @@
+ #include <likwid/accessClient.h>
+ #include <likwid/timer.h>
+ 
++// gcc likwid-test.c -std=gnu99 -Wall -g -I/opt/likwidl/include/ -I /opt/likwidl/include/likwid/ -l likwid -L /opt/likwidl/lib/ 
++
+ static void init(){
+        if (cpuid_init() == EXIT_FAILURE){
+                // TODO
+@@ -71,4 +73,4 @@ int main(){
+ 
+ 
+        perfmon_finalize();
+-}
+\ No newline at end of file
++}
+diff --git a/src/includes/perfmon_types.h b/src/includes/perfmon_types.h
+index 71324b9..c90f86a 100644
+--- a/src/includes/perfmon_types.h
++++ b/src/includes/perfmon_types.h
+@@ -125,7 +125,7 @@ typedef struct {
+ typedef struct {
+     int       init;
+     int       id;  /* TODO id is only used for EX type processors */
+-    uint64_t  counterData;
++    double    counterData;
+ } PerfmonCounter;
+ 
+ typedef struct {
