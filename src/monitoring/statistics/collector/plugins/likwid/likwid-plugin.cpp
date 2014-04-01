@@ -102,6 +102,7 @@ namespace {
 		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){
 			statisticsValues[i] = values[i];
 		}
+
 		perfmon_startCounters();
 	}
 
@@ -152,7 +153,10 @@ namespace {
 
 		#define addGaugeMetric( name, variableName, unitString, descriptionString ) \
 			result.push_back( {name, "@localhost", variableName, GAUGE, unitString, descriptionString, 0, 0} ); 
-		
+		#define addIncrementalMetric( name, variableName, unitString, descriptionString ) \
+			result.push_back( {name, "@localhost", variableName, INCREMENTAL, unitString, descriptionString, 0, 0} ); 
+
+
 		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){			
 			// extract correct unit from likwid
 			const char * name;
@@ -160,6 +164,7 @@ namespace {
 			likwidDerivedEventToOntology(likwidSetup.derivedNames[i], & name, & unit);
 
 			// TODO use correct name for the metric.
+			//if (strcmp(name, "energy/Socket/rapl") == 0 ){			
 			addGaugeMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
 		}
 

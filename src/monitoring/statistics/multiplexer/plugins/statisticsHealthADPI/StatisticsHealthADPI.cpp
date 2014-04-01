@@ -50,9 +50,8 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		/*
 		 * Fields to hold information on the statistics we are to watch, as per our options
 		 */
-		// How close (relative to total value spread observed up to now) to highest and lowest value
-		// to be regarded anomalous?
-		const float kWarnQuantile = 0.05;
+		// How many percent off highest and lowest value are regarded anomalous?
+		const float kWarnQuantile = 5.0;
 		// How many values are to be observed before evaluating a statistic's values for anomalies?
 		const uint64_t kMinObservationCount = 10;
 		// Domain string used for all statistics in the ontology
@@ -78,10 +77,10 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		// The latest values of the respective statistics
 		// vector<StatisticsValue> statisticsValues;
 		// Minimum, maximum and upper and lower quantiles at WARN_PERCENT point
-		vector<float> statisticsValuesMin;
-		vector<float> statisticsValuesMax;
-		vector<float> statisticsValuesQuantileLow;
-		vector<float> statisticsValuesQuantileHigh;
+		vector<StatisticsValue> statisticsValuesMin;
+		vector<StatisticsValue> statisticsValuesMax;
+		vector<StatisticsValue> statisticsValuesQuantileLow;
+		vector<StatisticsValue> statisticsValuesQuantileHigh;
 		// Number of observations for statistic up to now
 		vector<uint64_t> statisticsObservationCount;
 
@@ -128,10 +127,10 @@ void StatisticsHealthADPI::initPlugin() throw() {
 		// Prepare a shared_ptr to reference the actual statistic later on
 		statistics.push_back( shared_ptr<Statistic>( nullptr ) );
 		// Prepare variables to hold the statistic's characteristic values
-		statisticsValuesMin.push_back( 0.0f );
-		statisticsValuesMax.push_back( 0.0f );
-		statisticsValuesQuantileLow.push_back( 0.0f );
-		statisticsValuesQuantileHigh.push_back( 0.0f );
+		statisticsValuesMin.push_back( StatisticsValue( 0.0 ) );
+		statisticsValuesMax.push_back( StatisticsValue( 0.0 ) );
+		statisticsValuesQuantileLow.push_back( StatisticsValue( 0.0 ) );
+		statisticsValuesQuantileHigh.push_back( StatisticsValue( 0.0 ) );
 		statisticsObservationCount.push_back( 0 );
 	}
 }
@@ -147,7 +146,7 @@ ComponentOptions* StatisticsHealthADPI::AvailableOptions() {
  */
 void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & offeredStatistics, bool addedStatistics, bool removedStatistics ) throw(){
 
-	// OUTPUT( "Fresh statistics catalogue with " << offeredStatistics.size() << " entries." );
+	OUTPUT( "Fresh statistics catalogue with " << offeredStatistics.size() << " entries." );
 	if( gotAllRequested && !removedStatistics ) // We're happy - no need for action.
 		return;
 
@@ -196,7 +195,7 @@ void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_
 	// 	statisticsValues.push_back( StatisticsValue(0.0) );
 	// }
 
-	// OUTPUT( "Statistics catalogue now holds " << statistics.size() << " entries." );
+	OUTPUT( "Statistics catalogue now holds " << statistics.size() << " entries." );
 
 	gotAllRequested = ( requestedOntologyIDs.size() == availableStatisticsIndices.size() );
 }
@@ -218,8 +217,8 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	// 	*oa << (*itr)->curValue;
 	// }
 
-	// OUTPUT( "Received new data!" );
-	// OUTPUT( "Statistics being watched: " << availableStatisticsIndices.size() );
+	OUTPUT( "Received new data!" );
+	OUTPUT( "Statistics being watched: " << availableStatisticsIndices.size() );
 	// Copy values received into local store
 	for(uint i=0; i < availableStatisticsIndices.size() ; i++)
 	{
@@ -233,11 +232,11 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 		// Also, values should be double once taken from the statistic.
 
 		uint64_t count = ++statisticsObservationCount[j];
-		bool updateQuantiles = false;
 
 		if( count > kMinObservationCount )
 		{
 			// Test value for problems
+			// FIXME: Write > and < operators for VariableDatatype
 			if( value < statisticsValuesQuantileLow[j] )
 			{
 				// Flag any problems found to reasoner
@@ -292,7 +291,8 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			// Last value before actual assessment starts?
 			if( count == kMinObservationCount )
 			{
-				updateQuantiles = true;
+				// Set quantile values
+				// TODO
 			}
 		}
 
