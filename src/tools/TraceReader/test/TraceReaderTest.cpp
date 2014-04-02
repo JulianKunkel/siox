@@ -2,7 +2,7 @@
 
 int main( int argc, char ** argv )
 {
-	TraceReader tr = TraceReader( "activities.dat", "system-info.dat", "ontology.dat", "association.dat" );
+	TraceReader tr = TraceReader( "activities.dat", "system-info.dat", "ontology.dat", "association.dat", "");
 	while( true ) {
 		Activity * a = tr.nextActivity();
 		if( a == nullptr )

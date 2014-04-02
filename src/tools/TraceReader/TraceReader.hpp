@@ -11,6 +11,7 @@
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivitySerializationPlugin.hpp>
+#include <monitoring/topology/Topology.hpp>
 
 using namespace std;
 using namespace monitoring;
@@ -19,7 +20,7 @@ using namespace core;
 
 class TraceReader {
 	public:
-		TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile );
+		TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile, string topologyDatabase );
 
 		Activity * nextActivity();
 
@@ -41,11 +42,23 @@ class TraceReader {
 
 		~TraceReader(){
 			activityDeserializer->closeTrace();
+			s->stop();
+			o->stop();
+			s->finalize();
+			o->finalize();
+			delete(s);
+			delete(o);
+			if (t){
+				t->stop();
+				t->finalize();
+				delete(t);
+			}			
 		}
 	private:
-		AssociationMapper * a;
-		Ontology * o;
-		SystemInformationGlobalIDManager * s;
+		AssociationMapper * a = nullptr;
+		Ontology * o = nullptr;
+		SystemInformationGlobalIDManager * s = nullptr;
+		Topology * t = nullptr;
 		ActivitySerializationPlugin * activityDeserializer;
 
 		void strattribute( const Attribute & a, stringstream & s ) throw( NotFoundError );
