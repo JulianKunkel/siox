@@ -85,6 +85,10 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		// Number of observations for statistic up to now
 		vector<uint64_t> statisticsObservationCount;
 
+		// Total energy consumed
+		string nameEnergyConsumed = "power/rapl@localhost"; //FIXME: HACK ALERT!
+		double totalEnergyConsumed = 0.0;
+
 		// A field holding the indices of the statistics that are available at the moment.
 		// Used to iterate only over those available when updating values.
 		vector<uint> availableStatisticsIndices;
@@ -258,14 +262,14 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			if( value < statisticsValuesMin[j] ){
 				statisticsValuesMin[j] = value;
 				updateQuantiles = true;
-				OUTPUT( "New minimum: " << value );
+				// OUTPUT( "New minimum: " << value );
 			}
 			// Update Max?
 			if( value > statisticsValuesMax[j] )
 			{
 				statisticsValuesMax[j] = value;
 				updateQuantiles = true;
-				OUTPUT( "New maximum: " << value );
+				// OUTPUT( "New maximum: " << value );
 			}
 		}
 		else
@@ -276,7 +280,7 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 				// Set preliminary Min and Max values
 				statisticsValuesMax[j] = value;
 				statisticsValuesMin[j] = value;
-				OUTPUT( "First value: " << value );
+				// OUTPUT( "First value: " << value );
 			}
 
 			// Update Min?
@@ -310,6 +314,13 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			       << statisticsValuesQuantileHigh[j] << ","
 			       << statisticsValuesMax[j] << "]" );
 		}
+
+		// Finally, if we are treating the energy statistic, keep a running total
+		if ( statisticsNames[j] == nameEnergyConsumed ){
+			totalEnergyConsumed += value;
+			OUTPUT( "Total energy consumed up to now: " << totalEnergyConsumed );
+		}
+
 	}
 }
 
