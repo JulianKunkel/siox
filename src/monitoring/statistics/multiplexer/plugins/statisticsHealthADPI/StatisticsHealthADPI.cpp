@@ -92,6 +92,32 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		// A field holding the indices of the statistics that are available at the moment.
 		// Used to iterate only over those available when updating values.
 		vector<uint> availableStatisticsIndices;
+
+		/*
+		 * Fields to provide the estimated-deviation-from-expected-energy-consumation-anomaly feature
+		 */
+		// energy consumed
+		const string kNameEnergyConsumedOnt = "power/rapl"; // TODO: Do this properly!
+		const string kNameEnergyConsumedTop = "@localhost";
+		// OntologyAttributeID idEnergyConsumedOnt;
+		// TopologyObjectId idEnergyConsumedTop;
+		// shared_ptr<Statistic> statEnergyConsumed;
+		double energyConsumed;
+		// cpu utilization
+		const string kNameCpuUtilizationOnt = "utilization/cpu"; // TODO: Do this properly!
+		const string kNameCpuUtilizationTop = "@localhost";
+		// OntologyAttributeID idCpuUtilizationOnt;
+		// TopologyObjectId idCpuUtilizationTop;
+		// shared_ptr<Statistic> statCpuUtilization;
+		double cpuUtilization;
+		// Values for parameters of estimated Gaussian
+		uint64_t efficiencyCount = 0;
+		double efficiencyMean = 0.0;
+		double efficiencyM2 = 0.0;
+		double efficiencyVar;
+		// Stings to use in anomaly reporting
+		const string kIssueHighEfficiency = "High power efficiency";
+		const string kIssueLowEfficiency = "Low power efficiency";
 };
 
 
@@ -246,14 +272,12 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			if( value < statisticsValuesQuantileLow[j] )
 			{
 				// Flag any problems found to reasoner
-				// TODO
 				addObservation( cid, HealthState::ABNORMAL_GOOD,  kIssueLowConsumption, 0 );
 				OUTPUT( "Flagging Anomaly for " << value << "<" << statisticsValuesQuantileLow[j] << ": " << toString(HealthState::ABNORMAL_GOOD) );
 			}
 			if( value > statisticsValuesQuantileHigh[j] )
 			{
 				// Flag any problems found to reasoner
-				// TODO
 				addObservation( cid, HealthState::ABNORMAL_BAD,  kIssueHighConsumption, 0 );
 				OUTPUT( "Flagging Anomaly: " << toString(HealthState::ABNORMAL_BAD) );
 			}
@@ -315,12 +339,48 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			       << statisticsValuesMax[j] << "]" );
 		}
 
-		// Finally, if we are treating the energy statistic, keep a running total
-		if ( statisticsNames[j] == nameEnergyConsumed ){
+		// Finally, if we are treating the energy consumed, remember the value and keep a running total
+		if ( statisticsNames[j] == kNameEnergyConsumedOnt + kNameEnergyConsumedTop )
+		{
+			energyConsumed = value;
 			totalEnergyConsumed += value;
 			OUTPUT( "Total energy consumed up to now: " << totalEnergyConsumed );
 		}
+		// If we are treating the cpu utilization, remember the value
+		if ( statisticsNames[j] == kNameCpuUtilizationOnt + kNameCpuUtilizationTop )
+		{
+			cpuUtilization = value;
+			efficiencyCount = count;
+		}
 
+	}
+
+	// Once we have all values, compute energy efficiency and react to it
+	// FIXME: Fix for cpuUtilization == 0.0
+	double efficiency = energyConsumed / cpuUtilization;
+	OUTPUT( "efficiency = " << efficiency );
+	double stddev = sqrt(efficiencyVar);
+	if ( efficiency < efficiencyMean - stddev )
+	{
+		addObservation( cid, HealthState::ABNORMAL_BAD,  kIssueLowEfficiency, 0 );
+		OUTPUT( "Flagging Anomaly: " << toString(HealthState::ABNORMAL_BAD) );
+	}
+	if ( efficiency > efficiencyMean + stddev )
+	{
+		addObservation( cid, HealthState::ABNORMAL_GOOD,  kIssueHighEfficiency, 0 );
+		OUTPUT( "Flagging Anomaly: " << toString(HealthState::ABNORMAL_GOOD) );
+	}
+	// Estimate mean and variance, according to Knuth:
+	double delta = efficiency - efficiencyMean;
+	OUTPUT( "delta = " << delta );
+	efficiencyMean += delta / efficiencyCount;
+	OUTPUT( "efficiencyMean = " << efficiencyMean );
+	efficiencyM2 += delta * (efficiency - efficiencyMean);
+	OUTPUT( "efficiencyM2 = " << efficiencyM2 );
+	if ( efficiencyCount > 0)
+	{
+		efficiencyVar = efficiencyM2 / (efficiencyCount - 1);
+		OUTPUT( "Estimated Law: N(" << efficiencyMean << "," << efficiencyVar << ")" );
 	}
 }
 
