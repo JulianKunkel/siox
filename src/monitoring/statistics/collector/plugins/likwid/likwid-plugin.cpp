@@ -26,6 +26,13 @@ namespace {
 
 	class LikwidPlugin : public StatisticsProviderPlugin {
 		public:
+			struct ObservedType{
+				const char * unit;
+				const char * name;
+				bool shouldBeAccumulated;
+				StatisticsValue value = 0.0f;
+			};
+
 			void init( StatisticsProviderPluginOptions * options ) override;
 			void finalize() override;
 
@@ -36,12 +43,13 @@ namespace {
 			void nextTimestep() throw() override;
 			vector<StatisticsProviderDatatypes> availableMetrics() throw() override;
 		private:
-			void likwidDerivedEventToOntology(const char * likwidName, char const ** outName, char const ** outUnit);
+			void likwidDerivedEventToOntology(const char * likwidName, char const ** outName, char const ** outUnit, bool * shouldBeAccumulated);
 
 			EventSetup likwidSetup;
 			// results from likwid
 			float * values;
-			vector<StatisticsValue> statisticsValues;
+			vector<ObservedType> statistics;
+			int numCores;
 	};
 
 	void LikwidPlugin::finalize(void){
@@ -60,6 +68,7 @@ namespace {
 
 
 		const int numThreads = cpuid_topology.numSockets * cpuid_topology.numCoresPerSocket * cpuid_topology.numThreadsPerCore;
+		numCores = numThreads;
 		int * threads = (int*) malloc(sizeof(int) * numThreads);
 		for(int i=0; i < numThreads; i++){
 			threads[i] = i;
@@ -84,10 +93,12 @@ namespace {
 		likwidSetup = perfmon_prepareEventSetup( (char*) options->groups.c_str());
 
 		values = (float*) malloc( likwidSetup.numberOfDerivedCounters * sizeof(float) * 3);
-		statisticsValues.resize(likwidSetup.numberOfDerivedCounters);
-		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){
-			statisticsValues[i] = 0.0f;
-		}		
+		statistics.resize(likwidSetup.numberOfDerivedCounters);
+
+		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){			
+			// extract correct unit from likwid
+			likwidDerivedEventToOntology(likwidSetup.derivedNames[i], & statistics[i].name, & statistics[i].unit, & statistics[i].shouldBeAccumulated);
+		}
 
 		perfmon_setupCountersForEventSet(& likwidSetup);
 		perfmon_startCounters();		
@@ -97,41 +108,47 @@ namespace {
 		perfmon_stopCounters();
 		
 		perfmon_getDerivedCounterValues(& values[0], & values[likwidSetup.numberOfDerivedCounters], & values[likwidSetup.numberOfDerivedCounters*2]);	
-
+		
 		// copy likwid results
 		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){
-			statisticsValues[i] = values[i];
+			if ( statistics[i].shouldBeAccumulated ){				
+				statistics[i].value = values[i] * numCores;
+				//cout << statistics[i].name << " " << statistics[i].value << " " << numCores << endl;
+			}else{
+				statistics[i].value = values[i];
+			}
 		}
 
 		perfmon_startCounters();
 	}
 
-	void LikwidPlugin::likwidDerivedEventToOntology(const char * likwidName, char const ** outName, char const ** outUnit){
+	void LikwidPlugin::likwidDerivedEventToOntology(const char * likwidName, char const ** outName, char const ** outUnit, bool * shouldBeAccumulated){
 		struct LikwidType{
 			const char * Lname;
 			const char * unit;
 			const char * name;
+			bool shouldBeAccumulated;
 		};
 
 		LikwidType types[] = {
-			{"Runtime (RDTSC) [s]", "s", "time/cpu/Runtime (RDTSC)"},
-			{"Runtime unhalted [s]", "s", "time/cpu/RuntimeUnhalted"},
-			{"Clock [MHz]", "MHz", "throughput/cpu/Clockspeed"},
-			{"CPI", "", "throughput/cpu/CPI"},
-			{"DP MFlops/s (DP assumed)", "MFlops/s", "throughput/cpu/DPFlops"},
-			{"SP MFlops/s (SP assumed)", "MFlops/s", "throughput/cpu/SPFlops"},
-			{"Packed MUOPS/s", "MUOPS/s", "throughput/cpu/PackedMUOPS"},
-			{"Scalar MUOPS/s", "MUOPS/s", "throughput/cpu/ScalarMUOPS"},
-			{"SP MUOPS/s", "MUOPS/s", "throughput/cpu/SPMUOPS"},
-			{"DP MUOPS/s", "MUOPS/s", "throughput/cpu/DPMUOPS"},
-			{"Memory bandwidth [MBytes/s]", "MBytes/s", "throughput/memory/bandwidth"},
-			{"Memory data volume [GBytes]", "GBytes", "quantity/memory/volume"},
-			{"Remote Read BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteReadBW"},
-			{"Remote Write BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteWriteBW"},
-			{"Remote BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteBW"},
-			{"Energy [J]", "J", "energy/Socket/rapl"},
-			{"Energy DRAM [J]", "J", "energy/DRAM/rapl"},
-			{"Power [W]", "W", "power/rapl"},
+			{"Runtime (RDTSC) [s]", "s", "time/cpu/Runtime (RDTSC)", false},
+			{"Runtime unhalted [s]", "s", "time/cpu/UnhaltedConsumed", true},
+			{"Clock [MHz]", "MHz", "throughput/cpu/Clockspeed", false},
+			{"CPI", "", "throughput/cpu/CPI", false},
+			{"DP MFlops/s (DP assumed)", "MFlops/s", "throughput/cpu/DPFlops", false},
+			{"SP MFlops/s (SP assumed)", "MFlops/s", "throughput/cpu/SPFlops", false},
+			{"Packed MUOPS/s", "MUOPS/s", "throughput/cpu/PackedMUOPS", false},
+			{"Scalar MUOPS/s", "MUOPS/s", "throughput/cpu/ScalarMUOPS", false},
+			{"SP MUOPS/s", "MUOPS/s", "throughput/cpu/SPMUOPS", false},
+			{"DP MUOPS/s", "MUOPS/s", "throughput/cpu/DPMUOPS", false},
+			{"Memory bandwidth [MBytes/s]", "MBytes/s", "throughput/memory/bandwidth", false},
+			{"Memory data volume [GBytes]", "GBytes", "quantity/memory/volume", true},
+			{"Remote Read BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteReadBW", false},
+			{"Remote Write BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteWriteBW", false},
+			{"Remote BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteBW", false},
+			{"Energy [J]", "J", "energy/Socket/rapl", true},
+			{"Energy DRAM [J]", "J", "energy/DRAM/rapl", true},
+			{"Power [W]", "W", "power/rapl", true},
 			{nullptr, nullptr, nullptr} };
 		const LikwidType * check_type = types;
 
@@ -140,6 +157,7 @@ namespace {
 			if (strcmp(check_type->Lname, likwidName) == 0){
 				*outName = check_type->name;
 				*outUnit = check_type->unit;
+				*shouldBeAccumulated = check_type->shouldBeAccumulated;
 				return;
 			}
 			check_type++;
@@ -158,14 +176,8 @@ namespace {
 
 
 		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){			
-			// extract correct unit from likwid
-			const char * name;
-			const char * unit;
-			likwidDerivedEventToOntology(likwidSetup.derivedNames[i], & name, & unit);
-
-			// TODO use correct name for the metric.
-			//if (strcmp(name, "energy/Socket/rapl") == 0 ){			
-			addGaugeMetric( name, statisticsValues[i], unit, likwidSetup.derivedNames[i]);
+			// TODO use correct name for the metric.	
+			addGaugeMetric( statistics[i].name, statistics[i].value, statistics[i].unit, likwidSetup.derivedNames[i]);
 		}
 
 		return result;

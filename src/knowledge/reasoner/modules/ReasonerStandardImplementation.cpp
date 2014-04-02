@@ -422,7 +422,7 @@ void ReasonerStandardImplementation::start(){
 			{"utilization/io", "@localhost"},
 			{"utilization/network/send", "@localhost"},
 			{"utilization/network/receive", "@localhost"},
-			{"time/cpu/RuntimeUnhalted", "@localhost"}, // CONSUMED_CPU_SECONDS
+			{"time/cpu/UnhaltedConsumed", "@localhost"}, // CONSUMED_CPU_SECONDS
 // #ifdef ENABLE_LIKWID_POWER
 			{"energy/Socket/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
 // #else
