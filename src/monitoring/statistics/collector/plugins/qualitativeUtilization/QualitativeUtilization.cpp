@@ -36,7 +36,7 @@ class QualitativeUtilization : public StatisticsIntegrator {
 		OntologyAttributeID likwidMemoryBandwidth = 0;
 
 		TopologyTypeId ethType = 0;
-		TopologyObjectId localhostObject = 0, allCpusObject = 0;		
+		TopologyObjectId localhostObject = 0, allCpusObject = 0;
 
 		///@todo TODO: interprete the overflow_max_value and overflow_next_value fields of StatisticsProviderDatatypes
 		std::shared_ptr<Statistic> ioStatisticsRead;
@@ -77,13 +77,13 @@ vector<StatisticsProviderDatatypes> QualitativeUtilization::availableMetrics() t
 
 	r.push_back( {"utilization/cpu", "@localhost", cpuUtilization, GAUGE, "", "average cpu utilization on a node"} );
 	r.push_back( {"utilization/memory/vm", "@localhost", memoryUtilizationVM, GAUGE, "", "memory utilization on a node computed using the virtual machine's stats"} );
-	r.push_back( {"utilization/memory", "@localhost", memoryUtilization, GAUGE, "", "memory utilization on a node"} );	
+	r.push_back( {"utilization/memory", "@localhost", memoryUtilization, GAUGE, "", "memory utilization on a node"} );
 	r.push_back( {"utilization/network/send", "@localhost", networkUtilizationTX, GAUGE, "", "average network utilization across all links of a node"} );
-	r.push_back( {"utilization/network/receive", "@localhost", networkUtilizationRX, GAUGE, "", "average network utilization across all links of a node"} );	
+	r.push_back( {"utilization/network/receive", "@localhost", networkUtilizationRX, GAUGE, "", "average network utilization across all links of a node"} );
 	r.push_back( {"utilization/io", "@localhost", ioUtilization, GAUGE, "", "percentage of available I/O bandwidth used"} );
 
 	r.push_back( {"quantity/network/volume", "@localhost", networkVolume, GAUGE, "", "Amount of data transferred over the network"} );
-	r.push_back( {"quantity/io/volume", "@localhost", ioVolume, GAUGE, "", "Amount of data accessed on an I/O system"} );	
+	r.push_back( {"quantity/io/volume", "@localhost", ioVolume, GAUGE, "", "Amount of data accessed on an I/O system"} );
 
 	return r;
 }
@@ -157,7 +157,7 @@ void QualitativeUtilization::newDataAvailable() throw() {
 	uint64_t curCpuConsumed = cpuStatistic->curValue.uint64();
 
 	uint64_t curCpuTotal = curIdleCpuTime + curCpuConsumed;
-	cpuUtilization = (curCpuTotal == 0.0f) ? 0.0f : curCpuConsumed / curCpuTotal;
+	cpuUtilization = (curCpuTotal == 0.0f) ? 0.0f : curCpuConsumed / (double) curCpuTotal;
 
 	memoryUtilizationVM = 0.0f;
 
@@ -175,6 +175,7 @@ void QualitativeUtilization::newDataAvailable() throw() {
 	ioVolume = ((uint64_t) 512) * curIOvolume;
 
 	if ( likwidMemoryBandwithStatistic != nullptr ){
+		// cout << "Likwid reports: MemBandwidth =" << likwidMemoryBandwithStatistic->flt() << endl;
 		memoryUtilization =  (float) likwidMemoryBandwithStatistic->flt() / options->availableMemoryBandwidth;
 	}
 }

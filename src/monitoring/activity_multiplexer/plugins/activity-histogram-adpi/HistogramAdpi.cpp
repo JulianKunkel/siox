@@ -60,7 +60,7 @@ void HistogramAdpiPlugin::initPlugin() {
 
 	TopologyObject myData = topology->registerObjectByPath( {{ "AMUXPluginName", "ADPIPlugin", "AMUXPlugin" }} );
 	pluginTopoObjectID = myData.id();
-	
+
 	TopologyAttribute bucketMinAttribute = topology->registerAttribute( adpiType.id(), "min", VariableDatatype::Type::UINT64 );
 	bucketMinAttributID = bucketMinAttribute.id();
 
@@ -79,7 +79,7 @@ static string convertAIDToString(UniqueComponentActivityID aid){
 void HistogramAdpiPlugin::Notify( const shared_ptr<Activity> & activity, int lost ) {
 	const HistogramAdpiOptions & o = getOptions<HistogramAdpiOptions>();
 	unique_lock<mutex> lock( giant_mutex );
-	
+
 	auto itr = statistics.find(activity->ucaid_);
 	if ( itr == statistics.end() ){
 		statistics[activity->ucaid_] = {};
@@ -131,15 +131,15 @@ void HistogramAdpiPlugin::Notify( const shared_ptr<Activity> & activity, int los
 		// based on the bucket number we choose the goodness.
 		HealthState goodness;
 		if ( bucket < o.extremeBucketCount ){
-			goodness = HealthState::ABNORMAL_FAST;
+			goodness = HealthState::ABNORMAL_GOOD;
 		}else if ( bucket < o.slowFastBucketCount ){
-			goodness = HealthState::FAST;
+			goodness = HealthState::GOOD;
 		}else if ( bucket < ( o.buckets - o.slowFastBucketCount) ){
 			goodness = HealthState::OK;
 		}else if ( bucket < ( o.buckets - o.extremeBucketCount) ){
-			goodness = HealthState::SLOW;
+			goodness = HealthState::BAD;
 		}else{
-			goodness = HealthState::ABNORMAL_SLOW;
+			goodness = HealthState::ABNORMAL_BAD;
 		}
 
 		OUTPUT(duration << " " << (duration - ats.minTimeS) << " " << bucket << " " << ats.histogramBucketWidth << " " << o.slowFastBucketCount << " " << goodness);
@@ -181,7 +181,7 @@ ComponentReport HistogramAdpiPlugin::prepareReport()
 	// todo lookup via systeminformation plugin
 	for( auto itr = statistics.begin(); itr != statistics.end(); itr++ ){
 		ActivityTimeStatistics & ats = itr->second;
-		
+
 		GroupEntry * ge;
 
 		try{

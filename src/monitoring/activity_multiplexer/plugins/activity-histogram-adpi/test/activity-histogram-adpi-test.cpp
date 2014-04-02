@@ -40,7 +40,7 @@ int main( int argc, char const * argv[] )
 	topology->getOptions<RamTopologyOptions>();
 	topology->init();
 
-	
+
 	systemInfo->getOptions<FileBasedSystemInformationOptions>().filename = "system-info-test.txt";
 	systemInfo->init( );
 
@@ -58,7 +58,7 @@ int main( int argc, char const * argv[] )
    {
 	TopologyType dataType = topology->registerType("ADPIPlugin");
 	TopologyObject ucaid3data = topology->registerObjectByPath( {{ "AMUXPluginName", "ADPIPlugin", "AMUXPlugin" }, {"data", ucaid3 , "data"}} );
-	
+
 	TopologyAttribute bucketMinAttribute = topology->registerAttribute( dataType.id(), "min", VariableDatatype::Type::UINT64 );
 	TopologyAttribute bucketMaxAttribute = topology->registerAttribute( dataType.id(), "max", VariableDatatype::Type::UINT64 );
 
@@ -88,7 +88,7 @@ int main( int argc, char const * argv[] )
 
 	const ComponentID cid = {.pid = {2, 3, 4}, .id = 1};
 	const ActivityID aaid = {.cid = cid, .id = 2};
-	
+
 	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 100, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
 
 	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 1100, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
@@ -111,11 +111,11 @@ int main( int argc, char const * argv[] )
 
 	AnomalyPluginHealthStatistic & aph = (*aphsMap)[cid];
 	assert( aph.cid == cid );
-	
+
 	assert( aph.positiveIssues.size() == 0 );
 	assert( aph.negativeIssues.size() == 0 );
 
-	assert( aph.occurrences[HealthState::ABNORMAL_SLOW ] == 1 );
+	assert( aph.occurrences[HealthState::ABNORMAL_BAD ] == 1 );
 	}
 
 
@@ -127,11 +127,11 @@ int main( int argc, char const * argv[] )
 
 	AnomalyPluginHealthStatistic & aph = (*aphsMap)[cid];
 	assert( aph.cid == cid );
-	
+
 	assert( aph.positiveIssues.size() == 0 );
 	assert( aph.negativeIssues.size() == 0 );
 
-	assert( aph.occurrences[HealthState::ABNORMAL_FAST ] == 1 );
+	assert( aph.occurrences[HealthState::ABNORMAL_GOOD ] == 1 );
 	}
 
 	adpi->Notify( shared_ptr<Activity>( new Activity( ucaid1, 0, 400, aaid, parentArray, attributeArray, remoteCallsArray, NULL, 0 ) ), 0 );
@@ -157,7 +157,8 @@ int main( int argc, char const * argv[] )
 	assert( aph.cid == cid );
 	assert( aph.positiveIssues.size() == 0 );
 	assert( aph.negativeIssues.size() == 0 );
-	assert( aph.occurrences[HealthState::SLOW ] == 1 );
+	assert( aph.occurrences[HealthState::BAD
+ ] == 1 );
 	}
 
 
@@ -173,7 +174,7 @@ int main( int argc, char const * argv[] )
 	reporter->processFinalReport( lst );
 
 	// dump the current topology relation list
-	
+
 	TopologyObject stored1;
 	TopologyObject stored2;
 	TopologyObject stored3;
@@ -204,11 +205,11 @@ int main( int argc, char const * argv[] )
 
 	AnomalyPluginHealthStatistic & aph = (*aphsMap)[cid];
 	assert( aph.cid == cid );
-	
+
 	assert( aph.positiveIssues.size() == 0 );
 	assert( aph.negativeIssues.size() == 0 );
 
-	assert( aph.occurrences[HealthState::ABNORMAL_FAST ] == 1 );
+	assert( aph.occurrences[HealthState::ABNORMAL_GOOD ] == 1 );
 	}
 
 

@@ -282,7 +282,8 @@ void testReasoner(){
 	cout << ((ReasonerStandardImplementation *) rN1) << endl;
 
 
-	ProcessHealth p1 = { HealthState::SLOW, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
+	ProcessHealth p1 = { HealthState::BAD
+, 	{{0,1,5,5,0,0}}, { {"cache hits", 5, 0} }, { {"cache misses", 4, 0} } };
 	((ReasonerStandardImplementation *) rP11)->receivedReasonerProcessHealth( rmrInject, p1 );
 	cout << ((ReasonerStandardImplementation *) rP11) << endl;
 
@@ -290,7 +291,8 @@ void testReasoner(){
 	((ReasonerStandardImplementation *) rP12)->receivedReasonerProcessHealth( rmrInject, p2 );
 	cout << ((ReasonerStandardImplementation *) rP12) << endl;
 
-	ProcessHealth p3 = { HealthState::FAST, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
+	ProcessHealth p3 = { HealthState::GOOD
+, 	{{0,5,5,1,0,0}}, { { "optimal access pattern type 1", 2, 10 }, {"cache hits", 3, 0} }, { {"cache misses", 3, 0} } };
 	((ReasonerStandardImplementation *) rP13)->receivedReasonerProcessHealth( rmrInject, p3 );
 	cout << ((ReasonerStandardImplementation *) rP13) << endl;
 */
@@ -310,13 +312,17 @@ void testReasoner(){
 
 
 	// Now we inject an observation which will trigger a reaction:
-	adpiP11a.injectObservation( {{1,1,1},1}, HealthState::SLOW, "SlownessIssue", 10 );
+	adpiP11a.injectObservation( {{1,1,1},1}, HealthState::BAD
+, "SlownessIssue", 10 );
 	usleep(500);
-	adpiN1a.injectObservation( {{3,3,3},3}, HealthState::FAST, "Quickness Issue", -70 );
+	adpiN1a.injectObservation( {{3,3,3},3}, HealthState::GOOD
+, "Quickness Issue", -70 );
 	usleep(500);
-	adpiP11a.injectObservation( {{2,2,2},2}, HealthState::SLOW, "Slowness Issue", 10 );
+	adpiP11a.injectObservation( {{2,2,2},2}, HealthState::BAD
+, "Slowness Issue", 10 );
 	usleep(500);
-	adpiP11a.injectObservation( {{1,1,1},1}, HealthState::ABNORMAL_SLOW, "Standstill Issue", 10 );
+	adpiP11a.injectObservation( {{1,1,1},1}, HealthState::ABNORMAL_BAD
+, "Standstill Issue", 10 );
 
 /*
 	assert( at2.waitForAnomalyCount( 1 ) );
