@@ -52,8 +52,9 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		 */
 		// Preliminary Component ID
 		ComponentID cid = {{1,2,3},4};
-		// How many percent off highest and lowest value are regarded anomalous?
-		const double kWarnQuantile = 5.0;
+		// How close (relative to total value spread observed up to now) to highest and lowest value
+		// to be regarded anomalous?
+		const double kWarnQuantile = 0.05;
 		// How many values are to be observed before evaluating a statistic's values for anomalies?
 		const uint64_t kMinObservationCount = 10;
 		// Domain string used for all statistics in the ontology
@@ -146,7 +147,7 @@ ComponentOptions* StatisticsHealthADPI::AvailableOptions() {
  */
 void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_ptr<Statistic> > & offeredStatistics, bool addedStatistics, bool removedStatistics ) throw(){
 
-	OUTPUT( "Fresh statistics catalogue with " << offeredStatistics.size() << " entries." );
+	// OUTPUT( "Fresh statistics catalogue with " << offeredStatistics.size() << " entries." );
 	if( gotAllRequested && !removedStatistics ) // We're happy - no need for action.
 		return;
 
@@ -195,7 +196,7 @@ void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_
 	// 	statisticsValues.push_back( StatisticsValue(0.0) );
 	// }
 
-	OUTPUT( "Statistics catalogue now holds " << statistics.size() << " entries." );
+	// OUTPUT( "Statistics catalogue now holds " << statistics.size() << " entries." );
 
 	gotAllRequested = ( requestedOntologyIDs.size() == availableStatisticsIndices.size() );
 }
@@ -217,8 +218,8 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	// 	*oa << (*itr)->curValue;
 	// }
 
-	OUTPUT( "Received new data!" );
-	OUTPUT( "Statistics being watched: " << availableStatisticsIndices.size() );
+	// OUTPUT( "Received new data!" );
+	// OUTPUT( "Statistics being watched: " << availableStatisticsIndices.size() );
 	// Copy values received into local store
 	for(uint i=0; i < availableStatisticsIndices.size() ; i++)
 	{
@@ -236,19 +237,20 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 
 		if( count > kMinObservationCount )
 		{
+			// Necessary number of training values has been observed:
 			// Test value for problems
 			if( value < statisticsValuesQuantileLow[j] )
 			{
 				// Flag any problems found to reasoner
 				// TODO
-				addObservation( cid, HealthState::ABNORMAL_GOOD,  kIssueLowConsumption, 0 )
+				addObservation( cid, HealthState::ABNORMAL_GOOD,  kIssueLowConsumption, 0 );
 				OUTPUT( "Flagging Anomaly for " << value << "<" << statisticsValuesQuantileLow[j] << ": " << toString(HealthState::ABNORMAL_GOOD) );
 			}
 			if( value > statisticsValuesQuantileHigh[j] )
 			{
 				// Flag any problems found to reasoner
 				// TODO
-				addObservation( cid, HealthState::ABNORMAL_BAD,  kIssueHighConsumption, 0 )
+				addObservation( cid, HealthState::ABNORMAL_BAD,  kIssueHighConsumption, 0 );
 				OUTPUT( "Flagging Anomaly: " << toString(HealthState::ABNORMAL_BAD) );
 			}
 
