@@ -55,10 +55,10 @@ class TraceReader {
 			}			
 		}
 	private:
-		AssociationMapper * a;
-		Ontology * o;
-		SystemInformationGlobalIDManager * s;
-		Topology * t;
+		AssociationMapper * a = nullptr;
+		Ontology * o = nullptr;
+		SystemInformationGlobalIDManager * s = nullptr;
+		Topology * t = nullptr;
 		ActivitySerializationPlugin * activityDeserializer;
 
 		void strattribute( const Attribute & a, stringstream & s ) throw( NotFoundError );

@@ -31,7 +31,7 @@ Activity * TraceReader::nextActivity() {
 
 TraceReader::TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile, string topologyDatabase )
 {
-	if (topologyDatabase != ""){
+	if (topologyDatabase == ""){
 		a = core::module_create_instance<AssociationMapper>( "", "siox-monitoring-FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE );
 		o = core::module_create_instance<Ontology>( "", "siox-monitoring-FileOntology", ONTOLOGY_INTERFACE );
 		s = core::module_create_instance<SystemInformationGlobalIDManager>( "", "siox-monitoring-FileBasedSystemInformation", SYSTEMINFORMATION_GLOBALID_MANAGER_INTERFACE );
@@ -48,7 +48,8 @@ TraceReader::TraceReader( string activityFile, string systemInfoFile, string ont
 		a->init( aop );		
 	}else{
 		t = core::module_create_instance<Topology>( "", "siox-monitoring-DatabaseTopology", MONITORING_TOPOLOGY_INTERFACE );
-		// TODO parse me!
+
+		// TODO parse me! now HARDCODED
 		t->getOptions<DatabaseTopologyOptions>().hostaddress = "10.0.0.202";
 		t->getOptions<DatabaseTopologyOptions>().username = "siox";
 		t->getOptions<DatabaseTopologyOptions>().password = "siox";
