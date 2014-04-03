@@ -14,11 +14,11 @@ namespace knowledge{
 
 //@serializable
 enum HealthState{
-	ABNORMAL_FAST = 0,
-	FAST = 1,
+	ABNORMAL_GOOD = 0,
+	GOOD  = 1,
 	OK = 2,
-	SLOW = 3,
-	ABNORMAL_SLOW = 4,
+	BAD = 3,
+	ABNORMAL_BAD = 4,
 	ABNORMAL_OTHER = 5,
 	HEALTH_STATE_COUNT = 6
 };
@@ -273,7 +273,7 @@ typedef Health ProcessHealth;
 //@serializable
 struct NodeHealth : public Health{
 	array<uint8_t, UTILIZATION_STATISTIC_COUNT> utilization; // UtilizationIndex
-	
+
 	// the following elements account for consumed resources
 	array<float, NODE_STATISTIC_COUNT> statistics;
 
@@ -335,18 +335,18 @@ struct NodeHealth : public Health{
 
 inline string toString(HealthState s){
 	switch(s){
-		case ABNORMAL_SLOW:
-			return "ABNORMAL_SLOW";
-		case ABNORMAL_FAST:
-			return "ABNORMAL_FAST";
+		case ABNORMAL_BAD:
+			return "ABNORMAL_BAD";
+		case ABNORMAL_GOOD:
+			return "ABNORMAL_GOOD";
 		case ABNORMAL_OTHER:
 			return "ABNORMAL_OTHER";
-		case FAST:
-			return "FAST";
+		case GOOD:
+			return "GOOD";
 		case OK:
 			return "OK";
-		case SLOW:
-			return "SLOW";
+		case BAD:
+			return "BAD";
 		default:
 			return "UNKNOWN";
 	}

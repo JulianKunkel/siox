@@ -8,6 +8,10 @@
 #include <monitoring/association_mapper/modules/FileAssociationMapper/FileAssociationMapperOptions.hpp>
 #include <monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp>
 #include <monitoring/system_information/modules/filebased-system-information/FileBasedSystemInformationOptions.hpp>
+#include <monitoring/topology/databaseTopology/DatabaseTopologyOptions.hpp>
+#include <monitoring/association_mapper/modules/TopologyAssociationMapper/TopologyAssociationMapperOptions.hpp>
+#include <monitoring/ontology/modules/TopologyOntology/TopologyOntologyOptions.hpp>
+#include <monitoring/system_information/modules/TopologySystemInformation/TopologySystemInformationOptions.hpp>
 
 #include "TraceReader.hpp"
 
@@ -25,11 +29,51 @@ Activity * TraceReader::nextActivity() {
 	}
 }
 
-TraceReader::TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile )
+TraceReader::TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile, string topologyDatabase )
 {
-	a = core::module_create_instance<AssociationMapper>( "", "siox-monitoring-FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE );
-	o = core::module_create_instance<Ontology>( "", "siox-monitoring-FileOntology", ONTOLOGY_INTERFACE );
-	s = core::module_create_instance<SystemInformationGlobalIDManager>( "", "siox-monitoring-FileBasedSystemInformation", SYSTEMINFORMATION_GLOBALID_MANAGER_INTERFACE );
+	if (topologyDatabase == ""){
+		a = core::module_create_instance<AssociationMapper>( "", "siox-monitoring-FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE );
+		o = core::module_create_instance<Ontology>( "", "siox-monitoring-FileOntology", ONTOLOGY_INTERFACE );
+		s = core::module_create_instance<SystemInformationGlobalIDManager>( "", "siox-monitoring-FileBasedSystemInformation", SYSTEMINFORMATION_GLOBALID_MANAGER_INTERFACE );
+		FileBasedSystemInformationOptions * sop = new FileBasedSystemInformationOptions();
+		sop->filename = systemInfoFile;
+		s->init( sop );
+
+		FileOntologyOptions * oop = new FileOntologyOptions();
+		oop->filename = ontologyFile;
+		o->init( oop );
+
+		FileAssociationMapperOptions * aop = new FileAssociationMapperOptions();
+		aop->filename = associationFile;
+		a->init( aop );		
+	}else{
+		t = core::module_create_instance<Topology>( "", "siox-monitoring-DatabaseTopology", MONITORING_TOPOLOGY_INTERFACE );
+
+		// TODO parse me! now HARDCODED
+		t->getOptions<DatabaseTopologyOptions>().hostaddress = "10.0.0.202";
+		t->getOptions<DatabaseTopologyOptions>().username = "siox";
+		t->getOptions<DatabaseTopologyOptions>().password = "siox";
+		t->getOptions<DatabaseTopologyOptions>().dbname = "siox";
+		t->getOptions<DatabaseTopologyOptions>().port = 5432;
+		t->init();
+		t->start();
+
+		a = core::module_create_instance<AssociationMapper>( "", "siox-monitoring-TopologyAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE );
+		a->getOptions<TopologyAssociationMapperOptions>().topology = t;
+		a->init();
+		a->start();
+
+		o = core::module_create_instance<Ontology>( "", "siox-monitoring-TopologyOntology", ONTOLOGY_INTERFACE );
+		o->getOptions<TopologyOntologyOptions>().topology = t;
+		o->init();
+		o->start();		
+
+		s = core::module_create_instance<SystemInformationGlobalIDManager>( "", "siox-monitoring-TopologySystemInformation", SYSTEMINFORMATION_GLOBALID_MANAGER_INTERFACE );
+		s->getOptions<TopologySystemInformationOptions>().topology = t;
+		s->init();
+		s->start();		
+	}
+
 
 	activityDeserializer = core::module_create_instance<ActivitySerializationPlugin>( "", "siox-monitoring-activityPlugin-ActivityBinWriter", ACTIVITY_SERIALIZATION_PLUGIN_INTERFACE );
 
@@ -39,17 +83,7 @@ TraceReader::TraceReader( string activityFile, string systemInfoFile, string ont
 
 	//activityDeserializer = new FileDeserializer<Activity>( activityFile );
 
-	FileBasedSystemInformationOptions * sop = new FileBasedSystemInformationOptions();
-	sop->filename = systemInfoFile;
-	s->init( sop );
 
-	FileOntologyOptions * oop = new FileOntologyOptions();
-	oop->filename = ontologyFile;
-	o->init( oop );
-
-	FileAssociationMapperOptions * aop = new FileAssociationMapperOptions();
-	aop->filename = associationFile;
-	a->init( aop );
 	
 }
 

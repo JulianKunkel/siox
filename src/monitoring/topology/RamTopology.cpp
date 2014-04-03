@@ -376,6 +376,8 @@ bool RamTopology::setAttribute( TopologyObjectId object, TopologyAttributeId att
 	}
 	//Consistency check if we found a preexisting attributeId value.
 	// TODO removed because we want to alter the data.
+
+	return true;
 }
 
 TopologyValue RamTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {

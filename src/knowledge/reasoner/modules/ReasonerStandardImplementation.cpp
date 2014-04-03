@@ -91,8 +91,8 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
 				node_statistics[i] += health.statistics[i];
 			}
-			cout << "CPU: " << health.statistics[5] << endl;
-			cout << "RAPL: " << health.statistics[6] << endl;
+			cout << "CPU: " << health.statistics[CONSUMED_CPU_SECONDS] << endl;
+			cout << "RAPL: " << health.statistics[CONSUMED_ENERGY_JOULE] << endl;
 
 			nodeHealth = make_shared<NodeHealth>(health);
 
@@ -299,8 +299,10 @@ void ReasonerStandardImplementation::PeriodicRun(){
 					}
 
 					// Did number of any ABNORMAL state rise?
-					if( i == HealthState::ABNORMAL_SLOW
-					   || i == HealthState::ABNORMAL_FAST
+					if( i == HealthState::ABNORMAL_BAD
+
+					   || i == HealthState::ABNORMAL_GOOD
+
 					   || i == HealthState::ABNORMAL_OTHER ){
 						if( observationCounts[i] > oldObservationCounts[i] ){
 							anomalyDetected = true;
@@ -420,7 +422,7 @@ void ReasonerStandardImplementation::start(){
 			{"utilization/io", "@localhost"},
 			{"utilization/network/send", "@localhost"},
 			{"utilization/network/receive", "@localhost"},
-			{"time/cpu/RuntimeUnhalted", "@localhost"}, // CONSUMED_CPU_SECONDS
+			{"time/cpu/UnhaltedConsumed", "@localhost"}, // CONSUMED_CPU_SECONDS
 // #ifdef ENABLE_LIKWID_POWER
 			{"energy/Socket/rapl", "@localhost"}, // you may replace this with utilization/cpu to make it runnable :-)
 // #else
@@ -562,36 +564,36 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 	shared_ptr<NodeHealth> newHealth = make_shared<NodeHealth>();
 
 	// determine node health based on the historic knowledge AND the statistics
-	if ( nodeHealth->occurrences[ABNORMAL_FAST] || nodeHealth->occurrences[ABNORMAL_SLOW] || nodeHealth->occurrences[ABNORMAL_OTHER] ){
+	if ( nodeHealth->occurrences[ABNORMAL_GOOD] || nodeHealth->occurrences[ABNORMAL_BAD] || nodeHealth->occurrences[ABNORMAL_OTHER] ){
 		// we have a condition in which we must fire the anomaly trigger.
 		// cout << "Checkpoint 1a passed..." << endl;
-		if ( observationRatios[ABNORMAL_FAST] > 5 &&
-			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_SLOW] &&
-			observationRatios[ABNORMAL_FAST] > 2 * observationRatios[ABNORMAL_OTHER] )
+		if ( observationRatios[ABNORMAL_GOOD] > 5 &&
+			observationRatios[ABNORMAL_GOOD] > 2 * observationRatios[ABNORMAL_BAD] &&
+			observationRatios[ABNORMAL_GOOD] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
-			newHealth->overallState = HealthState::ABNORMAL_FAST;
-		}else if (observationRatios[ABNORMAL_SLOW] > 5 &&
-			observationRatios[ABNORMAL_SLOW] > 2 * observationRatios[ABNORMAL_FAST] &&
-			observationRatios[ABNORMAL_SLOW] > 2 * observationRatios[ABNORMAL_OTHER] )
+			newHealth->overallState = HealthState::ABNORMAL_GOOD;
+		}else if (observationRatios[ABNORMAL_BAD] > 5 &&
+			observationRatios[ABNORMAL_BAD] > 2 * observationRatios[ABNORMAL_GOOD] &&
+			observationRatios[ABNORMAL_BAD] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
-			newHealth->overallState = HealthState::ABNORMAL_SLOW;
+			newHealth->overallState = HealthState::ABNORMAL_BAD;
 		}else{
 			newHealth->overallState = HealthState::ABNORMAL_OTHER;
 		}
 	}else{
 		// cout << "Checkpoint 1b passed..." << endl;
 		// normal condition
-		// We have to pick between FAST, OK & SLOW
-		if ( observationRatios[FAST] > 5 &&
-			observationRatios[FAST] > 3*observationRatios[SLOW] )
+		// We have to pick between GOOD, OK & BAD
+		if ( observationRatios[GOOD] > 5 &&
+			observationRatios[GOOD] > 3*observationRatios[BAD] )
 		{
 			// cout << "Checkpoint 1ba passed..." << endl;
-			newHealth->overallState = HealthState::FAST;
-		}else if ( observationRatios[SLOW] > 5 &&
-			observationRatios[SLOW] > 3*observationRatios[FAST] )
+			newHealth->overallState = HealthState::GOOD;
+		}else if ( observationRatios[BAD] > 5 &&
+			observationRatios[BAD] > 3*observationRatios[GOOD] )
 		{
 			// cout << "Checkpoint 1bb passed..." << endl;
-			newHealth->overallState = HealthState::SLOW;
+			newHealth->overallState = HealthState::BAD;
 		}else{
 			// cout << "Checkpoint 1bc passed..." << endl;
 			newHealth->overallState = HealthState::OK;
@@ -603,7 +605,8 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 	if ( newHealth->overallState != HealthState::OK ){
 		uint totalUtilization = 0;
 
-		if ( newHealth->overallState == HealthState::SLOW || newHealth->overallState == HealthState::ABNORMAL_SLOW || newHealth->overallState == HealthState::ABNORMAL_OTHER ){
+		if ( newHealth->overallState == HealthState::BAD || newHealth->overallState == HealthState::ABNORMAL_BAD
+ || newHealth->overallState == HealthState::ABNORMAL_OTHER ){
 
 			for(int i=0; i < UTILIZATION_STATISTIC_COUNT; i++ ){
 				totalUtilization += newHealth->utilization[i];

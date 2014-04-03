@@ -164,13 +164,15 @@ void AnomalyInjectorPlugin::generateAnomaly()
 		// Generate random delta and from that a fitting state
 		delta_time_ms = dNorm(rd);
 		if ( delta_time_ms > 50 )
-			state = HealthState::ABNORMAL_SLOW;
+			state = HealthState::ABNORMAL_BAD;
 		else if ( delta_time_ms > 10 )
-			state = HealthState::SLOW;
+			state = HealthState::BAD
+;
 		else if ( delta_time_ms < -50 )
-			state = HealthState::ABNORMAL_FAST;
+			state = HealthState::ABNORMAL_GOOD;
 		else if ( delta_time_ms < -10 )
-			state = HealthState::SLOW;
+			state = HealthState::BAD
+;
 		else
 			state = HealthState::OK;
 
