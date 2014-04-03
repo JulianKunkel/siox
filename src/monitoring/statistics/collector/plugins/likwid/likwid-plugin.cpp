@@ -115,7 +115,7 @@ namespace {
 
 		LikwidType types[] = {
 			{"Runtime (RDTSC) [s]", "s", "time/cpu/Runtime (RDTSC)"},
-			{"Runtime unhalted [s]", "s", "time/cpu/RuntimeUnhalted"},
+			{"Runtime unhalted [s]", "s", "time/cpu/UnhaltedConsumed"},
 			{"Clock [MHz]", "MHz", "throughput/cpu/Clockspeed"},
 			{"CPI", "", "throughput/cpu/CPI"},
 			{"DP MFlops/s (DP assumed)", "MFlops/s", "throughput/cpu/DPFlops"},
