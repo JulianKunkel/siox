@@ -43,7 +43,7 @@ class ActivityPluginDereferencingImplementation : public ActivityPluginDereferen
 			return association_mapper->lookup_instance_mapping( id );
 		}
 
-		void registerAnomalyPlugin( knowledge::AnomalyPlugin * plugin ) {
+		void register_anomaly_plugin( knowledge::AnomalyPlugin * plugin ) {
 			assert( reasoner != nullptr );
 			reasoner->connectAnomalyPlugin( plugin );
 		}

@@ -71,7 +71,7 @@ class AnomalySkeleton: public ActivityMultiplexerPlugin, public AnomalyPlugin {
 				return;
 			}
 
-			facade->registerAnomalyPlugin( this );
+			facade->register_anomaly_plugin( this );
 			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &AnomalySkeleton::Notify ), false );
 		}
 

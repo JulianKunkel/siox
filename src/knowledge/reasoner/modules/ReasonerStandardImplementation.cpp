@@ -1,5 +1,6 @@
 #include <knowledge/reasoner/modules/ReasonerStandardImplementation.hpp>
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
+#include <util/threadSafety.h>
 
 #include <iostream>
 
@@ -13,10 +14,11 @@ using namespace monitoring;
 #ifndef DEBUG
 #define OUTPUT(...)
 #else
-#define OUTPUT(...) do { cout << "[Reasoner, role " << role << "] " << __VA_ARGS__ << "\n"; } while(0)
+// #define OUTPUT(...) do { cout << "[Reasoner " << id << ", role " << role << "] " << __VA_ARGS__ << "\n"; } while(0)
+#define OUTPUT(...) do { cout << "[Reasoner " << id << "] " << __VA_ARGS__ << "\n"; } while(0)
 #endif
 
-#define ERROR(...) do { cerr << "[Reasoner, role " << role << "] " << __VA_ARGS__ << "!\n"; } while(0)
+#define ERROR(...) do { cerr << "[Reasoner " << id << ", role " << role << "] " << __VA_ARGS__ << "!\n"; } while(0)
 
 
 namespace knowledge {
@@ -66,12 +68,12 @@ void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessa
 		// Only Node level reasoners should receive process level reports; others ignore them
 		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
 			(*childProcessesHealthMap)[data.reasonerID] = health;
-			// cout << id << " received status from process reasoner " << data.reasonerID << endl;
+			// OUTPUT( "Received status from process reasoner " << data.reasonerID );
 		}
 		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
 			processHealth = make_shared<ProcessHealth>( health );
 		else
-			cout << id << " received inappropriate message from " << data.reasonerID << "!" << endl;
+			OUTPUT( "Received inappropriate message from " << data.reasonerID << "!" );
 
 		nPushesReceived++;
 	}
@@ -84,24 +86,24 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 
 		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM ){
 			(*childNodesHealthMap)[data.reasonerID] = health;
-			// cout << id << " received status from node reasoner " << data.reasonerID << endl;
+			OUTPUT( "Received status from node reasoner " << data.reasonerID );
 		}
 		else if ( role == ReasonerStandardImplementationOptions::Role::PROCESS ){
 			// aggregate statistics
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
 				node_statistics[i] += health.statistics[i];
 			}
-			cout << "CPU: " << health.statistics[CONSUMED_CPU_SECONDS] << endl;
-			cout << "RAPL: " << health.statistics[CONSUMED_ENERGY_JOULE] << endl;
+			// OUTPUT( "CPU: " << health.statistics[CONSUMED_CPU_SECONDS] );
+			// OUTPUT( "RAPL: " << health.statistics[CONSUMED_ENERGY_JOULE] );
 
 			nodeHealth = make_shared<NodeHealth>(health);
 
-			//cout << id << " received status from node reasoner " << data.reasonerID << endl;
+		OUTPUT( "Received status from node reasoner " << data.reasonerID );
 		}
 		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
 			nodeHealth = make_shared<NodeHealth>( health );
 		else
-			cout << id << " received inappropriate message from " << data.reasonerID << "!" << endl;
+			OUTPUT( "Received inappropriate message from " << data.reasonerID << "!" );
 
 		nPushesReceived++;
 	}
@@ -113,13 +115,13 @@ void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessag
 		unique_lock<mutex> dataLock( dataMutex );
 
 		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
-			// cout << id << " received status from system reasoner " << data.reasonerID << endl;
+			OUTPUT( "Received status from system reasoner " << data.reasonerID );
 			systemHealth = make_shared<SystemHealth>(health);
 		}
 		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
 			systemHealth = make_shared<SystemHealth>( health );
 		else
-			cout << id << " received inappropriate message from " << data.reasonerID << "!" << endl;
+			OUTPUT( "Received inappropriate message from " << data.reasonerID << "!" );
 	}
 
 		nPushesReceived++;
@@ -127,11 +129,12 @@ void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessag
 
 
 void ReasonerStandardImplementation::PeriodicRun(){
+	monitoring_namespace_protect_thread();
 	bool persistingAnomaly; // Last cycle's anomalyDetected
 	bool anomalyDetected = false;
 
 	while( ! terminated ) {
-		// cout << "PeriodicRun started" << endl;
+		OUTPUT( "PeriodicRun started" );
 
 		auto timeout = chrono::system_clock::now() + chrono::milliseconds( update_intervall_ms );
 
@@ -167,25 +170,25 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				// Query recent observations of all connected plugins and integrate them into the local performance issues.
 				// Loop over all registered ADPIs
 				for( auto adpi : adpis ) {
-					// cout << "ADPI: " << adpi << endl;
+					OUTPUT( "ADPI: " << adpi );
 					// Memory management passes to our responsibility here!
 					unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>  newObservations = adpi->queryRecentObservations();
-					// cout << "Reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() << endl;
+					OUTPUT( "Reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() );
 					// Loop over all reports from current ADPI (by ComponentID)
 					for (auto report : *newObservations ) {
-						// cout << "Report for CID: " << report.first << endl;
+						OUTPUT( "Report for CID: " << report.first );
 						// Merge this report into the global set
 						// TODO: In Funktion auslagern
 
 						// Merge occurrences into gatheredStatistics and local Health
 						for ( int healthState=0; healthState < HEALTH_STATE_COUNT; healthState++ ){
-							// cout << "healthState = " << healthState;
-							// cout << "\tBefore: " << gatheredStatistics->map[report.first].occurrences[healthState];
+							OUTPUT( "HealthState = " << healthState );
+							OUTPUT( "Before: " << gatheredStatistics->map[report.first].occurrences[healthState] );
 							gatheredStatistics->map[report.first].cid = report.first;
 							gatheredStatistics->map[report.first].occurrences[healthState] += report.second.occurrences[healthState];
-							// cout << "\tAfter:  " << gatheredStatistics->map[report.first].occurrences[healthState] << endl;
+							OUTPUT( "After:  " << gatheredStatistics->map[report.first].occurrences[healthState] );
 							localHealth->occurrences[healthState] += report.second.occurrences[healthState];
-							// cout << "Updated: " << gatheredStatistics->map[report.first] << endl;
+							OUTPUT( "Updated: " << gatheredStatistics->map[report.first] );
 
 						}
 
@@ -195,7 +198,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						list<HealthIssue> * targetIssueList = & (localHealth->positiveIssues);
 						for ( auto issue : *sourceIssueMap )
 						{
-							// cout << id << " received issue: "<< issue.second << endl;
+							OUTPUT( "Received issue: " << issue.second );
 
 							{ // gatheredStatistics
 								auto precedent = targetIssueMap->find( issue.first );
@@ -224,17 +227,17 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						targetIssueList = & (localHealth->negativeIssues);
 						for ( auto issue : *sourceIssueMap )
 						{
-							// cout << id << " received issue: "<< issue.second << endl;
+							OUTPUT( "Received issue: "<< issue.second );
 
 							{ // gatheredStatistics
 							auto precedent = targetIssueMap->find( issue.first );
 							if ( precedent == targetIssueMap->end() ){
 								(*targetIssueMap)[issue.first] = HealthIssue( issue.first, issue.second.occurrences, issue.second.delta_time_ms );
-								// cout << "Created " << (*targetIssueMap)[issue.first] << endl;
+								OUTPUT( "Created " << (*targetIssueMap)[issue.first] );
 							}
 							else{
 								precedent->second.add(issue.second);
-								// cout << "Added to " << precedent->second << endl;
+								OUTPUT( "Added to " << precedent->second );
 							}
 							}
 
@@ -252,7 +255,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 							}
 						}
 					}
-					// cout << id << " reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() << endl;
+					OUTPUT( " Reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() );
 				}
 			} // pluginLock
 
@@ -262,21 +265,21 @@ void ReasonerStandardImplementation::PeriodicRun(){
 			oldObservationTotal = observationTotal;
 			// Reset current counts and total
 			observationTotal = 0;
-			for ( int i = 0; i< HEALTH_STATE_COUNT; i++ )
-				observationCounts[i] = 0;
+			for ( int state = 0; state< HEALTH_STATE_COUNT; state++ )
+				observationCounts[state] = 0;
 			// Add all gathered statistics by health state
 			for ( auto report : gatheredStatistics->map )
-				for ( int i = 0; i < HEALTH_STATE_COUNT; i++ )
-					observationCounts[i] += report.second.occurrences[i];
+				for ( int state = 0; state < HEALTH_STATE_COUNT; state++ )
+					observationCounts[state] += report.second.occurrences[state];
 			// Total up current counts
-			for ( int i = 0; i< HEALTH_STATE_COUNT; i++ )
-				observationTotal += observationCounts[i];
+			for ( int state = 0; state< HEALTH_STATE_COUNT; state++ )
+				observationTotal += observationCounts[state];
 			// Compute current ratios
 			if( observationTotal > 0 ){
 				float scale = 100.0 / observationTotal;
-				for ( int i = 0; i< HEALTH_STATE_COUNT; i++ ){
-					observationRatios[i] = observationCounts[i] * scale;
-					// cout << observationCounts[i] << "=" << (int) observationRatios[i] << "% ";
+				for ( int state = 0; state< HEALTH_STATE_COUNT; state++ ){
+					observationRatios[state] = observationCounts[state] * scale;
+					// cout << observationCounts[state] << "=" << (int) observationRatios[state] << "% ";
 				}
 				// cout << endl;
 			}
@@ -286,27 +289,27 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				// cout << id << " has news: " << oldObservationTotal << "->" << observationTotal << endl;
 
 				// Check whether anything interesting happened
-				for (int i = 0; i < HEALTH_STATE_COUNT; ++i)
+				for (int state = 0; state < HEALTH_STATE_COUNT; ++state)
 				{
-					// cout << i << ": " << (int)oldObservationRatios[i] << "->" << (int)observationRatios[i]<< endl;
+					// cout << state << ": " << (int)oldObservationRatios[state] << "->" << (int)observationRatios[state]<< endl;
 					// Did ratio of any non-OK state move by more than 2 points?
-					if( i != HealthState::OK ){
-						int diff = observationRatios[i] - oldObservationRatios[i];
+					if( state != HealthState::OK ){
+						int diff = observationRatios[state] - oldObservationRatios[state];
 						if( abs(diff) >= 2 ){
 							anomalyDetected = true;
-							// cout << id << " detected an anomaly (moving observation ratio for state " << i << " from " << (int)oldObservationRatios[i] << " to "<< (int)observationRatios[i] << ", or " << observationCounts[i] << " out of " << observationTotal << ")!" << endl;
+							// cout << id << " detected an anomaly (moving observation ratio for state " << state << " from " << (int)oldObservationRatios[state] << " to "<< (int)observationRatios[state] << ", or " << observationCounts[state] << " out of " << observationTotal << ")!" << endl;
 						}
 					}
 
 					// Did number of any ABNORMAL state rise?
-					if( i == HealthState::ABNORMAL_BAD
+					if( state == HealthState::ABNORMAL_BAD
 
-					   || i == HealthState::ABNORMAL_GOOD
+					   || state == HealthState::ABNORMAL_GOOD
 
-					   || i == HealthState::ABNORMAL_OTHER ){
-						if( observationCounts[i] > oldObservationCounts[i] ){
+					   || state == HealthState::ABNORMAL_OTHER ){
+						if( observationCounts[state] > oldObservationCounts[state] ){
 							anomalyDetected = true;
-							// cout << id << " detected an anomaly (abnormal state " << i << ")!" << endl;
+							OUTPUT( "Detected an anomaly (abnormal state " << state << ")!" );
 						}
 					}
 				}
