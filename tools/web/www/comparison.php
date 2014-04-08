@@ -42,7 +42,7 @@ if (empty($statids))
 	die("Error: No statistics selected.");
 
 $stats = Stats::get_list($statids); 
-$cumstats = Stats::get_list(array('energy/'));
+$cumstats = Stats::get_list(array('energy/', 'quantity/'));
 
 ?>
 
