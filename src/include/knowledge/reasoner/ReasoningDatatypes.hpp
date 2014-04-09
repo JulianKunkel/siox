@@ -2,6 +2,7 @@
 #define KNOWLEDGE_REASONER_DATATYPES_HPP
 
 #include <monitoring/datatypes/ids.hpp>
+#include "workarounds.hpp"
 
 #include <list>
 #include <array>
@@ -22,6 +23,27 @@ enum HealthState{
 	ABNORMAL_OTHER = 5,
 	HEALTH_STATE_COUNT = 6
 };
+ADD_ENUM_OPERATORS(HealthState)
+
+inline std::ostream & operator<<( std::ostream & os, HealthState state )
+{
+	switch(state){
+		case ABNORMAL_BAD:
+			return os << "ABNORMAL_BAD";
+		case ABNORMAL_GOOD:
+			return os << "ABNORMAL_GOOD";
+		case ABNORMAL_OTHER:
+			return os << "ABNORMAL_OTHER";
+		case GOOD:
+			return os << "GOOD";
+		case OK:
+			return os << "OK";
+		case BAD:
+			return os << "BAD";
+		default:
+			return os << "UNKNOWN";
+	}
+}
 
 
 //@serializable
@@ -286,23 +308,23 @@ struct NodeHealth : public Health{
 		}
 	}
 
-	friend std::ostream & operator<<( std::ostream & os, const NodeHealth & h )
+	inline friend std::ostream & operator<<( std::ostream & os, const NodeHealth & health )
 	{
 		ostringstream result;
 
-		result << "State:    \t" << to_string(h.overallState) << endl;
+		result << "State:    \t" << to_string(health.overallState) << endl;
 		result << "Utilization:\t";
-		for ( auto util : h.utilization )
+		for ( auto util : health.utilization )
 			result << " | " << (int) util;
 		result << " | " << endl;
 		result << "Occurrences:\t";
-		for ( auto o : h.occurrences )
+		for ( auto o : health.occurrences )
 			result << " | " << o;
 		result << " | " << endl;
 		result << "Issues:\t\t";
-		result << "+" << h.positiveIssues.size() << "\t";
-		result << "-" << h.negativeIssues.size() << endl;
-		result << "Last Modified:\t" << h.timeLastModified << endl;
+		result << "+" << health.positiveIssues.size() << "\t";
+		result << "-" << health.negativeIssues.size() << endl;
+		result << "Last Modified:\t" << health.timeLastModified << endl;
 
 		return os << result.str();
 	}
@@ -333,8 +355,8 @@ struct NodeHealth : public Health{
 // May be a good idea to provide an overloaded outputstream for the enums to make them "human" readable.
 // TODO: Offer a CPP for this reason.
 
-inline string toString(HealthState s){
-	switch(s){
+inline string toString(HealthState state){
+	switch(state){
 		case ABNORMAL_BAD:
 			return "ABNORMAL_BAD";
 		case ABNORMAL_GOOD:
@@ -352,8 +374,8 @@ inline string toString(HealthState s){
 	}
 }
 
-inline string toString(UtilizationIndex s){
-	switch(s){
+inline string toString(UtilizationIndex index){
+	switch(index){
 		case CPU:
 			return "CPU";
 		case MEMORY:

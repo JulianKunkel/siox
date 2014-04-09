@@ -73,7 +73,7 @@ void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessa
 		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
 			processHealth = make_shared<ProcessHealth>( health );
 		else
-			OUTPUT( "Received inappropriate message from " << data.reasonerID << "!" );
+			ERROR( "Received inappropriate message from " << data.reasonerID << "!" );
 
 		nPushesReceived++;
 	}
@@ -86,7 +86,7 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 
 		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM ){
 			(*childNodesHealthMap)[data.reasonerID] = health;
-			OUTPUT( "Received status from node reasoner " << data.reasonerID );
+			// OUTPUT( "Received status from node reasoner " << data.reasonerID );
 		}
 		else if ( role == ReasonerStandardImplementationOptions::Role::PROCESS ){
 			// aggregate statistics
@@ -98,12 +98,12 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 
 			nodeHealth = make_shared<NodeHealth>(health);
 
-		OUTPUT( "Received status from node reasoner " << data.reasonerID );
+		// OUTPUT( "Received status from node reasoner " << data.reasonerID );
 		}
 		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
 			nodeHealth = make_shared<NodeHealth>( health );
 		else
-			OUTPUT( "Received inappropriate message from " << data.reasonerID << "!" );
+			ERROR( "Received inappropriate message from " << data.reasonerID << "!" );
 
 		nPushesReceived++;
 	}
@@ -115,13 +115,13 @@ void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessag
 		unique_lock<mutex> dataLock( dataMutex );
 
 		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
-			OUTPUT( "Received status from system reasoner " << data.reasonerID );
+			// OUTPUT( "Received status from system reasoner " << data.reasonerID );
 			systemHealth = make_shared<SystemHealth>(health);
 		}
 		else if ( data.reasonerID == "INJECT" ) // Workaround for testing!
 			systemHealth = make_shared<SystemHealth>( health );
 		else
-			OUTPUT( "Received inappropriate message from " << data.reasonerID << "!" );
+			ERROR( "Received inappropriate message from " << data.reasonerID << "!" );
 	}
 
 		nPushesReceived++;
@@ -134,13 +134,14 @@ void ReasonerStandardImplementation::PeriodicRun(){
 	bool anomalyDetected = false;
 
 	while( ! terminated ) {
-		OUTPUT( "PeriodicRun started" );
+		// OUTPUT( "PeriodicRun started" );
 
 		auto timeout = chrono::system_clock::now() + chrono::milliseconds( update_intervall_ms );
 
 		cyclesTriggered++;
 
-		persistingAnomaly = anomalyDetected;
+		// Remember last cycle's anomaly state, if persisting anomalies are switched on
+		persistingAnomaly = anomalyDetected && kpersistentAnomalies;
 		anomalyDetected = false;
 
 		/*
@@ -170,25 +171,25 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				// Query recent observations of all connected plugins and integrate them into the local performance issues.
 				// Loop over all registered ADPIs
 				for( auto adpi : adpis ) {
-					OUTPUT( "ADPI: " << adpi );
+					// OUTPUT( "ADPI: " << adpi );
 					// Memory management passes to our responsibility here!
 					unique_ptr<unordered_map<ComponentID, AnomalyPluginHealthStatistic>>  newObservations = adpi->queryRecentObservations();
-					OUTPUT( "Reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() );
+					// OUTPUT( "Reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() );
 					// Loop over all reports from current ADPI (by ComponentID)
 					for (auto report : *newObservations ) {
-						OUTPUT( "Report for CID: " << report.first );
+						// OUTPUT( "Report for CID: " << report.first );
 						// Merge this report into the global set
 						// TODO: In Funktion auslagern
 
 						// Merge occurrences into gatheredStatistics and local Health
 						for ( int healthState=0; healthState < HEALTH_STATE_COUNT; healthState++ ){
-							OUTPUT( "HealthState = " << healthState );
-							OUTPUT( "Before: " << gatheredStatistics->map[report.first].occurrences[healthState] );
+							// OUTPUT( "HealthState = " << healthState );
+							// OUTPUT( "Before: " << gatheredStatistics->map[report.first].occurrences[healthState] );
 							gatheredStatistics->map[report.first].cid = report.first;
 							gatheredStatistics->map[report.first].occurrences[healthState] += report.second.occurrences[healthState];
-							OUTPUT( "After:  " << gatheredStatistics->map[report.first].occurrences[healthState] );
+							// OUTPUT( "After:  " << gatheredStatistics->map[report.first].occurrences[healthState] );
 							localHealth->occurrences[healthState] += report.second.occurrences[healthState];
-							OUTPUT( "Updated: " << gatheredStatistics->map[report.first] );
+							// OUTPUT( "Updated: " << gatheredStatistics->map[report.first] );
 
 						}
 
@@ -198,14 +199,20 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						list<HealthIssue> * targetIssueList = & (localHealth->positiveIssues);
 						for ( auto issue : *sourceIssueMap )
 						{
-							OUTPUT( "Received issue: " << issue.second );
+							// OUTPUT( "Received issue: " << issue.second );
 
 							{ // gatheredStatistics
 								auto precedent = targetIssueMap->find( issue.first );
 								if ( precedent == targetIssueMap->end() )
+								{
 									(*targetIssueMap)[issue.first] = HealthIssue( issue.first, issue.second.occurrences, issue.second.delta_time_ms );
+									// OUTPUT( "Created " << (*targetIssueMap)[issue.first] );
+								}
 								else
+								{
 									precedent->second.add(issue.second);
+									// OUTPUT( "Added to " << precedent->second );
+								}
 							}
 
 							{ // *localHealth
@@ -227,18 +234,20 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						targetIssueList = & (localHealth->negativeIssues);
 						for ( auto issue : *sourceIssueMap )
 						{
-							OUTPUT( "Received issue: "<< issue.second );
+							// OUTPUT( "Received issue: "<< issue.second );
 
 							{ // gatheredStatistics
-							auto precedent = targetIssueMap->find( issue.first );
-							if ( precedent == targetIssueMap->end() ){
-								(*targetIssueMap)[issue.first] = HealthIssue( issue.first, issue.second.occurrences, issue.second.delta_time_ms );
-								OUTPUT( "Created " << (*targetIssueMap)[issue.first] );
-							}
-							else{
-								precedent->second.add(issue.second);
-								OUTPUT( "Added to " << precedent->second );
-							}
+								auto precedent = targetIssueMap->find( issue.first );
+								if ( precedent == targetIssueMap->end() )
+								{
+									(*targetIssueMap)[issue.first] = HealthIssue( issue.first, issue.second.occurrences, issue.second.delta_time_ms );
+									// OUTPUT( "Created " << (*targetIssueMap)[issue.first] );
+								}
+								else
+								{
+									precedent->second.add(issue.second);
+									// OUTPUT( "Added to " << precedent->second );
+								}
 							}
 
 							{ // *localHealth
@@ -255,7 +264,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 							}
 						}
 					}
-					OUTPUT( " Reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() );
+					// OUTPUT( "Reports: " << gatheredStatistics->map.size() << " -> " << newObservations->size() );
 				}
 			} // pluginLock
 
@@ -279,25 +288,24 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				float scale = 100.0 / observationTotal;
 				for ( int state = 0; state< HEALTH_STATE_COUNT; state++ ){
 					observationRatios[state] = observationCounts[state] * scale;
-					// cout << observationCounts[state] << "=" << (int) observationRatios[state] << "% ";
+					// OUTPUT( observationCounts[state] << "=" << (int) observationRatios[state] << "% " );
 				}
-				// cout << endl;
 			}
 
 			// Check whether anything happened
 			if ( observationTotal != oldObservationTotal ){
-				// cout << id << " has news: " << oldObservationTotal << "->" << observationTotal << endl;
+				// OUTPUT( "Has news: " << oldObservationTotal << "->" << observationTotal );
 
 				// Check whether anything interesting happened
 				for (int state = 0; state < HEALTH_STATE_COUNT; ++state)
 				{
-					// cout << state << ": " << (int)oldObservationRatios[state] << "->" << (int)observationRatios[state]<< endl;
+					// OUTPUT( state << ": " << (int)oldObservationRatios[state] << "->" << (int)observationRatios[state] );
 					// Did ratio of any non-OK state move by more than 2 points?
 					if( state != HealthState::OK ){
 						int diff = observationRatios[state] - oldObservationRatios[state];
 						if( abs(diff) >= 2 ){
 							anomalyDetected = true;
-							// cout << id << " detected an anomaly (moving observation ratio for state " << state << " from " << (int)oldObservationRatios[state] << " to "<< (int)observationRatios[state] << ", or " << observationCounts[state] << " out of " << observationTotal << ")!" << endl;
+							// OUTPUT( "Detected an anomaly (moving observation ratio for state " << state << " from " << (int)oldObservationRatios[state] << " to "<< (int)observationRatios[state] << ", or " << observationCounts[state] << " out of " << observationTotal << ")!" );
 						}
 					}
 
@@ -309,7 +317,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 					   || state == HealthState::ABNORMAL_OTHER ){
 						if( observationCounts[state] > oldObservationCounts[state] ){
 							anomalyDetected = true;
-							OUTPUT( "Detected an anomaly (abnormal state " << state << ")!" );
+							// OUTPUT( "Detected an anomaly (abnormal state " << state << ")!" );
 						}
 					}
 				}
@@ -322,7 +330,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				case ReasonerStandardImplementationOptions::Role::PROCESS:
 					assessProcessHealth();
 					if (upstreamReasonerExists){
-						// cout << id << " pushing process state upstream!" << endl;
+						// OUTPUT( "Pushing process state upstream!" );
 						comm->pushProcessStateUpstream( processHealth);
 						nPushesSent++;
 					}
@@ -331,7 +339,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				case ReasonerStandardImplementationOptions::Role::NODE:
 					assessNodeHealth();
 					if (upstreamReasonerExists){
-						// cout << id << " pushing node state upstream!" << endl;
+						// OUTPUT( "Pushing node state upstream!" );
 						comm->pushNodeStateUpstream( nodeHealth);
 						nPushesSent++;
 					}
@@ -340,7 +348,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				case ReasonerStandardImplementationOptions::Role::SYSTEM:
 					assessSystemHealth();
 					if (upstreamReasonerExists){
-						// cout << id << " pushing system state upstream!" << endl;
+						// OUTPUT( "Pushing system state upstream!" );
 						comm->pushSystemStateUpstream( systemHealth);
 						nPushesSent++;
 					}
@@ -361,7 +369,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 
 			for(int i=0; i < NODE_STATISTIC_COUNT ; i++){
 				nodeHealth->statistics[i] = (*nodeStatistics)[i].toFloat();
-				cout << "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] << endl;
+				// OUTPUT( "CurrentNodeStatistics: " << i << " " << nodeHealth->statistics[i] );
 			}
 		}
 
@@ -379,18 +387,16 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		{	// Disallow changes in registered plugins while cycling through triggers
 			unique_lock<mutex> pluginLock( pluginMutex );
 
-			if( anomalyDetected && ! persistingAnomaly ) {
-				// cout << " Calling triggers!" << endl;
+			if( anomalyDetected || persistingAnomaly ) {
+				// OUTPUT( "New anomaly: " << anomalyDetected << "; persisting anomaly: " << persistingAnomaly );
+				// OUTPUT( "Calling triggers!" );
 				for( auto itr = triggers.begin(); itr != triggers.end() ; itr++ ) {
 					( *itr )->triggerResponseForAnomaly(false);
 				}
 			}
 		}
-		// TODO sometimes we'd like to have persistent Anomalies ... persistingAnomaly = anomalyDetected;
 
-
-
-		// cout << "PeriodicRun() going to sleep..." << endl;
+		// OUTPUT( "PeriodicRun() going to sleep..." );
 		unique_lock<mutex> lock( recentIssuesMutex );
 		// TODO: Understand, clarify and comment this!
 		if( terminated ) {
@@ -398,7 +404,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 		}
 		running_condition.wait_until( lock, timeout );
 	}
-	// cout << "PeriodicRun finished" << endl;
+	// OUTPUT( "PeriodicRun finished" );
 }
 
 void ReasonerStandardImplementation::stop(){
@@ -560,7 +566,7 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 	// Configuration: global reasoner address, local address
 	// Result: node health
 */
-	// cout << "Reasoner " << id << " assessing NODE health..." << endl;
+	// OUTPUT( "Reasoner " << id << " assessing NODE health..." );
 
 
 	// Create fresh NodeHealth to hold our results
@@ -569,7 +575,6 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 	// determine node health based on the historic knowledge AND the statistics
 	if ( nodeHealth->occurrences[ABNORMAL_GOOD] || nodeHealth->occurrences[ABNORMAL_BAD] || nodeHealth->occurrences[ABNORMAL_OTHER] ){
 		// we have a condition in which we must fire the anomaly trigger.
-		// cout << "Checkpoint 1a passed..." << endl;
 		if ( observationRatios[ABNORMAL_GOOD] > 5 &&
 			observationRatios[ABNORMAL_GOOD] > 2 * observationRatios[ABNORMAL_BAD] &&
 			observationRatios[ABNORMAL_GOOD] > 2 * observationRatios[ABNORMAL_OTHER] )
@@ -584,26 +589,21 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 			newHealth->overallState = HealthState::ABNORMAL_OTHER;
 		}
 	}else{
-		// cout << "Checkpoint 1b passed..." << endl;
 		// normal condition
 		// We have to pick between GOOD, OK & BAD
 		if ( observationRatios[GOOD] > 5 &&
 			observationRatios[GOOD] > 3*observationRatios[BAD] )
 		{
-			// cout << "Checkpoint 1ba passed..." << endl;
 			newHealth->overallState = HealthState::GOOD;
 		}else if ( observationRatios[BAD] > 5 &&
 			observationRatios[BAD] > 3*observationRatios[GOOD] )
 		{
-			// cout << "Checkpoint 1bb passed..." << endl;
 			newHealth->overallState = HealthState::BAD;
 		}else{
-			// cout << "Checkpoint 1bc passed..." << endl;
 			newHealth->overallState = HealthState::OK;
 		}
 	}
 
-	// cout << "Checkpoint 2 passed..." << endl;
 	// If the current state is not OK and a statistics behaves suboptimal, we can take this into account and potentially add new issues and even set the health state to OK.
 	if ( newHealth->overallState != HealthState::OK ){
 		uint totalUtilization = 0;
@@ -630,7 +630,7 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 */
 
 	nodeHealth = newHealth;
-	// cout << "State of resoner " << id << ": " << toString(nodeHealth->overallState) << endl;
+	// OUTPUT( "State of resoner " << id << ": " << toString(nodeHealth->overallState) );
 }
 
 
@@ -650,14 +650,14 @@ void ReasonerStandardImplementation::assessProcessHealth(){
 		Compact process health (for the last interval) like for node etc.
   	 */
 
-	// cout << "Reasoner " << id << " assessing PROCESS health..." << endl;
+	// OUTPUT( "Reasoner " << id << " assessing PROCESS health..." );
 
 	shared_ptr<ProcessHealth> newHealth = make_shared<ProcessHealth>();
 
 	// FIXME: Implementieren!
 
 	processHealth = newHealth;
-	// cout << "State of resoner " << id << ": " << toString(processHealth->overallState) << endl;
+	// OUTPUT( "State of resoner " << id << ": " << toString(processHealth->overallState) );
 }
 
 
@@ -669,14 +669,14 @@ void ReasonerStandardImplementation::assessSystemHealth(){
 	// Test case
 	// Three nodes report overlapping issues.
 
-	// cout << "Reasoner " << id << " assessing SYSTEM health..." << endl;
+	// OUTPUT( "Reasoner " << id << " assessing SYSTEM health..." );
 
 	shared_ptr<SystemHealth> newHealth = make_shared<SystemHealth>();
 
 	// FIXME: Implementieren!
 
 	systemHealth = newHealth;
-	// cout << "State of resoner " << id << ": " << toString(systemHealth->overallState) << endl;
+	// OUTPUT( "State of resoner " << id << ": " << toString(systemHealth->overallState) );
 }
 
 
