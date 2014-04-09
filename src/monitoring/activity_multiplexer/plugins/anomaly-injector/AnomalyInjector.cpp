@@ -15,6 +15,7 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
 #include <knowledge/reasoner/ReasoningDatatypes.hpp>
+#include <util/threadSafety.h>
 
 #include <knowledge/reasoner/AnomalyPlugin.hpp>
 
@@ -29,7 +30,11 @@ using namespace core;
 using namespace knowledge;
 
 
+#ifdef DEBUG
 #define OUTPUT(...) do { cout << "[AnomalyInjector] " << __VA_ARGS__ << "\n"; } while(0)
+#else
+#define OUTPUT(...)
+#endif
 
 
 
@@ -58,8 +63,12 @@ class AnomalyInjectorPlugin: public ActivityMultiplexerPlugin, public ComponentR
 		string issueName;
 		// Random generator for intervals and
 		random_device rd;
-		// Mean of Exponential distribution for interval between two anomaly injections in microseconds
+		// Mean of distribution for interval between two anomaly injections in microseconds
 		float intervalMean;
+		// Type of distribution for interval; possible values:
+		// 		"geometric"
+		//		"static"
+		string intervalType;
 		// Mean and variance of Gaussian distribution for delta_time_ms
 		float deltaTimeMean;
 		float deltaTimeVariance;
@@ -91,6 +100,8 @@ AnomalyInjectorPlugin::AnomalyInjectorPlugin(){
 	cid = {{0,0,0}, 0};
 
 	intervalMean = 10.0;
+	intervalType = "geometric";
+
 	deltaTimeMean = 0.0;
 	deltaTimeVariance = 10.0;
 
@@ -107,15 +118,27 @@ void AnomalyInjectorPlugin::initPlugin()
 	// fprintf(stderr, "AnomalyInjectorPlugin::initPlugin(), this = 0x%016jx\n", (intmax_t)this);
 
 	// Retrieve options
-	AnomalyInjectorPluginOptions & o = getOptions<AnomalyInjectorPluginOptions>();
+	AnomalyInjectorPluginOptions & options = getOptions<AnomalyInjectorPluginOptions>();
+	assert( &options != nullptr );
+	// OUTPUT( "Got options!" );
+
+	// Connect us to our reasoner
+	ActivityPluginDereferencing * facade = GET_INSTANCE( ActivityPluginDereferencing, options.dereferenceFacade );
+	assert( facade != nullptr );
+	// OUTPUT( "Got a dereferenceFacade!" );
+	facade->register_anomaly_plugin( this );
+
 
 	// Retrieve parameters for anomaly generation
-	issueName = o.issueName;
-	intervalMean = (o.intervalMean > 0 ? o.intervalMean : -o.intervalMean );
+	issueName = options.issueName;
+	intervalMean = (options.intervalMean > 0 ? options.intervalMean : -options.intervalMean );
 	if (intervalMean < 10.0)
 		intervalMean = 10.0;
-	deltaTimeMean = o.deltaTimeMean;
-	deltaTimeVariance =  o.deltaTimeVariance;
+	intervalType = options.intervalType;
+
+
+	deltaTimeMean = options.deltaTimeMean;
+	deltaTimeVariance =  options.deltaTimeVariance;
 
 	// TODO: Either set the proper value, or use a random number
 	cid.id = 42;
@@ -130,11 +153,11 @@ AnomalyInjectorPlugin::~AnomalyInjectorPlugin()
 	// Safely notify generator thread of termination
 	generatorMutex.lock();
 	terminate = true;
-	// cout << "Generator stop..." << endl;
+	OUTPUT( "Generator ordered to stop..." );
 	generatorSleep.notify_one();
 	generatorMutex.unlock();
 	generatorThread.join();
-	// cout << "Generator stopped!" << endl;
+	OUTPUT( "Generator stopped!" );
 }
 
 
@@ -143,6 +166,8 @@ AnomalyInjectorPlugin::~AnomalyInjectorPlugin()
  */
 void AnomalyInjectorPlugin::generateAnomaly()
 {
+	monitoring_namespace_protect_thread();
+
 	unsigned int sleepTime;
 
 	HealthState state = HealthState::OK;
@@ -153,12 +178,19 @@ void AnomalyInjectorPlugin::generateAnomaly()
 	// Create distribution for delta_time_ms of HealthIssue to be injected
 	normal_distribution<> dNorm( deltaTimeMean, deltaTimeVariance );
 
-	cout << "Generator started!" << endl;
+	OUTPUT( "Generator started!" );
 
 	while( ! terminate )
 	{
 		// Generate random sleep time and next wakeup point
-		sleepTime = dGeom(rd);
+		if( intervalType== "geometric")
+		{
+				sleepTime = dGeom(rd);
+		}
+		else // intervalType=="static" or other
+		{
+				sleepTime = intervalMean;
+		}
 		auto wakeupTime = chrono::system_clock::now() + chrono::milliseconds( sleepTime );
 
 		// Generate random delta and from that a fitting state
@@ -166,13 +198,11 @@ void AnomalyInjectorPlugin::generateAnomaly()
 		if ( delta_time_ms > 50 )
 			state = HealthState::ABNORMAL_BAD;
 		else if ( delta_time_ms > 10 )
-			state = HealthState::BAD
-;
+			state = HealthState::BAD;
 		else if ( delta_time_ms < -50 )
 			state = HealthState::ABNORMAL_GOOD;
 		else if ( delta_time_ms < -10 )
-			state = HealthState::BAD
-;
+			state = HealthState::BAD;
 		else
 			state = HealthState::OK;
 

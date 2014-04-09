@@ -145,20 +145,20 @@ void StatisticsHealthADPI::initPlugin() throw() {
 	facade->register_anomaly_plugin( this );
 
 
-	OUTPUT( "Got " << options.requestedStatistics.size() << " statistics requests." );
+	// OUTPUT( "Got " << options.requestedStatistics.size() << " statistics requests." );
 	for ( auto request : options.requestedStatistics )
 	{
 		/*
 		 * Look up and remember information for all requested statistics
 		 */
-		OUTPUT( "Got a statistics request: [" << request.first << "," << request.second << "]" );
+		// OUTPUT( "Got a statistics request: [" << request.first << "," << request.second << "]" );
 		// Find and remember ontology id
 		OntologyAttribute ontologyAttribute = facade->lookup_attribute_by_name( kStatisticsDomain, request.first );
-		OUTPUT( "OntologyID: " << ontologyAttribute.aID );
+		// OUTPUT( "OntologyID: " << ontologyAttribute.aID );
 		requestedOntologyIDs.push_back( ontologyAttribute.aID );
 		// Find and remember topology id
 		TopologyObject topologyObject = topology->lookupObjectByPath( request.second );
-		OUTPUT( "TopologyID: " << topologyObject.id() );
+		// OUTPUT( "TopologyID: " << topologyObject.id() );
 		requestedTopologyIDs.push_back( topologyObject.id() );
 		// Remember a handy name for statistic; used for readable output
 		statisticsNames.push_back( request.first + request.second );
@@ -200,7 +200,7 @@ void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_
 			if( s->ontologyId == requestedOntologyIDs[i]
 			   && s->topologyId == requestedTopologyIDs[i] )
 			{
-				OUTPUT( "Found a match for index " << i << ": " << (uintmax_t)&*s << " [" << statisticsNames[i] << ",ontID=" << s->ontologyId << ",topID=" << s->topologyId << ", of type " << s->curValue.getTypeAsString() << "]!" );
+				// OUTPUT( "Found a match for index " << i << ": " << (uintmax_t)&*s << " [" << statisticsNames[i] << ",ontID=" << s->ontologyId << ",topID=" << s->topologyId << ", of type " << s->curValue.getTypeAsString() << "]!" );
 				// Assign the statistic object to the proper index
 				statistics[i] = s;
 				// Remember this statistic's index amongst those being available.
@@ -367,13 +367,13 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	if ( nCpuUtilizationValues == nEnergyConsumedValues ) // Do we have the same number of values for both?
 	{	// Compute and test efficiency metric
 		double efficiency = cpuUtilization / energyConsumed;
-		OUTPUT( "efficiency = " << cpuUtilization << " / " << energyConsumed << " = " << efficiency );
+		// OUTPUT( "efficiency = " << cpuUtilization << " / " << energyConsumed << " = " << efficiency );
 
 		// If past the settling phase, test for anomalies
 		if ( nCpuUtilizationValues > kMinObservationCount )
 		{
 			efficiencyVar = efficiencyM2 / (nCpuUtilizationValues - 1);
-			OUTPUT( "Estimated Law: N(" << efficiencyMean << "," << efficiencyVar << ")" );
+			// OUTPUT( "Estimated Law: N(" << efficiencyMean << "," << efficiencyVar << ")" );
 			double stddev = sqrt(efficiencyVar);
 			if ( efficiency < efficiencyMean - stddev )
 			{

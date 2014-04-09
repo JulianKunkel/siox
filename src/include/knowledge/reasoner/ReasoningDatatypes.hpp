@@ -25,7 +25,7 @@ enum HealthState{
 };
 ADD_ENUM_OPERATORS(HealthState)
 
-std::ostream & operator<<( std::ostream & os, HealthState state )
+inline std::ostream & operator<<( std::ostream & os, HealthState state )
 {
 	switch(state){
 		case ABNORMAL_BAD:
