@@ -42,6 +42,9 @@ private:
 		ReasonerStandardImplementationOptions::Role role; // Our scope: PROCESS, NODE or SYSTEM
 		string id;
 
+		// Should anomalies persist for an additional cycle?
+		const bool kpersistentAnomalies = true;
+
 		list<AnomalyTrigger *> triggers;
 		list<AnomalyPlugin *>  adpis;
 		list<Reasoner *>  reasoners; // remote reasoners

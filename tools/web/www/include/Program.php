@@ -112,11 +112,9 @@ static function start_stop_times($nid, $pid, $time)
 
 	$result = array();
 
-	$sql = "SELECT time_start 
+	$sql = "SELECT MIN(time_start) AS time_start, MAX(time_stop) AS time_stop 
 		FROM activity.activity 
-		WHERE time_start IS NOT NULL AND cid_pid_nid = :nid AND cid_pid_pid = :pid AND cid_pid_time = :time 
-		ORDER BY time_start ASC 
-		LIMIT 1";
+		WHERE time_start IS NOT NULL AND time_stop IS NOT NULL AND cid_pid_nid = :nid AND cid_pid_pid = :pid AND cid_pid_time = :time";
 
 	$stmt = $dbcon->prepare($sql);
 	$stmt->bindParam(':nid', $nid);
@@ -131,25 +129,6 @@ static function start_stop_times($nid, $pid, $time)
 	$row = $stmt->fetch(PDO::FETCH_OBJ);
 
 	$result['start'] = $row->time_start;	
-
-	$sql = "SELECT time_stop  
-		FROM activity.activity 
-		WHERE time_stop IS NOT NULL AND cid_pid_nid = :nid AND cid_pid_pid = :pid AND cid_pid_time = :time 
-		ORDER BY time_stop DESC 
-		LIMIT 1";
-
-	$stmt = $dbcon->prepare($sql);
-	$stmt->bindParam(':nid', $nid);
-	$stmt->bindParam(':pid', $pid);
-	$stmt->bindParam(':time', $time);
-
-	if (!$stmt->execute()) {
-		print_r($dbcon->errorInfo());
-		die("Error getting stop time. NID=$nid, PID=$pid, TIME=$time.");
-	}
-
-	$row = $stmt->fetch(PDO::FETCH_OBJ);
-
 	$result['stop'] = $row->time_stop;	
 	
 	return $result;	

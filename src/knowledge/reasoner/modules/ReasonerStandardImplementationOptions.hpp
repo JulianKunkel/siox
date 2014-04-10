@@ -36,4 +36,20 @@ class ReasonerStandardImplementationOptions: public core::ComponentOptions {
 		core::ComponentReference statisticsCollector; // if available
 };
 
+inline std::ostream & operator<<( std::ostream & os, ReasonerStandardImplementationOptions::Role role )
+{
+	switch(role){
+		case ReasonerStandardImplementationOptions::Role::NONE:
+			return os << "NONE";
+		case ReasonerStandardImplementationOptions::Role::PROCESS:
+			return os << "PROCESS";
+		case ReasonerStandardImplementationOptions::Role::NODE:
+			return os << "NODE";
+		case ReasonerStandardImplementationOptions::Role::SYSTEM:
+			return os << "SYSTEM";
+		default:
+			return os << "(UNKNOWN)";
+	}
+}
+
 #endif

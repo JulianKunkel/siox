@@ -17,7 +17,7 @@ static function get_list($names = array())
 	if (empty($names))
 		$where = "";
 
-	$sql = "SELECT * FROM topology.get_statistics() $where";
+	$sql = "SELECT * FROM topology.get_statistics() $where ORDER BY childname ASC";
 
 	$stmt = $dbcon->prepare($sql);
 

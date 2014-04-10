@@ -195,8 +195,9 @@ void testReasoner(){
 		AnomalyInjectorPluginOptions & aipOptions = adpiN1b.getOptions<AnomalyInjectorPluginOptions>();
 		aipOptions.issueName = "Gaussian Issue";
 		aipOptions.intervalMean = 75.0;
+		aipOptions.intervalType = "geometric";
 		aipOptions.deltaTimeMean = 15.0;
-		aipOptions.deltaTimeVariance = 0.0; //15.0;
+		aipOptions.deltaTimeVariance = 15.0;
 		rN1->connectAnomalyPlugin( & adpiN1b );
 		adpiN1b.initPlugin();
 	}

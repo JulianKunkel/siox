@@ -51,15 +51,17 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		 * Fields to hold information on the statistics we are to watch, as per our options
 		 */
 		// Preliminary Component ID
-		ComponentID cid = {{1,2,3},4};
+		ComponentID cid = {{0,0,0},0};
 		// How close (relative to total value spread observed up to now) to highest and lowest value
 		// to be regarded anomalous?
-		const double kWarnQuantile = 0.05;
+		const double kWarnQuantile = 0.01;
 		// How many values are to be observed before evaluating a statistic's values for anomalies?
 		const uint64_t kMinObservationCount = 10;
 		// Domain string used for all statistics in the ontology
 		const string kStatisticsDomain = "statistics";
 		// Stings to use in anomaly reporting
+		const string kIssueBadValue = "Bad value for ";
+		const string kIssueGoodValue = "Good value for ";
 		const string kIssueHighConsumption = "High power consumption";
 		const string kIssueLowConsumption = "Low power consumption";
 		// A flag indicating whether all statistics requested are being obtained right now.
@@ -88,6 +90,39 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		// A field holding the indices of the statistics that are available at the moment.
 		// Used to iterate only over those available when updating values.
 		vector<uint> availableStatisticsIndices;
+
+		// Total energy consumed
+		double totalEnergyConsumed = 0.0;	// TODO: Make this available via the proper ways!
+
+		/*
+		 * Fields to provide the estimated-deviation-from-expected-energy-consumption-anomaly feature
+		 */
+		// energy consumed
+		const string kNameEnergyConsumedOnt = "power/rapl"; // TODO: Do this properly!
+		const string kNameEnergyConsumedTop = "@localhost";
+		const string kNameEnergyConsumed = kNameEnergyConsumedOnt + kNameEnergyConsumedTop;
+		uint64_t nEnergyConsumedValues = 0;
+		// OntologyAttributeID idEnergyConsumedOnt;
+		// TopologyObjectId idEnergyConsumedTop;
+		// shared_ptr<Statistic> statEnergyConsumed;
+		double energyConsumed;
+		// cpu utilization
+		const string kNameCpuUtilizationOnt = "utilization/cpu"; // TODO: Do this properly!
+		const string kNameCpuUtilizationTop = "@localhost";
+		const string kNameCpuUtilization = kNameCpuUtilizationOnt + kNameCpuUtilizationTop;
+		uint64_t nCpuUtilizationValues = 0;
+		// OntologyAttributeID idCpuUtilizationOnt;
+		// TopologyObjectId idCpuUtilizationTop;
+		// shared_ptr<Statistic> statCpuUtilization;
+		double cpuUtilization;
+		// Values for parameters of estimated Gaussian
+		// uint64_t efficiencyCount = 0;
+		double efficiencyMean = 0.0;
+		double efficiencyM2 = 0.0;
+		double efficiencyVar;
+		// Stings to use in anomaly reporting
+		const string kIssueHighEfficiency = "High power efficiency";
+		const string kIssueLowEfficiency = "Low power efficiency";
 };
 
 
@@ -106,21 +141,24 @@ void StatisticsHealthADPI::initPlugin() throw() {
 	Topology * topology = facade->topology();
 	assert( topology != nullptr );
 	// OUTPUT( "Got a topology!" );
+	// Connect us to our reasoner
+	facade->register_anomaly_plugin( this );
 
-	OUTPUT( "Got " << options.requestedStatistics.size() << " statistics requests." );
+
+	// OUTPUT( "Got " << options.requestedStatistics.size() << " statistics requests." );
 	for ( auto request : options.requestedStatistics )
 	{
 		/*
 		 * Look up and remember information for all requested statistics
 		 */
-		OUTPUT( "Got a statistics request: [" << request.first << "," << request.second << "]" );
+		// OUTPUT( "Got a statistics request: [" << request.first << "," << request.second << "]" );
 		// Find and remember ontology id
 		OntologyAttribute ontologyAttribute = facade->lookup_attribute_by_name( kStatisticsDomain, request.first );
-		OUTPUT( "OntologyID: " << ontologyAttribute.aID );
+		// OUTPUT( "OntologyID: " << ontologyAttribute.aID );
 		requestedOntologyIDs.push_back( ontologyAttribute.aID );
 		// Find and remember topology id
 		TopologyObject topologyObject = topology->lookupObjectByPath( request.second );
-		OUTPUT( "TopologyID: " << topologyObject.id() );
+		// OUTPUT( "TopologyID: " << topologyObject.id() );
 		requestedTopologyIDs.push_back( topologyObject.id() );
 		// Remember a handy name for statistic; used for readable output
 		statisticsNames.push_back( request.first + request.second );
@@ -162,7 +200,7 @@ void StatisticsHealthADPI::notifyAvailableStatisticsChange( const vector<shared_
 			if( s->ontologyId == requestedOntologyIDs[i]
 			   && s->topologyId == requestedTopologyIDs[i] )
 			{
-				OUTPUT( "Found a match for index " << i << ": " << (uintmax_t)&*s << " [" << statisticsNames[i] << ",ontID=" << s->ontologyId << ",topID=" << s->topologyId << ", of type " << s->curValue.getTypeAsString() << "]!" );
+				// OUTPUT( "Found a match for index " << i << ": " << (uintmax_t)&*s << " [" << statisticsNames[i] << ",ontID=" << s->ontologyId << ",topID=" << s->topologyId << ", of type " << s->curValue.getTypeAsString() << "]!" );
 				// Assign the statistic object to the proper index
 				statistics[i] = s;
 				// Remember this statistic's index amongst those being available.
@@ -225,12 +263,9 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 	{
 		uint j = availableStatisticsIndices[i];
 		double value = statistics[j]->curValue.toDouble();
-		OUTPUT( "Current node statistic[" << j << ": " << statisticsNames[j] << "]: " << value );
+		// OUTPUT( "Current node statistic[" << j << ": " << statisticsNames[j] << "]: " << value );
 		// FIXME:
-		// Receive *very* strange values here, often 0.
 		// Log file varies dramatically in length.
-		// I presume this is a problem with the Statistic class.
-		// Also, values should be double once taken from the statistic.
 
 		uint64_t count = ++statisticsObservationCount[j];
 		bool updateQuantiles = false;
@@ -242,30 +277,28 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			if( value < statisticsValuesQuantileLow[j] )
 			{
 				// Flag any problems found to reasoner
-				// TODO
-				addObservation( cid, HealthState::ABNORMAL_GOOD,  kIssueLowConsumption, 0 );
-				OUTPUT( "Flagging Anomaly for " << value << "<" << statisticsValuesQuantileLow[j] << ": " << toString(HealthState::ABNORMAL_GOOD) );
+				OUTPUT( "Flagging Anomaly for " << statisticsNames[j] << ": " << value << "<" << statisticsValuesQuantileLow[j] << " => " << HealthState::ABNORMAL_GOOD );
+				addObservation( cid, HealthState::ABNORMAL_GOOD,  kIssueGoodValue + statisticsNames[j], 0 );
 			}
 			if( value > statisticsValuesQuantileHigh[j] )
 			{
 				// Flag any problems found to reasoner
-				// TODO
-				addObservation( cid, HealthState::ABNORMAL_BAD,  kIssueHighConsumption, 0 );
-				OUTPUT( "Flagging Anomaly: " << toString(HealthState::ABNORMAL_BAD) );
+				OUTPUT( "Flagging Anomaly for " << statisticsNames[j] << ": " << value << ">" << statisticsValuesQuantileHigh[j] << " => " << HealthState::ABNORMAL_BAD );
+				addObservation( cid, HealthState::ABNORMAL_BAD,  kIssueBadValue + statisticsNames[j], 0 );
 			}
 
 			// Update Min?
 			if( value < statisticsValuesMin[j] ){
 				statisticsValuesMin[j] = value;
 				updateQuantiles = true;
-				OUTPUT( "New minimum: " << value );
+				// OUTPUT( "New minimum: " << value );
 			}
 			// Update Max?
 			if( value > statisticsValuesMax[j] )
 			{
 				statisticsValuesMax[j] = value;
 				updateQuantiles = true;
-				OUTPUT( "New maximum: " << value );
+				// OUTPUT( "New maximum: " << value );
 			}
 		}
 		else
@@ -276,7 +309,7 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 				// Set preliminary Min and Max values
 				statisticsValuesMax[j] = value;
 				statisticsValuesMin[j] = value;
-				OUTPUT( "First value: " << value );
+				// OUTPUT( "First value: " << value );
 			}
 
 			// Update Min?
@@ -304,12 +337,71 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			double quantileDelta = (statisticsValuesMax[j] - statisticsValuesMin[j]) * kWarnQuantile;
 			statisticsValuesQuantileLow[j] = statisticsValuesMin[j] + quantileDelta;
 			statisticsValuesQuantileHigh[j] = statisticsValuesMax[j] - quantileDelta;
-			OUTPUT( "New limits set for statistic: ["
-			       << statisticsValuesMin[j] << ","
-			       << statisticsValuesQuantileLow[j] << ","
-			       << statisticsValuesQuantileHigh[j] << ","
-			       << statisticsValuesMax[j] << "]" );
+			// OUTPUT( "New limits set for statistic: ["
+			       // << statisticsValuesMin[j] << ","
+			       // << statisticsValuesQuantileLow[j] << ","
+			       // << statisticsValuesQuantileHigh[j] << ","
+			       // << statisticsValuesMax[j] << "]" );
 		}
+
+		// Finally, if we are treating the energy consumed, remember the value and keep a running total
+		if ( statisticsNames[j] == kNameEnergyConsumed )
+		{
+			energyConsumed = value;
+			nEnergyConsumedValues ++;
+			totalEnergyConsumed += value; // Quick hack to supply a meter for energy consumed here.
+			// OUTPUT( "EnergyConsumed value # " << nEnergyConsumedValues << ": " << energyConsumed );
+			// OUTPUT( "Total energy consumed up to now: " << totalEnergyConsumed );
+		}
+		// If we are treating the cpu utilization, remember the value
+		if ( statisticsNames[j] == kNameCpuUtilization )
+		{
+			cpuUtilization = value;
+			nCpuUtilizationValues ++;
+			// OUTPUT( "CpuUtilization value # "<< nCpuUtilizationValues << ": " << cpuUtilization );
+		}
+
+	}
+
+	// Once we have all values, compute energy efficiency and react to it
+	if ( nCpuUtilizationValues == nEnergyConsumedValues ) // Do we have the same number of values for both?
+	{	// Compute and test efficiency metric
+		double efficiency = cpuUtilization / energyConsumed;
+		// OUTPUT( "efficiency = " << cpuUtilization << " / " << energyConsumed << " = " << efficiency );
+
+		// If past the settling phase, test for anomalies
+		if ( nCpuUtilizationValues > kMinObservationCount )
+		{
+			efficiencyVar = efficiencyM2 / (nCpuUtilizationValues - 1);
+			// OUTPUT( "Estimated Law: N(" << efficiencyMean << "," << efficiencyVar << ")" );
+			double stddev = sqrt(efficiencyVar);
+			if ( efficiency < efficiencyMean - stddev )
+			{
+				OUTPUT( "Flagging Anomaly for efficiency: " << efficiency << "<" << efficiencyMean - stddev << " => " << toString(HealthState::ABNORMAL_BAD) );
+				addObservation( cid, HealthState::ABNORMAL_BAD,  kIssueLowEfficiency, 0 );
+			}
+			if ( efficiency > efficiencyMean + stddev )
+			{
+				OUTPUT( "Flagging Anomaly for efficiency: " << efficiency << ">" << efficiencyMean + stddev << " => " << toString(HealthState::ABNORMAL_GOOD) );
+				addObservation( cid, HealthState::ABNORMAL_GOOD,  kIssueHighEfficiency, 0 );
+			}
+		}
+
+		// Estimate mean and variance, according to Knuth:
+		double delta = efficiency - efficiencyMean;
+		// OUTPUT( "delta = " << delta );
+		efficiencyMean += delta / nCpuUtilizationValues;
+		// OUTPUT( "efficiencyMean = " << efficiencyMean );
+		efficiencyM2 += delta * (efficiency - efficiencyMean);
+		// OUTPUT( "efficiencyM2 = " << efficiencyM2 );
+	}
+	else
+	{	// No efficiency metric for this cycle;
+		// effectively the ignore lone value for this cycle by discounting it
+		if( nCpuUtilizationValues > nEnergyConsumedValues )
+			nCpuUtilizationValues --;
+		else
+			nEnergyConsumedValues --;
 	}
 }
 
