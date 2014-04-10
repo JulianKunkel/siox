@@ -32,10 +32,8 @@ until [ $DONE ] ; do
 	case "$1" in
 		(-h) ABORT ;;
 		(--help) ABORT ;;
-		(-v) VERBOSE_LEVEL=1 ; shift ;;
+		(-v) VERBOSE_LEVEL=$((VERBOSE_LEVEL+1)) ; shift ;;
 		(--verbose) VERBOSE_LEVEL=1 ; shift ;;
-		(-q) VERBOSE_LEVEL=-1 ; shift ;;
-		(--quit) VERBOSE_LEVEL=-1 ; shift ;;
 		(*) DONE=true ;;
 	esac
 done
@@ -58,6 +56,10 @@ fi
 
 if [[ "$1" == "" ]] ; then
 	ABORT
+fi
+
+if (( $VERBOSE_LEVEL >= 3 )) ; then
+	echo "VERBOSITY: $VERBOSE_LEVEL" 
 fi
 
 if (( $VERBOSE_LEVEL >= 1 )) ; then
@@ -86,20 +88,20 @@ if [[ $TYPE == "dlsym" ]] ; then
 		echo "INFO: LD_PRELOAD=\"$LDSTRING\" $@"
 	fi
 
-	if (( $VERBOSE_LEVEL >= 0 )) ; then
+	if (( $VERBOSE_LEVEL >= 1 )) ; then
 		echo "[EXE] $LAYERS \"$@\" "
 	fi
 	export LD_LIBRARY_PATH=$LIBDIR:$LD_LIBRARY_PATH
 
-	LD_PRELOAD="$LDSTRING" $@
+	LD_PRELOAD="$LDSTRING" "$@"
 else
 
-	if (( $VERBOSE_LEVEL >= 1 )) ; then
+	if (( $VERBOSE_LEVEL >= 2 )) ; then
 		echo "INFO: $@ $WRAPSTRING $WRAPLIBS"
 	fi
 
-	if (( $VERBOSE_LEVEL >= 0 )) ; then
+	if (( $VERBOSE_LEVEL >= 1 )) ; then
 		echo "[CC] $LAYERS \"$@\""
 	fi
-	$@ $WRAPSTRING $WRAPLIBS
+	"$@" $WRAPSTRING $WRAPLIBS
 fi
