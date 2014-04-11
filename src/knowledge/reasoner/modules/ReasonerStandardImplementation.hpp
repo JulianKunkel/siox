@@ -86,7 +86,7 @@ private:
 		/*
 		 * Fields to hold current state and past observations
 		 */
-		// Local or neighbouring reasoners' states, depending on our role
+		// Local or parent reasoner's states, depending on our role
 		shared_ptr<ProcessHealth> processHealth;
 		shared_ptr<NodeHealth> nodeHealth;
 		shared_ptr<SystemHealth> systemHealth;

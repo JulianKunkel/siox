@@ -12,6 +12,9 @@
 
 namespace knowledge{
 
+// May be a good idea to provide an overloaded outputstream for the enums to make them "human" readable.
+// TODO: Offer a CPP for this reason.
+
 
 //@serializable
 enum HealthState{
@@ -45,6 +48,25 @@ inline std::ostream & operator<<( std::ostream & os, HealthState state )
 	}
 }
 
+inline string toString(HealthState state){
+	switch(state){
+		case ABNORMAL_BAD:
+			return "ABNORMAL_BAD";
+		case ABNORMAL_GOOD:
+			return "ABNORMAL_GOOD";
+		case ABNORMAL_OTHER:
+			return "ABNORMAL_OTHER";
+		case GOOD:
+			return "GOOD";
+		case OK:
+			return "OK";
+		case BAD:
+			return "BAD";
+		default:
+			return "UNKNOWN";
+	}
+}
+
 
 //@serializable
 enum UtilizationIndex{
@@ -54,6 +76,37 @@ enum UtilizationIndex{
 	NETWORK = 3,
 	UTILIZATION_STATISTIC_COUNT = 4
 };
+
+inline std::ostream & operator<<( std::ostream & os, UtilizationIndex index )
+{
+	switch(index){
+		case CPU:
+			return os << "CPU";
+		case MEMORY:
+			return os << "MEMORY";
+		case IO:
+			return os << "IO";
+		case NETWORK:
+			return os << "NETWORK";
+		default:
+			return os << "UNKNOWN";
+	}
+}
+
+inline string toString(UtilizationIndex index){
+	switch(index){
+		case CPU:
+			return "CPU";
+		case MEMORY:
+			return "MEMORY";
+		case IO:
+			return "IO";
+		case NETWORK:
+			return "NETWORK";
+		default:
+			return "UNKNOWN";
+	}
+}
 
 //Additional statistics of the node we would like to transfer to processes.
 //@serializable
@@ -350,45 +403,6 @@ struct NodeHealth : public Health{
 		unordered_map<string, HealthIssueWithExplaination> issues;
 	};
 */
-
-
-// May be a good idea to provide an overloaded outputstream for the enums to make them "human" readable.
-// TODO: Offer a CPP for this reason.
-
-inline string toString(HealthState state){
-	switch(state){
-		case ABNORMAL_BAD:
-			return "ABNORMAL_BAD";
-		case ABNORMAL_GOOD:
-			return "ABNORMAL_GOOD";
-		case ABNORMAL_OTHER:
-			return "ABNORMAL_OTHER";
-		case GOOD:
-			return "GOOD";
-		case OK:
-			return "OK";
-		case BAD:
-			return "BAD";
-		default:
-			return "UNKNOWN";
-	}
-}
-
-inline string toString(UtilizationIndex index){
-	switch(index){
-		case CPU:
-			return "CPU";
-		case MEMORY:
-			return "MEMORY";
-		case IO:
-			return "IO";
-		case NETWORK:
-			return "NETWORK";
-		default:
-			return "UNKNOWN";
-	}
-}
-
 } // namespace knowledge
 
 #endif
