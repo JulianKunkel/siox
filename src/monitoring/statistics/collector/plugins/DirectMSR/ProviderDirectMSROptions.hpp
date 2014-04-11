@@ -6,5 +6,5 @@
 //@serializable
 class ProviderDirectMSROptions: public monitoring::StatisticsProviderPluginOptions {
 	public:
-		std::string groups; // at the moment only one group can be measured
+		
 };

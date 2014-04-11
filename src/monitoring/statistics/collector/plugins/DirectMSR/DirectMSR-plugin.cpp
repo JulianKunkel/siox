@@ -97,7 +97,6 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 		private:
 			void DirectMSRDerivedEventToOntology(const char * DirectMSRName, char const ** outName, char const ** outUnit, bool * shouldBeAccumulated);
 
-			EventSetup DirectMSRSetup;
 			// results from DirectMSR
 			double * values;
 			vector<ObservedType> statistics;
@@ -154,7 +153,7 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 
 		FILE * nullFD = fopen("/dev/null", "w");
 		perfmon_init(numThreads, threads, nullFD);
-		
+		/*
 		int groupCount = options->groups.length() > 0 ? 1 : 0;
 		const char * cur = options->groups.c_str();
 		while( *cur != '\0'){
@@ -174,7 +173,7 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 			// extract correct unit from DirectMSR
 			DirectMSRDerivedEventToOntology(DirectMSRSetup.derivedNames[i], & statistics[i].name, & statistics[i].unit, & statistics[i].shouldBeAccumulated);
 		}
-
+    */
 		perfmon_setupCountersForEventSet(& DirectMSRSetup);
 		perfmon_startCounters();		
 	}
@@ -239,6 +238,7 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 		for( int i=0; i < DirectMSRSetup.numberOfDerivedCounters; i++ ){			
 			// TODO use correct name for the metric.	
 			addGaugeMetric( statistics[i].name, statistics[i].value, statistics[i].unit, DirectMSRSetup.derivedNames[i]);
+      addGaugeMetric( statistics[i].dram_energy, statistics[i].value, statistics[i].unit, DirectMSRSetup.derivedNames[i]);
 		}
 
 		return result;
@@ -383,7 +383,7 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
   maximum_power=power_units*(double)((result>>32)&0x7fff);
   printf("Package maximum power: %.3fW\n",maximum_power);
   time_window=time_units*(double)((result>>48)&0x7fff);
-  printf("Package maximum time window: %.6fs\n",time_window);
+  printf("Package maximum time window: %.6fs\n",time_wicd /ndow);
 
   /* Show package power limit */
   result=DirectMSRPlugin::read_msr(fd,MSR_PKG_RAPL_POWER_LIMIT);
@@ -453,12 +453,15 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 
   printf("\nSleeping 1 second\n\n");
   sleep(1);
-
+  
+  /* Socket energy (package) */
   result=DirectMSRPlugin::read_msr(fd,MSR_PKG_ENERGY_STATUS);
   package_after=(double)result*energy_units;
   printf("Package energy after: %.6f  (%.6fJ consumed)\n",
          package_after,package_after-package_before);
+         Socket_energy=package_after-package_before;
 
+  /* CPU core (Power Plane 0) */
   result=DirectMSRPlugin::read_msr(fd,MSR_PP0_ENERGY_STATUS);
   pp0_after=(double)result*energy_units;
   printf("PowerPlane0 (core) for core %d energy after: %.6f  (%.6fJ consumed)\n",
@@ -471,6 +474,7 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
      pp1_after=(double)result*energy_units;
      printf("PowerPlane1 (on-core GPU if avail) after: %.6f  (%.6fJ consumed)\n",
          pp1_after,pp1_after-pp1_before);
+     Core_energy=pp1_after-pp1_before;
   }
 
   if ((cpu_model==CPU_SANDYBRIDGE_EP) || (cpu_model==CPU_IVYBRIDGE_EP) ||
@@ -479,6 +483,7 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
      dram_after=(double)result*energy_units;
      printf("DRAM energy after: %.6f  (%.6fJ consumed)\n",
          dram_after,dram_after-dram_before);
+     Ram_energy=dram_after-dram_before;
   }
 
   printf("\n");
