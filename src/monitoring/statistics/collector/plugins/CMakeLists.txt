@@ -22,6 +22,7 @@ install(TARGETS siox-monitoring-statisticsPluginGeneric LIBRARY DESTINATION ${SI
 
 add_subdirectory(OSMemUsage)
 add_subdirectory(cpustats)
+#add_subdirectory(DirectMSR)
 add_subdirectory(iostats)
 add_subdirectory(network)
 add_subdirectory(provider-skeleton)
