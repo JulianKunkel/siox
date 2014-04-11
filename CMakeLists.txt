@@ -49,10 +49,10 @@ include(SIOXMacros)
 set_library_install_suffix()
 set(SIOX_INSTALL_LIBRARY_DIR lib${LIBRARY_INSTALL_SUFFIX})
 
-find_package(Boost 1.49 COMPONENTS regex serialization system thread program_options REQUIRED)
+find_package(Boost 1.49.0 COMPONENTS regex serialization system thread program_options REQUIRED)
 set_package_properties(Boost PROPERTIES URL "http://www.boost.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
-find_package(GLIB COMPONENTS gio gobject gmodule REQUIRED)
+find_package(GLIB 2.30 COMPONENTS gio gobject gmodule REQUIRED)
 set_package_properties(GLIB PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
 find_package(GIOUNIX2 REQUIRED)
@@ -70,12 +70,12 @@ set_package_properties(PostgreSQL PROPERTIES URL "http://www.postgresql.org" TYP
 find_package(PythonInterp 2.7 REQUIRED)
 set_package_properties(PythonInterp PROPERTIES URL "http://www.python.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
-# find_package(LIKWID)
-# set_package_properties(LIKWID PROPERTIES URL "see Readme.md" TYPE OPTIONAL PURPOSE "CPU counters")
+find_package(LIKWID)
+set_package_properties(LIKWID PROPERTIES URL "see Readme.md" TYPE OPTIONAL PURPOSE "CPU counters")
 
 
-# find_package(BDB)
-# set_package_properties(BDB PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" TYPE OPTIONAL PURPOSE "Alternative backend for activities")
+find_package(BDB)
+set_package_properties(BDB PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" TYPE OPTIONAL PURPOSE "Alternative backend for activities")
 
 feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following mandatory packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
 

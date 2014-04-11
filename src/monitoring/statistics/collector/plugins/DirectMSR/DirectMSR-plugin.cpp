@@ -138,7 +138,7 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 			assert(FALSE && "CPUID_INIT");
 		}
 		numa_init();
-		timer_init();
+		//timer_init();
 
 
 		const int numThreads = cpuid_topology.numSockets * cpuid_topology.numCoresPerSocket * cpuid_topology.numThreadsPerCore;
@@ -179,10 +179,13 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 	}
 
 	void DirectMSRPlugin::nextTimestep() throw() {
-		perfmon_stopCounters();
+		//perfmon_stopCounters();
+		DirectMSRPlugin::run();
+		//perfmon_getDerivedCounterValues(& values[0], & values[DirectMSRSetup.numberOfDerivedCounters], & values[DirectMSRSetup.numberOfDerivedCounters*2]);	
 		
-		perfmon_getDerivedCounterValues(& values[0], & values[DirectMSRSetup.numberOfDerivedCounters], & values[DirectMSRSetup.numberOfDerivedCounters*2]);	
-		
+    statistics[1].value = values[1];
+    statistics[2].value = values[2];
+    /*
 		// copy DirectMSR results
 		for( int i=0; i < DirectMSRSetup.numberOfDerivedCounters; i++ ){
 			if ( statistics[i].shouldBeAccumulated ){				
@@ -191,9 +194,9 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 			}else{
 				statistics[i].value = values[i];
 			}
-		}
+		}*/
 
-		perfmon_startCounters();
+		//perfmon_startCounters();
 	}
 
  void DirectMSRPlugin::DirectMSRDerivedEventToOntology(const char * DirectMSRName, char const ** outName, char const ** outUnit, bool * shouldBeAccumulated){
@@ -207,7 +210,7 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 
 		DirectMSRType types[] = {
 			{"Energy [J]", "J", "energy/Socket/Direct", true},
-			{"Energy DRAM [J]", "J", "energy/DRAM/Direct", true},
+			{"Energy RAM [J]", "J", "energy/RAM/Direct", true},
 			{"Power [W]", "W", "power/Direct", true},
 			{nullptr, nullptr, nullptr} };
 		const DirectMSRType * check_type = types;
@@ -238,7 +241,9 @@ class DirectMSRPlugin : public StatisticsProviderPlugin {
 		for( int i=0; i < DirectMSRSetup.numberOfDerivedCounters; i++ ){			
 			// TODO use correct name for the metric.	
 			addGaugeMetric( statistics[i].name, statistics[i].value, statistics[i].unit, DirectMSRSetup.derivedNames[i]);
-      addGaugeMetric( statistics[i].dram_energy, statistics[i].value, statistics[i].unit, DirectMSRSetup.derivedNames[i]);
+      addGaugeMetric( statistics[i].Ram_energy, statistics[i].value, statistics[i].energy_units, RamEnergy);
+      addGaugeMetric( statistics[i].Core_energy, statistics[i].value, statistics[i].energy_units, CoreEnergy);
+      addGaugeMetric( statistics[i].Socket_energy, statistics[i].value, statistics[i].energy_units, SocketEnergy);
 		}
 
 		return result;
