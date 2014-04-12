@@ -2,7 +2,7 @@ macro(SIOX_RUN_SERIALIZER IN OUT)
 	add_custom_command(
 		OUTPUT ${OUT}
 		COMMENT "Generating boost serialization ${IN}"
-		COMMAND ${CMAKE_SOURCE_DIR}/devel/scripts/serialization-code-generator.py
+		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/devel/scripts/serialization-code-generator.py
 		ARGS -I ${CMAKE_SOURCE_DIR}/src/include ${CMAKE_SOURCE_DIR}/src -i ${CMAKE_CURRENT_SOURCE_DIR}/${IN} -o ${OUT} 
 	)
 endmacro(SIOX_RUN_SERIALIZER)
@@ -12,7 +12,7 @@ macro(SIOX_RUN_BINARY_SERIALIZER IN OUT)
 	add_custom_command(
 		OUTPUT ${OUT}
 		COMMENT "Generating binary serialization ${IN}"
-		COMMAND ${CMAKE_SOURCE_DIR}/devel/scripts/serialization-code-generator.py
+		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/devel/scripts/serialization-code-generator.py
 		ARGS -s JBinary -I ${CMAKE_SOURCE_DIR}/src/include -i ${CMAKE_CURRENT_SOURCE_DIR}/${IN} -o ${OUT} 
 	)
 endmacro(SIOX_RUN_BINARY_SERIALIZER)
@@ -21,7 +21,7 @@ macro(SIOX_RUN_TEXT_SERIALIZER IN OUT)
 	add_custom_command(
 		OUTPUT ${OUT}
 		COMMENT "Generating text serialization ${IN}"
-		COMMAND ${CMAKE_SOURCE_DIR}/devel/scripts/serialization-code-generator.py
+		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/devel/scripts/serialization-code-generator.py
 		ARGS -f text -I ${CMAKE_SOURCE_DIR}/src/include -i ${CMAKE_CURRENT_SOURCE_DIR}/${IN} -o ${OUT} 
 	)
 endmacro(SIOX_RUN_TEXT_SERIALIZER)
@@ -38,7 +38,7 @@ endmacro(SYMLINK)
 macro(SIOX_SKELETON_BUILDER TYPE INPUT TEMPLATE LAYER OUTPUT)
 	message("Generating ${TYPE} skeleton for ${INPUT}.")
 	execute_process(
-		COMMAND ${CMAKE_SOURCE_DIR}/tools/siox-skeleton-builder/siox-skeleton-builder -s ${TYPE} -t ${TEMPLATE} -W ${LAYER}.wrap -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT} ${INPUT}
+		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/siox-skeleton-builder/siox-skeleton-builder.py -s ${TYPE} -t ${TEMPLATE} -W ${LAYER}.wrap -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT} ${INPUT}
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	)
 endmacro(SIOX_SKELETON_BUILDER)
