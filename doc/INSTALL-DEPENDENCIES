@@ -1,0 +1,110 @@
+This document describes how to compile and install the dependencies for SIOX on e.g. Centos 6.5.
+
+Since there have been issues with conflicting libraries such as NetCDF and MPI, this document describes how to build 
+most dependencies from scratch.
+
+
+The following commands have been tested on Centos 6.5.
+
+# The prefix, we will create a deps folder for generic dependencies (those that should never change), OpenMPI for its dependencies and HDF5, NetCDF and postgres.
+TARGET=/opt/centos/6.5
+SRC=/opt/centos/src
+BUILD=$SRC/builds/
+mkdir $BUILD
+
+
+# This function eases installation of basic dependencies
+function installSimple(){
+F=$1
+mkdir $BUILD/$F
+pushd $BUILD/$F
+$SRC/$F/configure --prefix=$TARGET/deps/
+make -j
+make install
+popd
+}
+
+# We install GCC first, since we'll use it to compile ALL subsequent dependencies
+installSimple gcc-4.8.2
+
+
+# now we remove the old GCC, this is optional.
+yum remove gcc-c++ gcc gdb
+
+
+# Now we create an aliases file to ease access to the libraries
+
+echo '
+for P in deps OpenMPI/1.6.3/ postgres; do
+T=/opt/centos/6.5/$P
+export PATH=$T/bin:$PATH
+export LD_LIBRARY_PATH=$T/lib:$T/lib64:$LD_LIBRARY_PATH
+export PKG_CONFIG_PATH=$T/lib/pkgconfig/:$PKG_CONFIG_PATH
+done
+' >  $TARGET/aliases
+
+
+source $TARGET/aliases
+
+# check if the right gcc is used:
+which gcc
+which gfortran
+
+
+# generic packages
+
+installSimple make-4.0
+installSimple gdb-7.7 # eases debugging, the shipped gdb might be broken
+
+installSimple libffi-3.0.13 # needed for glib
+installSimple glib-2.36.0
+installSimple cmake-2.8.12.2 # needed for siox
+installSimple Python-3.3.4 # needed for siox
+installSimple valgrind-3.9.0 # eases debugging
+
+### Now the ones with individual configures.
+
+pushd boost_1_55_0
+./bootstrap.sh --prefix=$TARGET/deps/
+./b2 install --prefix=$TARGET/deps/
+popd
+
+pushd openmpi-1.6.3
+./configure --prefix=$TARGET/OpenMPI/1.6.3 --enable-mpi-f90 --enable-opal-multi-threads --enable-memchecker --with-valgrind \
+		--with-hwloc \
+ 		--enable-ft-thread --with-ft=cr \
+	        --with-threads=posix \
+		--with-devel-headers \
+		--with-sge
+make -j && make install
+popd
+
+
+pushd hdf5-1.8.11
+./configure --prefix=$TARGET/OpenMPI/1.6.3 --enable-using-memchecker --enable-parallel --enable-shared --enable-fortran
+make -j && make install
+popd
+
+
+pushd netcdf-4.2.1.1
+./configure --prefix=$TARGET/OpenMPI/1.6.3 --enable-netcdf-4 CFLAGS="$CFLAGS" CC=mpicc
+make -j && make install
+
+
+pushd netcdf-fortran-4.2 
+./configure --prefix=$TARGET/OpenMPI/1.6.3
+make -j && make install
+popd
+
+
+pushd postgresql-9.3.2
+./configure --prefix=$TARGET/postgres --with-gnu-ld
+make -j && make install
+popd
+
+
+pushd libpqxx-4.0.1
+./configure --prefix=$TARGET/postgres --with-gnu-ld --with-pic
+make -j && make install
+popd
+
