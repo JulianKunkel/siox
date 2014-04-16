@@ -55,13 +55,13 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		// How close (relative to total value spread observed up to now) to highest and lowest value
 		// to be regarded anomalous?
 		const double kWarnQuantile = 0.01;
-		// How many values are to be observed before evaluating a statistic's values for anomalies?
-		const uint64_t kMinObservationCount = 10;
 		// Domain string used for all statistics in the ontology
 		const string kStatisticsDomain = "statistics";
 		// Stings to use in anomaly reporting
 		const string kIssueBadValue = "Bad value for ";
 		const string kIssueGoodValue = "Good value for ";
+		// How many values are to be observed before evaluating a statistic's values for anomalies?
+		uint64_t nMinObservationCount = 100;
 		// A flag indicating whether all statistics requested are being obtained right now.
 		// Used for easier checking when the set of available ones changes.
 		bool gotAllRequested = false;
@@ -108,6 +108,9 @@ void StatisticsHealthADPI::initPlugin() throw() {
 	// OUTPUT( "Got a topology!" );
 	// Connect us to our reasoner
 	facade->register_anomaly_plugin( this );
+
+	// Retrieve other options
+	nMinObservationCount = options.nMinObservationCount;
 
 
 	// OUTPUT( "Got " << options.requestedStatistics.size() << " statistics requests." );
@@ -235,7 +238,7 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 		uint64_t count = ++statisticsObservationCount[j];
 		bool updateQuantiles = false;
 
-		if( count > kMinObservationCount )
+		if( count > nMinObservationCount )
 		{
 			// Necessary number of training values has been observed:
 			// Test value for problems
@@ -290,7 +293,7 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			}
 
 			// Last value before actual assessment starts?
-			if( count == kMinObservationCount )
+			if( count == nMinObservationCount )
 			{
 				// Set quantile values
 				updateQuantiles = true;

@@ -15,9 +15,11 @@ using namespace std;
 //@serializable
 class EnergyEfficiencyHealthADPIOptions : public monitoring::StatisticsMultiplexerPluginOptions {
 
-	// public:
+	public:
 
-		// vector< pair<string,string> >	requestedStatistics;
+		// No. of observations to observe (in order to learn range of possible values)
+		// before flagging anomalies
+		uint64_t	nMinObservationCount = 100;
 
 };
 

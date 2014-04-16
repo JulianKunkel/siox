@@ -58,7 +58,7 @@ class EnergyEfficiencyHealthADPI : public StatisticsMultiplexerPlugin, public An
 		const string kIssueHighConsumption = "High power consumption";
 		const string kIssueLowConsumption = "Low power consumption";
 		// How many values are to be observed before evaluating a statistic's values for anomalies?
-		const uint64_t kMinObservationCount = 10; // TODO: Make this an option
+		uint64_t nMinObservationCount = 100;
 		// A flag indicating whether all statistics requested are being obtained right now.
 		// Used for easier checking when the set of available ones changes.
 		bool gotAllRequested = false;
@@ -125,6 +125,10 @@ void EnergyEfficiencyHealthADPI::initPlugin() throw() {
 	// OUTPUT( "Got a topology!" );
 	// Connect us to our reasoner
 	facade->register_anomaly_plugin( this );
+
+	// Retrieve other options
+	nMinObservationCount = options.nMinObservationCount;
+
 
 	/*
 	 * Look up and remember information for all requested statistics
@@ -253,7 +257,7 @@ void EnergyEfficiencyHealthADPI::newDataAvailable() throw(){
 		OUTPUT( "Efficiency # " << nEfficiencyCount << ": " << cpuUtilization << " / " << energyConsumed << " = " << efficiency );
 
 		// If past the settling phase, test for anomalies
-		if ( nEfficiencyCount > kMinObservationCount )
+		if ( nEfficiencyCount > nMinObservationCount )
 		{
 			efficiencyVar = efficiencyM2 / (nCpuUtilizationValues - 1);
 			// OUTPUT( "Estimated Law: N(" << efficiencyMean << "," << efficiencyVar << ")" );

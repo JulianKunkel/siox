@@ -19,6 +19,10 @@ class StatisticsHealthADPIOptions : public monitoring::StatisticsMultiplexerPlug
 
 		vector< pair<string,string> >	requestedStatistics;
 
+		// No. of observations to observe (in order to learn range of possible values)
+		// before flagging anomalies
+		uint64_t						nMinObservationCount = 100;
+
 };
 
 #endif
