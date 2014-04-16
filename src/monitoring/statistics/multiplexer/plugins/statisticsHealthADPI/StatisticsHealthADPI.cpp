@@ -62,8 +62,6 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		// Stings to use in anomaly reporting
 		const string kIssueBadValue = "Bad value for ";
 		const string kIssueGoodValue = "Good value for ";
-		const string kIssueHighConsumption = "High power consumption";
-		const string kIssueLowConsumption = "Low power consumption";
 		// A flag indicating whether all statistics requested are being obtained right now.
 		// Used for easier checking when the set of available ones changes.
 		bool gotAllRequested = false;
@@ -90,39 +88,6 @@ class StatisticsHealthADPI : public StatisticsMultiplexerPlugin, public AnomalyP
 		// A field holding the indices of the statistics that are available at the moment.
 		// Used to iterate only over those available when updating values.
 		vector<uint> availableStatisticsIndices;
-
-		// Total energy consumed
-		double totalEnergyConsumed = 0.0;	// TODO: Make this available via the proper ways!
-
-		/*
-		 * Fields to provide the estimated-deviation-from-expected-energy-consumption-anomaly feature
-		 */
-		// energy consumed
-		const string kNameEnergyConsumedOnt = "power/rapl"; // TODO: Do this properly!
-		const string kNameEnergyConsumedTop = "@localhost";
-		const string kNameEnergyConsumed = kNameEnergyConsumedOnt + kNameEnergyConsumedTop;
-		uint64_t nEnergyConsumedValues = 0;
-		// OntologyAttributeID idEnergyConsumedOnt;
-		// TopologyObjectId idEnergyConsumedTop;
-		// shared_ptr<Statistic> statEnergyConsumed;
-		double energyConsumed;
-		// cpu utilization
-		const string kNameCpuUtilizationOnt = "utilization/cpu"; // TODO: Do this properly!
-		const string kNameCpuUtilizationTop = "@localhost";
-		const string kNameCpuUtilization = kNameCpuUtilizationOnt + kNameCpuUtilizationTop;
-		uint64_t nCpuUtilizationValues = 0;
-		// OntologyAttributeID idCpuUtilizationOnt;
-		// TopologyObjectId idCpuUtilizationTop;
-		// shared_ptr<Statistic> statCpuUtilization;
-		double cpuUtilization;
-		// Values for parameters of estimated Gaussian
-		// uint64_t efficiencyCount = 0;
-		double efficiencyMean = 0.0;
-		double efficiencyM2 = 0.0;
-		double efficiencyVar;
-		// Stings to use in anomaly reporting
-		const string kIssueHighEfficiency = "High power efficiency";
-		const string kIssueLowEfficiency = "Low power efficiency";
 };
 
 
@@ -265,7 +230,7 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 		double value = statistics[j]->curValue.toDouble();
 		// OUTPUT( "Current node statistic[" << j << ": " << statisticsNames[j] << "]: " << value );
 		// FIXME:
-		// Log file varies dramatically in length.
+		// Sometimes, log file varies dramatically in length.
 
 		uint64_t count = ++statisticsObservationCount[j];
 		bool updateQuantiles = false;
@@ -288,7 +253,8 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			}
 
 			// Update Min?
-			if( value < statisticsValuesMin[j] ){
+			if( value < statisticsValuesMin[j] )
+			{
 				statisticsValuesMin[j] = value;
 				updateQuantiles = true;
 				// OUTPUT( "New minimum: " << value );
@@ -337,71 +303,8 @@ void StatisticsHealthADPI::newDataAvailable() throw(){
 			double quantileDelta = (statisticsValuesMax[j] - statisticsValuesMin[j]) * kWarnQuantile;
 			statisticsValuesQuantileLow[j] = statisticsValuesMin[j] + quantileDelta;
 			statisticsValuesQuantileHigh[j] = statisticsValuesMax[j] - quantileDelta;
-			// OUTPUT( "New limits set for statistic: ["
-			       // << statisticsValuesMin[j] << ","
-			       // << statisticsValuesQuantileLow[j] << ","
-			       // << statisticsValuesQuantileHigh[j] << ","
-			       // << statisticsValuesMax[j] << "]" );
+			OUTPUT( "New limits set for statistic: [" << statisticsValuesMin[j] << "," << statisticsValuesQuantileLow[j] << "," << statisticsValuesQuantileHigh[j] << "," << statisticsValuesMax[j] << "]" );
 		}
-
-		// Finally, if we are treating the energy consumed, remember the value and keep a running total
-		if ( statisticsNames[j] == kNameEnergyConsumed )
-		{
-			energyConsumed = value;
-			nEnergyConsumedValues ++;
-			totalEnergyConsumed += value; // Quick hack to supply a meter for energy consumed here.
-			// OUTPUT( "EnergyConsumed value # " << nEnergyConsumedValues << ": " << energyConsumed );
-			// OUTPUT( "Total energy consumed up to now: " << totalEnergyConsumed );
-		}
-		// If we are treating the cpu utilization, remember the value
-		if ( statisticsNames[j] == kNameCpuUtilization )
-		{
-			cpuUtilization = value;
-			nCpuUtilizationValues ++;
-			// OUTPUT( "CpuUtilization value # "<< nCpuUtilizationValues << ": " << cpuUtilization );
-		}
-
-	}
-
-	// Once we have all values, compute energy efficiency and react to it
-	if ( nCpuUtilizationValues == nEnergyConsumedValues ) // Do we have the same number of values for both?
-	{	// Compute and test efficiency metric
-		double efficiency = cpuUtilization / energyConsumed;
-		// OUTPUT( "efficiency = " << cpuUtilization << " / " << energyConsumed << " = " << efficiency );
-
-		// If past the settling phase, test for anomalies
-		if ( nCpuUtilizationValues > kMinObservationCount )
-		{
-			efficiencyVar = efficiencyM2 / (nCpuUtilizationValues - 1);
-			// OUTPUT( "Estimated Law: N(" << efficiencyMean << "," << efficiencyVar << ")" );
-			double stddev = sqrt(efficiencyVar);
-			if ( efficiency < efficiencyMean - stddev )
-			{
-				OUTPUT( "Flagging Anomaly for efficiency: " << efficiency << "<" << efficiencyMean - stddev << " => " << toString(HealthState::ABNORMAL_BAD) );
-				addObservation( cid, HealthState::ABNORMAL_BAD,  kIssueLowEfficiency, 0 );
-			}
-			if ( efficiency > efficiencyMean + stddev )
-			{
-				OUTPUT( "Flagging Anomaly for efficiency: " << efficiency << ">" << efficiencyMean + stddev << " => " << toString(HealthState::ABNORMAL_GOOD) );
-				addObservation( cid, HealthState::ABNORMAL_GOOD,  kIssueHighEfficiency, 0 );
-			}
-		}
-
-		// Estimate mean and variance, according to Knuth:
-		double delta = efficiency - efficiencyMean;
-		// OUTPUT( "delta = " << delta );
-		efficiencyMean += delta / nCpuUtilizationValues;
-		// OUTPUT( "efficiencyMean = " << efficiencyMean );
-		efficiencyM2 += delta * (efficiency - efficiencyMean);
-		// OUTPUT( "efficiencyM2 = " << efficiencyM2 );
-	}
-	else
-	{	// No efficiency metric for this cycle;
-		// effectively the ignore lone value for this cycle by discounting it
-		if( nCpuUtilizationValues > nEnergyConsumedValues )
-			nCpuUtilizationValues --;
-		else
-			nEnergyConsumedValues --;
 	}
 }
 
