@@ -5,13 +5,13 @@ include_directories(
 )
 
 add_library(
-	siox-monitoring-statisticsMultiplexerPlugin-healthADPI
+	siox-monitoring-statisticsMultiplexerPlugin-energyEfficiencyHealthADPI
 	EnergyEfficiencyHealthADPI.cpp
 	EnergyEfficiencyHealthADPIOptions.cpp
 )
 
 target_link_libraries(
-	siox-monitoring-statisticsMultiplexerPlugin-healthADPI
+	siox-monitoring-statisticsMultiplexerPlugin-energyEfficiencyHealthADPI
 	siox-core-AutoConfigurator
 	siox-monitoring-Statistic
 )

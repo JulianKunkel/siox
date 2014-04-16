@@ -8,7 +8,7 @@
 // #include <monitoring/statistics/StatisticsCollection.hpp>
 // #include <monitoring/statistics/collector/StatisticsCollector.hpp>
 
-#include <monitoring/statistics/multiplexer/plugins/statisticsHealthADPI/EnergyEfficiencyHealthADPIOptions.hpp>
+#include <monitoring/statistics/multiplexer/plugins/energyEfficiencyHealthADPI/EnergyEfficiencyHealthADPIOptions.hpp>
 
 #include <string>
 
@@ -240,7 +240,7 @@ void EnergyEfficiencyHealthADPI::newDataAvailable() throw(){
 
 	energyConsumed = statisticEnergyConsumed->curValue.toDouble();
 	nEnergyConsumedValues ++;
-	totalEnergyConsumed += value; // Quick hack to supply a meter for energy consumed here.
+	totalEnergyConsumed += energyConsumed; // Quick hack to supply a meter for energy consumed here.
 	// OUTPUT( "EnergyConsumed value # " << nEnergyConsumedValues << ": " << energyConsumed );
 	OUTPUT( "Total energy consumed up to now: " << totalEnergyConsumed );
 

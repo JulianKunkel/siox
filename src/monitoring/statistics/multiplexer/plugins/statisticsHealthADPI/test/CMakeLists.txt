@@ -14,7 +14,7 @@ target_link_libraries(
 	siox-core-ModuleLoader
 	siox-monitoring-ThreadedStatisticsCollector
 	siox-monitoring-StatisticsMultiplexerSync
-	siox-monitoring-statisticsMultiplexerPlugin-healthADPI
+	siox-monitoring-statisticsMultiplexerPlugin-statisticsHealthADPI
 )
 
 # symlink(siox.conf siox.conf)
