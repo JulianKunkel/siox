@@ -1,22 +1,24 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
 #Small script to generate the SIOX documentation.
 
-#Go to SIOX base directory
-cd $(dirname $(dirname $(dirname $0)))
+SIOX_ROOT=/home/aguilera/Projects/SIOX/github/siox
+
+PUMLJAR=/home/aguilera/bin/plantuml.jar
+DOXYGEN=/usr/bin/doxygen
+JAVA=/usr/bin/java
+
+pushd $SIOX_ROOT
 
 #TODO generate plantuml diagrams
-echo "scanning sources for plantuml diagrams, this may take a while if it's the first time after a reboot"
-for file in $(grep --files-with-matches '@startuml' $(find . -name '*') 2>/dev/null) ; do
-	case $file in
-		(*Doxyfile)
-			;;
-		(*)
-			echo "generating plantuml diagrams from $file"
-			plantuml -o $(pwd)/doc/doc-created/images $file
-			;;
-	esac
+grep -RI --files-with-matches '@startuml' --exclude-dir=devel --exclude-dir=build\* --exclude=Doxyfile | while read line
+do
+	$JAVA -jar $PUMLJAR -o $SIOX_ROOT/doc/doc-created/images $line 
 done
 
 #Generate documentation
-cd doc
-doxygen
+pushd doc
+$DOXYGEN 
+popd
+popd
+
+
