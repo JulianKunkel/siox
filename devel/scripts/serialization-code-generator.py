@@ -192,7 +192,7 @@ class JBinaryOutputGenerator(OutputGenerator):
         self.parents = parentClasses
         self.className = className
         try:
-            self.parentClassnames = map(lambda p: re.split("[ \t]+", p)[1].strip(), parentClasses)
+            self.parentClassnames = list(map(lambda p: re.split("[ \t]+", p)[1].strip(), parentClasses))
         except IndexError:            
             print("Did you forget to specify public class inheritance for class \"" + className + "\" ?")
             os._exit(1)
