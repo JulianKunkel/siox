@@ -323,6 +323,17 @@ void ReasonerStandardImplementation::PeriodicRun(){
 				}
 			}
 
+			// TODO combine health of the next level with my local information:
+			switch (role){
+				case ReasonerStandardImplementationOptions::Role::PROCESS :
+					if ( nodeHealth->overallState != GOOD && nodeHealth->overallState != BAD && nodeHealth->overallState != OK ){
+						anomalyDetected = true;
+					}
+					break;
+			}
+
+
+
 			// Run assessment appropriate to reasoner's role;
 			// then, forward current state to remote reasoners
 			switch ( role ) {
@@ -575,12 +586,12 @@ void ReasonerStandardImplementation::assessNodeHealth(){
 	// determine node health based on the historic knowledge AND the statistics
 	if ( nodeHealth->occurrences[ABNORMAL_GOOD] || nodeHealth->occurrences[ABNORMAL_BAD] || nodeHealth->occurrences[ABNORMAL_OTHER] ){
 		// we have a condition in which we must fire the anomaly trigger.
-		if ( observationRatios[ABNORMAL_GOOD] > 5 &&
+		if ( observationRatios[ABNORMAL_GOOD] >= 1 &&
 			observationRatios[ABNORMAL_GOOD] > 2 * observationRatios[ABNORMAL_BAD] &&
 			observationRatios[ABNORMAL_GOOD] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
 			newHealth->overallState = HealthState::ABNORMAL_GOOD;
-		}else if (observationRatios[ABNORMAL_BAD] > 5 &&
+		}else if (observationRatios[ABNORMAL_BAD] >= 1 &&
 			observationRatios[ABNORMAL_BAD] > 2 * observationRatios[ABNORMAL_GOOD] &&
 			observationRatios[ABNORMAL_BAD] > 2 * observationRatios[ABNORMAL_OTHER] )
 		{
