@@ -24,7 +24,6 @@ static function get_all_parents()
 	return $list;
 }
 
-
 }
 
 ?>

@@ -4,20 +4,67 @@ require_once("SIOX.php");
 
 class Program {
 
-static function get_count()
+static function get_count($cmd = NULL, $node = NULL, $user = NULL)
 {
 	global $dbcon;
 
-	$sql = "SELECT count(*) FROM get_program_list()";
+	if ($cmd && $user) {
+		$sql = "
+SELECT count(*) 
+FROM (
+	SELECT childobjectid, attribute, value 
+	FROM program_with_attrs 
+	WHERE childobjectid IN (
+		SELECT childobjectid 
+		FROM program_with_attrs 
+		WHERE value = :user
+	)
+) AS p 
+WHERE attribute = 'description/commandLine' AND value LIKE :cmd";
+	} else if (!$cmd && $user) {
+		$sql = "
+SELECT count(*)
+FROM (
+	SELECT * 
+	FROM program_with_attrs 
+	WHERE childobjectid IN (
+		SELECT childobjectid 
+		FROM program_with_attrs 
+		WHERE value = :user
+	)
+) AS p 
+WHERE attribute = 'description/commandLine'";
+
+	} else if ($cmd && !$user) {
+		$sql = "
+SELECT count(*) 
+FROM program_with_attrs
+WHERE attribute = 'description/commandLine' AND value LIKE :cmd";
+	} else {
+		$sql = "SELECT * FROM programs";
+	}
+
 	$stmt = $dbcon->prepare($sql);
+	if ($cmd)
+		$stmt->bindValue(':cmd', "%$cmd%");
+	if ($user)
+		$stmt->bindParam(':user', $user);
 
 	if (!$stmt->execute()) {
 		print_r($dbcon->errorInfo());
-		die("Error getting program count.");
+		die("Error getting program count. Command=$cmd, Node=$node, User=$user.");
 	}
 
 	$row = $stmt->fetch(PDO::FETCH_OBJ);
+
 	return $row->count;
+
+}
+
+static function get_attribute_list($key)
+{
+	global $dbcon;
+
 
 }
 
@@ -46,15 +93,56 @@ static function get_attributes($procid)
 }
 
 
-static function get_list($page = 1, $page_size = 200)
+static function get_list($page = 1, $page_size = 200, $cmd = NULL, $node = NULL, $user = NULL)
 {
 	global $dbcon;
+	$page_offset = $page_size*($page-1);
 
-	$sql = "SELECT * FROM get_program_list() LIMIT :page_size OFFSET :page_offset";
-	
+	if ($cmd && $user) {
+		$sql = "
+SELECT * 
+FROM (
+	SELECT childobjectid, attribute, value 
+	FROM program_with_attrs 
+	WHERE childobjectid IN (
+		SELECT childobjectid 
+		FROM program_with_attrs 
+		WHERE value = :user
+	)
+) AS p 
+WHERE attribute = 'description/commandLine' AND value LIKE :cmd";
+	} else if (!$cmd && $user) {
+		$sql = "
+SELECT *
+FROM (
+	SELECT * 
+	FROM program_with_attrs 
+	WHERE childobjectid IN (
+		SELECT childobjectid 
+		FROM program_with_attrs 
+		WHERE value = :user
+	)
+) AS p 
+WHERE attribute = 'description/commandLine'";
+
+	} else if ($cmd && !$user) {
+		$sql = "
+SELECT * 
+FROM program_with_attrs
+WHERE attribute = 'description/commandLine' AND value LIKE :cmd";
+	} else {
+		$sql = "SELECT * FROM programs";
+	}
+
+	$sql .= " ORDER BY childobjectid ASC LIMIT $page_size OFFSET $page_offset";	
+
 	$stmt = $dbcon->prepare($sql);
 	$stmt->bindParam(':page_size', $page_size);
 	$stmt->bindValue(':page_offset', $page_size*($page-1));
+	if ($cmd)
+		$stmt->bindValue(':cmd', "%$cmd%");
+	if ($user)
+		$stmt->bindParam(':user', $user, PDO::PARAM_STR);
 
 	if (!$stmt->execute()) {
 		print_r($dbcon->errorInfo());

@@ -41,16 +41,17 @@ $p = Program::get($pnum);
 
 <br /><br />
 
-<h2>Execution Context</h2>
-
+<h2>Program information</h2>
 
 <table cellspacing="0" cellpadding="0">
-	<tr class="even">
-		<th>program number</th><td><?=$pnum?></td>
-	</tr>
-	<tr class="odd">
-		<th>node (nid, pid, time)</th><td><?="$p->node ($p->nid, $p->pid, $p->time)"?></td>
-	</tr>
+	<tr class="even"><th>Program number</th><td><?=$pnum?></td></tr>
+	<tr class="odd"><th>Total activities</th><td><?=$total_activities?></td></tr>
+	<tr class="odd"><th>Node (nid, pid, time)</th><td><?="$p->node ($p->nid, $p->pid, $p->time)"?></td></tr>
+</table>
+
+<h2>Execution Context</h2>
+
+<table cellspacing="0" cellpadding="0">
 <?php $i = 0; ?>
 <?php foreach ($p->attributes as $k => $v): ?>
 	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd"; ?>">
