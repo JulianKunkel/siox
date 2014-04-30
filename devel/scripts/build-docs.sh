@@ -1,24 +1,49 @@
 #!/usr/bin/env bash
-#Small script to generate the SIOX documentation.
+# Small script to generate the SIOX documentation.
 
-SIOX_ROOT=/home/aguilera/Projects/SIOX/github/siox
+# If you don't have the needed programs in your $PATH, you may adjust here
+DOXYGEN=doxygen
+PLANTUML=plantuml
 
-PUMLJAR=/home/aguilera/bin/plantuml.jar
-DOXYGEN=/usr/bin/doxygen
-JAVA=/usr/bin/java
+# Where to search for PlantUML code
+PLANTUML_SOURCES="doc/doc-source/ src/"
 
-pushd $SIOX_ROOT
 
-#TODO generate plantuml diagrams
-grep -RI --files-with-matches '@startuml' --exclude-dir=devel --exclude-dir=build\* --exclude=Doxyfile | while read line
+# Determine SIOX root directory
+cd "$(dirname "$0")"
+cd ../..
+SIOX_ROOT="$(pwd)"
+# Export for use in Doxyfile
+export SIOX_ROOT
+printf "SIOX root directory is '$SIOX_ROOT'\n"
+
+which "$DOXYGEN" &>/dev/null || { printf "\nCannot find doxygen!\n\n"; exit 1; }
+which "$PLANTUML" &>/dev/null || {
+	printf "\nCannot find plantuml!\n\n"
+	if [ ! -e ~/bin/plantuml ]; then
+		if [ ! -d ~/bin -a ! -e ~/bin ]; then
+			mkdir ~/bin
+		fi
+		cat >~/bin/plantuml <<EOT
+#!/bin/sh
+exec java -jar /path/to/plantuml.jar "\$@"
+EOT
+		chmod +x ~/bin/plantuml
+		printf "A wrapper for invoking plantuml.jar has been created for your convenience at '~/bin/plantuml'\nAdjust the path to the jar file and try again.\n"
+	fi
+	exit 1
+}
+
+# Generate PlantUML diagrams
+cd "$SIOX_ROOT"
+printf "Searching for PlantUML source files in $PLANTUML_SOURCES ...\n"
+grep -RI --files-with-matches '^[[:space:]]*@startuml' $PLANTUML_SOURCES | while read filename
 do
-	$JAVA -jar $PUMLJAR -o $SIOX_ROOT/doc/doc-created/images $line 
+	printf "Generating UML from '$filename' ...\n"
+	"$PLANTUML" -o "$SIOX_ROOT/doc/doc-created/images" "$filename" || { printf "\nPlantUML error!\n\n"; exit 1; }
 done
 
-#Generate documentation
-pushd doc
-$DOXYGEN 
-popd
-popd
+[ $? -ne 0 ] && exit 1
 
-
+# Generate Doxygen documentation
+cd "$SIOX_ROOT/doc" && "$DOXYGEN"
