@@ -41,7 +41,7 @@ SELECT count(*)
 FROM program_with_attrs
 WHERE attribute = 'description/commandLine' AND value LIKE :cmd";
 	} else {
-		$sql = "SELECT * FROM programs";
+		$sql = "SELECT count(*) FROM programs";
 	}
 
 	$stmt = $dbcon->prepare($sql);
@@ -102,7 +102,7 @@ static function get_list($page = 1, $page_size = 200, $cmd = NULL, $node = NULL,
 		$sql = "
 SELECT * 
 FROM (
-	SELECT childobjectid, attribute, value 
+	SELECT childobjectid, childname, attribute, value 
 	FROM program_with_attrs 
 	WHERE childobjectid IN (
 		SELECT childobjectid 
@@ -115,7 +115,7 @@ WHERE attribute = 'description/commandLine' AND value LIKE :cmd";
 		$sql = "
 SELECT *
 FROM (
-	SELECT * 
+	SELECT childobjectid, childname, attribute, value 
 	FROM program_with_attrs 
 	WHERE childobjectid IN (
 		SELECT childobjectid 
@@ -127,14 +127,14 @@ WHERE attribute = 'description/commandLine'";
 
 	} else if ($cmd && !$user) {
 		$sql = "
-SELECT * 
+SELECT childobjectid, childname, attribute, value 
 FROM program_with_attrs
 WHERE attribute = 'description/commandLine' AND value LIKE :cmd";
 	} else {
 		$sql = "SELECT * FROM programs";
 	}
 
-	$sql .= " ORDER BY childobjectid ASC LIMIT $page_size OFFSET $page_offset";	
+	$sql .= " ORDER BY childobjectid ASC LIMIT :page_size OFFSET :page_offset";	
 
 	$stmt = $dbcon->prepare($sql);
 	$stmt->bindParam(':page_size', $page_size);
