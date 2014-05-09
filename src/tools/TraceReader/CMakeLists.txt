@@ -35,8 +35,10 @@ target_link_libraries(
 	siox-monitoring-TopologyAssociationMapper
 	siox-monitoring-TopologyOntology
 	siox-monitoring-TopologySystemInformation
-	siox-monitoring-DatabaseTopology
+	siox-monitoring-Topology
 )
+#	siox-monitoring-DatabaseTopology
+
 
 add_subdirectory(test)
 add_subdirectory(plugin)
