@@ -5,7 +5,7 @@
 
 # create wrapper
 echo 'Generating posix-printf.c'
-python ../../siox-wrapper.py -o posix-printf.c -t template-plain.py -s plain low-level-io.h
+python ../../siox-skeleton-builder.py -o posix-printf.c -t template-plain.py -s plain low-level-io.h
 
 # create library implementation
 echo 'Compiling posix-printf.c as shared object posix.so'

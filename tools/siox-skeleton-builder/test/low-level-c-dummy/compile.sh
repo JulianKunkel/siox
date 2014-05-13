@@ -1,6 +1,6 @@
 #!/bin/bash
 #python ../../siox-wrapper.py -o siox-ll-dummy-blank.h -b  -t ../../template.py ../../../../include/monitoring/low-level-c/siox-ll.h
-python ../../siox-wrapper.py -o siox-ll-dummy-implementation.c -t ../../template.py -s plain siox-ll-dummy-blank.h
+python ../../siox-skeleton-builder.py -o siox-ll-dummy-implementation.c -t ../../template.py -s plain siox-ll-dummy-blank.h
 
 # SIOX Fake-Implementation of low-level interface
 gcc siox-ll-dummy-implementation.c -I  ../../../../include -shared -fPIC -o libsiox-ll-dummy-implementation.so `pkg-config --cflags --libs glib-2.0`

@@ -5,7 +5,7 @@ from __future__ import print_function
 
 import unittest
 import os
-sioxWrapper = __import__("siox-wrapper")
+sioxWrapper = __import__("siox-skeleton-builder")
 
 
 ##
