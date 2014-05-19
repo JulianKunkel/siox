@@ -51,7 +51,7 @@ def main(argv):
     # f.close()
 
     # y2 = numpy.loadtxt('data.y2')
-    print 'Time for loading ', (time.time() - tstart), " s"
+    print ( 'Time for loading ' + str(time.time() - tstart) + " s" )
 
     tstart = time.time()
 
@@ -67,7 +67,7 @@ def main(argv):
 
     #ax.set_ylim(0,5)
 
-    print 'Time for plotting ', (time.time() - tstart), " s"
+    print ('Time for plotting ' + str(time.time() - tstart) + " s")
 
     if type == "pdf":
         from matplotlib.backends.backend_pdf import PdfPages
