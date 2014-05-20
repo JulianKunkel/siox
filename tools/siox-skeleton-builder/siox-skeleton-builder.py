@@ -9,18 +9,31 @@ globalOnce = ""
 global debug
 debug = False
 
-global autoInitializeSet
-autoInitializeSet = False
 
-
+import os
 import re
 import sys
 import argparse
-
-genericVariablesForTemplates = {}
+import traceback
 
 global precompiler
 precompiler = []
+
+def getCurrentPath():
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
+
+
+def loadModuleDynamic(file, path=getCurrentPath()):
+    sys.path.append(path)
+
+    try:
+       return  __import__(file)
+    except:
+        print("Could not load the module \"" + file + "\" from directory: " + path + "\n")
+        traceback.print_exc(file = sys.stderr)
+        sys.exit(1)
+
+
 
 #
 # @brief Generate and handle the command line parsing.
@@ -53,7 +66,8 @@ from a other header file.''')
 
         argParser.add_argument('--style', '-s',
                                action='store', default='dlsym', dest='style',
-                               choices=['wrap', 'dlsym', 'plain'],
+                               choices=[nm[0:len(nm)-3] for nm in os.listdir(getCurrentPath() + "/lib/styles/") if nm.endswith('.py')]
+                               ,
                                help='''Choose which output-style to use.''')
 
         argParser.add_argument('inputFile', default=None,
@@ -680,7 +694,6 @@ at the end of """)
     # @brief This function matches a instruction command with the prefix //@
     #
     def matchCommand(self, inputLine, templateList):
-        global autoInitializeSet
         match = self.commandRegex.match(inputLine)
 
         if (match):
@@ -691,11 +704,9 @@ at the end of """)
             # Search for init or final sections to define init or final
             # functions
 
-            if commandName == 'autoInitializeLibrary':
-                autoInitializeSet = True
             # If the current instrumentation command is available in the template
             # create a new template object and fill it with the command data
-            elif commandName in availableCommands:
+            if commandName in availableCommands:
                 commandName = match.group(1)
                 commandArgs = match.group(2) + " "
                 newTemplate = Template( template[commandName], commandName, commandArgs )
@@ -805,7 +816,7 @@ class Template():
             self.parameterList[lastName] += " " + leftover
 
 
-    def cleanOutput(self, output):
+    def cleanOutput(self, output, genericVariablesForTemplates):
        ret = output  % self.parameterList
        for key in genericVariablesForTemplates:
             ret = ret.replace( "%(" +  key + ")s",  genericVariablesForTemplates[key] );
@@ -820,404 +831,16 @@ class Template():
     # @param type What part of the template should be given
     #
     # @return The requested string from the template
-    def output(self, type):
+    def output(self, type, genericVariablesForTemplates = {}):
         if (type in self.templateDict):
-            text = self.cleanOutput(self.templateDict[type])
+            text = self.cleanOutput(self.templateDict[type], genericVariablesForTemplates)
             if debug and text != "":
                 return "// @" + self.name + " " + str(self.parameterList).strip("{}").replace("': '", "=").replace("'", "") + "\n" + text
-            return text;
+            return text.strip();
         else:
             # Error
             print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
             sys.exit(1)
-
-
-
-def prepareGenericVariablesForTemplates(function, call=""):
-  global genericVariablesForTemplates
-  genericVariablesForTemplates = {"FUNCTION_NAME" : function.name,
-                                  "FUNCTION_CALL" : call}
-
-#
-# @brief The output class (write a file to disk)
-#
-class Writer():
-
-    #
-    # @brief The constructor
-    #
-    # @param options The supplied arguments
-    def __init__(self, options):
-        self.outputFile = options.outputFile
-        self.wrapFile = options.wrapFile
-        self.writeWrapFile = (options.style == "wrap")
-
-    #
-    # @brief Write a header file
-    #
-    # @param functions A list of function-objects to write
-    def headerFile(self, functionList):
-        # open the output file for writing
-        output = open(self.outputFile, 'w')
-
-        # write all function headers
-        for function in functionList:
-            for match in throwaway:
-                if re.search(match, function.getDefinition()):
-                    function.name = ''
-
-            if function.type == '':
-                continue
-
-            elif function.name == '':
-                continue
-
-            else:
-                print(function.getDefinition(), end=';\n', sep='', file=output)
-
-        # close the file
-        output.close()
-
-    def writeHeaderBegin(self, functionList):
-
-        # open the output file for writing
-        output = open(self.outputFile, 'w')
-
-        # write all needed includes
-        for match in precompiler:
-            print('#' + match, end='\n', file=output)
-
-        print("// global includes: ", file=output)
-        for match in includes:
-            print('#include ', match, end='\n', file=output)
-        print('\n', file=output)
-
-        # write all global-Templates
-        for function in functionList:
-            prepareGenericVariablesForTemplates(function)
-            for templ in function.usedTemplateList:
-                if templ.output('global') != '':
-                    print(templ.output('global'), file=output)
-        print("", file=output)
-
-
-        # write global once from template
-        print(globalOnce, file=output)
-
-        if autoInitializeSet :
-            print("static void sioxFinal() __attribute__((destructor));", file=output)
-            print("static void sioxInit() __attribute__((constructor));", file=output)
-        else:
-            print("static void sioxFinal();", file=output)
-            print("static void sioxInit();", file=output)
-        return output
-
-    #
-    # @brief Write a source file
-    #
-    # @param functions A list of function-objects to write
-    def sourceFileWrap(self, functionList):
-        output = self.writeHeaderBegin(functionList);
-
-        # write all function redefinitions
-        for function in functionList:
-            print(function.getDefinitionReal(), end=';\n', sep='', file=output)
-
-        print("", file=output)
-
-        print("static void sioxInit() {", file=output)
-        # write all init-templates
-        for function in functionList:
-            prepareGenericVariablesForTemplates(function)
-            for templ in function.usedTemplateList:
-                outputString = templ.output('init').strip()
-                if outputString.strip() != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-        
-        for function in reversed(functionList):
-            for templ in function.usedTemplateList:
-                outputString = templ.output('initLast').strip()
-                if outputString.strip() != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-        print("}", file=output)
-
-        print("static void sioxFinal() {", file=output)
-        # write all final-functions
-        for function in functionList:
-            prepareGenericVariablesForTemplates(function)
-            for templ in function.usedTemplateList:
-                outputString = templ.output('final').strip()
-                if outputString.strip() != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-        print("}", file=output)
-
-        # write all functions-bodies
-        for function in functionList:
-            # a variable to save the return-value
-            returnType = function.type
-
-            # write the function call
-            if returnType != "void":
-                functionCall = '\tret = ' + function.getCallReal() + ';\n'
-            else:
-                functionCall = '\t' + function.getCallReal() + ';\n'
-
-            prepareGenericVariablesForTemplates(function, functionCall)
-            # write function signature
-
-            print(function.getDefinitionWrap(),
-                  end='\n{\n', sep='', file=output)
-
-            # look for va_lists because they need special treament
-            if function.parameterList[-1].type == "...":
-                if not function.rewriteCall:
-                    print("function: " + function.getDefinition() + " needs the rewriteCall annotation since it supports va_args")
-                    exit(1)
-
-                print('\tva_list valist;', file=output)
-                print('\tva_start(valist, %s);' % function.parameterList[-2].name,
-                    file=output)
-                #print( '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type,  function.parameterList[-2].type), file=output)
-
-                # set the name to args
-                function.parameterList[-1].name = "val"
-
-
-            if returnType != "void":
-                print('\t', returnType, ' ret;', end='\n', sep='',
-                      file=output)
-
-            self.writeBefore(function, output)
-
-            # write the function call
-            print(functionCall, file=output)
-            
-            self.writeAfter(function, output)
-
-            # look for va_lists because they need special treament
-            if function.parameterList[-1].type == "...":
-                print("\tva_end(valist);", file=output)
-
-            # write the return statement and close the function
-            if returnType != "void":
-                print('\treturn ret;\n}', end='\n\n', file=output)
-
-            else:
-                print('\n}', end='\n\n', file=output)
-
-        output.close()
-
-        # generate gcc string for the user
-        if self.wrapFile and self.writeWrapFile:
-            output = open(self.wrapFile, 'w')
-            gccHelper = '-Wl'
-
-            for function in functionList:
-                gccHelper = "%s,--wrap=%s" % (gccHelper, function.name)
-
-            print(gccHelper, file=output)
-            output.close()
-
-    #
-    # @brief Write a source file
-    #
-    # @param functions A list of function-objects to write
-    def sourceFilePlain(self, functionList):
-        # open the output file for writing
-        output = open(self.outputFile, 'w')
-
-        # write all needed includes
-        for match in includes:
-            print('#include ', match, end='\n', file=output)
-        print('\n', file=output)
-
-        # write all global-Templates
-        for function in functionList:
-            prepareGenericVariablesForTemplates(function)
-            for templ in function.usedTemplateList:
-                if templ.output('global') != '':
-                    print(templ.output('global'), file=output)
-        print("", file=output)
-
-        # write global once from template
-        print(globalOnce, file=output)
-
-        # write all functions-bodies
-        for function in functionList:
-            prepareGenericVariablesForTemplates(function)
-            # write function signature
-
-            print(function.getDefinition(),
-                  end='\n{\n', sep='', file=output)
-
-            # look for va_lists because they need special treament
-            if function.parameterList[-1].type == "...":
-                print('\tva_list valist;', file=output)
-                print('\tva_start(valist, %s);' % function.parameterList[-2].name, file=output)
-                #print(                    '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type,function.parameterList[-2].type), file=output)
-                # set the name to args
-                function.parameterList[-1].name = "val"
-
-            # a variable to save the return-value
-            returnType = function.type
-
-            if returnType != "void":
-                print('\t', returnType, ' ret;', end='\n', sep='',
-                      file=output)
-
-
-            self.writeBefore(function, output)
-            self.writeAfter(function, output)
-
-            # look for va_lists because they need special treament
-            if function.parameterList[-1].type == "...":
-                print("\tva_end(valist);", file=output)
-
-            # write the return statement and close the function
-            if returnType != "void":
-                print('\treturn ret;\n}', end='\n\n', file=output)
-
-            else:
-                print('\n}', end='\n\n', file=output)
-        # close the file
-        output.close()
-    
-    def writeBefore(self, function, output):
-            # write the before-template for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('before').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-            # write the beforeLast-template for this function
-            for templ in reversed(function.usedTemplateList):
-                outputString = templ.output('beforeLast').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-    
-    def writeAfter(self, function, output):
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('after').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-            for templ in reversed(function.usedTemplateList):
-                outputString = templ.output('afterLast').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-
-            # write all after-templates for this function
-            for templ in function.usedTemplateList:
-                outputString = templ.output('cleanup').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-            for templ in reversed(function.usedTemplateList):
-                outputString = templ.output('cleanupLast').strip()
-                if outputString != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-
-
-    #
-    # @brief Write a source file
-    #
-    # @param functions A list of function-objects to write
-    def sourceFileDLSym(self, functionList):
-        precompiler.insert(0, "define _GNU_SOURCE")
-        output = self.writeHeaderBegin(functionList);
-
-
-        print('#include <dlfcn.h>\n', file=output)
-
-        print("static char* dllib = RTLD_NEXT;", file=output)
-
-        for function in functionList:
-            print(function.getDefinitionPointer(), file=output)
-        print("\tstatic int initialized_dlsym = 0;\n", file=output)
-
-        print("\nstatic void sioxSymbolInit() {\ninitialized_dlsym = 1;", file=output)
-        for function in functionList:
-            print(function.getDlsym(), file=output)
-
-        print("}", file=output)
-
-        print("\nstatic void sioxInit() {\n", file=output)
-        print("\tif(initialized_dlsym == 0) sioxSymbolInit();", file=output)
-        # write all init-templates
-        for function in functionList:
-            prepareGenericVariablesForTemplates(function)
-
-            for templ in function.usedTemplateList:
-                outputString = templ.output('init').strip()
-                if outputString.strip() != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-        for function in reversed(functionList):
-            for templ in function.usedTemplateList:
-                outputString = templ.output('initLast').strip()
-                if outputString.strip() != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-        print("}", file=output)
-
-        print("\nstatic void sioxFinal() {", file=output)
-        # write all final-functions
-        for function in functionList:
-            prepareGenericVariablesForTemplates(function)
-            for templ in function.usedTemplateList:
-                outputString = templ.output('final').strip()
-                if outputString.strip() != '':
-                    print('\t', outputString, end='\n', sep='', file=output)
-
-        print("}", file=output)
-
-        for function in functionList:
-
-            # a variable to save the return-value
-            returnType = function.type
-
-            if returnType != "void":
-                functionCall = '\tret = ' + function.getCallPointer() + ';\n'
-            else:
-                functionCall = '\t' + function.getCallPointer() + ';\n'
-
-            prepareGenericVariablesForTemplates(function, "if(initialized_dlsym == 0) sioxSymbolInit();\n" + functionCall + "\n")
-
-            # write function signature
-            print(function.getDefinition(), end='\n{\n', sep=' ',
-                  file=output)
-
-            # look for va_lists because they need special treament
-            if function.parameterList[-1].type == "...":
-                print('\tva_list valist;', file=output)
-                print(
-                    '\tva_start(valist, %s);' % function.parameterList[-2].name,
-                    file=output)
-             #   print( '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type, function.parameterList[-2].type), file=output)
-                # set the name to args
-                function.parameterList[-1].name = "val"
-
-            if returnType != "void":
-                print('\t', returnType, ' ret;', end='\n', sep='',
-                      file=output)
-
-            self.writeBefore(function, output)
-
-            # write the function call
-            print(functionCall, file=output)
-
-            self.writeAfter(function, output)
-
-            # look for va_lists because they need special treament
-            if function.parameterList[-1].type == "...":
-                print("\tva_end(valist);", file=output)
-
-            # write the return statement and close the function
-            if returnType != "void":
-                print('\treturn ret;\n}', end='\n\n', file=output)
-
-            else:
-                print('\n}', end='\n\n', file=output)
-
-        # close the file
-        output.close()
-
 
 #
 # @brief The main function.
@@ -1228,24 +851,19 @@ def main():
     opt = Option()
     options = opt.parse()
 
-    functionParser = FunctionParser(options)
-    outputWriter = Writer(options)
+    sys.path.append(getCurrentPath() + "/lib/")
+    style_module = loadModuleDynamic(options.style, getCurrentPath() + "/lib/styles/")
+    outputWriter = style_module.Style()
 
     if options.blankHeader:
+        # TODO outsource into own style
+        functionParser = FunctionParser(options)
         functions = functionParser.parseFile()
         outputWriter.headerFile(functions)
-
-    else:
-
+    else:                
         commandParser = CommandParser(options)
-
         functions = commandParser.parse()
-        if options.style == "wrap":
-            outputWriter.sourceFileWrap(functions)
-        elif options.style == "dlsym":
-            outputWriter.sourceFileDLSym(functions)
-        else:
-            outputWriter.sourceFilePlain(functions)
+        outputWriter.writeOutput(options, functions, templateParameters, precompiler)
 
 if __name__ == '__main__':
     main()
