@@ -851,17 +851,16 @@ def main():
     opt = Option()
     options = opt.parse()
 
-    functionParser = FunctionParser(options)
-
     sys.path.append(getCurrentPath() + "/lib/")
     style_module = loadModuleDynamic(options.style, getCurrentPath() + "/lib/styles/")
-    
     outputWriter = style_module.Style()
 
     if options.blankHeader:
+        # TODO outsource into own style
+        functionParser = FunctionParser(options)
         functions = functionParser.parseFile()
         outputWriter.headerFile(functions)
-    else:        
+    else:                
         commandParser = CommandParser(options)
         functions = commandParser.parse()
         outputWriter.writeOutput(options, functions, templateParameters, precompiler)

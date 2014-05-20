@@ -12,6 +12,8 @@ class Writer():
         output = open(self.outputFile, 'w')
 
         # write all function headers
+        throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
+
         for function in functionList:
             for match in throwaway:
                 if re.search(match, function.getDefinition()):
