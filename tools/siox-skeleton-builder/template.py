@@ -33,14 +33,14 @@ template = {
 		
 		''',
         'initLast': '%(ComponentVariable)s_layer_initialized = TRUE;',
-	'before': '',
-	'after': '',
-	'cleanup': '',
 	'final': '''
 		if (%(ComponentVariable)s_layer_initialized) { siox_component_unregister(%(ComponentVariable)s_component); %(ComponentVariable)s_component = NULL; %(ComponentVariable)s_layer_initialized = FALSE; }'''
 },
 'autoInitializeLibrary':{
-	# this hint is interpreted by the wrapper.
+	'global' : """
+				static void sioxFinal() __attribute__((destructor));
+            static void sioxInit() __attribute__((constructor));
+            """
 },
 'callLibraryFinalize':{
 	'after' : 'sioxFinal();'
@@ -627,14 +627,13 @@ template = {
         'cleanup': '',
         'final': ''
 }
-
 }
 
+templateParameters = {
 # Insert global once
-globalOnce = ""
-
+"globalOnce": "",
 # Regular expressions for functions to throw away
-throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
-
+"throwaway" : ["((^\s*)|(\s+))extern\s+.*\("],
 # Will be included
-includes = ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']
+"includes" : ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']
+}
