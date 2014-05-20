@@ -6,12 +6,12 @@ include_directories(
 )
 
 add_executable(
-	WrapAroundTest
-	WrapAroundTest.cpp
+	WrapAroundTestDefault
+	WrapAroundTestDefault.cpp
 )
 
 target_link_libraries(
-	WrapAroundTest
+	WrapAroundTestDefault
 	siox-core-ModuleLoader
 	siox-monitoring-TopologyOntology
 	siox-monitoring-RamTopology
@@ -20,4 +20,21 @@ target_link_libraries(
 	${Boost_LIBRARIES}
 )
 
-add_test(monitoring_statistics_collector_test_WrapAroundTest WrapAroundTest)
+add_test(monitoring_statistics_collector_test_WrapAroundTestDefault WrapAroundTestDefault)
+
+add_executable(
+	WrapAroundTestCustom
+	WrapAroundTestCustom.cpp
+)
+
+target_link_libraries(
+	WrapAroundTestCustom
+	siox-core-ModuleLoader
+	siox-monitoring-TopologyOntology
+	siox-monitoring-RamTopology
+	siox-knowledge-DereferencingFacade
+	siox-monitoring-ThreadedStatisticsCollector
+	${Boost_LIBRARIES}
+)
+
+add_test(monitoring_statistics_collector_test_WrapAroundTestCustom WrapAroundTestCustom)
