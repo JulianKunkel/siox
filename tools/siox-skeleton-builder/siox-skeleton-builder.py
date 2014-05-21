@@ -863,7 +863,11 @@ def main():
     else:                
         commandParser = CommandParser(options)
         functions = commandParser.parse()
-        outputWriter.writeOutput(options, functions, templateParameters, precompiler)
+
+        if ('templateParameters' not in locals()) and ('templateParameters' not in globals()):
+            templateParameters = {'includes' : '0', 'globalOnce' : '0'}
+		
+            outputWriter.writeOutput(options, functions, templateParameters, precompiler)
 
 if __name__ == '__main__':
     main()
