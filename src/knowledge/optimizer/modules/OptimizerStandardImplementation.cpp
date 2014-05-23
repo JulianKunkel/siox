@@ -60,7 +60,7 @@ namespace knowledge {
 				if( res != expert.end() ) {
 					return res->second->optimalParameter( aid );
 				} else {
-					throw NotFoundError( "Illegal attribute!" );
+					throw NotFoundError( "No optimizer plug-in found for attribute!" );
 				}
 			}
 
@@ -71,7 +71,7 @@ namespace knowledge {
 				if( res != expert.end() ) {
 					return res->second->optimalParameterFor( aid, activityToStart );
 				} else {
-					throw NotFoundError( "Illegal attribute!" );
+					throw NotFoundError( "No optimizer plug-in found for attribute!" );
 				}
 			}
 
