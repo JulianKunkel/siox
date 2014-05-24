@@ -57,7 +57,7 @@ namespace monitoring {
 			    enum StatisticIntervalType intervalType,
 			    const string& si_unit,
 			    const string& description,
-			    uint64_t overflow_max_value = 0,
+			    uint64_t overflow_max_value = ~(uint64_t)0,
 			    uint64_t overflow_next_value = 0
 			)
 				:
