@@ -27,7 +27,8 @@ public:
 	
 	virtual uint64_t insert_remote_call_id(const RemoteCallIdentifier &rcid, const uint64_t activity_uid) = 0;
 	virtual uint64_t query_remote_call_unique_id(const RemoteCallIdentifier &rcid) = 0;
-	
+
+	virtual ~DBQuerier(){}
 };
 
 #endif

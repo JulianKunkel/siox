@@ -17,6 +17,10 @@ import argparse
 import traceback
 
 global precompiler
+global templateParameters
+
+templateParameters = {"globalOnce": "", "includes" : [] }
+
 precompiler = []
 
 def getCurrentPath():
@@ -94,7 +98,9 @@ from a other header file.''')
         # import the templates (symbol template)
         namespace = {}
         with open(args.template, "r") as fh:
-            exec(fh.read(), namespace)
+            templateCode = fh.read()
+            exec(templateCode, namespace)
+
         globals().update(namespace)
         # update the datastructures for the templates
 

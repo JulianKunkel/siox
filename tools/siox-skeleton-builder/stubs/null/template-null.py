@@ -24,11 +24,14 @@ template = {
 },
 }
 
+templateParameters = {
 # Insert global once
-globalOnce = ""
+"globalOnce" : "",
 
 # Regexes for functions to throw away
-throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
+"throwaway" : ["((^\s*)|(\s+))extern\s+.*\("],
 
 # Will be included
-includes = ['<stdlib.h>', '"C/siox.h"']
+"includes" : ['<stdlib.h>', '"C/siox.h"'],
+
+}

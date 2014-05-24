@@ -15,14 +15,17 @@ template = {
 }
 }
 
+templateParameters = {
 # Inserted before every call
-forEachBefore = ""
+"forEachBefore" : "",
 
 # Inserted after every call
-forEachAfter = ""
+"forEachAfter" : "",
 
 # Regexes for functions to throw away
-throwaway = ["((^\s*)|(\s+))extern\s+.*\("]
+"throwaway" : ["((^\s*)|(\s+))extern\s+.*\("],
 
 # Will be included
-includes = ['<stdlib.h>', '<stdarg.h>']
+"includes" : ['<stdlib.h>', '<stdarg.h>'],
+
+}
