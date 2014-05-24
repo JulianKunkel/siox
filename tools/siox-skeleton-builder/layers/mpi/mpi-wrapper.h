@@ -3,7 +3,7 @@
 // To record the version append:
 // implVersion "" int major, minor; char implVersion[151]; int v_ret = MPI_Get_version(& major, & minor); if (v_ret >= 0) snprintf(implVersion, 150, "%d.%d", major, minor); else sprintf(implVersion, "0");
 
-//@InitializerForLibrary
+//@createInitializerForLibrary
 
 //@register_attribute commSize "MPI" "description/commSize" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute commRank "MPI" "description/commRank" SIOX_STORAGE_32_BIT_UINTEGER
