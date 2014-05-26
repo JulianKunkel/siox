@@ -1,5 +1,10 @@
 /**
- * Topologoy that caches data in RAM but also forwards it to another topology implementation
+ * This topologoy caches data but also forwards it to another topology implementation.
+ * This is useful when the underlying topology has slow response times and speedy return
+ * times are valuable. This topology will cache both, the data sent and the data requested,
+ * to speed up return times.
+ * It will not try to correct old data (which should not change anyway). For cached entries,
+ * the underlying topology will not even be queried.
  *
  * @author Roman Michel
  * @date 2014
