@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 #
 # @brief The output class (write a file to disk)
 #

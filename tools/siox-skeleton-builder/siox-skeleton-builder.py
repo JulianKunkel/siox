@@ -17,7 +17,12 @@ import argparse
 import traceback
 
 global precompiler
+global templateParameters
+
+templateParameters = {"globalOnce": "", "includes" : [] }
+
 precompiler = []
+
 
 def getCurrentPath():
     return os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -94,7 +99,9 @@ from a other header file.''')
         # import the templates (symbol template)
         namespace = {}
         with open(args.template, "r") as fh:
-            exec(fh.read(), namespace)
+            templateCode = fh.read()
+            exec(templateCode, namespace)
+
         globals().update(namespace)
         # update the datastructures for the templates
 
@@ -863,11 +870,8 @@ def main():
     else:                
         commandParser = CommandParser(options)
         functions = commandParser.parse()
-
-        if ('templateParameters' not in locals()) and ('templateParameters' not in globals()):
-            templateParameters = {'includes' : '0', 'globalOnce' : '0'}
 		
-            outputWriter.writeOutput(options, functions, templateParameters, precompiler)
+        outputWriter.writeOutput(options, functions, templateParameters, precompiler)
 
 if __name__ == '__main__':
     main()

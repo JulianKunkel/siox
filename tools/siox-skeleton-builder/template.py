@@ -42,6 +42,12 @@ template = {
             static void sioxInit() __attribute__((constructor));
             """
 },
+'createInitializerForLibrary':{
+	'global' : """ 
+				static void sioxFinal();
+            static void sioxInit();
+            """
+},
 'callLibraryFinalize':{
 	'after' : 'sioxFinal();'
 },
