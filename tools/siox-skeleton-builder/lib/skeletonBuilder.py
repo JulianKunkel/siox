@@ -1,4 +1,5 @@
 from __future__ import print_function
+import re
 
 #
 # @brief The output class (write a file to disk)
@@ -9,9 +10,9 @@ class Writer():
     # @brief Write a header file
     #
     # @param functions A list of function-objects to write
-    def headerFile(self, functionList):
+    def headerFile(self, options, functionList):
         # open the output file for writing
-        output = open(self.outputFile, 'w')
+        output = open(options.outputFile, 'w')
 
         # write all function headers
         throwaway = ["((^\s*)|(\s+))extern\s+.*\("]

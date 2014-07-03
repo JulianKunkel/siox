@@ -866,7 +866,7 @@ def main():
         # TODO outsource into own style
         functionParser = FunctionParser(options)
         functions = functionParser.parseFile()
-        outputWriter.headerFile(functions)
+        outputWriter.headerFile(options, functions)
     else:                
         commandParser = CommandParser(options)
         functions = commandParser.parse()
