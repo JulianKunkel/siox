@@ -35,7 +35,7 @@ class NetworkForwarderTopologyServer : public core::Component, ServerCallback {
         uint8_t msgTypeInt;
         j_serialization::deserialize(msgTypeInt, message_data, pos, buffer_size);
         // TODO: How to get TopologyTypeRequest to serialize properly?
-        //j_serialization::deserialize(typeRequest, message_data, pos, buffer_size);
+        j_serialization::deserialize(typeRequest, message_data, pos, buffer_size);
 
         msgType = (NetworkForwarderMessageType) msgTypeInt;
 

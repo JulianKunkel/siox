@@ -14,9 +14,8 @@ using namespace core;
 using namespace monitoring;
 using namespace boost;
 
-//@serializeable
+//@serializable
 struct TopologyTypeRequest {
-
     TopologyTypeId id;
     string name;
 };
