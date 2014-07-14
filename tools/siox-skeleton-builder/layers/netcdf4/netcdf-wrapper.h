@@ -2,6 +2,7 @@
 
 //@component "NetCDF" "4.1"
 
+//@autoInitializeLibrary
 
 //@register_attribute componentVersion "Global" "descriptor/componentVersion" SIOX_STORAGE_STRING
 //@register_attribute fileName "NetCDF" "descriptor/filename" SIOX_STORAGE_STRING

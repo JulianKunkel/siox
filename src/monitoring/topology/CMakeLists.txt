@@ -44,3 +44,4 @@ if (PostgreSQL_FOUND)
 	add_subdirectory(cacheTopology)
 endif (PostgreSQL_FOUND)
 
+add_subdirectory(NetworkForwarderTopology)

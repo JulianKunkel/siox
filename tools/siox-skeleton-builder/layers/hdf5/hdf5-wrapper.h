@@ -2,6 +2,8 @@
 
 //@component "HDF5" "Generic"
 
+//@autoInitializeLibrary
+
 //implVersion "" int major, minor, relnum; char implVersion[151]; int v_ret = H5get_libversion(& major, & minor, & relnum); if (v_ret >= 0) snprintf(implVersion, 150, "%d.%d", major, minor); else sprintf(implVersion, "0");
 
 //@register_attribute fileName "HDF5" "descriptor/filename" SIOX_STORAGE_STRING
