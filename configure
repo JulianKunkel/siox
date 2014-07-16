@@ -19,7 +19,8 @@ function help(){
 	echo "--with-glib=<dir>        : path to the GLIB2 installation"
 	echo "--with-likwid=<dir>      : path to the patched LIKWID version"
 	echo "--with-python=<file>     : path to the Python interpreter"
-	echo "--with-libpq=<dir>       : path to PostgreSQL's libpq"
+	echo "--with-libpq=<dir>       : path to LibPQXX"
+	echo "--with-libpqxx=<dir>     : path to PostgreSQL's libpq"
 	echo
 	echo "Optional:"
 	echo "--build-dir=<dir>        : directory in which to build"
@@ -35,7 +36,7 @@ function help(){
 
 buildDIR="build"
 
-set -- `getopt -ul "help,version,with-boost:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,with-likwid:,build-wrappers,use-ninja,verbose,build-dir:" hV "$@"`
+set -- `getopt -ul "help,version,with-boost:,with-libpq:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,with-likwid:,build-wrappers,use-ninja,verbose,build-dir:" hV "$@"`
 test $# -lt 1  && exit 1
 while test $# -gt 0 
 do
@@ -47,10 +48,11 @@ do
 		--with-cc) ccbin="$2"; shift;;
 		--with-cxx) cxxbin="$2"; shift;;
 		--with-glib) glib="$2"; shift;;
+		--with-libpq) libpq="$2"; shift;;
 		--with-mpicc) mpicc="$2"; shift;;
 		--with-mpicxx) mpicxx="$2"; shift;;
 		--with-python) python="$2"; shift;;
-		--with-libpq) libpq="$2"; shift;;
+		--with-libpq) libpqxx="$2"; shift;;
 		--with-likwid) likwid="$2"; shift;;
 		--build-dir) buildDIR="$2"; shift;;
 		--build-wrappers) buildWrappers="YES";;
@@ -114,9 +116,13 @@ if test -n "$libpq"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_INCLUDE_DIR:PATH=$libpq/include"
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_LIBRARY_DIR:PATH=$libpq/lib"
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_ROOT:PATH=$libpq"
-	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_INCLUDE_DIR:PATH=$libpq/include"
-	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_LIBRARY_DIR:PATH=$libpq/lib"
+	
 fi
+if test -n "$libpqxx"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_INCLUDE_DIR:PATH=$libpqxx/include"
+	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_LIBRARY_DIR:PATH=$libpqxx/lib"
+fi
+
 if test -n "$buildWrappers"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DBUILD_WRAPPERS:BOOL=ON"
 fi
