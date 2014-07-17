@@ -21,13 +21,22 @@ set(GLIB_INCLUDE_DIR_MESSAGE "Set the GLIB_INCLUDE_DIR cmake cache entry to the 
 set(GLIB_LIBRARY_PATH_DESCRIPTION "top-level directory containing the glib libraries.")
 set(GLIB_LIBRARY_DIR_MESSAGE "Set the GLIB_LIBRARY_DIR cmake cache entry to the ${GLIB_LIBRARY_PATH_DESCRIPTION}.")
 
-find_path(GLIB_INCLUDE_DIRS 
+find_path(GLIB_INCLUDE
 	NAME
 		glib-2.0 
 	PATHS
 		${GLIB_ROOT_DIR}/include/
 	DOC
 		"Directory for glib headers"
+)
+
+find_path(GLIB_MODULE_DIR
+	NAME
+		gmodule.h 
+	PATHS
+		${GLIB_ROOT_DIR}/include/glib-2.0/
+	DOC
+		"Directory for gmodule headers"
 )
 
 find_path(GLIB_CONFIG_DIR
@@ -48,7 +57,7 @@ find_path(GLIB_IO_DIR
 		"Directory with the gio stuff.h"
 )
 
-set(GLIB_INCLUDE_DIRS ${GLIB_INCLUDE_DIRS} ${GLIB_CONFIG_DIR} ${GLIB_IO_DIR})
+set(GLIB_INCLUDE_DIRS ${GLIB_INCLUDE} ${GLIB_CONFIG_DIR} ${GLIB_IO_DIR} ${GLIB_MODULE_DIR})
 
 find_library(GLIB_LIBRARIES 
 	NAMES 

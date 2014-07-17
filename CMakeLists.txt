@@ -55,12 +55,6 @@ set_package_properties(Boost PROPERTIES URL "http://www.boost.org" TYPE REQUIRED
 find_package(GLIB 2.30 COMPONENTS gio gobject gmodule REQUIRED)
 set_package_properties(GLIB PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
-find_package(GIOUNIX2 REQUIRED)
-set_package_properties(GIOUNIX2 PROPERTIES URL "http://www.gtk.org" TYPE OPTIONAL PURPOSE "GIO communication module.")
-
-find_package(GMODULE2 REQUIRED)
-set_package_properties(GMODULE2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
-
 find_package(Pqxx 3.0)
 set_package_properties(Pqxx PROPERTIES URL "http://pqxx.org" TYPE OPTIONAL PURPOSE "PostgreSQL Backend.")
 
