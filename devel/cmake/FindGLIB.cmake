@@ -21,81 +21,97 @@ set(GLIB_INCLUDE_DIR_MESSAGE "Set the GLIB_INCLUDE_DIR cmake cache entry to the 
 set(GLIB_LIBRARY_PATH_DESCRIPTION "top-level directory containing the glib libraries.")
 set(GLIB_LIBRARY_DIR_MESSAGE "Set the GLIB_LIBRARY_DIR cmake cache entry to the ${GLIB_LIBRARY_PATH_DESCRIPTION}.")
 
-find_path(GLIB_INCLUDE
-	NAME
-		glib-2.0 
-	PATHS
-		${GLIB_ROOT_DIR}/include/
-	DOC
-		"Directory for glib headers"
-)
+if (NOT DEFINED GLIB_ROOT_DIR)
+	if (NOT DEFINED GLIB_LIBRARIES)
+		find_package(PkgConfig)
 
-find_path(GLIB_MODULE_DIR
-	NAME
-		gmodule.h 
-	PATHS
-		${GLIB_ROOT_DIR}/include/glib-2.0/
-	DOC
-		"Directory for gmodule headers"
-)
+		# try to use pkg-config to localize the libraries.
+		pkg_check_modules (GLIB2   glib-2.0>=2.36 REQUIRED)
+		pkg_check_modules (GLIB2IO   gio-2.0 REQUIRED)
+		pkg_check_modules (GLIB2UNIX  gio-unix-2.0 REQUIRED)
 
-find_path(GLIB_CONFIG_DIR
-	NAME
-		glibconfig.h
-	PATHS
-		${GLIB_ROOT_DIR}/lib/glib-2.0/include/
-	DOC
-		"Directory with the glibconfig.h"
-)
+		set(GLIB_LIBRARIES ${GLIB2_LIBRARIES} ${GLIB2IO_LIBRARIES} ${GLIB2UNIX_LIBRARIES} CACHE STRING "GLIB LIBRARIES" )
+		set(GLIB_INCLUDE_DIRS ${GLIB2_INCLUDE_DIRS} ${GLIB2IO_INCLUDE_DIRS} ${GLIB2UNIX_INCLUDE_DIRS} CACHE STRING "GLIB INCLUDE_DIRS")
+	endif()
+else(NOT DEFINED GLIB_ROOT_DIR)
 
-find_path(GLIB_IO_DIR
-	NAME
-		gio-unix-2.0
-	PATHS
-		${GLIB_ROOT_DIR}/include/
-	DOC
-		"Directory with the gio stuff.h"
-)
+	find_path(GLIB_INCLUDE
+		NAME
+			glib-2.0 
+		PATHS
+			${GLIB_ROOT_DIR}/include/
+		DOC
+			"Directory for glib headers"
+	)
 
-set(GLIB_INCLUDE_DIRS ${GLIB_INCLUDE} ${GLIB_CONFIG_DIR} ${GLIB_IO_DIR} ${GLIB_MODULE_DIR})
+	find_path(GLIB_MODULE_DIR
+		NAME
+			gmodule.h 
+		PATHS
+			${GLIB_ROOT_DIR}/include/glib-2.0/
+		DOC
+			"Directory for gmodule headers"
+	)
 
-find_library(GLIB_LIBRARIES 
-	NAMES 
-		glib-2.0
-	PATHS
-		${GLIB_ROOT_DIR}/lib/
-	DOC
-		"Directory for glib binary"
-)
+	find_path(GLIB_CONFIG_DIR
+		NAME
+			glibconfig.h
+		PATHS
+			${GLIB_ROOT_DIR}/lib/glib-2.0/include/
+		DOC
+			"Directory with the glibconfig.h"
+	)
 
-find_library(GLIB_IO 
-	NAMES 
-		gio-2.0 
-	PATHS
-		${GLIB_ROOT_DIR}/lib/
-	DOC
-		"Directory for gio binary"
-)
+	find_path(GLIB_IO_DIR
+		NAME
+			gio-unix-2.0
+		PATHS
+			${GLIB_ROOT_DIR}/include/
+		DOC
+			"Directory with the gio stuff.h"
+	)
 
-find_library(GLIB_OBJECT 
-	NAMES 
-		gobject-2.0
-	PATHS
-		${GLIB_ROOT_DIR}/lib/
-	DOC
-		"Directory for gobject binary"
-)
+	set(GLIB_INCLUDE_DIRS ${GLIB_INCLUDE} ${GLIB_CONFIG_DIR} ${GLIB_IO_DIR} ${GLIB_MODULE_DIR})
 
-find_library(GLIB_MODULE
-	NAMES 
-		gmodule-2.0
-	PATHS
-		${GLIB_ROOT_DIR}/lib/
-	DOC
-		"Directory for gmodule binary"
-)
+	find_library(GLIB_LIBRARIES 
+		NAMES 
+			glib-2.0
+		PATHS
+			${GLIB_ROOT_DIR}/lib/
+		DOC
+			"Directory for glib binary"
+	)
 
-set(GLIB_LIBRARIES ${GLIB_LIBRARIES} ${GLIB_IO} ${GLIB_OBJECT} ${GLIB_MODULE})
+	find_library(GLIB_IO 
+		NAMES 
+			gio-2.0 
+		PATHS
+			${GLIB_ROOT_DIR}/lib/
+		DOC
+			"Directory for gio binary"
+	)
+
+	find_library(GLIB_OBJECT 
+		NAMES 
+			gobject-2.0
+		PATHS
+			${GLIB_ROOT_DIR}/lib/
+		DOC
+			"Directory for gobject binary"
+	)
+
+	find_library(GLIB_MODULE
+		NAMES 
+			gmodule-2.0
+		PATHS
+			${GLIB_ROOT_DIR}/lib/
+		DOC
+			"Directory for gmodule binary"
+	)
+
+	set(GLIB_LIBRARIES ${GLIB_LIBRARIES} ${GLIB_IO} ${GLIB_OBJECT} ${GLIB_MODULE})
+
+endif(NOT DEFINED GLIB_ROOT_DIR)
 
 include(FindPackageHandleStandardArgs)
 

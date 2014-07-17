@@ -1,8 +1,7 @@
 project(SIOX)
 
 include_directories(
-	${SIOX_INCLUDE}
-	${SIOX_SOURCES}
+	${SIOX_INCLUDE_DIRS}
 	${GLIB_INCLUDE_DIRS}
 )
 

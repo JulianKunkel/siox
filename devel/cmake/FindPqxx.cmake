@@ -14,24 +14,38 @@ set(PQXX_INCLUDE_DIR_MESSAGE "Set the PQXX_INCLUDE_DIR cmake cache entry to the 
 set(PQXX_LIBRARY_PATH_DESCRIPTION "top-level directory containing the PQXX libraries.")
 set(PQXX_LIBRARY_DIR_MESSAGE "Set the PQXX_LIBRARY_DIR cmake cache entry to the ${PQXX_LIBRARY_PATH_DESCRIPTION}")
 
-find_path(PQXX_INCLUDE_DIRS 
-	NAME
-		pqxx
-	PATHS
-		${PQXX_INCLUDE_DIR}
-	DOC
-		"Directory for pqxx headers"
-)
+if (NOT DEFINED PQXX_INCLUDE_DIR)
+	if (NOT DEFINED PQXX_LDFLAGS)
+		find_package(PkgConfig)
+
+		# try to use pkg-config to localize the libraries.
+		pkg_check_modules (PQXX  libpqxx REQUIRED)
+
+		set(PQXX_LIBRARIES ${PQXX_LIBRARIES} CACHE STRING "GLIB LDFLAGS" )
+		set(PQXX_INCLUDE_DIRS ${PQXX_INCLUDE_DIRS}  CACHE STRING "GLIB CFLAGS")
+	endif()
+else()
+
+	find_path(PQXX_INCLUDE_DIRS 
+		NAME
+			pqxx
+		PATHS
+			${PQXX_INCLUDE_DIR}
+		DOC
+			"Directory for pqxx headers"
+	)
 
 
-find_library(PQXX_LIBRARIES 
-	NAMES 
-		pqxx
-	PATHS
-		${PQXX_LIBRARY_DIR}
-	DOC
-		"Directory for pqxx binary"
-)
+	find_library(PQXX_LIBRARIES 
+		NAMES 
+			pqxx
+		PATHS
+			${PQXX_LIBRARY_DIR}
+		DOC
+			"Directory for pqxx binary"
+	)
+
+endif()
 
 include(FindPackageHandleStandardArgs)
 
