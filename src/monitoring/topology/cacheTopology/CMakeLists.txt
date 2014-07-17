@@ -18,6 +18,7 @@ target_link_libraries(
 	siox-monitoring-Topology
 	${Boost_LIBRARIES}
 	${PQXX_LIBRARIES}	
+	${PostgreSQL_LIBRARY}
 )
 
 
