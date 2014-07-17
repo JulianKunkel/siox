@@ -4,7 +4,6 @@ include_directories(
 	${SIOX_INCLUDE}
 	${SIOX_SOURCES}
 	${GLIB_INCLUDE_DIRS}
-	${GMODULE2_INCLUDE_DIRS}
 )
 
 add_library(
@@ -15,10 +14,7 @@ add_library(
 target_link_libraries(
 	siox-core-ModuleLoader
 	${GLIB_LIBRARIES}
-	${GLIB_GMODULE_LIBRARIES}
-	${GMODULE2_LIBRARIES}
 )
-
 
 add_subdirectory(test)
 

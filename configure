@@ -3,27 +3,62 @@
 echo $0 $* > configure.log
 
 CMAKEFLAGS=
-srcdir="../"
+SRCDIR=$(dirname $(readlink -f $0))
+CURPATH="$PWD"
 
-set -- `getopt -ul "with-boost:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,srcdir:,with-likwid:,build-wrappers" hV "$@"`
+function help(){
+	echo ""
+	echo "SIOX uses the CMake (http://www.cmake.org) buildsystem instead of configure."
+	echo "CMake uses different options than configure, but you can use this script to "
+	echo "specify them in the traditional way and get the equivalent cmake command."
+	echo "Use the following options to change default paths."
+	echo "--prefix=<dir>           : installation prefix"
+	echo "--with-boost=<dir>       : path to the boost library root directory"
+	echo "--with-cc=<file>         : path to the C compiler"
+	echo "--with-cxx=<file>        : path to the C++ compiler"
+	echo "--with-glib=<dir>        : path to the GLIB2 installation"
+	echo "--with-likwid=<dir>      : path to the patched LIKWID version"
+	echo "--with-python=<file>     : path to the Python interpreter"
+	echo "--with-libpq=<dir>       : path to PostgreSQL's libpq"
+	echo "--with-libpqxx=<dir>     : path to PostgreSQL's libpqxx"
+	echo
+	echo "Optional:"
+	echo "--build-dir=<dir>        : directory in which to build"
+	echo "--build-wrappers         : build the wrappers for MPI, POSIX, etc. that is in the path"
+	echo "--use-ninja              : use the Ninja build tool instead of the old fashioned make"
+	echo "--verbose                : output the command but do not execute it"
+	echo
+	echo "The following list of options is only needed if you choose to build the wrappers with cmake"
+	echo "--with-mpicc=<file>    : path to the MPI C compiler"
+	echo "--with-mpicxx=<file>   : path to the MPI C++ compiler"
+	echo 
+}
+
+buildDIR="build"
+
+set -- `getopt -ul "help,version,with-boost:,with-libpqxx:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,with-likwid:,build-wrappers,use-ninja,verbose,build-dir:" hV "$@"`
 test $# -lt 1  && exit 1
 while test $# -gt 0 
 do
 	case "$1" in
-		-h|--help) echo "$help"; exit;;
-		-V|--version) cmake --version; exit;;
-		--srcdir) srcdir="$2"; shift;;
+		--help) help; exit;;
+		--version) cmake --version; exit;;
 		--prefix) prefix="$2"; shift;;
 		--with-boost) boostdir="$2"; shift;;
 		--with-cc) ccbin="$2"; shift;;
 		--with-cxx) cxxbin="$2"; shift;;
 		--with-glib) glib="$2"; shift;;
+		--with-libpq) libpq="$2"; shift;;
 		--with-mpicc) mpicc="$2"; shift;;
 		--with-mpicxx) mpicxx="$2"; shift;;
 		--with-python) python="$2"; shift;;
-		--with-libpq) libpq="$2"; shift;;
+		--with-libpqxx) libpqxx="$2"; shift;;
 		--with-likwid) likwid="$2"; shift;;
+		--build-dir) buildDIR="$2"; shift;;
 		--build-wrappers) buildWrappers="YES";;
+		--use-ninja) useNinja="YES";;
+		--verbose) VERBOSE="YES";;
+
 		--) shift; break;;
 	esac
 	shift
@@ -42,20 +77,7 @@ if test -n "$cxxbin"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER:FILEPATH=$cxxbin"
 fi
 if test -n "$glib"; then
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_ROOT:PATH=$glib"
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_INCLUDE_DIR:PATH=$glib/include/glib-2.0"
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_INCLUDE_DIR:PATH=$glib/include/glib-2.0"
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_CONFIG_INCLUDE_DIR:PATH=$glib/lib/glib-2.0/include"
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIBCONFIG_INCLUDE_DIR:PATH=$glib/lib/glib-2.0/include"
-	CMAKEFLAGS="$CMAKEFLAGS -DGIOUNIX2_INCLUDE_DIR:PATH=$glib/include/gio-unix-2.0"
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_LIBRARIES:STRING=\"-L$glib/lib -lglib-2.0\""
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_LIBRARIES:STRING=\"-L$glib/lib -lglib-2.0\""
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_GIO_LIBRARIES:STRING=\"-L$glib/lib -lgio-2.0 -lgobject-2.0 -lglib-2.0\""
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_GIO_LIBRARIES:STRING=\"-L$glib/lib -lgio-2.0 -lgobject-2.0 -lglib-2.0\""
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_GOBJECT_LIBRARIES:STRING=\"-L$glib/lib -lgobject-2.0 -lglib-2.0\""
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_GOBJECT_LIBRARIES:STRING=\"-L$glib/lib -lgobject-2.0 -lglib-2.0\""
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_GMODULE_LIBRARIES:STRING=\"-Wl,--export-dynamic -pthread -L$glib/lib -lgmodule-2.0 -lrt -lglib-2.0\""
-	CMAKEFLAGS="$CMAKEFLAGS -DGLIB2_GMODULE_LIBRARIES:STRING=\"-Wl,--export-dynamic -pthread -L$glib/lib -lgmodule-2.0 -lrt -lglib-2.0\""
+	CMAKEFLAGS="$CMAKEFLAGS -DGLIB_ROOT_DIR:PATH=$glib"
 fi
 if test -n "$mpicc"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DMPI_C_COMPILER:FILEPATH=$mpicc"
@@ -81,56 +103,34 @@ if test -n "$libpq"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_INCLUDE_DIR:PATH=$libpq/include"
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_LIBRARY_DIR:PATH=$libpq/lib"
 	CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_ROOT:PATH=$libpq"
-	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_INCLUDE_DIR:PATH=$libpq/include"
-	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_LIBRARY_DIR:PATH=$libpq/lib"
+	
 fi
+if test -n "$libpqxx"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_INCLUDE_DIR:PATH=$libpqxx/include"
+	CMAKEFLAGS="$CMAKEFLAGS -DPQXX_LIBRARY_DIR:PATH=$libpqxx/lib"
+fi
+
 if test -n "$buildWrappers"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DBUILD_WRAPPERS:BOOL=ON"
 fi
 
-echo ""
-echo "SIOX uses the CMake (http://www.cmake.org) buildsystem instead of configure."
-echo "CMake uses different options than configure, but you can use this script to "
-echo "specify them in the traditional way and get the equivalent cmake command."
-echo "Use the following options to change default paths."
-echo "<srcdir>                 : path to SIOX's source code"
-echo "--prefix=<dir>           : installation prefix"
-echo "--with-boost=<dir>       : path to the boost library root directory"
-echo "--with-cc=<file>         : path to the C compiler"
-echo "--with-cxx=<file>        : path to the C++ compiler"
-echo "--with-glib=<dir>        : path to the GLIB2 installation"
-echo "--with-likwid=<dir>      : path to the patched LIKWID version"
-echo "--with-python=<file>     : path to the Python interpreter"
-echo "--with-libpq=<dir>       : path to PostgreSQL's libpq"
-echo "--build-wrappers         : build the wrappers for MPI, POSIX, etc. that is in the path"
-echo
-echo "For each version of MPI, etc. you may need a wrapper library compiled against this version."
-echo "So, if you have multiple versions it is not adviced to specify --build-wrappers"
-echo "You can build a wrapper for each version of MPI etc. independently"
-echo "To do so, run ./devel/scripts/build-wrapper.sh [WRAPPER] [CONFIGURE OPTIONS | -h]"
-echo "For example: ./devel/scripts/build-wrapper.sh mpi --label=mpich2 --siox=/usr/local/siox --prefix=/usr/local/siox --mpicc=mpicc.mpich2 --mpi=/usr/lib/mpich2"
-echo
-echo "The following list of options is only needed if you choose to build the wrappers with cmake"
-echo "--with-mpicc=<file>    : path to the MPI C compiler"
-echo "--with-mpicxx=<file>   : path to the MPI C++ compiler"
-echo 
-echo "Once CMake has run successfully, you can use \"make edit_cache\" or \"ccmake ../\" to view and modify all settings."
-echo "For more information visit \"http://www.hpc-io.org\"."
-echo ""
-echo "Your current configure options translate more or less to:"
-echo "	mkdir build ; cd build; cmake$CMAKEFLAGS $srcdir && make && make install"
-NINJA=$(which ninja 2> /dev/null)
-if [ "$NINJA" != "" ]; then
-	echo
-	echo "It seems you have the ninja-build tool installed, which you could use instead of the old fashioned make."
-	echo "This usually speedups compilation. If you want you can use:"
-	echo "	mkdir build; cd build; cmake -GNinja $CMAKEFLAGS $srcdir && ninja && ninja install"
+NINJA=""
+if [[ "$useNinja" == "YES" ]] ; then
+	NINJA="-GNinja"	
 fi
 
-echo ""
-echo "After the installation you could adjust the environment variables LD_LIBRARY_PATH and PATH -- for bash like this:"
-echo "export LD_LIBRARY_PATH=$TARGET_DIR/lib:$LD_LIBRARY_PATH"
-echo "export PATH=$TARGET_DIR/bin:$PATH"
-echo ""
-echo "Documentation can be generated by executing"
-echo "	./devel/scripts/build-docs.sh"
+COMMAND="mkdir $buildDIR; cd $buildDIR; cmake $NINJA $CMAKEFLAGS $SRCDIR"
+
+if [[ "$VERBOSE" == "YES" ]] ; then
+	echo "Your current configure options translate more or less to:"
+	echo "$COMMAND"
+	exit 0
+else
+	eval "$COMMAND"
+	ERROR="$?"
+	if [[ "$ERROR" != 0 ]] ; then
+		echo "An error occurred during the configuration, aborting!"
+		exit 1
+	fi
+fi
+
