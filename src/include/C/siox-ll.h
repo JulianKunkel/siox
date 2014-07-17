@@ -339,7 +339,16 @@ siox_associate * siox_associate_instance( const char * instance_information );
  * @return  A fresh @em siox_component to be used in all the component's future communications
  *          with SIOX.
  *
+ * Typical usage:
  *
+ * static siox_component * global_component = NULL; 
+ * 
+ * if ( ! global_component ) {
+* siox_unique_interface * uuid = siox_system_information_lookup_interface_id( "POSIX", "GENERIC");   
+ *    global_component = siox_component_register(uuid, "INSTANCE NAME");
+ *    ...
+ *    activity1 = siox_component_register_activity(...)
+ * }
  */
 //////////////////////////////////////////////////////////////////////////////
 /// Register the current component with SIOX.
