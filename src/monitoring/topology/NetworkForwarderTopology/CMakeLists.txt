@@ -3,7 +3,6 @@ project(SIOX)
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIR}
-	${PQXX_INCLUDE_DIRS}
 )
 
 siox_run_binary_serializer(NetworkForwarderCommunication.hpp NetworkForwarderCommunicationBinarySerializable.hpp)
@@ -29,7 +28,6 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	siox-monitoring-Topology
 	${Boost_LIBRARIES}
-	${PQXX_LIBRARIES}
 	siox-core-comm	
 )
 

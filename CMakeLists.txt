@@ -7,7 +7,7 @@ include(FeatureSummary)
 
 set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/src/include)
-set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/src)
+set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/src CACHE STRING "SIOX INCLUDE DIRS")
 
 SET (CMAKE_C_FLAGS_DEBUG          "")
 SET (CMAKE_CXX_FLAGS_DEBUG        "")
@@ -54,12 +54,6 @@ set_package_properties(Boost PROPERTIES URL "http://www.boost.org" TYPE REQUIRED
 
 find_package(GLIB 2.30 COMPONENTS gio gobject gmodule REQUIRED)
 set_package_properties(GLIB PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
-
-find_package(GIOUNIX2 REQUIRED)
-set_package_properties(GIOUNIX2 PROPERTIES URL "http://www.gtk.org" TYPE OPTIONAL PURPOSE "GIO communication module.")
-
-find_package(GMODULE2 REQUIRED)
-set_package_properties(GMODULE2 PROPERTIES URL "http://www.gtk.org" TYPE REQUIRED PURPOSE "SIOX core dependency.")
 
 find_package(Pqxx 3.0)
 set_package_properties(Pqxx PROPERTIES URL "http://pqxx.org" TYPE OPTIONAL PURPOSE "PostgreSQL Backend.")

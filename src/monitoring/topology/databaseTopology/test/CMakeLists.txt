@@ -15,7 +15,7 @@ target_link_libraries(
 	siox-core-ModuleLoader
 	siox-monitoring-DatabaseTopology
 	${PQXX_LIBRARIES}	
-	pq
+	${PostgreSQL_LIBRARY}
 )
 
 add_test(monitoring_topology_databaseTopology_Test monitoring_topology_databaseTopology_Test)
