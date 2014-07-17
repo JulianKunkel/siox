@@ -19,8 +19,8 @@ target_link_libraries(
 	${Boost_LIBRARIES}
 )
 
-add_subdirectory(examples)
-add_subdirectory(test)
+#add_subdirectory(examples)
+#add_subdirectory(test)
 
 install(TARGETS siox-monitoring-siox-ll LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
 

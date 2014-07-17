@@ -39,9 +39,9 @@ add_subdirectory(test)
 install(TARGETS siox-monitoring-RamTopology LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
 install(TARGETS siox-monitoring-Topology LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
 
-if (PostgreSQL_FOUND)
+if (PQXX_FOUND)
 	add_subdirectory(databaseTopology)
 	add_subdirectory(cacheTopology)
-endif (PostgreSQL_FOUND)
+endif (PQXX_FOUND)
 
 add_subdirectory(NetworkForwarderTopology)
