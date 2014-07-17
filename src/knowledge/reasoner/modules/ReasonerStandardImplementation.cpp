@@ -330,6 +330,12 @@ void ReasonerStandardImplementation::PeriodicRun(){
 						anomalyDetected = true;
 					}
 					break;
+
+				case ReasonerStandardImplementationOptions::Role::SYSTEM :
+				case ReasonerStandardImplementationOptions::Role::NODE :
+				case ReasonerStandardImplementationOptions::Role::NONE :
+					// This should not happen
+					break;
 			}
 
 
