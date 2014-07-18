@@ -21,6 +21,7 @@ function help(){
 	echo "--with-python=<file>     : path to the Python interpreter"
 	echo "--with-libpq=<dir>       : path to PostgreSQL's libpq"
 	echo "--with-libpqxx=<dir>     : path to PostgreSQL's libpqxx"
+	echo "--with-libpq-type-dir=<dir>: path to PostgreSQL's type directory"
 	echo
 	echo "Optional:"
 	echo "--build-dir=<dir>        : directory in which to build"
@@ -36,7 +37,7 @@ function help(){
 
 buildDIR="build"
 
-set -- `getopt -ul "help,version,with-boost:,with-libpqxx:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,with-likwid:,build-wrappers,use-ninja,verbose,build-dir:" hV "$@"`
+set -- `getopt -ul "help,version,with-boost:,with-libpq-type-dir:,with-libpqxx:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,with-likwid:,build-wrappers,use-ninja,verbose,build-dir:" hV "$@"`
 test $# -lt 1  && exit 1
 while test $# -gt 0 
 do
@@ -56,6 +57,9 @@ do
 		--with-likwid) likwid="$2"; shift;;
 		--build-dir) buildDIR="$2"; shift;;
 		--build-wrappers) buildWrappers="YES";;
+		--with-libpq-type-dir) 
+			CMAKEFLAGS="$CMAKEFLAGS -DPostgreSQL_TYPE_INCLUDE_DIR:PATH=$1"
+		 shift;;
 		--use-ninja) useNinja="YES";;
 		--verbose) VERBOSE="YES";;
 

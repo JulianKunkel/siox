@@ -1,4 +1,4 @@
-project(SIOX)
+project(SIOX C CXX)
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -13,7 +13,6 @@ SET (CMAKE_C_FLAGS_DEBUG          "")
 SET (CMAKE_CXX_FLAGS_DEBUG        "")
 #SET (CMAKE_LINKER  "/usr/bin/ld")
 
-set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC")
 set(CMAKE_C_FLAGS "-ggdb -Wall -std=gnu99")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed")
@@ -22,6 +21,19 @@ set(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_MODULE_PATH ${SIOX_SOURCES}/devel/cmake ${CMAKE_MODULE_PATH})
 
 set(BUILD_SHARED_LIBS ON)
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+    set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC")
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+    if (NOT (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7))
+        message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or greater.")
+    endif ()
+elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+else ()
+    message(FATAL_ERROR "Your C++ compiler does not support C++11. (or it is not supported by this build script)")
+endif ()
+
 
 # IF we set it here we cannot change it using for example ccmake
 #### WARNING DO NOT USE THIS, use ccmake or configure to set the directory
