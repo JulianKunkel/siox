@@ -1,7 +1,7 @@
 ﻿Requirements
 ============
 
-The communication code requires cmake 2.8 and the components especified in the CMakeLists.txt 
+The communication code requires cmake 2.8 and the components especified in the CMakeLists.txt
 file, that is:
 
 * Boost library (threads, system, regex, unit_test_framework)
@@ -24,7 +24,7 @@ Additional requirements for the wrappers are found under tools/siox-skeleton-bui
 Ubuntu 13.04/13.10
 ==================
 To install the SIOX dependencies call:
-apt-get install libboost-dev libboost-program-options-dev libboost-serialization-dev libboost-regex-dev libboost-system-dev libboost-random-dev libboost-thread-dev ninja-build cmake libglib2.0-dev 
+apt-get install libboost-dev libboost-program-options-dev libboost-serialization-dev libboost-regex-dev libboost-system-dev libboost-random-dev libboost-thread-dev ninja-build cmake libglib2.0-dev
 
 To build with postgres you need:
 libpqxx3-dev postgresql-common postgresql
@@ -48,18 +48,18 @@ Set variables, this will ensure that the right dependencies are used:
 # build in the following order:
 * gcc 4.8.2
 	$ bash ./contrib/download_prerequisites
-	$ ./configure --prefix=$SIOXDEPS 
+	$ ./configure --prefix=$SIOXDEPS
 	$ make && make install
 	# If you get the error: "fatal error: gnu/stubs-32.h: No such file or directory" then you must install the 32 bit libc dev package.
 	# if you have exported PATH etc. you will now use the new gcc, check which gcc is used by calling $ which gcc
-* cmake 2.8.12 
-	$ ./configure --prefix=$SIOXDEPS 
+* cmake 2.8.12
+	$ ./configure --prefix=$SIOXDEPS
 	$ make install
 * boost 1.55
 	$ ./bootstrap.sh
 	$ ./b2 install --prefix=$SIOXDEPS
 * libffi (required by Glib2)
- 	$ wget ftp://sourceware.org/pub/libffi/libffi-3.0.13.tar.gz	
+ 	$ wget ftp://sourceware.org/pub/libffi/libffi-3.0.13.tar.gz
 	$ ./configure --prefix=$SIOXDEPS
 	$ make && make install
 * Glib2 2.36
@@ -73,10 +73,10 @@ Set variables, this will ensure that the right dependencies are used:
 	$ ./configure --prefix=$SIOXDEPS --disable-vt --enable-debug --enable-mem-debug
 	$ make && make install
 * likwid 		# if you want to use it
-	$ hg clone https://code.google.com/p/likwid/ 
+	$ hg clone https://code.google.com/p/likwid/
 	$ cd likwid ; patch -p 1 < ./src/monitoring/statistics/collector/plugins/likwid/likwid-mod.patch
 	edit config.mk and adjust prefix
-	$ make && make install 
+	$ make && make install
 	# Note that make install must be called as root because the permissions of likwid's access deamon  must be setuid
 * Berkeley DB	# if you want to use it
 	$ wget http://download.oracle.com/berkeley-db/db-6.0.20.tar.gz
@@ -94,7 +94,7 @@ Compilation
 By utilizing CMake we can either use the traditional make tool or ninja which has a faster build process (Ubuntu package ninja-build).
 
 Configuration:
-We provide a configure script for convenient setting of important CMake variables. So instead of using the options above you may use:
+We provide a configure script for convenient setting of important CMake variables. So instead of using the options above you may use (for ninja, add --use-ninja ):
 
 	$ ./configure --prefix=/usr/local/siox
 
@@ -107,13 +107,13 @@ After the installation you must adjust the environment variables LD_LIBRARY_PATH
 
 Then you can compile SIOX:
 
-	make -j 4
-	make install
+	$ make -j 4
+	$ make install
 
-To use ninja instead of make run:
+To use ninja instead of make, run:
 
-	$ cmake -GNinja ../
 	$ ninja
+	$ ninja install
 
 Note that C++ takes a considerable amount of memory to compile, parallel builds might exhaust machines with less than 2 GByte of memory.
 
@@ -125,7 +125,7 @@ Testing
 ===========
 
 To execute the unit tests, go into the build dir and run :
-make test 
+make test
   or
 ctest
 
@@ -224,7 +224,7 @@ In detail it supports the two scenarios (link-time instrumentation and run-time 
 1.2) Run the application as ANY regular application
 	$ ./mpi-test.siox
 	Since it is instrumented, it will check for siox.conf etc.
-	
+
 2) dynamic run-time instrumentation
 2.1) compile your application as usual, without siox specific stuff.
 	$ mpicc -std=c99 -o mpi-test test.c -g
@@ -232,7 +232,7 @@ In detail it supports the two scenarios (link-time instrumentation and run-time 
 2.2) Run the application with siox-inst to instrument it on the fly (using LD_PRELOAD)
 	If you run your application normally like this
 	$ ./mpi-test <ARGUMENTS>
-	
+
 	Then you can use siox-inst to create the appropriate LD_PRELOAD environment variable for you:
 	$ siox-inst posix,mpi ./mpi-test <ARGUMENTS>
 
@@ -248,9 +248,9 @@ More about testing:
 ====================
 With waf you can build sample sub modules implementing a particular interface.
 Once called the stub will just output function names or append call information to a list (for debugging).
-To build go to the directory scripts/dummy-stubs/ and run 
+To build go to the directory scripts/dummy-stubs/ and run
 ./waf configure build
-Internally the script will search for the string "// BUILD_TEST_INTERFACE" inside all include files. 
+Internally the script will search for the string "// BUILD_TEST_INTERFACE" inside all include files.
 If found, stubs will be build.
 
 Documentation:
@@ -259,4 +259,4 @@ Documentation:
 Code documentation is provided inline and can be created invoking
 doxygen
 
-For developers there is additional 
+For developers there is additional

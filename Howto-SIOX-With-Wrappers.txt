@@ -1,0 +1,49 @@
+Compile SIOX, including the wrappers:
+=====================================
+
+
+1. Compile and Install SIOX Itself
+----------------------------------
+
+This method uses ninja; for using the standard make, refer to README.mk
+
+Build and install SIOX as described in README.mk, but CALL configure WITHOUT THE OPTION --build-wrappers !
+
+
+2. Set the paths
+----------------
+
+Once again, follow the instructions from README.mk and the output from configure.
+
+
+3. Compile and Install the Wrappers
+-----------------------------------
+
+cd to siox base dir, then
+
+> cd tools/siox-skeleton-builder/layers
+
+cd to the layer you want, e.g.
+	> cd mpi
+
+(if there's a build dir here, clean it via
+	> rm -rf build/*
+)
+
+> ./waf configure --prefix=SIOXINSTALLPATH --siox=SIOXINSTALLPATH
+where you should replace SIOXINSTALLPATH with the place installed SIOX to, e.g. /usr/local
+
+> ./waf build
+
+If - in the case of the MPI layer - this results in error messages complaining about conflicting types in the MPI functions, try this instead:
+> ./waf configure --prefix=TARGETINSTALLPATH --siox=SIOXINSTALLPATH --mpi-const
+> ./waf build
+
+> ./waf install
+
+Repeat this step for every layer to be wrapped!
+
+
+4. Done! :D
+-----------
+
