@@ -69,7 +69,7 @@ End of global part
 // All processes record the pid of Rank 0 then.
 
 #ifndef  OPTIONAL_CONST
-#define  OPTIONAL_CONST const
+#define  OPTIONAL_CONST 
 #endif
 
 //@callLibraryInitialize

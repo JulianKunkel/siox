@@ -1,13 +1,14 @@
 #!/bin/bash -ex
 
-export LD_LIBRARY_PATH=/usr/local/siox/lib/
-export PATH=/usr/local/siox/bin:$PATH
+# export LD_LIBRARY_PATH=/usr/local/siox/lib/
+# export PATH=/usr/local/siox/bin:$PATH
 
 echo "Running daemon"
 rm *.dat /tmp/daemon.socket 2>/dev/null || true
 killall siox-daemon || true
 
-siox-daemon --configEntry=daemon.conf &
+siox-daemon --configEntry=daemon-withoutStats.conf &
+# siox-daemon --configEntry=daemon.conf &
 
 echo "Compiling"
 siox-inst posix wrap gcc -g -Wall fwrite.c -o fwrite-wrapped
@@ -29,14 +30,14 @@ echo "Running IOR"
 echo Without wrapper run: mpiexec -np 4 --env=LD_PRELOAD="/usr/local/siox/lib/libsiox-mpi-dlsym.so /usr/local/siox/lib/libsiox-posix-dlsym.so" ...
 
 export SIOX_REPORTING_FILENAME=ior-report.txt
-mpiexec -np 4 ./ior.wrapped -v -o testfile -s 10 -i 1 -f ior.conf 
+mpiexec -np 4 ./ior.wrapped -v -o testfile -s 10 -i 1 -f ior.conf
 mpiexec -np 4 -env=LD_PRELOAD="/usr/local/siox/lib/libsiox-mpi-dlsym.so /usr/local/siox/lib/libsiox-posix-dlsym.so"  ./ior.normal -v -o testfile -s 10 -i 1 -f ior.conf
 
 
 echo "Run completed!"
 
 
-echo 
+echo
 echo "Trace output"
 
 siox-trace-reader
