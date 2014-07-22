@@ -16,6 +16,7 @@ target_link_libraries(
 	siox-core-ModuleLoader 
 	siox-core-ContainerSerializer 
 	siox-core-ComponentRegistrar	
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

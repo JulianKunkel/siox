@@ -17,6 +17,7 @@ target_link_libraries(
 	siox-monitoring-ActivityMultiplexerAsync
 	siox-core-ContainerSerializer 
 	siox-core-AutoConfigurator 
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 
@@ -38,6 +39,7 @@ target_link_libraries(
 	siox-monitoring-ActivityMultiplexerSync
 	siox-core-ContainerSerializer 
 	siox-core-AutoConfigurator 
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

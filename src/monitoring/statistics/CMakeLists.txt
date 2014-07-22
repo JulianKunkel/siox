@@ -15,6 +15,7 @@ add_library(
 
 target_link_libraries(
 	siox-monitoring-Statistic
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

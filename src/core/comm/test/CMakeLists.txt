@@ -23,6 +23,7 @@ target_link_libraries(
 	siox-core-comm-rpc-client
 	siox-core-AutoConfigurator
 	siox-core-comm
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 
@@ -37,6 +38,7 @@ target_link_libraries(
 	siox-core-comm-rpc-server
 	siox-core-AutoConfigurator
 	siox-core-comm
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 
@@ -53,6 +55,7 @@ target_link_libraries(
 	siox-core-ModuleLoader
 	# link any module here...	
 	siox-core-comm-gio
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

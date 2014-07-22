@@ -17,6 +17,7 @@ target_link_libraries(
 	core-communication-tests 
 	core-communication 
 	core-comm-buffers
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

@@ -17,6 +17,7 @@ target_link_libraries(
 	siox-monitoring-activityPlugin-ActivityBDBWriter
 	siox-core-ContainerSerializer
 	siox-core-AutoConfigurator
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 	${BDB_LIBRARIES}
 )

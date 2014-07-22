@@ -13,6 +13,8 @@ target_link_libraries(
 	siox-core-autoconfigurator-FileConfigurationProvider
 	siox-core-AutoConfigurator 
 	siox-core-ContainerSerializer
+	-L${Boost_LIBRARY_DIR}
+    ${Boost_LIBRARIES}
 )
 
 add_subdirectory(test)

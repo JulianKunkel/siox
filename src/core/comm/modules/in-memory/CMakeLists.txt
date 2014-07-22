@@ -14,6 +14,7 @@ add_library(
 
 target_link_libraries(
 	siox-core-comm-inmemory
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 	siox-core-comm
 )

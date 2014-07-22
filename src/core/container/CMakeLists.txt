@@ -12,6 +12,7 @@ add_library(
 
 target_link_libraries(
 	siox-core-ContainerSerializer
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

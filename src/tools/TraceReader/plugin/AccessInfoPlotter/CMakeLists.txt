@@ -13,6 +13,7 @@ add_library(
 target_link_libraries(
 	siox-tools-TraceReader-AccessInfoPlotterPlugin
 	siox-core-ModuleLoader
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

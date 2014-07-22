@@ -18,6 +18,7 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	siox-util
 	siox-monitoring-Topology
+	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

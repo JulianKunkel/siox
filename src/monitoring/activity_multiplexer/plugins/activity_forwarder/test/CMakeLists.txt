@@ -19,6 +19,7 @@ include_directories(
 # 	core-component-registrar
 # 	core-container-serializer
 # 	module-loader
+#	-L${Boost_LIBRARY_DIR}
 # 	${Boost_LIBRARIES}
 # 	${GLIB2_LIBRARIES}
 # )
