@@ -13,6 +13,7 @@
 #include <workarounds.hpp>
 #include <core/comm/CommunicationModule.hpp>
 #include <core/comm/DefaultCallbacks.hpp>
+#include <monitoring/topology/NetworkForwarderTopology/NetworkForwarderCommunicationBinarySerializable.hpp>
 
 
 #include <boost/algorithm/string.hpp>
@@ -26,7 +27,20 @@ using namespace core;
 using namespace monitoring;
 using namespace boost;
 
-// TODO: MessageCallback implementieren
+class MyCallback: public ConnectionCallback{
+public:
+    void connectionErrorCB(ServiceClient & connection, CommunicationError error){
+        printf("Error connecting.");
+        fflush(stdout);
+        assert(false);
+    }
+
+    void connectionSuccessfullCB(ServiceClient & connection){
+        printf("Connection successful.");
+        fflush(stdout);   
+    }
+};
+
 class NetworkForwarderTopology : public Topology, MessageCallback {
     public:
         virtual void init();
@@ -84,10 +98,14 @@ void NetworkForwarderTopology::stop(){
 
 
 void NetworkForwarderTopology::init() {
+
+    connCallback = MyCallback();
     NetworkForwarderTopologyOptions & o = getOptions<NetworkForwarderTopologyOptions>();
     CommunicationModule * comm =  GET_INSTANCE(CommunicationModule, o.comm);
+
+    assert(comm != nullptr);
+
     client = comm->startClientService(o.targetAddress, & connCallback, this);
-    connCallback = DefaultReConnectionCallback();
 }
 
 ComponentOptions* NetworkForwarderTopology::AvailableOptions() {
@@ -96,13 +114,10 @@ ComponentOptions* NetworkForwarderTopology::AvailableOptions() {
 
 TopologyType NetworkForwarderTopology::registerType( const string& name ) throw() {
 
-    TopologyTypeRequest req;
-    req.id = 0;
-    req.name = name;
-
     NetworkForwarderRequestMessage mess;
-    mess.type = NETWORK_FORWARDER_TOPOLOGY_TYPE_REGISTER;
-    mess.data = &req;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_TYPE_REGISTER;
+    mess.id = 0;
+    mess.name = "";
 
     BlockingRPCMessage container;
     {
@@ -114,7 +129,7 @@ TopologyType NetworkForwarderTopology::registerType( const string& name ) throw(
     }
 
     TopologyType returnType;
-    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name, (size_t) container.response.data));
+    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name, (size_t) container.response.id));
     returnType.setObject(newType);
 
     return returnType;
@@ -122,25 +137,29 @@ TopologyType NetworkForwarderTopology::registerType( const string& name ) throw(
 
 TopologyType NetworkForwarderTopology::lookupTypeByName( const string& name ) throw() {
 
-    TopologyTypeRequest req;
-    req.id = 0;
-    req.name = name;
-
     NetworkForwarderRequestMessage mess;
-    mess.type = NETWORK_FORWARDER_TOPOLOGY_TYPE_LOOKUP_BY_NAME;
-    mess.data = &req;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_TYPE_REGISTER;
+    mess.id = 0;
+    mess.name = "";
 
     BlockingRPCMessage container;
     {
         unique_lock<mutex> lock(container.m);
         client->isend(& mess, & container);
 
+        printf("1");
+        fflush(stdout);
+
         // wait for the response
         container.cv.wait(lock);
+
+        printf("10");
+        fflush(stdout);
+
     }
 
     TopologyType returnType;
-    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name, (size_t) container.response.data));
+    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name, (size_t) container.response.id));
     returnType.setObject(newType);
 
     return returnType;
@@ -148,13 +167,10 @@ TopologyType NetworkForwarderTopology::lookupTypeByName( const string& name ) th
 
 TopologyType NetworkForwarderTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 
-    TopologyTypeRequest req;
-    req.id = anId;
-    req.name = "";
-
     NetworkForwarderRequestMessage mess;
     mess.type = NETWORK_FORWARDER_TOPOLOGY_TYPE_LOOKUP_BY_ID;
-    mess.data = &req;
+    mess.id = anId;
+    mess.name = "";
 
     BlockingRPCMessage container;
     {
@@ -166,10 +182,7 @@ TopologyType NetworkForwarderTopology::lookupTypeById( TopologyTypeId anId ) thr
     }
 
     TopologyType returnType;
-    string retName;
-    uint64_t pos = 0;
-    j_serialization::deserialize(retName, (char*) container.response.data, pos, container.response.length);
-    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation( retName, anId));
+    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation( container.response.name, anId));
     returnType.setObject(newType);
 
     return returnType;
@@ -226,8 +239,17 @@ TopologyValueList NetworkForwarderTopology::enumerateAttributes( TopologyObjectI
 void NetworkForwarderTopology::messageSendCB(BareMessage * msg) throw() { /* do nothing */ }
 
 void NetworkForwarderTopology::messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size) throw() {
-    // TODO
-    assert(false);
+    // Deserialize and unlock container
+    BlockingRPCMessage * container = (BlockingRPCMessage *) msg->user_ptr;
+
+    printf("2");
+    fflush(stdout);
+
+    uint64_t pos = 0;
+    j_serialization::deserialize(container->response, buffer, pos, buffer_size);
+
+    unique_lock<mutex> lock(container->m);
+    container->cv.notify_one();
 }
 
 void NetworkForwarderTopology::messageTransferErrorCB(BareMessage * msg, CommunicationError error) throw() {
@@ -237,13 +259,11 @@ void NetworkForwarderTopology::messageTransferErrorCB(BareMessage * msg, Communi
 }
 
 uint64_t NetworkForwarderTopology::serializeMessageLen(const void * msgObject) throw() {
-    // TODO
-    assert(false);
+    return j_serialization::serializeLen(* (NetworkForwarderRequestMessage*)  msgObject);
 }
 
 void NetworkForwarderTopology::serializeMessage(const void * msgObject, char * buffer, uint64_t & pos) throw() {
-    // TODO
-    assert(false);
+    j_serialization::serialize(* (NetworkForwarderRequestMessage*) msgObject, buffer, pos);
 }
 
 extern "C" {

@@ -12,7 +12,6 @@
 // #define WRITE_ONLY
 
 // threadcount defines how many times the test will run consecutively
-// It will need one connection per run, so don't set this higher than the number configured in postgresql
 const int threadcount = 1;
 
 #include <iostream>
@@ -22,25 +21,41 @@ const int threadcount = 1;
 #include <core/module/ModuleLoader.hpp>
 #include <boost/thread.hpp>
 #include <monitoring/topology/Topology.hpp>
+#include <core/comm/NetworkService.hpp>
 
 #include "../NetworkForwarderTopologyOptions.hpp"
+#include "../NetworkForwarderTopologyServerOptions.hpp"
+#include "../NetworkForwarderCommunication.hpp"
 
 using namespace core;
 using namespace monitoring;
 
 void workerFunc(int i) {
+
+	// start one communication module
 	CommunicationModule * commModule = module_create_instance<CommunicationModule>( "", "siox-core-comm-gio", CORE_COMM_INTERFACE );
 
 	assert(commModule != nullptr);
 	commModule->init();
 
+	// Start the server first
+	Component * server = core::module_create_instance<Component>( "", "siox-monitoring-NetworkForwarderTopologyServer", NETWORK_SERVICE_INTERFACE );
+
+	NetworkForwarderTopologyServerOptions & o = server->getOptions<NetworkForwarderTopologyServerOptions>();
+
+	o.comm = commModule;
+    o.commAddress = "localhost:8080"; 
+
+    // TODO: start und stop implementieren
+    server->init();
+    server->start();
+
+	// Start the client
 	Topology* topology = module_create_instance<Topology>( "", "siox-monitoring-NetworkForwarderTopology", MONITORING_TOPOLOGY_INTERFACE );
 
-	assert(commModule != nullptr);
-
-    NetworkForwarderTopologyOptions & o = topology->getOptions<NetworkForwarderTopologyOptions>();
-    o.comm = commModule;
-    o.targetAddress = "localhost:8080";
+    NetworkForwarderTopologyOptions & o2 = topology->getOptions<NetworkForwarderTopologyOptions>();
+    o2.comm = commModule;
+    o2.targetAddress = "localhost:8080";
 
     topology->init();
     topology->start();

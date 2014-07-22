@@ -1,7 +1,9 @@
 #ifndef INCLUDE_GUARD_NETWORK_FORWARDER_SERVER_TOPOLOGY_COMM_HPP
 #define INCLUDE_GUARD_NETWORK_FORWARDER_SERVER_TOPOLOGY_COMM_HPP
+
 #include <monitoring/topology/TopologyImplementation.hpp>
 
+//@serializable
 enum NetworkForwarderMessageType {
 
     NETWORK_FORWARDER_TOPOLOGY_TYPE_REGISTER,
@@ -15,21 +17,24 @@ using namespace monitoring;
 using namespace boost;
 
 //@serializable
-struct TopologyTypeRequest {
-    TopologyTypeId id;
-    string name;
-};
-
 struct NetworkForwarderRequestMessage {
 
-    NetworkForwarderMessageType type;  
-    void * data;
+    NetworkForwarderMessageType request_type;  
+    uint32_t id;
+    uint32_t type;
+    uint32_t other;
+    string name;
+    //TODO: TopologyValue value;
 };
 
+//@serializable
 struct NetworkForwarderResponseMessage {
 
-    void * data;
-    uint64_t length = 0;
+    uint32_t id;
+    uint32_t type;
+    uint32_t other;
+    string name;
+    //TODO: TopologyValue value;
 };
 
 struct BlockingRPCMessage {
