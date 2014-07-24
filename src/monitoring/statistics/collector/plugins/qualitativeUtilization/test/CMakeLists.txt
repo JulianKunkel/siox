@@ -24,6 +24,7 @@ target_link_libraries(
 	siox-monitoring-ThreadedStatisticsCollector
 	siox-monitoring-StatisticsMultiplexerSync
 	siox-monitoring-statisticsPlugin-qualitativeUtilization
+	${Boost_LIBRARIES}
 )
 
 add_test(monitoring_statistics_collector_plugins_qualitativeUtilization_test monitoring_statistics_collector_plugins_qualitativeUtilization_test)

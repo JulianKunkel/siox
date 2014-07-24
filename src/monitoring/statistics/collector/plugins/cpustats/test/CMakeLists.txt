@@ -13,6 +13,7 @@ target_link_libraries(
 	cpustatsTest
 	siox-monitoring-statisticsPlugin-CPUstats 
 	siox-core-AutoConfigurator
+	${Boost_LIBRARIES}
 )
 
 add_test(CPU-Statistics cpustatsTest)

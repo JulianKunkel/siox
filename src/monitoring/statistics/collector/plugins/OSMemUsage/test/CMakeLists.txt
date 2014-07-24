@@ -13,6 +13,7 @@ target_link_libraries(
 	OSMemUsageTest
 	siox-monitoring-statisticsPlugin-OSMemUsage
 	siox-core-AutoConfigurator
+	${Boost_LIBRARIES}
 )
 
 add_test(Memory-Statistics OSMemUsageTest)
