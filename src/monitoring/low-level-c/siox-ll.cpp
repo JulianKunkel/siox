@@ -57,6 +57,10 @@ static int initalizationCounter = 0;
 /// Struct to hold references to global objects needed.
 static struct process_info process_data;
 
+// REMEMBER BUG
+// due to a wrong invocation order of library destructors in some very old GLIBC version
+// the destructor of the list may have been called by  __cxa_finalize() before the siox destructor
+// is called. This breaks the finalization completely.
 static list<void (*)(void)> terminate_cbs;
 static list<void (*)(void)> initialization_cbs;
 static list<void (*)(void)> terminate_complete_cbs;
