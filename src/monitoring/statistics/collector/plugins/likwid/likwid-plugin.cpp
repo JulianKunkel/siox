@@ -3,6 +3,7 @@
  * @date 2014
  */
 #include <stdio.h>
+#include <string.h>
 
 extern "C"{
 #include <likwid/perfmon.h>
@@ -24,6 +25,7 @@ namespace {
 	using namespace core;
 	using namespace monitoring;
 
+
 	class LikwidPlugin : public StatisticsProviderPlugin {
 		public:
 			struct ObservedType{
@@ -31,6 +33,13 @@ namespace {
 				const char * name;
 				bool shouldBeAccumulated;
 				StatisticsValue value = 0.0f;
+			};
+
+			struct GroupData{
+					EventSetup likwidSetup;
+					// results from likwid
+					float * values;
+					vector<ObservedType> statistics;
 			};
 
 			void init( StatisticsProviderPluginOptions * options ) override;
@@ -45,10 +54,9 @@ namespace {
 		private:
 			void likwidDerivedEventToOntology(const char * likwidName, char const ** outName, char const ** outUnit, bool * shouldBeAccumulated);
 
-			EventSetup likwidSetup;
-			// results from likwid
-			float * values;
-			vector<ObservedType> statistics;
+			vector<GroupData> groups;
+			unsigned currentGroup = 0;
+
 			int numCores;
 	};
 
@@ -79,43 +87,51 @@ namespace {
 
 		FILE * nullFD = fopen("/dev/null", "w");
 		perfmon_init(numThreads, threads, nullFD);
-		
-		int groupCount = options->groups.length() > 0 ? 1 : 0;
-		const char * cur = options->groups.c_str();
-		while( *cur != '\0'){
-			if ( *cur == ',') groupCount++;
-			cur++;
-		}
 
 		// create all groups
-		// TODO support multiple groups properly
-		assert(groupCount == 1);
-		likwidSetup = perfmon_prepareEventSetup( (char*) options->groups.c_str());
+		char * str = (char*) options->groups.c_str();
+		char * saveptr = nullptr;
+		str = strtok_r(str, ",", & saveptr);
+      while (str != nullptr){
+      	groups.push_back({});
+      	struct GroupData * group = & groups[groups.size()-1];
 
-		values = (float*) malloc( likwidSetup.numberOfDerivedCounters * sizeof(float) * 3);
-		statistics.resize(likwidSetup.numberOfDerivedCounters);
+			group->likwidSetup = perfmon_prepareEventSetup( str );
 
-		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){			
-			// extract correct unit from likwid
-			likwidDerivedEventToOntology(likwidSetup.derivedNames[i], & statistics[i].name, & statistics[i].unit, & statistics[i].shouldBeAccumulated);
+			group->values = (float*) malloc( group->likwidSetup.numberOfDerivedCounters * sizeof(float) * 3);
+			group->statistics.resize(group->likwidSetup.numberOfDerivedCounters);
+
+			for( int i=0; i < group->likwidSetup.numberOfDerivedCounters; i++ ){			
+				// extract correct unit from likwid
+				likwidDerivedEventToOntology(group->likwidSetup.derivedNames[i], & group->statistics[i].name, & group->statistics[i].unit, & group->statistics[i].shouldBeAccumulated);
+			}
+			//cout << "CREATING : " << & group->likwidSetup << endl;
+      	str = strtok_r(nullptr, ",", & saveptr);
 		}
 
-		perfmon_setupCountersForEventSet(& likwidSetup);
-		perfmon_startCounters();		
+		perfmon_setupCountersForEventSet(& groups.begin()->likwidSetup);
+		perfmon_startCounters();
 	}
 
 	void LikwidPlugin::nextTimestep() throw() {
 		perfmon_stopCounters();
+
+		struct GroupData * group = & groups[currentGroup];
+		//cout << "ACCESSING : " << currentGroup << " " << & group->likwidSetup << endl;
 		
-		perfmon_getDerivedCounterValues(& values[0], & values[likwidSetup.numberOfDerivedCounters], & values[likwidSetup.numberOfDerivedCounters*2]);	
+		perfmon_setupCountersForEventSet(& group->likwidSetup);
+		cout << currentGroup << " " << groups.size() << endl;
+		currentGroup = (currentGroup + 1) % groups.size();
+
+		perfmon_getDerivedCounterValues(& group->values[0], & group->values[group->likwidSetup.numberOfDerivedCounters], & group->values[group->likwidSetup.numberOfDerivedCounters*2]);	
 		
 		// copy likwid results
-		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){
-			if ( statistics[i].shouldBeAccumulated ){				
-				statistics[i].value = values[i] * numCores;
+		for( int i=0; i < group->likwidSetup.numberOfDerivedCounters; i++ ){
+			if ( group->statistics[i].shouldBeAccumulated ){				
+				group->statistics[i].value = group->values[i] * numCores;
 				//cout << statistics[i].name << " " << statistics[i].value << " " << numCores << endl;
 			}else{
-				statistics[i].value = values[i];
+				group->statistics[i].value = group->values[i];
 			}
 		}
 
@@ -142,6 +158,10 @@ namespace {
 			{"SP MUOPS/s", "MUOPS/s", "throughput/cpu/SPMUOPS", false},
 			{"DP MUOPS/s", "MUOPS/s", "throughput/cpu/DPMUOPS", false},
 			{"Memory bandwidth [MBytes/s]", "MBytes/s", "throughput/memory/bandwidth", false},
+			{"L2 Load [MBytes/s]", "MBytes/s", "throughput/L2/load", false},
+			{"L2 Evict [MBytes/s]", "MBytes/s", "throughput/L2/evict", false},
+			{"L2 bandwidth [MBytes/s]", "MBytes/s", "throughput/L2/bandwidth", false},
+			{"L2 data volume [GBytes]", "GBytes", "quantity/L2/volume", true},
 			{"Memory data volume [GBytes]", "GBytes", "quantity/memory/volume", true},
 			{"Remote Read BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteReadBW", false},
 			{"Remote Write BW [MBytes/s]", "MBytes/s", "throughput/memory/RemoteWriteBW", false},
@@ -172,12 +192,13 @@ namespace {
 		#define addGaugeMetric( name, variableName, unitString, descriptionString ) \
 			result.push_back( {name, "@localhost", variableName, GAUGE, unitString, descriptionString, 0, 0} ); 
 		#define addIncrementalMetric( name, variableName, unitString, descriptionString ) \
-			result.push_back( {name, "@localhost", variableName, INCREMENTAL, unitString, descriptionString, 0, 0} ); 
+			result.push_back( {name, "@localhost", variableName, INCREMENTAL, unitString, descriptionString, 0, 0} );
 
-
-		for( int i=0; i < likwidSetup.numberOfDerivedCounters; i++ ){			
-			// TODO use correct name for the metric.	
-			addGaugeMetric( statistics[i].name, statistics[i].value, statistics[i].unit, likwidSetup.derivedNames[i]);
+		for( auto group = groups.begin(); group != groups.end(); group++ ){
+			for( int i=0; i < group->likwidSetup.numberOfDerivedCounters; i++ ){			
+				// TODO use correct name for the metric.	
+				addGaugeMetric( group->statistics[i].name, group->statistics[i].value, group->statistics[i].unit, group->likwidSetup.derivedNames[i]);
+			}
 		}
 
 		return result;

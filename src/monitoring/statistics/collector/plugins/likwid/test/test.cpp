@@ -19,14 +19,14 @@ int main( int argc, char const * argv[] )
 	                                    "siox-monitoring-statisticsPlugin-likwid" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 
 	ProviderLikwidOptions options;
-	options.groups = "MEM";
+	options.groups = "MEM,L2";
 	plugin->init(& options);
 
 	auto list = plugin->availableMetrics();
 
 	cout << "Likwid plugin" << endl;
 
-	for(int i=0; i < 3 ; i++){
+	for(int i=0; i < 4 ; i++){
 		cout << endl; 
 		cout << "next timestep" << endl;
 		plugin->nextTimestep();
