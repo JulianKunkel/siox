@@ -20,12 +20,12 @@ target_link_libraries(
 	siox-util-jobProcessors
 	siox-util
 	-L${Boost_LIBRARY_DIR}
-	${Boost_LIBRARIES}
 	${GLIB_LIBRARIES}
         ${GLIB_GOBJECT_LIBRARIES}
         ${GLIB_GMODULE_LIBRARIES}
         ${GLIB_GIO_LIBRARIES}
 	${GIOUNIX2_LIBRARIES}
+	${Boost_LIBRARIES}
 	siox-core-comm
 )
 siox_run_serializer(GIOOptions.hpp GIOOptions.cpp)
