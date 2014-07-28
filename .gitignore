@@ -2,6 +2,15 @@
 #
 
 # File extensions to ignore
+
+out
+*.wrap
+*.exe
+vgcore.*
+*.dat*
+*.bin
+core
+*.pyc
 *~
 *.err
 *.log

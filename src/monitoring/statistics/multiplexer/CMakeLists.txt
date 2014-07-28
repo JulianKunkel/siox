@@ -16,7 +16,6 @@ target_link_libraries(
 	siox-core-ContainerSerializer
 	siox-core-AutoConfigurator
 	siox-util
-	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

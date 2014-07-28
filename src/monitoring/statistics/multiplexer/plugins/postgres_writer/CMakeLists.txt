@@ -17,7 +17,6 @@ target_link_libraries(
 	siox-monitoring-statisticsMultiplexerPlugin-PostgreSQLWriter
 	siox-core-AutoConfigurator
 	siox-monitoring-Statistic
-	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 	${PostgreSQL_LIBRARY}
 )

@@ -7,4 +7,5 @@ add_subdirectory(energyEfficiencyHealthADPI)
 
 if (PostgreSQL_FOUND)
 	add_subdirectory(postgres_writer)
+	add_subdirectory(postgres_interval_writer)
 endif (PostgreSQL_FOUND)

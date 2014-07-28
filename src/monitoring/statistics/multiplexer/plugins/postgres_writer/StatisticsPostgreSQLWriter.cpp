@@ -15,10 +15,10 @@ using namespace core;
 
 class StatisticsPostgreSQLWriter : public StatisticsMultiplexerPlugin {
 public:
-	virtual void initPlugin() throw();
-	virtual ComponentOptions *AvailableOptions();
-	virtual void notifyAvailableStatisticsChange(const vector<shared_ptr<Statistic> > &statistics, bool addedStatistics, bool removedStatistics) throw();
-	virtual void newDataAvailable() throw();
+	virtual void initPlugin() throw() override;
+	virtual ComponentOptions *AvailableOptions() override;
+	virtual void notifyAvailableStatisticsChange(const vector<shared_ptr<Statistic> > &statistics, bool addedStatistics, bool removedStatistics) throw() override;
+	virtual void newDataAvailable() throw() override;
 	~StatisticsPostgreSQLWriter();
 private:
 	const vector<shared_ptr<Statistic> > *statistics;

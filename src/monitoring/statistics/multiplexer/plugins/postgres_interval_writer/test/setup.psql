@@ -1,0 +1,27 @@
+# su - postgres
+# psql
+# Be careful, DBs with uppercase are created with lowercase, then you cannot connect with the uppercase name...
+
+# Create here a role for your current login name, e.g. the output of: id -n -u 
+CREATE USER julian;
+
+CREATE DATABASE sioxtest;
+GRANT ALL PRIVILEGES ON DATABASE sioxtest to julian;
+
+
+# Once the DB is created create the table
+CREATE SCHEMA aggregate;
+
+
+DROP TABLE aggregate.statistics;
+
+CREATE TABLE aggregate.statistics (
+    time_begin bigint,
+    time_end bigint,
+    topology_id bigint,
+    ontology_id bigint,
+
+    average double,
+    min double,
+    max double
+    );

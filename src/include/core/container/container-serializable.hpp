@@ -1,10 +1,8 @@
-#ifndef CONTAINER_SERIALIZABLE_H
-#define CONTAINER_SERIALIZABLE_H
+#ifndef BOOST_SERIALIZABLE_Container
+#define BOOST_SERIALIZABLE_Container
 
 #include <core/container/container-macros.hpp>
 #include <boost/serialization/serialization.hpp>
-
-
 
 namespace boost {
 	namespace serialization {
