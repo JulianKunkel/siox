@@ -35,6 +35,12 @@ namespace core {
 		const Component * component;		
 
 		RegisteredComponent( ComponentReferenceID nr, const std::string & section, const std::string & moduleName, Component * component ) : id(nr), section(section), moduleName(moduleName), component(component) {}
+
+		std::string toString(){
+			char buff[20];
+			sprintf(buff, "%d", (int) id);
+			return std::string("<") + buff + ">:" + moduleName;
+		}
 	};
 
 

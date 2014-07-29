@@ -5,6 +5,8 @@
 #include <condition_variable>
 #include <mutex>
 
+#include <core/persist/SetupPersistentStructures.hpp>
+
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/parsers.hpp>
@@ -12,11 +14,8 @@
 #include <util/autoLoadModules.hpp>
 #include <util/ReporterHelper.hpp>
 
-
 using namespace boost;
 using namespace std;
-
-
 
 static ComponentRegistrar * registrar;
 // Make sure the daemon quits when it receives SIGINT.
@@ -52,6 +51,10 @@ int main( int argc, char ** argv )
 		( "configEntry", program_options::value<string>(& configEntry), "Starting point for requesting a configuration")
 		( "configProvider", program_options::value<string>(& configProvider), "Configuration provider module")
 		( "configSection", program_options::value<string>(&configSection), "Configuration section to use")
+		( "createPersistentStructures", "Instruct all loaded daemon plugins to create the required structures to persist data for subsequent operations" )
+#ifndef PRODUCTIVE_DEPLOYMENT
+		( "purgePersistentStructures", "Instruct all loaded daemon plugins to purge the currently stored persistent storages" )
+#endif
 		;
 
 		program_options::variables_map vm;
@@ -60,7 +63,7 @@ int main( int argc, char ** argv )
 
 		if( vm.count( "help" ) ) {
 			cout << desc << endl;
-			return 1;
+			return 0;
 		}
 
 		// override environment variables if set as parameter
@@ -75,6 +78,38 @@ int main( int argc, char ** argv )
 		registrar = new ComponentRegistrar();
 		AutoConfigurator * configurator = nullptr;
 		vector<Component *> loadedComponents = util::LoadConfiguration(& configurator, registrar);
+
+		if ( vm.count ("createPersistentStructures") || vm.count ("purgePersistentStructures") ){
+			const bool create = vm.count ("createPersistentStructures");
+
+			cout << "Creating persistent structures" << endl;
+
+			list< pair<SetupPersistentStructures*, RegisteredComponent*> > lst = registrar->listAllComponentsOfATypeFull<SetupPersistentStructures>();
+			for( auto c = lst.begin(); c != lst.end(); c++ ){		
+				cout << c->second->toString() << " ";
+				int ret = 0;
+				if (create){
+					ret = c->first->preparePersistentStructuresIfNecessary();
+#ifndef PRODUCTIVE_DEPLOYMENT					
+				}else{
+					ret = c->first->cleanPersistentStructures();
+#endif
+				}				
+				if (ret){
+					cout << " [OK]"  << endl;
+				}else{
+					cout << " [ERROR]" << endl;
+				}
+			}
+			cout << "Done creating persistent structures" << endl;
+
+			if (lst.size() == 0){
+				cout << "WARNING: No supported plugin requested to persist anything. Maybe the configuration is wrong?" << endl;
+			}
+
+			registrar->shutdown();
+			return 0;
+		}
 
 		// Stop on SIGINT and SIGUSR1 (USR1 eases debugging)
 		signal(SIGINT, signalHandler);

@@ -5,7 +5,7 @@
 
 #include <core/module/ModuleLoader.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
-#include <core/db/DatabaseSetup.hpp>
+#include <core/persist/SetupPersistentStructures.hpp>
 
 #include <monitoring/statistics/collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
@@ -92,9 +92,9 @@ int main( int argc, char const * argv[] )
 	}
 
 	// clean the test DB
-	DatabaseSetup * db_setup = dynamic_cast<DatabaseSetup*>(mplexer_plugin);
-	db_setup->cleanDatabase();
- 	db_setup->prepareDatabaseIfNecessary();
+	SetupPersistentStructures * db_setup = dynamic_cast<SetupPersistentStructures*>(mplexer_plugin);
+	db_setup->cleanPersistentStructures();
+ 	db_setup->preparePersistentStructuresIfNecessary();
 
 	// now initialize all plugins
 	topology->init();

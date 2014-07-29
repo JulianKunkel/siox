@@ -248,7 +248,6 @@ static void add_program_information()
 	}
 	process_data.association_mapper->set_process_attribute( process_data.pid, description, read );
 
-
 	description = process_data.ontology->register_attribute( "program", "description/user-id", VariableDatatype::Type::UINT64 );
 	u64 = ( uint64_t ) getuid();
 	process_data.association_mapper->set_process_attribute( process_data.pid, description, u64 );

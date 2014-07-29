@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include <core/reporting/ComponentReportInterface.hpp>
-#include <core/db/DatabaseSetup.hpp>
+#include <core/persist/SetupPersistentStructures.hpp>
 
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexer.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerPluginImplementation.hpp>
@@ -23,7 +23,7 @@ using namespace core;
  * result but instead takes an configuratable interval e.g. 1s and stores these results.
  * This reduces the burden on the Postgres DB and the overhead.
  */
-class StatisticsPostgreSQLIntervalWriter : public StatisticsMultiplexerPlugin, public ComponentReportInterface, public DatabaseSetup {
+class StatisticsPostgreSQLIntervalWriter : public StatisticsMultiplexerPlugin, public ComponentReportInterface, public SetupPersistentStructures {
 private:
 	struct StatisticSummary{
 		double min = 1e306;
@@ -39,8 +39,8 @@ public:
 
 	virtual ComponentReport prepareReport() override;
 
-	virtual void prepareDatabaseIfNecessary() override;
-	virtual void cleanDatabase() override;
+	virtual int preparePersistentStructuresIfNecessary() override;
+	virtual int cleanPersistentStructures() override;
 
 private:
 	const vector<shared_ptr<Statistic> > *statistics;
@@ -58,7 +58,14 @@ private:
 	Timestamp totalExecutionTime = 0;
 };
 
-void StatisticsPostgreSQLIntervalWriter::prepareDatabaseIfNecessary(){
+int StatisticsPostgreSQLIntervalWriter::preparePersistentStructuresIfNecessary(){
+	if (PQstatus(dbconn_) != CONNECTION_OK) {
+		StatisticsPostgreSQLIntervalWriterOptions &o = getOptions<StatisticsPostgreSQLIntervalWriterOptions>();
+		dbconn_ = PQconnectdb(o.dbinfo.c_str());
+	}
+
+	int ret = true;
+
  	PGresult *res = PQexec(dbconn_, "CREATE SCHEMA aggregate;");
 	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
 		cerr << "ERROR could not setup the database: " << PQresultErrorMessage(res) << endl;
@@ -75,22 +82,27 @@ void StatisticsPostgreSQLIntervalWriter::prepareDatabaseIfNecessary(){
  		);
 	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
 		cerr << "ERROR could not setup the database: " << PQresultErrorMessage(res) << endl;
+		ret = false;
 	}
 
-
  	PQclear(res);
+ 	return ret;
 }
 
-void StatisticsPostgreSQLIntervalWriter::cleanDatabase(){
+int StatisticsPostgreSQLIntervalWriter::cleanPersistentStructures(){
 	if (PQstatus(dbconn_) != CONNECTION_OK) {
 		StatisticsPostgreSQLIntervalWriterOptions &o = getOptions<StatisticsPostgreSQLIntervalWriterOptions>();
 		dbconn_ = PQconnectdb(o.dbinfo.c_str());
 	}
  	PGresult *res = PQexec(dbconn_, "drop table aggregate.statistics;");
+	int ret = true;
+
 	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
 		cerr << "ERROR could not drop the database: " << PQresultErrorMessage(res) << endl;
+		ret = false;
 	}
  	PQclear(res);
+ 	return ret;
 }
 
 ComponentReport StatisticsPostgreSQLIntervalWriter::prepareReport()
@@ -182,9 +194,6 @@ void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
 	}
 	
 	intervalsReported++;
-
-
-	const int nparams = 7;
 
 	stringstream s;
 
