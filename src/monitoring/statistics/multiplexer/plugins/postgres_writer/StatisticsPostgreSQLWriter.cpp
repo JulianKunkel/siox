@@ -61,36 +61,32 @@ void StatisticsPostgreSQLWriter::notifyAvailableStatisticsChange(const vector<sh
 
 void StatisticsPostgreSQLWriter::newDataAvailable() throw()
 {
-	uint64_t timestamp = (*statistics->begin())->curTimestamp();
 	// uint64_t size = statistics->size();
 
 	const int nparams = 4;
-	const char *command =
-		"INSERT INTO statistics.stats (topology_id, ontology_id, value, timestamp) VALUES ($1::int4, $2::int4, $3, $4::int8)";
 
-	uint64_t tim = util::htonll(timestamp);
+	stringstream s;
+	s << "INSERT INTO statistics.stats (topology_id, ontology_id, value, timestamp) VALUES ";
 
 	// write out all currently existing statistics
-	for (auto itr = statistics->begin(); itr != statistics->end(); itr++) {
+	for (unsigned i=0; i < statistics->size() ; i++ ){
 
-		StatisticsDescription &sd = **itr;
-		uint32_t tid = htonl(sd.topologyId);
-		uint32_t oid = htonl(sd.ontologyId);
-		std::string val = (*itr)->curValue.toStr();
-
-		const char *param_values[nparams] = {(char *) &tid, (char *) &oid, val.length() == 0 || val == "0" ? NULL : val.c_str(), (char *) &tim};
-		int param_lengths[nparams] = {sizeof(tid), sizeof(oid), (int) val.length(), sizeof(tim)};
-		int param_formats[nparams] = {1, 1, 0, 1};
-		int result_format = 1;
-
-		PGresult *res = PQexecParams(dbconn_, command, nparams, NULL, param_values, param_lengths, param_formats, result_format);
-
-		if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-			std::cerr << "Error inserting statistic: " << PQresultErrorMessage(res) << std::endl;
+		if (i != 0){
+			s << ",";
 		}
+		Statistic &sd = *(*statistics)[i];
 
-		PQclear(res);
+		s << "(" << sd.topologyId << "," << sd.ontologyId << "," << sd.curValue.toStr() << "," << sd.curTimestamp() << ")";
 	}
+
+	PGresult * res = PQexec(dbconn_, s.str().c_str() );
+
+	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+		cerr << "Error inserting statistic. Postgres error message: " << PQresultErrorMessage(res) << endl;
+	}
+
+	PQclear(res);
+
 }
 
 extern "C" {

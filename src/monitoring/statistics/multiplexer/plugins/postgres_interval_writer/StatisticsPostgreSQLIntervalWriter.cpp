@@ -205,7 +205,6 @@ void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
 		aggregates[i].max = 0;
 		aggregates[i].sum = 0;
 	}
-	s << ";";
 
 	PGresult * res = PQexec(dbconn_, s.str().c_str() );
 
