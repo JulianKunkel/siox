@@ -9,7 +9,7 @@
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerPluginImplementation.hpp>
 #include <monitoring/statistics/StatisticTypesSerializableText.cpp>
 #include <util/Util.hpp>
-
+#include <util/time.h>
 
 #include "StatisticsPostgreSQLIntervalWriterOptions.hpp"
 
@@ -23,6 +23,12 @@ using namespace core;
  * This reduces the burden on the Postgres DB and the overhead.
  */
 class StatisticsPostgreSQLIntervalWriter : public StatisticsMultiplexerPlugin, public ComponentReportInterface, public DatabaseSetup {
+private:
+	struct StatisticSummary{
+		double min = 1e306;
+		double max = 0;
+		double sum = 0;
+	};
 public:
 	virtual void initPlugin() throw() override;
 	virtual ComponentOptions *AvailableOptions() override;
@@ -37,8 +43,11 @@ public:
 
 private:
 	const vector<shared_ptr<Statistic> > *statistics;
-	int statisticsIterationsBeforeSync;
-	int currentIterations = 0;
+	vector<StatisticSummary> aggregates;
+	Timestamp intervalLength;
+	Timestamp lastTriggeredTime = 0;
+	int intervalUpdateCount = 0;
+
 	PGconn *dbconn_;
 	mutex mtx_;
 
@@ -79,7 +88,7 @@ void StatisticsPostgreSQLIntervalWriter::cleanDatabase(){
  	PGresult *res = PQexec(dbconn_, "drop table aggregate.statistics;");
 	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
 		cerr << "ERROR could not drop the database: " << PQresultErrorMessage(res) << endl;
-	} 	
+	}
  	PQclear(res);
 }
 
@@ -110,9 +119,11 @@ void StatisticsPostgreSQLIntervalWriter::initPlugin() throw()
 
  	dbconn_ = PQconnectdb(o.dbinfo.c_str());
 
- 	statisticsIterationsBeforeSync = o.statisticsInterval;
+ 	intervalLength = convert_seconds_to_timestamp( o.intervalLengthInS );
 
- 	assert(statisticsIterationsBeforeSync > 1);
+ 	assert(intervalLength >= 1000*1000ll*1000);
+
+ 	lastTriggeredTime = siox_gettime();
 
  	if (PQstatus(dbconn_) != CONNECTION_OK) {
  		cerr << "Connection to database failed: " << PQerrorMessage(dbconn_) << endl;
@@ -129,43 +140,67 @@ ComponentOptions* StatisticsPostgreSQLIntervalWriter::AvailableOptions()
 void StatisticsPostgreSQLIntervalWriter::notifyAvailableStatisticsChange(const vector<shared_ptr<Statistic> > &statistics, bool addedStatistics, bool removedStatistics) throw ()
 {
 	this->statistics = &statistics;
+
+	// update aggregate
+	this->aggregates.resize(statistics.size());
+
+ 	lastTriggeredTime = siox_gettime();	
 }
 
 void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
 {
 	intervalsTriggered++;
 
-	currentIterations++;
-	if (currentIterations < statisticsIterationsBeforeSync){
-		return;
-	}
  	if (PQstatus(dbconn_) != CONNECTION_OK) {
  		return;
  	}
 
-	currentIterations = 0;
+	Timestamp curTime = (*statistics->begin())->curTimestamp();
 
+	// update aggregates
+	for (unsigned i=0; i < statistics->size() ; i++ ){
+		double val = (*statistics)[i]->curValue.toFloat();
+		aggregates[i].min = aggregates[i].min < val ? aggregates[i].min : val;
+		aggregates[i].max = aggregates[i].max > val ? aggregates[i].max : val;
+		aggregates[i].sum += val;
+	}
+
+	intervalUpdateCount++;
+
+	if ( curTime - lastTriggeredTime < intervalLength ){
+		return;
+	}
+	
 	intervalsReported++;
-
-	uint64_t timestamp = (*statistics->begin())->curTimestamp();
 
 	const int nparams = 7;
 	const char *command =
 		"INSERT INTO aggregate.statistics (time_begin, time_end, topology_id, ontology_id, average, min, max) VALUES ($1::int8, $2::int8, $3::int4, $4::int4, $5, $6, $7)";
 
-	uint64_t tim = util::htonll(timestamp);
+	uint64_t t_begin = util::htonll(lastTriggeredTime);
+	uint64_t t_end = util::htonll(curTime);
 
 	// write out all currently existing statistics
-	for (auto itr = statistics->begin(); itr != statistics->end(); itr++) {
+	for (unsigned i=0; i < statistics->size() ; i++ ){
 
-		StatisticsDescription &sd = **itr;
+		Statistic &sd = *(*statistics)[i];
 		uint32_t tid = htonl(sd.topologyId);
 		uint32_t oid = htonl(sd.ontologyId);
 
-		string average = (*itr)->curValue.toStr();
+		char average[40];
+		char min[40];
+		char max[40];
 
-		const char *param_values[nparams] = {(char *) &tim, (char *) &tim, (char *) &tid, (char *) &oid, average.c_str(), average.c_str(), average.c_str() };
-		int param_lengths[nparams] = {sizeof(tim), sizeof(tim), sizeof(tid), sizeof(oid), (int) average.length(), (int) average.length(), (int) average.length()};
+		average[39] = 0;
+		min[39] = 0;
+		max[39] = 0;
+		
+		snprintf(average, 39, "%f", aggregates[i].sum / intervalUpdateCount);
+		snprintf(min, 39, "%f", aggregates[i].min);
+		snprintf(max, 39, "%f", aggregates[i].max );
+
+		const char *param_values[nparams] = {(char *) &t_begin, (char *) &t_end, (char *) &tid, (char *) &oid, average, min, max};
+		int param_lengths[nparams] = {sizeof(t_begin), sizeof(t_end), sizeof(tid), sizeof(oid), strlen(average), strlen(min), strlen(max)};
 
 		int param_formats[nparams] = {1, 1, 1, 1, 0, 0, 0};
 		int result_format = 1;
@@ -173,11 +208,18 @@ void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
 		PGresult *res = PQexecParams(dbconn_, command, nparams, NULL, param_values, param_lengths, param_formats, result_format);
 
 		if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-			cerr << "Error inserting statistic: " << PQresultErrorMessage(res) << endl;
+			cerr << "Error inserting statistic. Postgres error message: " << PQresultErrorMessage(res) << endl;
 		}
 
 		PQclear(res);
+
+		aggregates[i].min = 1e307;
+		aggregates[i].max = 0;
+		aggregates[i].sum = 0;		
 	}
+
+	intervalUpdateCount = 0;
+	lastTriggeredTime = curTime;
 }
 
 extern "C" {

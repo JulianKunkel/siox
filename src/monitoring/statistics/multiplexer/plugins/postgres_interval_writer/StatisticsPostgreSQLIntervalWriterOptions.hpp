@@ -12,7 +12,8 @@ using namespace monitoring;
 class StatisticsPostgreSQLIntervalWriterOptions : public monitoring::StatisticsMultiplexerPluginOptions {
 public:
 	string dbinfo;
-	int statisticsInterval;
+
+	int intervalLengthInS;
 };
 
 #endif

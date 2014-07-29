@@ -72,7 +72,7 @@ int main( int argc, char const * argv[] )
 		StatisticsPostgreSQLIntervalWriterOptions & op = dynamic_cast<StatisticsPostgreSQLIntervalWriterOptions &>(mplexer_plugin->getOptions());
 		op.multiplexer = multiplexer;
 		op.dbinfo = DBINFO;
-		op.statisticsInterval = 10;
+		op.intervalLengthInS = 1;
 	}
 
 	// clean the test DB
