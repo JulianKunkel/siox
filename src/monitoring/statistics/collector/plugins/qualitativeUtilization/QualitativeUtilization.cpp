@@ -7,7 +7,7 @@ using namespace std;
 using namespace monitoring;
 using namespace core;
 
-
+
 class QualitativeUtilization : public StatisticsIntegrator {
 	public:
 		ComponentOptions* AvailableOptions() override;

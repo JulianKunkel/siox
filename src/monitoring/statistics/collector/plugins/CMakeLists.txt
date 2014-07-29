@@ -29,6 +29,7 @@ add_subdirectory(network)
 add_subdirectory(provider-skeleton)
 add_subdirectory(provider-skeleton-minimal)
 add_subdirectory(qualitativeUtilization)
+add_subdirectory(testGenerator)
 
 
 IF ( LIKWID_FOUND )

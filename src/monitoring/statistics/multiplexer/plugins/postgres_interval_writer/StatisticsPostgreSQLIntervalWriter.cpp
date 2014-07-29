@@ -195,6 +195,7 @@ void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
 		min[39] = 0;
 		max[39] = 0;
 		
+		// TODO check accuracy
 		snprintf(average, 39, "%f", aggregates[i].sum / intervalUpdateCount);
 		snprintf(min, 39, "%f", aggregates[i].min);
 		snprintf(max, 39, "%f", aggregates[i].max );
