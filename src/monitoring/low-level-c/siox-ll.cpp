@@ -48,7 +48,7 @@ using namespace monitoring;
 ///////////////// GLOBAL VARIABLES ///////////////////////
 //############################################################################
 
-/// Flag indiciating whether SIOX is finalized and needing initalization.
+/// Flag indicating whether SIOX is finalized and needing initialization.
 static bool finalized = true;
 
 /// Number of times SIOX is initalized
@@ -56,6 +56,10 @@ static int initalizationCounter = 0;
 
 /// Struct to hold references to global objects needed.
 static struct process_info process_data;
+
+// SIOX monitoring for the API itself
+static UniqueInterfaceID siox_monitoring_uid;
+static ComponentID siox_monitoring_cid;
 
 // REMEMBER BUG
 // due to a wrong invocation order of library destructors in some very old GLIBC version
@@ -271,6 +275,16 @@ static void add_program_information()
 	process_data.association_mapper->set_process_attribute( process_data.pid, description, read );
 }
 
+// Record an activity from the siox-ll API itself
+static void internal_trace_heavyWeight(const char * activityName, Timestamp t_start){
+	UniqueComponentActivityID aid = process_data.system_information_manager->register_activityID( siox_monitoring_uid, activityName);
+	ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
+	Activity * a = ab->beginActivity( siox_monitoring_cid, aid );
+	ab->startActivity( a, t_start );
+	ab->stopActivity( a, siox_gettime() );
+	ab->endActivity( a );
+	process_data.amux->Log( shared_ptr<Activity>(a) );
+}
 
 extern "C" {
 
@@ -290,8 +304,10 @@ __attribute__( ( constructor ) ) void siox_ctor()
 		
 		NO_PERFMEASURE_FUNCTION_BEGIN
 		// Retrieve hostname; NodeID and PID will follow once process_data is set up
-		// If necessary, do actual initialisation
+		// If necessary, do actual initialization
 		if( finalized ) {
+			Timestamp t_start = siox_gettime();
+
 			process_data.overhead = new OverheadStatistics();
 			PERF_MEASURE_START("INIT")
 			string hostname = util::getHostname();
@@ -333,7 +349,14 @@ __attribute__( ( constructor ) ) void siox_ctor()
 			add_program_information();
 
 			finalized = false;
-			monitoringDisabled = SIOX_MONITORING_ENABLED;			
+			monitoringDisabled = SIOX_MONITORING_ENABLED;
+
+			// register the low-level API as event source.
+			siox_monitoring_uid = process_data.system_information_manager->register_interfaceID("SIOX", "LowLevelAPI" );			
+			siox_monitoring_cid.id = ++process_data.last_componentID;
+			siox_monitoring_cid.pid = process_data.pid;
+
+			internal_trace_heavyWeight("init", t_start);
 		}		
 	}
 
@@ -358,6 +381,8 @@ static void finalizeSIOX(int print){
 			return;
 		}
 
+		Timestamp t_end = siox_gettime();
+
 		// invoke terminate callbacks
 		for( auto itr = terminate_cbs.begin() ; itr != terminate_cbs.end(); itr++ ){
 			(*itr)();
@@ -365,6 +390,9 @@ static void finalizeSIOX(int print){
 
 		{			
 			PERF_MEASURE_START("FINALIZE")
+			
+			// send special SIOX exit() event.
+			internal_trace_heavyWeight("exit", t_end);
 
 			process_data.registrar->stopNonMandatoryModules();			
 
@@ -414,6 +442,7 @@ void siox_handle_fork_complete(int im_the_child){
 	FUNCTION_BEGIN
 
 	process_data.pid.pid = ( uint32_t ) getpid();
+	siox_monitoring_cid.pid.pid = process_data.pid.pid;
 	process_data.association_mapper->setLocalInformation(process_data.association_mapper->localHostname(), process_data.pid);
 
 	// fix the pid() in the existing components
