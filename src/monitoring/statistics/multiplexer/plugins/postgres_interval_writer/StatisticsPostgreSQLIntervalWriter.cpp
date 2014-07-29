@@ -1,6 +1,7 @@
 #include <iostream>
 #include <mutex>
 #include <libpq-fe.h>
+#include <sstream>
 
 #include <core/reporting/ComponentReportInterface.hpp>
 #include <core/db/DatabaseSetup.hpp>
@@ -9,6 +10,7 @@
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerPluginImplementation.hpp>
 #include <monitoring/statistics/StatisticTypesSerializableText.cpp>
 #include <util/Util.hpp>
+#include <util/time.h>
 
 #include "StatisticsPostgreSQLIntervalWriterOptions.hpp"
 
@@ -53,7 +55,7 @@ private:
 	// statistics about operation
 	int intervalsReported = 0;	
 	int intervalsTriggered = 0;
-	int statisticsReported = 0;
+	Timestamp totalExecutionTime = 0;
 };
 
 void StatisticsPostgreSQLIntervalWriter::prepareDatabaseIfNecessary(){
@@ -96,7 +98,12 @@ ComponentReport StatisticsPostgreSQLIntervalWriter::prepareReport()
 	ComponentReport rep;
 	rep.addEntry("Intervals reported",  {ReportEntry::Type::SIOX_INTERNAL_DEBUG,  intervalsReported} );
 	rep.addEntry("Intervals triggered", {ReportEntry::Type::SIOX_INTERNAL_DEBUG,  intervalsTriggered} );
+
+	int statisticsReported = aggregates.size();
 	rep.addEntry("Statistics reported", {ReportEntry::Type::SIOX_INTERNAL_DEBUG,  statisticsReported} );
+
+	double overheadTime = siox_time_in_s(totalExecutionTime);
+	rep.addEntry("Processing time", {ReportEntry::Type::SIOX_INTERNAL_PERFORMANCE,  overheadTime});
 	return rep;
 }
 
@@ -152,6 +159,8 @@ void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
 
 	Timestamp curTime = (*statistics->begin())->curTimestamp();
 
+ 	Timestamp start = siox_gettime();
+
 	// ignore the first timestamp
 	if ( lastTriggeredTime == 0 ){
 		lastTriggeredTime = curTime;
@@ -174,54 +183,42 @@ void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
 	
 	intervalsReported++;
 
-	const int nparams = 7;
-	const char *command =
-		"INSERT INTO aggregate.statistics (time_begin, time_end, topology_id, ontology_id, average, min, max) VALUES ($1::int8, $2::int8, $3::int4, $4::int4, $5, $6, $7)";
 
-	uint64_t t_begin = util::htonll(lastTriggeredTime);
-	uint64_t t_end = util::htonll(curTime);
+	const int nparams = 7;
+
+	stringstream s;
+
+	s << "INSERT INTO aggregate.statistics (time_begin, time_end, topology_id, ontology_id, average, min, max) VALUES ";
 
 	// write out all currently existing statistics
 	for (unsigned i=0; i < statistics->size() ; i++ ){
 
-		Statistic &sd = *(*statistics)[i];
-		uint32_t tid = htonl(sd.topologyId);
-		uint32_t oid = htonl(sd.ontologyId);
-
-		char average[40];
-		char min[40];
-		char max[40];
-
-		average[39] = 0;
-		min[39] = 0;
-		max[39] = 0;
-		
-		// TODO check accuracy
-		snprintf(average, 39, "%f", aggregates[i].sum / intervalUpdateCount);
-		snprintf(min, 39, "%f", aggregates[i].min);
-		snprintf(max, 39, "%f", aggregates[i].max );
-
-		const char *param_values[nparams] = {(char *) &t_begin, (char *) &t_end, (char *) &tid, (char *) &oid, average, min, max};
-		int param_lengths[nparams] = {sizeof(t_begin), sizeof(t_end), sizeof(tid), sizeof(oid), strlen(average), strlen(min), strlen(max)};
-
-		int param_formats[nparams] = {1, 1, 1, 1, 0, 0, 0};
-		int result_format = 1;
-
-		PGresult *res = PQexecParams(dbconn_, command, nparams, NULL, param_values, param_lengths, param_formats, result_format);
-
-		if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-			cerr << "Error inserting statistic. Postgres error message: " << PQresultErrorMessage(res) << endl;
+		if (i != 0){
+			s << ",";
 		}
 
-		PQclear(res);
+		Statistic &sd = *(*statistics)[i];
+		s << "(" << lastTriggeredTime << "," << curTime << "," << sd.topologyId << "," << sd.ontologyId << "," << (aggregates[i].sum / intervalUpdateCount) << "," << aggregates[i].min  << "," << aggregates[i].max << ")";
+		// TODO check accuracy
 
 		aggregates[i].min = 1e307;
 		aggregates[i].max = 0;
-		aggregates[i].sum = 0;		
+		aggregates[i].sum = 0;
 	}
+	s << ";";
+
+	PGresult * res = PQexec(dbconn_, s.str().c_str() );
+
+	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+		cerr << "Error inserting statistic. Postgres error message: " << PQresultErrorMessage(res) << endl;
+	}
+
+	PQclear(res);
 
 	intervalUpdateCount = 0;
 	lastTriggeredTime = curTime;
+
+	totalExecutionTime += siox_gettime() - start;	
 }
 
 extern "C" {

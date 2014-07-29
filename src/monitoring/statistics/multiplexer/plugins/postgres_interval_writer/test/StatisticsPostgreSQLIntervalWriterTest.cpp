@@ -96,8 +96,6 @@ int main( int argc, char const * argv[] )
 	db_setup->cleanDatabase();
  	db_setup->prepareDatabaseIfNecessary();
 
- 	Timestamp start = siox_gettime();
-
 	// now initialize all plugins
 	topology->init();
 	collector->init();
@@ -105,8 +103,10 @@ int main( int argc, char const * argv[] )
 	multiplexer->init();
 	mplexer_plugin->init();
 
-	// start all threaded functions
+	// start time measurement
+ 	Timestamp start = siox_gettime();
 
+	// start all threaded functions
 	collector->start();
 	provider->start();
 	multiplexer->start();
@@ -115,15 +115,6 @@ int main( int argc, char const * argv[] )
 	// main test
 	// wait 3 seconds
 	sleep(waitTime);
-
-	// check correctness
-
-	ComponentReportInterface * cri = dynamic_cast<ComponentReportInterface*>(mplexer_plugin);
-	ComponentReport cr = cri->prepareReport();
-
-	for (auto key = cr.data.begin() ; key != cr.data.end(); key++){
-		cout << key->first->name << " " << key->second.value << endl;
-	}
 
 	// end test
 
@@ -141,6 +132,21 @@ int main( int argc, char const * argv[] )
 	mplexer_plugin->finalize();
 	topology->finalize();
 	ontology->finalize();
+
+
+	// check correctness
+	ComponentReportInterface * cri = dynamic_cast<ComponentReportInterface*>(mplexer_plugin);
+	ComponentReport cr = cri->prepareReport();
+
+	double internalProcessingTime;
+
+	for (auto key = cr.data.begin() ; key != cr.data.end(); key++){
+		cout << key->first->name << " " << key->second.value << endl;
+
+		if (key->first->name == "Processing time"){
+			internalProcessingTime = key->second.value.toFloat();
+		}
+	}
 	
 	
 	delete( topology );
@@ -164,6 +170,7 @@ int main( int argc, char const * argv[] )
 
 		double tInS = siox_time_in_s(end-start);
 		cout << tInS << "s " <<  count << " values in DB " << (count / tInS) << " values/s" << endl;
+		cout << "Only the IntervalWriter: " << internalProcessingTime << "s " <<  (count / internalProcessingTime)  << " values/s " << (internalProcessingTime / count * 1000) << " ms/value" << endl;
 	}
 	PQclear(res); 		
 
