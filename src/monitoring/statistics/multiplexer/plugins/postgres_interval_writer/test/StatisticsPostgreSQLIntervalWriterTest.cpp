@@ -19,6 +19,7 @@
 #include <monitoring/statistics/multiplexer/plugins/postgres_interval_writer/StatisticsPostgreSQLIntervalWriterOptions.hpp>
 #include <monitoring/statistics/collector/plugins/testGenerator/TestGeneratorOptions.hpp>
 
+#include <util/time.h>
 
 // The string to connect to the DB
 // We assume the local username has access to the DB
@@ -38,6 +39,15 @@ using namespace core;
  */
 int main( int argc, char const * argv[] )
 {
+	cout << "This program can be used as a benchmark if started with: " << argv[0] << " <time> <statistics>" << endl;
+	int waitTime = 3;
+	int statisticCount = 5;
+	if (argc == 3){
+		// we are running this app as a benchmark!
+		waitTime = atoi(argv[1]);
+		statisticCount = atoi(argv[2]);
+	}
+
 	// data source
 	StatisticsProviderPlugin * provider = module_create_instance<StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-testGenerator" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 	StatisticsCollector * collector = module_create_instance<StatisticsCollector>( "", "siox-monitoring-ThreadedStatisticsCollector", STATISTICS_COLLECTOR_INTERFACE );
@@ -53,6 +63,7 @@ int main( int argc, char const * argv[] )
 	// initialize options
 	{
 		TestGeneratorOptions & op = dynamic_cast<TestGeneratorOptions &>(provider->getOptions());
+		op.statisticsToCreate = statisticCount;
 	}
 
 	{
@@ -85,8 +96,9 @@ int main( int argc, char const * argv[] )
 	db_setup->cleanDatabase();
  	db_setup->prepareDatabaseIfNecessary();
 
-	// now initialize all plugins
+ 	Timestamp start = siox_gettime();
 
+	// now initialize all plugins
 	topology->init();
 	collector->init();
 	provider->init();
@@ -102,7 +114,7 @@ int main( int argc, char const * argv[] )
 
 	// main test
 	// wait 3 seconds
-	sleep(3);
+	sleep(waitTime);
 
 	// check correctness
 
@@ -138,6 +150,7 @@ int main( int argc, char const * argv[] )
 	delete( multiplexer );
 	delete( mplexer_plugin );
 
+	Timestamp end = siox_gettime();
 
 	// determine number of created stats:
 
@@ -147,7 +160,10 @@ int main( int argc, char const * argv[] )
 	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
 		cerr << "Error determining count from statistic: " << PQresultErrorMessage(res) << endl;
 	}else{
-		cout << "TEST INTERFACE: Statistics entries stored in the database: " << PQgetvalue(res, 0, 0) << endl;
+		auto count = atol(PQgetvalue(res, 0, 0));
+
+		double tInS = siox_time_in_s(end-start);
+		cout << tInS << "s " <<  count << " values in DB " << (count / tInS) << " values/s" << endl;
 	}
 	PQclear(res); 		
 

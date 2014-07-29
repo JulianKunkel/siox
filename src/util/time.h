@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 	siox_timestamp siox_gettime( void );
+	double siox_time_in_s( siox_timestamp time );
 
 
 #ifdef  __cplusplus
