@@ -109,6 +109,10 @@ typedef struct {
 #define SIOX_INVALID_ID 0
 
 
+#define SIOX_SUCCESS 0
+#define SIOX_ERR_ATTRIBUTE_NOT_FOUND 1
+#define SIOX_ERR_WRONG_ATTRIBUTE_TYPE 2
+
 //@test
 //@null 1
 int siox_is_monitoring_enabled();
@@ -522,11 +526,28 @@ void siox_activity_link_to_parent( siox_activity * activity_child, siox_activity
 
 
 /*
- The ownership of the returned datastructure is given to the caller.
+ The ownership of the returned data structure is given to the caller.
  */
 //@test ''%p'' activity
 //@null
 siox_activity_ID * siox_activity_get_ID( const siox_activity * activity );
+
+/*
+ Return the value of a known attribute from an activity.
+
+ @return SIOX_SUCCESS on success
+ */
+//@test ''%p'' activity 
+int siox_activity_get_attribute(const siox_activity * activity, const siox_attribute * attr, void * outBuffer);
+
+/*
+ Return the attribute value from an activity.
+
+ @return SIOX_SUCCESS on success
+ */
+//@test ''%p'' activity 
+int siox_activity_get_attributeE(const siox_activity * activity, const char * domain, const char * name, void * outBuffer);
+
 
 // TODO maybe just using ID?
 //void siox_activity_link_to_parent(siox_activity * activity_child, siox_activity_ID?);

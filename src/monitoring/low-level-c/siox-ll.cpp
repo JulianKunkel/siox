@@ -437,7 +437,7 @@ void siox_handle_fork_complete(int im_the_child){
 typedef VariableDatatype AttributeValue;
 
 // we stuff inside the siox_attribute pointer the type (first 32 Bits) and the ID
-static OntologyAttribute convertPtrToOntologyAttribute(siox_attribute * ptr){
+static OntologyAttribute convertPtrToOntologyAttribute(const siox_attribute * ptr){
 	return OntologyAttribute((uint32_t)(size_t) ptr, (VariableDatatype::Type) ((size_t)ptr>>32));
 }
 
@@ -1020,6 +1020,44 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 		}
 }
 
+
+int siox_activity_get_attribute(const siox_activity * activity, const siox_attribute * attributeSearched, void * outBuffer){
+	FUNCTION_BEGIN
+	
+	OntologyAttribute oa = convertPtrToOntologyAttribute(attributeSearched);
+	auto attr= activity->activity->attributeArray();
+	for(auto itr = attr.begin(); itr != attr.end(); itr++ ){
+		if ( itr->id == oa.aID ){
+			// found it
+			convert_attribute_back(oa, itr->value, outBuffer);
+			return SIOX_SUCCESS;
+		}
+	}
+
+	return SIOX_ERR_ATTRIBUTE_NOT_FOUND;
+}
+
+int siox_activity_get_attributeE(const siox_activity * activity, const char * domain, const char * name, void * outBuffer ){
+	FUNCTION_BEGIN
+
+	try {		
+		auto oa = process_data.ontology->lookup_attribute_by_name( domain, name );
+
+		auto attr= activity->activity->attributeArray();
+		for(auto itr = attr.begin(); itr != attr.end(); itr++ ){
+			if ( itr->id == oa.aID ){
+				// found it
+				convert_attribute_back(oa, itr->value, outBuffer);
+				return SIOX_SUCCESS;
+			}
+		}
+
+	} catch( NotFoundError & e ) {
+		return SIOX_ERR_ATTRIBUTE_NOT_FOUND;
+	}
+
+	return SIOX_ERR_ATTRIBUTE_NOT_FOUND;
+}
 
 
 } // extern "C"
