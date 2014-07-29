@@ -1,7 +1,11 @@
+#include <libpq-fe.h>
+
+
 #include <iostream>
 
 #include <core/module/ModuleLoader.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
+#include <core/db/DatabaseSetup.hpp>
 
 #include <monitoring/statistics/collector/StatisticsProviderPlugin.hpp>
 #include <monitoring/statistics/collector/StatisticsCollector.hpp>
@@ -69,8 +73,12 @@ int main( int argc, char const * argv[] )
 		op.multiplexer = multiplexer;
 		op.dbinfo = DBINFO;
 		op.statisticsInterval = 10;
-		op.thisIsATest = true;
 	}
+
+	// clean the test DB
+	DatabaseSetup * db_setup = dynamic_cast<DatabaseSetup*>(mplexer_plugin);
+	db_setup->cleanDatabase();
+ 	db_setup->prepareDatabaseIfNecessary();
 
 	// now initialize all plugins
 
@@ -124,6 +132,19 @@ int main( int argc, char const * argv[] )
 	delete( collector );
 	delete( multiplexer );
 	delete( mplexer_plugin );
+
+
+	// determine number of created stats:
+
+	auto dbconn = PQconnectdb(DBINFO);
+	auto res = PQexec(dbconn, "select count(*) from aggregate.statistics;");
+
+	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+		cerr << "Error determining count from statistic: " << PQresultErrorMessage(res) << endl;
+	}else{
+		cout << "TEST INTERFACE: Statistics entries stored in the database: " << PQgetvalue(res, 0, 0) << endl;
+	}
+	PQclear(res); 		
 
 	cout << "OK" << endl;
 	return 0;

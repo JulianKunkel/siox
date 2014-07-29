@@ -3,6 +3,7 @@
 #include <libpq-fe.h>
 
 #include <core/reporting/ComponentReportInterface.hpp>
+#include <core/db/DatabaseSetup.hpp>
 
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexer.hpp>
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerPluginImplementation.hpp>
@@ -21,7 +22,7 @@ using namespace core;
  * result but instead takes an configuratable interval e.g. 1s and stores these results.
  * This reduces the burden on the Postgres DB and the overhead.
  */
-class StatisticsPostgreSQLIntervalWriter : public StatisticsMultiplexerPlugin, public ComponentReportInterface {
+class StatisticsPostgreSQLIntervalWriter : public StatisticsMultiplexerPlugin, public ComponentReportInterface, public DatabaseSetup {
 public:
 	virtual void initPlugin() throw() override;
 	virtual ComponentOptions *AvailableOptions() override;
@@ -30,7 +31,9 @@ public:
 	~StatisticsPostgreSQLIntervalWriter();
 
 	virtual ComponentReport prepareReport() override;
-	virtual void stop() override;
+
+	virtual void prepareDatabaseIfNecessary() override;
+	virtual void cleanDatabase() override;
 
 private:
 	const vector<shared_ptr<Statistic> > *statistics;
@@ -44,6 +47,41 @@ private:
 	int intervalsTriggered = 0;
 	int statisticsReported = 0;
 };
+
+void StatisticsPostgreSQLIntervalWriter::prepareDatabaseIfNecessary(){
+ 	PGresult *res = PQexec(dbconn_, "CREATE SCHEMA aggregate;");
+	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+		cerr << "ERROR could not setup the database: " << PQresultErrorMessage(res) << endl;
+	}
+	res = PQexec(dbconn_, 
+		"CREATE TABLE aggregate.statistics (" 
+	   " time_begin bigint," 
+	   " time_end bigint," 
+	   " topology_id bigint," 
+	   " ontology_id bigint," 
+	   " average float," 
+	   " min float," 
+	   " max float );"
+ 		);
+	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+		cerr << "ERROR could not setup the database: " << PQresultErrorMessage(res) << endl;
+	}
+
+
+ 	PQclear(res);
+}
+
+void StatisticsPostgreSQLIntervalWriter::cleanDatabase(){
+	if (PQstatus(dbconn_) != CONNECTION_OK) {
+		StatisticsPostgreSQLIntervalWriterOptions &o = getOptions<StatisticsPostgreSQLIntervalWriterOptions>();
+		dbconn_ = PQconnectdb(o.dbinfo.c_str());
+	}
+ 	PGresult *res = PQexec(dbconn_, "drop table aggregate.statistics;");
+	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+		cerr << "ERROR could not drop the database: " << PQresultErrorMessage(res) << endl;
+	} 	
+ 	PQclear(res);
+}
 
 ComponentReport StatisticsPostgreSQLIntervalWriter::prepareReport()
 {
@@ -64,22 +102,6 @@ StatisticsPostgreSQLIntervalWriter::~StatisticsPostgreSQLIntervalWriter()
 	 }
 }
 
-void StatisticsPostgreSQLIntervalWriter::stop() {
-	StatisticsPostgreSQLIntervalWriterOptions &o = getOptions<StatisticsPostgreSQLIntervalWriterOptions>();	
-
- 	if (o.thisIsATest){
- 		// clean table
- 		PGresult *res = PQexec(dbconn_, "select count(*) from aggregate.statistics;");
-
- 		if (PQresultStatus(res) != PGRES_TUPLES_OK) {
-			cerr << "Error determining count from statistic: " << PQresultErrorMessage(res) << endl;
-		}else{
-			cout << "TEST INTERFACE: Statistics entries stored in the database: " << PQgetvalue(res, 0, 0) << endl;
-		}
- 		PQclear(res); 		
- 	}
-}
-
 void StatisticsPostgreSQLIntervalWriter::initPlugin() throw()
 {
 	std::cout << "PostgreSQL StatisticIntervalWriter initializing..." << std::endl;
@@ -93,13 +115,7 @@ void StatisticsPostgreSQLIntervalWriter::initPlugin() throw()
  	assert(statisticsIterationsBeforeSync > 1);
 
  	if (PQstatus(dbconn_) != CONNECTION_OK) {
- 		std::cerr << "Connection to database failed: " << PQerrorMessage(dbconn_) << std::endl;
- 	}
-
- 	if (o.thisIsATest){
- 		// clean table
- 		PGresult *res = PQexec(dbconn_, "delete from aggregate.statistics ;");
- 		PQclear(res);
+ 		cerr << "Connection to database failed: " << PQerrorMessage(dbconn_) << endl;
  	}
 }
 
@@ -123,6 +139,10 @@ void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
 	if (currentIterations < statisticsIterationsBeforeSync){
 		return;
 	}
+ 	if (PQstatus(dbconn_) != CONNECTION_OK) {
+ 		return;
+ 	}
+
 	currentIterations = 0;
 
 	intervalsReported++;
@@ -153,7 +173,7 @@ void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
 		PGresult *res = PQexecParams(dbconn_, command, nparams, NULL, param_values, param_lengths, param_formats, result_format);
 
 		if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-			std::cerr << "Error inserting statistic: " << PQresultErrorMessage(res) << std::endl;
+			cerr << "Error inserting statistic: " << PQresultErrorMessage(res) << endl;
 		}
 
 		PQclear(res);

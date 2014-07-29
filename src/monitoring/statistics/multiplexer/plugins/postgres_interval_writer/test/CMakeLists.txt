@@ -2,6 +2,7 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
+	${PostgreSQL_INCLUDE_DIR}
 )
 
 add_executable(
@@ -16,7 +17,8 @@ target_link_libraries(
 	siox-monitoring-StatisticsMultiplexerSync
 	siox-monitoring-statisticsPlugin-OSMemUsage
 	siox-monitoring-TopologyOntology
-	siox-monitoring-RamTopology	
+	siox-monitoring-RamTopology
+	${PostgreSQL_LIBRARY}
 )
 
 #target_compile_options(

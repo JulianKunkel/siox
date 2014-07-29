@@ -13,7 +13,6 @@ class StatisticsPostgreSQLIntervalWriterOptions : public monitoring::StatisticsM
 public:
 	string dbinfo;
 	int statisticsInterval;
-	bool thisIsATest = false;
 };
 
 #endif

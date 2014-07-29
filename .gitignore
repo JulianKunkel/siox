@@ -9,7 +9,7 @@ out
 vgcore.*
 *.dat*
 *.bin
-core
+*/core
 *.pyc
 *~
 *.err
