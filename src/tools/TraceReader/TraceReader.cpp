@@ -12,6 +12,7 @@
 #include <monitoring/association_mapper/modules/TopologyAssociationMapper/TopologyAssociationMapperOptions.hpp>
 #include <monitoring/ontology/modules/TopologyOntology/TopologyOntologyOptions.hpp>
 #include <monitoring/system_information/modules/TopologySystemInformation/TopologySystemInformationOptions.hpp>
+#include <util/time.h>
 
 #include "TraceReader.hpp"
 
@@ -127,10 +128,13 @@ void TraceReader::strattribute( const Attribute & a, stringstream & s ) throw( N
 
 void TraceReader::printActivity( Activity * a )
 {
-
 	stringstream str;
 	try {
-		
+		char buff[40];
+		siox_time_to_str( a->time_start(), buff, false );
+
+		str << buff << " ";
+
 		strdelta( a->time_stop() - a->time_start(), str );
 		if( printHostname )
 			str << " " << s->lookup_node_hostname( a->aid().cid.pid.nid );

@@ -1,6 +1,6 @@
 /*
  * File:   siox_time.h
- * Author: mickler
+ * Author: mickler, kunkel
  *
  * Created on July 15, 2013, 2:18 PM
  */
@@ -14,9 +14,9 @@
 extern "C" {
 #endif
 
-	siox_timestamp siox_gettime( void );
-	double siox_time_in_s( siox_timestamp time );
-
+siox_timestamp siox_gettime( void );
+double siox_time_in_s( siox_timestamp time );
+void siox_time_to_str( siox_timestamp time, char buff[40], int convertYear );
 
 #ifdef  __cplusplus
 }

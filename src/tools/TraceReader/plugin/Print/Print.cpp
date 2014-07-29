@@ -13,7 +13,7 @@ void PrintPlugin::moduleOptions(program_options::options_description & od){
 
 }
 void PrintPlugin::init(program_options::variables_map * vm, TraceReader * tr){
-
+	cout << "Time (HH:MM:SS.NANO)\tDuration\tID\tComponent\tActivity(Attributes)\tParents = ReturnCode" << endl;
 }
 
 Activity * PrintPlugin::processNextActivity(Activity * a){

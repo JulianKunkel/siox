@@ -14,7 +14,6 @@ add_executable(
 target_link_libraries(
 	siox-trace-reader
 	siox-tools-TraceReader
-	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 
@@ -27,7 +26,6 @@ add_library(
 target_link_libraries(
 	siox-tools-TraceReader
 	siox-core-ModuleLoader
-	-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 	siox-monitoring-FileAssociationMapper
 	siox-monitoring-FileOntology
@@ -38,6 +36,7 @@ target_link_libraries(
 	siox-monitoring-TopologyOntology
 	siox-monitoring-TopologySystemInformation
 	siox-monitoring-Topology
+	siox-util
 )
 #	siox-monitoring-DatabaseTopology
 
