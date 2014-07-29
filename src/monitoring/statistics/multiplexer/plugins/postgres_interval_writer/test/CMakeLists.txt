@@ -15,7 +15,7 @@ target_link_libraries(
 	siox-core-ModuleLoader 	
 	siox-monitoring-ThreadedStatisticsCollector
 	siox-monitoring-StatisticsMultiplexerSync
-	siox-monitoring-statisticsPlugin-OSMemUsage
+	siox-monitoring-statisticsPlugin-testGenerator
 	siox-monitoring-TopologyOntology
 	siox-monitoring-RamTopology
 	${PostgreSQL_LIBRARY}

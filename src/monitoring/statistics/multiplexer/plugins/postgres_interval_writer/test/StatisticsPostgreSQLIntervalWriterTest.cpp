@@ -17,6 +17,8 @@
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/ontology/modules/TopologyOntology/TopologyOntologyOptions.hpp>
 #include <monitoring/statistics/multiplexer/plugins/postgres_interval_writer/StatisticsPostgreSQLIntervalWriterOptions.hpp>
+#include <monitoring/statistics/collector/plugins/testGenerator/TestGeneratorOptions.hpp>
+
 
 // The string to connect to the DB
 // We assume the local username has access to the DB
@@ -37,7 +39,7 @@ using namespace core;
 int main( int argc, char const * argv[] )
 {
 	// data source
-	StatisticsProviderPlugin * provider = module_create_instance<StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-OSMemUsage" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
+	StatisticsProviderPlugin * provider = module_create_instance<StatisticsProviderPlugin>( "", "siox-monitoring-statisticsPlugin-testGenerator" , MONITORING_STATISTICS_PLUGIN_INTERFACE );
 	StatisticsCollector * collector = module_create_instance<StatisticsCollector>( "", "siox-monitoring-ThreadedStatisticsCollector", STATISTICS_COLLECTOR_INTERFACE );
 
 	Ontology * ontology = core::module_create_instance<Ontology>( "", "siox-monitoring-TopologyOntology", ONTOLOGY_INTERFACE );
@@ -48,8 +50,11 @@ int main( int argc, char const * argv[] )
 	StatisticsMultiplexer * multiplexer = module_create_instance<StatisticsMultiplexer>( "", "siox-monitoring-StatisticsMultiplexerSync", STATISTICS_MULTIPLEXER_INTERFACE );
 	StatisticsMultiplexerPlugin * mplexer_plugin = module_create_instance<StatisticsMultiplexerPlugin>( "", "siox-monitoring-statisticsMultiplexerPlugin-PostgreSQLIntervalWriter", STATISTICS_MULTIPLEXER_PLUGIN_INTERFACE );
 
-
 	// initialize options
+	{
+		TestGeneratorOptions & op = dynamic_cast<TestGeneratorOptions &>(provider->getOptions());
+	}
+
 	{
 		TopologyOntologyOptions * op = new TopologyOntologyOptions();
 		op->topology.componentPointer = topology ;

@@ -9,7 +9,6 @@
 #include <monitoring/statistics/multiplexer/StatisticsMultiplexerPluginImplementation.hpp>
 #include <monitoring/statistics/StatisticTypesSerializableText.cpp>
 #include <util/Util.hpp>
-#include <util/time.h>
 
 #include "StatisticsPostgreSQLIntervalWriterOptions.hpp"
 
@@ -123,8 +122,6 @@ void StatisticsPostgreSQLIntervalWriter::initPlugin() throw()
 
  	assert(intervalLength >= 1000*1000ll*1000);
 
- 	lastTriggeredTime = siox_gettime();
-
  	if (PQstatus(dbconn_) != CONNECTION_OK) {
  		cerr << "Connection to database failed: " << PQerrorMessage(dbconn_) << endl;
  	}
@@ -143,8 +140,6 @@ void StatisticsPostgreSQLIntervalWriter::notifyAvailableStatisticsChange(const v
 
 	// update aggregate
 	this->aggregates.resize(statistics.size());
-
- 	lastTriggeredTime = siox_gettime();	
 }
 
 void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
@@ -156,6 +151,12 @@ void StatisticsPostgreSQLIntervalWriter::newDataAvailable() throw()
  	}
 
 	Timestamp curTime = (*statistics->begin())->curTimestamp();
+
+	// ignore the first timestamp
+	if ( lastTriggeredTime == 0 ){
+		lastTriggeredTime = curTime;
+		return;
+	}
 
 	// update aggregates
 	for (unsigned i=0; i < statistics->size() ; i++ ){
