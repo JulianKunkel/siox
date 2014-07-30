@@ -3,7 +3,11 @@
 #include <list>
 #include <thread>
 #include <mutex>
-#include "libpq-fe.h"
+#include <libpq-fe.h>
+
+#include <core/component/ActivitySerializableText.cpp>
+#include <core/persist/SetupPersistentStructures.hpp>
+
 
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
@@ -12,19 +16,29 @@
 
 #include "ActivityPostgreSQLWriterOptions.hpp"
 
-#include <core/component/ActivitySerializableText.cpp>
-
 using namespace std;
 using namespace monitoring;
 using namespace core;
 
 // It is important that the first parent class is of type ActivityMultiplexerPlugin
-class PostgreSQLWriterPlugin : public ActivityMultiplexerPlugin {
+class PostgreSQLWriterPlugin : public ActivityMultiplexerPlugin, public SetupPersistentStructures  {
 private:
 	PostgreSQLQuerier *querier_;
 	PGconn *dbconn_;
 	mutex mtx_;
 public:
+
+	int preparePersistentStructuresIfNecessary() override{
+		bool ret = true;
+		// TODO
+		return ret;
+	}
+
+	int cleanPersistentStructures() override{
+		bool ret = true;
+		// TODO
+		return ret;
+	}
 
 	void Notify(const shared_ptr<Activity> & activity, int lost) {
 		mtx_.lock();

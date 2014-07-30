@@ -7,6 +7,8 @@
 #include <sstream>
 #include <pqxx/pqxx>
 
+#include <core/persist/SetupPersistentStructures.hpp>
+
 #include <util/ExceptionHandling.hpp>
 #include <monitoring/topology/TopologyImplementation.hpp>
 #include <workarounds.hpp>
@@ -22,7 +24,7 @@ using namespace monitoring;
 using namespace pqxx;
 using namespace boost;
 
-class DatabaseTopology : public Topology {
+class DatabaseTopology : public Topology, public SetupPersistentStructures {
     public:
         virtual void init();
         virtual ComponentOptions * AvailableOptions();
@@ -56,9 +58,25 @@ class DatabaseTopology : public Topology {
         void start() override;
         void stop() override;
 
+        int preparePersistentStructuresIfNecessary() override;
+
+    int cleanPersistentStructures() override;
+
     private:
         connection* conn;
 };
+
+int DatabaseTopology::preparePersistentStructuresIfNecessary(){
+    bool ret = true;
+    // TODO
+    return ret;
+}
+
+int DatabaseTopology::cleanPersistentStructures(){
+    bool ret = true;
+    // TODO
+    return ret;
+}
 
 void DatabaseTopology::start(){
     Topology::start();
