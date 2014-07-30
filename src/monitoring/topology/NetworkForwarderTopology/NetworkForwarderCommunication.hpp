@@ -9,6 +9,16 @@ enum NetworkForwarderMessageType {
     NETWORK_FORWARDER_TOPOLOGY_TYPE_REGISTER,
     NETWORK_FORWARDER_TOPOLOGY_TYPE_LOOKUP_BY_NAME,
     NETWORK_FORWARDER_TOPOLOGY_TYPE_LOOKUP_BY_ID,
+
+    NETWORK_FORWARDER_TOPOLOGY_OBJECT_REGISTER,
+    NETWORK_FORWARDER_TOPOLOGY_OBJECT_LOOKUP,
+
+    NETWORK_FORWARDER_TOPOLOGY_RELATION_REGISTER,
+    NETWORK_FORWARDER_TOPOLOGY_RELATION_LOOKUP,
+
+    NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_REGISTER,
+    NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_LOOKUP_BY_NAME,
+    NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_LOOKUP_BY_ID,
 };
 
 using namespace std;
@@ -20,9 +30,9 @@ using namespace boost;
 struct NetworkForwarderRequestMessage {
 
     NetworkForwarderMessageType request_type;  
-    uint32_t id;
-    uint32_t type;
-    uint32_t other;
+    int32_t id;
+    int32_t type;
+    int32_t other;
     string name;
     //TODO: TopologyValue value;
 };
@@ -30,9 +40,9 @@ struct NetworkForwarderRequestMessage {
 //@serializable
 struct NetworkForwarderResponseMessage {
 
-    uint32_t id;
-    uint32_t type;
-    uint32_t other;
+    int32_t id;
+    int32_t type;
+    int32_t other;
     string name;
     //TODO: TopologyValue value;
 };

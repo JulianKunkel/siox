@@ -22,16 +22,18 @@ class NetworkForwarderTopologyServer : public NetworkService, ServerCallback {
         assert(comm != nullptr);
 
         server = comm->startServerService(o.commAddress, this);
+        topologyBackend = GET_INSTANCE(Topology, o.topologyBackend);
+
+        assert(topologyBackend != nullptr);
     }
 
     virtual void messageReceivedCB(std::shared_ptr<ServerClientMessage> msg, const char * message_data, uint64_t buffer_size) {
 
-        printf("1.5");
-        fflush(stdout);
-
         NetworkForwarderRequestMessage reqMess;
         NetworkForwarderResponseMessage resMess;
         TopologyType type;
+        TopologyObject object;
+        TopologyRelation relation;
         uint64_t pos = 0;
 
         j_serialization::deserialize(reqMess, message_data, pos, buffer_size);
@@ -39,19 +41,93 @@ class NetworkForwarderTopologyServer : public NetworkService, ServerCallback {
         switch(reqMess.request_type) {
             case NETWORK_FORWARDER_TOPOLOGY_TYPE_REGISTER: 
                 type = topologyBackend->registerType(reqMess.name);
-                resMess.id = (size_t) type.id();
+
+                if(type) {
+                    resMess.id = (size_t) type.id();
+                }
+                else {
+                    resMess.id = -1;
+                }
+
                 msg->isendResponse(&resMess);
                 break;
             case NETWORK_FORWARDER_TOPOLOGY_TYPE_LOOKUP_BY_NAME: 
                 type = topologyBackend->lookupTypeByName(reqMess.name);
-                resMess.id = (size_t) type.id();
+
+                if(type) {
+                    resMess.id = (size_t) type.id();
+                }
+                else {
+                    resMess.id = -1;
+                }
+
                 msg->isendResponse(&resMess);
                 break;
             case NETWORK_FORWARDER_TOPOLOGY_TYPE_LOOKUP_BY_ID: 
                 type = topologyBackend->lookupTypeById(reqMess.id);
-                resMess.name = type.name();
+
+                if(type) {
+                    resMess.name = type.name();
+                }
+                else {
+                    //TODO: -1 als reserved keyword okay?
+                    resMess.name = "-1";
+                }
+
                 msg->isendResponse(&resMess);
                 break;
+
+            case NETWORK_FORWARDER_TOPOLOGY_OBJECT_REGISTER:
+                object = topologyBackend->registerObject(reqMess.id, reqMess.type, reqMess.name, reqMess.other);
+
+                if(object) {
+                    resMess.id = object.id();
+                }
+                else {
+                    resMess.id = -1;
+                }
+
+                msg->isendResponse(&resMess);
+                break;
+            case NETWORK_FORWARDER_TOPOLOGY_OBJECT_LOOKUP:
+                object = topologyBackend->lookupObjectById(reqMess.id);
+
+                if(object) {
+                    resMess.id = object.id();
+                    resMess.type = object.type();
+                }
+                else {
+                    resMess.id = -1;
+                }
+
+                msg->isendResponse(&resMess);
+                break;
+
+            case NETWORK_FORWARDER_TOPOLOGY_RELATION_REGISTER:
+                relation = topologyBackend->registerRelation(reqMess.id, reqMess.type, reqMess.name, reqMess.other);
+
+                if(relation) {
+                    // Wont be read, but we'll send a success signal anyway
+                    resMess.id = 0;
+                }
+                else {
+                    resMess.id = -1;
+                }
+
+                msg->isendResponse(&resMess);
+                break;       
+            case NETWORK_FORWARDER_TOPOLOGY_RELATION_LOOKUP:
+                relation = topologyBackend->lookupRelation(reqMess.id, reqMess.type, reqMess.name);
+
+                if(relation) {
+                    resMess.id = relation.child();
+                }
+                else {
+                    resMess.id = -1;
+                }
+
+                msg->isendResponse(&resMess);
+                break;                           
         }
     }
 
