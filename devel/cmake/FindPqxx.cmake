@@ -19,7 +19,7 @@ if (NOT DEFINED PQXX_INCLUDE_DIR)
 		find_package(PkgConfig)
 
 		# try to use pkg-config to localize the libraries.
-		pkg_check_modules (PQXX  libpqxx REQUIRED)
+		pkg_check_modules (PQXX  libpqxx)
 
 		set(PQXX_LIBRARIES ${PQXX_LIBRARIES} CACHE STRING "GLIB LDFLAGS" )
 		set(PQXX_INCLUDE_DIRS ${PQXX_INCLUDE_DIRS}  CACHE STRING "GLIB CFLAGS")
