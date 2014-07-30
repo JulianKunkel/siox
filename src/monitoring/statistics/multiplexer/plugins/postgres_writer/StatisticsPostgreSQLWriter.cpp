@@ -46,7 +46,6 @@ int StatisticsPostgreSQLWriter::preparePersistentStructuresIfNecessary(){
 	int ret = true;
 	res = PQexec(dbconn_, 
 		"CREATE TABLE statistics.stats (" 
-    	"stat_id bigint NOT NULL,"
     	"topology_id bigint,"
     	"ontology_id bigint,"
     	"value float,"
