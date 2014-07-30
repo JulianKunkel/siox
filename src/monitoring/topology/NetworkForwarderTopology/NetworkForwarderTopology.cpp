@@ -37,7 +37,7 @@ public:
 
     void connectionSuccessfullCB(ServiceClient & connection){
         printf("Connection successful.");
-        fflush(stdout);   
+        fflush(stdout);
     }
 };
 
@@ -117,7 +117,7 @@ TopologyType NetworkForwarderTopology::registerType( const string& name ) throw(
     NetworkForwarderRequestMessage mess;
     mess.request_type = NETWORK_FORWARDER_TOPOLOGY_TYPE_REGISTER;
     mess.id = 0;
-    mess.name = "";
+    mess.name = name;
 
     BlockingRPCMessage container;
     {
@@ -129,8 +129,11 @@ TopologyType NetworkForwarderTopology::registerType( const string& name ) throw(
     }
 
     TopologyType returnType;
-    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name, (size_t) container.response.id));
-    returnType.setObject(newType);
+
+    if (container.response.id != -1) {
+        Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name, (size_t) container.response.id));
+        returnType.setObject(newType);
+    }
 
     return returnType;
 }
@@ -138,29 +141,25 @@ TopologyType NetworkForwarderTopology::registerType( const string& name ) throw(
 TopologyType NetworkForwarderTopology::lookupTypeByName( const string& name ) throw() {
 
     NetworkForwarderRequestMessage mess;
-    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_TYPE_REGISTER;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_TYPE_LOOKUP_BY_NAME;
     mess.id = 0;
-    mess.name = "";
+    mess.name = name;
 
     BlockingRPCMessage container;
     {
         unique_lock<mutex> lock(container.m);
         client->isend(& mess, & container);
 
-        printf("1");
-        fflush(stdout);
-
         // wait for the response
         container.cv.wait(lock);
-
-        printf("10");
-        fflush(stdout);
-
     }
 
     TopologyType returnType;
-    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name, (size_t) container.response.id));
-    returnType.setObject(newType);
+
+    if (container.response.id != -1) {
+        Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation(name, (size_t) container.response.id));
+        returnType.setObject(newType);
+    }
 
     return returnType;
 }
@@ -168,7 +167,7 @@ TopologyType NetworkForwarderTopology::lookupTypeByName( const string& name ) th
 TopologyType NetworkForwarderTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 
     NetworkForwarderRequestMessage mess;
-    mess.type = NETWORK_FORWARDER_TOPOLOGY_TYPE_LOOKUP_BY_ID;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_TYPE_LOOKUP_BY_ID;
     mess.id = anId;
     mess.name = "";
 
@@ -182,26 +181,121 @@ TopologyType NetworkForwarderTopology::lookupTypeById( TopologyTypeId anId ) thr
     }
 
     TopologyType returnType;
-    Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation( container.response.name, anId));
-    returnType.setObject(newType);
+
+    if (container.response.name != "-1") {
+        Release<TopologyTypeImplementation> newType(new TopologyTypeImplementation( container.response.name, anId));
+        returnType.setObject(newType);
+    }
 
     return returnType;
 }
 
 TopologyObject NetworkForwarderTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
-    assert(false);
+
+    NetworkForwarderRequestMessage mess;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_OBJECT_REGISTER;
+    mess.id = parentId;
+    mess.type = relationType;
+    mess.name = childName;
+    mess.other = objectType;
+
+    BlockingRPCMessage container;
+    {
+        unique_lock<mutex> lock(container.m);
+        client->isend(& mess, & container);
+
+        // wait for the response
+        container.cv.wait(lock);
+    }
+
+    TopologyObject returnObject;
+
+    if (container.response.id != -1) {
+        Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(objectType, container.response.id) );
+        returnObject.setObject(newObject);
+    }
+
+    return returnObject;
 }
 
 TopologyObject NetworkForwarderTopology::lookupObjectById( TopologyObjectId anId ) throw() {
-    assert(false);
+    
+    NetworkForwarderRequestMessage mess;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_OBJECT_LOOKUP;
+    mess.id = anId;
+
+    BlockingRPCMessage container;
+    {
+        unique_lock<mutex> lock(container.m);
+        client->isend(& mess, & container);
+
+        // wait for the response
+        container.cv.wait(lock);
+    }
+
+    TopologyObject returnObject;
+
+    if (container.response.id != -1) {
+        Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(container.response.type, container.response.id) );
+        returnObject.setObject(newObject);
+    }
+
+    return returnObject;
 }
 
 TopologyRelation NetworkForwarderTopology::registerRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName, TopologyObjectId child ) throw() {
-    assert(false);
+    
+    NetworkForwarderRequestMessage mess;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_RELATION_REGISTER;
+    mess.id = parent;
+    mess.type = relationType;
+    mess.name = childName;
+    mess.other = child;
+
+    BlockingRPCMessage container;
+    {
+        unique_lock<mutex> lock(container.m);
+        client->isend(& mess, & container);
+
+        // wait for the response
+        container.cv.wait(lock);
+    }
+
+    TopologyRelation returnRelation;
+
+    if (container.response.id != -1) {
+        Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, child, relationType ) );
+        returnRelation.setObject(newRelation);
+    }
+
+    return returnRelation;
 }
 
 TopologyRelation NetworkForwarderTopology::lookupRelation( TopologyObjectId parent, TopologyTypeId relationType, const string& childName ) throw() {
-    assert(false);
+   
+    NetworkForwarderRequestMessage mess;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_RELATION_LOOKUP;
+    mess.id = parent;
+    mess.type = relationType;
+    mess.name = childName;
+
+    BlockingRPCMessage container;
+    {
+        unique_lock<mutex> lock(container.m);
+        client->isend(& mess, & container);
+
+        // wait for the response
+        container.cv.wait(lock);
+    }
+
+    TopologyRelation returnRelation;
+
+    if (container.response.id != -1) {
+        Release<TopologyRelationImplementation> newRelation( new TopologyRelationImplementation( childName, parent, container.response.id, relationType ) );
+        returnRelation.setObject(newRelation);
+    }
+
+    return returnRelation;
 }
 
 TopologyRelationList NetworkForwarderTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
@@ -241,9 +335,6 @@ void NetworkForwarderTopology::messageSendCB(BareMessage * msg) throw() { /* do 
 void NetworkForwarderTopology::messageResponseCB(BareMessage * msg, char * buffer, uint64_t buffer_size) throw() {
     // Deserialize and unlock container
     BlockingRPCMessage * container = (BlockingRPCMessage *) msg->user_ptr;
-
-    printf("2");
-    fflush(stdout);
 
     uint64_t pos = 0;
     j_serialization::deserialize(container->response, buffer, pos, buffer_size);

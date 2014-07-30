@@ -13,6 +13,7 @@ namespace monitoring {
         public:
             string commAddress;
             ComponentReference comm;
+            ComponentReference topologyBackend;
     };
 }
 

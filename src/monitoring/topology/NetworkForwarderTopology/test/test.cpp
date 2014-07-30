@@ -37,6 +37,12 @@ void workerFunc(int i) {
 
 	assert(commModule != nullptr);
 	commModule->init();
+	commModule->start();
+
+	// Create a backend topology for the server
+	Topology * backend = module_create_instance<Topology>( "", "siox-monitoring-RamTopology", MONITORING_TOPOLOGY_INTERFACE );
+	backend->init();
+	backend->start();
 
 	// Start the server first
 	Component * server = core::module_create_instance<Component>( "", "siox-monitoring-NetworkForwarderTopologyServer", NETWORK_SERVICE_INTERFACE );
@@ -44,7 +50,8 @@ void workerFunc(int i) {
 	NetworkForwarderTopologyServerOptions & o = server->getOptions<NetworkForwarderTopologyServerOptions>();
 
 	o.comm = commModule;
-    o.commAddress = "localhost:8080"; 
+    o.commAddress = "127.0.0.1:8080";
+    o.topologyBackend = backend;
 
     // TODO: start und stop implementieren
     server->init();
@@ -55,7 +62,7 @@ void workerFunc(int i) {
 
     NetworkForwarderTopologyOptions & o2 = topology->getOptions<NetworkForwarderTopologyOptions>();
     o2.comm = commModule;
-    o2.targetAddress = "localhost:8080";
+    o2.targetAddress = "127.0.0.1:8080";
 
     topology->init();
     topology->start();
@@ -78,6 +85,8 @@ void workerFunc(int i) {
 
 	#ifndef WRITE_ONLY
 	type2 = topology->lookupTypeByName( "type1"+to_string(i) );
+
+	assert(type2);
 	assert( type2.name() == "type1"+to_string(i) );
 
 	type2 = topology->lookupTypeById( type2.id() );
