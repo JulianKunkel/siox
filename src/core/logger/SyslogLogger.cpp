@@ -16,7 +16,7 @@ SyslogLogger::~SyslogLogger()
 
 void SyslogLogger::log_append( const Priority prio, const char * buffer )
 {
-	syslog( prio, buffer );
+	syslog( prio, "%s", buffer );
 }
 
 

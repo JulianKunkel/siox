@@ -9,7 +9,7 @@ add_subdirectory(file-surveyor)
 add_subdirectory(activity-histogram-adpi)
 add_subdirectory(anomaly-injector)
 add_subdirectory(activityMonitor)
-
+add_subdirectory(profiler)
 add_subdirectory(binwriter)
 
 if (PostgreSQL_FOUND)
