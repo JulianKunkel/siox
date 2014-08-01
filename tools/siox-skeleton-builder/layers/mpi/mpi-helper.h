@@ -409,3 +409,54 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 	for I in   ; do echo -n " ( ( flags & $I ) > 0 ? SIOX_$I : 0 ) | " ; done ; echo
 */
 
+
+static inline void recordProcessesGroup(siox_activity * sioxActivity, MPI_Group group){
+ 	MPI_Group world_group;
+ 	MPI_Comm_group(MPI_COMM_WORLD, & world_group);
+
+ 	// check if this is COMM_WORLD
+ 	int res;
+	MPI_Group_compare(group, world_group, & res );
+	if (res == MPI_IDENT){
+		return;
+	}
+
+ 	int size;
+ 	MPI_Group_size(group, & size);
+
+ 	int ranksIn[size];
+ 	int ranksCommWorld[size];
+	
+ 	for( int i = 0; i < size; i++ ){
+ 		ranksIn[i] = i;
+ 	}
+
+	MPI_Group_translate_ranks( group, size, ranksIn, world_group, ranksCommWorld);
+
+	for( int i = 0; i < size; i++ ){
+ 		siox_activity_set_attribute( sioxActivity, commProcessesWorld, & ranksIn[i] );
+		siox_activity_set_attribute( sioxActivity, commProcessesGroup, & ranksIn[i] );
+ 	}
+}
+
+
+static inline void recordProcessesComm(siox_activity * sioxActivity, MPI_Comm comm){
+	MPI_Group group;
+ 	MPI_Comm_group(comm, & group);
+ 	recordProcessesGroup(sioxActivity, group);
+}
+
+static inline uint64_t getCommHandle(MPI_Comm comm){
+	if( comm == MPI_COMM_WORLD ){
+		return SIOX_MPI_COMM_WORLD;
+	}else if ( comm == MPI_COMM_SELF ){
+		return SIOX_MPI_COMM_SELF;
+	}
+
+	// TODO make this func work nicely with configure
+	if (sizeof(MPI_Comm) == sizeof(int)){
+		return (unsigned) comm;
+	}else{
+		return (uint64_t) comm;
+	}
+}

@@ -22,4 +22,8 @@ enum MPIThreadLevel{
 	SIOX_MPI_THREAD_MULTIPLE = 8
 };
 
+#define SIOX_MPI_COMM_WORLD (~(0ll))
+#define SIOX_MPI_COMM_SELF (~(0ll)-1)
+
+
 #endif
