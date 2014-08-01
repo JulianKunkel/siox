@@ -258,6 +258,19 @@ namespace monitoring {
 		inline bool operator!=( ActivityID const & b ) const {
 			return !( *this == b );
 		}
+
+
+		inline bool operator<( ActivityID const & b ) const {
+			if ( id != b.id ){
+				return id < b.id;
+			}else{
+				if ( thread != b.thread ){
+					return thread < b.thread;
+				}else{
+					return cid < b.cid;
+				}
+			}
+		}
 	};
 
 	inline ostream & operator<<( ostream & os, const ActivityID & v )
