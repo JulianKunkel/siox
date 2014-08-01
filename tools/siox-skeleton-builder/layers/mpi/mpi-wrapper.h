@@ -5,6 +5,13 @@
 
 //@createInitializerForLibrary
 
+//Generic MPI hints
+//List of all processes in the communicator.
+//@register_attribute commProcessesGroup "MPI" "description/group/rankInGroup" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute commProcessesWorld "MPI" "description/group/rankInWorld" SIOX_STORAGE_32_BIT_UINTEGER
+
+
+//File MPI hints
 //@register_attribute commSize "MPI" "description/commSize" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute commRank "MPI" "description/commRank" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute threadLevelRequired "MPI" "description/threadLevelRequired" SIOX_STORAGE_32_BIT_UINTEGER
@@ -45,6 +52,7 @@
 
 //Contains all hints:
 //@register_attribute infoString "MPI" "hints/info" SIOX_STORAGE_STRING
+
 
 //@register_attribute fileName "MPI" "descriptor/filename" SIOX_STORAGE_STRING
 /* Attributes for parallel filesystem, if known   ?  */
@@ -90,9 +98,11 @@ int MPI_Init( int * argc, char ** *argv );
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); PMPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 int MPI_Init_thread( int *argc, char ** *argv, int required, int *provided );
 
+//@activity
+//@supressFunctionCall
 //@splice_before siox_register_termination_complete_signal( (void (*)(void)) PMPI_Finalize);
-//@callLibraryFinalizeBefore
-//@splice_before return MPI_SUCCESS; // we do not execute MPI_Finalize() here but defer it.
+//@splice_after ret = MPI_SUCCESS;
+//@callLibraryFinalize
 int MPI_Finalize( void );
 
 /*

@@ -49,7 +49,7 @@ template = {
             """
 },
 'callLibraryFinalize':{
-	'after' : 'sioxFinal();'
+	'cleanup' : 'sioxFinal();'
 },
 'callLibraryFinalizeBefore':{
 	'before' : 'sioxFinal();'
@@ -626,6 +626,16 @@ template = {
 },
 'rewriteCall': { # This is a special template, interpreted by the skeleton-builder !
         'variables': 'functionName arguments= parameters=',
+        'global': '',
+        'init': '',
+        'before': '',
+        'after': '',
+        'cleanup': '',
+        'final': ''
+}
+,
+'supressFunctionCall': { # This is a special template, interpreted by the skeleton-builder !
+        'variables': '',
         'global': '',
         'init': '',
         'before': '',

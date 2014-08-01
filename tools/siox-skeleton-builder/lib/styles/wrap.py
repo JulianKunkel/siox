@@ -88,7 +88,8 @@ class Style(skeletonBuilder.Writer):
             self.writeBefore(function, output, functionVariables)
 
             # write the function call
-            print(functionCall, file=output)
+            if function.writeFunctionCall:
+                print(functionCall, file=output)
             
             self.writeAfter(function, output, functionVariables)
 

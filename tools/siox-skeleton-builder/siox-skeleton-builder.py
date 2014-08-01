@@ -169,11 +169,13 @@ class Function():
         self.rewriteCall = False
         self.rewriteCallParams = False
         self.rewriteCallArguments = False
+        self.writeFunctionCall = True
 
     def setTemplateList(self, usedTemplateList):
         self.usedTemplateList = usedTemplateList
 
         # Special rewrite rules for change in function names.
+        # print(self.name)
         for t in self.usedTemplateList:
             if(t.name == "rewriteCall"):
                 self.rewriteCall = t.parameterList['functionName']
@@ -181,6 +183,8 @@ class Function():
                     self.rewriteCallArguments = t.parameterList['arguments']
                 if t.parameterList['parameters'] != "":
                     self.rewriteCallParams = t.parameterList['parameters']
+            if(t.name == "supressFunctionCall"):
+                self.writeFunctionCall = False
 
     #
     # @brief Generate the function call.
