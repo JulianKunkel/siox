@@ -123,7 +123,7 @@ if [[ "$useNinja" == "YES" ]] ; then
 	NINJA="-GNinja"	
 fi
 
-COMMAND="mkdir $buildDIR; cd $buildDIR; cmake $NINJA $CMAKEFLAGS $SRCDIR"
+COMMAND="mkdir -p $buildDIR; cd $buildDIR; cmake $NINJA $CMAKEFLAGS $SRCDIR"
 
 if [[ "$VERBOSE" == "YES" ]] ; then
 	echo "Your current configure options translate more or less to:"
