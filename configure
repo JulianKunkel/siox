@@ -24,10 +24,11 @@ function help(){
 	echo
 	echo "Optional:"
 	echo "--build-dir=<dir>        : directory in which to build"
-	echo "--build-wrappers         : build the wrappers for MPI, POSIX, etc. that is in the path"
-	echo "--use-ninja              : use the Ninja build tool instead of the old fashioned make"
-	echo "--verbose                : output the command but do not execute it"
-	echo "--reconfigure            : run configure again with the parameters used the last time"
+	echo "--build-wrappers       : build the wrappers for MPI, POSIX, etc. that is in the path"
+	echo "--debug                       : build SIOX with debug flags"
+	echo "--use-ninja                  : use the Ninja build tool instead of the old fashioned make"
+	echo "--verbose                   : output the command but do not execute it"
+	echo "--reconfigure             : run configure again with the parameters used the last time"
 	echo "The following list of options is only needed if you choose to build the wrappers with cmake"
 	echo "--with-mpicc=<file>    : path to the MPI C compiler"
 	echo "--with-mpicxx=<file>   : path to the MPI C++ compiler"
@@ -45,7 +46,7 @@ function reconfigure(){
 	exit $?
 }
 
-set -- `getopt -ul "help,version,reconfigure,with-boost:,with-libpq-type-dir:,with-libpqxx:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,with-likwid:,build-wrappers,use-ninja,verbose,build-dir:" hV "$@"`
+set -- `getopt -ul "help,version,debug,reconfigure,with-boost:,with-libpq-type-dir:,with-libpqxx:,prefix:,with-cc:,with-cxx:,with-glib:,with-mpicc:,with-mpicxx:,with-libpq:,with-python:,with-likwid:,build-wrappers,use-ninja,verbose,build-dir:" hV "$@"`
 test $# -lt 1  && exit 1
 while test $# -gt 0 
 do
@@ -54,6 +55,7 @@ do
 		--reconfigure) reconfigure;;
 		--version) cmake --version; exit;;
 		--prefix) prefix="$2"; shift;;
+		--debug) debug="yes"; shift;;
 		--with-boost) boostdir="$2"; shift;;
 		--with-cc) ccbin="$2"; shift;;
 		--with-cxx) cxxbin="$2"; shift;;
@@ -80,6 +82,12 @@ done
 echo $PARAMETERS > configure.log
 
 TARGET_DIR="/usr/local"
+
+if test -n "$debug"; then
+	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_BUILD_TYPE:STRING=debug"
+else
+	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_BUILD_TYPE:STRING=release"
+fi
 
 if test -n "$prefix"; then
 	CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_INSTALL_PREFIX:PATH=$prefix"

@@ -9,11 +9,12 @@ set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/src/include)
 set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/src CACHE STRING "SIOX INCLUDE DIRS")
 
-SET (CMAKE_C_FLAGS_DEBUG          "")
-SET (CMAKE_CXX_FLAGS_DEBUG        "")
-#SET (CMAKE_LINKER  "/usr/bin/ld")
+SET (CMAKE_C_FLAGS_DEBUG          "-ggdb -O1")
+SET (CMAKE_CXX_FLAGS_DEBUG        "-ggdb -O1")
 
-set(CMAKE_C_FLAGS "-ggdb -Wall -std=gnu99")
+set(CMAKE_C_FLAGS "-Wall -std=gnu99")
+set(CMAKE_C_FLAGS_RELEASE "-O3")
+
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-as-needed")
@@ -83,7 +84,9 @@ set_package_properties(LIKWID PROPERTIES URL "see Readme.md" TYPE OPTIONAL PURPO
 find_package(BDB)
 set_package_properties(BDB PROPERTIES URL "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html" TYPE OPTIONAL PURPOSE "Alternative backend for activities")
 
-feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following mandatory packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
+if(PACKAGES_NOT_FOUND) 
+	feature_summary(INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES DESCRIPTION "\n-- The following mandatory packages couldn't be found on your system:\n" WHAT PACKAGES_NOT_FOUND) 
+endif()
 
 add_subdirectory(src)
 
@@ -91,3 +94,5 @@ add_subdirectory(src)
 if (BUILD_WRAPPERS)
 	add_subdirectory(tools)
 endif (BUILD_WRAPPERS)
+
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
