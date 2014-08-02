@@ -49,12 +49,20 @@ class Style(skeletonBuilder.Writer):
 
         print("\nstatic void sioxFinal() {", file=output)
         # write all final-functions
+        for templ in function.usedTemplateList:
+            outputString = templ.output('finalOnce', functionVariables)
+            if outputString != '':
+                print('\t', outputString, end='\n', sep='', file=output)
         for function in functionList:
             functionVariables = self.functionVariables(function)
             for templ in function.usedTemplateList:
                 outputString = templ.output('final', functionVariables)
                 if outputString != '':
                     print('\t', outputString, end='\n', sep='', file=output)
+        for templ in function.usedTemplateList:
+            outputString = templ.output('finalOnceLast', functionVariables)
+            if outputString != '':
+                print('\t', outputString, end='\n', sep='', file=output)
 
         print("}", file=output)
 

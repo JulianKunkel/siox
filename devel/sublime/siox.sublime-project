@@ -21,7 +21,7 @@
     [
         {
          "name": "Ninja",
-			"cmd" : [ "ninja", "-v", "install"],
+			"cmd" : [ "ninja", "-v", "-j", "3", "install"],
 			"working_dir": "${project_path}/build/",
 				"file_regex": "^(../..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
 				"selector": "source.c, source.c++, source.cpp, source.hpp, source.h, source.txt",

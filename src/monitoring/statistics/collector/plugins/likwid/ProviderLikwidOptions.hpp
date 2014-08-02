@@ -6,5 +6,7 @@
 //@serializable
 class ProviderLikwidOptions: public monitoring::StatisticsProviderPluginOptions {
 	public:
-		std::string groups; // groups are separated by comma (,)
+		// groups are separated by comma (,)
+		std::string groups; 
 };
+

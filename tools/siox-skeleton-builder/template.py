@@ -8,6 +8,69 @@ template = {
 # InstanceName ?
 # ComponentVariable ? ?
 # SpliceCode ? ? ?
+
+# Special tag, annotates all functions, here we measure the overhead of SIOX itself (profile)
+# Here we capture the overhead of all fkt calls. 
+# NOTE THIS IS NOT REALLY THREAD SAFE!!!
+'ALL_FUNCTIONS':{
+   'variables': 'fname=%(FUNCTION_NAME)s',
+   'global': '''static siox_timestamp t_overhead_%(fname)s = 0;
+   				 static siox_timestamp t_fkt_%(fname)s = 0;
+   				 static int calls_%(fname)s = 0;''',
+	'before' : '''
+			siox_timestamp t_tmp;
+			siox_timestamp t_fkt_start;
+			siox_timestamp t_start = siox_gettime(); 
+			siox_timestamp t_overhead;''',
+	'beforeLast' : '''
+		t_tmp = siox_gettime();
+		t_overhead = t_tmp - t_start;
+		t_fkt_start = t_tmp;
+		''',
+	'after' : '''
+		t_tmp = siox_gettime();
+		t_start = t_tmp;
+		t_fkt_%(fname)s += t_tmp - t_fkt_start;
+		''',
+	'cleanupLast' : '''
+		calls_%(fname)s++; 
+		t_overhead += siox_gettime() - t_start;
+		t_overhead_%(fname)s += t_overhead;
+		''',
+	'finalOnce' : '''		
+		FILE * overheadFD = NULL;
+		siox_timestamp overheadTotal = 0;
+		if ( getenv("SIOX_WRITE_OVERHEAD_FILE") ){
+			char overheadFile[40];
+			sprintf(overheadFile, "%%s_%%lld.txt", getenv("SIOX_WRITE_OVERHEAD_FILE"), (long long int) getpid());
+			overheadFD = fopen(overheadFile, "a");
+			fprintf(overheadFD, "function\\t\\tcalls\\t\\ttime\\t\\t\\torig\\t\\toverhead\\trel. overhead\\n");
+		}		
+		''',
+	'finalOnceLast' : '''
+		if (overheadFD){ 
+			fprintf(overheadFD, "total overhead: %%fs\\n", siox_time_in_s(overheadTotal));
+			fclose(overheadFD); 
+		}
+		''',
+	'final' : '''
+		if (overheadFD && calls_%(fname)s > 0){
+			fprintf(overheadFD, "%(fname)s()\\t" 
+				"%%d\\t"
+				"%%fms\\t"
+				"%%fms/call\\t\\t"
+				"%%fms/call\\t\\t"
+				"%%.2f%%%%/call\\n", 
+				calls_%(fname)s, 
+				siox_time_in_s(t_fkt_%(fname)s + t_overhead_%(fname)s) * 1000, 				
+				siox_time_in_s(t_fkt_%(fname)s) / calls_%(fname)s * 1000, 
+				siox_time_in_s(t_overhead_%(fname)s) / calls_%(fname)s * 1000, 
+				100.0 * t_overhead_%(fname)s / t_fkt_%(fname)s 
+				);
+				overheadTotal += t_overhead_%(fname)s;
+		}
+	'''
+},
 'component': {
 	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" ComponentVariable=global SpliceCode=',
 	'global': '''

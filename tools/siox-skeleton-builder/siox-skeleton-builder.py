@@ -144,7 +144,10 @@ from a other header file.''')
                 entries["cleanupLast"] = ""                
             if not "final" in entries:
                 entries["final"] = ""
-
+            if not "finalOnce" in entries:
+                entries["finalOnce"] = ""
+            if not "finalOnceLast" in entries:
+                entries["finalOnceLast"] = ""                
         return args
 
 #
@@ -646,6 +649,10 @@ class CommandParser():
         inputString = input.read()
         functionString = ""
         templateList = []
+
+        if "ALL_FUNCTIONS" in availableCommands:
+            templateList = [ Template( template["ALL_FUNCTIONS"], "ALL_FUNCTIONS", "" )]
+
         functionList = []
         # Strip commentsq
         inputString = re.sub('/\*.*?\*/', '', inputString, flags=re.M | re.S)
@@ -683,6 +690,9 @@ class CommandParser():
                 currentFunction.setTemplateList(templateList[:])
                 functionList.append(currentFunction)
                 templateList = []
+                if "ALL_FUNCTIONS" in availableCommands:
+                    templateList = [ Template( template["ALL_FUNCTIONS"], "ALL_FUNCTIONS", "" )]
+
                 functionString = ""
             if i < len(inputLineList):
                 i += 1
@@ -831,7 +841,7 @@ class Template():
        ret = output  % self.parameterList
        for key in genericVariablesForTemplates:
             ret = ret.replace( "%(" +  key + ")s",  genericVariablesForTemplates[key] );
-       ret = ret.strip()
+       #ret = ret.strip()
        #ret = self.cleanOutputRegex.sub("\n", ret)#.replace(";", ";\n")
        return ret
 

@@ -51,7 +51,7 @@ int main( int argc, char * argv[] ){
 	int ops = 0;
 
 	if (rank == 0){
-		while( time_in_s (end - start) < 1){
+		while( time_in_s (end - start) < 10){
 			for(int i=0; i < 100; i++){
 				MPI_Send( &num, 1, MPI_INT, 1, 4713, MPI_COMM_WORLD);				
 			}
@@ -73,8 +73,8 @@ int main( int argc, char * argv[] ){
 
 	if (rank == 0){
 		end = gettime();
-		printf("%fs operations: %d perOperation: %.10f s/op\n", time_in_s (end - start), ops, 
-		time_in_s (end - start) / ops );
+		printf("%fs operations: %d perOperation: %.2f ns/op\n", time_in_s (end - start), ops, 
+		time_in_s (end - start) / ops *1000*1000*1000 );
 	}
 
 

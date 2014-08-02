@@ -14,7 +14,7 @@ SET (CMAKE_C_FLAGS_DEBUG          "-ggdb -O1")
 SET (CMAKE_CXX_FLAGS_DEBUG        "-ggdb -O1")
 
 set(CMAKE_C_FLAGS "-Wall -std=gnu99")
-set(CMAKE_C_FLAGS_RELEASE "-O3")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -g")
 
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed")

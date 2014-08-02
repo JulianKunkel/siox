@@ -101,11 +101,13 @@ int MPI_Init( int * argc, char ** *argv );
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); MPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 int MPI_Init_thread( int *argc, char ** *argv, int required, int *provided );
 
+
+//callLibraryFinalize
+
 //@activity
 //@supressFunctionCall
 //@splice_before siox_register_termination_complete_signal( (void (*)(void)) PMPI_Finalize);
 //@splice_after ret = MPI_SUCCESS;
-//@callLibraryFinalize
 int MPI_Finalize( void );
 
 

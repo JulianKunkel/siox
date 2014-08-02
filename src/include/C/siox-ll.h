@@ -81,6 +81,8 @@
 #define siox_LL_H
 
 #include <C/siox-types.h>
+#include <util/time.h>
+
 
 /// @name Typedefs to Hide Implementation from C Interface
 /// <i>*Jedi Hand Wave*</i>

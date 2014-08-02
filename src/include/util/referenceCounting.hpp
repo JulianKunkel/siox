@@ -68,15 +68,14 @@
  *
  * A base class for reference counted objects. Usually used in conjunction with Retain<> smart pointers.
  */
-
 class ReferencedObject {
 	public:
 		ReferencedObject() : retentionCount(1) {}
 		ReferencedObject(const ReferencedObject& obj) : retentionCount(1) {}
 		ReferencedObject& operator=(const ReferencedObject& source) { return *this; };	//no need to call it from overriding version - it's not functional
 
-		ReferencedObject* retain() { RefCountType oldCount = retentionCount++; assert(oldCount); return this; }
-		const ReferencedObject* retain() const { RefCountType oldCount = retentionCount++; assert(oldCount); return this; }
+		ReferencedObject* retain() { assert(retentionCount); retentionCount++; return this; }
+		const ReferencedObject* retain() const { assert(retentionCount); retentionCount++; return this; }
 		void release() const {
 			RefCountType oldCount = retentionCount.fetch_sub(1);
 			assert(oldCount);
@@ -95,7 +94,6 @@ class ReferencedObject {
  * a pointer class that releases its object when the pointer object is destructed
  * reinventing auto_ptr, but this time for retention counting
  */
-
 template<class T> class Retain;
 template<class T>
 	class Release {
@@ -167,7 +165,6 @@ template<class T>
  * a pointer class that takes ownership for its object while it lives, retaining upon construction & assignment and releasing upon assignment & destruction
  * reinventing the wheel once more, but this time it is a pretty wheel!
  */
-
 template<class T>
 	class Retain : public Release<T> {
 		public:
