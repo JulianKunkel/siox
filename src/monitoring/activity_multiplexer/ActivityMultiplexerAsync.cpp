@@ -292,11 +292,16 @@ void ActivityMultiplexerAsync::Log( const shared_ptr<Activity> & activity ) {
 	processed_activities++;
 	assert( activity != nullptr );
 
+	// Lock causes about 20% overhead in measurement, 8.5 us with lock vs. 6.9 us without
 	syncDispatchersLock.lock_shared();
 	IGNORE_EXCEPTIONS( syncDispatchers.at( activity->ucaid() ).dispatch( activity, 0 ); );
 	IGNORE_EXCEPTIONS( syncDispatchers.at( 0 ).dispatch( activity, 0 ); );
 	syncDispatchersLock.unlock_shared();
-	queue.Push(activity);
+
+	// optimization: avoid enquing activities, if the asyncDispatchers are empty
+	if ( asyncDispatchers.size() > 0 ){
+		queue.Push(activity);
+	}
 }
 
 /**
