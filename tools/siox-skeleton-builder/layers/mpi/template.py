@@ -1,7 +1,12 @@
 template = {
-	'activity_attribute_MPI': {
-		'variables': 'Attribute Value Activity=sioxActivity',
-		'before': 'siox_activity_set_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );',
-	}
+	'MPI_error': {
+	'variables': 'Error=ret Activity=sioxActivity',
+	'after': '''if ( ret!=MPI_SUCCESS ){
+                      siox_activity_report_error( %(Activity)s, %(Error)s );
+                      siox_activity_stop(%(Activity)s);
+                      siox_activity_end(%(Activity)s);
+                      return ret;
+		    }''',
+	},
 }
 
