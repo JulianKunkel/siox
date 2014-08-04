@@ -653,6 +653,8 @@ int MPI_File_sync( MPI_File fh );
 /* OTHER MPI FUNCTIONS */
 ////////////////////////////////////////////////////////////////////////////////////
 
+
+
 //@activity ActivityVariable=sioxActivity
 //@splice_after if (ret == MPI_SUCCESS ) { recordProcessesGroup(sioxActivity, group); }
 //@splice_after ''uint64_t commHandlerValue; commHandlerValue = getCommHandle(*newcomm);''
@@ -679,6 +681,28 @@ int MPI_Comm_dup( MPI_Comm comm, MPI_Comm *newcomm );
 int MPI_Comm_split( MPI_Comm comm, int color, int key, MPI_Comm *newcomm );
 
 
+
+//@register_attribute t_id "MPI" "description/type/id" SIOX_STORAGE_64_BIT_UINTEGER
+
+//@register_attribute t_size "MPI" "quantity/type/size" SIOX_STORAGE_32_BIT_INTEGER
+//@register_attribute t_extent "MPI" "quantity/type/extent" SIOX_STORAGE_64_BIT_UINTEGER
+
+#define RECORD_TYPE_INFORMATION(t) { int tmp_size; MPI_Type_size(t, & tmp_size); siox_activity_set_attribute( sioxActivity, t_size, & tmp_size ); MPI_Aint tmp_extent; uint64_t aint;  MPI_Type_extent(t, & tmp_extent); aint = tmp_extent;siox_activity_set_attribute( sioxActivity, t_extent, & aint );  }
+
+//@register_attribute t_count "MPI" "quantity/type/struct/count" SIOX_STORAGE_32_BIT_INTEGER
+//@register_attribute t_blocklen "MPI" "quantity/type/struct/blocklen" SIOX_STORAGE_32_BIT_INTEGER
+//@register_attribute t_displ "MPI" "quantity/type/struct/displacement" SIOX_STORAGE_64_BIT_UINTEGER
+
+//@activity ActivityVariable=sioxActivity
+//@activity_attribute t_count count
+//@splice_after '' uint64_t typeID = getConstructedDatatypeHandle(*newtype);'' 
+//@activity_attribute_late t_id typeID
+//@splice_before '' for (int t=0; t < count ; t++) { siox_activity_set_attribute( sioxActivity, t_blocklen , & array_of_blocklengths[t] ); uint64_t tmp;  tmp = array_of_displacements[t]; siox_activity_set_attribute( sioxActivity, t_displ, & tmp );  tmp = getDatatypeHandle(array_of_types[t]); siox_activity_set_attribute( sioxActivity, t_id , & tmp); } ''
+//@splice_after RECORD_TYPE_INFORMATION(*newtype)
+int MPI_Type_create_struct( int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[], MPI_Datatype array_of_types[], MPI_Datatype *newtype );
+
+
+
 #define MPI_COMMUNICATION
 
 #ifdef MPI_COMMUNICATION
@@ -691,9 +715,11 @@ int MPI_Comm_split( MPI_Comm comm, int color, int key, MPI_Comm *newcomm );
 //@register_attribute cDest "MPI" "description/p2p/dest" SIOX_STORAGE_32_BIT_INTEGER
 //@register_attribute cSource "MPI" "description/p2p/source" SIOX_STORAGE_32_BIT_INTEGER
 //@register_attribute cTag "MPI" "description/p2p/tag" SIOX_STORAGE_32_BIT_INTEGER
-//@register_attribute cCount "MPI" "description/p2p/count" SIOX_STORAGE_32_BIT_INTEGER
+//@register_attribute cCount "MPI" "quantity/p2p/count" SIOX_STORAGE_32_BIT_INTEGER
+//@register_attribute CRoot "MPI" "description/collective/root" SIOX_STORAGE_32_BIT_INTEGER
+//@register_attribute CCount "MPI" "quantity/collective/count" SIOX_STORAGE_32_BIT_INTEGER
 
-
+//@register_attribute CDataSize "MPI" "quantity/collective/dataSize" SIOX_STORAGE_64_BIT_UINTEGER
 
 //@activity ComponentVariable=comm
 //@error ''ret!=MPI_SUCCESS'' ret
@@ -729,5 +755,19 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, M
 //@activity_attribute_late commHandler commHandlerValue
 int MPI_Barrier( MPI_Comm comm );
 
+
+//@activity ComponentVariable=comm
+//@error ''ret!=MPI_SUCCESS'' ret
+//@splice_after ''uint64_t commHandlerValue; commHandlerValue = getCommHandle(comm);''
+//@activity_attribute_late commHandler commHandlerValue
+//@activity_attribute CRoot root
+//@activity_attribute CCount count
+
+//@splice_before '' uint64_t typeID = getDatatypeHandle(datatype);'' 
+//@activity_attribute t_id typeID
+
+//@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
+//@activity_attribute CDataSize size
+int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm );
 
 #endif

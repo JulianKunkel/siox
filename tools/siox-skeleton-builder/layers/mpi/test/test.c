@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "mpi.h"
+#include <stdint.h>
+#include <mpi.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -85,7 +86,14 @@ int main( int argc, char * argv[] )
 	oldtypes[2] = darray;
 	MPI_Datatype structType;
 	MPI_Type_create_struct( 3, blocklens, displs, oldtypes, & structType );
+	int asize;
+	MPI_Type_size(structType, & asize);
+	printf("SIZE: %lu\n", (uint64_t) asize);
+	MPI_Type_extent(structType, & asize);
+	printf("EXTENT: %lu\n", (uint64_t) asize);	
 	MPI_Type_commit(& structType);
+	MPI_Type_size(structType, & asize);
+	printf("SIZE: %lu\n", (uint64_t) asize);
 
 	MPI_File_set_view( fh, 30, MPI_INT, structType, "native", MPI_INFO_NULL );
 	int data = 40;

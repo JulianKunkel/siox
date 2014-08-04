@@ -17,6 +17,23 @@ static inline int translateMPIThreadLevelToSIOX( int flags )
         return  ( ( flags & MPI_THREAD_SINGLE ) > 0 ? SIOX_MPI_THREAD_SINGLE : 0 ) |  ( ( flags & MPI_THREAD_FUNNELED ) > 0 ? SIOX_MPI_THREAD_FUNNELED : 0 ) |  ( ( flags & MPI_THREAD_SERIALIZED ) > 0 ? SIOX_MPI_THREAD_SERIALIZED : 0 ) |  ( ( flags & MPI_THREAD_MULTIPLE ) > 0 ? SIOX_MPI_THREAD_MULTIPLE : 0 );
 }
 
+static inline enum MPIDatatype translateElementaryMPIDatatype( MPI_Datatype type ){
+ 	if (type == MPI_CHAR ) return SIOX_MPI_TYPE_CHAR;
+ 	if (type == MPI_SHORT ) return SIOX_MPI_TYPE_SHORT;
+ 	if (type == MPI_INT ) return SIOX_MPI_TYPE_INT;
+ 	if (type == MPI_LONG ) return SIOX_MPI_TYPE_LONG;
+ 	if (type == MPI_UNSIGNED_CHAR ) return SIOX_MPI_TYPE_UNSIGNED_CHAR;
+ 	if (type == MPI_UNSIGNED_SHORT ) return SIOX_MPI_TYPE_UNSIGNED_SHORT;
+ 	if (type == MPI_UNSIGNED_LONG ) return SIOX_MPI_TYPE_UNSIGNED_LONG;
+ 	if (type == MPI_UNSIGNED ) return SIOX_MPI_TYPE_UNSIGNED;
+ 	if (type == MPI_FLOAT ) return SIOX_MPI_TYPE_FLOAT;
+ 	if (type == MPI_DOUBLE ) return SIOX_MPI_TYPE_DOUBLE;
+ 	if (type == MPI_LONG_DOUBLE ) return SIOX_MPI_TYPE_LONG_DOUBLE;
+ 	if (type == MPI_BYTE ) return SIOX_MPI_TYPE_BYTE;
+ 	if (type == MPI_PACKED ) return SIOX_MPI_TYPE_PACKED;
+ 	return SIOX_MPI_TYPE_UNKNOWN;
+}
+
 // this routine is taken from PIOSIM, mpi-names.c, author Paul Mueller
 static const char * getCombinerName(int combiner)
 {
@@ -454,9 +471,28 @@ static inline uint64_t getCommHandle(MPI_Comm comm){
 	}
 
 	// TODO make this func work nicely with configure
-	if (sizeof(MPI_Comm) == sizeof(int)){
+	if (sizeof(comm) == sizeof(int)){
 		return (unsigned) comm;
 	}else{
 		return (uint64_t) comm;
+	}
+}
+
+static inline uint64_t getDatatypeHandle(MPI_Datatype type){
+	uint64_t val = translateElementaryMPIDatatype(type);
+	if (val == SIOX_MPI_TYPE_UNKNOWN){
+		if (sizeof(type) == sizeof(int)){
+			return (unsigned) type;
+		}else{
+			return (uint64_t) type;
+		}
+	}
+}
+
+static inline uint64_t getConstructedDatatypeHandle(MPI_Datatype type){
+	if (sizeof(type) == sizeof(int)){
+		return (unsigned) type;
+	}else{
+		return (uint64_t) type;
 	}
 }
