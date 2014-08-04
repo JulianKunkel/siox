@@ -23,6 +23,8 @@ templateParameters = {"globalOnce": "", "includes" : [] }
 
 precompiler = []
 
+template = {}
+
 
 def getCurrentPath():
     return os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -39,6 +41,65 @@ def loadModuleDynamic(file, path=getCurrentPath()):
         sys.exit(1)
 
 
+
+def parseTemplate(file):
+    global template
+    # import the templates (symbol template)
+    templateOld = template
+
+    namespace = {}
+    with open(file, "r") as fh:
+        templateCode = fh.read()
+        exec(templateCode, namespace)
+
+    globals().update(namespace)
+    # update the datastructures for the templates
+
+    for t in template.keys():
+        entries = template[t]
+        if not "global" in entries:
+            entries["global"] = ""
+        entries["variablesDefaults"] = {}
+        if not "variables" in entries:
+            entries["variables"] = []
+        else:
+            var = entries["variables"].split()
+            processedVars = []
+            # extract default values:
+            for v in var:
+                if "=" in v:
+                    # we have a default
+                    (name, default) = v.split("=")
+                    processedVars.append(name)
+                    entries["variablesDefaults"][name] = default.strip()
+                else:
+                    processedVars.append(v)
+            entries["variables"] = processedVars
+
+        if not "init" in entries:
+            entries["init"] = ""
+        if not "initLast" in entries:
+            entries["initLast"] = ""
+        if not "before" in entries:
+            entries["before"] = ""
+        if not "beforeLast" in entries:
+            entries["beforeLast"] = ""
+        if not "after" in entries:
+            entries["after"] = ""
+        if not "afterLast" in entries:
+            entries["afterLast"] = ""                 
+        if not "cleanup" in entries:
+            entries["cleanup"] = ""
+        if not "cleanupLast" in entries:
+            entries["cleanupLast"] = ""                
+        if not "final" in entries:
+            entries["final"] = ""
+        if not "finalOnce" in entries:
+            entries["finalOnce"] = ""
+        if not "finalOnceLast" in entries:
+            entries["finalOnceLast"] = ""
+
+    template.update(templateOld)
 
 #
 # @brief Generate and handle the command line parsing.
@@ -86,68 +147,24 @@ from a other header file.''')
                                action='store', dest='wrapFile', default="options.gcc",
                                help='Redirect the GCC wrap options from stdout into a file')
 
-        argParser.add_argument('--template', '-t',
-                               action='store', default='./template.py', dest='template',
+        argParser.add_argument('--template', '-t', action='append', 
+                               dest='template',
                                help='Provide an alternative template.')
+
+        argParser.add_argument('--relaxed', action='store_true', 
+                               dest='relaxedMode',
+                               help='Do not check the existence of template commands -- thus ignore commands from unknown commands.')
+
         args = argParser.parse_args()
 
         debug = args.debug
 
+        for file in args.template:
+            parseTemplate(file)
+
         if args.outputFile:
             args.outputFile = args.outputFile[0]
-
-        # import the templates (symbol template)
-        namespace = {}
-        with open(args.template, "r") as fh:
-            templateCode = fh.read()
-            exec(templateCode, namespace)
-
-        globals().update(namespace)
-        # update the datastructures for the templates
-
-        for t in template.keys():
-            entries = template[t]
-            if not "global" in entries:
-                entries["global"] = ""
-            entries["variablesDefaults"] = {}
-            if not "variables" in entries:
-                entries["variables"] = []
-            else:
-                var = entries["variables"].split()
-                processedVars = []
-                # extract default values:
-                for v in var:
-                    if "=" in v:
-                        # we have a default
-                        (name, default) = v.split("=")
-                        processedVars.append(name)
-                        entries["variablesDefaults"][name] = default.strip()
-                    else:
-                        processedVars.append(v)
-                entries["variables"] = processedVars
-
-            if not "init" in entries:
-                entries["init"] = ""
-            if not "initLast" in entries:
-                entries["initLast"] = ""
-            if not "before" in entries:
-                entries["before"] = ""
-            if not "beforeLast" in entries:
-                entries["beforeLast"] = ""
-            if not "after" in entries:
-                entries["after"] = ""
-            if not "afterLast" in entries:
-                entries["afterLast"] = ""                 
-            if not "cleanup" in entries:
-                entries["cleanup"] = ""
-            if not "cleanupLast" in entries:
-                entries["cleanupLast"] = ""                
-            if not "final" in entries:
-                entries["final"] = ""
-            if not "finalOnce" in entries:
-                entries["finalOnce"] = ""
-            if not "finalOnceLast" in entries:
-                entries["finalOnceLast"] = ""                
+                
         return args
 
 #
@@ -623,6 +640,8 @@ class CommandParser():
         # This regular expression matches the instructions which begin with //
         self.commandRegex = re.compile('^\s*//\s*@\s*(\w+)\s*(.*)')
         self.precompilerRegex = re.compile('^\s*#\s*(.*)\s*')
+
+        self.strictMode = not options.relaxedMode
         
         self.options = options
 
@@ -732,16 +751,11 @@ at the end of """)
                 commandArgs = match.group(2) + " "
                 newTemplate = Template( template[commandName], commandName, commandArgs )
                 templateList.append(newTemplate)
-
-            # If the command name is not in the template the parsed line
-            # belongs to the command parsed in a earlier line and the line only
-            # contains command arguments.
             else:
-                if commandArgs[0] == "=":
-                    templateList[-1].setParameters(commandName + commandArgs)
-                else:
-                    templateList[-1].setParameters(
-                        commandName + " " + commandArgs)
+                if self.strictMode:
+                    print("Error command name " + commandName + " is not defined, line: " + inputLine)
+                    exit(1)
+
 
             return False
 

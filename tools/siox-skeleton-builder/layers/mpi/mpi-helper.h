@@ -487,6 +487,7 @@ static inline uint64_t getDatatypeHandle(MPI_Datatype type){
 			return (uint64_t) type;
 		}
 	}
+	return val;
 }
 
 static inline uint64_t getConstructedDatatypeHandle(MPI_Datatype type){
