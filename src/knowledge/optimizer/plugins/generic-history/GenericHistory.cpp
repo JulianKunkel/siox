@@ -204,7 +204,6 @@ void GenericHistoryPlugin::Notify( const shared_ptr<Activity> & activity, int lo
 	lastActionType = type;
 }
 
-
 void GenericHistoryPlugin::initPlugin() {
 	TRACK_FUNCTION_CALLS
 
@@ -219,80 +218,102 @@ void GenericHistoryPlugin::initPlugin() {
 
 		case 1:
 			// Retrieve uiid
-			RETURN_ON_EXCEPTION( uiid = sysinfo->lookup_interfaceID(o.interface, o.implementation); );
+			try{
+				uiid = sysinfo->lookup_interfaceID(o.interface, o.implementation); 
+			}catch( const std::exception &e) { 
+				cout << "Could not lookup interface " + o.interface + " " + o.implementation + ": " + e.what() << endl; 
+				return;
+			}
 			initLevel = 2;
 
 		case 2:
 			// Fill token maps with every known activity's UCAID, type and perfomance-relevant attribute's OAID
-			RETURN_ON_EXCEPTION(
-				for( auto itr = o.openTokens.begin(); itr != o.openTokens.end(); itr++ )
+			
+			for( auto itr = o.openTokens.begin(); itr != o.openTokens.end(); itr++ ){
+				try{
 					types[sysinfo->lookup_activityID(uiid,*itr)] = OPEN;
-			);
+			   }catch( const std::exception &e) { 
+					cout << "Could not lookup token " + *itr + ": " + e.what() << endl; 
+				}
+			}
 			initLevel = 3;
 
 		case 3:
 			// Special care has to be taken that both arrays used are of identical size
 			assert(o.accessTokens.size() == o.accessRelevantOntologyAttributes.size());
-			RETURN_ON_EXCEPTION(
+			{
 				auto itr = o.accessTokens.begin();
 				auto atr = o.accessRelevantOntologyAttributes.begin();
 				while (itr != o.accessTokens.end()) {
+					try{
 					UniqueComponentActivityID ucaid = sysinfo->lookup_activityID(uiid,*itr);
 					types[ucaid] = ACCESS;
 					performanceAttIDs[ucaid] = facade->lookup_attribute_by_name(atr->first, atr->second).aID;
+					}catch( const std::exception &e) { 
+						cout << "Could not lookup attribute " + *itr + ": " + e.what() << endl; 
+					}
 					itr++;
 					atr++;
 				}
-			);
+			}
 			initLevel = 4;
 
 		case 4:
-			RETURN_ON_EXCEPTION(
-				for( auto itr = o.closeTokens.begin(); itr != o.closeTokens.end(); itr++ )
+			for( auto itr = o.closeTokens.begin(); itr != o.closeTokens.end(); itr++ ){
+				try{
 					types[sysinfo->lookup_activityID(uiid,*itr)] = CLOSE;
-			);
+				 }catch( const std::exception &e) { 
+					cout << "Could not lookup token " + *itr + ": " + e.what() << endl; 
+				}
+			}
 			initLevel = 5;
 
 		case 5:
-			RETURN_ON_EXCEPTION(
-				for( auto itr = o.hintTokens.begin(); itr != o.hintTokens.end(); itr++ )
+			
+			for( auto itr = o.hintTokens.begin(); itr != o.hintTokens.end(); itr++ ){
+				try{
 					types[sysinfo->lookup_activityID(uiid,*itr)] = HINT;
-			);
+				 }catch( const std::exception &e) { 
+					cout << "Could not lookup token " + *itr + ": " + e.what() << endl; 
+				}					
+			}
 			initLevel = 6;
 
 		case 6:
 			// Find oaids and value types for attributes used as hints and remember them
-			RETURN_ON_EXCEPTION(
-				for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ ) {
-					string domain = itr->first;
-					string attribute = itr->second;
+			for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ ) {
+				string domain = itr->first;
+				string attribute = itr->second;
 
+				try{
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
 					hintTypes[ontatt.aID]=ontatt.storage_type;
-				}
-			);
+				 }catch( const std::exception &e) { 
+					cout << "Could not lookup attribute " + domain + "/" + attribute + ":" + e.what() << endl; 
+				}					
+			}
 			initLevel = 7;
 
-		case 7:
+		case 7:{
 			// Walk through the attributes again and register this as an optimizer for them.
 			// This is done in a separate step, because the previous loop may exit with an exception,
-			// and the optimizer does not tollerate us registering ourselves twice for the same attribute.
-			// This time we should not get any exceptions since we were already able to lookup the attributes once.
-			try{
-				Optimizer * optimizer = GET_INSTANCE(Optimizer, o.optimizer);
-				assert(optimizer);
-				for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ ) {
-					string domain = itr->first;
-					string attribute = itr->second;
+			// and the optimizer does not tolerate us registering ourselves twice for the same attribute.
+			// This time we should not get any exceptions since we were already able to lookup the attributes once.			
+			Optimizer * optimizer = GET_INSTANCE(Optimizer, o.optimizer);
+			assert(optimizer);
+			for( auto itr = o.hintAttributes.begin(); itr != o.hintAttributes.end(); itr++ ) {
+				string domain = itr->first;
+				string attribute = itr->second;
 
+				try{
 					OntologyAttribute ontatt = facade->lookup_attribute_by_name(domain, attribute);
 					optimizer->registerPlugin( ontatt.aID, this );
+				}catch( const std::exception &e) { 
 				}
-			} catch(...) {
-				assert(0 && "Fatal error, cannot look up an attribute that could be looked up previously. Please report this bug."), abort();
 			}
-			initLevel = 8;
 
+			initLevel = 8;
+		}
 		case 8:
 			// Find and remember various other OAIDs
 			RETURN_ON_EXCEPTION( uidAttID = facade->lookup_attribute_by_name("program","description/user-id").aID; );
