@@ -88,20 +88,17 @@ End of global part
 #endif
 
 //@callLibraryInitialize
-//@activity
-//@MPI_error
+//@MPI_activity
 //@component_attribute commSize mpi_sz  int mpi_sz; MPI_Comm_size(MPI_COMM_WORLD, & mpi_sz);
 //@component_attribute commRank mpi_rank  int mpi_rank; MPI_Comm_rank(MPI_COMM_WORLD, & mpi_rank);
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); MPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 int MPI_Init( int * argc, char ** *argv );
 
 //@callLibraryInitialize
-//@activity
-//@MPI_error
+//@MPI_activity
 //@component_attribute commSize mpi_sz  int mpi_sz; MPI_Comm_size(MPI_COMM_WORLD, & mpi_sz);
 //@component_attribute commRank mpi_rank  int mpi_rank; MPI_Comm_rank(MPI_COMM_WORLD, & mpi_rank);
-//@splice_before int32_t translatedFlags = translateMPIThreadLevelToSIOX(required);
-//@component_attribute threadLevelRequired translatedFlags
+//@component_attribute threadLevelRequired translatedFlags int32_t translatedFlags = translateMPIThreadLevelToSIOX(required);
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); MPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 int MPI_Init_thread( int *argc, char ** *argv, int required, int *provided );
 
@@ -160,17 +157,16 @@ int MPI_Abort( MPI_Comm comm,  int errorcode );
     NON-SETTABLE HINTS:
     - filename: Access this hint to get the name of the file.
 */
-//@activity
+
+//@MPI_activity
 //@splice_before uint32_t translatedFlags = translateMPIOpenFlagsToSIOX(amode);
 //@activity_attribute fileOpenFlags translatedFlags
 //@activity_attribute_str fileName filename
+//@MPI_comm_handle comm
 //@splice_after setFileInfo(*fh, info);
 //@horizontal_map_put_size *fh
 //@splice_after recordFileInfo(sioxActivity, *fh);
-//@error ''ret != MPI_SUCCESS '' ret
 //@activity_attribute_late fileHandle *fh
-//@splice_after ''uint64_t commHandlerValue; commHandlerValue = getCommHandle(comm);''
-//@activity_attribute_late commHandler commHandlerValue
 int MPI_File_open( MPI_Comm comm, OPTIONAL_CONST char * filename, int amode, MPI_Info info, MPI_File * fh );
 
 //It is required to save the value of *fh prior to calling MPI_File_close, because some MPI implementations will set it to zero, so that we cannot use *fh afterwards to lookup the parent in the hash table or to link the close activity to its parent.
@@ -181,36 +177,30 @@ int MPI_File_open( MPI_Comm comm, OPTIONAL_CONST char * filename, int amode, MPI
 //@MPI_error
 int MPI_File_close( MPI_File * fh );
 
-//@activity
+//@MPI_activity
 //@activity_attribute_str fileName filename
-//@MPI_error
 int MPI_File_delete( OPTIONAL_CONST char * filename, MPI_Info info );
 
-//@activity
+//@MPI_activity
 //@activity_link_size fh
 //@activity_attribute hintFileSize size
-//@MPI_error
 int MPI_File_set_size( MPI_File fh, MPI_Offset size );
 
-//@activity
+//@MPI_activity
 //@activity_link_size fh
 //@activity_attribute hintFileSize size
-//@MPI_error
 int MPI_File_preallocate( MPI_File fh, MPI_Offset size );
 
-//@activity
+//@MPI_activity
 //@activity_link_size fh
-//@MPI_error
 int MPI_File_get_size( MPI_File fh, MPI_Offset * size );
 
-//@activity
+//@MPI_activity
 //@activity_link_size fh
-//@MPI_error
 int MPI_File_get_group( MPI_File fh, MPI_Group * group );
 
-//@activity
+//@MPI_activity
 //@activity_link_size fh
-//@MPI_error
 int MPI_File_get_amode( MPI_File fh, int * amode );
 
 //TODO Shall we define an array for info?
@@ -256,10 +246,9 @@ int MPI_File_get_amode( MPI_File fh, int * amode );
     - filename: Access this hint to get the name of the file.
 */
 
-//@activity
+//@MPI_activity
 //@activity_link_size fh
 //@splice_after recordFileInfo(sioxActivity, fh);
-//@MPI_error
 int MPI_File_set_info( MPI_File fh, MPI_Info info );
 
 //TODO Shall we define an array for info?

@@ -150,9 +150,11 @@ template = {
 	'variables': 'Attribute Value SpliceCode=',
 	'global': '''''',
 	'after': '''
+				{
 				%(SpliceCode)s 
 				assert( %(Attribute)s != NULL );
 				siox_component_set_attribute( global_component,  %(Attribute)s, %(Value)s);
+				}
 			''',
     'before': '''''',
 	'cleanup': '',
@@ -162,9 +164,11 @@ template = {
 	'variables': 'Attribute Value SpliceCode=',
 	'global': '''''',
 	'after': '''
+				{
 				%(SpliceCode)s 
 				assert( %(Attribute)s != NULL );
 				siox_component_set_attribute( global_component,  %(Attribute)s, &%(Value)s);
+				}
 			''',
     'before': '''''',
 	'cleanup': '',
@@ -543,7 +547,6 @@ template = {
     	'before': '''''',
 	'after': '''if ( %(Condition)s ){
                       siox_activity_report_error( %(Activity)s, %(Error)s );
-                      siox_activity_stop(%(Activity)s);
                       siox_activity_end(%(Activity)s);
                       return ret;
 		    }''',
@@ -558,7 +561,6 @@ template = {
         'after': ''' int errsv = errno;
 		    if ( %(Condition)s ){
                       siox_activity_report_error( %(Activity)s, errsv );
-                      siox_activity_stop(%(Activity)s);
                       siox_activity_end(%(Activity)s);
 							 errno = errsv;
 							 return ret;

@@ -89,8 +89,9 @@ int main( int argc, char * argv[] )
 	int asize;
 	MPI_Type_size(structType, & asize);
 	printf("SIZE: %lu\n", (uint64_t) asize);
-	MPI_Type_extent(structType, & asize);
-	printf("EXTENT: %lu\n", (uint64_t) asize);	
+	MPI_Aint aint;
+	MPI_Type_extent(structType, & aint);
+	printf("EXTENT: %lu\n", (uint64_t) aint);	
 	MPI_Type_commit(& structType);
 	MPI_Type_size(structType, & asize);
 	printf("SIZE: %lu\n", (uint64_t) asize);

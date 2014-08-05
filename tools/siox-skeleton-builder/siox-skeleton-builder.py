@@ -628,6 +628,30 @@ class FunctionParser():
         return functionList
 
 
+class TemplateList():
+    def __init__(self):
+        self.list = []
+
+        if "ALL_FUNCTIONS" in template.keys():
+            self.list = [ Template( template["ALL_FUNCTIONS"], "ALL_FUNCTIONS", "" )] 
+
+    def append(self, commandParser, template):
+        self.list.append(template)
+
+        if "templates" in template.templateDict:
+            tlist = template.templateDict["templates"]
+            genericVariablesForTemplates = {}
+            for t in tlist:
+                replaced = template.cleanOutput( t, genericVariablesForTemplates )
+                # print(t + " " + replaced)
+                commandParser.matchCommand( "//" + replaced, self )
+
+    def len(self):
+        if "ALL_FUNCTIONS" in template.keys():
+            return len(self.list) - 1
+        return len(self.list)
+
+
 #
 # @brief The command parser which reads the instrumentation instructions.
 #
@@ -667,10 +691,7 @@ class CommandParser():
         input = open(self.inputFile, 'r')
         inputString = input.read()
         functionString = ""
-        templateList = []
-
-        if "ALL_FUNCTIONS" in availableCommands:
-            templateList = [ Template( template["ALL_FUNCTIONS"], "ALL_FUNCTIONS", "" )]
+        templateList = TemplateList()
 
         functionList = []
         # Strip commentsq
@@ -693,8 +714,7 @@ class CommandParser():
             # Because a instrumentation command can be longer than one line we
             # we have to insure to read the whole command.
             while not commandFinished:
-                commandFinished = self.matchCommand(
-                    inputLineList[i], templateList)
+                commandFinished = self.matchCommand(inputLineList[i], templateList)
                 if not commandFinished:
                     functionString = ""
                     if i < len(inputLineList):
@@ -706,11 +726,9 @@ class CommandParser():
             if len(currentFunctionList) > 0:
 
                 currentFunction = currentFunctionList[0]
-                currentFunction.setTemplateList(templateList[:])
+                currentFunction.setTemplateList(templateList.list[:])
                 functionList.append(currentFunction)
-                templateList = []
-                if "ALL_FUNCTIONS" in availableCommands:
-                    templateList = [ Template( template["ALL_FUNCTIONS"], "ALL_FUNCTIONS", "" )]
+                templateList = TemplateList()
 
                 functionString = ""
             if i < len(inputLineList):
@@ -718,9 +736,10 @@ class CommandParser():
 
         if self.options.debug:
             print("Finished scanning input header file.")
-            if len(templateList) > 0:
-                print("""WARNING: Found unassociated instrumentation commands\
-at the end of """)
+
+        if templateList.len() > 0:
+            print("WARNING: Found " + str(len(templateList.list)) +" unassociated instrumentation commands at the end of the file: " + str(templateList.list))
+
         return functionList
 
     def matchPrecompiler(self, inputLine):
@@ -750,7 +769,7 @@ at the end of """)
                 commandName = match.group(1)
                 commandArgs = match.group(2) + " "
                 newTemplate = Template( template[commandName], commandName, commandArgs )
-                templateList.append(newTemplate)
+                templateList.append(self, newTemplate)
             else:
                 if self.strictMode:
                     print("Error command name " + commandName + " is not defined, line: " + inputLine)
@@ -772,6 +791,11 @@ class Template():
     #
     # @param name The name of the used template
     # @param variables The used variables
+
+    def __str__(self):
+        return "T(" + self.name + ")"
+    def __repr__(self):
+        return self.__str__()
 
     def __init__(self, templateDict, name, variables):
         self.templateDict = templateDict
@@ -830,8 +854,8 @@ class Template():
                        name = value.group(1).strip("=")
                        # the variable with the given name is set
                        if not name in nameList:
-                               print("Error name " + name + " is not part of the defined function " + self.name)
-                               exit(1)
+                           print("Error name " + name + " is not part of the defined function " + self.name)
+                           exit(1)
                # Set the matched value
                valueString = value.group(2).strip()
                if(valueString.startswith("''")):
@@ -900,6 +924,8 @@ def main():
         functions = commandParser.parse()
 		
         outputWriter.writeOutput(options, functions, templateParameters, precompiler)
+
+        os.system( "indent -kr -l120 -nut -ts2 " + options.outputFile + " >/dev/null 2>&1")
 
 if __name__ == '__main__':
     main()

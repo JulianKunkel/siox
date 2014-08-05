@@ -2,6 +2,7 @@
 #include <string>
 
 #include <monitoring/activity_multiplexer/plugins/profiler/ActivityProfiler.hpp>
+
 #include <monitoring/activity_multiplexer/plugins/profiler/ActivityProfilerPluginOptions.hpp>
 
 #include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
