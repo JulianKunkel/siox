@@ -183,6 +183,7 @@ void workerFunc(int i) {
 	assert( attribute2.name() == "attribute1"+to_string(i) );
 	assert( attribute2.domainId() == type1.id() );
 	assert( attribute2.dataType() == TopologyVariable::Type::FLOAT );
+
 	attribute2 = topology->lookupAttributeByName( type1.id(), "attribute1"+to_string(i) );
 	assert( attribute2.domainId() == type1.id() );
 	assert( attribute2.dataType() == TopologyVariable::Type::FLOAT );
@@ -194,11 +195,7 @@ void workerFunc(int i) {
 
 	TopologyValue value1, value2;
 
-	assert ( topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1.1f ) ));
-	#ifndef WRITE_ONLY
-	value2 = topology->getAttribute( object1.id(), attribute1.id() );
-	assert( value2.value() == 1.1f );
-	#endif
+
 
 
 	assert(topology->setAttribute( object1.id(), attribute2.id(), TopologyVariable( 3.0 ) ));
@@ -208,6 +205,12 @@ void workerFunc(int i) {
 	assert( value2.object() == object1.id() );
 	assert( value2.attribute() == attribute2.id() );
 	assert( value2.value() == 3.0 );
+	#endif
+
+	assert ( topology->setAttribute( object1.id(), attribute1.id(), TopologyVariable( 1.1f ) ));
+	#ifndef WRITE_ONLY
+	value2 = topology->getAttribute( object1.id(), attribute1.id() );
+	assert( value2.value() == 1.1f );
 	#endif
 
 	assert(topology->setAttribute( object1.id(), attribute2.id(), TopologyVariable( 2.0 ) ));

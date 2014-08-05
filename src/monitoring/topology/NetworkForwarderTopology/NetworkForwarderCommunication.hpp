@@ -18,7 +18,9 @@ enum NetworkForwarderMessageType {
 
     NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_REGISTER,
     NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_LOOKUP_BY_NAME,
-    NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_LOOKUP_BY_ID,
+    NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_LOOKUP_BY_ID, 
+    NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_SET,
+    NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_GET,
 };
 
 using namespace std;
@@ -33,8 +35,8 @@ struct NetworkForwarderRequestMessage {
     int32_t id;
     int32_t type;
     int32_t other;
-    string name;
-    //TODO: TopologyValue value;
+    string name = "";
+    TopologyVariable var;
 };
 
 //@serializable
@@ -43,8 +45,8 @@ struct NetworkForwarderResponseMessage {
     int32_t id;
     int32_t type;
     int32_t other;
-    string name;
-    //TODO: TopologyValue value;
+    string name = "";
+    TopologyVariable var;
 };
 
 struct BlockingRPCMessage {
@@ -55,24 +57,3 @@ struct BlockingRPCMessage {
 };
 
 #endif
-/*oid func(x, y){
-    baue struct TopologyTypeRequest => auf Stack
-    baue NetworkForwarderRequestMessage => auf Stack, verlinke diese Objekte über *data
-    isend()
-    response = wait()
-}
-
-void serverMessageReceivedCB(){
-    decode message()
-    switch (type){
-        call right function(); <= blockierend
-        send response.
-    }
-}
-
-decode message(){
-    decode NetworkForwarderRequestMessage manually!
-    switch type
-    case(TOPOLOGY_TYPE):
-        deserialize(... (TopologyTypeRequest*) buffer, an aktueller stelle);
-}*/

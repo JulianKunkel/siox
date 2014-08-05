@@ -80,7 +80,7 @@ inline void serialize(const uint64_t & obj, char * buffer, uint64_t & pos){
 
 inline void serialize(const double & obj, char * buffer, uint64_t & pos){
 	memcpy(& buffer[pos], & obj, 8);
-	pos += 4;
+	pos += 8;
 }
 
 inline void serialize(const long double & obj, char * buffer, uint64_t & pos){	
