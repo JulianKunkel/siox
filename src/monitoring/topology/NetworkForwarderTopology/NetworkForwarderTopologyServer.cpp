@@ -1,6 +1,7 @@
 #include "NetworkForwarderCommunication.hpp"
 #include "NetworkForwarderTopologyServerOptions.hpp"
 #include <monitoring/topology/NetworkForwarderTopology/NetworkForwarderCommunicationBinarySerializable.hpp>
+#include <core/datatypes/VariableDatatypeJBinarySerialization.hpp>
 
 #include <core/comm/CommunicationModule.hpp>
 #include <util/JobProcessors/DefaultProcessorQueues.cpp>
@@ -34,6 +35,7 @@ class NetworkForwarderTopologyServer : public NetworkService, ServerCallback {
         TopologyType type;
         TopologyObject object;
         TopologyRelation relation;
+        TopologyAttribute attribute;
         uint64_t pos = 0;
 
         j_serialization::deserialize(reqMess, message_data, pos, buffer_size);
@@ -127,12 +129,84 @@ class NetworkForwarderTopologyServer : public NetworkService, ServerCallback {
                 }
 
                 msg->isendResponse(&resMess);
+                break;    
+            case NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_REGISTER:
+                attribute = topologyBackend->registerAttribute(reqMess.id, reqMess.name, (VariableDatatype::Type) reqMess.other);
+
+                if(attribute) {
+                    resMess.id = attribute.id();
+                }
+                else {
+                    resMess.id = -1;
+                }
+                msg->isendResponse(&resMess);
+
+                break;                       
+            case NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_LOOKUP_BY_NAME:
+                attribute = topologyBackend->lookupAttributeByName(reqMess.id, reqMess.name);
+
+                if(attribute) {
+                    resMess.id = attribute.id();
+                    resMess.other = (intmax_t) attribute.dataType();
+                }
+                else {
+                    resMess.id = -1;
+                }
+                msg->isendResponse(&resMess);
+
+                break;
+    
+            case NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_LOOKUP_BY_ID:
+                attribute = topologyBackend->lookupAttributeById(reqMess.id);
+
+                if(attribute) {
+                    resMess.name = attribute.name();
+                    resMess.id = attribute.domainId();
+                    resMess.other = (intmax_t) attribute.dataType();
+                }
+                else {
+                    resMess.id = -1;
+                }
+                msg->isendResponse(&resMess);
+
+                break;
+
+            case NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_SET:
+
+                bool ret;
+
+                ret = topologyBackend->setAttribute(reqMess.id, reqMess.type, reqMess.var);
+
+                if(ret) {
+                    resMess.id = 1;
+                }
+                else {
+                    resMess.id = -1;
+                }
+
+                msg->isendResponse(&resMess);
+
+                break;
+
+            case NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_GET:
+
+                TopologyValue value = topologyBackend->getAttribute(reqMess.id, reqMess.type);
+
+                if(value) {
+                    resMess.id = 1;
+                    resMess.var = value.value();
+                }
+                else {
+                    resMess.id = -1;
+                }
+                msg->isendResponse(&resMess);
+
                 break;                           
         }
     }
 
     virtual void invalidMessageReceivedCB(CommunicationError error) {
-        printf("Error");
+        printf("Error. Invalid Message received. Aborting.");
         fflush(stdout);
         assert(false);
     }

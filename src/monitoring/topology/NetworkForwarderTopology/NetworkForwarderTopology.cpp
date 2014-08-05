@@ -1,5 +1,7 @@
 /**
- * Topologoy forwards it's data to another instance
+ * This topology forwards it's data to another topolgy over TCP/IP.
+ * Blocks all the way (because we need to wait for an answer) and does not cache
+ * at all. Please refer to cacheTopology if you need fast response times.
  *
  * @author Roman Michel
  * @date 2014
@@ -9,6 +11,7 @@
 #include <util/ExceptionHandling.hpp>
 #include <core/comm/CommunicationModule.hpp>
 #include <core/reporting/ComponentReportInterface.hpp>
+#include <core/datatypes/VariableDatatypeJBinarySerialization.hpp>
 #include <monitoring/topology/TopologyImplementation.hpp>
 #include <workarounds.hpp>
 #include <core/comm/CommunicationModule.hpp>
@@ -36,8 +39,7 @@ public:
     }
 
     void connectionSuccessfullCB(ServiceClient & connection){
-        printf("Connection successful.");
-        fflush(stdout);
+        // TODO: This never gets called. Maybe we should look into this.
     }
 };
 
@@ -307,23 +309,137 @@ TopologyRelationList NetworkForwarderTopology::enumerateParents( TopologyObjectI
 }
 
 TopologyAttribute NetworkForwarderTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
-    assert(false);
+   
+    NetworkForwarderRequestMessage mess;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_REGISTER;
+    mess.id = domain;
+    mess.name = name;
+    mess.other = (intmax_t) datatype;
+
+    BlockingRPCMessage container;
+    {
+        unique_lock<mutex> lock(container.m);
+        client->isend(& mess, & container);
+
+        // wait for the response
+        container.cv.wait(lock);
+    }
+
+    TopologyAttribute returnAttribute;
+
+    if (container.response.id != -1) {
+        Release<TopologyAttributeImplementation> newAttribute( new TopologyAttributeImplementation( name, domain, datatype ) );
+        newAttribute->id = container.response.id;
+        returnAttribute.setObject(newAttribute);
+        fflush(stdout);
+    }
+
+    return returnAttribute;
 }
 
 TopologyAttribute NetworkForwarderTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
-    assert(false);
+    
+    NetworkForwarderRequestMessage mess;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_LOOKUP_BY_NAME;
+    mess.id = domain;
+    mess.name = name;
+
+    BlockingRPCMessage container;
+    {
+        unique_lock<mutex> lock(container.m);
+        client->isend(& mess, & container);
+
+        // wait for the response
+        container.cv.wait(lock);
+    }
+
+    TopologyAttribute returnAttribute;
+
+    if (container.response.id != -1) {
+        Release<TopologyAttributeImplementation> newAttribute( new TopologyAttributeImplementation( name, domain, (VariableDatatype::Type) container.response.other ) );
+        newAttribute->id = container.response.id;
+        returnAttribute.setObject(newAttribute);
+    }
+
+    return returnAttribute;
 }
 
 TopologyAttribute NetworkForwarderTopology::lookupAttributeById( TopologyAttributeId attributeId ) throw() {
-    assert(false);
+
+    NetworkForwarderRequestMessage mess;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_LOOKUP_BY_ID;
+    mess.id = attributeId;
+
+    BlockingRPCMessage container;
+    {
+        unique_lock<mutex> lock(container.m);
+        client->isend(& mess, & container);
+
+        // wait for the response
+        container.cv.wait(lock);
+    }
+
+    TopologyAttribute returnAttribute;
+
+    if (container.response.id != -1) {
+        Release<TopologyAttributeImplementation> newAttribute( new TopologyAttributeImplementation( container.response.name, container.response.id, (VariableDatatype::Type) container.response.other ) );
+        newAttribute->id = attributeId;
+        returnAttribute.setObject(newAttribute);
+    }
+
+    return returnAttribute;
 }
 
 bool NetworkForwarderTopology::setAttribute( TopologyObjectId objectId, TopologyAttributeId attributeId, const TopologyVariable& value ) throw() {
-    assert(false);
+    
+    NetworkForwarderRequestMessage mess;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_SET;
+    mess.id = objectId;
+    mess.type = attributeId;
+    mess.var = value;
+
+    BlockingRPCMessage container;
+    {
+        unique_lock<mutex> lock(container.m);
+        client->isend(& mess, & container);
+
+        // wait for the response
+        container.cv.wait(lock);
+    }
+
+    if (container.response.id != -1) {
+        return true;
+
+    }
+
+    return false;
 }
 
 TopologyValue NetworkForwarderTopology::getAttribute( TopologyObjectId object, TopologyAttributeId attribute ) throw() {
-    assert(false);
+
+    NetworkForwarderRequestMessage mess;
+    mess.request_type = NETWORK_FORWARDER_TOPOLOGY_ATTRIBUTE_GET;
+    mess.id = object;
+    mess.type = attribute;
+
+    BlockingRPCMessage container;
+    {
+        unique_lock<mutex> lock(container.m);
+        client->isend(& mess, & container);
+
+        // wait for the response
+        container.cv.wait(lock);
+    }
+
+    TopologyValue retValue;
+
+    if (container.response.id == 1) {
+
+        Release<TopologyValueImplementation> newValue( new TopologyValueImplementation( container.response.var, object, attribute ) );
+        retValue.setObject(newValue);
+    }
+    
+    return retValue;
 }
 
 TopologyValueList NetworkForwarderTopology::enumerateAttributes( TopologyObjectId object ) throw() {
