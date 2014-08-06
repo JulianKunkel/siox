@@ -24,6 +24,14 @@ template = {
 			uint64_t commHandlerValue = getCommHandle(%(Comm)s); 
 			siox_activity_set_attribute( %(Activity)s, %(Attribute)s, & commHandlerValue );
 			}'''
-	}
+	},
+	'MPI_file_createMap': {
+		'variables': 'MapName=activityHashTable_size',
+		'templates': ["@horizontal_map_create_size MapName=%(MapName)s"]
+	},	
+	'MPI_communication_activity': {
+		'variables': 'ActivityVar=sioxActivity',
+		'templates': ["@activity ActivityVariable=%(ActivityVar)s ComponentVariable=comm", "@error ''ret!=MPI_SUCCESS'' "]
+	},	
 }
 
