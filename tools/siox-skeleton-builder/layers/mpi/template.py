@@ -33,5 +33,13 @@ template = {
 		'variables': 'ActivityVar=sioxActivity',
 		'templates': ["@activity ActivityVariable=%(ActivityVar)s ComponentVariable=comm", "@error ''ret!=MPI_SUCCESS'' "]
 	},	
+	'MPI_comm_handler':{
+		'variables': 'Comm=comm',
+		'templates': ["@splice_before ''uint64_t commHandlerValue = getCommHandle(%(Comm)s);''", "@activity_attribute commHandler commHandlerValue" ]
+		},
+	'MPI_comm_handler_out':{
+		'variables': 'Comm=comm',
+		'templates': ["@splice_after ''uint64_t commHandlerValueOut = getCommHandle(%(Comm)s);''", "@activity_attribute_late commHandlerOut commHandlerValueOut" ]
+	}
 }
 

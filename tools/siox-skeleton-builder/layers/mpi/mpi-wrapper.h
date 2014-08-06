@@ -613,7 +613,7 @@ int MPI_File_sync( MPI_File fh );
 ///////////////////////////////////////////////////////////////////////////////////
 
 //@MPI_activity ActivityVar=sioxActivity
-//@splice_after if (ret == MPI_SUCCESS ) { recordProcessesGroup(sioxActivity, group); }
+//@splice_after recordProcessesGroup(sioxActivity, group);
 //@splice_after ''uint64_t commHandlerValue; commHandlerValue = getCommHandle(*newcomm);''
 //@activity_attribute_late commHandlerOut commHandlerValue
 //@splice_after ''commHandlerValue = getCommHandle(comm);''
@@ -621,20 +621,16 @@ int MPI_File_sync( MPI_File fh );
 int MPI_Comm_create( MPI_Comm comm, MPI_Group group,  MPI_Comm *newcomm );
 
 //@MPI_activity ActivityVar=sioxActivity
-//@splice_after ''uint64_t commHandlerValue; commHandlerValue = getCommHandle(*newcomm);''
-//@activity_attribute_late commHandlerOut commHandlerValue
-//@splice_after ''commHandlerValue = getCommHandle(comm);''
-//@activity_attribute_late commHandler commHandlerValue
+//@MPI_comm_handler
+//@MPI_comm_handler_out *newcomm
 int MPI_Comm_dup( MPI_Comm comm, MPI_Comm *newcomm );
 
 //@MPI_activity ActivityVar=sioxActivity
 //@activity_attribute commColor color
 //@activity_attribute commKey key
-//@splice_after if (ret == MPI_SUCCESS ) { recordProcessesComm(sioxActivity, *newcomm); }
-//@splice_after ''uint64_t commHandlerValue; commHandlerValue = getCommHandle(*newcomm);''
-//@activity_attribute_late commHandlerOut commHandlerValue
-//@splice_after ''commHandlerValue = getCommHandle(comm);''
-//@activity_attribute_late commHandler commHandlerValue
+//@splice_after recordProcessesComm(sioxActivity, *newcomm);
+//@MPI_comm_handler
+//@MPI_comm_handler_out *newcomm
 int MPI_Comm_split( MPI_Comm comm, int color, int key, MPI_Comm *newcomm );
 
 
