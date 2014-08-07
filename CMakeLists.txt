@@ -10,22 +10,22 @@ set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/src/include)
 set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/src CACHE STRING "SIOX INCLUDE DIRS")
 
-SET (CMAKE_C_FLAGS_DEBUG          "-ggdb -O1")
-SET (CMAKE_CXX_FLAGS_DEBUG        "-ggdb -O1")
+SET (CMAKE_C_FLAGS_DEBUG          "-ggdb -O1 -Wno-unused-local-typedefs")
+SET (CMAKE_CXX_FLAGS_DEBUG        "-ggdb -O1 -Wno-unused-local-typedefs")
 
-set(CMAKE_C_FLAGS "-Wall -std=gnu99")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -g")
+set(CMAKE_C_FLAGS "-Wall -std=gnu99 -Wno-unused-local-typedefs")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -g -Wno-unused-local-typedefs")
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed")
-set(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-as-needed")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed -Wno-unused-local-typedefs")
+set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed -Wno-unused-local-typedefs")
+set(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-as-needed -Wno-unused-local-typedefs")
 
 set(CMAKE_MODULE_PATH ${SIOX_SOURCES}/devel/cmake ${CMAKE_MODULE_PATH})
 
 set(BUILD_SHARED_LIBS ON)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-    set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC")
+    set(CMAKE_CXX_FLAGS "-ggdb -Wall -std=gnu++11 -fPIC -Wno-unused-local-typedefs")
     execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
     if (NOT (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7))
         message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or greater.")
