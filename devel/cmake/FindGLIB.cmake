@@ -42,6 +42,7 @@ else(NOT DEFINED GLIB_ROOT_DIR)
 			${GLIB_ROOT_DIR}/include/
 		DOC
 			"Directory for glib headers"
+		NO_DEFAULT_PATH
 	)
 
 	find_path(GLIB_MODULE_DIR
@@ -51,6 +52,7 @@ else(NOT DEFINED GLIB_ROOT_DIR)
 			${GLIB_ROOT_DIR}/include/glib-2.0/
 		DOC
 			"Directory for gmodule headers"
+		NO_DEFAULT_PATH
 	)
 
 	find_path(GLIB_CONFIG_DIR
@@ -60,15 +62,17 @@ else(NOT DEFINED GLIB_ROOT_DIR)
 			${GLIB_ROOT_DIR}/lib/glib-2.0/include/
 		DOC
 			"Directory with the glibconfig.h"
+		NO_DEFAULT_PATH
 	)
 
 	find_path(GLIB_IO_DIR
 		NAME
-			gio-unix-2.0
+			gio	
 		PATHS
-			${GLIB_ROOT_DIR}/include/
+			${GLIB_ROOT_DIR}/include/gio-unix-2.0
 		DOC
 			"Directory with the gio stuff.h"
+		NO_DEFAULT_PATH
 	)
 
 	set(GLIB_INCLUDE_DIRS ${GLIB_INCLUDE} ${GLIB_CONFIG_DIR} ${GLIB_IO_DIR} ${GLIB_MODULE_DIR})
@@ -80,6 +84,7 @@ else(NOT DEFINED GLIB_ROOT_DIR)
 			${GLIB_ROOT_DIR}/lib/
 		DOC
 			"Directory for glib binary"
+		NO_DEFAULT_PATH
 	)
 
 	find_library(GLIB_IO 
@@ -89,6 +94,7 @@ else(NOT DEFINED GLIB_ROOT_DIR)
 			${GLIB_ROOT_DIR}/lib/
 		DOC
 			"Directory for gio binary"
+		NO_DEFAULT_PATH
 	)
 
 	find_library(GLIB_OBJECT 
@@ -98,6 +104,7 @@ else(NOT DEFINED GLIB_ROOT_DIR)
 			${GLIB_ROOT_DIR}/lib/
 		DOC
 			"Directory for gobject binary"
+		NO_DEFAULT_PATH
 	)
 
 	find_library(GLIB_MODULE
@@ -107,6 +114,7 @@ else(NOT DEFINED GLIB_ROOT_DIR)
 			${GLIB_ROOT_DIR}/lib/
 		DOC
 			"Directory for gmodule binary"
+		NO_DEFAULT_PATH
 	)
 
 	set(GLIB_LIBRARIES ${GLIB_LIBRARIES} ${GLIB_IO} ${GLIB_OBJECT} ${GLIB_MODULE})
