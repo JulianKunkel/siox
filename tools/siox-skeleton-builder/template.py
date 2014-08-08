@@ -15,8 +15,8 @@ template = {
 'ALL_FUNCTIONS':{
    'variables': 'fname=%(FUNCTION_NAME)s',
    'global': '''static siox_timestamp t_overhead_%(fname)s = 0;
-   				 static siox_timestamp t_fkt_%(fname)s = 0;
-   				 static int calls_%(fname)s = 0;''',
+static siox_timestamp t_fkt_%(fname)s = 0;
+static int calls_%(fname)s = 0;''',
 	'before' : '''
 			siox_timestamp t_tmp;
 			siox_timestamp t_fkt_start;
@@ -74,9 +74,9 @@ template = {
 'component': {
 	'variables': 'InterfaceName ImplementationIdentifier InstanceName="" ComponentVariable=global SpliceCode=',
 	'global': '''
-		static siox_component * %(ComponentVariable)s_component = NULL;
-      static siox_unique_interface * %(ComponentVariable)s_uid = NULL;
-      static int %(ComponentVariable)s_layer_initialized = FALSE;
+static siox_component * %(ComponentVariable)s_component = NULL;
+static siox_unique_interface * %(ComponentVariable)s_uid = NULL;
+static int %(ComponentVariable)s_layer_initialized = FALSE;
 		''',
     'init': ''' 
 		if ( siox_is_monitoring_permanently_disabled() || %(ComponentVariable)s_component ){
@@ -102,7 +102,7 @@ template = {
 'autoInitializeLibrary':{
 	'global' : """
 				static void sioxFinal() __attribute__((destructor));
-            static void sioxInit() __attribute__((constructor));
+static void sioxInit() __attribute__((constructor));
             """
 },
 'createInitializerForLibrary':{
@@ -714,5 +714,5 @@ templateParameters = {
 # Insert global once
 "globalOnce": "",
 # Will be included
-"includes" : ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>']
+"includes" : ['<stdlib.h>', '<stdio.h>', '<stdarg.h>', '<glib.h>', '<C/siox.h>', '<assert.h>', '<string.h>', '<unistd.h>']
 }
