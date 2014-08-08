@@ -26,7 +26,10 @@ public:
 	virtual void init(){
 		setenv("GIO_USE_VFS", "local", 0 );		
 		setenv("GVFS_DISABLE_FUSE", "true" , 0);
+
+		#if !GLIB_CHECK_VERSION(2, 36, 0)
 		g_type_init();
+		#endif
 
 		g_log_set_always_fatal( (GLogLevelFlags) (G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL) );
 	}
