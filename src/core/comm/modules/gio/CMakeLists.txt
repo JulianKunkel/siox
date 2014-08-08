@@ -4,7 +4,6 @@ include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIR}
 	${GLIB_INCLUDE_DIRS}
-	${GIOUNIX2_INCLUDE_DIRS}
 )
 
 add_library(
@@ -19,7 +18,6 @@ target_link_libraries(
 	siox-core-comm-gio
 	siox-util-jobProcessors
 	siox-util
-	-L${Boost_LIBRARY_DIR}
 	${GLIB_LIBRARIES}
         ${GLIB_GOBJECT_LIBRARIES}
         ${GLIB_GMODULE_LIBRARIES}
@@ -28,6 +26,7 @@ target_link_libraries(
 	${Boost_LIBRARIES}
 	siox-core-comm
 )
+
 siox_run_serializer(GIOOptions.hpp GIOOptions.cpp)
 
 add_subdirectory(test)
