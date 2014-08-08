@@ -93,7 +93,7 @@ class Style(skeletonBuilder.Writer):
                 function.parameterList[-1].name = "val"
 
             if returnType != "void":
-                print('\t', returnType, ' ret;', end='\n', sep='',
+                print('\t', returnType, ' ret = 0;', end='\n', sep='',
                       file=output)
 
             self.writeBefore(function, output, functionVariables)

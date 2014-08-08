@@ -89,7 +89,7 @@ class Style(skeletonBuilder.Writer):
 
 
             if returnType != "void":
-                print('\t', returnType, ' ret;', end='\n', sep='',
+                print('\t', returnType, ' ret = 0;', end='\n', sep='',
                       file=output)
 
             functionVariables = self.functionVariables(function, functionCall)
