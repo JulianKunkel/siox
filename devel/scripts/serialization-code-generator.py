@@ -254,9 +254,9 @@ class JBinaryOutputGenerator(OutputGenerator):
             else:
                 serializeLen = "count += 4;"
 
-            return serializeLen + "\n\tfor(auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++){\n\t\t%(CHILD)s; \n\t}"  % {"NAME" : name, "CHILD": self.map_type_length(childType, "*itr")}
+            return serializeLen + "\n\tfor (auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++) {\n\t\t%(CHILD)s; \n\t}"  % {"NAME" : name, "CHILD": self.map_type_length(childType, "*itr")}
         if type.endswith("*"):
-            return "if (" + name + " == nullptr ) { count += 1 ; } else{ " + self.map_type_length(type[0:len(type)-2].strip(), "*" + name) + " + 1; }"
+            return "if (" + name + " == nullptr ) { count += 1 ; } else { " + self.map_type_length(type[0:len(type)-2].strip(), "*" + name) + " + 1; }"
         #if type in self.typeMap:
         #    return self.map_memberType(self.typeMap[type])        
         #return "ERROR invalid type: " + type + " for " + name
@@ -273,13 +273,13 @@ class JBinaryOutputGenerator(OutputGenerator):
             else:
                 serializeLen = "uint32_t vlen = %(NAME)s.size(); \n\tserialize(vlen, buffer, pos);"
 
-            return ("\n\t{ " + serializeLen + " \n\tfor(auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++){\n\t\t%(CHILD)s; \n\t}}")  % {"NAME" : name, "CHILD": self.map_type_serializer(childType, "*itr")}
+            return ("\n\t{ " + serializeLen + " \n\tfor (auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++) {\n\t\t%(CHILD)s; \n\t}}")  % {"NAME" : name, "CHILD": self.map_type_serializer(childType, "*itr")}
 
         if type.endswith("*"):
-            return "if (" + name + " == nullptr ) { serialize((uint8_t) 0, buffer, pos); } else{\n\t\tserialize((uint8_t) 1, buffer, pos); \n\t\t" + self.map_type_serializer(type[0:len(type)-2].strip(), "*" + name) + "; \n\t}"
+            return "if (" + name + " == nullptr ) { serialize((uint8_t) 0, buffer, pos); } else {\n\t\tserialize((uint8_t) 1, buffer, pos); \n\t\t" + self.map_type_serializer(type[0:len(type)-2].strip(), "*" + name) + "; \n\t}"
 
         if type in self.enumMap:
-            return "serialize( (" + self.enumMap[type] + " &)"  + name + ", buffer, pos )";
+            return "serialize((" + self.enumMap[type] + " &)"  + name + ", buffer, pos)";
 
         return "serialize(" + name + ", buffer, pos)";
 
@@ -300,10 +300,10 @@ class JBinaryOutputGenerator(OutputGenerator):
 
         if type.endswith("*"):
             childType = type[0:len(type)-2].strip()
-            return "\n\t{\n\tint8_t ptr; deserialize(ptr, buffer, pos, length);\n\tif ( ptr == 0 ) { %(NAME)s = nullptr; } else{\n\t\t%(NAME)s = (%(TYPE)s) malloc(sizeof(%(CHILDTYPE)s));\n\t\tdeserialize(*%(NAME)s, buffer, pos, length);\n\t}}" % { "NAME" : name, "TYPE" : type, "CHILDTYPE" : childType, "CHILD" : self.map_type_deserializer(childType, "* " + name) }
+            return "\n\t{\n\tint8_t ptr; deserialize(ptr, buffer, pos, length);\n\tif (ptr == 0) { %(NAME)s = nullptr; } else {\n\t\t%(NAME)s = (%(TYPE)s) malloc(sizeof(%(CHILDTYPE)s));\n\t\tdeserialize(*%(NAME)s, buffer, pos, length);\n\t}}" % { "NAME" : name, "TYPE" : type, "CHILDTYPE" : childType, "CHILD" : self.map_type_deserializer(childType, "* " + name) }
 
         if type in self.enumMap:
-            return "deserialize( (" + self.enumMap[type] + " &)"  + name + ", buffer, pos, length)"; 
+            return "deserialize((" + self.enumMap[type] + " &)"  + name + ", buffer, pos, length)"; 
 
         return "deserialize(" + name + ", buffer, pos, length)";
 
@@ -330,30 +330,30 @@ class JBinaryOutputGenerator(OutputGenerator):
             print("\t" + self.map_type_length(memberType, "obj." + memberName) + ";", file = self.fh)
         
         for p in self.parentClassnames:
-            print("\tcount += serializeLen( ( " + p + " ) "  + " obj );" , file = self.fh)
+            print("\tcount += serializeLen((" + p + ") "  + " obj);" , file = self.fh)
 
         print("\treturn count;", file = self.fh)
         print("}", file = self.fh)
 
-        print("inline void serialize(const %(CLASS)s & obj, char * buffer, uint64_t & pos){"  % self.mapping, file = self.fh)
+        print("inline void serialize(const %(CLASS)s &obj, char *buffer, uint64_t &pos) {"  % self.mapping, file = self.fh)
 
         for p in self.parentClassnames:
-            print("\tserialize( ( " + p + " &) "  + " obj, buffer, pos );" , file = self.fh)
+            print("\tserialize((" + p + " &) "  + " obj, buffer, pos);" , file = self.fh)
 
         for (memberType, memberName) in self.registeredTypes:
             print("\t" + self.map_type_serializer(memberType, "obj." + memberName) + ";", file = self.fh)
 
         print("}", file = self.fh)
 
-        print("inline void deserialize(%(CLASS)s & obj, const char * buffer, uint64_t & pos, uint64_t length){\n\t"  % self.mapping, file = self.fh)
+        print("inline void deserialize(%(CLASS)s &obj, const char *buffer, uint64_t &pos, uint64_t length) {"  % self.mapping, file = self.fh)
 
         for p in self.parentClassnames:
-            print("\tdeserialize( ( " + p + " &) "  + " obj, buffer, pos, length );" , file = self.fh)
+            print("\tdeserialize((" + p + " &) "  + " obj, buffer, pos, length);" , file = self.fh)
 
         for (memberType, memberName) in self.registeredTypes:
             print("\t" + self.map_type_deserializer(memberType, "obj." + memberName) + ";", file = self.fh)
 
-        print("}\n", file = self.fh)
+        print("}\n", file=self.fh)
         print("}\n", file=self.fh)
 
 
@@ -406,14 +406,13 @@ class BoostOutputGenerator(OutputGenerator):
 
 
         print("""
-            #ifndef BOOST_SERIALIZABLE_%(CLASS)s
-            #define BOOST_SERIALIZABLE_%(CLASS)s
-            namespace boost{
-            namespace serialization {
-            template<class Archive>
-            void serialize( Archive & ar, %(CLASS)s & a, const unsigned int version )
-            {
-                """  % self.mapping , file = self.fh)
+#ifndef BOOST_SERIALIZABLE_%(CLASS)s 
+#define BOOST_SERIALIZABLE_%(CLASS)s 
+namespace boost { 
+namespace serialization { 
+	template<class Archive> 
+	void serialize(Archive &ar, %(CLASS)s &a, const unsigned int version) 
+	{"""  % self.mapping , file = self.fh)
 
     def forceInclude(self, filename):
         self.createFileIfNeeded()
@@ -425,36 +424,35 @@ class BoostOutputGenerator(OutputGenerator):
         if self.flavor == "xml":
             for p in self.parentClassnames:            
                 print(""" 
-                ar & boost::serialization::make_nvp("%(PARENT_NO_NAMESPACE)s", boost::serialization::base_object<%(PARENT)s>(a)); """ % {"PARENT" : p, "PARENT_NO_NAMESPACE" : removeNamespace(p) }, file = self.fh)
+                ar &boost::serialization::make_nvp("%(PARENT_NO_NAMESPACE)s", boost::serialization::base_object<%(PARENT)s>(a)); """ % {"PARENT" : p, "PARENT_NO_NAMESPACE" : removeNamespace(p) }, file = self.fh)
         else:
             for p in self.parentClassnames:            
                 print(""" 
-                ar & boost::serialization::base_object<%(PARENT)s>(a)); """ % {"PARENT" : p }, file = self.fh)
+                ar& boost::serialization::base_object<%(PARENT)s>(a)); """ % {"PARENT" : p }, file = self.fh)
+
+        print("""\t}
+}
+}"""  % self.mapping, file = self.fh)
 
         print("""
-            }
-            }
-            }"""  % self.mapping, file = self.fh)
-
-        print("""
-            BOOST_CLASS_EXPORT(%(CLASS)s)
-            BOOST_CLASS_IMPLEMENTATION(%(CLASS)s, boost::serialization::object_serializable)
-            BOOST_CLASS_TRACKING(%(CLASS)s, boost::serialization::track_never)""" % self.mapping , file = self.fh)
+BOOST_CLASS_EXPORT(%(CLASS)s) 
+BOOST_CLASS_IMPLEMENTATION(%(CLASS)s, boost::serialization::object_serializable) 
+BOOST_CLASS_TRACKING(%(CLASS)s, boost::serialization::track_never)""" % self.mapping , file = self.fh)
         
         if self.nestingDepth == 0:
-            print("""template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_oarchive & ar, %(CLASS)s & g, const unsigned int version);
-                template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_iarchive & ar, %(CLASS)s & g, const unsigned int version);
-                """ % self.mapping , file = self.fh)
-        print("\n#endif", file = self.fh)
+            print("""template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_oarchive &ar, %(CLASS)s &g, const unsigned int version);
+template void boost::serialization::serialize(boost::archive::%(FLAVOR)s_iarchive &ar, %(CLASS)s &g, const unsigned int version);
+""" % self.mapping , file = self.fh)
+        print("#endif\n", file = self.fh)
 
 
         
 
     def registerMember(self, memberType, memberName, annotations):
         if self.flavor == "xml":
-            print("""\t\tar & boost::serialization::make_nvp("%(MEMBER)s", a.%(MEMBER)s);""" % {"MEMBER" : memberName} , file = self.fh)
+            print("""\t\tar &boost::serialization::make_nvp("%(MEMBER)s", a.%(MEMBER)s);""" % {"MEMBER" : memberName} , file = self.fh)
         else:
-            print("""\t\tar & a.%(MEMBER)s;""" % {"MEMBER" : memberName} , file = self.fh)
+            print("""\t\tar &a.%(MEMBER)s;""" % {"MEMBER" : memberName} , file = self.fh)
 
 
     def initFile(self):
@@ -463,19 +461,18 @@ class BoostOutputGenerator(OutputGenerator):
             dir = os.path.basename(self.options.inputFile)
         else:
             dir = self.options.inputFile
-        print("""#include <boost/serialization/serialization.hpp>
-                \n #include <boost/serialization/nvp.hpp>
-                \n #include <boost/serialization/vector.hpp>
-                \n #include <boost/serialization/map.hpp>
-                \n #include <boost/serialization/list.hpp>
-                \n #include <boost/serialization/tracking.hpp>
-                \n #include <boost/serialization/level.hpp>
-                \n #include <boost/serialization/export.hpp>
-                \n #include <boost/archive/%(FLAVOR)s_iarchive.hpp>
-                \n #include <boost/archive/%(FLAVOR)s_oarchive.hpp>                               
-                \n #include \"%(INFILE)s\" 
-
-                """ % { "INFILE" : dir, "FLAVOR" : self.options.flavor } , file=self.fh)
+        print("""#include <boost/serialization/serialization.hpp> 
+#include <boost/serialization/nvp.hpp>           
+#include <boost/serialization/vector.hpp>        
+#include <boost/serialization/map.hpp>           
+#include <boost/serialization/list.hpp>          
+#include <boost/serialization/tracking.hpp>      
+#include <boost/serialization/level.hpp>         
+#include <boost/serialization/export.hpp>        
+#include <boost/archive/%(FLAVOR)s_iarchive.hpp> 
+#include <boost/archive/%(FLAVOR)s_oarchive.hpp>  
+#include \"%(INFILE)s\" 
+""" % { "INFILE" : dir, "FLAVOR" : self.options.flavor } , file=self.fh)
 
 
 
@@ -507,7 +504,7 @@ class ProtoBufOutputGenerator(OutputGenerator):
         print("#include <" + dir + ">\n", file = self.convertFileHPP)
         print("#include <" + self.options.outputFile + ".pb.h>\n", file = self.convertFileHPP)
 
-        print("#include <" + self.options.outputFile + ".hpp>\nnamespace convert{", file = self.convertFileCPP)
+        print("#include <" + self.options.outputFile + ".hpp>\nnamespace convert { ", file = self.convertFileCPP)
 
         print("""package protobuf;\n"""  , file=self.fh)
         for n in self.namespace:
@@ -574,23 +571,23 @@ class ProtoBufOutputGenerator(OutputGenerator):
             #className = "::".join(self.namespace) + "::" + className 
             print("using namespace " + n + ";", file = self.convertFileHPP)
 
-        print("""namespace convert{
-            %(CLASS)s convertToSerializable(const protobuf::%(CLASS)s & protobuf);
-            protobuf::%(CLASS)s convertToProto(const %(CLASS)s & serializable);
-            }
+        print("""namespace convert {
+	%(CLASS)s convertToSerializable(const protobuf::%(CLASS)s &protobuf);
+	protobuf::%(CLASS)s convertToProto(const %(CLASS)s &serializable);
+}
             """  % self.mapping, file = self.convertFileHPP)
 
         if self.options.debug:
             print(self.registeredTypes)
 
         # Implement the converter methods:
-        print("%(CLASS)s convertToSerializable(const protobuf::%(CLASS)s & protobuf){"
+        print("%(CLASS)s convertToSerializable(const protobuf::%(CLASS)s &protobuf) {"
              % self.mapping, file = self.convertFileCPP)
         for type in self.registeredTypes:
             print(type)
         print("}", file = self.convertFileCPP)
 
-        print("protobuf::%(CLASS)s convertToProto(const %(CLASS)s & serializable){"  
+        print("protobuf::%(CLASS)s convertToProto(const %(CLASS)s &serializable) {"  
             % self.mapping, file = self.convertFileCPP)
         for type in self.registeredTypes:
             pass
