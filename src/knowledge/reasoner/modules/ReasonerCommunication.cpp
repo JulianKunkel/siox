@@ -137,7 +137,7 @@ ReasonerMessageDataType ReasonerCommunication::parseReceivedData(const char * bu
 		return ReasonerMessageDataType::NONE;
 	}
 
-	ReasonerMessageDataType expectedResponse;
+	ReasonerMessageDataType expectedResponse = 0;
 
 	ReasonerMessageReceived rmr( data.reasonerID );
 
