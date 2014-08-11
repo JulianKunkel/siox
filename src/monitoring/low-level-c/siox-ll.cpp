@@ -29,10 +29,8 @@
 
 #include "siox-ll-internal.hpp"
 
-extern "C" {
 #define SIOX_INTERNAL_USAGE
 #include <C/siox.h>
-}
 
 using namespace std;
 using namespace core;
