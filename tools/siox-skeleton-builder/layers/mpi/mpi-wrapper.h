@@ -652,7 +652,7 @@ int MPI_Comm_split( MPI_Comm comm, int color, int key, MPI_Comm *newcomm );
 //@activity_attribute_late t_id typeID
 //@splice_before '' for (int t=0; t < count ; t++) { siox_activity_set_attribute( sioxActivity, t_blocklen , & array_of_blocklengths[t] ); uint64_t tmp;  tmp = array_of_displacements[t]; siox_activity_set_attribute( sioxActivity, t_displ, & tmp );  tmp = getDatatypeHandle(array_of_types[t]); siox_activity_set_attribute( sioxActivity, t_id , & tmp); } ''
 //@splice_after RECORD_TYPE_INFORMATION(*newtype)
-int MPI_Type_create_struct( int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[], MPI_Datatype array_of_types[], MPI_Datatype *newtype );
+int MPI_Type_create_struct( int count, OPTIONAL_CONST int array_of_blocklengths[], OPTIONAL_CONST MPI_Aint array_of_displacements[],  OPTIONAL_CONST MPI_Datatype array_of_types[], MPI_Datatype *newtype );
 
 
 
@@ -682,7 +682,7 @@ int MPI_Type_create_struct( int count, int array_of_blocklengths[], MPI_Aint arr
 //@activity_attribute cTag tag
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute cBytesSend size
-int MPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
+int MPI_Send(OPTIONAL_CONST void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
 
 //@MPI_communication_activity
 //@splice_after ''uint64_t commHandlerValue; commHandlerValue = getCommHandle(comm);''

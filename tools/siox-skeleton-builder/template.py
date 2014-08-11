@@ -21,7 +21,7 @@ static int calls_%(fname)s = 0;''',
 			siox_timestamp t_tmp;
 			siox_timestamp t_fkt_start;
 			siox_timestamp t_start = siox_gettime(); 
-			siox_timestamp t_overhead;''',
+			siox_timestamp t_overhead = 0;''',
 	'beforeLast' : '''
 		t_tmp = siox_gettime();
 		t_overhead = t_tmp - t_start;
