@@ -70,9 +70,7 @@ End of global part
 ------------------------------------------------------------------------------*/
 
 //@splice_before mode_t mode = va_arg(valist,mode_t);
-//@guard
-//@errorErrno ''ret<0''
-//@activity
+//@POSIX_activity
 //@splice_before uint32_t translatedFlags = translatePOSIXFlagsToSIOX(flags);
 //@activity_attribute fileOpenFlags translatedFlags
 //@splice_before SET_FILENAME(pathname)
@@ -81,18 +79,14 @@ End of global part
 //@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
 int open( const char * pathname, int flags, ... );
 
-//@guard
-//@errorErrno ''ret<0''
-//@activity
+//@POSIX_activity
 //@horizontal_map_put_int ret
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_late fileHandle ret
 int creat( const char * pathname, mode_t mode );
 
 //@splice_before mode_t mode = va_arg(valist,mode_t);
-//@guard
-//@errorErrno ''ret<0''
-//@activity open
+//@POSIX_activity Name=open
 //@splice_before SET_FILENAME(pathname)
 //@splice_before uint32_t translatedFlags = translatePOSIXFlagsToSIOX(flags);
 //@activity_attribute fileOpenFlags translatedFlags
@@ -101,9 +95,7 @@ int creat( const char * pathname, mode_t mode );
 //@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
 int open64( const char * pathname, int flags, ... );
 
-//@guard
-//@errorErrno ''ret<0''
-//@activity creat
+//@POSIX_activity Name=creat
 //@horizontal_map_put_int ret
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_late fileHandle ret

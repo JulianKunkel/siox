@@ -553,25 +553,6 @@ static void sioxInit() __attribute__((constructor));
 	'cleanup': '',
 	'final': ''
 },
-'errorErrno': {
-        'variables': 'Condition="ret<0" Activity=sioxActivity',
-        'global': '''''',
-        'init': '''''',
-        'before': '''''',
-        'after': ''' int errsv = errno;
-		    if ( %(Condition)s ){
-                      siox_activity_report_error( %(Activity)s, errsv );
-                      siox_activity_end(%(Activity)s);
-							 errno = errsv;
-							 return ret;
-                    }''',
-        'cleanup': '',
-        #'cleanupLast': '''errno = errsv;''',        
-        'final': ''
-},
-'restoreErrno': {
-        'after': ''' errno = errsv; '''
-},
 
 # remote_call_start
 #
