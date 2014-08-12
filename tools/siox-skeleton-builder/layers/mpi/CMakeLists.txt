@@ -82,8 +82,8 @@ if ( (NOT MPI_PROTOTYPE_CONST AND NOT MPI_PROTOTYPE_DEFAULT) OR (MPI_PROTOTYPE_C
 endif()
 
 if ( MPI_PROTOTYPE_CONST )
-	set_target_properties(siox-${LAYER}-wrap PROPERTIES COMPILE_FLAGS "-DOPTIONAL_CONST")
-	set_target_properties(siox-${LAYER}-dlsym PROPERTIES COMPILE_FLAGS "-DOPTIONAL_CONST")
+	set_target_properties(siox-${LAYER}-wrap PROPERTIES COMPILE_FLAGS "-DOPTIONAL_CONST=const")
+	set_target_properties(siox-${LAYER}-dlsym PROPERTIES COMPILE_FLAGS "-DOPTIONAL_CONST=const")
 endif()
 
 set_target_properties(siox-${LAYER}-wrap PROPERTIES LINK_FLAGS ${WRAP_LD_OPTS})
