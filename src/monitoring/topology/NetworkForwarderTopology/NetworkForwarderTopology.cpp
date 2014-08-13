@@ -302,10 +302,14 @@ TopologyRelation NetworkForwarderTopology::lookupRelation( TopologyObjectId pare
 
 TopologyRelationList NetworkForwarderTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
     assert(false);
+    TopologyRelationList retval;
+    return retval;
 }
 
 TopologyRelationList NetworkForwarderTopology::enumerateParents( TopologyObjectId child, TopologyTypeId relationType ) throw() {
     assert(false);
+    TopologyRelationList retval;
+    return retval;
 }
 
 TopologyAttribute NetworkForwarderTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
@@ -444,6 +448,8 @@ TopologyValue NetworkForwarderTopology::getAttribute( TopologyObjectId object, T
 
 TopologyValueList NetworkForwarderTopology::enumerateAttributes( TopologyObjectId object ) throw() {
     assert(false);
+    TopologyValueList retval;
+    return retval;
 }
 
 void NetworkForwarderTopology::messageSendCB(BareMessage * msg) throw() { /* do nothing */ }
