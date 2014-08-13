@@ -158,6 +158,8 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
         // Something very strange happened
         assert(false);
     }
+
+   return tmpType;
 }
 
 TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw() {
@@ -268,6 +270,8 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
     else {
         assert(false);
     }
+
+   return tmpObject;
 }
 
 TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw() {
@@ -357,6 +361,7 @@ TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, Topo
 }
 
 TopologyRelationList DatabaseTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
+
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     /*work selectAction(*conn, "Select Transaction");
 
@@ -386,6 +391,9 @@ TopologyRelationList DatabaseTopology::enumerateChildren( TopologyObjectId paren
     }
     return returnVector;*/
     assert(false);
+
+    TopologyRelationList returnVector;
+    return returnVector;
 
 }
 
@@ -418,9 +426,12 @@ TopologyRelationList DatabaseTopology::enumerateParents( TopologyObjectId child,
     }
     else {
         // Not found
-    }
-    return returnVector;*/
+    }*/
+
     assert(false);
+
+    TopologyRelationList returnVector;
+    return returnVector;
 }
 
 TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
@@ -480,6 +491,8 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
         // Something went horribly wrong.
         assert(false);
     }
+    
+    return tmpAttribute;
 }
 
 TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
@@ -630,10 +643,11 @@ TopologyValueList DatabaseTopology::enumerateAttributes( TopologyObjectId object
     }
     else {
         // Not found
-    }
-
-    return returnVector;*/
+    }*/
     assert(false);
+
+    Topology::TopologyValueList returnVector;
+    return returnVector;
 }
 
 extern "C" {
