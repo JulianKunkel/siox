@@ -221,6 +221,8 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 
 TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
 
+    TopologyObject tmpObject;
+
     work selectAction(*conn, "registerObject");
     // Perform a select
     result resultSelect = selectAction.exec(("SELECT childObjectId FROM topology.relation WHERE childName='" + selectAction.esc(childName) + "' AND parentObjectId = '"+to_string(parentId)+"' AND relationTypeId = '"+to_string(relationType)+"'"));
@@ -235,7 +237,6 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
 
         selectAction.commit();
 
-        TopologyObject tmpObject;
         Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(objectType, tmpId) );
         tmpObject.setObject(newObject);
 
@@ -260,7 +261,6 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
 
         selectAction.commit();
 
-        TopologyObject tmpObject;
         Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(objectType, tmpId) );
         tmpObject.setObject(newObject);
 
@@ -436,6 +436,8 @@ TopologyRelationList DatabaseTopology::enumerateParents( TopologyObjectId child,
 
 TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
 
+    TopologyAttribute tmpAttribute;
+
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "registerAttribute");
 
@@ -444,7 +446,6 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
-        TopologyAttribute tmpAttribute;
         TopologyTypeId tmpId;
         intmax_t tmpInt;
         // Check if results are sane (and convert them)
@@ -473,7 +474,6 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
-        TopologyAttribute tmpAttribute;
         TopologyTypeId tmpId;
         // Check if results are sane (and convert them)
         if (!resultSelect[0]["id"].to(tmpId)) {
@@ -646,7 +646,7 @@ TopologyValueList DatabaseTopology::enumerateAttributes( TopologyObjectId object
     }*/
     assert(false);
 
-    Topology::TopologyValueList returnVector;
+    TopologyValueList returnVector;
     return returnVector;
 }
 
