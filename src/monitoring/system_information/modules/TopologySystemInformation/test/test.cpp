@@ -7,6 +7,7 @@
 
 #include <monitoring/system_information/modules/TopologySystemInformation/TopologySystemInformationOptions.hpp>
 #include <monitoring/topology/Topology.hpp>
+#include <util/Util.hpp>
 
 using namespace std;
 
@@ -50,17 +51,17 @@ int main( int argc, char const * argv[] )
 	NodeID nid = s->register_nodeID( "testhost" );
 	assert( s->lookup_nodeID( "testhost" ) == nid );
 	assert( s->lookup_node_hostname( nid ) == "testhost" );
-
+	
 	DeviceID did = s->register_deviceID( nid, "/dev/ssd1" );
 	assert( s->lookup_deviceID( nid, "/dev/ssd1" ) == did );
 	assert( s->lookup_node_of_device( did ) == nid );
 	assert( s->lookup_device_local_name( did ) == "/dev/ssd1" );
-
+	_unused(did);
 
 	FilesystemID fid = s->register_filesystemID( "pvfs2://10.0.0.1" );
 	assert( fid == s->lookup_filesystemID( "pvfs2://10.0.0.1" ) );
 	assert( s->lookup_filesystem_name( fid ) == "pvfs2://10.0.0.1" );
-
+	_unused(fid);
 
 	UniqueComponentActivityID aid = s->register_activityID( uid, "open" );
 	assert( aid == s->lookup_activityID( uid, "open" ) );
@@ -73,6 +74,7 @@ int main( int argc, char const * argv[] )
 
 	assert( s->lookup_activity_name( aid ) == "open" );
 	assert( s->lookup_interface_of_activity( aid ) == uid );
+	_unused(aid);
 
 	delete( s );
 	delete( topology );
