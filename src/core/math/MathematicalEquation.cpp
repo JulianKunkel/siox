@@ -225,6 +225,8 @@ namespace core {
 			default:
 				assert( false );
 		}
+		
+		return 0;
 	}
 
 	static double evaluate_factor( iterator const & i, MathematicalEquation & e )
