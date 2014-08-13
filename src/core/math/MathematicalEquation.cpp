@@ -157,6 +157,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == function_call.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 
@@ -260,6 +261,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == power.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -284,6 +286,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == term.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -310,6 +313,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -336,6 +340,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == comparision_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -367,6 +372,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == equal_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -394,6 +400,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == and_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -420,6 +427,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == or_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -446,6 +454,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == condition_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
