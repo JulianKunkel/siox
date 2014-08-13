@@ -8,6 +8,7 @@
 
 #include <monitoring/topology/Topology.hpp>
 #include <monitoring/topology/RamTopologyOptions.hpp>
+#include <util/Util.hpp>
 
 using namespace std;
 
@@ -40,6 +41,8 @@ int main( int argc, char const * argv[] )
 
 	const OntologyAttribute & a3 = o->register_attribute( domain, s_a1, VariableDatatype::Type::UINT32 );
 	assert( a3 == a1 );
+	_unused(a3);
+
 	try {
 		const OntologyAttribute & a4 = o->register_attribute( domain, s_a1, VariableDatatype::Type::UINT64 );
 		cerr << "a4.aID = " << a4.aID << "\n";
