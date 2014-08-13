@@ -450,6 +450,9 @@ static inline void recordProcessesGroup(siox_activity * sioxActivity, MPI_Group 
 
 	MPI_Group_translate_ranks( group, size, ranksIn, world_group, ranksCommWorld);
 
+	extern commProcessesGroup;
+	extern commProcessesWorld;
+
 	for( int i = 0; i < size; i++ ){
  		siox_activity_set_attribute( sioxActivity, commProcessesGroup, & ranksIn[i] );
 		siox_activity_set_attribute( sioxActivity, commProcessesWorld, & ranksCommWorld[i] );
