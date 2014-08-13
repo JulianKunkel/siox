@@ -21,6 +21,7 @@
 #include <boost/spirit/include/phoenix1.hpp>
 
 #include <core/math/MathematicalEquation.hpp>
+#include <util/Util.hpp>
 
 using namespace core;
 using namespace std;
