@@ -4,6 +4,7 @@
 #include <core/module/ModuleLoader.hpp>
 
 #include <monitoring/system_information/SystemInformationGlobalIDManager.hpp>
+#include <util/Util.hpp>
 
 #include "../FileBasedSystemInformationOptions.hpp"
 
@@ -50,12 +51,12 @@ int main( int argc, char const * argv[] )
 	assert( s->lookup_deviceID( nid, "/dev/ssd1" ) == did );
 	assert( s->lookup_node_of_device( did ) == nid );
 	assert( s->lookup_device_local_name( did ) == "/dev/ssd1" );
-
+	_unused(did);
 
 	FilesystemID fid = s->register_filesystemID( "pvfs2://10.0.0.1" );
 	assert( fid == s->lookup_filesystemID( "pvfs2://10.0.0.1" ) );
 	assert( s->lookup_filesystem_name( fid ) == "pvfs2://10.0.0.1" );
-
+	_unused(fid);
 
 	UniqueComponentActivityID aid = s->register_activityID( uid, "open" );
 	assert( aid == s->lookup_activityID( uid, "open" ) );
@@ -65,9 +66,10 @@ int main( int argc, char const * argv[] )
 	} catch( NotFoundError & e ) {
 
 	}
-
+	
 	assert( s->lookup_interface_of_activity( aid ) == uid );
 	assert( s->lookup_activity_name( aid ) == "open" );
+	_unused(aid);
 
 	delete( s );
 
