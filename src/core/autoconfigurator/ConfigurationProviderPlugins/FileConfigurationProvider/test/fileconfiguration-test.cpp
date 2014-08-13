@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include <core/autoconfigurator/AutoConfigurator.hpp>
+#include <util/Util.hpp>
 
 #include "test-serialize-modules.hpp"
 
@@ -52,6 +53,7 @@ int main()
 	void * instance = GET_INSTANCE( MyChildModule, chi );
 	assert( instance );
 	assert( instance == child );
+	_unused(instance);
 
 	delete( registrar );
 
