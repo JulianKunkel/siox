@@ -120,6 +120,7 @@ public:
 
 	uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType){
 		assert(false);
+		return 0;
 	}
 
 	void serializeResponseMessage(const ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos){
