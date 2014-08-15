@@ -90,7 +90,12 @@ int main( int argc, char * argv[] )
 	MPI_Type_size(structType, & asize);
 	printf("SIZE: %lu\n", (uint64_t) asize);
 	MPI_Aint aint;
+	#if MPI_VERSION >= 2
+	MPI_Aint lb;
+	MPI_Type_get_extent(structType, &lb, &aint);
+	#else
 	MPI_Type_extent(structType, & aint);
+	#endif
 	printf("EXTENT: %lu\n", (uint64_t) aint);	
 	MPI_Type_commit(& structType);
 	MPI_Type_size(structType, & asize);
