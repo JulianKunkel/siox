@@ -47,8 +47,14 @@ namespace {
 
 void ActivityMultiplexerSyncImpl1::Log( const shared_ptr<Activity> & activity ) {
 	dispatchersLock.lock_shared();
-	IGNORE_EXCEPTIONS( dispatchers.at( activity->ucaid() ).dispatch( activity, 0 ); );
-	IGNORE_EXCEPTIONS( dispatchers.at( 0 ).dispatch( activity, 0 ); );
+	auto found = dispatchers.find(activity->ucaid());
+	if (  found != dispatchers.end() ){
+		found->second.dispatch( activity, 0 );
+	}
+	found = dispatchers.find(0);
+	if ( found != dispatchers.end() ){
+		found->second.dispatch( activity, 0 );
+	}
 	dispatchersLock.unlock_shared();
 }
 

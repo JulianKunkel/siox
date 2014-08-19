@@ -294,8 +294,14 @@ void ActivityMultiplexerAsync::Log( const shared_ptr<Activity> & activity ) {
 
 	// Lock causes about 20% overhead in measurement, 8.5 us with lock vs. 6.9 us without
 	syncDispatchersLock.lock_shared();
-	IGNORE_EXCEPTIONS( syncDispatchers.at( activity->ucaid() ).dispatch( activity, 0 ); );
-	IGNORE_EXCEPTIONS( syncDispatchers.at( 0 ).dispatch( activity, 0 ); );
+	auto found = syncDispatchers.find(activity->ucaid());
+	if ( found  != syncDispatchers.end() ){
+		found->second.dispatch( activity, 0 );
+	}
+	found = syncDispatchers.find(0);
+	if ( found != syncDispatchers.end() ){
+		found->second.dispatch( activity, 0 );
+	}
 	syncDispatchersLock.unlock_shared();
 
 	// optimization: avoid enquing activities, if the asyncDispatchers are empty
@@ -313,8 +319,14 @@ void ActivityMultiplexerAsync::Log( const shared_ptr<Activity> & activity ) {
 
 void ActivityMultiplexerAsync::dispatch(int lost, const shared_ptr<Activity>& work) {
 	asyncDispatchersLock.lock_shared();
-	IGNORE_EXCEPTIONS( asyncDispatchers.at( work->ucaid() ).dispatch( work, lost ); );
-	IGNORE_EXCEPTIONS( asyncDispatchers.at( 0 ).dispatch( work, lost ); );
+	auto found = asyncDispatchers.find(work->ucaid());
+	if ( found != asyncDispatchers.end() ){
+		found->second.dispatch( work, lost );
+	}
+	found = asyncDispatchers.find(0);
+	if ( found != asyncDispatchers.end() ){
+		found->second.dispatch( work, lost );
+	}
 	asyncDispatchersLock.unlock_shared();
 	processed_events_in_async++;
 	lost_events += lost;
