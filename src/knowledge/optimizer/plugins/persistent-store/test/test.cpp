@@ -5,8 +5,7 @@
 #include <knowledge/optimizer/Optimizer.hpp>
 #include <core/module/ModuleLoader.hpp>
 #include <monitoring/ontology/OntologyImplementation.hpp>
-
-#include "../../../../monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp"
+#include <monitoring/ontology/modules/file-ontology/FileOntologyOptions.hpp>
 
 using namespace std;
 using namespace knowledge;

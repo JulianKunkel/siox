@@ -330,7 +330,7 @@ GenericHistoryPlugin::~GenericHistoryPlugin() {
 	Optimizer * optimizer = GET_INSTANCE(Optimizer, o.optimizer);
 	// Unregister all attributes we claimed as optimizable with the optimizer
 	for( auto itr = hintTypes.begin(); itr != hintTypes.end(); itr++ ) {
-		optimizer->unregisterPlugin( itr->first );	// Tell the optimizer not to ask us for this attribute any more
+		optimizer->unregisterPlugin( itr->first, this );	// Tell the optimizer not to ask us for this attribute any more
 	}
 }
 

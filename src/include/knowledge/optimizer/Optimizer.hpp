@@ -65,7 +65,7 @@ namespace knowledge {
 			 * @param plugin [in]
 			 *      The plugin that will provide suggestions
 			 */
-			virtual void registerPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) = 0;
+			virtual bool registerPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) = 0;
 
 			/**
 			 * Is there a plug-in registered that can provide suggestions for
@@ -75,7 +75,7 @@ namespace knowledge {
 			 *      The attribute in question
 			 *
 			 * @return
-			 *      @c true if there is a plug-in regiestered for attribute;
+			 *      @c true if there is a plug-in registered for attribute;
 			 *      otherwise @c false.
 			 */
 			virtual bool isPluginRegistered( OntologyAttributeID aid ) const = 0;
@@ -87,7 +87,7 @@ namespace knowledge {
 			 * @param attribute [in]
 			 *      The attribute to remove from the list
 			 */
-			virtual void unregisterPlugin( OntologyAttributeID aid ) = 0;
+			virtual bool unregisterPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) = 0;
 
 			/**
 			 * Ask the optimizer to suggest a parameter for @a attribute.

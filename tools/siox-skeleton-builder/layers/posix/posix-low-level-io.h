@@ -21,7 +21,7 @@
 #endif
 
 // TODO: To ensure thread safety, calls which query the current position should be protected? We may also accept inaccuracy when multiple threads concurrently access a file...
-// TODO: Generall aproach to handle errors: How do we convert them to the platform dependent error message.
+// TODO: General approach to handle errors: How do we convert them to the platform dependent error message.
 
 /* Set the interface name for the library*/
 //@autoInitializeLibrary

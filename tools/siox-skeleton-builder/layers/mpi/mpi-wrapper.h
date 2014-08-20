@@ -92,6 +92,7 @@ End of global part
 //@component_attribute commSize mpi_sz  int mpi_sz; MPI_Comm_size(MPI_COMM_WORLD, & mpi_sz);
 //@component_attribute commRank mpi_rank  int mpi_rank; MPI_Comm_rank(MPI_COMM_WORLD, & mpi_rank);
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); MPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+//@splice_after initMPIHelper();
 int MPI_Init( int * argc, char ** *argv );
 
 //@callLibraryInitialize
@@ -100,6 +101,7 @@ int MPI_Init( int * argc, char ** *argv );
 //@component_attribute commRank mpi_rank  int mpi_rank; MPI_Comm_rank(MPI_COMM_WORLD, & mpi_rank);
 //@component_attribute threadLevelRequired translatedFlags int32_t translatedFlags = translateMPIThreadLevelToSIOX(required);
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); MPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+//@splice_after initMPIHelper();
 int MPI_Init_thread( int *argc, char ** *argv, int required, int *provided );
 
 
@@ -163,7 +165,9 @@ int MPI_Abort( MPI_Comm comm,  int errorcode );
 //@activity_attribute fileOpenFlags translatedFlags
 //@activity_attribute_str fileName filename
 //@MPI_comm_handle comm
+//@splice_before int changed_info = (info == MPI_INFO_NULL); info = setOptimalParametersForOpen(info, sioxActivity);
 //@splice_after setFileInfo(*fh, info);
+//@splice_after if (changed_info) PMPI_Info_free(& info);
 //@horizontal_map_put_size *fh
 //@splice_after recordFileInfo(sioxActivity, *fh);
 //@activity_attribute_late fileHandle *fh
@@ -620,7 +624,7 @@ int MPI_File_sync( MPI_File fh );
 //@activity_attribute_late commHandler commHandlerValue
 int MPI_Comm_create( MPI_Comm comm, MPI_Group group,  MPI_Comm *newcomm );
 
-//@MPI_activity ActivityVar=sioxActivity
+//@MPI_activity
 //@MPI_comm_handler
 //@MPI_comm_handler_out *newcomm
 int MPI_Comm_dup( MPI_Comm comm, MPI_Comm *newcomm );

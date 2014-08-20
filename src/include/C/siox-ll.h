@@ -645,6 +645,9 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 //@null 0
 int siox_suggest_optimal_value_for( siox_component * component, siox_attribute * attribute, siox_activity * activity, void * out_value );
 
+
+int siox_suggest_optimal_value_for_str( siox_component * component, siox_attribute * attribute, siox_activity * activity, char * target_str, int maxLength );
+
 //////////////////////////////////////////////////////////////////////////////
 /// Report that a local activity was initiated via a remote call.
 /// While during a single activity, many remote calls may be sent, only one

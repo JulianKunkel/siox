@@ -243,33 +243,89 @@ static inline void recordDatatype(siox_activity * sioxActivity, siox_attribute *
  */
 struct known_hint_t{
 	char * name;
-	siox_attribute ** attribute;
+	siox_attribute * attribute;
 };
 
 // Three different types are supported, int32, int64 and strings.
-static struct known_hint_t knownHintValueInt32 [] = {
-	{"mpiio_concurrency", & infoConcurrency},
-	{"mpiio_coll_contiguous", & infoCollContiguous},
-	{NULL, NULL}};
+static struct known_hint_t * knownHintValueInt32;
 
-static struct known_hint_t knownHintValueInt64 [] = {
-	{"cb_buffer_size" , & infoBuffSize},
-	{"noncoll_read_bufsize" , & infoReadBuffSize},
-	{"noncoll_write_bufsize", &infoWriteBuffSize},
-	{"coll_read_bufsize", & infoCollReadBuffSize},
-	{"coll_write_bufsize", & infoCollWriteBuffSize},
-	{NULL, NULL}};
+static struct known_hint_t * knownHintValueInt64;
 
-static struct known_hint_t knownHintValueStr [] = {
-	{"romio_cb_read", & infoROMIOCollReadEnabled},
-	{"romio_cb_write", & infoROMIOCollWriteEnabled},
-	{NULL, NULL}};
+static struct known_hint_t * knownHintValueStr;
 
-static struct known_hint_t optimizeHints [] = {
-	{"cb_buffer_size" , & infoBuffSize},
-	{"romio_cb_read", & infoROMIOCollReadEnabled},
-	{"romio_cb_write", & infoROMIOCollWriteEnabled},
-	{NULL, NULL}};
+static struct known_hint_t * optimizeHints;
+
+void initMPIHelper(){
+	{
+	// support the known hints to the data structures, since the values are only available after init, it can't be done statically.
+	struct known_hint_t tmp [] = {
+		{"mpiio_concurrency",  infoConcurrency},
+		{"mpiio_coll_contiguous",  infoCollContiguous},
+		{NULL, NULL}};
+	knownHintValueInt32 = malloc(sizeof(tmp));
+	memcpy(knownHintValueInt32, tmp, sizeof(tmp));
+	}
+	{
+	struct known_hint_t tmp [] = {
+		{"cb_buffer_size" ,  infoBuffSize},
+		{"romio_cb_read",  infoROMIOCollReadEnabled},
+		{"romio_cb_write",  infoROMIOCollWriteEnabled},
+		{NULL, NULL}};
+	optimizeHints = malloc(sizeof(tmp));
+	memcpy(optimizeHints, tmp, sizeof(tmp));		
+	}
+	{
+	struct known_hint_t tmp [] = {
+		{"romio_cb_read",  infoROMIOCollReadEnabled},
+		{"romio_cb_write",  infoROMIOCollWriteEnabled},
+		{NULL, NULL}};	
+	knownHintValueStr = malloc(sizeof(tmp));
+	memcpy(knownHintValueStr, tmp, sizeof(tmp));		
+	}
+	{
+	struct known_hint_t tmp [] = {
+		{"cb_buffer_size" ,  infoBuffSize},
+		{"ind_rd_buffer_size" ,  infoReadBuffSize},
+		{"ind_wr_buffer_size", infoWriteBuffSize},
+		{"coll_read_bufsize",  infoCollReadBuffSize},
+		{"coll_write_bufsize",  infoCollWriteBuffSize},
+		{NULL, NULL}};
+	knownHintValueInt64 = malloc(sizeof(tmp));
+	memcpy(knownHintValueInt64, tmp, sizeof(tmp));		
+	}
+}
+
+static inline void setOptimalHints(struct known_hint_t * cur, MPI_Info info, siox_activity * activity){
+	char value[MPI_MAX_INFO_VAL];	
+	for( ; cur->name != NULL; cur ++){
+		int ret = siox_suggest_optimal_value_for_str(global_component, cur->attribute, activity, value, MPI_MAX_INFO_VAL );
+
+		if ( ret ){
+			PMPI_Info_set( info, cur->name, value );
+		}
+	}
+}
+
+
+static inline MPI_Info setOptimalParametersForOpen(MPI_Info user_info, siox_activity * activity){
+	int ret;
+
+	if (user_info == MPI_INFO_NULL){		
+		PMPI_Info_create( & user_info );
+	}
+	if (! knownHintValueInt64){
+		return user_info;
+	}	
+
+	// try to set the known hints
+	struct known_hint_t * cur;
+
+	setOptimalHints(knownHintValueInt32, user_info, activity);
+	setOptimalHints(knownHintValueInt64, user_info, activity);
+	setOptimalHints(knownHintValueStr, user_info, activity);
+
+	return user_info;
+}
 
 static inline int setOptimalInfo(MPI_Info write, MPI_Info read){
 	char value[MPI_MAX_INFO_VAL];
@@ -289,7 +345,7 @@ static inline int setOptimalInfo(MPI_Info write, MPI_Info read){
 				continue;
 			}
 		}
-		if( siox_suggest_optimal_value_str( global_component, *cur->attribute, value, MPI_MAX_INFO_VAL ) ){
+		if( siox_suggest_optimal_value_str( global_component, cur->attribute, value, MPI_MAX_INFO_VAL ) ){
 			PMPI_Info_set( write, cur->name, value );
 			setHint = 1;
 		}
@@ -395,7 +451,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 			continue;
 		}
 		int32_t val = (int32_t) atoi(value);
-		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );
+		siox_activity_set_attribute( sioxActivity, cur->attribute , & val );
 	}
 
 	for( cur = knownHintValueInt64; cur->name != NULL; cur ++){
@@ -407,7 +463,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 			continue;
 		}
 		int64_t val = (int64_t) atol(value);
-		siox_activity_set_attribute( sioxActivity, *cur->attribute , & val );
+		siox_activity_set_attribute( sioxActivity, cur->attribute , & val );
 	}
 
 	for( cur = knownHintValueStr; cur->name != NULL; cur ++){
@@ -418,7 +474,7 @@ static inline void recordFileInfo(siox_activity * sioxActivity, MPI_File fh){
 		if ( ! isDefined || ret != MPI_SUCCESS ){
 			continue;
 		}
-		siox_activity_set_attribute( sioxActivity, *cur->attribute , value );
+		siox_activity_set_attribute( sioxActivity, cur->attribute , value );
 	}
 }
 

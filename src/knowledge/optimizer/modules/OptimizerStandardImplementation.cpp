@@ -35,11 +35,14 @@ namespace knowledge {
 
 		public:
 
-			 void registerPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) override {
+			 bool registerPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) override {
 				assert( plugin != nullptr );
-				assert( expert[aid] == nullptr );
 
-				expert[aid] = ( OptimizerInterface * ) plugin;
+				if ( expert[aid] == nullptr ){
+					expert[aid] = ( OptimizerInterface * ) plugin;
+					return true;
+				}
+				return false;
 			}
 
 
@@ -48,8 +51,13 @@ namespace knowledge {
 			}
 
 
-			void unregisterPlugin( OntologyAttributeID aid ) override {
-				expert.erase( aid );
+			bool unregisterPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) override {
+				auto itr = expert.find(aid);
+				if ( itr != expert.end() && itr->second == plugin){
+					expert.erase( aid );
+					return true;
+				}
+				return false;				
 			}
 
 
