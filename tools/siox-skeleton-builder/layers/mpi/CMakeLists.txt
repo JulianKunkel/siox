@@ -77,13 +77,13 @@ CHECK_C_SOURCE_COMPILES("
 
 # Only one of them should be true
 
-if ( (NOT MPI_PROTOTYPE_CONST AND NOT MPI_PROTOTYPE_DEFAULT) OR (MPI_PROTOTYPE_CONST AND NOT MPI_PROTOTYPE_DEFAULT) )
+if ( (NOT MPI_PROTOTYPE_CONST AND NOT MPI_PROTOTYPE_DEFAULT) OR (MPI_PROTOTYPE_CONST AND MPI_PROTOTYPE_DEFAULT) )
 	message(FATAL_ERROR "Could not determine the MPI prototype status correctly")
 endif()
 
 if ( MPI_PROTOTYPE_CONST )
-	set_target_properties(siox-${LAYER}-wrap PROPERTIES COMPILE_FLAGS "-DOPTIONAL_CONST")
-	set_target_properties(siox-${LAYER}-dlsym PROPERTIES COMPILE_FLAGS "-DOPTIONAL_CONST")
+	set_target_properties(siox-${LAYER}-wrap PROPERTIES COMPILE_FLAGS "-DOPTIONAL_CONST=const")
+	set_target_properties(siox-${LAYER}-dlsym PROPERTIES COMPILE_FLAGS "-DOPTIONAL_CONST=const")
 endif()
 
 set_target_properties(siox-${LAYER}-wrap PROPERTIES LINK_FLAGS ${WRAP_LD_OPTS})

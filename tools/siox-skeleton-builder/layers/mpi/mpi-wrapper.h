@@ -92,6 +92,7 @@ End of global part
 //@component_attribute commSize mpi_sz  int mpi_sz; MPI_Comm_size(MPI_COMM_WORLD, & mpi_sz);
 //@component_attribute commRank mpi_rank  int mpi_rank; MPI_Comm_rank(MPI_COMM_WORLD, & mpi_rank);
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); MPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+//@splice_after initMPIHelper();
 int MPI_Init( int * argc, char ** *argv );
 
 //@callLibraryInitialize
@@ -100,6 +101,7 @@ int MPI_Init( int * argc, char ** *argv );
 //@component_attribute commRank mpi_rank  int mpi_rank; MPI_Comm_rank(MPI_COMM_WORLD, & mpi_rank);
 //@component_attribute threadLevelRequired translatedFlags int32_t translatedFlags = translateMPIThreadLevelToSIOX(required);
 //@component_attribute pidRank0 pid uint64_t pid = (uint64_t) getpid(); MPI_Bcast(& pid, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+//@splice_after initMPIHelper();
 int MPI_Init_thread( int *argc, char ** *argv, int required, int *provided );
 
 
@@ -163,7 +165,9 @@ int MPI_Abort( MPI_Comm comm,  int errorcode );
 //@activity_attribute fileOpenFlags translatedFlags
 //@activity_attribute_str fileName filename
 //@MPI_comm_handle comm
+//@splice_before int changed_info = (info == MPI_INFO_NULL); info = setOptimalParametersForOpen(info, sioxActivity);
 //@splice_after setFileInfo(*fh, info);
+//@splice_after if (changed_info) PMPI_Info_free(& info);
 //@horizontal_map_put_size *fh
 //@splice_after recordFileInfo(sioxActivity, *fh);
 //@activity_attribute_late fileHandle *fh
@@ -620,7 +624,7 @@ int MPI_File_sync( MPI_File fh );
 //@activity_attribute_late commHandler commHandlerValue
 int MPI_Comm_create( MPI_Comm comm, MPI_Group group,  MPI_Comm *newcomm );
 
-//@MPI_activity ActivityVar=sioxActivity
+//@MPI_activity
 //@MPI_comm_handler
 //@MPI_comm_handler_out *newcomm
 int MPI_Comm_dup( MPI_Comm comm, MPI_Comm *newcomm );
@@ -652,7 +656,7 @@ int MPI_Comm_split( MPI_Comm comm, int color, int key, MPI_Comm *newcomm );
 //@activity_attribute_late t_id typeID
 //@splice_before '' for (int t=0; t < count ; t++) { siox_activity_set_attribute( sioxActivity, t_blocklen , & array_of_blocklengths[t] ); uint64_t tmp;  tmp = array_of_displacements[t]; siox_activity_set_attribute( sioxActivity, t_displ, & tmp );  tmp = getDatatypeHandle(array_of_types[t]); siox_activity_set_attribute( sioxActivity, t_id , & tmp); } ''
 //@splice_after RECORD_TYPE_INFORMATION(*newtype)
-int MPI_Type_create_struct( int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[], MPI_Datatype array_of_types[], MPI_Datatype *newtype );
+int MPI_Type_create_struct( int count, OPTIONAL_CONST int array_of_blocklengths[], OPTIONAL_CONST MPI_Aint array_of_displacements[],  OPTIONAL_CONST MPI_Datatype array_of_types[], MPI_Datatype *newtype );
 
 
 
@@ -682,7 +686,7 @@ int MPI_Type_create_struct( int count, int array_of_blocklengths[], MPI_Aint arr
 //@activity_attribute cTag tag
 //@splice_before ''int intSize; MPI_Type_size(datatype, & intSize); uint64_t size = (uint64_t)intSize * (uint64_t)count;''
 //@activity_attribute cBytesSend size
-int MPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
+int MPI_Send(OPTIONAL_CONST void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
 
 //@MPI_communication_activity
 //@splice_after ''uint64_t commHandlerValue; commHandlerValue = getCommHandle(comm);''

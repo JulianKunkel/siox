@@ -158,6 +158,8 @@ TopologyType DatabaseTopology::registerType( const string& name ) throw() {
         // Something very strange happened
         assert(false);
     }
+
+   return tmpType;
 }
 
 TopologyType DatabaseTopology::lookupTypeByName( const string& name ) throw() {
@@ -219,6 +221,8 @@ TopologyType DatabaseTopology::lookupTypeById( TopologyTypeId anId ) throw() {
 
 TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, TopologyTypeId relationType, const string& childName, TopologyTypeId objectType ) throw() {
 
+    TopologyObject tmpObject;
+
     work selectAction(*conn, "registerObject");
     // Perform a select
     result resultSelect = selectAction.exec(("SELECT childObjectId FROM topology.relation WHERE childName='" + selectAction.esc(childName) + "' AND parentObjectId = '"+to_string(parentId)+"' AND relationTypeId = '"+to_string(relationType)+"'"));
@@ -233,7 +237,6 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
 
         selectAction.commit();
 
-        TopologyObject tmpObject;
         Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(objectType, tmpId) );
         tmpObject.setObject(newObject);
 
@@ -258,7 +261,6 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
 
         selectAction.commit();
 
-        TopologyObject tmpObject;
         Release<TopologyObjectImplementation> newObject( new TopologyObjectImplementation(objectType, tmpId) );
         tmpObject.setObject(newObject);
 
@@ -268,6 +270,8 @@ TopologyObject DatabaseTopology::registerObject( TopologyObjectId parentId, Topo
     else {
         assert(false);
     }
+
+   return tmpObject;
 }
 
 TopologyObject DatabaseTopology::lookupObjectById( TopologyObjectId anId ) throw() {
@@ -357,6 +361,7 @@ TopologyRelation DatabaseTopology::lookupRelation( TopologyObjectId parent, Topo
 }
 
 TopologyRelationList DatabaseTopology::enumerateChildren( TopologyObjectId parent, TopologyTypeId relationType ) throw() {
+
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     /*work selectAction(*conn, "Select Transaction");
 
@@ -386,6 +391,9 @@ TopologyRelationList DatabaseTopology::enumerateChildren( TopologyObjectId paren
     }
     return returnVector;*/
     assert(false);
+
+    TopologyRelationList returnVector;
+    return returnVector;
 
 }
 
@@ -418,12 +426,17 @@ TopologyRelationList DatabaseTopology::enumerateParents( TopologyObjectId child,
     }
     else {
         // Not found
-    }
-    return returnVector;*/
+    }*/
+
     assert(false);
+
+    TopologyRelationList returnVector;
+    return returnVector;
 }
 
 TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, const string& name, VariableDatatype::Type datatype ) throw() {
+
+    TopologyAttribute tmpAttribute;
 
     // Create a new transaction. It gets automatically destroyed at the end of this funtion.
     work selectAction(*conn, "registerAttribute");
@@ -433,7 +446,6 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
-        TopologyAttribute tmpAttribute;
         TopologyTypeId tmpId;
         intmax_t tmpInt;
         // Check if results are sane (and convert them)
@@ -462,7 +474,6 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
 
     // Check if there is only one result
     if (resultSelect.size() == 1) {
-        TopologyAttribute tmpAttribute;
         TopologyTypeId tmpId;
         // Check if results are sane (and convert them)
         if (!resultSelect[0]["id"].to(tmpId)) {
@@ -480,6 +491,8 @@ TopologyAttribute DatabaseTopology::registerAttribute( TopologyTypeId domain, co
         // Something went horribly wrong.
         assert(false);
     }
+    
+    return tmpAttribute;
 }
 
 TopologyAttribute DatabaseTopology::lookupAttributeByName( TopologyTypeId domain, const string& name ) throw() {
@@ -630,10 +643,11 @@ TopologyValueList DatabaseTopology::enumerateAttributes( TopologyObjectId object
     }
     else {
         // Not found
-    }
-
-    return returnVector;*/
+    }*/
     assert(false);
+
+    TopologyValueList returnVector;
+    return returnVector;
 }
 
 extern "C" {

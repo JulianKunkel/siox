@@ -5,6 +5,8 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 
+#define _unused(x) ((void) x)
+
 namespace util {
 
 	inline uint64_t htonll(const uint64_t n)

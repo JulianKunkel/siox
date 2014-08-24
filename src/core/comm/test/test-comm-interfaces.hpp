@@ -11,6 +11,7 @@
 #include <util/TestHelper.hpp>
 
 #include <core/container/container-binary-serializer.hpp>
+#include <util/Util.hpp>
 
 using namespace core;
 using namespace std;
@@ -119,6 +120,7 @@ public:
 
 	uint64_t serializeResponseMessageLen(const ServerClientMessage * msg, const void * responseType){
 		assert(false);
+		return 0;
 	}
 
 	void serializeResponseMessage(const ServerClientMessage * msg, const void * responseType, char * buffer, uint64_t & pos){
@@ -197,6 +199,7 @@ void doubleListenerError(CommunicationModule * comm, string address1, string add
 	try{
 		ServiceServer * s3 = comm->startServerService(address1,  & myEmptyServerCB );
 		assert(s3 == nullptr);
+		_unused(s3);
 	}catch(CommunicationModuleException & e){
 		// we expect that this server address is already occupied.
 	}

@@ -297,7 +297,7 @@ void ThreadedStatisticsCollector::init() throw() {
 void ThreadedStatisticsCollector::registerPlugin( StatisticsProviderPlugin * plugin ) throw() {
 	assert( plugin );
 	sourcesLock.lock();
-	// Check whether this plugin is alread registered.
+	// Check whether this plugin is already registered.
 	if(find(plugins.begin(), plugins.end(), plugin) != plugins.end()) {
 		assert( 0 && "Statistics Collector Plugins may only be registered with a StatisticsCollector once." ), abort();
 	}

@@ -21,6 +21,7 @@
 #include <boost/spirit/include/phoenix1.hpp>
 
 #include <core/math/MathematicalEquation.hpp>
+#include <util/Util.hpp>
 
 using namespace core;
 using namespace std;
@@ -157,6 +158,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == function_call.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 
@@ -223,6 +225,8 @@ namespace core {
 			default:
 				assert( false );
 		}
+		
+		return 0;
 	}
 
 	static double evaluate_factor( iterator const & i, MathematicalEquation & e )
@@ -260,6 +264,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == power.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -284,6 +289,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == term.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -310,6 +316,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -336,6 +343,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == comparision_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -367,6 +375,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == equal_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -394,6 +403,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == and_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -420,6 +430,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == or_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();
@@ -446,6 +457,7 @@ namespace core {
 	{
 		spirit_cls::parser_id const id = i->value.id();
 		assert( id == condition_expression.id() );
+		_unused(id);
 
 		iterator current = i->children.begin();
 		iterator const end = i->children.end();

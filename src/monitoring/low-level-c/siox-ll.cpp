@@ -1009,24 +1009,8 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		}		
 	}
 
-	int siox_suggest_optimal_value_for( siox_component * component, siox_attribute * attribute, siox_activity * activity, void * out_value ){
-		FUNCTION_BEGIN
 
-		if ( process_data.optimizer == nullptr ){
-			return false;
-		}
-
-		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
-
-		try{
-			OntologyValue val(process_data.optimizer->optimalParameterFor(oa.aID, activity->activity));
-			return convert_attribute_back(oa, val, out_value);
-		}catch ( NotFoundError & e ){
-			return false;
-		}		
-	}
-
-int siox_suggest_optimal_value_str( siox_component * component, siox_attribute * attribute, char * target_str, int maxLength ){
+	int siox_suggest_optimal_value_str( siox_component * component, siox_attribute * attribute, char * target_str, int maxLength ){
 		if ( process_data.optimizer == nullptr ){
 			return 0;
 		}
@@ -1044,8 +1028,43 @@ int siox_suggest_optimal_value_str( siox_component * component, siox_attribute *
 		}catch ( NotFoundError & e ){
 			return 0;
 		}
-}
+	}
 
+
+	int siox_suggest_optimal_value_for( siox_component * component, siox_attribute * attribute, siox_activity * activity, void * out_value ){
+		FUNCTION_BEGIN
+
+		if ( process_data.optimizer == nullptr ){
+			return false;
+		}
+
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+
+		try{
+			OntologyValue val(process_data.optimizer->optimalParameterFor(oa.aID, activity->activity));
+			return convert_attribute_back(oa, val, out_value);
+		}catch ( NotFoundError & e ){
+			return false;
+		}
+	}
+
+	int siox_suggest_optimal_value_for_str( siox_component * component, siox_attribute * attribute, siox_activity * activity, char * target_str, int maxLength ){
+		FUNCTION_BEGIN
+
+		if ( process_data.optimizer == nullptr ){
+			return false;
+		}
+
+		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+
+		try{
+			OntologyValue val(process_data.optimizer->optimalParameterFor(oa.aID, activity->activity));
+			strncpy( target_str, val.toStr().c_str(), maxLength );
+			return true;
+		}catch ( NotFoundError & e ){
+			return false;
+		}
+	}
 
 int siox_activity_get_attribute(const siox_activity * activity, const siox_attribute * attributeSearched, void * outBuffer){
 	FUNCTION_BEGIN

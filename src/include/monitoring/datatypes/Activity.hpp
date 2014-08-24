@@ -190,6 +190,15 @@ namespace monitoring {
 				return errorValue_;
 			}
 
+			inline const AttributeValue * findAttribute(OntologyAttributeID aID) const{
+				for(auto itr = attributeArray_.begin(); itr != attributeArray_.end(); itr++){
+					if (itr->id == aID){
+						return & itr->value;
+					}
+				}
+				return nullptr;
+			}
+
 	};
 
 }

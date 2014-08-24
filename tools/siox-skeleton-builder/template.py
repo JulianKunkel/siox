@@ -18,10 +18,10 @@ template = {
 static siox_timestamp t_fkt_%(fname)s = 0;
 static int calls_%(fname)s = 0;''',
 	'before' : '''
-			siox_timestamp t_tmp;
-			siox_timestamp t_fkt_start;
+			siox_timestamp t_tmp = 0;
+			siox_timestamp t_fkt_start = 0;
 			siox_timestamp t_start = siox_gettime(); 
-			siox_timestamp t_overhead;''',
+			siox_timestamp t_overhead = 0;''',
 	'beforeLast' : '''
 		t_tmp = siox_gettime();
 		t_overhead = t_tmp - t_start;
@@ -552,25 +552,6 @@ static void sioxInit() __attribute__((constructor));
 		    }''',
 	'cleanup': '',
 	'final': ''
-},
-'errorErrno': {
-        'variables': 'Condition="ret<0" Activity=sioxActivity',
-        'global': '''''',
-        'init': '''''',
-        'before': '''''',
-        'after': ''' int errsv = errno;
-		    if ( %(Condition)s ){
-                      siox_activity_report_error( %(Activity)s, errsv );
-                      siox_activity_end(%(Activity)s);
-							 errno = errsv;
-							 return ret;
-                    }''',
-        'cleanup': '',
-        #'cleanupLast': '''errno = errsv;''',        
-        'final': ''
-},
-'restoreErrno': {
-        'after': ''' errno = errsv; '''
 },
 
 # remote_call_start
