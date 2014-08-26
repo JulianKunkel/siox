@@ -269,7 +269,7 @@ int fdatasync( int fd );
 //@activity
 //@activity_attribute fileHandle fd
 //@activity_link_int fd
-//@activity_attribute filePosition ret
+//@activity_attribute_late filePosition ret
 off_t lseek(int fd, off_t offset, int whence);
 
 
