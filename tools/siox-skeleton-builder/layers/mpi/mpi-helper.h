@@ -279,8 +279,14 @@ void initMPIHelper(){
 		{"romio_cb_read",  infoROMIOCollReadEnabled},
 		{"romio_cb_write",  infoROMIOCollWriteEnabled},
 		{"sioxAccessRange",  sioxAccessRange},
+		{"sioxFreeRange",  sioxFreeRange},
 		{"sioxClearFileCache",  sioxClearFileCache},
 		{"sioxCancelHints",  sioxCancelHints},
+		{"sioxDataShipStart",  sioxDataShipStart},
+		{"sioxDataShipStop",  sioxDataShipStop},
+		{"sioxSetReplication",  sioxSetReplication},
+		{"sioxByteRange",  sioxByteRange},
+		{"sioxRestripeData",  sioxRestripeData},
 		{NULL, NULL}};	
 	knownHintValueStr = malloc(sizeof(tmp));
 	memcpy(knownHintValueStr, tmp, sizeof(tmp));		
