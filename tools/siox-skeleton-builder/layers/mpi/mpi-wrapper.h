@@ -56,6 +56,15 @@
 //@register_attribute infoOMPIOCollWriteEnabled "OMPIO" "hints/collWrite" SIOX_STORAGE_STRING
 //@register_attribute infoConcurrency "MPI" "hints/ioconcurrency" SIOX_STORAGE_32_BIT_UINTEGER
 //@register_attribute infoCollContiguous "MPI" "hints/collContiguous" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute sioxAccessRange "GPFS" "sioxAccessRange" SIOX_STORAGE_STRING
+//@register_attribute sioxAccessRange "GPFS" "sioxFreeRange" SIOX_STORAGE_STRING
+//@register_attribute sioxClearFileCache "GPFS" "sioxClearFileCache" SIOX_STORAGE_STRING
+//@register_attribute sioxCancelHints "GPFS" "sioxCancelHints" SIOX_STORAGE_STRING
+//@register_attribute sioxCancelHints "GPFS" "sioxDataShipStart" SIOX_STORAGE_STRING
+//@register_attribute sioxCancelHints "GPFS" "sioxDataShipStop" SIOX_STORAGE_STRING
+//@register_attribute sioxCancelHints "GPFS" "sioxSetReplication" SIOX_STORAGE_STRING
+//@register_attribute sioxCancelHints "GPFS" "sioxByteRange" SIOX_STORAGE_STRING
+//@register_attribute sioxCancelHints "GPFS" "sioxRestripeData" SIOX_STORAGE_STRING
 
 //Contains all hints:
 //@register_attribute infoString "MPI" "hints/info" SIOX_STORAGE_STRING

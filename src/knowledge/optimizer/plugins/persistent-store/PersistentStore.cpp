@@ -107,7 +107,6 @@ OntologyValue PersistentStorePlugin::optimalParameterFor( OntologyAttributeID ai
 
 	// should be true, otherwise programming error...
 	assert( activityToStart->ucaid() == openActivity ); 
-
 	// determine the filename
 	const AttributeValue * fileName = activityToStart->findAttribute(filenameAttribute);
 	if ( fileName ){

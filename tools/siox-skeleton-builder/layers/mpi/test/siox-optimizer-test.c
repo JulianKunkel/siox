@@ -10,6 +10,15 @@
 
 int main( int argc, char * argv[] )
 {
+	// for DEBUG
+	/*int gdb = 0;
+    char hostname[256];
+    gethostname(hostname, sizeof(hostname));
+    printf("PID %d on %s ready for attach\n", getpid(), hostname);
+    fflush(stdout);
+    while (0 == gdb)
+        sleep(5);*/
+
 	int rank, size;
 	MPI_File fh;
 	char* buf;

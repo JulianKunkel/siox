@@ -38,8 +38,8 @@ struct activityDescription{
 //@serializable
 struct PersistentStoreOptions : public OptimizerPluginOptions{
 	// values are set to show how to use the XML
-	vector<FileOptions> fileHints = {{ "test", {{"MPI", "hints/noncollReadBuffSize", "102400"}} }}; 
-
+	//vector<FileOptions> fileHints = {{ "/siox-gpfs/with_gpfs_hints_0", {{"GPFS", "sioxAccessRange", "102400"}} }}; 
+	vector<FileOptions> fileHints;
 	attribute 				filenameAttribute;
 	activityDescription  openActivity;
 };

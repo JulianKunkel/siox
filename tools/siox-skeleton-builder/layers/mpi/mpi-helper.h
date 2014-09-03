@@ -278,6 +278,9 @@ void initMPIHelper(){
 	struct known_hint_t tmp [] = {
 		{"romio_cb_read",  infoROMIOCollReadEnabled},
 		{"romio_cb_write",  infoROMIOCollWriteEnabled},
+		{"sioxAccessRange",  sioxAccessRange},
+		{"sioxClearFileCache",  sioxClearFileCache},
+		{"sioxCancelHints",  sioxCancelHints},
 		{NULL, NULL}};	
 	knownHintValueStr = malloc(sizeof(tmp));
 	memcpy(knownHintValueStr, tmp, sizeof(tmp));		
