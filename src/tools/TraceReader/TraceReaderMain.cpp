@@ -24,7 +24,7 @@ int main( int argc, char ** argv )
 		genericOptions.add_options()
 		( "help", "This help message" )
 		( "verbosity", program_options::value<int>()->default_value(0), "Verbosity level, 1 is Warning, 3+ is Debug" )
-		( "afile", program_options::value<string>()->default_value( "activities.dat" ), "Activity file" )
+		( "afile", program_options::value<string>()->default_value( "" ), "Activity file" )
 		( "ofile", program_options::value<string>()->default_value( "ontology.dat" ), "Ontology file" )
 		( "sfile", program_options::value<string>()->default_value( "system-info.dat" ), "System information file" )
 		( "Afile", program_options::value<string>()->default_value( "association.dat" ), "Association file" )
@@ -71,7 +71,16 @@ int main( int argc, char ** argv )
 		program_options::store( program_options::command_line_parser(argc, argv).options(cmdline_options).style(program_options::command_line_style::unix_style ^ program_options::command_line_style::allow_short).run(), vm);
 		program_options::notify( vm );
 
-		TraceReader tr = TraceReader( vm["afile"].as<string>(), vm["sfile"].as<string>(), vm["ofile"].as<string>(), vm["Afile"].as<string>(), vm["DBtopology"].as<string>() );
+		string file = vm["afile"].as<string>();
+		if (file == ""){
+			if(argc > 1){
+				file = argv[argc-1];
+			}else{
+				file = "activities.dat";
+			}
+		}
+
+		TraceReader tr = TraceReader( file, vm["sfile"].as<string>(), vm["ofile"].as<string>(), vm["Afile"].as<string>(), vm["DBtopology"].as<string>() );
 
 		for( auto itr = plugins.begin(); itr != plugins.end(); ){
 			auto plugin = *itr;

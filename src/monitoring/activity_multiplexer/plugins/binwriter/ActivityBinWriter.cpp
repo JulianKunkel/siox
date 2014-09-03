@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sstream>
+#include <stdexcept> 
 
 #include <monitoring/activity_multiplexer/plugins/binwriter/ActivityBinWriter.hpp>
 #include <monitoring/activity_multiplexer/plugins/binwriter/ActivityBinWriterPluginOptions.hpp>
@@ -50,10 +51,10 @@ void ActivityBinWriterPlugin::start( ) {
  	buff<< o.filename;
  	if (! getenv("SIOX_ACTIVITY_WRITER_FILENAME_DONT_APPEND_PID")){
 			buff << (long long unsigned) getpid();
-	}			
+	}
 
 	file = fopen(buff.str().c_str(), "ab");
-	if (! file)	{
+	if (! file )	{
 		printf("Error in %s %s, disabling plugin \n", __FILE__, strerror(errno));
 	}else{
 		multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( & ActivityBinWriterPlugin::Notify ), false );
@@ -79,10 +80,17 @@ ActivityBinWriterPlugin::~ActivityBinWriterPlugin() {
 
 }
 
-void ActivityTraceReaderPlugin::loadTrace(string configEntry){
+void ActivityTraceReaderPlugin::loadTrace(string configEntry){	
+	if ( configEntry.size() <= 1){
+		throw invalid_argument("ActivityTraceReader: No valid filename specified.");
+	}	
 	file = fopen(configEntry.c_str(), "rb");
-	assert(file);
+	
 	// TODO: setvbuf(file, buff, int mode, size_t size);
+
+	if ( file == nullptr ){
+		throw invalid_argument("ActivityTraceReader: file \"" + configEntry + "\" could not be read.");
+	}		
 }
 
 void ActivityTraceReaderPlugin::closeTrace(){
