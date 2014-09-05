@@ -270,6 +270,15 @@ void initMPIHelper(){
 		{"cb_buffer_size" ,  infoBuffSize},
 		{"romio_cb_read",  infoROMIOCollReadEnabled},
 		{"romio_cb_write",  infoROMIOCollWriteEnabled},
+		{"sioxAccessRange",  sioxAccessRange},
+		{"sioxFreeRange",  sioxFreeRange},
+		{"sioxClearFileCache",  sioxClearFileCache},
+		{"sioxCancelHints",  sioxCancelHints},
+		{"sioxDataShipStart",  sioxDataShipStart},
+		{"sioxDataShipStop",  sioxDataShipStop},
+		{"sioxSetReplication",  sioxSetReplication},
+		{"sioxByteRange",  sioxByteRange},
+		{"sioxRestripeData",  sioxRestripeData},
 		{NULL, NULL}};
 	optimizeHints = malloc(sizeof(tmp));
 	memcpy(optimizeHints, tmp, sizeof(tmp));		
