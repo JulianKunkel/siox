@@ -1143,13 +1143,25 @@ SET search_path = public, pg_catalog;
 --
 
 CREATE VIEW commands AS
- SELECT DISTINCT split_part(b.value, ' '::text, 1) AS cmd
-   FROM topology.relation a,
-    topology.value b
-  WHERE ((b.objectid = a.childobjectid) AND (a.childname = (( SELECT (relation.childobjectid)::character(100) AS childobjectid
-           FROM topology.relation
-          WHERE (relation.childname = 'description/commandLine'::text)))::text))
-  ORDER BY split_part(b.value, ' '::text, 1);
+SELECT DISTINCT split_part(b.value, ' '::text, 1) AS cmd 
+FROM topology.relation a, topology.value b 
+WHERE (b.objectid = a.childobjectid) AND (a.childname IN (
+SELECT relation.childobjectid::character(100) AS childobjectid 
+FROM topology.relation 
+WHERE relation.childname = 'description/commandLine'))
+ORDER BY split_part(b.value, ' '::text, 1);
+--  SELECT DISTINCT split_part(b.value, ' '::text, 1) AS cmd
+--    FROM topology.relation a,
+--     topology.value b
+--   WHERE (
+-- 	(b.objectid = a.childobjectid) 
+-- 		AND (a.childname = (
+-- 			( SELECT (relation.childobjectid)::character(100) AS childobjectid
+-- 				FROM topology.relation
+-- 				WHERE (relation.childname = 'description/commandLine'::text)))::text)
+-- 		)
+-- ORDER BY split_part(b.value, ' '::text, 1);
+
 
 
 ALTER TABLE public.commands OWNER TO siox;
