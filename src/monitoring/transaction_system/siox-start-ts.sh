@@ -1,10 +1,8 @@
 #!/bin/bash
 
-#
-# This is ugly and should be rewritten.
-#
+_MYDIR=$(readlink -f "$(dirname "$(which "$0")")")
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/3rdparty/boost/1.53.0/lib/
+_SIOXDIR=$(dirname "$_MYDIR")
 
-siox-daemon --configEntry /usr/local/etc/siox-ts.conf
+exec "$_MYDIR/siox-daemon" --configEntry "$_SIOXDIR/etc/siox-ts.conf"
 
