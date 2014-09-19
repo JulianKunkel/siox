@@ -157,7 +157,7 @@ namespace core {
 				registrarMutex.unlock();
 
 				string  str = cs.serialize( options );
-				cerr << "Configuration values: " << str << endl;
+				cerr << "Configuration values: " << endl << str << endl;
 				throw InvalidConfiguration( string( "Error during initialization of " ) + e.what(), module->name );
 			}
 			registrar->registerComponent( module->componentID + autoConfiguratorOffset, type + " " + matchingRules, module->name, component );
