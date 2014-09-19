@@ -75,7 +75,7 @@ int main( int argc, const char * argv[] )
 	assert( test->getFilesystemByUID( "test" )->unique_id == "test" );
 
 	// Delete all StorageDevice stuff
-	connection * conn = new connection( "hostaddr=136.172.14.14 port=48142 user=postgres password=postgres dbname=systeminfo_test" );
+	connection * conn = new connection( "host=136.172.14.14 port=48142 user=postgres password=postgres dbname=systeminfo_test" );
 	work deleteAction2( *conn, "Delete Transaction 2" );
 	deleteAction2.exec( "DELETE FROM storage_devices WHERE node_id =" + to_string( testNode->node_id ) );
 	deleteAction2.commit();

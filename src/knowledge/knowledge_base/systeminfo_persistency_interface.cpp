@@ -45,7 +45,7 @@ namespace knowledge {
 
 		options->get_component_options( myList );
 
-		conn = new connection( "hostaddr=" + hostaddr + " port=" + port + " user=" + user + " password=" + password + " dbname=" + dbname );
+		conn = new connection( "host=" + hostaddr + " port=" + port + " user=" + user + " password=" + password + " dbname=" + dbname );
 		// hostaddr=x.x.x.x only for IP-Addresses! Use host=xxx for a hostname.
 	}
 

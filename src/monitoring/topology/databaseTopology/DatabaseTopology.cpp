@@ -85,7 +85,7 @@ void DatabaseTopology::start(){
 
     DatabaseTopologyOptions & o = getOptions<DatabaseTopologyOptions>();
     stringstream endpoint;
-    endpoint << "hostaddr=" << o.hostaddress << " port=" << o.port << " user=" << o.username << " password=" << o.password << " dbname=" << o.dbname;
+    endpoint << "host=" << o.hostaddress << " port=" << o.port << " user=" << o.username << " password=" << o.password << " dbname=" << o.dbname;
 
     conn = new connection(endpoint.str());
 }

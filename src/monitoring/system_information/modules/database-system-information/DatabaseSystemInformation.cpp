@@ -37,7 +37,7 @@ namespace monitoring {
 	    	string dbname = o.dbname;
 	    	
 	    	// Connect to database
-	    	conn = new connection("hostaddr="+hostaddr+" port="+port+" user="+user+" password="+password+" dbname="+dbname);
+	    	conn = new connection("host="+hostaddr+" port="+port+" user="+user+" password="+password+" dbname="+dbname);
 		}
 
 		void  ~DatabaseSystemInformation() {
