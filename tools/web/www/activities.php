@@ -34,7 +34,7 @@ $p = Program::get($pnum);
 <form name="runs_frm" method="post" action="index.php" style="float: left;">
 	<input type="submit" value="Execution Overview" />
 </form>
-<form name="stats_frm" method="post" action="statistics.php?start=<?=$p->times['start']?>&amp;stop=<?=$p->times['stop']?>&amp;nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;pnum=<?=$pnum?>" style="float: left;">
+<form name="stats_frm" method="post" action="statistics.php?start=<?php echo $p->times['start']?>&amp;stop=<?php echo $p->times['stop']?>&amp;nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;pnum=<?php echo $pnum?>" style="float: left;">
 	<input type="submit" value="Time frame statistics" />
 </form>
 
@@ -44,9 +44,9 @@ $p = Program::get($pnum);
 <h2>Program information</h2>
 
 <table cellspacing="0" cellpadding="0">
-	<tr class="even"><th>Program number</th><td><?=$pnum?></td></tr>
-	<tr class="odd"><th>Total activities</th><td><?=$total_activities?></td></tr>
-	<tr class="odd"><th>Node (nid, pid, time)</th><td><?="$p->node ($p->nid, $p->pid, $p->time)"?></td></tr>
+	<tr class="even"><th>Program number</th><td><?php echo $pnum?></td></tr>
+	<tr class="odd"><th>Total activities</th><td><?php echo $total_activities?></td></tr>
+	<tr class="odd"><th>Node (nid, pid, time)</th><td><?php echo "$p->node ($p->nid, $p->pid, $p->time)"?></td></tr>
 </table>
 
 <h2>Execution Context</h2>
@@ -54,8 +54,8 @@ $p = Program::get($pnum);
 <table cellspacing="0" cellpadding="0">
 <?php $i = 0; ?>
 <?php foreach ($p->attributes as $k => $v): ?>
-	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd"; ?>">
-		<th style="text-align: left;"><?=$k?></th><td><?=str_replace(" ", "<br />", $v)?></td>
+	<tr class="<?php echo $i++ % 2 == 0 ? "even" : "odd"; ?>">
+		<th style="text-align: left;"><?php echo $k?></th><td><?php echo str_replace(" ", "<br />", $v)?></td>
 	</tr>
 <?php endforeach ?>
 </table>
@@ -65,9 +65,9 @@ $p = Program::get($pnum);
 <table id="big_list" cellspacing="0" cellpadding="0">
 <thead>
 	<tr>
-		<th colspan="2" style="text-align: left"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=1&amp;pnum=<?=$pnum?>#act_list">↶ first</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == 1 ? 1 : $current_page-1?>&amp;pnum=<?=$pnum?>#act_list">← previous</a></th>
-		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="2" style="text-align: right"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>&amp;pnum=<?=$pnum?>#act_list">next →</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$total_pages?>&amp;pnum=<?=$pnum?>#act_list">last ↷</a></th>
+		<th colspan="2" style="text-align: left"><a href="?nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;page=1&amp;pnum=<?php echo $pnum?>#act_list">↶ first</a>&nbsp;&nbsp;<a href="?nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;page=<?php echo $current_page == 1 ? 1 : $current_page-1?>&amp;pnum=<?php echo $pnum?>#act_list">← previous</a></th>
+		<th colspan="2" style="text-align: center"><?php echo $current_page?> / <?php echo $total_pages?></th>
+		<th colspan="2" style="text-align: right"><a href="?nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;page=<?php echo $current_page == $total_pages ? $current_page : $current_page+1?>&amp;pnum=<?php echo $pnum?>#act_list">next →</a>&nbsp;&nbsp;<a href="?nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;page=<?php echo $total_pages?>&amp;pnum=<?php echo $pnum?>#act_list">last ↷</a></th>
 	</tr>
 <tr>
 		<th>#</th>
@@ -86,21 +86,21 @@ $p = Program::get($pnum);
 <?php endif ?>
 <?php $i = 0; ?>
 <?php foreach ($activities as $a): ?>
-	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?> <?=$a->error_value != 0 ? "error" : ""?>" onclick="window.location='activity.php?unique_id=<?=$a->unique_id?>&amp;pnum=<?=$pnum?>'">
-		<td><?=$a->unique_id?></td>
-		<td><?=$a->name?></td>
-		<td><?=date("d.m.Y H:i:s", floor($a->time_start / 1000000000)).".<b>".($a->time_start % 1000000000)."</b>"?></td>
-		<td><?=date("d.m.Y H:i:s", floor($a->time_stop / 1000000000)).".<b>".($a->time_stop % 1000000000)."</b>"?></td>
-		<td align="center"><?=round(($a->time_stop - $a->time_start) / 1000, 3)?></td>
-		<td><?=$a->error_value != 0 ? $erno[$a->error_value] : ""?></td>
+	<tr class="<?php echo $i++ % 2 == 0 ? "even" : "odd";?> <?php echo $a->error_value != 0 ? "error" : ""?>" onclick="window.location='activity.php?unique_id=<?php echo $a->unique_id?>&amp;pnum=<?php echo $pnum?>'">
+		<td><?php echo $a->unique_id?></td>
+		<td><?php echo $a->name?></td>
+		<td><?php echo date("d.m.Y H:i:s", floor($a->time_start / 1000000000)).".<b>".($a->time_start % 1000000000)."</b>"?></td>
+		<td><?php echo date("d.m.Y H:i:s", floor($a->time_stop / 1000000000)).".<b>".($a->time_stop % 1000000000)."</b>"?></td>
+		<td align="center"><?php echo round(($a->time_stop - $a->time_start) / 1000, 3)?></td>
+		<td><?php echo $a->error_value != 0 ? $erno[$a->error_value] : ""?></td>
 	</tr>
 <?php endforeach ?>
 </tbody>
 <tfoot>
 	<tr>
-		<th colspan="2" style="text-align: left"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=1&amp;pnum=<?=$pnum?>#act_list">↶ first</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == 1 ? 1 : $current_page-1?>&amp;pnum=<?=$pnum?>#act_list">← previous</a></th>
-		<th colspan="2" style="text-align: center"><?=$current_page?> / <?=$total_pages?></th>
-		<th colspan="2" style="text-align: right"><a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$current_page == $total_pages ? $current_page : $current_page+1?>&amp;pnum=<?=$pnum?>#act_list">next →</a>&nbsp;&nbsp;<a href="?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;page=<?=$total_pages?>&amp;pnum=<?=$pnum?>#act_list">last ↷</a></th>
+		<th colspan="2" style="text-align: left"><a href="?nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;page=1&amp;pnum=<?php echo $pnum?>#act_list">↶ first</a>&nbsp;&nbsp;<a href="?nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;page=<?php echo $current_page == 1 ? 1 : $current_page-1?>&amp;pnum=<?php echo $pnum?>#act_list">← previous</a></th>
+		<th colspan="2" style="text-align: center"><?php echo $current_page?> / <?php echo $total_pages?></th>
+		<th colspan="2" style="text-align: right"><a href="?nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;page=<?php echo $current_page == $total_pages ? $current_page : $current_page+1?>&amp;pnum=<?php echo $pnum?>#act_list">next →</a>&nbsp;&nbsp;<a href="?nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;page=<?php echo $total_pages?>&amp;pnum=<?php echo $pnum?>#act_list">last ↷</a></th>
 	</tr>
 </tfoot>
 </table>

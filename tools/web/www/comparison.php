@@ -53,7 +53,7 @@ $cumstats = Stats::get_list(array('energy/', 'quantity/'));
 <h2>Comparing the following program runs:</h2>
 
 <?php foreach ($proglist as $p): ?>
-<b>[<?=$p->childobjectid?>]:</b> <?=$p->attributes['description/commandLine'];?><br />
+<b>[<?php echo $p->childobjectid?>]:</b> <?php echo $p->attributes['description/commandLine'];?><br />
 <?php endforeach ?>
 
 <h2>Summaries</h2>
@@ -63,15 +63,15 @@ $cumstats = Stats::get_list(array('energy/', 'quantity/'));
 		<th>ID</th>
 		<th>Duration</th>
 <?php foreach ($cumstats as $cs):?>
-		<th><?=$cs->childname?></th>
+		<th><?php echo $cs->childname?></th>
 <?php endforeach ?>
 	</tr>
 <?php foreach ($proglist as $p): ?>
 	<tr>
-		<td><?=$p->childobjectid?></td>
-		<td><?=round(($p->times["stop"] - $p->times["start"]) / 1000000000, 3)?> s</td>
+		<td><?php echo $p->childobjectid?></td>
+		<td><?php echo round(($p->times["stop"] - $p->times["start"]) / 1000000000, 3)?> s</td>
 <?php foreach ($cumstats as $cs): ?>
-		<td><?=Stats::get_cumulative($cs->childobjectid, $p->times['start'], $p->times['stop'])?></td>
+		<td><?php echo Stats::get_cumulative($cs->childobjectid, $p->times['start'], $p->times['stop'])?></td>
 <?php endforeach ?>		
 	</tr>
 <?php endforeach ?>
@@ -80,9 +80,9 @@ $cumstats = Stats::get_list(array('energy/', 'quantity/'));
 
 <?php foreach ($stats as $s): ?>
 
-<h2><?=$s->childname?></h2>
+<h2><?php echo $s->childname?></h2>
 
-<img src="plot_comp.php?x=timestamp&amp;y=<?=$s->childobjectid?>&amp;start=<?=$startvals_enc?>&amp;stop=<?=$stopvals_enc?>&amp;label=<?=$labels_enc?>" />
+<img src="plot_comp.php?x=timestamp&amp;y=<?php echo $s->childobjectid?>&amp;start=<?php echo $startvals_enc?>&amp;stop=<?php echo $stopvals_enc?>&amp;label=<?php echo $labels_enc?>" />
 
 <?php endforeach ?>
  

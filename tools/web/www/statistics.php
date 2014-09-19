@@ -29,7 +29,7 @@ $stats_list = Stats::get_list();
 <form name="runs_frm" method="post" action="index.php" style="float: left;">
 	<input type="submit" value="Execution Overview" />
 </form>
-<form name="acts_frm" method="post" action="activities.php?nid=<?=$nid?>&amp;pid=<?=$pid?>&amp;time=<?=$time?>&amp;pnum=<?=$pnum?>" style="float: left">
+<form name="acts_frm" method="post" action="activities.php?nid=<?php echo $nid?>&amp;pid=<?php echo $pid?>&amp;time=<?php echo $time?>&amp;pnum=<?php echo $pnum?>" style="float: left">
 	<input type="submit" value="Activities Overview" />
 </form>
 
@@ -37,9 +37,9 @@ $stats_list = Stats::get_list();
 
 <?php foreach ($stats_list as $stat): ?>
 
-<h2><?=$stat->childname?></h2>
+<h2><?php echo $stat->childname?></h2>
 
-<img src="plot.php?x=timestamp&amp;y=<?=$stat->childobjectid?>&amp;start=<?=$start?>&amp;stop=<?=$stop?>" />
+<img src="plot.php?x=timestamp&amp;y=<?php echo $stat->childobjectid?>&amp;start=<?php echo $start?>&amp;stop=<?php echo $stop?>" />
 
 <?php endforeach ?>
 

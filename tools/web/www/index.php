@@ -35,11 +35,11 @@ $node_list = SIOX::get_node_list();
 	<input type="submit" value="Topology overview"  onclick="return action='topology.php'" />
 	<input type="submit" value="General statistics" onclick="return action='statistics.php'" />
 	<input type="submit" value="Compare selected"   onclick="return action='comparison.php'" />
-	<input type="hidden" name="page" id="page" value="<?=$current_page?>" />
+	<input type="hidden" name="page" id="page" value="<?php echo $current_page?>" />
 
 	<select name="stats[]" multiple="multiple" size="4">
 <?php foreach ($stats_avail as $s):?>
-		<option name="<?=$s->childobjectid?>"><?=$s->childname?></option>
+		<option name="<?php echo $s->childobjectid?>"><?php echo $s->childname?></option>
 <?php endforeach ?>
 	</select>
 
@@ -62,9 +62,9 @@ $link_last  = "<a href=\"#\" onclick=\"page.value=$total_pages;document.getEleme
 	<tr>
 		<th>
 			<select name="cmd" onchange="action='index.php';submit()">
-				<option value="all_cmds" <?= $cmd_sel == "all_cmds" ? "selected=\"selected\"" : ''?>>All commands</option>
+				<option value="all_cmds" <?php echo  $cmd_sel == "all_cmds" ? "selected=\"selected\"" : ''?>>All commands</option>
 <?php foreach ($cmd_list as $cmd):?>
-				<option <?= $cmd == $cmd_sel ? "selected=\"selected\"" : ''?>><?=$cmd?></option>
+				<option <?php echo  $cmd == $cmd_sel ? "selected=\"selected\"" : ''?>><?php echo $cmd?></option>
 <?php endforeach?>
 			</select>
 		</th>
@@ -72,17 +72,17 @@ $link_last  = "<a href=\"#\" onclick=\"page.value=$total_pages;document.getEleme
 		<th>Duration</th>
 		<th>
 			<select name="node" onchange="action='index.php';submit()" disabled>
-				<option value="all_nodes" <?= $node_sel == "all_nodes" ? "selected=\"selected\"" : ''?>>All nodes</option>
+				<option value="all_nodes" <?php echo  $node_sel == "all_nodes" ? "selected=\"selected\"" : ''?>>All nodes</option>
 <?php foreach ($node_list as $node):?>
-				<option <?= $node == $node_sel ? "selected=\"selected\"" : ''?>><?=$node?></option>
+				<option <?php echo  $node == $node_sel ? "selected=\"selected\"" : ''?>><?php echo $node?></option>
 <?php endforeach?>
 			</select>
 		</th>
 		<th>
 			<select name="user" onchange="action='index.php';submit()">
-				<option value="all_users" <?= $user_sel == "all_users" ? "selected=\"selected\"" : ''?>>All users</option>
+				<option value="all_users" <?php echo  $user_sel == "all_users" ? "selected=\"selected\"" : ''?>>All users</option>
 <?php foreach ($user_list as $user):?>
-				<option <?= $user == $user_sel ? "selected=\"selected\"" : ''?>><?=$user?></option>
+				<option <?php echo  $user == $user_sel ? "selected=\"selected\"" : ''?>><?php echo $user?></option>
 <?php endforeach?>
 			</select>
 		</th>
@@ -97,13 +97,13 @@ $link_last  = "<a href=\"#\" onclick=\"page.value=$total_pages;document.getEleme
 <?php endif ?>
 <?php $i = 0; ?>
 <?php foreach ($runs as $r): ?>
-	<tr class="<?=$i++ % 2 == 0 ? "even" : "odd";?>">
-		<td class="prog" onclick="window.location='activities.php?nid=<?=$r->nid?>&amp;pid=<?=$r->pid?>&amp;time=<?=$r->time?>&amp;pnum=<?=$r->childobjectid?>'"><?=$r->attributes['description/commandLine'];?></td>
-		<td><?=date("d.m.Y H:i:s", floor($r->times["start"] / 1000000000)).".".($r->times["start"] % 1000000000)?></td>
-		<td><?=format_seconds(round(($r->times["stop"] - $r->times["start"]) / 1000000000))?></td>
-		<td><?=$r->node?></td>
-		<td><?=$r->attributes['description/user-name'];?></td>
-		<td><input type="checkbox" name="progs[]" value="<?=$r->childobjectid?>" /></td>
+	<tr class="<?php echo $i++ % 2 == 0 ? "even" : "odd";?>">
+		<td class="prog" onclick="window.location='activities.php?nid=<?php echo $r->nid?>&amp;pid=<?php echo $r->pid?>&amp;time=<?php echo $r->time?>&amp;pnum=<?php echo $r->childobjectid?>'"><?php echo $r->attributes['description/commandLine'];?></td>
+		<td><?php echo date("d.m.Y H:i:s", floor($r->times["start"] / 1000000000)).".".($r->times["start"] % 1000000000)?></td>
+		<td><?php echo format_seconds(round(($r->times["stop"] - $r->times["start"]) / 1000000000))?></td>
+		<td><?php echo $r->node?></td>
+		<td><?php echo $r->attributes['description/user-name'];?></td>
+		<td><input type="checkbox" name="progs[]" value="<?php echo $r->childobjectid?>" /></td>
 	</tr>
 <?php endforeach ?>
 </tbody>

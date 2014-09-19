@@ -1,5 +1,5 @@
 <th colspan="6" style="text-align: center">
-	<div style="float: left;"><?=$link_first?>&nbsp;&nbsp;<?=$link_prev?></div>
-	<?=$current_page?> / <?=$total_pages?>
-	<div style="float: right;"><?=$link_next?>&nbsp;&nbsp;<?=$link_last?></div>
+	<div style="float: left;"><?php echo $link_first?>&nbsp;&nbsp;<?php echo $link_prev?></div>
+	<?php echo $current_page?> / <?php echo $total_pages?>
+	<div style="float: right;"><?php echo $link_next?>&nbsp;&nbsp;<?php echo $link_last?></div>
 </th> 

@@ -17,7 +17,7 @@ $parents = Topology::get_all_parents();
 	<input type="submit" value="Program overview" />
 </form>
 
-<img src="tree.php?top=<?=$top?>&amp;levels=<?=$levels?>" title="Topology tree" alt="Topology tree" />
+<img src="tree.php?top=<?php echo $top?>&amp;levels=<?php echo $levels?>" title="Topology tree" alt="Topology tree" />
 
 <?php
 require_once("footer.php");
