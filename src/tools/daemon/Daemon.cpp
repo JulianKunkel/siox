@@ -111,8 +111,9 @@ int main( int argc, char ** argv )
 			return 0;
 		}
 
-		// Stop on SIGINT and SIGUSR1 (USR1 eases debugging)
+		// Stop on SIGINT, SIGTERM and SIGUSR1 (USR1 eases debugging)
 		signal(SIGINT, signalHandler);
+		signal(SIGTERM, signalHandler);
 		signal(SIGUSR1, signalHandler);
 
 
