@@ -1,0 +1,10 @@
+siox.conf als Beispiel wie die NetworkForwarderTopology zu nutzen ist.
+
+- Für den Server reicht es "siox-daemon" im Server-Verzeichnis auszuführen.
+- Für den Client wird ein Testprogramm benötigt. Im Client-Verzeichnis:
+
+siox-inst posix TESTPROGRAMM
+
+Um die POSIX-Instrumentation zu nutzen. Als Testprogramm eignet sich beispielsweise fwrite aus siox/devel/system-test.
+
+Der Client schickt nun seine Messwerte an den vorher gestarteten Server.

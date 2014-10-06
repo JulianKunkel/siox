@@ -5,11 +5,11 @@
 
 #ifndef NO_OBJECT_INJECTION
 
-#include <boost/serialization/split_free.hpp>
-#include <boost/serialization/nvp.hpp>
-
 #include <core/component/ComponentReference.hpp>
 #include <core/component/ComponentRegistrar.hpp>
+
+#include <boost/serialization/split_free.hpp>
+#include <boost/serialization/nvp.hpp>
 
 extern core::ComponentRegistrar * autoConfiguratorRegistrar;
 extern int autoConfiguratorOffset;
@@ -17,7 +17,7 @@ extern int autoConfiguratorOffset;
 namespace boost {
 	namespace serialization {
 		template<class Archive>
-		void serialize( Archive & ar, core::ComponentReference & g, const unsigned int version )
+		void serialize( Archive & ar, ::core::ComponentReference & g, const unsigned int version )
 		{
 			ar & boost::serialization::make_nvp( "componentID", g.componentID );
 			ar & boost::serialization::make_nvp( "global", g.global );
@@ -25,11 +25,11 @@ namespace boost {
 		}
 
 		template<class Archive>
-		void save( Archive & ar, const core::ComponentReference & g, const unsigned int version )
+		void save( Archive & ar, const ::core::ComponentReference & g, const unsigned int version )
 		{}
 
 		template<class Archive>
-		void load( Archive & ar,  core::ComponentReference & g, const unsigned int version )
+		void load( Archive & ar,  ::core::ComponentReference & g, const unsigned int version )
 		{
 			// load component from ModuleRegistrar
 			if( g.componentID != 0 ) {
@@ -37,7 +37,7 @@ namespace boost {
 				if( ! g.global ) {
 					myOffset = autoConfiguratorOffset;
 				}
-				g.componentPointer = ( core::Component* ) autoConfiguratorRegistrar->lookupComponent( g.componentID + myOffset );
+				g.componentPointer = ( ::core::Component* ) autoConfiguratorRegistrar->lookupComponent( g.componentID + myOffset );
 			}
 		}
 

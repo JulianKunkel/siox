@@ -5,7 +5,7 @@
 #include <core/component/ComponentReference.hpp>
 
 using namespace std;
-using namespace core;
+using namespace ::core;
 
 namespace monitoring {
 	//@serializable

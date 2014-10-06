@@ -26,7 +26,7 @@
 #include "NetworkForwarderCommunication.hpp"
 
 using namespace std;
-using namespace core;
+using namespace ::core;
 using namespace monitoring;
 using namespace boost;
 

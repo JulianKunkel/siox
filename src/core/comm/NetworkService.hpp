@@ -4,7 +4,7 @@
 #include <core/component/Component.hpp>
 #include <core/comm/CommunicationModule.hpp>
 
-typedef core::Component NetworkService;
+typedef ::core::Component NetworkService;
 
 #define NETWORK_SERVICE_INTERFACE "network_service"
 

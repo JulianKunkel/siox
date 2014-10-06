@@ -16,7 +16,7 @@
 using namespace boost;
 
 using namespace std;
-using namespace core;
+using namespace ::core;
 
 #define DEBUG( ... ) do { if ( this->verbosity > 3 ) cerr << __VA_ARGS__ << endl; } while(0);
 

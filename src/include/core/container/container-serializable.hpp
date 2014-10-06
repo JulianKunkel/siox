@@ -7,7 +7,7 @@
 namespace boost {
 	namespace serialization {
 		template<class Archive>
-		void serialize( Archive & ar, core::Container & g, const unsigned int version )
+		void serialize( Archive & ar, ::core::Container & g, const unsigned int version )
 		{
 		}
 	}

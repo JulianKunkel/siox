@@ -27,7 +27,7 @@ const int threadcount = 1;
 #include "../NetworkForwarderTopologyServerOptions.hpp"
 #include "../NetworkForwarderCommunication.hpp"
 
-using namespace core;
+using namespace ::core;
 using namespace monitoring;
 
 void workerFunc(int i) {
@@ -45,7 +45,7 @@ void workerFunc(int i) {
 	backend->start();
 
 	// Start the server first
-	Component * server = core::module_create_instance<Component>( "", "siox-monitoring-NetworkForwarderTopologyServer", NETWORK_SERVICE_INTERFACE );
+	Component * server = ::core::module_create_instance<Component>( "", "siox-monitoring-NetworkForwarderTopologyServer", NETWORK_SERVICE_INTERFACE );
 
 	NetworkForwarderTopologyServerOptions & o = server->getOptions<NetworkForwarderTopologyServerOptions>();
 

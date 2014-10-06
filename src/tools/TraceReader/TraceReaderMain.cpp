@@ -52,7 +52,7 @@ int main( int argc, char ** argv )
 		for( auto itr = pluginNames.begin(); itr != pluginNames.end(); itr++ ){
 			string plainName = *itr;
 			string module = "siox-tools-TraceReader-" + plainName + "Plugin" ;
-			TraceReaderPlugin * plugin = core::module_create_instance<TraceReaderPlugin>( "", module, TRACE_READER_PLUGIN_INTERFACE );
+			TraceReaderPlugin * plugin = ::core::module_create_instance<TraceReaderPlugin>( "", module, TRACE_READER_PLUGIN_INTERFACE );
 
 			// add command line options
 			program_options::options_description descPlugin( plainName + " plugin options" );
