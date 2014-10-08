@@ -109,6 +109,7 @@ int main( int argc, char ** argv )
 				break;
 			}
 			firstPlugin->nextActivity(a);
+			delete(a);
 		}
 
 		// finalize all plugins
