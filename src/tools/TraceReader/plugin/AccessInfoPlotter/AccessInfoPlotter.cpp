@@ -53,7 +53,7 @@ void AccessInfoPlotter::init(program_options::variables_map * vm, TraceReader * 
 	IGNORE_ERROR(bytesWrittenID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;)
 }
 
-void AccessInfoPlotter::addActivityHandler(const string & interface, const string & impl, const string & a, void (AccessInfoPlotter::* handler)(Activity*) )
+void AccessInfoPlotter::addActivityHandler(const string & interface, const string & impl, const string & a, void (AccessInfoPlotter::* handler)(std::shared_ptr<Activity>) )
 {
 	SystemInformationGlobalIDManager * s = tr->getSystemInformationGlobalIDManager();
 
@@ -67,7 +67,7 @@ void AccessInfoPlotter::addActivityHandler(const string & interface, const strin
 	}
 }
 
-Activity * AccessInfoPlotter::processNextActivity(Activity * a){
+std::shared_ptr<Activity> AccessInfoPlotter::processNextActivity(std::shared_ptr<Activity> a){
 	auto both = activityHandlers.find(a->ucaid_);
 
 	if ( both != activityHandlers.end() ){
@@ -195,7 +195,7 @@ void AccessInfoPlotter::finalize(){
 	}
 }
 
-static const uint32_t findUINT32AttributeByID( const Activity * a, OntologyAttributeID oaid )
+static const uint32_t findUINT32AttributeByID( const std::shared_ptr<Activity> a, OntologyAttributeID oaid )
 {
  	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
@@ -207,7 +207,7 @@ static const uint32_t findUINT32AttributeByID( const Activity * a, OntologyAttri
 }
 
 
-static const uint64_t findUINT64AttributeByID( const Activity * a, OntologyAttributeID oaid )
+static const uint64_t findUINT64AttributeByID( const std::shared_ptr<Activity> a, OntologyAttributeID oaid )
 {
  	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
@@ -218,7 +218,7 @@ static const uint64_t findUINT64AttributeByID( const Activity * a, OntologyAttri
 	return INVALID_UINT64;
 }
 
-static const char * findStrAttributeByID( const Activity * a, OntologyAttributeID oaid )
+static const char * findStrAttributeByID( const std::shared_ptr<Activity> a, OntologyAttributeID oaid )
 {
  	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
@@ -229,7 +229,7 @@ static const char * findStrAttributeByID( const Activity * a, OntologyAttributeI
 	return "unknown";
 }
 
-OpenFiles * AccessInfoPlotter::findParentFile( const Activity * a )
+OpenFiles * AccessInfoPlotter::findParentFile( const std::shared_ptr<Activity> a )
 {
 	const vector<ActivityID>& parents = a->parentArray();
 
@@ -242,7 +242,7 @@ OpenFiles * AccessInfoPlotter::findParentFile( const Activity * a )
 	return nullptr;
 }
 
-OpenFiles * AccessInfoPlotter::findParentFileByFh( const Activity * a ){
+OpenFiles * AccessInfoPlotter::findParentFileByFh( const std::shared_ptr<Activity> a ){
 	OpenFiles * parent = findParentFile(a);
 	if ( parent == nullptr ){
 		// add a dummy for the file handle since we do not know the filename
@@ -260,17 +260,17 @@ OpenFiles * AccessInfoPlotter::findParentFileByFh( const Activity * a ){
 	return parent;
 }
 
-void AccessInfoPlotter::handlePOSIXSeek(Activity * a){
+void AccessInfoPlotter::handlePOSIXSeek(std::shared_ptr<Activity> a){
 	OpenFiles * parent = findParentFileByFh(a);
 	parent->currentPosition = findUINT64AttributeByID(a, positionID);
 }
 
-void AccessInfoPlotter::handlePOSIXSync(Activity * a){
+void AccessInfoPlotter::handlePOSIXSync(std::shared_ptr<Activity> a){
 	OpenFiles * parent = findParentFileByFh(a);
 	parent->syncOperations.push_back( {a->time_start_, a->time_stop_} );
 }
 
-void AccessInfoPlotter::handlePOSIXWrite(Activity * a){
+void AccessInfoPlotter::handlePOSIXWrite(std::shared_ptr<Activity> a){
 	uint64_t bytes = findUINT64AttributeByID(a, bytesWrittenID);
 	uint64_t position = findUINT64AttributeByID(a, positionID);
 
@@ -283,7 +283,7 @@ void AccessInfoPlotter::handlePOSIXWrite(Activity * a){
 	parent->writeAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
 
-void AccessInfoPlotter::handlePOSIXRead(Activity * a){
+void AccessInfoPlotter::handlePOSIXRead(std::shared_ptr<Activity> a){
 	uint64_t bytes = findUINT64AttributeByID(a, bytesReadID);
 	uint64_t position = findUINT64AttributeByID(a, positionID);
 
@@ -296,11 +296,11 @@ void AccessInfoPlotter::handlePOSIXRead(Activity * a){
 	parent->readAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
 }
 
-void AccessInfoPlotter::handlePOSIXOpen(Activity * a){
+void AccessInfoPlotter::handlePOSIXOpen(std::shared_ptr<Activity> a){
 	openFiles[ a->aid() ] = { findStrAttributeByID(a, fname), a->time_start_, 0, 0, a->aid_};
 }
 
-void AccessInfoPlotter::handlePOSIXClose(Activity * a){
+void AccessInfoPlotter::handlePOSIXClose(std::shared_ptr<Activity> a){
 	OpenFiles * parent = findParentFileByFh(a);
 	parent->closeTime = a->time_stop_;
 }

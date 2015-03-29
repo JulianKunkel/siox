@@ -43,7 +43,7 @@ class ActivityTraceReaderPlugin: public ActivitySerializationPlugin{
 public:	
 	void loadTrace(string configEntry) override;
 	void closeTrace() override;
-	Activity * nextActivity() override;
+	std::shared_ptr<Activity> nextActivity() override;
 	bool hasNextActivity() override;
 private:
 		FILE * file = nullptr;

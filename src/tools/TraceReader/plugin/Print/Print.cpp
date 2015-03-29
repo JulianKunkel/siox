@@ -16,7 +16,7 @@ void PrintPlugin::init(program_options::variables_map * vm, TraceReader * tr){
 	cout << "Time (HH:MM:SS.NANO)\tDuration\tID\tComponent\tActivity(Attributes)\tParents = ReturnCode" << endl;
 }
 
-Activity * PrintPlugin::processNextActivity(Activity * a){
+std::shared_ptr<Activity> PrintPlugin::processNextActivity(std::shared_ptr<Activity> a){
 	tr->printActivity( a );
 	return a;
 }

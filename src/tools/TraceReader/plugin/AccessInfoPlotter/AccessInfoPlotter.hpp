@@ -38,7 +38,7 @@ class AccessInfoPlotter: public TraceReaderPlugin{
 	protected:
 		void init(program_options::variables_map * vm, TraceReader * tr) override;
 	public:
-		Activity * processNextActivity(Activity * activity) override;
+		std::shared_ptr<Activity> processNextActivity(std::shared_ptr<Activity> activity) override;
 
 		void moduleOptions(program_options::options_description & od) override;
 
@@ -46,7 +46,7 @@ class AccessInfoPlotter: public TraceReaderPlugin{
 	private:
 		Ontology * o;
 		
-		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (AccessInfoPlotter::* handler)(Activity*));
+		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (AccessInfoPlotter::* handler)(std::shared_ptr<Activity>));
 
 		void plotFileAccess(const OpenFiles & file);
 		void plotSingleFileAccess(const string & type, const vector<Access> & accessVector, ofstream & f, const OpenFiles & file);
@@ -56,18 +56,18 @@ class AccessInfoPlotter: public TraceReaderPlugin{
 		unordered_map<ActivityID, OpenFiles> openFiles;
 		unordered_map<int, OpenFiles> unnamedFiles;
 
-		unordered_map<UniqueComponentActivityID, void (AccessInfoPlotter::*)(Activity*)> activityHandlers;
+		unordered_map<UniqueComponentActivityID, void (AccessInfoPlotter::*)(std::shared_ptr<Activity>)> activityHandlers;
 
-		OpenFiles * findParentFile( const Activity * activity );
-		OpenFiles * findParentFileByFh( const Activity * activity );
+		OpenFiles * findParentFile( const std::shared_ptr<Activity> activity );
+		OpenFiles * findParentFileByFh( const std::shared_ptr<Activity> activity );
 
 
-		void handlePOSIXOpen(Activity * activity);
-		void handlePOSIXSync(Activity * activity);
-		void handlePOSIXWrite(Activity * activity);
-		void handlePOSIXRead(Activity * activity);
-		void handlePOSIXClose(Activity * activity);
-		void handlePOSIXSeek(Activity * a);
+		void handlePOSIXOpen(std::shared_ptr<Activity> activity);
+		void handlePOSIXSync(std::shared_ptr<Activity> activity);
+		void handlePOSIXWrite(std::shared_ptr<Activity> activity);
+		void handlePOSIXRead(std::shared_ptr<Activity> activity);
+		void handlePOSIXClose(std::shared_ptr<Activity> activity);
+		void handlePOSIXSeek(std::shared_ptr<Activity> a);
 
 		// Ontology attributes needed in the plugin
 		OntologyAttributeID fhID;
