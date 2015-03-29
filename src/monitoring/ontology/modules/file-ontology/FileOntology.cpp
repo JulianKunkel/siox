@@ -91,7 +91,7 @@ namespace monitoring {
 				file.close();
 			}
 
-			void init() {
+			void init() override {
 				FileOntologyOptions & o = getOptions<FileOntologyOptions>();
 				filename = o.filename;
 				if( filename.length() == 0 ) {
