@@ -3,6 +3,7 @@
 
 #include <monitoring/datatypes/Activity.hpp>
 #include <core/module/Module.hpp>
+#include <memory>
 
 namespace monitoring{
 
@@ -13,7 +14,7 @@ class ActivitySerializationPlugin : public core::ModuleInterface{
 public:
 	virtual void loadTrace(string configEntry) = 0;
 	virtual void closeTrace() = 0;
-	virtual Activity * nextActivity() = 0;
+	virtual std::shared_ptr<Activity> nextActivity() = 0;
 	virtual bool hasNextActivity() = 0;
 
 };

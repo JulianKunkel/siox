@@ -28,6 +28,7 @@ int main( int argc, char ** argv )
 		( "ofile", program_options::value<string>()->default_value( "ontology.dat" ), "Ontology file" )
 		( "sfile", program_options::value<string>()->default_value( "system-info.dat" ), "System information file" )
 		( "Afile", program_options::value<string>()->default_value( "association.dat" ), "Association file" )
+		( "reader", program_options::value<string>()->default_value( "" ), "Activity reader." )
 		( "DBtopology", program_options::value<string>()->default_value( "" ), "Use a database to load the topology to store ontology, system-info, association" )		
 		( "plugin", program_options::value<vector<string> >()->multitoken(), "invoke the specified trace reader plugin, default=Print")
 		;
@@ -49,13 +50,12 @@ int main( int argc, char ** argv )
 
 		// load all plugins and initialize them
 		vector<TraceReaderPlugin*> plugins;
-		for( auto itr = pluginNames.begin(); itr != pluginNames.end(); itr++ ){
-			string plainName = *itr;
-			string module = "siox-tools-TraceReader-" + plainName + "Plugin" ;
+		for (const auto& pluginName : pluginNames) {
+			const string module{"siox-tools-TraceReader-" + pluginName + "Plugin"};
 			TraceReaderPlugin * plugin = ::core::module_create_instance<TraceReaderPlugin>( "", module, TRACE_READER_PLUGIN_INTERFACE );
 
 			// add command line options
-			program_options::options_description descPlugin( plainName + " plugin options" );
+			program_options::options_description descPlugin( pluginName + " plugin options" );
 			plugin->moduleOptions(descPlugin);
 			cmdline_options.add(descPlugin);
 
@@ -80,7 +80,7 @@ int main( int argc, char ** argv )
 			}
 		}
 
-		TraceReader tr = TraceReader( file, vm["sfile"].as<string>(), vm["ofile"].as<string>(), vm["Afile"].as<string>(), vm["DBtopology"].as<string>() );
+		TraceReader tr = TraceReader( file, vm["sfile"].as<string>(), vm["ofile"].as<string>(), vm["Afile"].as<string>(), vm["DBtopology"].as<string>(), vm["reader"].as<string>() );
 
 		for( auto itr = plugins.begin(); itr != plugins.end(); ){
 			auto plugin = *itr;
@@ -104,12 +104,12 @@ int main( int argc, char ** argv )
 		// loop through all activities
 		TraceReaderPlugin * firstPlugin = plugins[0];
 		while( true ) {
-			Activity * a = tr.nextActivity();
+			std::shared_ptr<Activity> a = tr.nextActivity();
 			if( a == nullptr ){
 				break;
 			}
 			firstPlugin->nextActivity(a);
-			delete(a);
+//			delete(a);
 		}
 
 		// finalize all plugins

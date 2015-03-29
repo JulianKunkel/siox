@@ -40,13 +40,13 @@ namespace tools {
 
 		TraceReaderPlugin * nextInChain = nullptr;
 
-		void forwardActivity(Activity * a){
+		void forwardActivity(std::shared_ptr<Activity> a){
 			if ( nextInChain != nullptr ){
 				nextInChain->nextActivity(a);
 			}
 		}
 
-		virtual Activity * processNextActivity(Activity * activity) = 0;		
+		virtual std::shared_ptr<Activity> processNextActivity(std::shared_ptr<Activity> activity) = 0;		
 	public:
 
 		ComponentOptions * AvailableOptions() override{
@@ -68,12 +68,12 @@ namespace tools {
 
 		virtual void finalize(){};
 
-		void nextActivity(Activity * activity){
-			Activity * a = processNextActivity(activity);
-			if ( a != activity ){ 
-				// the original activity is not thrown again
-				delete(activity);
-			}
+		void nextActivity(std::shared_ptr<Activity> activity){
+			std::shared_ptr<Activity> a = processNextActivity(activity);
+//			if ( a != activity ){ 
+//				// the original activity is not thrown again
+//				delete(activity);
+//			}
 			if( a != nullptr ){
 				forwardActivity ( a ); 
 			}

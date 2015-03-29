@@ -12,25 +12,27 @@
 #include <monitoring/association_mapper/modules/TopologyAssociationMapper/TopologyAssociationMapperOptions.hpp>
 #include <monitoring/ontology/modules/TopologyOntology/TopologyOntologyOptions.hpp>
 #include <monitoring/system_information/modules/TopologySystemInformation/TopologySystemInformationOptions.hpp>
+#include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
+#include <knowledge/activity_plugin/DereferencingFacadeOptions.hpp>
 #include <util/time.h>
 
 #include "TraceReader.hpp"
 
 //#include <core/component/ActivitySerializableText.cpp>
 
-Activity * TraceReader::nextActivity() {
+std::shared_ptr<Activity> TraceReader::nextActivity() {
 	try{
 	if( activityDeserializer->hasNextActivity() )
 		return activityDeserializer->nextActivity();
 	else
-		return nullptr;
+		return std::shared_ptr<Activity>{nullptr};
 	}catch(exception & e){
 		cerr << "Error while reading trace entry: " << e.what() << endl;
-		return nullptr;
+		return std::shared_ptr<Activity>{nullptr};
 	}
 }
 
-TraceReader::TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile, string topologyDatabase )
+TraceReader::TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile, string topologyDatabase, string activityReader)
 {
 	if (topologyDatabase == ""){
 		a = core::module_create_instance<AssociationMapper>( "", "siox-monitoring-FileAssociationMapper", MONITORING_ASSOCIATION_MAPPER_INTERFACE );
@@ -75,12 +77,50 @@ TraceReader::TraceReader( string activityFile, string systemInfoFile, string ont
 		s->start();		
 	}
 
+	
+	if (activityReader == "") {
+		activityDeserializer = core::module_create_instance<ActivitySerializationPlugin>( "", "siox-monitoring-activityPlugin-ActivityBinWriter", ACTIVITY_SERIALIZATION_PLUGIN_INTERFACE );
+	}
+	else {
+		cerr << "Could not find " << activityReader << ". Please check --reader option" << endl;
+		exit(1);
+	}
 
-	activityDeserializer = core::module_create_instance<ActivitySerializationPlugin>( "", "siox-monitoring-activityPlugin-ActivityBinWriter", ACTIVITY_SERIALIZATION_PLUGIN_INTERFACE );
+	ActivityMultiplexer* amux = core::module_create_instance<ActivityMultiplexer>("", "siox-monitoring-ActivityMultiplexerSync", ACTIVITY_MULTIPLEXER_INTERFACE);
+	amux->init();
+	amux->start();
+
+	ActivityPluginDereferencing* facade = core::module_create_instance<ActivityPluginDereferencing>("", "siox-knowledge-DereferencingFacade", ACTIVITY_DEREFERENCING_FACADE_INTERFACE);
+	DereferencingFacadeOptions& dfo = facade->getOptions<DereferencingFacadeOptions>();
+	dfo.topology = nullptr;
+	dfo.system_information_manager = s;
+	dfo.association_mapper = a;
+	dfo.ontology = o;
+	dfo.reasoner = nullptr;
+	facade->init();
+	facade->start();
+
+	assert(amux != nullptr);
+	assert(facade != nullptr);
+
+	ActivityMultiplexerPlugin* ke = core::module_create_instance<ActivityMultiplexerPlugin>( "", "siox-monitoring-activityPlugin-KnowledgeExtractor", ACTIVITY_MULTIPLEXER_PLUGIN_INTERFACE);
+	ActivityMultiplexerPluginOptions& keo = ke->getOptions<ActivityMultiplexerPluginOptions>();
+	keo.multiplexer = amux;
+	keo.dereferenceFacade = facade;
+	ke->init();
+	ke->start();
 
 	assert( activityDeserializer );
 
 	activityDeserializer->loadTrace(activityFile);
+	while (true) {
+		cout << "pass activity to activity multiplexer" << endl;
+		std::shared_ptr<Activity> activity = activityDeserializer->nextActivity();
+		if (activity == nullptr) {
+			break;
+		}
+		amux->Log(activity);
+	}
 
 	//activityDeserializer = new FileDeserializer<Activity>( activityFile );
 
@@ -126,7 +166,7 @@ void TraceReader::strattribute( const Attribute & a, stringstream & s ) throw( N
 }
 
 
-void TraceReader::printActivity( Activity * a )
+void TraceReader::printActivity( std::shared_ptr<Activity> a )
 {
 	stringstream str;
 	try {

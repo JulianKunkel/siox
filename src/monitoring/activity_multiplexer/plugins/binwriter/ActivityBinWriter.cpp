@@ -97,15 +97,42 @@ void ActivityTraceReaderPlugin::closeTrace(){
 	fclose(file);
 }
 
-Activity * ActivityTraceReaderPlugin::nextActivity(){
-	Activity * activity = new Activity();
-
+//std::shared_ptr<Activity> ActivityTraceReaderPlugin::nextActivity(){
+//	Activity* activity = new Activity{};
+//	// read the next size:
+//	uint64_t size;
+//	int ret = fread(& size, sizeof(uint64_t), 1, file);
+//	if ( ret == 0 ){
+//		// TODO throw
+//		return std::make_shared<Activity>{nullptr};
+//	}
+//	char * buffer = (char*) malloc(size);
+//	assert(buffer);
+//
+//	ret = fread(buffer, size, 1, file);
+//	if ( ret == 0 ){
+//		// TODO throw
+//		return std::make_shared<Activity>{nullptr};
+//	}
+//
+//	uint64_t pos = 0;
+//	j_serialization::deserialize(*activity, buffer, pos, size);
+//	assert(pos == size);
+//
+//	free(buffer);
+//	
+//
+//	std::shared_ptr<Activity> shared_activity = std::make_shared<Activity>{};
+//	return activity;
+//}
+std::shared_ptr<Activity> ActivityTraceReaderPlugin::nextActivity(){
 	// read the next size:
 	uint64_t size;
 	int ret = fread(& size, sizeof(uint64_t), 1, file);
 	if ( ret == 0 ){
 		// TODO throw
-		return nullptr;
+		std::cout << "Couldn't read file" << endl;
+		return std::shared_ptr<Activity>{nullptr};
 	}
 	char * buffer = (char*) malloc(size);
 	assert(buffer);
@@ -113,16 +140,17 @@ Activity * ActivityTraceReaderPlugin::nextActivity(){
 	ret = fread(buffer, size, 1, file);
 	if ( ret == 0 ){
 		// TODO throw
-		return nullptr;
+		std::cout << "Couldn't read file : 2" << endl;
+		return std::shared_ptr<Activity>{nullptr};
 	}
 
 	uint64_t pos = 0;
-	j_serialization::deserialize(*activity, buffer, pos, size);
+	std::shared_ptr<Activity> shared_activity{new Activity()};
+	j_serialization::deserialize(*shared_activity.get(), buffer, pos, size);
 	assert(pos == size);
 
 	free(buffer);
-
-	return activity;
+	return shared_activity;
 }
 
 bool ActivityTraceReaderPlugin::hasNextActivity(){

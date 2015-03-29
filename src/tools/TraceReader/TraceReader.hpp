@@ -12,6 +12,7 @@
 #include <monitoring/datatypes/Activity.hpp>
 #include <monitoring/activity_multiplexer/ActivitySerializationPlugin.hpp>
 #include <monitoring/topology/Topology.hpp>
+#include <monitoring/activity_multiplexer/ActivityMultiplexer.hpp>
 
 using namespace std;
 using namespace monitoring;
@@ -20,11 +21,11 @@ using namespace core;
 
 class TraceReader {
 	public:
-		TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile, string topologyDatabase );
+		TraceReader( string activityFile, string systemInfoFile, string ontologyFile, string associationFile, string topologyDatabase, string activityReader );
 
-		Activity * nextActivity();
+		std::shared_ptr<Activity> nextActivity();
 
-		void printActivity( Activity * activity );
+		void printActivity( std::shared_ptr<Activity> activity );
 
 		bool printHostname = false;
 
@@ -59,7 +60,7 @@ class TraceReader {
 		Ontology * o = nullptr;
 		SystemInformationGlobalIDManager * s = nullptr;
 		Topology * t = nullptr;
-		ActivitySerializationPlugin * activityDeserializer;
+		ActivitySerializationPlugin * activityDeserializer = nullptr;
 
 		void strattribute( const Attribute & a, stringstream & s ) throw( NotFoundError );
 };
