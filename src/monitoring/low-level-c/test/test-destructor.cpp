@@ -1,21 +1,35 @@
 #include <stdio.h>
  
-// gcc -ggdb test-destructor.cpp -O3
+// g++ -ggdb test-destructor.cpp -O3 -Wl,--no-as-needed -L. -ldestructor-test
+// exec with: LD_LIBRARY_PATH=. ./a.out 
+
 /*
 
 Expected destructor behavior:
+beginLib ()
+Lib ()
 begin ()
 Destroy ()
+
 main ()
 Destroy~ ()
 end ()
+endLib ()
+Lib~ ()
+
 
 Behavior leading to issues:
+Lib ()
+beginLib ()
 Destroy ()
 begin ()
+
 main ()
 Destroy~ ()
 end ()
+Lib~ ()
+endLib ()
+
 */ 
 
 class Destroy{
