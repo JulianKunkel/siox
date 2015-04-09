@@ -63,9 +63,15 @@ static ComponentID siox_monitoring_cid;
 // due to a wrong invocation order of library destructors in some very old GLIBC version
 // the destructor of the list may have been called by  __cxa_finalize() before the siox destructor
 // is called. This breaks the finalization completely.
-static list<void (*)(void)> terminate_cbs;
-static list<void (*)(void)> initialization_cbs;
-static list<void (*)(void)> terminate_complete_cbs;
+
+// to fix it, a new structure is created which is created on the heap.
+struct LLCallbacks{
+	list<void (*)(void)> terminate_cbs;
+	list<void (*)(void)> initialization_cbs;
+	list<void (*)(void)> terminate_complete_cbs;
+};
+
+static struct LLCallbacks * cbs = NULL;
 
 static unordered_map<UniqueInterfaceID, siox_component*> registeredComponents;
 
@@ -149,24 +155,24 @@ NodeID lookup_node_id( const string & hostname )
 }
 
 void siox_register_termination_signal( void (*func)(void) ){
-	for(auto itr = terminate_cbs.begin(); itr != terminate_cbs.end(); itr++ ){
+	for(auto itr = cbs->terminate_cbs.begin(); itr != cbs->terminate_cbs.end(); itr++ ){
 		if ( *itr == func ) return;
 	}
-	terminate_cbs.push_back(func);
+	cbs->terminate_cbs.push_back(func);
 }
 
 void siox_register_termination_complete_signal( void (*func)(void) ){
-	for(auto itr = terminate_complete_cbs.begin(); itr != terminate_complete_cbs.end(); itr++ ){
+	for(auto itr = cbs->terminate_complete_cbs.begin(); itr != cbs->terminate_complete_cbs.end(); itr++ ){
 		if ( *itr == func ) return;
 	}
-	terminate_complete_cbs.push_back(func);	
+	cbs->terminate_complete_cbs.push_back(func);	
 }
 
 void siox_register_initialization_signal( void (*func)(void) ){
-	for(auto itr = initialization_cbs.begin(); itr != initialization_cbs.end(); itr++ ){
+	for(auto itr = cbs->initialization_cbs.begin(); itr != cbs->initialization_cbs.end(); itr++ ){
 		if ( *itr == func ) return;
 	}
-	initialization_cbs.push_back(func);
+	cbs->initialization_cbs.push_back(func);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -289,6 +295,9 @@ extern "C" {
 
 __attribute__( ( constructor ) ) void siox_ctor()
 	{
+		if (cbs == NULL){
+			cbs = new LLCallbacks();
+		}
 		// for debugging of the LD_PRELOAD wrapper, you may use gdb to attach to the process
 		// Inside gdb run: set waiting = 0
 		// Then the loop will continue.
@@ -364,8 +373,8 @@ int siox_initialization_count(){
 void siox_initialize_monitoring(){
 	siox_ctor();
 
-	// invoke initialization callbacks
-	for( auto itr = initialization_cbs.begin() ; itr != initialization_cbs.end(); itr++ ){
+	// invoke initialization LLcallbacks
+	for( auto itr = cbs->initialization_cbs.begin() ; itr != cbs->initialization_cbs.end(); itr++ ){
 		(*itr)();
 	}
 }
@@ -380,8 +389,8 @@ static void finalizeSIOX(int print){
 
 		Timestamp t_end = siox_gettime();
 
-		// invoke terminate callbacks
-		for( auto itr = terminate_cbs.begin() ; itr != terminate_cbs.end(); itr++ ){
+		// invoke terminate LLcallbacks
+		for( auto itr = cbs->terminate_cbs.begin() ; itr != cbs->terminate_cbs.end(); itr++ ){
 			(*itr)();
 		}
 
@@ -418,8 +427,8 @@ __attribute__( ( destructor ) ) void siox_ll_dtor()
 {
 	finalizeSIOX(1);
 
-	// invoke termination complete callbacks
-	for( auto itr = terminate_complete_cbs.begin() ; itr != terminate_complete_cbs.end(); itr++ ){
+	// invoke termination complete LLcallbacks
+	for( auto itr = cbs->terminate_complete_cbs.begin() ; itr != cbs->terminate_complete_cbs.end(); itr++ ){
 		(*itr)();
 	}
 }
