@@ -55,6 +55,9 @@ class CSVExtractor: public TraceReaderPlugin{
 		OntologyAttributeID bytesWrittenID;
 
 		ofstream csv;
+		// the timestamp of the first event.
+		Timestamp tstart = 0;
+
 		// the timestamp of the last event.
 		Timestamp tlast = 0;
 

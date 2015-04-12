@@ -51,7 +51,7 @@ void CSVExtractor::init(program_options::variables_map * vm, TraceReader * tr){
 	const string filename = (*vm)["file"].as<string>();
 	cout << "Writing CSV file to " << filename << endl;
 	csv.open(filename, ios::out | ios::trunc );
-	csv << "DeltaTime,fd,OpTyp,DeltaOffset,Size,Duration" << endl;
+	csv << "AbsTime,DeltaTime,fd,OpTyp,DeltaOffset,Size,Duration" << endl;
 }
 
 void CSVExtractor::addActivityHandler(const string & interface, const string & impl, const string & a, void (CSVExtractor::* handler)(Activity*) )
@@ -71,6 +71,7 @@ void CSVExtractor::addActivityHandler(const string & interface, const string & i
 Activity * CSVExtractor::processNextActivity(Activity * a){
 	if (tlast == 0){
 		tlast = a->time_start_;
+		tstart = tlast;
 	}
 
 	auto both = activityHandlers.find(a->ucaid_);
@@ -177,7 +178,7 @@ void CSVExtractor::handlePOSIXSeek(Activity * a){
 void CSVExtractor::handlePOSIXSync(Activity * a){
 	int fd = findUINT32AttributeByID(a, fhID);
 	Timestamp delta = a->time_stop_ - a->time_start_;
-	csv << convertUpdateTime(a->time_start_) << "," << fd << "," << "S,0,0," << ttoDbl(delta) << endl;
+	csv << ttoDbl(a->time_start_ - this->tstart) << "," << convertUpdateTime(a->time_start_) << "," << fd << "," << "S,0,0," << ttoDbl(delta) << endl;
 }
 
 
@@ -203,7 +204,7 @@ void CSVExtractor::handlePOSIXAccess(Activity * a, string type){
 	parent->lastAccessPosition = parent->currentPosition;
 	int fd = findUINT32AttributeByID(a, fhID);
 	Timestamp delta = a->time_stop_ - a->time_start_;
-	csv << convertUpdateTime(a->time_start_) << "," << fd << "," << type << "," << deltaPosition << "," << bytes << "," << ttoDbl(delta) << endl;
+	csv << ttoDbl(a->time_start_ - this->tstart) << "," << convertUpdateTime(a->time_start_) << "," << fd << "," << type << "," << deltaPosition << "," << bytes << "," << ttoDbl(delta) << endl;
 }
 
 
