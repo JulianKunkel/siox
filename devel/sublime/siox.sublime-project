@@ -58,9 +58,11 @@
         {
             "name": "CMake",
 				"working_dir": "${project_path}/build/",
-				"cmd": ["make", "-v"],
+				"cmd": ["make", "install"],
 				"file_regex": "^(../..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
 				"selector": "source.c, source.c++, source.cpp, source.hpp, source.h, source.txt",
+				"file_regex": "^(...*?):([0-9]*):?([0-9]*)",
+				//"showWhenFinished" : true,
 				"variants":
 				[
 				{
