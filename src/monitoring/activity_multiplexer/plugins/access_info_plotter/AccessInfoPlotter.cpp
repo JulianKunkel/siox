@@ -280,9 +280,8 @@ void AccessInfoPlotterPlugin::handlePOSIXWrite(std::shared_ptr<Activity> a){
 	uint64_t position = findUINT64AttributeByID(a, positionID);
 
 	OpenFiles * parent = findParentFileByFh(a);
-	// uint64_t realPosition = position;
 	if ( position == INVALID_UINT64){
-		// realPosition = parent->currentPosition;
+		position = parent->currentPosition;
 		parent->currentPosition += bytes;
 	}
 	parent->writeAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
@@ -293,9 +292,8 @@ void AccessInfoPlotterPlugin::handlePOSIXRead(std::shared_ptr<Activity> a){
 	uint64_t position = findUINT64AttributeByID(a, positionID);
 
 	OpenFiles * parent = findParentFileByFh(a);
-	// uint64_t realPosition = position;
 	if ( position == INVALID_UINT64){
-		// realPosition = parent->currentPosition;
+		position = parent->currentPosition;
 		parent->currentPosition += bytes;
 	}
 	parent->readAccesses.push_back( Access{a->time_start_, a->time_stop_, position, bytes} );
@@ -310,15 +308,6 @@ void AccessInfoPlotterPlugin::handlePOSIXClose(std::shared_ptr<Activity> a){
 	parent->closeTime = a->time_stop_;
 }
 
-
-/*
-void test(){
-			regex fileRegex(regex);
-
-			Ontology * o;
-
-}
-*/
 
 extern "C" {
 	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME()
