@@ -11,6 +11,8 @@ add_subdirectory(anomaly-injector)
 add_subdirectory(activityMonitor)
 add_subdirectory(profiler)
 add_subdirectory(binwriter)
+add_subdirectory(access_info_plotter)
+add_subdirectory(print)
 
 if (PostgreSQL_FOUND)
 	add_subdirectory(postgres_writer)
