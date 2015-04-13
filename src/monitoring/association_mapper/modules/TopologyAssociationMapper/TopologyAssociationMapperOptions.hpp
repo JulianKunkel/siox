@@ -1,3 +1,6 @@
+#ifndef  TopologyAssociationMapperOptions_INC
+#define  TopologyAssociationMapperOptions_INC
+
 #include <core/component/component-options.hpp>
 #include <core/component/ComponentReference.hpp>
 
@@ -10,3 +13,4 @@ class TopologyAssociationMapperOptions: public core::ComponentOptions {
 		ComponentReference topology;
 };
 
+#endif   /* ----- #ifndef TopologyAssociationMapperOptions_INC  ----- */
