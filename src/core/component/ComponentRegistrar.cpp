@@ -37,6 +37,7 @@ namespace core {
 				list.erase( itr );
 				map.erase(map.find(nr));
 				delete( *itr );
+				*itr = nullptr; // good practice
 				break;
 			}
 		}
@@ -49,6 +50,7 @@ namespace core {
 			const_cast<Component*>((*it)->component)->finalize();
 			delete( (*it)->component );
 			delete( *it );
+			*it = nullptr; // good practice
 		}
 	}
 
