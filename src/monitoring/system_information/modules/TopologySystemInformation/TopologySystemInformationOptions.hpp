@@ -1,3 +1,6 @@
+#ifndef  TopologySystemInformationOptions_INC
+#define  TopologySystemInformationOptions_INC
+
 #include <core/component/component-options.hpp>
 #include <core/component/ComponentReference.hpp>
 
@@ -10,3 +13,4 @@ class TopologySystemInformationOptions: public core::ComponentOptions {
 		ComponentReference topology;
 };
 
+#endif   /* ----- #ifndef TopologySystemInformationOptions_INC  ----- */
