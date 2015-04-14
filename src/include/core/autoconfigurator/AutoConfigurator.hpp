@@ -61,7 +61,9 @@ namespace core {
 			/*
 			 * Load/Parse the configuration options, create the necessary components and link their attributes.
 			 */
-			vector<Component *> LoadConfiguration( string type, string matchingRules ) throw( InvalidComponentException, InvalidConfiguration );
+			vector<Component *> LoadConfiguration( string type, string matchingRules, bool initComponents = true ) throw( InvalidComponentException, InvalidConfiguration );
+
+			void initAllComponents(vector<Component *> & components);
 
 			template<class TYPE>
 			TYPE * searchFor( vector<Component *> vector ) {
@@ -92,7 +94,14 @@ namespace core {
 			 */
 			string DumpConfiguration( ComponentOptions * options );
 
+			string DumpConfiguration( Component * component ){
+				return DumpConfiguration( & component->getOptions());
+			}
+
+			void SetConfiguration(Component * component, const string & config) throw (InvalidConfiguration);
 		private:
+			void SetConfiguration(Component * component, stringstream & config) throw (InvalidConfiguration);
+
 			ConfigurationProvider * configurationProvider;
 			ComponentRegistrar * registrar;
 	};

@@ -48,7 +48,7 @@ namespace core {
 		configurationProvider->connect( val );
 	}
 
-	vector<Component *> AutoConfigurator::LoadConfiguration( string type, string matchingRules ) throw( InvalidComponentException, InvalidConfiguration )
+	vector<Component *> AutoConfigurator::LoadConfiguration( string type, string matchingRules, bool initComponents ) throw( InvalidComponentException, InvalidConfiguration )
 	{
 		string config = configurationProvider->getConfiguration( type, matchingRules );
 		if( config.length() < 10 ) {
@@ -120,7 +120,6 @@ namespace core {
 
 			// no, so we hope that the configuration is complete
 			LoadModule * module;
-			ComponentOptions * options;
 			Component * component;
 
 			//cout << "Parsing a module" << endl;
@@ -137,30 +136,12 @@ namespace core {
 			cout << "[AC] Module config: "  << module->name << " (" << module->interface << ")" << endl;
 			component = module_create_instance<Component>( module->path, module->name, module->interface );
 			//cout << DumpConfiguration(component->get_options()) << endl;
-
-			try {
-				options = cs.parse( already_parsed_config );
-			} catch( exception & e ) {
-				autoConfiguratorRegistrar = nullptr;
-				registrarMutex.unlock();
-				ComponentOptions & availableOptions = component->getOptions();
-				string  str = cs.serialize( & availableOptions );
-				cerr << endl << "Expected configuration: " << str << endl;
-
-				throw InvalidConfiguration( "Error during parsing of options", module->name );
+			try{
+				SetConfiguration( component, already_parsed_config );
+			}catch(InvalidConfiguration & e){
+				throw InvalidConfiguration( "Error during parsing of options", module->name);
 			}
 
-			try {
-				component->setOptions( options );
-				component->init();
-			} catch( exception & e ) {
-				autoConfiguratorRegistrar = nullptr;
-				registrarMutex.unlock();
-
-				string  str = cs.serialize( options );
-				cerr << "Configuration values: " << endl << str << endl;
-				throw InvalidConfiguration( string( "Error during initialization: " ) + e.what(), module->name );
-			}
 			registrar->registerComponent( module->componentID + autoConfiguratorOffset, type + " " + matchingRules, module->name, component );
 
 			components.push_back( component );
@@ -170,8 +151,50 @@ namespace core {
 		autoConfiguratorRegistrar = nullptr;
 		registrarMutex.unlock();
 
+		if (initComponents){
+			initAllComponents(components);
+		}
 		return components;
 	}
+
+	void AutoConfigurator::SetConfiguration(Component * component, const string & config) throw (InvalidConfiguration){
+		stringstream s(config);
+		SetConfiguration(component, s);
+	}
+
+	void AutoConfigurator::SetConfiguration(Component * component, stringstream & config) throw (InvalidConfiguration){
+		ComponentOptions * options;
+		ContainerSerializer cs = ContainerSerializer();
+		try {
+			options = cs.parse( config );	
+			component->setOptions(options);			
+		} catch( exception & e ) {
+			autoConfiguratorRegistrar = nullptr;
+			registrarMutex.unlock();
+			ComponentOptions & availableOptions = component->getOptions();
+			string  str = cs.serialize( & availableOptions );
+			cerr << endl << "Expected configuration: " << str << endl;
+
+			throw InvalidConfiguration( "Error during parsing of options", "unknown");
+		}
+	}
+
+	void AutoConfigurator::initAllComponents(vector<Component *> & c){
+		for (auto it = c.begin(); it != c.end(); it++){
+			try {
+				(*it)->init();				
+			} catch( exception & e ) {
+				autoConfiguratorRegistrar = nullptr;
+				registrarMutex.unlock();
+
+				string  str = DumpConfiguration( & (*it)->getOptions());
+				cerr << "Configuration values: " << endl << str << endl;
+				throw InvalidConfiguration( string( "Error during initialization: " ) + e.what(), "unknown" );
+			}
+
+		}
+	}
+
 
 	string AutoConfigurator::DumpConfiguration( ComponentOptions * options )
 	{

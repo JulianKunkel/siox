@@ -70,13 +70,17 @@ int main( int argc, char ** argv )
 		ComponentRegistrar registrar{};
 		AutoConfigurator* configurator = new AutoConfigurator(
 				& registrar, "siox-core-autoconfigurator-FileConfigurationProvider",	"", configFile); 
-		vector<Component*> coreComponents = configurator->LoadConfiguration("TraceReader", "");
+		vector<Component*> coreComponents = configurator->LoadConfiguration("TraceReader", "", false);
 		std::list<ActivityMultiplexer*> amuxs = configurator->searchForAll<ActivityMultiplexer>(coreComponents);
 		tools::ActivityInputStreamPlugin* activities = configurator->searchFor<tools::ActivityInputStreamPlugin>(coreComponents);
 		assert(coreComponents.size() != 0);
 
 		// fetch module options if available
-		//for (Component* component : traceReaderComponents) {
+		for (Component* c : coreComponents) {
+			// parse options that can be set from XML...
+			// change the XML and inject it back.
+			// configurator->SetConfiguration(c, configurator->DumpConfiguration(c));
+		}
 		//	CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
 		//	if (opts) {
 		//		opts->moduleOptions(genericOptions);
@@ -103,6 +107,9 @@ int main( int argc, char ** argv )
 		//		opts->setOptions(vm);
 		//	}
 		//}
+
+		// initialize all modules with the appropriate module options
+		configurator->initAllComponents(coreComponents);
 
 		AssociationMapper* associations           = nullptr;
 		Ontology* ontology                        = nullptr;

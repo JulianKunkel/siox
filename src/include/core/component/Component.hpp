@@ -32,7 +32,10 @@ namespace core {
 			// Call this function to initialize the object with given options
 			// Ownership of the options is given to the Component!
 			void setOptions( ComponentOptions * options ) {
-				assert( this->options == nullptr ); // otherwise it has been initialized.
+				if( this->options != nullptr ){
+					// it has been initialized.
+					delete this->options;
+				} 
 				// if the options have been fetched using getOptions* then only init() must be used.
 				this->options = options;
 			}
@@ -62,11 +65,11 @@ namespace core {
 			}
 
 			inline ComponentOptions & getOptions() {
-				if( options == nullptr ) {
-					options = AvailableOptions();
-					assert( options != nullptr );
+				if( this->options == nullptr ) {
+					this->options = AvailableOptions();
+					assert( this->options != nullptr );
 				}
-				return *options;
+				return * this->options;
 			}
 
 			template<class TYPE>
