@@ -29,7 +29,7 @@ class FileConfigurationProvider : public ConfigurationProvider {
 				fin.open( *it );
 				//cout << "> Checking config " << *it << endl;
 				if( fin.good() ) {
-					cout << "> config file: " << *it << endl;
+					cout << "> use config file: " << *it << endl;
 					break;
 				}
 			}

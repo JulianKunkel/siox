@@ -148,22 +148,28 @@ int main( int argc, char ** argv )
 		program_options::store( program_options::command_line_parser(argc, argv).options(genericOptions).allow_unregistered().style(program_options::command_line_style::unix_style ^ program_options::command_line_style::allow_short).run(), vm );
 		program_options::notify( vm );
 
+		string configFile = vm["conf"].as<string>();
+
+		if( vm.count( "help" ) and configFile == "" ) {
+			cout << genericOptions << endl;
+			return 1;
+		}
+
+		if (configFile == ""){
+			configFile = "siox-trace-reader.conf:/etc/siox/trace-reader.conf";
+		}
 
 		// Loading Modules
 		ComponentRegistrar registrar{};
 		AutoConfigurator* configurator = new AutoConfigurator(
-				&registrar, 
-				"siox-core-autoconfigurator-FileConfigurationProvider", 
-				"", 
-				"siox.conf"); // TODO: make smart AutoConfigurator, to get rid of "new"
-		vector<Component*> coreComponents = util::LoadConfiguration(&configurator, &registrar);
-		vector<Component*> posixComponents = configurator->LoadConfiguration("TraceReader", "POSIX");
-		std::list<ActivityMultiplexer*> amuxs = configurator->searchForAll<ActivityMultiplexer>(posixComponents);
-		tools::ActivityInputStreamPlugin* activities = configurator->searchFor<tools::ActivityInputStreamPlugin>(posixComponents);
-		assert(posixComponents.size() != 0);
+				& registrar, "siox-core-autoconfigurator-FileConfigurationProvider",	"", configFile); 
+		vector<Component*> coreComponents = configurator->LoadConfiguration("TraceReader", "");
+		std::list<ActivityMultiplexer*> amuxs = configurator->searchForAll<ActivityMultiplexer>(coreComponents);
+		tools::ActivityInputStreamPlugin* activities = configurator->searchFor<tools::ActivityInputStreamPlugin>(coreComponents);
+		assert(coreComponents.size() != 0);
 
 		// fetch module options if available
-		//for (Component* component : posixComponents) {
+		//for (Component* component : traceReaderComponents) {
 		//	CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
 		//	if (opts) {
 		//		opts->moduleOptions(genericOptions);
@@ -189,7 +195,7 @@ int main( int argc, char ** argv )
 		}
 
 		// set module options
-		//for (Component* component : posixComponents) {
+		//for (Component* component : traceReaderComponents) {
 		//	CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
 		//	if (opts) {
 		//		opts->setOptions(vm);

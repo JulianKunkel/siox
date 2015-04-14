@@ -158,7 +158,7 @@ namespace core {
 
 				string  str = cs.serialize( options );
 				cerr << "Configuration values: " << endl << str << endl;
-				throw InvalidConfiguration( string( "Error during initialization of " ) + e.what(), module->name );
+				throw InvalidConfiguration( string( "Error during initialization: " ) + e.what(), module->name );
 			}
 			registrar->registerComponent( module->componentID + autoConfiguratorOffset, type + " " + matchingRules, module->name, component );
 
