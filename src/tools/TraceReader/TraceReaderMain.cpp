@@ -31,7 +31,6 @@
 //#include <tools/TraceReader/activity_stream/FileAIStream/FileAIStream.hpp>
 #include <tools/TraceReader/activity_stream/ActivityInputStreamPlugin.hpp>
 #include <tools/TraceReader/activity_stream/ActivityInputStreamPluginOptions.hpp>
-#include <tools/TraceReader/CommandLineOptions.hpp>
 
 using namespace boost;
 using namespace std;
@@ -164,12 +163,12 @@ int main( int argc, char ** argv )
 		assert(posixComponents.size() != 0);
 
 		// fetch module options if available
-		for (Component* component : posixComponents) {
-			CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
-			if (opts) {
-				opts->moduleOptions(genericOptions);
-			}
-		}
+		//for (Component* component : posixComponents) {
+		//	CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
+		//	if (opts) {
+		//		opts->moduleOptions(genericOptions);
+		//	}
+		//}
 
 		// the final command line options
 		program_options::options_description cmdline_options;
@@ -190,12 +189,12 @@ int main( int argc, char ** argv )
 		}
 
 		// set module options
-		for (Component* component : posixComponents) {
-			CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
-			if (opts) {
-				opts->setOptions(vm);
-			}
-		}
+		//for (Component* component : posixComponents) {
+		//	CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
+		//	if (opts) {
+		//		opts->setOptions(vm);
+		//	}
+		//}
 
 		AssociationMapper* associations           = nullptr;
 		Ontology* ontology                        = nullptr;

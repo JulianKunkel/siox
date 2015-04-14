@@ -13,17 +13,6 @@ ComponentOptions* PrintPlugin::AvailableOptions()
 	return new PrintPluginOptions{};
 }
 
-void PrintPlugin::moduleOptions(boost::program_options::options_description& od) {
-	od.add_options()( "printVerbosity", boost::program_options::value<unsigned int>(), "Print plugin verbosity" );
-}
-
-void PrintPlugin::setOptions(const boost::program_options::variables_map& vm) {
-	PrintPluginOptions& opts = getOptions<PrintPluginOptions>();
-	if (!vm["printVerbosity"].empty()) {
-		opts.verbosity = vm["printVerbosity"].as<unsigned int>();
-	}
-}
-
 void PrintPlugin::initPlugin(){
 	assert(multiplexer);
 	multiplexer->registerCatchall(this, static_cast<ActivityMultiplexer::Callback>(&PrintPlugin::notify), false);

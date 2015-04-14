@@ -13,6 +13,7 @@ add_subdirectory(profiler)
 add_subdirectory(binwriter)
 add_subdirectory(access_info_plotter)
 add_subdirectory(print)
+add_subdirectory(CSVExtractor)
 
 if (PostgreSQL_FOUND)
 	add_subdirectory(postgres_writer)

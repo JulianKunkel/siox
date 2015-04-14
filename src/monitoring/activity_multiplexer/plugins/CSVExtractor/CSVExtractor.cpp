@@ -10,24 +10,23 @@
 #include <time.h>
 
 #include <monitoring/ontology/Ontology.hpp>
-#include <tools/TraceReader/plugin/CSVExtractor/CSVExtractor.hpp>
-
+#include <src/monitoring/activity_multiplexer/plugins/CSVExtractor/CSVExtractor.hpp>
+#include "CSVExtractorOptions.hpp"
 
 using namespace std;
 using namespace monitoring;
-using namespace tools;
 
 #define INVALID_UINT64 ((uint64_t) -1)
 #define IGNORE_ERROR(x) try{ x } catch(NotFoundError & e){}
 
-void CSVExtractor::moduleOptions(program_options::options_description & od){
-	od.add_options()
-		( "file", program_options::value<string>()->default_value( "output.csv" ), "Name of the created CSV file" );
-		// string regex = vm["plotFileGraphRegex"].as<string>();
+ComponentOptions* CSVExtractor::AvailableOptions()
+{
+	return new CSVExtractorOptions{};
 }
 
-void CSVExtractor::init(program_options::variables_map * vm, TraceReader * tr){
-	o = tr->getOntology();
+void CSVExtractor::initPlugin(){
+	assert(multiplexer);
+	multiplexer->registerCatchall(this, static_cast<ActivityMultiplexer::Callback>(&CSVExtractor::notify), false);
 
 	addActivityHandler("POSIX", "", "open", & CSVExtractor::handlePOSIXOpen);
 	addActivityHandler("POSIX", "", "creat", & CSVExtractor::handlePOSIXOpen);
@@ -42,22 +41,25 @@ void CSVExtractor::init(program_options::variables_map * vm, TraceReader * tr){
 	addActivityHandler("POSIX", "", "fdatasync", & CSVExtractor::handlePOSIXSync);
 	addActivityHandler("POSIX", "", "lseek", & CSVExtractor::handlePOSIXSeek);
 
+	ActivityPluginDereferencing * o = facade;
+	assert(o);
 	IGNORE_ERROR(fhID = o->lookup_attribute_by_name( "POSIX", "descriptor/filehandle" ).aID;)
 	IGNORE_ERROR(fname = o->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;)
 	IGNORE_ERROR(bytesReadID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesRead" ).aID;)
 	IGNORE_ERROR(positionID = o->lookup_attribute_by_name( "POSIX", "file/position" ).aID;)
 	IGNORE_ERROR(bytesWrittenID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;)
 
-	const string filename = (*vm)["file"].as<string>();
-	cout << "Writing CSV file to " << filename << endl;
-	csv.open(filename, ios::out | ios::trunc );
+	CSVExtractorOptions& opts = getOptions<CSVExtractorOptions>();
+	cout << "Writing CSV file to " << opts.filename << endl;
+	csv.open(opts.filename, ios::out | ios::trunc );
 	csv << "AbsTime,DeltaTime,fd,OpTyp,DeltaOffset,Size,Duration" << endl;
 }
 
-void CSVExtractor::addActivityHandler(const string & interface, const string & impl, const string & a, void (CSVExtractor::* handler)(Activity*) )
+void CSVExtractor::addActivityHandler(const string & interface, const string & impl, const string & a, void (CSVExtractor::* handler)(std::shared_ptr<Activity> Activity) )
 {
-	SystemInformationGlobalIDManager * s = tr->getSystemInformationGlobalIDManager();
 
+	SystemInformationGlobalIDManager* s = facade->get_system_information();
+	assert(s);
 	UniqueInterfaceID uiid = s->lookup_interfaceID( interface, impl );
 
 	try{
@@ -68,7 +70,7 @@ void CSVExtractor::addActivityHandler(const string & interface, const string & i
 	}
 }
 
-Activity * CSVExtractor::processNextActivity(Activity * a){
+void CSVExtractor::notify(const std::shared_ptr<Activity>& a, int lost){
 	if (tlast == 0){
 		tlast = a->time_start_;
 		tstart = tlast;
@@ -78,15 +80,8 @@ Activity * CSVExtractor::processNextActivity(Activity * a){
 
 	if ( both != activityHandlers.end() ){
 		auto fkt = both->second;
-
-		if( verbosity > 3){
-			tr->printActivity(a);
-		}
-
 		(this->*fkt)(a);
 	}
-
-	return a;
 }
 
 static double ttoDbl(Timestamp t){
@@ -104,7 +99,7 @@ void CSVExtractor::finalize(){
 	csv.close();
 }
 
-static const uint32_t findUINT32AttributeByID( const Activity * a, OntologyAttributeID oaid )
+static const uint32_t findUINT32AttributeByID( std::shared_ptr<Activity>& a, OntologyAttributeID oaid )
 {
  	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
@@ -116,7 +111,7 @@ static const uint32_t findUINT32AttributeByID( const Activity * a, OntologyAttri
 }
 
 
-static const uint64_t findUINT64AttributeByID( const Activity * a, OntologyAttributeID oaid )
+static const uint64_t findUINT64AttributeByID( std::shared_ptr<Activity>& a, OntologyAttributeID oaid )
 {
  	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
@@ -127,7 +122,7 @@ static const uint64_t findUINT64AttributeByID( const Activity * a, OntologyAttri
 	return INVALID_UINT64;
 }
 
-static const char * findStrAttributeByID( const Activity * a, OntologyAttributeID oaid )
+static const char * findStrAttributeByID( std::shared_ptr<Activity>& a, OntologyAttributeID oaid )
 {
  	const vector<Attribute> & attributes = a->attributeArray();
 	for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
@@ -138,7 +133,7 @@ static const char * findStrAttributeByID( const Activity * a, OntologyAttributeI
 	return "unknown";
 }
 
-OpenFiles * CSVExtractor::findParentFile( const Activity * a )
+OpenFiles * CSVExtractor::findParentFile( std::shared_ptr<Activity>& a )
 {
 	const vector<ActivityID>& parents = a->parentArray();
 
@@ -151,7 +146,7 @@ OpenFiles * CSVExtractor::findParentFile( const Activity * a )
 	return nullptr;
 }
 
-OpenFiles * CSVExtractor::findParentFileByFh( const Activity * a ){
+OpenFiles * CSVExtractor::findParentFileByFh( std::shared_ptr<Activity>& a ){
 	OpenFiles * parent = findParentFile(a);
 	if ( parent == nullptr ){
 		// add a dummy for the file handle since we do not know the filename
@@ -169,13 +164,13 @@ OpenFiles * CSVExtractor::findParentFileByFh( const Activity * a ){
 	return parent;
 }
 
-void CSVExtractor::handlePOSIXSeek(Activity * a){
+void CSVExtractor::handlePOSIXSeek(std::shared_ptr<Activity> a){
 	OpenFiles * parent = findParentFileByFh(a);
 	parent->currentPosition = findUINT64AttributeByID(a, positionID);
 	// ",OpTyp,Size,DeltaOffset,Duration"
 }
 
-void CSVExtractor::handlePOSIXSync(Activity * a){
+void CSVExtractor::handlePOSIXSync(std::shared_ptr<Activity> a){
 	int fd = findUINT32AttributeByID(a, fhID);
 	Timestamp delta = a->time_stop_ - a->time_start_;
 	csv << ttoDbl(a->time_start_ - this->tstart) << "," << convertUpdateTime(a->time_start_) << "," << fd << "," << "S,0,0," << ttoDbl(delta) << endl;
@@ -183,7 +178,7 @@ void CSVExtractor::handlePOSIXSync(Activity * a){
 
 
 
-void CSVExtractor::handlePOSIXAccess(Activity * a, string type){
+void CSVExtractor::handlePOSIXAccess(std::shared_ptr<Activity> a, string type){
 	uint64_t bytes = findUINT64AttributeByID(a, bytesReadID);
 	if (bytes == INVALID_UINT64){
 		bytes = findUINT64AttributeByID(a, bytesWrittenID);	
@@ -208,24 +203,26 @@ void CSVExtractor::handlePOSIXAccess(Activity * a, string type){
 }
 
 
-void CSVExtractor::handlePOSIXWrite(Activity * a){
+void CSVExtractor::handlePOSIXWrite(std::shared_ptr<Activity> a){
 	handlePOSIXAccess(a, "W");
 }
 
-void CSVExtractor::handlePOSIXRead(Activity * a){
+void CSVExtractor::handlePOSIXRead(std::shared_ptr<Activity> a){
 	handlePOSIXAccess(a, "R");
 }
 
-void CSVExtractor::handlePOSIXOpen(Activity * a){
+void CSVExtractor::handlePOSIXOpen(std::shared_ptr<Activity> a){
 	openFiles[ a->aid() ] = { findStrAttributeByID(a, fname), 0};
 }
 
-void CSVExtractor::handlePOSIXClose(Activity * a){
-	OpenFiles * parent = findParentFileByFh(a);
+void CSVExtractor::handlePOSIXClose(std::shared_ptr<Activity> a){
+	int fd = findUINT32AttributeByID(a, fhID);
+	unnamedFiles.erase(fd);
+	openFiles.erase(a->aid());
 }
 
 extern "C" {
-	void * TOOLS_TRACE_READER_INSTANCIATOR_NAME()
+	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME()
 	{
 		return new CSVExtractor();
 	}
