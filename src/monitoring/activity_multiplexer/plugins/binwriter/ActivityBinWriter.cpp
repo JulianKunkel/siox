@@ -127,7 +127,9 @@ std::shared_ptr<Activity> ActivityTraceReaderPlugin::nextActivity(){
 	int ret = fread(& size, sizeof(uint64_t), 1, file);
 	if ( ret == 0 ){
 		// TODO throw
-		std::cout << "Couldn't read file (1)" << endl;
+		if (! feof (file)){
+			std::cout << "Error couldn't read file (1)" << endl;
+		}
 		return std::shared_ptr<Activity>{nullptr};
 	}
 
@@ -138,7 +140,9 @@ std::shared_ptr<Activity> ActivityTraceReaderPlugin::nextActivity(){
 
 	if ( ret == 0 ){
 		// TODO throw
-		std::cout << "Couldn't read file (2)" << endl;
+		if (! feof (file)){
+			std::cout << "Couldn't read file (2)" << endl;
+		}
 		return std::shared_ptr<Activity>{nullptr};
 	}
 

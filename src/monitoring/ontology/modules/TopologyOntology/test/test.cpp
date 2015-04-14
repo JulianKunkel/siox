@@ -27,7 +27,8 @@ int main( int argc, char const * argv[] )
 
 	TopologyOntologyOptions * op = new TopologyOntologyOptions();
 	op->topology.componentPointer = topology ;
-	o->init( op );
+	o->setOptions( op );
+	o->init();
 
 	string domain( "test" );
 	string s_a1( "a1" );

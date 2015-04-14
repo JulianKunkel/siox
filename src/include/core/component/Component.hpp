@@ -31,12 +31,10 @@ namespace core {
 
 			// Call this function to initialize the object with given options
 			// Ownership of the options is given to the Component!
-			void init( ComponentOptions * options ) {
+			void setOptions( ComponentOptions * options ) {
 				assert( this->options == nullptr ); // otherwise it has been initialized.
 				// if the options have been fetched using getOptions* then only init() must be used.
-
 				this->options = options;
-				init();
 			}
 
 			// This function will (and must) be called before the destructor of the object is called.

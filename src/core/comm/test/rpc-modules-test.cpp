@@ -58,8 +58,10 @@ int main(){
 	cmo->comm = comm;
 
 
-	server->init(smo);
-	client->init(cmo);
+	server->setOptions(smo);
+	server->init();
+	client->setOptions(cmo);
+	client->init();
 
 	// END Setup: All the previous work has been done by the auto-configurator
 

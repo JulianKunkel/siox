@@ -26,7 +26,8 @@ int main( int argc, char const * argv[] )
 	// not necessary, but for testing...
 	TopologySystemInformationOptions * op = new TopologySystemInformationOptions();
 	op->topology.componentPointer = topology ;
-	s->init( op );
+	s->setOptions( op );
+	s->init();
 
 
 	UniqueInterfaceID uid = s->register_interfaceID( "MPI", "MPICH2" );

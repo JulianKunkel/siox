@@ -49,7 +49,8 @@ int main( int argc, char const * argv[] )
 	// Create and set its options object
 	FileOntologyOptions * ont_opt = new FileOntologyOptions();
 	ont_opt->filename = "optimizer-ontology-example.dat";
-	ont->init( ont_opt );
+	ont->setOptions( ont_opt );
+	ont->init();
 
 	//Create some attributes
 	string domain( "test" );

@@ -63,7 +63,8 @@ void test2(){
 	so->target_multiplexer.componentPointer = & myTargetMux;
 	so->comm.componentPointer = comm;
 	so->serviceAddress = "localhost:3032";
-	server->init(so);
+	server->setOptions(so);
+	server->init();
 	server->start();
 
 	ActivityNetworkForwarderClientOptions * co = new ActivityNetworkForwarderClientOptions();
@@ -72,7 +73,8 @@ void test2(){
 	co->targetAddress = "localhost:3032";
 	co->forwardAllActivities = false;
 	co->ringBufferSize = 4;
-	((Component*) client)->init(co);
+	((Component*) client)->setOptions(co);
+	client->init();
 	client->start();
 
 	shared_ptr<Activity> activity (new Activity());
@@ -137,7 +139,8 @@ void test(){
 	so->target_multiplexer.componentPointer = & myTargetMux;
 	so->comm.componentPointer = comm;
 	so->serviceAddress = "localhost:3032";
-	server->init(so);
+	server->setOptions(so);
+	server->init();
 	server->start();
 
 	ActivityNetworkForwarderClientOptions * co = new ActivityNetworkForwarderClientOptions();
@@ -145,7 +148,8 @@ void test(){
 	co->comm.componentPointer = comm;
 	co->forwardAllActivities = true;
 	co->targetAddress = "localhost:3032";
-	((Component*) client)->init(co);
+	((Component*) client)->setOptions(co);
+	client->init();
 	client->start();
 
 	// begin the test

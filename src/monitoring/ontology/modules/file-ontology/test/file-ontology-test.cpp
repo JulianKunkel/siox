@@ -21,7 +21,8 @@ int main( int argc, char const * argv[] )
 	// not necessary, but for testing...
 	FileOntologyOptions * op = new FileOntologyOptions();
 	op->filename = "ontology-example.dat";
-	o->init( op );
+	o->setOptions( op );
+	o->init();
 
 	string domain( "test" );
 	string s_a1( "a1" );

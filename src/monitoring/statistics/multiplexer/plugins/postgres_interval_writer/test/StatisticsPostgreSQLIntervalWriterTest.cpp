@@ -69,7 +69,8 @@ int main( int argc, char const * argv[] )
 	{
 		TopologyOntologyOptions * op = new TopologyOntologyOptions();
 		op->topology.componentPointer = topology ;
-		ontology->init( op );
+		ontology->setOptions( op );
+		ontology->init();
 	}
 
 	{

@@ -21,7 +21,8 @@ int main( int argc, char const * argv[] )
 	// not necessary, but for testing...
 	FileBasedSystemInformationOptions * op = new FileBasedSystemInformationOptions();
 	op->filename = "system-info-example.txt";
-	s->init( op );
+	s->setOptions( op );
+	s->init();
 
 
 	UniqueInterfaceID uid = s->register_interfaceID( "MPI", "MPICH2" );

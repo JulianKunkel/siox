@@ -151,7 +151,8 @@ namespace core {
 			}
 
 			try {
-				component->init( options );
+				component->setOptions( options );
+				component->init();
 			} catch( exception & e ) {
 				autoConfiguratorRegistrar = nullptr;
 				registrarMutex.unlock();
