@@ -3,36 +3,21 @@
 #include <sstream>
 #include <exception>
 
-using namespace std;
+#include <container-xml-serializer.hpp>
+
+// g++ --std=gnu++11 test-xml-serialization.cpp  -g -I ../../src/include/core/container/
 
 
-
-
-class XMLException: public exception
-{
-public:
-  string txt;
-
-  XMLException(const string & what){
-      txt = what;
-  }
-
-  virtual const char* what() const throw()
-  {
-    return txt.c_str();
-  }
-};
-
-struct member_description{
-   string type;
-   void * address;
-};
-
-struct class_description{
-   string name;
-   // member name
-   unordered_map<string, member_description> members;
-};
+// struct member_description{
+//    string type;
+//    void * address;
+// };
+// 
+// struct class_description{
+//    string name;
+//    // member name
+//    unordered_map<string, member_description> members;
+// };
 
 
 #include <array>
@@ -50,71 +35,6 @@ struct test{
    int count;
 };
 
-static void encodeXML(string x, stringstream & s){
-   for (char c: x){
-      switch (c)
-      {
-      case '\"': s << "&quot;"; break;   
-      case '&':  s << "&amp;";  break;   
-      case '<':  s << "&lt;";   break;   
-      case '>':  s << "&gt;";   break;
-      default: 
-         s << c;
-      }
-   }
-}
-static void decodeXML(string & x, stringstream & s){   
-   stringstream str;
-   try{
-      while(true){
-         char c;
-         c = s.peek();
-         if (c == '&'){
-            // devour special chars.
-            s.get();
-            c = s.get();
-            switch(c){
-               case 'q':
-                  s.get();
-                  s.get();
-                  s.get();
-                  str << '\"';
-                  break;
-               case 'a':
-                  s.get();
-                  s.get();
-                  str << '&';
-                  break;
-               case 'l':
-                  s.get();
-                  str << '<';
-                  break;
-               case 'g':
-                  s.get();
-                  str << '>';
-                  break;
-               default:
-                  throw exception();
-            }
-            c = s.get();
-            if (c != ';'){
-               // should terminate with ;
-               throw exception();
-            }
-            continue;
-         }
-         if (c == '<'){
-            break;
-         }
-         str << c;
-         s.get();
-      }
-      
-   }catch (exception & e){
-      throw XMLException("Error deserializing content of string, parsed so far: \"" + str.str() + "\".");
-   }
-   x = str.str();
-}
 
 void serialize(struct obj & t, stringstream & s, const string & name = "obj"){
    s << "<" << name << ">" << endl;
@@ -129,57 +49,6 @@ void serialize(struct test & t, stringstream & s, const string & name = "test"){
    s << "<" << name << ">" << endl;
    serialize(t.o, s, "o");
    s << "</" << name << ">" << endl;
-}
-
-
-static void devourWhitespace(stringstream & s){
-   while(s.peek() == '\t' || s.peek() == ' ' ) {
-      s.get();
-   }
-}
-
-
-static void retrieveTag(stringstream & s, const string & tag, const string & obj,  bool end=false){
-   devourWhitespace(s);
-   char c;
-   stringstream out;
-   try{
-      s >> c;
-      if (c != '<') {
-         throw exception();
-      }
-      if (end){
-         s >> c;
-         if (c != '/') {
-            throw exception();
-         }      
-      }
-      while(true){
-         c = s.get();
-         if (c == '>'){
-            break;
-         }
-         out << c;
-      }
-      if (c != '>') {
-         throw exception();
-      }
-   }catch(exception & e){
-      throw XMLException("Error reached end of string, tag " + tag + " is not closed. Remaining buffer: " + s.str().substr(s.tellg()));
-   }
-
-   if (out.str() != tag){
-      throw XMLException("Error deserializing \"" + obj + "\", expected " + tag + " but got " + out.str());
-   }
-}
-
-static void checkXMLTagBegin(stringstream & s, const string & name, const string & obj){ 
-   retrieveTag(s, name, obj, false);
-}
-
-
-static void checkXMLTagEnd(stringstream & s, const string & name, const string & obj){
-   retrieveTag(s, name, obj, true);
 }
 
 
@@ -201,6 +70,7 @@ void retrieveSimpleXMLTag(stringstream & s, const string & name, string & str){
    decodeXML(str, s) ;
    checkXMLTagEnd(s, name, name);
 }
+
 
 void deserialize(struct obj & t, stringstream & s, const string & name = "obj"){
    checkXMLTagBegin(s, name, "obj");
