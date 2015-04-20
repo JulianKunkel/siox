@@ -2,7 +2,7 @@
 #define CONTAINER_XML_SERIALIZER_H
 
 /* 
- * This include files contains functions for (de)serialization of primitive types.
+ * This include files contains functions for (de)serialization of XML basic types.
  */
 
 #include <assert.h>
@@ -13,6 +13,8 @@
 #include <exception>
 
 using namespace std;
+
+namespace j_xml_serialization{
 
 class XMLException: public exception
 {
@@ -44,6 +46,14 @@ static void encodeXML(string x, stringstream & s){
       }
    }
 }
+
+static string convertStringBuffer(stringstream & s){
+	if (s.eof()){
+		return "Buffer reached end of string.";
+	}
+	return "Buffer: " + s.str().substr(s.tellg());
+}
+
 static void decodeXML(string & x, stringstream & s){   
    stringstream str;
    try{
@@ -92,7 +102,7 @@ static void decodeXML(string & x, stringstream & s){
       }
       
    }catch (exception & e){
-      throw XMLException("Error deserializing content of string, parsed so far: \"" + str.str() + "\".");
+      throw XMLException("Error deserializing content of string, parsed so far: \"" + str.str() + "\"."  + convertStringBuffer(s));
    }
    x = str.str();
 }
@@ -105,7 +115,7 @@ static void devourWhitespace(stringstream & s){
 }
 
 
-static void retrieveTag(stringstream & s, const string & tag, const string & obj,  bool end=false){
+static string retrieveTag(stringstream & s, const string & tag, const string & obj,  bool end=false){
    devourWhitespace(s);
    char c;
    stringstream out;
@@ -131,13 +141,18 @@ static void retrieveTag(stringstream & s, const string & tag, const string & obj
          throw exception();
       }
    }catch(exception & e){
-      throw XMLException("Error reached end of string, tag " + tag + " is not closed. Remaining buffer: " + s.str().substr(s.tellg()));
+      throw XMLException("Error reached end of string in obj: " + obj + ", tag " + tag + " is not closed. " + convertStringBuffer(s));
    }
+   return out.str();
+}
 
-   if (out.str() != tag){
-      throw XMLException("Error deserializing \"" + obj + "\", expected " + tag + " but got " + out.str());
+static void checkTag(stringstream & s, const string & tag, const string & obj,  bool end=false){
+	string out = retrieveTag(s, tag, obj, end);
+   if (out != tag){
+      throw XMLException("Error deserializing \"" + obj + "\", expected " + tag + " but got " + out + ". " + convertStringBuffer(s));
    }
 }
+
 
 static void checkXMLTagBegin(stringstream & s, const string & name, const string & obj){ 
    retrieveTag(s, name, obj, false);
@@ -148,6 +163,59 @@ static void checkXMLTagEnd(stringstream & s, const string & name, const string &
    retrieveTag(s, name, obj, true);
 }
 
+template <typename MYTYPE>
+void retrieveSimpleXMLTag(stringstream & s, const string & name, MYTYPE & typ){
+   checkXMLTagBegin(s, name, name);
+   devourWhitespace(s);
+   try{
+      s >> typ ;
+   }catch(exception & e){
+      throw XMLException("Error deserializing content of \"" + name + "\". " + convertStringBuffer(s));
+   }
+   checkXMLTagEnd(s, name, name);
+}
+
+template <>
+void retrieveSimpleXMLTag(stringstream & s, const string & name, string & str){
+   checkXMLTagBegin(s, name, name);
+   decodeXML(str, s) ;
+   checkXMLTagEnd(s, name, name);
+}
+
+template <typename TYPE>
+static void storeSimpleXMLTag(stringstream & s, const string & name, TYPE & typ, int intent){
+	for (int x = 0; x < intent; x++ ){
+		s << "  ";
+	}
+	s << "<" << name << ">" << typ << "</" << name << ">" << endl;
+}
+
+template <>
+void storeSimpleXMLTag(stringstream & s, const string & name, string & typ, int intent){
+	for (int x = 0; x < intent; x++ ){
+		s << "  ";
+	}	
+	s << "<" << name << ">";
+	encodeXML(typ, s);
+	s << "</" << name << ">" << endl;
+}
+
+static void storeTagBegin(stringstream & s, const string & name, int intent){
+	for (int x = 0; x < intent; x++ ){
+		s << "  ";
+	}	
+	s << "<" << name << ">" << endl;
+}
+
+
+static void storeTagEnd(stringstream & s, const string & name, int intent){
+	for (int x = 0; x < intent; x++ ){
+		s << "  ";
+	}	
+	s << "</" << name << ">" << endl;
+}
+
+} // end namespace
 
 
 #endif
