@@ -539,7 +539,7 @@ class JXMLOutputGenerator(OutputGenerator):
         print("#include <" + filename + "JXMLSerialization.hpp>", file = self.fh)
 
     def registerEnumClass(self, className, type):
-        print(className + " " + type)
+        #print(className + " " + type)
         self.enumMap[className] = type
         
 
