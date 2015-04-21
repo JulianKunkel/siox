@@ -25,7 +25,7 @@ class Option():
 
         argParser.add_argument('--style', '-s',
                                action='store', default='Boost', dest='style',
-                               choices=['Boost', 'Protobuf', 'JBinary'],
+                               choices=['Boost', 'Protobuf', 'JBinary', 'JXML'],
                                help='''Choose which output-style to use.''')
 
         argParser.add_argument('--flavor', '-f',
@@ -153,15 +153,17 @@ class OutputGenerator():
 
     def setOptions(self, options):
         self.options = options
-        self.flavor = options.flavor
+        self.flavor = options.flavor        
 
     def createFileIfNeeded(self):
         if self.fh == None:
             self.fh = open(self.options.outputFile, "w")
+            print("//Created from " + self.options.inputFile, file = self.fh);
             self.initFile()
 
     def initFile(self):
         pass
+
 
     def finalize(self):
         pass
@@ -375,7 +377,231 @@ class JBinaryOutputGenerator(OutputGenerator):
         pass
 
 
+class JXMLOutputGenerator(OutputGenerator):
 
+    def __init__(self):
+        self.nestingDepth = 0
+        self.mapping = {}
+        self.enumMap = {}
+        self.parents = ""
+        self.namespace = {}
+        self.className = None
+        self.registeredTypes = []
+        self.containerTypes = ["std::vector", "std::list"] #  "std::array"
+        self.baseTypes = {"bool", "uint", "int", "float", "double", "unsigned", "unsigned int", "long", "int8_t", "uint8_t", "uint16_t", "int16_t", "uint32_t", "uint64_t", "int32_t", "int64_t", "string", "std::string"};   
+
+    def registerAnnotatedHeader(self, className, parentClasses):
+        self.createFileIfNeeded()
+        for n in self.namespace:
+            #className = "::".join(self.namespace) + "::" + className 
+            print("using namespace " + n + ";", file = self.fh)
+
+        self.mapping = {"CLASS" : className , "PARENT" : ",".join(parentClasses), "FLAVOR" : self.flavor }
+        self.parents = parentClasses
+        self.className = className
+        try:
+            self.parentClassnames = list(map(lambda p: re.split("[ \t]+", p)[1].strip(), parentClasses))
+        except IndexError:            
+            print("Did you forget to specify public class inheritance for class \"" + className + "\" ?")
+            os._exit(1)
+
+        if self.options.debug:
+            print("\tFound " + className + " parent str: " + str(parentClasses))
+            print("\tParents: " + str(self.parentClassnames))
+
+        self.registeredTypes = []
+
+    def pairType(self, type):
+        m = re.search("([^<]+)<([^,]*),([^>]*)>", type)
+        if m:
+            type = m.group(1).strip()
+            child1 = m.group(2).strip()
+            child2 = m.group(3).strip()
+
+            if type.startswith("std::"):
+                return [type, child1, child2]
+            else:
+                return ["std::" + type, child1, child2]
+        return [type, None, None]
+
+    def basicType(self, type):
+        pos = type.find("<")
+        if pos > 0:
+
+            childType = type[ type.find("<") + 1 : -1 ].strip();
+
+            if childType.find("<") > 0:
+                childSimpleType = childType[ 0: childType.find("<")].strip();
+            else:
+                childSimpleType = childType
+
+            type = type[0:pos].strip()
+            if type.startswith("std::"):
+                return [type, childType, childSimpleType]
+            else:
+                return ["std::" + type, childType, childSimpleType]
+        return [type, None, None]
+
+    def map_type_serializer(self, type, name, tagname, intent):
+        (bType, childType, childSimpleType) = self.basicType(type)
+        if bType in self.containerTypes:
+            return ("""
+             storeTagBegin(s, "%(TAG)s", intent + %(INTENT)s);
+             for (auto itr = %(NAME)s.begin(); itr != %(NAME)s.end() ; itr++) {
+                %(CHILD)s
+             }
+             storeTagEnd(s, "%(TAG)s", intent + %(INTENT)s);
+             """) % {"NAME" : name, "CHILD": self.map_type_serializer(childType, "*itr", childType, intent + 1), "TAG" : tagname, "INTENT" : intent}
+
+        if bType == "std::pair":
+            (t, c1, c2) = self.pairType(type)
+            return """
+            storeTagBegin(s, "pair", intent + %(INTENT)s);
+                %(FIRST)s
+                %(SECOND)s
+            storeTagEnd(s, "pair", intent + %(INTENT)s);""" % ({
+                "FIRST" : self.map_type_serializer(c1, "(" + name + ").first", "first", intent + 1), 
+                "SECOND" : self.map_type_serializer(c2, "(" + name + ").second", "second", intent + 1),
+                "INTENT" : intent + 1 })
+
+        if type.endswith("*"):
+            #  self.map_type_serializer(type[0:len(type)-2].strip()
+            return "!! TODO POINTER !!";
+
+        if type in self.baseTypes:
+            return "storeSimpleXMLTag(s, \"%s\", %s, intent + %d);" % (tagname, name, intent);
+        if type in self.enumMap:
+            return "storeSimpleXMLTag(s,  \"%s\", (%s &) %s, intent + %d);" % (tagname, self.enumMap[type], name, intent);
+        #    return "serialize((" + self.enumMap[type] + " &)"  + name + ", buffer, pos)";
+
+        return "serialize(%s, s, intent + %s);" % (name, intent);
+
+
+    def map_type_deserializer(self, type, name, tagname):
+        (bType, childType, childSimpleType) = self.basicType(type)
+        if bType in self.containerTypes:
+            return ("""
+               checkXMLTagBegin(s, name, "%(TAG)s");
+               while(true){
+                  string tag = retrieveTag(s, "%(CHILDSIMPLE)s", "%(TYPE)s");
+                  if (tag == "/%(TAG)s"){
+                     break;
+                  }
+                  if (tag != "%(CHILDSIMPLE)s"){
+                     throw XMLException("Error expected %(CHILDSIMPLE)s as child in %(TYPE)s %(TAG)s but got " + tag + ". " + convertStringBuffer(s));
+                  }
+                  // tag is now <%(CHILDTYPE)s>
+                  s.seekg(-%(CHILDLEN)d -2, ios_base::cur); 
+                  %(CHILDTYPE)s child; 
+                  %(CHILD)s
+                  %(NAME)s.push_back(child);
+               }""")% {"NAME" : name, "TYPE" : type, "CHILDLEN" : len(childType), 
+            "CHILD": self.map_type_deserializer(childType, "child", childSimpleType), 
+            "CHILDTYPE": childType, 
+            "TAG" : tagname,
+            "CHILDSIMPLE": childSimpleType}
+
+        if bType == "std::pair":
+            (t, c1, c2) = self.pairType(type)
+            return """
+            checkXMLTagBegin(s, "pair", "%(NAME)s");
+                %(FIRST)s
+                %(SECOND)s
+            checkXMLTagEnd(s, "pair", "%(NAME)s");""" % ({
+                "FIRST" : self.map_type_deserializer(c1, "(" + name + ").first", "first"), 
+                "SECOND" : self.map_type_deserializer(c2, "(" + name + ").second", "second"),
+                "NAME" : tagname })
+
+        if type.endswith("*"):
+            childType = type[0:len(type)-2].strip()
+            return "TODO POINTER"
+
+        if type in self.enumMap: # self.enumMap[type] 
+            return "retrieveSimpleXMLTag(s,  \"%s\", (%s &) %s);" % (tagname, self.enumMap[type], name);
+
+        if type in self.baseTypes:
+            return "retrieveSimpleXMLTag(s, \"%s\", %s);" % (tagname, name);
+
+        return "deserialize(" + name + ", s);";
+
+
+    def forceInclude(self, filename):
+        self.createFileIfNeeded()
+        print("#include <" + filename + "JXMLSerialization.hpp>", file = self.fh)
+
+    def registerEnumClass(self, className, type):
+        self.enumMap[className] = type
+        
+
+    def registerAnnotatedHeaderEnd(self):
+        if self.options.debug:
+            print("\tEnd class")
+  
+        print("\nnamespace j_xml_serialization{", file=self.fh)
+
+        print("void serialize(%(CLASS)s &obj, stringstream & s, int intent = 0, const string & name = \"%(CLASS)s\"){"  % self.mapping, file = self.fh)
+
+        if len(self.parentClassnames) > 0 or len(self.registeredTypes) > 0:
+            print("\tstoreTagBegin(s, name, intent);", file = self.fh)
+            for p in self.parentClassnames:
+                print("\tserialize((" + p + " &) "  + " obj, s, intent + 1);" , file = self.fh)
+
+            for (memberType, memberName) in self.registeredTypes:
+                print("\t" + self.map_type_serializer(memberType, "obj." + memberName, memberName, 1), file = self.fh)
+
+            print("\tstoreTagEnd(s, name, intent);", file = self.fh)
+        print("}", file = self.fh)
+
+
+        print("void deserialize(%(CLASS)s &obj, stringstream & s, const string & name = \"%(CLASS)s\") {"  % self.mapping, file = self.fh)
+
+        if len(self.parentClassnames) > 0 or len(self.registeredTypes) > 0:
+            print("\tcheckXMLTagBegin(s, name, \"%s\");" %  self.className, file = self.fh)
+            for p in self.parentClassnames:
+                print("\tdeserialize((" + p + " &) "  + " obj, s);" , file = self.fh)
+
+            for (memberType, memberName) in self.registeredTypes:
+                print("\t" + self.map_type_deserializer(memberType, "obj." + memberName, memberName), file = self.fh)
+
+            print("\tcheckXMLTagEnd(s, name, \"%s\");" %  self.className, file = self.fh)
+        print("}\n", file=self.fh)
+
+        print("}\n", file=self.fh)
+
+
+
+
+    def registerMember(self, memberType, memberName, annotations):
+        self.registeredTypes.append([memberType, memberName])
+
+    def initFile(self):
+        if self.options.relative:
+            dir = os.path.basename(self.options.inputFile)
+        else:
+            dir = self.options.inputFile
+
+        print("#include \"%(INFILE)s\"" % { "INFILE" : dir } , file=self.fh)
+
+        print("#include <core/container/container-xml-serializer.hpp>\n\n", file=self.fh)
+
+    def finalize(self):
+        print("""
+            // We add this code to simplify parsing from strings.            
+            namespace j_xml_serialization{
+                template <typename TYPE>
+                static void deserialize(TYPE & t, const string & str, const string & name){
+                   stringstream s(str);
+                   deserialize(t, s, name);
+                }
+
+                template <typename TYPE>
+                static void deserialize(TYPE & t, const string & str){
+                   stringstream s(str);
+                   deserialize(t, s);
+                }
+                /////////////////////////////////////
+
+            }""", file=self.fh)
 
 class BoostOutputGenerator(OutputGenerator):
 
@@ -742,6 +968,8 @@ def main():
         og = ProtoBufOutputGenerator()
     elif options.style == "JBinary":
         og = JBinaryOutputGenerator()
+    elif options.style == "JXML":
+        og = JXMLOutputGenerator()        
     elif options.style == "Boost":
         og = BoostOutputGenerator()
 

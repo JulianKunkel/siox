@@ -2,13 +2,12 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIR}	
 )
 
 add_library(
 	siox-core-AutoConfigurator
 	AutoConfigurator.cpp
-	BoostXMLSerializable.cpp
+	ModuleOptionsXML.cpp
 )
 
 target_link_libraries(
@@ -16,11 +15,9 @@ target_link_libraries(
 	siox-core-ModuleLoader 
 	siox-core-ContainerSerializer 
 	siox-core-ComponentRegistrar	
-	-L${Boost_LIBRARY_DIR}
-	${Boost_LIBRARIES}
 )
 
-siox_run_serializer(ModuleOptions.hpp BoostXMLSerializable.cpp)
+siox_run_serializer(ModuleOptions.hpp ModuleOptionsXML.cpp)
 
 
 add_subdirectory(ConfigurationProviderPlugins)

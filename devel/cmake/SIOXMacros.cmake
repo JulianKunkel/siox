@@ -1,9 +1,9 @@
 macro(SIOX_RUN_SERIALIZER IN OUT)
 	add_custom_command(
 		OUTPUT ${OUT}
-		COMMENT "Generating boost serialization ${IN}"
+		COMMENT "Generating XML serialization ${IN}"
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/devel/scripts/serialization-code-generator.py
-		ARGS -I ${CMAKE_SOURCE_DIR}/src/include ${CMAKE_SOURCE_DIR}/src -i ${CMAKE_CURRENT_SOURCE_DIR}/${IN} -o ${OUT} 
+		ARGS -s JXML -I ${CMAKE_SOURCE_DIR}/src/include ${CMAKE_SOURCE_DIR}/src -i ${CMAKE_CURRENT_SOURCE_DIR}/${IN} -o ${OUT} 
 	)
 endmacro(SIOX_RUN_SERIALIZER)
 

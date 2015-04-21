@@ -26,7 +26,7 @@
 //@serializable
 class AccessInfoPlotterPluginOptions : public monitoring::ActivityMultiplexerPluginOptions {
 	public:
-		unsigned int verbosity;
+		uint32_t verbosity;
 		std::string regex;
 };
 

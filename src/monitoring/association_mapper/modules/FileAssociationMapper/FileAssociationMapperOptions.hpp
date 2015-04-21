@@ -1,10 +1,10 @@
-#include <core/component/component-options.hpp>
+#include <string>
 
-using namespace std;
+#include <core/component/component-options.hpp>
 
 //@serializable
 class FileAssociationMapperOptions: public core::ComponentOptions {
 	public:
-		string filename;
+		std::string filename;
 };
 

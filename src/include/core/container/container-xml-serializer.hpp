@@ -6,9 +6,9 @@
  */
 
 #include <assert.h>
-#include <string.h>
 #include <string>
 #include <inttypes.h>
+#include <sstream>
 
 #include <exception>
 
@@ -146,7 +146,7 @@ static string retrieveTag(stringstream & s, const string & tag, const string & o
    return out.str();
 }
 
-static void checkTag(stringstream & s, const string & tag, const string & obj,  bool end=false){
+static inline void checkTag(stringstream & s, const string & tag, const string & obj,  bool end=false){
 	string out = retrieveTag(s, tag, obj, end);
    if (out != tag){
       throw XMLException("Error deserializing \"" + obj + "\", expected " + tag + " but got " + out + ". " + convertStringBuffer(s));
@@ -154,12 +154,12 @@ static void checkTag(stringstream & s, const string & tag, const string & obj,  
 }
 
 
-static void checkXMLTagBegin(stringstream & s, const string & name, const string & obj){ 
+static inline void checkXMLTagBegin(stringstream & s, const string & name, const string & obj){ 
    retrieveTag(s, name, obj, false);
 }
 
 
-static void checkXMLTagEnd(stringstream & s, const string & name, const string & obj){
+static inline void checkXMLTagEnd(stringstream & s, const string & name, const string & obj){
    retrieveTag(s, name, obj, true);
 }
 

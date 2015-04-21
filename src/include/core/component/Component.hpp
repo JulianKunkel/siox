@@ -32,7 +32,7 @@ namespace core {
 			// Call this function to initialize the object with given options
 			// Ownership of the options is given to the Component!
 			void setOptions( ComponentOptions * options ) {
-				if( this->options != nullptr ){
+				if( this->options != nullptr && this->options != options ){
 					// it has been initialized.
 					delete this->options;
 				} 

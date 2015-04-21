@@ -2,13 +2,12 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIR}
 )
 
 add_executable(
 	test-serializer
 	test-serializer.cpp
-	BoostXMLSerializable.cpp
+	test-serializable.cpp
 )
 
 target_link_libraries(
@@ -23,7 +22,7 @@ add_executable(
 )
 
 
-siox_run_serializer(test-serializer.hpp BoostXMLSerializable.cpp)
+siox_run_serializer(test-serializer.hpp test-serializable.cpp)
 
 siox_run_binary_serializer(test-bin-serializer.hpp test-bin-serializerBinary.hpp)
 

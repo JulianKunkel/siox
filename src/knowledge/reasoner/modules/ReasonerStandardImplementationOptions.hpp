@@ -5,6 +5,7 @@
 #include <core/component/component-options.hpp>
 #include <core/component/ComponentReference.hpp>
 
+#include <ostream>
 #include <list>
 
 //@serializable
@@ -23,7 +24,8 @@ class ReasonerStandardImplementationOptions: public core::ComponentOptions {
 		uint32_t update_intervall_ms;
 
 		ReasonerCommunicationOptions communicationOptions;
-
+		
+		//@serializable
 		enum class Role : uint8_t{
 			NONE = 0,
 			PROCESS = 1,

@@ -1,6 +1,9 @@
 #ifndef MODULE_AUTOCONFIGURATOR_HPP
 #define MODULE_AUTOCONFIGURATOR_HPP
 
+#include <stdint.h>
+#include <string>
+
 #include <core/component/component-options.hpp>
 
 using namespace core;

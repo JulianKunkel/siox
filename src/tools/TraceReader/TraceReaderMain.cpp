@@ -75,11 +75,14 @@ int main( int argc, char ** argv )
 		tools::ActivityInputStreamPlugin* activities = configurator->searchFor<tools::ActivityInputStreamPlugin>(coreComponents);
 		assert(coreComponents.size() != 0);
 
-		// fetch module options if available
+		// fetch module options if available		
 		for (Component* c : coreComponents) {
 			// parse options that can be set from XML...
 			// change the XML and inject it back.
-			// configurator->SetConfiguration(c, configurator->DumpConfiguration(c));
+			string config = configurator->DumpConfiguration(c);
+			cout << config << endl;
+
+			//configurator->SetConfiguration(c, config);
 		}
 		//	CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
 		//	if (opts) {
