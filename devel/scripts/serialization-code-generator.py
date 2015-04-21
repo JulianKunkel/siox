@@ -383,10 +383,11 @@ class JXMLOutputGenerator(OutputGenerator):
         self.nestingDepth = 0
         self.mapping = {}
         self.enumMap = {}
-        self.parents = ""
+        self.parents = ""        
         self.namespace = {}
         self.className = None
         self.registeredTypes = []
+        self.lastWords = []
         self.containerTypes = ["std::vector", "std::list"] #  "std::array"
         self.baseTypes = {"bool", "uint", "int", "float", "double", "unsigned", "unsigned int", "long", "int8_t", "uint8_t", "uint16_t", "int16_t", "uint32_t", "uint64_t", "int32_t", "int64_t", "string", "std::string"};   
 
@@ -397,7 +398,7 @@ class JXMLOutputGenerator(OutputGenerator):
             print("using namespace " + n + ";", file = self.fh)
 
         self.mapping = {"CLASS" : className , "PARENT" : ",".join(parentClasses), "FLAVOR" : self.flavor }
-        self.parents = parentClasses
+        self.parents = parentClasses        
         self.className = className
         try:
             self.parentClassnames = list(map(lambda p: re.split("[ \t]+", p)[1].strip(), parentClasses))
@@ -408,6 +409,8 @@ class JXMLOutputGenerator(OutputGenerator):
         if self.options.debug:
             print("\tFound " + className + " parent str: " + str(parentClasses))
             print("\tParents: " + str(self.parentClassnames))
+
+        self.parentsNoContainer = filter(lambda x: x != "Container" and x != "core::Container", self.parentClassnames)
 
         self.registeredTypes = []
 
@@ -534,37 +537,51 @@ class JXMLOutputGenerator(OutputGenerator):
         
 
     def registerAnnotatedHeaderEnd(self):
+        if self.className == "Container":
+            return
+
         if self.options.debug:
             print("\tEnd class")
   
         print("\nnamespace j_xml_serialization{", file=self.fh)
 
         print("void serialize(%(CLASS)s &obj, stringstream & s, int intent = 0, const string & name = \"%(CLASS)s\"){"  % self.mapping, file = self.fh)
+        if self.options.debug:
+            print("printf(\"DEBUG serialize(%(CLASS)s)\\n\");" % self.mapping , file = self.fh)
 
-        if len(self.parentClassnames) > 0 or len(self.registeredTypes) > 0:
-            print("\tstoreTagBegin(s, name, intent);", file = self.fh)
-            for p in self.parentClassnames:
-                print("\tserialize((" + p + " &) "  + " obj, s, intent + 1);" , file = self.fh)
+        #if len(self.parentsNoContainer) > 0 or len(self.registeredTypes) > 0:
+        print("\tstoreTagBegin(s, name, intent);", file = self.fh)
 
-            for (memberType, memberName) in self.registeredTypes:
-                print("\t" + self.map_type_serializer(memberType, "obj." + memberName, memberName, 1), file = self.fh)
+        for (memberType, memberName) in self.registeredTypes:
+            print("\t" + self.map_type_serializer(memberType, "obj." + memberName, memberName, 1), file = self.fh)
+        for p in self.parentsNoContainer:
+            print("\tserialize((" + p + " &) "  + " obj, s, intent + 1);" , file = self.fh)
 
-            print("\tstoreTagEnd(s, name, intent);", file = self.fh)
+        print("\tstoreTagEnd(s, name, intent);", file = self.fh)
         print("}", file = self.fh)
 
 
         print("void deserialize(%(CLASS)s &obj, stringstream & s, const string & name = \"%(CLASS)s\") {"  % self.mapping, file = self.fh)
+        if self.options.debug:
+            print("printf(\"DEBUG deserialize(%(CLASS)s)\\n\");" % self.mapping , file = self.fh)
 
-        if len(self.parentClassnames) > 0 or len(self.registeredTypes) > 0:
-            print("\tcheckXMLTagBegin(s, name, \"%s\");" %  self.className, file = self.fh)
-            for p in self.parentClassnames:
-                print("\tdeserialize((" + p + " &) "  + " obj, s);" , file = self.fh)
+        
+        print("\tcheckXMLTagBegin(s, name, \"%s\");" %  self.className, file = self.fh)
+        for (memberType, memberName) in self.registeredTypes:
+            print("\t" + self.map_type_deserializer(memberType, "obj." + memberName, memberName), file = self.fh)
+        for p in self.parentsNoContainer:
+            print("\tdeserialize((" + p + " &) "  + " obj, s);" , file = self.fh)
 
-            for (memberType, memberName) in self.registeredTypes:
-                print("\t" + self.map_type_deserializer(memberType, "obj." + memberName, memberName), file = self.fh)
 
-            print("\tcheckXMLTagEnd(s, name, \"%s\");" %  self.className, file = self.fh)
+        print("\tcheckXMLTagEnd(s, name, \"%s\");" %  self.className, file = self.fh)
         print("}\n", file=self.fh)
+
+        # instantiate templates only if a parent class exists.
+        if len(self.parentClassnames) > 0:
+            self.lastWords.append("""
+                template void WRAPPER_serialize(%(CLASS)s * in, stringstream & s);
+                template void WRAPPER_deserialize(%(CLASS)s * in, stringstream & s);
+                """ % self.mapping)
 
         print("}\n", file=self.fh)
 
@@ -579,15 +596,35 @@ class JXMLOutputGenerator(OutputGenerator):
             dir = os.path.basename(self.options.inputFile)
         else:
             dir = self.options.inputFile
-
+        
+        if self.options.debug:
+            print("#include <typeinfo>\n#include <iostream>", file=self.fh)           
+        print("#include <sstream>", file=self.fh)
+        print("#include <string>\n", file=self.fh)
         print("#include \"%(INFILE)s\"" % { "INFILE" : dir } , file=self.fh)
-
         print("#include <core/container/container-xml-serializer.hpp>\n\n", file=self.fh)
 
     def finalize(self):
         print("""
-            // We add this code to simplify parsing from strings.            
             namespace j_xml_serialization{
+
+                template<typename TYPE>
+                void WRAPPER_serialize(TYPE * in, stringstream & s){
+                    core::Container * a = (core::Container*) in;
+                    //printf("CALLING S %%s\\n", typeid(*in).name());
+                    serialize(*dynamic_cast<TYPE*>(a), s);
+                }
+
+                template<typename TYPE>
+                void WRAPPER_deserialize(TYPE * in, stringstream & s){
+                    //printf("CALLING D %%s\\n", typeid(*in).name());
+                    core::Container * a = (core::Container*) in;
+                    deserialize(*dynamic_cast<TYPE*>(a), s);
+                }
+
+                %s
+
+                // We add this code to simplify parsing from strings.            
                 template <typename TYPE>
                 static void deserialize(TYPE & t, const string & str, const string & name){
                    stringstream s(str);
@@ -601,7 +638,7 @@ class JXMLOutputGenerator(OutputGenerator):
                 }
                 /////////////////////////////////////
 
-            }""", file=self.fh)
+            }""" % ("".join(self.lastWords)), file=self.fh)
 
 class BoostOutputGenerator(OutputGenerator):
 
@@ -904,6 +941,8 @@ def parseFile(file, options, output_generator):
                     parentClasses = m.group(4).replace("ComponentOptions", "Container").split(",")
                 else:
                     parentClasses = []
+
+                parentClasses = [ x.strip() for x in parentClasses ]
 
                 output_generator.registerAnnotatedHeader(curClass, parentClasses)
 

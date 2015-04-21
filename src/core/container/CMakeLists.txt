@@ -11,8 +11,9 @@ add_library(
 
 target_link_libraries(
 	siox-core-ContainerSerializer
+   dl
 )
 
-add_subdirectory(test)
+#add_subdirectory(test)
 
 install(TARGETS siox-core-ContainerSerializer LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})

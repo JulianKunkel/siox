@@ -7,17 +7,18 @@ include_directories(
 add_library(
 	siox-core-AutoConfigurator
 	AutoConfigurator.cpp
-	ModuleOptionsXML.cpp
+   ModuleOptionsXML.hpp
 )
 
 target_link_libraries(
 	siox-core-AutoConfigurator
-	siox-core-ModuleLoader 
-	siox-core-ContainerSerializer 
-	siox-core-ComponentRegistrar	
+	siox-core-ModuleLoader
+   siox-core-ModuleLoader
+	siox-core-ComponentRegistrar
+   siox-core-ContainerSerializer	
 )
 
-siox_run_serializer(ModuleOptions.hpp ModuleOptionsXML.cpp)
+siox_run_serializer(ModuleOptions.hpp ModuleOptionsXML.hpp)
 
 
 add_subdirectory(ConfigurationProviderPlugins)

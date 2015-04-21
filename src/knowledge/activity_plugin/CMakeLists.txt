@@ -13,7 +13,6 @@ add_library(
 
 target_link_libraries(
 	siox-knowledge-DereferencingFacade
-	siox-core-ContainerSerializer 
 	siox-monitoring-Topology
 	siox-core-AutoConfigurator
 )

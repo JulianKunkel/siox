@@ -14,16 +14,15 @@ namespace core {
 	 */
 	class ContainerSerializer {
 		public:
-			std::string serialize( const Container * object );
+			std::string serialize( Container * object );
 
-			void serialize( const Container * object, std::ostream & os );
+			void serialize( Container * object, std::stringstream & s );
 
-			Container * parse( std::istream & stream );
+			void parse( Container * out, std::stringstream & s );
 
-			Container * parse( std::string data );
+			void parse( Container * out, std::string data );
 
 	};
-
 
 }
 

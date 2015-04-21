@@ -1,87 +1,58 @@
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
-#include <boost/type_traits/is_abstract.hpp>
-#include <boost/serialization/nvp.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/tracking.hpp>
-#include <boost/serialization/level.hpp>
+#include <typeinfo>
 
+#include <iostream>
+#include <sstream>
+#include <dlfcn.h>
 
 #include <core/container/container-serializer.hpp>
 #include <core/container/container.hpp>
-#include <core/container/container-serializable.hpp>
-
-/**
- * ContainerSerializer allows to serialize/deserialize containers which use the macros defined in container-macros.hpp
- * into configuration strings and files.
- */
 
 using namespace std;
 
+
 namespace core {
 
-	string ContainerSerializer::serialize( const Container * object )
+	string ContainerSerializer::serialize( Container * object )
 	{
 		stringstream s;
 		serialize( object, s );
 		return s.str();
 	}
 
-	void ContainerSerializer::serialize( const Container * object, ostream & os )
-	{
-		unsigned int flags = boost::archive::no_header | boost::archive::no_codecvt;
-		assert( os.good() );
-		boost::archive::xml_oarchive oa( os, flags );
-
-		oa << BOOST_SERIALIZATION_NVP( object );
-	}
-
-	Container * ContainerSerializer::parse( istream & stream )
-	{
-		Container * object;
-		unsigned int flags = boost::archive::no_header;
-		assert( stream.good() );
-		assert( ! stream.eof() );
-		boost::archive::xml_iarchive ia( stream, flags );
-		try {
-			ia >> BOOST_SERIALIZATION_NVP( object );
-		} catch( boost::archive::archive_exception & e ) {
-			int pos = stream.tellg();
-
-			cerr << e.what() << endl;
-			cerr << "Error at: " << pos << endl;
-			// output whole stream input
-			stream.seekg( 0 );
-			char str[pos + 1];
-			stream.read( str, pos );
-			str[pos] = 0;
-
-			cerr << str << endl;
-			cerr << " <<ERROR IS HERE>> " << endl;
-
-			string s;
-			while( ! stream.eof() ) {
-				stream >> s;
-				cerr << s << endl;
-			}
-			throw e;
-		}
-
-		return object;
-	}
-
-	Container * ContainerSerializer::parse( string data )
+	void ContainerSerializer::parse(Container * out, string data )
 	{
 		stringstream s( data );
-		Container * obj;
-		try {
-			obj = parse( s );
-		} catch( boost::archive::archive_exception & e ) {
-			cerr << "Error while parsing string " << endl;
-			cerr << data << endl;
-			throw e;
-		}
-		return obj;
+		parse( out, s );
 	}
 
+	void ContainerSerializer::serialize( Container * c, stringstream & s )
+	{
+		stringstream symbol;
+		symbol << "_ZN19j_xml_serialization17WRAPPER_serializeI" << typeid(*c).name();
+		symbol << "EEvPT_RSt18basic_stringstreamIcSt11char_traitsIcESaIcEE";
+
+		void * fp= dlsym(NULL, symbol.str().c_str());
+		if (fp == NULL){
+			cerr << "ERROR could not find required symbol for container serialization " << symbol.str() << endl;
+			exit(1);
+		}
+		// now invoke the wrapping code
+		(*(void (*)(Container * c, stringstream & s))fp)(c, s);
+	}
+
+	void ContainerSerializer::parse(Container * c, stringstream & s )
+	{
+		stringstream symbol;
+		symbol << "_ZN19j_xml_serialization19WRAPPER_deserializeI" << typeid(*c).name();
+		symbol << "EEvPT_RSt18basic_stringstreamIcSt11char_traitsIcESaIcEE";
+
+		void * fp= dlsym(NULL, symbol.str().c_str());
+		if (fp == NULL){
+			cerr << "ERROR could not find required symbol for container serialization " << symbol.str() << endl;
+			exit(1);
+		}
+		//cout << "PARSE: " << symbol.str() << endl;
+		// now invoke the wrapping code
+		(*(void (*)(Container * c, stringstream & s))fp)(c, s);
+	}
 }

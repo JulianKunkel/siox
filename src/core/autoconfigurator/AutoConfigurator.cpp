@@ -4,9 +4,10 @@
 #include <core/autoconfigurator/AutoConfigurator.hpp>
 #include <core/module/ModuleLoader.hpp>
 #include <core/autoconfigurator/AutoConfigurator.hpp>
+
+#include <core/autoconfigurator/ModuleOptionsXML.hpp>
 #include <core/container/container-serializer.hpp>
 
-#include "ModuleOptions.hpp"
 
 using namespace std;
 
@@ -48,57 +49,33 @@ namespace core {
 		configurationProvider->connect( val );
 	}
 
+	static void outputErrorPosition(int pos, stringstream & ss){
+		const string & s = ss.str();
+		cerr << "Configuration error " << endl << s.substr(0, pos) << "!!!!ERROR IS HERE!!!!" << s.substr(pos) << endl;
+	}
+
 	vector<Component *> AutoConfigurator::LoadConfiguration( string type, string matchingRules, bool initComponents ) throw( InvalidComponentException, InvalidConfiguration )
 	{
 		string config = configurationProvider->getConfiguration( type, matchingRules );
 		if( config.length() < 10 ) {
 			throw InvalidConfiguration( "Configuration is unavailable or too short", "" );
 		}
-
-		// replace <X> with  <object class_id="1" class_name="X">
-		// replace </X> with Container></Container></object>
-
 		stringstream transformed_config;
 
-		size_t current = 0;
-		do {
-			// ignore comments
-			if (config[current] == '#' ){
-				current = config.find('\n', current) + 1;
-				continue;
-			}
-			// find start tag
-			current = config.find( '<', current );
-			if ( current == std::string::npos ){
-				break;
-			}			
-			size_t type_end = config.find( '>', current );
-
-			//cout << current << " " << type_end << " " << end_pos << endl;
-
-			// check if the Container parent is already part
-			size_t container_set_pos = config.find( "<Container></Container>", current );
-			string className = config.substr( current + 1, type_end - current - 1 );
-
-			// end tag
-			size_t end_pos = config.find( "</" + className + ">", type_end + 1);
-
-			transformed_config << "<object class_id=\"1\" class_name=\"" << className << "\">" << endl;
-			transformed_config << config.substr( type_end + 1, end_pos - type_end - 1 ) << endl;
-
-
-			//cout << "Piece: " << config.substr( current + 1, type_end - current - 1 ) << endl;
-			//cout << "PART: " << config.substr( type_end + 1, end_pos - type_end - 1 ) << endl;
-
-			if( container_set_pos >= end_pos ) {
-				transformed_config << "\t<Container></Container>" << endl;
-			}
-			transformed_config << "</object>" << endl;
-
-			// start to search the next tag after the end of the current tag.
-			current = end_pos + 3 + className.length() + 1;
-			//cout << "  [" << config.substr(current, next - current) << "]" << endl;
-		} while( true );
+		{
+			stringstream input(config);
+			
+			// erase comment lines
+		   string item;
+	   	while (getline(input, item, '\n')) {
+	   		if (item[0] == '#'){
+	   			transformed_config << endl;
+	   			continue;
+	   		}
+	   		transformed_config << item << endl;
+	    	}
+    	}
+    	// cout << transformed_config.str() << endl;
 
 		// parse string
 		vector<Component *> components;
@@ -107,7 +84,6 @@ namespace core {
 		autoConfiguratorOffset = registrar->getMaximumComponentNumber();
 		autoConfiguratorRegistrar = registrar;
 
-		ContainerSerializer cs = ContainerSerializer();
 		stringstream already_parsed_config( transformed_config.str() );
 		//cout << transformed_config.str() << endl;
 		while( ! already_parsed_config.eof() ) {
@@ -119,26 +95,33 @@ namespace core {
 				break;
 
 			// no, so we hope that the configuration is complete
-			LoadModule * module;
+			LoadModule * module = new LoadModule();
 			Component * component;
 
-			//cout << "Parsing a module" << endl;
-			try {
-				module = dynamic_cast<LoadModule *>( cs.parse( already_parsed_config ) );
+
+			int pos = already_parsed_config.tellg();
+
+			//cout << "Parsing a module" << endl;			
+			try{
+				j_xml_serialization::deserialize( *module, already_parsed_config );
 			} catch( exception & e ) {
 				autoConfiguratorRegistrar = nullptr;
 				registrarMutex.unlock();
 
 				cerr << "Error: " << e.what() << endl;
+				outputErrorPosition(pos, already_parsed_config);
 				throw InvalidConfiguration( "Error while parsing module configuration", "");
 			}
 
+			pos = already_parsed_config.tellg();
 			cout << "[AC] Module config: "  << module->name << " (" << module->interface << ")" << endl;
 			component = module_create_instance<Component>( module->path, module->name, module->interface );
 			//cout << DumpConfiguration(component->get_options()) << endl;
+			//try{				
 			try{
 				SetConfiguration( component, already_parsed_config );
 			}catch(InvalidConfiguration & e){
+				outputErrorPosition(pos, already_parsed_config);
 				throw InvalidConfiguration( "Error during parsing of options", module->name);
 			}
 
@@ -163,18 +146,16 @@ namespace core {
 	}
 
 	void AutoConfigurator::SetConfiguration(Component * component, stringstream & config) throw (InvalidConfiguration){
-		ComponentOptions * options;
-		ContainerSerializer cs = ContainerSerializer();
+		ComponentOptions * options = & component->getOptions();
+		ContainerSerializer cs;
+		cs.parse( options, config );
 		try {
-			options = cs.parse( config );	
-			component->setOptions(options);			
+			//j_xml_serialization::deserialize( *options, config );
 		} catch( exception & e ) {
 			autoConfiguratorRegistrar = nullptr;
 			registrarMutex.unlock();
-			ComponentOptions & availableOptions = component->getOptions();
-			string  str = cs.serialize( & availableOptions );
-			cerr << endl << "Expected configuration: " << str << endl;
 
+			cerr << endl << "Expected configuration: " << DumpConfiguration(options) << endl;
 			throw InvalidConfiguration( "Error during parsing of options", "unknown");
 		}
 	}
@@ -198,9 +179,8 @@ namespace core {
 
 	string AutoConfigurator::DumpConfiguration( ComponentOptions * options )
 	{
-		ContainerSerializer cs = ContainerSerializer();
-		string  str = cs.serialize( options );
-		return str;
+		ContainerSerializer cs;
+		return cs.serialize(options);
 	}
 
 }

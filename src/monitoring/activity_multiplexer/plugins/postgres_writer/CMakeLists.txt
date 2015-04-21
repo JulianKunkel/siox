@@ -3,7 +3,6 @@ project(SIOX)
 include_directories(
 	${SIOX_INCLUDE_DIRS}
 	${PostgreSQL_INCLUDE_DIR}
-	${Boost_INCLUDE_DIR}
 )
 
 add_library(
@@ -16,10 +15,7 @@ add_library(
 
 target_link_libraries(
 	siox-monitoring-activityPlugin-ActivityPostgreSQLWriter
-	siox-core-ContainerSerializer
 	siox-core-AutoConfigurator
-	-L${Boost_LIBRARY_DIR}
-	${Boost_LIBRARIES}
 	${PostgreSQL_LIBRARY}
 )
 

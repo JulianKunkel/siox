@@ -12,6 +12,10 @@
 
 #include <exception>
 
+#include <core/container/container.hpp>
+#include <core/container/container-serializer.hpp>
+
+
 using namespace std;
 
 namespace j_xml_serialization{
@@ -48,7 +52,7 @@ static void encodeXML(string x, stringstream & s){
 }
 
 static string convertStringBuffer(stringstream & s){
-	if (s.eof()){
+	if (s.eof() || s.tellg() == -1){
 		return "Buffer reached end of string.";
 	}
 	return "Buffer: " + s.str().substr(s.tellg());
@@ -164,7 +168,7 @@ static inline void checkXMLTagEnd(stringstream & s, const string & name, const s
 }
 
 template <typename MYTYPE>
-void retrieveSimpleXMLTag(stringstream & s, const string & name, MYTYPE & typ){
+static inline void retrieveSimpleXMLTag(stringstream & s, const string & name, MYTYPE & typ){
    checkXMLTagBegin(s, name, name);
    devourWhitespace(s);
    try{
@@ -176,14 +180,14 @@ void retrieveSimpleXMLTag(stringstream & s, const string & name, MYTYPE & typ){
 }
 
 template <>
-void retrieveSimpleXMLTag(stringstream & s, const string & name, string & str){
+inline void retrieveSimpleXMLTag(stringstream & s, const string & name, string & str){
    checkXMLTagBegin(s, name, name);
    decodeXML(str, s) ;
    checkXMLTagEnd(s, name, name);
 }
 
 template <typename TYPE>
-static void storeSimpleXMLTag(stringstream & s, const string & name, TYPE & typ, int intent){
+static inline void storeSimpleXMLTag(stringstream & s, const string & name, TYPE & typ, int intent){
 	for (int x = 0; x < intent; x++ ){
 		s << "  ";
 	}
@@ -191,7 +195,7 @@ static void storeSimpleXMLTag(stringstream & s, const string & name, TYPE & typ,
 }
 
 template <>
-void storeSimpleXMLTag(stringstream & s, const string & name, string & typ, int intent){
+inline void storeSimpleXMLTag(stringstream & s, const string & name, string & typ, int intent){
 	for (int x = 0; x < intent; x++ ){
 		s << "  ";
 	}	
@@ -200,7 +204,7 @@ void storeSimpleXMLTag(stringstream & s, const string & name, string & typ, int 
 	s << "</" << name << ">" << endl;
 }
 
-static void storeTagBegin(stringstream & s, const string & name, int intent){
+static inline void storeTagBegin(stringstream & s, const string & name, int intent){
 	for (int x = 0; x < intent; x++ ){
 		s << "  ";
 	}	
@@ -208,7 +212,7 @@ static void storeTagBegin(stringstream & s, const string & name, int intent){
 }
 
 
-static void storeTagEnd(stringstream & s, const string & name, int intent){
+static inline void storeTagEnd(stringstream & s, const string & name, int intent){
 	for (int x = 0; x < intent; x++ ){
 		s << "  ";
 	}	
