@@ -389,7 +389,8 @@ class JXMLOutputGenerator(OutputGenerator):
         self.registeredTypes = []
         self.lastWords = []
         self.containerTypes = ["std::vector", "std::list"] #  "std::array"
-        self.baseTypes = {"bool", "uint", "int", "float", "double", "unsigned", "unsigned int", "long", "int8_t", "uint8_t", "uint16_t", "int16_t", "uint32_t", "uint64_t", "int32_t", "int64_t", "string", "std::string"};   
+        self.readAsInt = {"char", "uchar", "int8_t", "uint8_t"};
+        self.baseTypes = {"bool", "uint", "int", "float", "double", "unsigned", "unsigned int", "long", "uint16_t", "int16_t", "uint32_t", "uint64_t", "int32_t", "int64_t", "string", "std::string"};   
 
     def registerAnnotatedHeader(self, className, parentClasses):
         self.createFileIfNeeded()
@@ -471,10 +472,12 @@ class JXMLOutputGenerator(OutputGenerator):
             #  self.map_type_serializer(type[0:len(type)-2].strip()
             return "!! TODO POINTER !!";
 
+        if type in self.readAsInt:
+            return "{int v = (int) %s; storeSimpleXMLTag(s, \"%s\", v, intent + %d); }" % (name, tagname, intent);
         if type in self.baseTypes:
             return "storeSimpleXMLTag(s, \"%s\", %s, intent + %d);" % (tagname, name, intent);
         if type in self.enumMap:
-            return "storeSimpleXMLTag(s,  \"%s\", (%s &) %s, intent + %d);" % (tagname, self.enumMap[type], name, intent);
+            return self.map_type_serializer(self.enumMap[type], name, tagname, intent)
         #    return "serialize((" + self.enumMap[type] + " &)"  + name + ", buffer, pos)";
 
         return "serialize(%s, s, intent + %s);" % (name, intent);
@@ -520,10 +523,13 @@ class JXMLOutputGenerator(OutputGenerator):
             return "TODO POINTER"
 
         if type in self.enumMap: # self.enumMap[type] 
-            return "retrieveSimpleXMLTag(s,  \"%s\", (%s &) %s);" % (tagname, self.enumMap[type], name);
+            return "{int v; retrieveSimpleXMLTag(s, \"%s\", v); %s = (%s) v; }" % (tagname, name, type);
 
+        if type in self.readAsInt:
+            return "{int v; retrieveSimpleXMLTag(s, \"%s\", v); %s = (%s) v; }" % (tagname, name, type);
         if type in self.baseTypes:
             return "retrieveSimpleXMLTag(s, \"%s\", %s);" % (tagname, name);
+        
 
         return "deserialize(" + name + ", s);";
 
@@ -533,6 +539,7 @@ class JXMLOutputGenerator(OutputGenerator):
         print("#include <" + filename + "JXMLSerialization.hpp>", file = self.fh)
 
     def registerEnumClass(self, className, type):
+        print(className + " " + type)
         self.enumMap[className] = type
         
 

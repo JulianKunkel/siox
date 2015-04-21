@@ -39,7 +39,7 @@ namespace knowledge {
 
 class ReasonerStandardImplementation : public Reasoner, public ReasoningDataReceivedCB, public ComponentReportInterface {
 private:
-		ReasonerStandardImplementationOptions::Role role; // Our scope: PROCESS, NODE or SYSTEM
+		Role role; // Our scope: PROCESS, NODE or SYSTEM
 		string id;
 
 		// Should anomalies persist for an additional cycle?

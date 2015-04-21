@@ -27,7 +27,7 @@ shared_ptr<ProcessHealth> ReasonerStandardImplementation::getProcessHealth(){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		if ( role == ReasonerStandardImplementationOptions::Role::PROCESS )
+		if ( role == Role::PROCESS )
 			return processHealth;
 	}
 	// For other roles, return NULL; this should never happen
@@ -40,7 +40,7 @@ shared_ptr<NodeHealth> ReasonerStandardImplementation::getNodeHealth(){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		if ( role == ReasonerStandardImplementationOptions::Role::NODE )
+		if ( role == Role::NODE )
 			return nodeHealth;
 	}
 	// For other roles, return NULL; this should never happen
@@ -52,7 +52,7 @@ shared_ptr<SystemHealth> ReasonerStandardImplementation::getSystemHealth(){
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM )
+		if ( role == Role::SYSTEM )
 			return systemHealth;
 	}
 	// For other roles, return NULL; this should never happen
@@ -66,7 +66,7 @@ void ReasonerStandardImplementation::receivedReasonerProcessHealth(ReasonerMessa
 		unique_lock<mutex> dataLock( dataMutex );
 
 		// Only Node level reasoners should receive process level reports; others ignore them
-		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
+		if ( role == Role::NODE ){
 			(*childProcessesHealthMap)[data.reasonerID] = health;
 			// OUTPUT( "Received status from process reasoner " << data.reasonerID );
 		}
@@ -84,11 +84,11 @@ void ReasonerStandardImplementation::receivedReasonerNodeHealth(ReasonerMessageR
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		if ( role == ReasonerStandardImplementationOptions::Role::SYSTEM ){
+		if ( role == Role::SYSTEM ){
 			(*childNodesHealthMap)[data.reasonerID] = health;
 			// OUTPUT( "Received status from node reasoner " << data.reasonerID );
 		}
-		else if ( role == ReasonerStandardImplementationOptions::Role::PROCESS ){
+		else if ( role == Role::PROCESS ){
 			// aggregate statistics
 			for (int i=0; i < NODE_STATISTIC_COUNT; i++){
 				node_statistics[i] += health.statistics[i];
@@ -114,7 +114,7 @@ void ReasonerStandardImplementation::receivedReasonerSystemHealth(ReasonerMessag
 	{	// Disallow other access to aggregated data fields
 		unique_lock<mutex> dataLock( dataMutex );
 
-		if ( role == ReasonerStandardImplementationOptions::Role::NODE ){
+		if ( role == Role::NODE ){
 			// OUTPUT( "Received status from system reasoner " << data.reasonerID );
 			systemHealth = make_shared<SystemHealth>(health);
 		}
@@ -152,13 +152,13 @@ void ReasonerStandardImplementation::PeriodicRun(){
 
 			Health * localHealth = nullptr;
 			switch (role){
-				case ReasonerStandardImplementationOptions::Role::PROCESS :
+				case Role::PROCESS :
 					localHealth = processHealth.get();
 					break;
-				case ReasonerStandardImplementationOptions::Role::NODE :
+				case Role::NODE :
 					localHealth = nodeHealth.get();
 					break;
-				case ReasonerStandardImplementationOptions::Role::SYSTEM :
+				case Role::SYSTEM :
 					localHealth = systemHealth.get();
 					break;
 				default:
@@ -325,15 +325,15 @@ void ReasonerStandardImplementation::PeriodicRun(){
 
 			// TODO combine health of the next level with my local information:
 			switch (role){
-				case ReasonerStandardImplementationOptions::Role::PROCESS :
+				case Role::PROCESS :
 					if ( nodeHealth->overallState != GOOD && nodeHealth->overallState != BAD && nodeHealth->overallState != OK ){
 						anomalyDetected = true;
 					}
 					break;
 
-				case ReasonerStandardImplementationOptions::Role::SYSTEM :
-				case ReasonerStandardImplementationOptions::Role::NODE :
-				case ReasonerStandardImplementationOptions::Role::NONE :
+				case Role::SYSTEM :
+				case Role::NODE :
+				case Role::NONE :
 					// This should not happen
 					break;
 			}
@@ -344,7 +344,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 			// then, forward current state to remote reasoners
 			switch ( role ) {
 
-				case ReasonerStandardImplementationOptions::Role::PROCESS:
+				case Role::PROCESS:
 					assessProcessHealth();
 					if (upstreamReasonerExists){
 						// OUTPUT( "Pushing process state upstream!" );
@@ -353,7 +353,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 					}
 					break;
 
-				case ReasonerStandardImplementationOptions::Role::NODE:
+				case Role::NODE:
 					assessNodeHealth();
 					if (upstreamReasonerExists){
 						// OUTPUT( "Pushing node state upstream!" );
@@ -362,7 +362,7 @@ void ReasonerStandardImplementation::PeriodicRun(){
 					}
 					break;
 
-				case ReasonerStandardImplementationOptions::Role::SYSTEM:
+				case Role::SYSTEM:
 					assessSystemHealth();
 					if (upstreamReasonerExists){
 						// OUTPUT( "Pushing system state upstream!" );
@@ -481,20 +481,20 @@ void ReasonerStandardImplementation::init(){
 	id = options.communicationOptions.reasonerID;
 	role = options.role;
 	switch( role ){
-		case ReasonerStandardImplementationOptions::Role::SYSTEM :
+		case Role::SYSTEM :
 			systemHealth = make_shared<SystemHealth>();
 			childNodesHealthMap = new unordered_map<string,NodeHealth>;
 			break;
-		case ReasonerStandardImplementationOptions::Role::NODE :
+		case Role::NODE :
 			systemHealth = make_shared<SystemHealth>();
 			nodeHealth = make_shared<NodeHealth>();
 			childProcessesHealthMap = new unordered_map<string,ProcessHealth>;
 			break;
-		case ReasonerStandardImplementationOptions::Role::PROCESS :
+		case Role::PROCESS :
 			nodeHealth = make_shared<NodeHealth>();
 			processHealth = make_shared<ProcessHealth>();
 			break;
-		case ReasonerStandardImplementationOptions::Role::NONE:
+		case Role::NONE:
 			break;
 	}
 
@@ -556,13 +556,13 @@ std::ostream & operator<<( std::ostream & os, const ReasonerStandardImplementati
 
 	result << "\"" << r->id << "\":" << endl;
 	switch ( r->role ){
-		case ReasonerStandardImplementationOptions::Role::PROCESS :
+		case Role::PROCESS :
 			result << (*(r->processHealth));
 			break;
-		case ReasonerStandardImplementationOptions::Role::NODE :
+		case Role::NODE :
 			result << (*(r->nodeHealth));
 			break;
-		case ReasonerStandardImplementationOptions::Role::SYSTEM :
+		case Role::SYSTEM :
 			result << (*(r->systemHealth));
 			break;
 		default:

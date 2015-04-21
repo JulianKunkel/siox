@@ -161,7 +161,7 @@ void testReasoner(){
 	assert( rS != nullptr );
 	{
 		ReasonerStandardImplementationOptions & r_options = rS->getOptions<ReasonerStandardImplementationOptions>();
-		r_options.role = ReasonerStandardImplementationOptions::Role::SYSTEM;
+		r_options.role = Role::SYSTEM;
 		r_options.communicationOptions.comm.componentPointer = comm;
 		r_options.communicationOptions.serviceAddress = "ipc://reasonerS";
 		r_options.communicationOptions.reasonerID = "system";
@@ -175,7 +175,7 @@ void testReasoner(){
 	assert( rN1 != nullptr );
 	{
 		ReasonerStandardImplementationOptions & r_options = rN1->getOptions<ReasonerStandardImplementationOptions>();
-		r_options.role = ReasonerStandardImplementationOptions::Role::NODE;
+		r_options.role = Role::NODE;
 		r_options.communicationOptions.comm.componentPointer = comm;
 		r_options.communicationOptions.serviceAddress = "ipc://reasonerN1";
 		r_options.communicationOptions.upstreamReasoner = "ipc://reasonerS";
@@ -208,7 +208,7 @@ void testReasoner(){
 	assert( rP11 != nullptr );
 	{
 		ReasonerStandardImplementationOptions & r_options = rP11->getOptions<ReasonerStandardImplementationOptions>();
-		r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
+		r_options.role = Role::PROCESS;
 		r_options.communicationOptions.comm.componentPointer = comm;
 		r_options.communicationOptions.serviceAddress = "ipc://reasonerP11";
 		r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
@@ -226,7 +226,7 @@ void testReasoner(){
 	assert( rP12 != nullptr );
 	{
 		ReasonerStandardImplementationOptions & r_options = rP12->getOptions<ReasonerStandardImplementationOptions>();
-		r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
+		r_options.role = Role::PROCESS;
 		r_options.communicationOptions.comm.componentPointer = comm;
 		r_options.communicationOptions.serviceAddress = "ipc://reasonerP12";
 		r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";
@@ -247,7 +247,7 @@ void testReasoner(){
 	assert( rP13 != nullptr );
 	{
 		ReasonerStandardImplementationOptions & r_options = rP13->getOptions<ReasonerStandardImplementationOptions>();
-		r_options.role = ReasonerStandardImplementationOptions::Role::PROCESS;
+		r_options.role = Role::PROCESS;
 		r_options.communicationOptions.comm.componentPointer = comm;
 		r_options.communicationOptions.serviceAddress = "ipc://reasonerP13";
 		r_options.communicationOptions.upstreamReasoner = "ipc://reasonerN1";

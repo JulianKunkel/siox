@@ -19,35 +19,35 @@ struct ReasonerCommunicationOptions {
 };
 
 //@serializable
+enum class Role : uint8_t{
+	NONE = 0,
+	PROCESS = 1,
+	NODE = 2,
+	SYSTEM = 3,
+};
+
+//@serializable
 class ReasonerStandardImplementationOptions: public core::ComponentOptions {
 	public:
 		uint32_t update_intervall_ms;
 
 		ReasonerCommunicationOptions communicationOptions;
-		
-		//@serializable
-		enum class Role : uint8_t{
-			NONE = 0,
-			PROCESS = 1,
-			NODE = 2,
-			SYSTEM = 3,
-		};
 
 		Role role = Role::PROCESS;
 
 		core::ComponentReference statisticsCollector; // if available
 };
 
-inline std::ostream & operator<<( std::ostream & os, ReasonerStandardImplementationOptions::Role role )
+inline std::ostream & operator<<( std::ostream & os, Role role )
 {
 	switch(role){
-		case ReasonerStandardImplementationOptions::Role::NONE:
+		case Role::NONE:
 			return os << "NONE";
-		case ReasonerStandardImplementationOptions::Role::PROCESS:
+		case Role::PROCESS:
 			return os << "PROCESS";
-		case ReasonerStandardImplementationOptions::Role::NODE:
+		case Role::NODE:
 			return os << "NODE";
-		case ReasonerStandardImplementationOptions::Role::SYSTEM:
+		case Role::SYSTEM:
 			return os << "SYSTEM";
 		default:
 			return os << "(UNKNOWN)";

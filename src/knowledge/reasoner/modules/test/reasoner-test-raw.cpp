@@ -259,7 +259,7 @@ void testReasonerAssessment(){
 	assert( r != nullptr );
 	{
 	ReasonerStandardImplementationOptions & r_options = r->getOptions<ReasonerStandardImplementationOptions>();
-	r_options.role = ReasonerStandardImplementationOptions::Role::NODE;
+	r_options.role = Role::NODE;
 	r_options.communicationOptions.comm.componentPointer = comm;
 	r_options.communicationOptions.serviceAddress = "ipc://reasoner1";
 	r->init(); // This will start a separate Reasoner thread
