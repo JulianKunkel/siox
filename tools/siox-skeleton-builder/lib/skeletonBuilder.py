@@ -74,6 +74,10 @@ class Writer():
     def writeAfter(self, function, output, functionVariables):
             # write all after-templates for this function
             for templ in function.usedTemplateList:
+                outputString = templ.output('afterFirst', functionVariables).strip()
+                if outputString != '':
+                    print('\t', outputString, end='\n', sep='', file=output)
+            for templ in function.usedTemplateList:
                 outputString = templ.output('after', functionVariables).strip()
                 if outputString != '':
                     print('\t', outputString, end='\n', sep='', file=output)

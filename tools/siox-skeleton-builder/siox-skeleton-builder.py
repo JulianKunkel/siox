@@ -87,7 +87,9 @@ def parseTemplate(file):
         if not "after" in entries:
             entries["after"] = ""
         if not "afterLast" in entries:
-            entries["afterLast"] = ""                 
+            entries["afterLast"] = ""
+        if not "afterFirst" in entries:
+            entries["afterFirst"] = ""
         if not "cleanup" in entries:
             entries["cleanup"] = ""
         if not "cleanupLast" in entries:
