@@ -15,6 +15,7 @@ add_library(
 target_link_libraries(
 	siox-monitoring-activityPlugin-ActivityBDBWriter
 	siox-core-AutoConfigurator
+	${BDB_LIBRARIES}
 )
 
 siox_run_serializer(ActivityBDBWriterPluginOptions.hpp ActivityBDBWriterPluginOptions.cpp)
