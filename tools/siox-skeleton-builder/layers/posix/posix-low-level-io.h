@@ -29,6 +29,12 @@
 //@component "POSIX_Network" "" ComponentVariable=network
 
 /* Register the data types for the descriptors */
+
+//@register_attribute dataChar "POSIX" "data/character" SIOX_STORAGE_32_BIT_INTEGER
+//@register_attribute dataCount "POSIX" "data/count" SIOX_STORAGE_32_BIT_UINTEGER
+//@register_attribute memoryAddress "POSIX" "data/MemoryAddress" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute filePointer "POSIX" "descriptor/FilePointer" SIOX_STORAGE_64_BIT_UINTEGER
+
 //@register_attribute bytesToRead "POSIX" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesToWrite "POSIX" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute filePosition "POSIX" "file/position" SIOX_STORAGE_64_BIT_UINTEGER
@@ -148,6 +154,7 @@ ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 //@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute bytesToWrite count
 //@activity_attribute fileHandle fd
+//@activity_attribute memoryAddress buf
 //@activity_attribute_late bytesWritten ret
 ssize_t write( int fd, const void * buf, size_t count );
 
@@ -155,8 +162,9 @@ ssize_t write( int fd, const void * buf, size_t count );
 //@errorErrno ''ret<0''
 //@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute bytesToRead count
-//@activity_attribute_late bytesRead ret
+//@activity_attribute memoryAddress buf
 //@activity_attribute fileHandle fd
+//@activity_attribute_late bytesRead ret
 ssize_t read( int fd, void * buf, size_t count );
 
 //@guard
@@ -187,8 +195,9 @@ ssize_t pwrite( int fd, const void * buf, size_t count, off_t offset );
 //@errorErrno ''ret==(size_t)-1''
 //@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute bytesToRead count
-//@activity_attribute_late bytesRead ret
+//@activity_attribute memoryAddress buf
 //@activity_attribute filePosition offset
+//@activity_attribute_late bytesRead ret
 ssize_t pread( int fd, void * buf, size_t count, off_t offset );
 
 //@guard
@@ -197,6 +206,7 @@ ssize_t pread( int fd, void * buf, size_t count, off_t offset );
 //@activity_attribute fileHandle fd
 //@activity_attribute bytesToWrite count
 //@activity_attribute filePosition offset
+//@activity_attribute memoryAddress buf
 //@activity_attribute_late bytesWritten ret
 ssize_t pwrite64( int fd, const void * buf, size_t count, off_t offset );
 
@@ -204,9 +214,10 @@ ssize_t pwrite64( int fd, const void * buf, size_t count, off_t offset );
 //@errorErrno ''ret==(size_t)-1''
 //@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
 //@activity_attribute bytesToRead count
-//@activity_attribute_late bytesRead ret
+//@activity_attribute memoryAddress buf
 //@activity_attribute fileHandle fd
 //@activity_attribute filePosition offset
+//@activity_attribute_late bytesRead ret
 ssize_t pread64( int fd, void * buf, size_t count, off_t offset );
 
 //@guard
@@ -398,6 +409,7 @@ On most library implementations, the variable is also set to a system-specific e
 //@activity_attribute fileOpenFlags translatedFlags
 //@splice_after int fd = (ret != 0) ? fileno(ret) : 0;
 //@activity_attribute_late fileHandle fd
+//@activity_attribute_late filePointer ret
 //@horizontal_map_put_size ret
 FILE * fopen( const char * filename, const char * mode );
 
@@ -418,6 +430,7 @@ On most library implementations, thesave variable is also set to a system-specif
 //@horizontal_map_put_size ret
 //@splice_after int fd = (ret != 0) ? fileno(ret) : 0;
 //@activity_attribute_late fileHandle fd
+//@activity_attribute_late filePointer ret
 FILE * fopen64( const char * filename, const char * mode );
 /*
 The  fdopen()  function  associates a stream with the existing file descriptor, fd.  The mode of the stream (one of the
@@ -433,6 +446,7 @@ stream created by fdopen() is closed.
 //@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
 //@activity_attribute fileOpenFlags translatedFlags
 //@horizontal_map_put_size ret
+//@activity_attribute_late filePointer ret
 FILE * fdopen( int fd, const char * mode );
 
 // The function fileno() examines the argument stream and returns its integer descriptor.
@@ -444,6 +458,7 @@ FILE * fdopen( int fd, const char * mode );
 //@activity_link_size stream
 //@horizontal_map_put_int ret
 //@activity_attribute_late fileHandle ret
+//@activity_attribute filePointer stream
 int fileno( FILE * stream );
 
 /*
@@ -459,6 +474,7 @@ On most library implementations, the variable is also set to a system-specific e
 //@guard
 //@errorErrno ''ret==NULL''
 //@activity
+//@activity_attribute filePointer stream
 //@splice_before SET_FILENAME(filename)
 //@splice_before uint32_t translatedFlags = translateFILEFlagsToSIOX(mode);
 //@activity_attribute fileOpenFlags translatedFlags
@@ -475,6 +491,7 @@ FILE * freopen( const char * filename, const char * mode, FILE * stream );
 //@horizontal_map_put_size ret
 //@splice_after int fd = (ret != 0) ? fileno(ret) : 0;
 //@activity_attribute_late fileHandle fd
+//@activity_attribute filePointer ret
 FILE * tmpfile( void );
 
 //@guard
@@ -486,6 +503,7 @@ FILE * tmpfile( void );
 //@activity_attribute fileHandle fd
 //@horizontal_map_remove_int fd
 //@horizontal_map_remove_int fd MapName=activityHashTable_network_int
+//@activity_attribute filePointer stream
 int fclose( FILE * stream );
 
 //  If an error occurs, EOF is returned and the error indicator is set (see ferror).
@@ -493,6 +511,7 @@ int fclose( FILE * stream );
 //@errorErrno ''ret == EOF''
 //@activity
 //@activity_link_size stream
+//@activity_attribute filePointer stream
 int fflush( FILE * stream );
 
 //On success, the character read is returned (promoted to an int value).
@@ -502,6 +521,7 @@ int fflush( FILE * stream );
 //@errorErrno ''ret == EOF''
 //@activity
 //@activity_link_size stream
+//@activity_attribute filePointer stream
 int fgetc( FILE * stream );
 
 /*
@@ -514,6 +534,7 @@ If some other reading error happens, the function also returns EOF, but sets its
 //@errorErrno ''ret == EOF''
 //@activity
 //@activity_link_size stream
+//@activity_attribute filePointer stream
 int getc( FILE * stream );
 
 
@@ -526,12 +547,16 @@ int getc( FILE * stream );
 //@errorErrno ''ret == EOF''
 //@activity
 //@activity_link_size stream
+//@activity_attribute filePointer stream
+//@activity_attribute dataChar character
 int fputc( int character, FILE * stream );
 
 //@guard
 //@errorErrno ''ret == EOF''
 //@activity
 //@activity_link_size stream
+//@activity_attribute dataChar character
+//@activity_attribute filePointer stream
 int putc( int character, FILE * stream );
 
 /*
@@ -546,6 +571,9 @@ If a read error occurs, the error indicator (ferror) is set and a null pointer i
 //@errorErrno ''ret == NULL''
 //@activity
 //@activity_link_size stream
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress str
+//@activity_attribute dataCount num
 char * fgets( char * str, int num, FILE * stream );
 
 
@@ -557,6 +585,8 @@ On error, the function returns EOF and sets the error indicator (ferror).
 //@errorErrno ''ret == EOF''
 //@activity
 //@activity_link_size stream
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress str
 int fputs( const char * str, FILE * stream );
 
 
@@ -574,6 +604,9 @@ If either size or count is zero, the function returns zero and both the stream s
 //@activity_attribute bytesToRead payload
 //@splice_after ''uint64_t posDelta = ret*size;''
 //@activity_attribute_late bytesRead posDelta
+
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress ptr
 size_t fread( void * ptr, size_t size, size_t count, FILE * stream );
 
 /*
@@ -591,6 +624,9 @@ If either size or count is zero, the function returns zero and the error indicat
 //@activity_attribute bytesToWrite payload
 //@splice_after ''uint64_t posDelta = ret*size;''
 //@activity_attribute_late bytesWritten posDelta
+
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress ptr
 size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
 
 
@@ -600,6 +636,7 @@ size_t fwrite( const void * ptr, size_t size, size_t count, FILE * stream );
 //@activity_link_size stream
 //@splice_after ''uint64_t pos = (uint64_t) ftello(stream);''
 //@activity_attribute_late filePosition pos
+//@activity_attribute filePointer stream
 int fseeko(FILE *stream, off_t offset, int whence);
 
 //@guard
@@ -608,6 +645,7 @@ int fseeko(FILE *stream, off_t offset, int whence);
 //@activity_link_size stream
 //@splice_after ''uint64_t pos = (uint64_t) ftell(stream);''
 //@activity_attribute_late filePosition pos
+//@activity_attribute filePointer stream
 int fseek(FILE *stream, long offset, int whence);
 
 
@@ -620,6 +658,8 @@ This function should be called once the stream has been associated with an open 
 //@guard
 //@activity
 //@activity_link_size stream
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress buffer
 void setbuf( FILE * stream, char * buffer );
 
 /*
@@ -633,6 +673,8 @@ Otherwise, a non-zero value is returned; This may be due to an invalid mode para
 //@activity_link_size stream
 //@activity_attribute fileBufferSize size
 //@activity_attribute fileBufferMode mode
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress buffer
 int setvbuf( FILE * stream, char * buffer, int mode, size_t size );
 
 /*
@@ -656,6 +698,8 @@ If a multibyte character encoding error occurs while writing wide characters, is
 //@activity
 //@activity_link_size stream
 //@activity_attribute_late bytesWritten ret
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress format
 int vfprintf( FILE * stream, const char * format, va_list arg );
 
 /*
@@ -667,6 +711,8 @@ If an encoding error happens interpreting wide characters, the function sets to 
 //@errorErrno ''ret < 0''
 //@activity
 //@activity_link_size stream
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress format
 int vfscanf( FILE * stream, const char * format, va_list arg );
 
 
@@ -681,6 +727,8 @@ If an encoding error happens interpreting wide characters, the function sets to 
 //@activity
 //@activity_link_size stream
 //@rewriteCall vfscanf ''stream,format,valist''
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress format
 int fscanf( FILE * stream, const char * format, ... );
 
 /*
@@ -690,6 +738,8 @@ int fscanf( FILE * stream, const char * format, ... );
 //@activity
 //@activity_link_size stream
 //@rewriteCall vfprintf ''stream,format,valist''
+//@activity_attribute filePointer stream
+//@activity_attribute memoryAddress format
 int fprintf( FILE * stream, const char * format, ... );
 
 

@@ -30,6 +30,23 @@ static inline unsigned translatePOSIXFlagsToSIOX( unsigned flags )
 		| ( ( flags & O_TRUNC ) > 0 ? SIOX_LOW_LEVEL_O_TRUNC : 0 );
 }
 
+static inline unsigned translateSIOXFlagsToPOSIX( unsigned flags )
+{
+	return ( ( flags & SIOX_LOW_LEVEL_O_RDONLY ) > 0 ? O_RDONLY : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_WRONLY ) > 0 ? O_WRONLY : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_RDWR ) > 0 ? O_RDWR : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_APPEND ) > 0 ? O_APPEND : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_ASYNC ) > 0 ? O_ASYNC : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_CLOEXEC ) > 0 ? O_CLOEXEC : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_CREAT ) > 0 ? O_CREAT : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_DIRECTORY ) > 0 ? O_DIRECTORY : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_EXCL ) > 0 ? O_EXCL : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_NOCTTY ) > 0 ? O_NOCTTY : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_NOFOLLOW ) > 0 ? O_NOFOLLOW : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_NONBLOCK ) > 0 ? O_NONBLOCK : 0 )
+		| ( ( flags & SIOX_LOW_LEVEL_O_TRUNC ) > 0 ? O_TRUNC : 0 );
+}
+
 /*
  This helper function translates the mode flag from stdio to the same flags as for low-level I/O.
  Not storing this short string conserves space and standardizes these attributes.
@@ -62,15 +79,36 @@ static inline unsigned translateFILEFlagsToSIOX( const char * str )
 	return flags;
 }
 
+static inline void translatePOSIXFlagsToFILE( char * outBuff, int s_flags )
+{
+	if (s_flags & SIOX_LOW_LEVEL_O_APPEND){
+		outBuff[0] = 'a';
+		outBuff++;
+	}
+	if (s_flags & SIOX_LOW_LEVEL_O_RDONLY){
+		outBuff[0] = 'r';
+		outBuff++;
+	}
+	if (s_flags & SIOX_LOW_LEVEL_O_WRONLY){
+		outBuff[0] = 'w';
+		outBuff++;
+	}	
+	if (s_flags & SIOX_LOW_LEVEL_O_RDWR){
+		outBuff[0] = '+';
+		outBuff++;
+	}	
+}
+
 
 
 static inline unsigned prepareIovec( const struct iovec * iov, int iovcnt ) {
+	// TODO
 	return 0;
 }
 
 
 
-static inline int translateErrno(int err){
+static inline int translateErrnoToSIOX(int err){
 	switch(err){
 		case (0):{
 			return SIOX_ESUCCESS;

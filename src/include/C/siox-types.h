@@ -29,6 +29,8 @@ typedef uint32_t siox_activity_error;
  * Postgres needs datatypes twice as large as these for storage due to its internal structure.
  */
 enum siox_ont_storage_type {
+	//SIOX_STORAGE_8_BIT_INTEGER,
+	//SIOX_STORAGE_8_BIT_UINTEGER,
 	SIOX_STORAGE_64_BIT_INTEGER,
 	SIOX_STORAGE_64_BIT_UINTEGER,
 	SIOX_STORAGE_32_BIT_INTEGER,
