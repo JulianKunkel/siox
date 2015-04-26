@@ -167,7 +167,6 @@ OpenFiles * CSVExtractor::findParentFileByFh( std::shared_ptr<Activity>& a ){
 void CSVExtractor::handlePOSIXSeek(std::shared_ptr<Activity> a){
 	OpenFiles * parent = findParentFileByFh(a);
 	parent->currentPosition = findUINT64AttributeByID(a, positionID);
-	// ",OpTyp,Size,DeltaOffset,Duration"
 }
 
 void CSVExtractor::handlePOSIXSync(std::shared_ptr<Activity> a){
@@ -184,7 +183,7 @@ void CSVExtractor::handlePOSIXAccess(std::shared_ptr<Activity> a, string type){
 		bytes = findUINT64AttributeByID(a, bytesWrittenID);	
 	}	
 	uint64_t position = findUINT64AttributeByID(a, positionID);
-	uint64_t deltaPosition;
+	int64_t deltaPosition;
 
 	//cout << bytes << ", " << position << endl;
 
