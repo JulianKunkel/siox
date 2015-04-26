@@ -2,6 +2,7 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIR}
 )
 
 add_executable(
@@ -12,7 +13,6 @@ add_executable(
 target_link_libraries(
 	siox-trace-reader
 	siox-core-ModuleLoader
-	siox-monitoring-DatabaseTopology
 	siox-util
 )
 

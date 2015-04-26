@@ -2,6 +2,7 @@ project(SIOX)
 
 include_directories(
 	${SIOX_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIR}
 )
 
 siox_run_serializer(ActivityMultiplexerAsyncOptions.hpp BoostXMLSerializable.cpp)
