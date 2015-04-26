@@ -195,7 +195,10 @@ void CSVExtractor::handlePOSIXAccess(std::shared_ptr<Activity> a, string type){
 
 	// position = 1000, lastAccessPosition = 500
 	deltaPosition = position - parent->lastAccessPosition;
-	parent->lastAccessPosition = parent->currentPosition;
+	// cout << position << " " << parent->lastAccessPosition << " " << deltaPosition << endl;
+
+	parent->lastAccessPosition = position + bytes;
+
 	int fd = findUINT32AttributeByID(a, fhID);
 	Timestamp delta = a->time_stop_ - a->time_start_;
 	csv << ttoDbl(a->time_start_ - this->tstart) << "," << convertUpdateTime(a->time_start_) << "," << fd << "," << type << "," << deltaPosition << "," << bytes << "," << ttoDbl(delta) << endl;
