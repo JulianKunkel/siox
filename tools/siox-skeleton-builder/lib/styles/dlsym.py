@@ -116,4 +116,5 @@ class Style(skeletonBuilder.Writer):
                 print('\n}', end='\n\n', file=output)
 
         # close the file
+        self.writeEnd(output, functionList)
         output.close()

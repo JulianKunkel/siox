@@ -55,8 +55,44 @@
 			
 
         },
+{
+            "name": "CMake Release",
+				"working_dir": "${project_path}/build-release/",
+				"cmd": ["make", "install"],
+				"file_regex": "^(../..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+				"selector": "source.c, source.c++, source.cpp, source.hpp, source.h, source.txt",
+				"file_regex": "^(...*?):([0-9]*):?([0-9]*)",
+				//"showWhenFinished" : true,
+				"variants":
+				[
+				{
+				"cmd": ["cmake", "../"],
+				"name": "Configure"
+				},
+				{
+				"cmd": ["make", "clean"],
+				"name": "Clean"
+				},
+				{
+				"cmd": ["make", "test"],
+				"name": "Run"
+				},
+				{
+				"cmd": ["make", "install"],
+				"name": "Install"
+				},
+				{
+				"cmd": ["${project_path}/devel/scripts/serialization-code-generator.py", "-i", "$file", "-o", "$file-BinarySerialization.cpp", "--style", "JBinary"],
+				"name": "Create Binary Serialization"
+				},
+				{
+				"cmd": ["${project_path}/devel/scripts/serialization-code-generator.py", "-i", "$file", "-o", "$file-BoostSerialization.cpp", "--style", "Boost"],
+				"name": "Create Boost Serialization"
+				}
+				]            
+        },
         {
-            "name": "CMake",
+            "name": "CMake Debug",
 				"working_dir": "${project_path}/build/",
 				"cmd": ["make", "install"],
 				"file_regex": "^(../..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",

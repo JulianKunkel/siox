@@ -58,7 +58,17 @@ class Writer():
 
         return output
 
-    
+
+    def writeEnd(self, output, functionList):
+        # write all global-Templates
+        for function in functionList:
+            functionVariables = self.functionVariables(function)
+            for templ in function.usedTemplateList:
+                if templ.output('global_end') != '':
+                    print(templ.output('global_end', functionVariables), file=output)
+        print("", file=output)
+
+
     def writeBefore(self, function, output, functionVariables):
             # write the before-template for this function
             for templ in function.usedTemplateList:

@@ -326,21 +326,21 @@ int rename( const char * oldname, const char * newname );
 // Linux specific, Xstat is redirected to Xstat64
 // stat() symbols do not exist, a macro rewrites them, problem stat64 types.
 // Be aware this might lead to problems.
-//@splice_once ''int stat(const char *path, struct stat *buf){ return __xstat64(1, path, buf); }''
+//@splice_once_end ''int stat(const char *path, struct stat *buf){ return __xstat64(1, path, (struct stat64 *) buf); }''
 //@guard
 //@errorErrno ''ret<0''
 //@activity Name=stat
 //@splice_before SET_FILENAME(path)
 int __xstat64( int __ver, const char * path, struct stat64 * buf );
 
-//@splice_once ''int lstat(const char *path, struct stat *buf){ return __lxstat64(1, path, buf); }''
+//@splice_once_end ''int lstat(const char *path, struct stat *buf){ return __lxstat64(1, path, (struct stat64 *) buf); }''
 //@guard
 //@errorErrno ''ret<0''
 //@activity Name=lstat
 //@splice_before SET_FILENAME(path)
 int __lxstat64( int __ver, const char * path, struct stat64 * buf );
 
-//@splice_once ''int fstat(int fd, struct stat *buf){ return __fxstat64(1, fd, buf); }''
+//@splice_once_end ''int fstat(int fd, struct stat *buf){ return __fxstat64(1, fd, (struct stat64 *) buf); }''
 //@guard
 //@errorErrno ''ret<0''
 //@activity Name=fstat

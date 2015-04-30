@@ -23,12 +23,12 @@ static int calls_%(fname)s = 0;''',
 			siox_timestamp t_start = siox_gettime(); 
 			siox_timestamp t_overhead = 0;''',
 	'beforeLast' : '''
-		t_tmp = siox_gettime();
+		//t_tmp = siox_gettime();
 		t_overhead = t_tmp - t_start;
 		t_fkt_start = t_tmp;
 		''',
 	'after' : '''
-		t_tmp = siox_gettime();
+		//t_tmp = siox_gettime();
 		t_start = t_tmp;
 		t_fkt_%(fname)s += t_tmp - t_fkt_start;
 		''',
@@ -234,9 +234,9 @@ static void sioxInit() __attribute__((constructor));
 	    	assert(%(ComponentVariable)s_component);
 	    	assert(%(ComponentActivity)s);
 	    	siox_activity * %(ActivityVariable)s = siox_activity_begin( %(ComponentVariable)s_component, %(ComponentActivity)s );''',
-	   'beforeLast': '''siox_activity_start(%(ActivityVariable)s);''',
-	'after': '''
-			siox_activity_stop( %(ActivityVariable)s );''',
+	   'beforeLast': '''t_tmp = siox_activity_start(%(ActivityVariable)s);''',
+	'afterFirst': '''
+			t_tmp = siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 	'final': ''
 },
@@ -278,8 +278,8 @@ static void sioxInit() __attribute__((constructor));
 	    	
 	    	siox_activity_link_to_parent( %(ActivityVariable)s, %(ActivityParentVar)s );
 	    	''',
-	   'beforeLast': '''siox_activity_start(%(ActivityVariable)s);''',
-	'after': '''siox_activity_stop( %(ActivityVariable)s );''',
+	   'beforeLast': '''t_tmp = siox_activity_start(%(ActivityVariable)s);''',
+	'afterFirst': '''t_tmp = siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
 },
 'guard': {
@@ -651,6 +651,15 @@ static void sioxInit() __attribute__((constructor));
 	'final': ''
 },
 
+'splice_once_end': {
+	'variables': 'PROGRAMCODE',
+	'global_end': '%(PROGRAMCODE)s',
+	'init': '',
+	'before': '',
+	'after': '',
+	'cleanup': '',
+	'final': ''
+},
 
 'include': {
 	'variables': 'what',

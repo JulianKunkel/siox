@@ -744,7 +744,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		return new siox_activity( a, component );
 	}
 
-	void siox_activity_start( siox_activity * activity )
+	siox_timestamp siox_activity_start( siox_activity * activity )
 	{
 		assert( activity != nullptr );
 
@@ -758,17 +758,22 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		if ( ! monitoringDisabled && component->preCallAmux ){
 			component->preCallAmux->Log( activity->shrdPtr );
 		}
-		ab->startActivity( activity->activity, siox_gettime() );
+		siox_timestamp time = siox_gettime();
+		ab->startActivity( activity->activity, time );
+		return time;
 	}
 
 
-	void siox_activity_stop( siox_activity * activity )
-	{
+	siox_timestamp siox_activity_stop( siox_activity * activity )
+	{		
+		siox_timestamp time = siox_gettime();
+
 		assert( activity != nullptr );
 
-		FUNCTION_BEGIN
+		FUNCTION_BEGIN		
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
-		ab->stopActivity( activity->activity, siox_gettime() );
+		ab->stopActivity( activity->activity, time );
+		return time;
 	}
 
 

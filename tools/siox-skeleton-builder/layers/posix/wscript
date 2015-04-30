@@ -19,6 +19,8 @@ def configure(conf):
 	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
 	conf.check_cc(lib='dl', uselib_store='DL', mandatory = True)
 
+	conf.env.append_value('LIBPATH', ["/usr/local/lib","/usr/local/lib64"])
+
 	if conf.options.SIOX_LL_IMPLEMENTATION:
 		conf.env.append_value('LIBPATH', [conf.options.SIOX_LL_IMPLEMENTATION])
 		conf.env.LIBPATH_SIOX_LL = conf.options.SIOX_LL_IMPLEMENTATION
@@ -44,7 +46,7 @@ def configure(conf):
 
 	# conf.env.append_value('LIBDIR', [conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"])
 
-        if conf.options.debug:
+        if not conf.options.debug:
 	        conf.env.append_value("CFLAGS", ['-std=gnu99', '-O3', '-Wall'])
 	else:
 		conf.env.append_value("CFLAGS", ['-std=gnu99', '-g', '-Wall'])

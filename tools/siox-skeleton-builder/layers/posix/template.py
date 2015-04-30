@@ -4,7 +4,6 @@ template = {
 	        'afterFirst': ''' int errsv = errno;''',
 	        'after': ''' 
 			    if ( %(Condition)s ){
-			    				 siox_activity_stop(%(Activity)s);
 	                      siox_activity_report_error( %(Activity)s, translateErrnoToSIOX(errsv) );	                      
 	                      siox_activity_end(%(Activity)s);
 								 errno = errsv;

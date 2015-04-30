@@ -10,7 +10,7 @@ class Style(skeletonBuilder.Writer):
     def writeOutput(self, options, functionList, templateParameters, precompiler):
         # open the output file for writing
         output = open(options.outputFile, 'w')
-
+        precompiler.insert(0, "define _GNU_SOURCE")
         self.writeHeaderBegin(output, functionList, templateParameters["includes"], templateParameters["globalOnce"], precompiler);
 
         # write all function redefinitions
@@ -112,6 +112,7 @@ class Style(skeletonBuilder.Writer):
             else:
                 print('\n}', end='\n\n', file=output)
 
+        self.writeEnd(output, functionList)
         output.close()
 
         # generate gcc string for the user

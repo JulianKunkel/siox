@@ -59,6 +59,8 @@ def parseTemplate(file):
         entries = template[t]
         if not "global" in entries:
             entries["global"] = ""
+        if not "global_end" in entries:
+            entries["global_end"] = ""            
         entries["variablesDefaults"] = {}
         if not "variables" in entries:
             entries["variables"] = []

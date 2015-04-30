@@ -463,7 +463,7 @@ siox_activity * siox_activity_begin( siox_component * component, siox_component_
  * @param[in]   activity    The activity.
  */
 //@test ''%p'' activity
-void siox_activity_start( siox_activity * activity );
+siox_timestamp siox_activity_start( siox_activity * activity );
 
 /**
  * Report the end of an activity's active phase, beginning its reporting phase.
@@ -474,7 +474,7 @@ void siox_activity_start( siox_activity * activity );
  * @param[in]   activity    The activity.
  */
 //@test ''%p'' activity
-void siox_activity_stop( siox_activity * activity );
+siox_timestamp siox_activity_stop( siox_activity * activity );
 
 /**
  * Report an attribute of an activity.
