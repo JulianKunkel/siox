@@ -3,7 +3,7 @@
   This performance test spawns a command line defined number of threads each calling fwrite() with no payload to minimize the conducted work and thus allow easy measurement of the overhead.
   
   Compile with:
-  	gcc -std=gnu99 performance-test-multi-threaded.c -lpthread -o performance-test-multi-threaded -g -lrt
+  	gcc -std=gnu99 performance-test-multi-threaded.c -lpthread -o performance-test-multi-threaded -g -lrt -DUSE_STDIO
 
   To measure SIOX overhead run, e.g.:
 	siox-inst posix performance-test-multi-threaded 2 4
@@ -34,8 +34,20 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <string.h>
+#include <assert.h>
 
 #include <time.h>
+
+#ifdef USE_STDIO
+	#warning USING STDIO fopen(), fwrite(), fclose()
+#else
+	#warning USING open(), write(), close()
+#endif
+
+#ifdef RECORD_INVIDUAL
+	#warning RECORD INDIVIDUAL CALLS to "out.csv"
+#endif
 
 uint64_t gettime()
 {
@@ -59,12 +71,20 @@ void * threadFunc(void * data){
 	int i, o;
 	int thread_number = (int) data;
 
+#ifdef USE_STDIO
 	FILE * pFile;
+#else
+	int fd;
+#endif
 	char buffer[] = {'a', 'b'};
 	char filename[200];
 	sprintf(filename, "testfile.%d", thread_number);
 
+#ifdef USE_STDIO
 	pFile = fopen( filename, "wb" );	
+#else
+	fd = creat(filename, S_IRWXU);
+#endif
 
 	if( thread_number == 0 ){
 		printf("Determining the number of global_iterations for 1s\n");
@@ -78,7 +98,11 @@ void * threadFunc(void * data){
 		const uint64_t current_iterations = global_iterations;
 
 		for(i=0; i < current_iterations; i++){
+#ifdef USE_STDIO
 			fwrite(buffer, 0, 0, pFile );
+#else
+			write(fd, buffer, 0);
+#endif
 		}
 
 		pthread_barrier_wait( & barrier );
@@ -107,12 +131,29 @@ void * threadFunc(void * data){
 
 	uint64_t t0 = gettime();
 
+#ifdef RECORD_INVIDUAL
+	double * times = (double*) malloc(sizeof(double) * (uint64_t) time_to_run_s * global_iterations);
+	memset(times, 0, ((uint64_t) sizeof(double)) * time_to_run_s * global_iterations);
+	uint64_t tpos = 0;
+#endif 
+
 	for(o=0; o < time_to_run_s; o++){
 		const uint64_t current_iterations = global_iterations;
 
 		uint64_t startT = gettime();
 		for(i=0; i < current_iterations; i++){
+#ifdef RECORD_INVIDUAL
+			uint64_t startI = gettime();
+#endif 
+#ifdef USE_STDIO
 			fwrite(buffer, 0, 0, pFile );
+#else
+			write(fd, buffer, 0);
+#endif
+#ifdef RECORD_INVIDUAL
+			times[tpos] = gettime() - startI;
+			tpos++;
+#endif 			
 		}
 
 		pthread_barrier_wait( & barrier );	
@@ -124,14 +165,33 @@ void * threadFunc(void * data){
 		}
 	}
 
+	// cleanup phase
+#ifdef USE_STDIO
+	fclose( pFile );
+#else
+	close(fd);
+#endif
+	unlink(filename);
+
+#ifdef RECORD_INVIDUAL
+	FILE * csvFile;
+	sprintf(filename, "out-%d.csv", thread_number);
+	csvFile = fopen( filename, "w" );
+	assert(csvFile != NULL);
+	printf("Writing to file %s, %lld entries\n", filename, (long long unsigned) tpos);
+	for (uint64_t i=0; i < tpos; i++){
+		fprintf(csvFile, "%.9f\n", times[i] / 1000000000.0);
+	}
+	fclose(csvFile);
+	free(times);
+#endif
+
 	if ( thread_number == 0){
 		printf("\nTotal time\taverage \n");
 		double deltaT = gettime() - t0;
 		printf( "  %.2f\t%.3f %.9f\n", deltaT/ 1000000000.0, global_iterations  * thread_count * time_to_run_s / (deltaT / 1000000000ull), deltaT / time_to_run_s / 1000000000ull / global_iterations /  thread_count);
 	}
-	// cleanup phase
-	fclose( pFile );
-	unlink(filename);
+
 }
 
 int main( int argc, char ** argv )
