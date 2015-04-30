@@ -10,11 +10,12 @@ set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/src/include)
 set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/src CACHE STRING "SIOX INCLUDE DIRS")
 
-SET (CMAKE_C_FLAGS_DEBUG          "-ggdb -O0 -Wno-unused-local-typedefs")
-SET (CMAKE_CXX_FLAGS_DEBUG        "-ggdb -O0 -Wno-unused-local-typedefs")
+SET (CMAKE_C_FLAGS_DEBUG          "-ggdb -O0 -Wno-unused-local-typedefs -DDEBUG_VERSION")
+SET (CMAKE_CXX_FLAGS_DEBUG        "-ggdb -O0 -Wno-unused-local-typedefs -DDEBUG_VERSION")
 
-set(CMAKE_C_FLAGS "-Wall -std=gnu99 -Wno-unused-local-typedefs")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -Wno-unused-local-typedefs")
+set(CMAKE_C_FLAGS "-Wall -std=gnu99 -Wno-unused-local-typedefs -DRELEASE_VERSION")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -std=gnu99 -Wno-unused-local-typedefs")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wno-unused-local-typedefs -DRELEASE_VERSION")
 
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed -Wno-unused-local-typedefs")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-as-needed -Wno-unused-local-typedefs")

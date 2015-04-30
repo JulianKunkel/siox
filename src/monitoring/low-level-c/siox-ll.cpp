@@ -99,9 +99,15 @@ struct FUNCTION_PERF_CLASS : FUNCTION_CLASS{
 	}
 };
 
+#ifdef RELEASE_VERSION
+#define PERF_MEASURE_START(name) FUNCTION_CLASS _class_inst_x;
+#define FUNCTION_BEGIN  FUNCTION_CLASS _class_inst_x;
+#define NO_PERFMEASURE_FUNCTION_BEGIN FUNCTION_CLASS _class_inst_x;
+#else
 #define PERF_MEASURE_START(name) static OverheadEntry * _oe = process_data.overhead->getOverheadFor(name); FUNCTION_PERF_CLASS _class_inst_x(_oe);
 #define FUNCTION_BEGIN static OverheadEntry * _oe = process_data.overhead->getOverheadFor(__FUNCTION__); FUNCTION_PERF_CLASS _class_inst_x(_oe);
 #define NO_PERFMEASURE_FUNCTION_BEGIN FUNCTION_CLASS _class_inst_x;
+#endif
 
 enum SIOX_MONITORING_STATE{
 	SIOX_MONITORING_PERMANENTLY_DISABLED = -1,
