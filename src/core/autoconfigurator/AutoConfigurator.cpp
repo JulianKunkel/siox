@@ -147,13 +147,14 @@ namespace core {
 
 	void AutoConfigurator::SetConfiguration(Component * component, stringstream & config) throw (InvalidConfiguration){
 		ComponentOptions * options = & component->getOptions();
-		ContainerSerializer cs;
-		cs.parse( options, config );
+		ContainerSerializer cs;		
 		try {
-			//j_xml_serialization::deserialize( *options, config );
+			cs.parse( options, config );
 		} catch( exception & e ) {
 			autoConfiguratorRegistrar = nullptr;
 			registrarMutex.unlock();
+
+			cerr << e.what() << endl;
 
 			cerr << endl << "Expected configuration: " << DumpConfiguration(options) << endl;
 			throw InvalidConfiguration( "Error during parsing of options", "unknown");

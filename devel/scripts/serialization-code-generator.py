@@ -501,7 +501,7 @@ class JXMLOutputGenerator(OutputGenerator):
                   %(CHILDTYPE)s child; 
                   %(CHILD)s
                   %(NAME)s.push_back(child);
-               }""")% {"NAME" : name, "TYPE" : type, "CHILDLEN" : len(childType), 
+               }""")% {"NAME" : name, "TYPE" : type, "CHILDLEN" : len(childSimpleType), 
             "CHILD": self.map_type_deserializer(childType, "child", childSimpleType), 
             "CHILDTYPE": childType, 
             "TAG" : tagname,
