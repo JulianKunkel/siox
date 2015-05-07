@@ -54,6 +54,18 @@ struct siox_activity {
 	siox_activity( Activity * a, siox_component * c ) : activity( a ), component( c ), shrdPtr(a) {}
 };
 
+// REMEMBER BUG
+// due to a wrong invocation order of library destructors in some very old GLIBC version
+// the destructor of the list may have been called by  __cxa_finalize() before the siox destructor
+// is called. This breaks the finalization completely.
+
+// to fix it, a new structure is created which is created on the heap.
+struct LLCallbacks{
+	list<void (*)(void)> terminate_cbs;
+	list<void (*)(void)> initialization_cbs;
+	list<void (*)(void)> terminate_complete_cbs;
+};
+
 struct process_info {
 	NodeID nid;
 	ProcessID pid;
@@ -84,6 +96,13 @@ struct process_info {
 	boost::shared_mutex  critical_mutex;
 
 	uint16_t last_componentID;
+
+	struct LLCallbacks cbs;
+	unordered_map<UniqueInterfaceID, siox_component*> registeredComponents;
+
+	// SIOX monitoring for the API itself
+	UniqueInterfaceID monitoring_uid;
+	ComponentID monitoring_cid;
 };
 
 
