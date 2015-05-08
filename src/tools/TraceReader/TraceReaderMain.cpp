@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <sstream>
 
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -135,6 +136,18 @@ int main( int argc, char ** argv )
 	         	}
 	         	finishedLast = false;
 	         	txt = tools::XML::extractText(s);
+
+	         	if (stack.empty()){
+		         	if (identicalNames.find(tag) == identicalNames.end()){
+							identicalNames[tag] = 1;
+	         		}else{
+	         			stringstream tmp;
+	         			tmp << tag;
+	         			tmp << identicalNames[tag];
+	         			identicalNames[tag]++;
+	         			tag = tmp.str();
+	         		}
+	         	}
 	         	stack.push_back(tag);
 	         }
 			}
@@ -213,6 +226,17 @@ int main( int argc, char ** argv )
 	
 	         	finishedLast = false;
 	         	txt = tools::XML::extractText(s);
+
+	         	if (stack.empty()){
+		         	if (identicalNames.find(tag) == identicalNames.end()){
+							identicalNames[tag] = 1;
+	         		}else{
+	         			stringstream tmp;
+	         			tmp << tag;
+	         			tmp << identicalNames[tag];
+	         			identicalNames[tag]++;
+	         			tag = tmp.str();	         		}
+	         	}
 	         	stack.push_back(tag);
 	         }
 	
