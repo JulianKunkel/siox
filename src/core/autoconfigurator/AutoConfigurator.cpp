@@ -131,7 +131,7 @@ namespace core {
 
 			delete( module );
 		}
-		autoConfiguratorRegistrar = nullptr;
+		//autoConfiguratorRegistrar = nullptr; we may want to lookup the component later on.
 		registrarMutex.unlock();
 
 		if (initComponents){

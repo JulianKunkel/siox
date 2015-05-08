@@ -480,7 +480,7 @@ class JXMLOutputGenerator(OutputGenerator):
             return self.map_type_serializer(self.enumMap[type], name, tagname, intent)
         #    return "serialize((" + self.enumMap[type] + " &)"  + name + ", buffer, pos)";
 
-        return "serialize(%s, s, intent + %s);" % (name, intent);
+        return "serialize(%s, s, intent + %s, \"%s\");" % (name, intent, tagname);
 
 
     def map_type_deserializer(self, type, name, tagname):
@@ -531,7 +531,7 @@ class JXMLOutputGenerator(OutputGenerator):
             return "retrieveSimpleXMLTag(s, \"%s\", %s);" % (tagname, name);
         
 
-        return "deserialize(" + name + ", s);";
+        return "deserialize(" + name + ", s, \"" + tagname + "\");";
 
 
     def forceInclude(self, filename):

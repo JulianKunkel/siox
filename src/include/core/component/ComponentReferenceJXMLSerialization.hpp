@@ -1,6 +1,7 @@
 #ifndef SIOX_COMPONENT_XML_SERIALIZABLE_S_H
 #define SIOX_COMPONENT_XML_SERIALIZABLE_S_H
 
+#include <assert.h>
 
 #include <core/component/ComponentReference.hpp>
 #include <core/component/ComponentRegistrar.hpp>
@@ -37,6 +38,7 @@ namespace j_xml_serialization{
          if( ! t.global ) {
             myOffset = autoConfiguratorOffset;
          }
+         assert(autoConfiguratorRegistrar != nullptr && "Registrar is not correctly set");
          t.componentPointer = ( ::core::Component* ) autoConfiguratorRegistrar->lookupComponent( t.componentID + myOffset );
       }
    }

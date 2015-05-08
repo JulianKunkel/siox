@@ -36,6 +36,14 @@ namespace core {
 				this->componentPointer = const_cast<Component *>(component);
 				return *this;
 			}
+
+			bool operator== ( const void * component ){
+				return this->componentPointer == component;
+			}
+
+			bool operator!= ( const void * component ){
+				return this->componentPointer != component;
+			}
 	};
 
 #define GET_INSTANCE(TYPE, Y) (dynamic_cast<TYPE *>(Y.componentPointer))

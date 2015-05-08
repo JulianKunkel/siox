@@ -41,9 +41,15 @@ namespace monitoring {
 				ActivityMultiplexerPluginOptions & o = getOptions<ActivityMultiplexerPluginOptions>();
 
 				multiplexer = GET_INSTANCE(ActivityMultiplexer, o.multiplexer);
+				if (o.multiplexer != nullptr){
+					assert(multiplexer != nullptr && "Error multiplexer object is broken");
+				}
 
 				// may be NULL
 				facade = GET_INSTANCE(ActivityPluginDereferencing, o.dereferenceFacade);
+				if (o.dereferenceFacade != nullptr){
+					assert(facade != nullptr && "Error facade object is broken");
+				}
 
 				initPlugin();
 			}

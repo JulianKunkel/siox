@@ -1,6 +1,8 @@
 #include <exception>
 #include <iostream>
 #include <string>
+#include <vector>
+#include <unordered_map>
 
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -36,6 +38,7 @@ using namespace boost;
 using namespace std;
 using namespace monitoring;
 
+#include "AdjustXML.cpp"
 
 /*
  This little program provides a command line interface to reading siox-traces.
@@ -45,28 +48,36 @@ int main( int argc, char ** argv )
 	//try {
 		program_options::options_description genericOptions( "Synopsis" );
 		genericOptions.add_options()
-		( "help", "This help message" )
+		( "helpGeneral", "This help message" )
+		( "help", "The module-specific help" )
 		( "verbosity", program_options::value<int>()->default_value(0), "Verbosity level, 1 is Warning, 3+ is Debug" )
 		( "conf", program_options::value<string>()->default_value( "" ), "Configuration file" )
-		( "module", program_options::value<string>()->default_value( "" ), "Set module options")
+		( "ignoreConfigOptions", "Ignore module options")
 		;
 
 		program_options::variables_map vm;
 		program_options::store( program_options::command_line_parser(argc, argv).options(genericOptions).allow_unregistered().style(program_options::command_line_style::unix_style ^ program_options::command_line_style::allow_short).run(), vm );
 		program_options::notify( vm );
 
-		string configFile = vm["conf"].as<string>();
-
-		if( vm.count( "help" ) and configFile == "" ) {
+		if( vm.count( "helpGeneral" ) ) {
 			cout << genericOptions << endl;
 			return 1;
 		}
 
+
+		string configFile = vm["conf"].as<string>();
 		if (configFile == ""){
 			configFile = "siox-trace-reader.conf:/etc/siox/trace-reader.conf";
 		}
 
-		// Loading Modules
+		const bool ignoreConfigOptions = vm.count("ignoreConfigOptions") > 0;
+
+		program_options::options_description cmdline_options;
+
+
+		// fetch module options if available and add them to the cmdline_options
+
+		// Loading Modules according to configuration file.
 		ComponentRegistrar registrar{};
 		AutoConfigurator* configurator = new AutoConfigurator(
 				& registrar, "siox-core-autoconfigurator-FileConfigurationProvider",	"", configFile); 
@@ -74,24 +85,62 @@ int main( int argc, char ** argv )
 		std::list<ActivityMultiplexer*> amuxs = configurator->searchForAll<ActivityMultiplexer>(coreComponents);
 		tools::ActivityInputStreamPlugin* activities = configurator->searchFor<tools::ActivityInputStreamPlugin>(coreComponents);
 		assert(coreComponents.size() != 0);
+	
+		if (! ignoreConfigOptions){
+			unordered_map<string,int> identicalNames;
 
-		// fetch module options if available		
-		for (Component* c : coreComponents) {
-			// parse options that can be set from XML...
-			// change the XML and inject it back.
-			string config = configurator->DumpConfiguration(c);
-			cout << config << endl;
+			for (Component* c : coreComponents) {
+				// parse options that can be set from XML...
+				// change the XML and inject it back.
+				string config = configurator->DumpConfiguration(c);
+	
+				//cout << config << endl;
+				stringstream s(config);
+				bool isFinishTag;
+				vector<string> stack= {};
+	
+				string txt;
+				bool finishedLast = false;
 
-			//configurator->SetConfiguration(c, config);
+	         while(s.good()){
+	         	// extract next begin tag
+	         	string tag = tools::XML::extractNextTag(s, isFinishTag);
+	         	if (isFinishTag){         		
+	         		string last = stack.back();
+	         		stack.pop_back();	
+	
+	         		if (tag == last && stack.size() > 0 && finishedLast == false && txt.size() > 0){
+	         			stringstream val;
+	         			for(string parent : stack ){
+	         				val << parent << ".";
+	         			}
+	         			val << last;
+							string optname = val.str();
+
+							if (identicalNames.find(optname) == identicalNames.end()){
+								identicalNames[optname] = 1;
+							}else{
+								val << identicalNames[optname];
+								identicalNames[optname]++;
+								optname = val.str();
+							}
+
+	         			// no nested tags => potential candidate
+	         			// cout << val.str() << " " << txt << endl;
+	         			cmdline_options.add_options()( optname.c_str(), program_options::value<string>()->default_value( txt ));
+	         		}
+	         		txt = "";
+	         		finishedLast = true;
+	         		continue;
+	         	}
+	         	finishedLast = false;
+	         	txt = tools::XML::extractText(s);
+	         	stack.push_back(tag);
+	         }
+			}
 		}
-		//	CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
-		//	if (opts) {
-		//		opts->moduleOptions(genericOptions);
-		//	}
-		//}
 
 		// the final command line options
-		program_options::options_description cmdline_options;
 		cmdline_options.add(genericOptions);
 
 		// now all options can be parsed
@@ -103,13 +152,75 @@ int main( int argc, char ** argv )
 			return 1;
 		}
 
-		// set module options
-		//for (Component* component : traceReaderComponents) {
-		//	CommandLineOptions* opts = dynamic_cast<CommandLineOptions*>(component);
-		//	if (opts) {
-		//		opts->setOptions(vm);
-		//	}
-		//}
+		if (! ignoreConfigOptions){
+			unordered_map<string,int> identicalNames;
+
+			// set module options
+			for (Component* c : coreComponents) {
+				// parse options that can be set from XML...
+				// change the XML and inject it back.
+				string config = configurator->DumpConfiguration(c);
+				stringstream newConfig;
+	
+				stringstream s(config);
+				bool isFinishTag;
+				vector<string> stack= {};
+	
+				string txt;
+				bool finishedLast = false;
+	
+	         while(s.good()){
+	         	// extract next begin tag
+	         	string tag = tools::XML::extractNextTag(s, isFinishTag);
+	         	if (isFinishTag){
+	         		string last = stack.back();
+	         		stack.pop_back();	
+	
+	         		if (tag == last && stack.size() > 0 && finishedLast == false && txt.size() > 0){
+	         			stringstream val;
+	         			for(string parent : stack ){
+	         				val << parent << ".";
+	         			}
+	         			val << last;
+
+							string optname = val.str();
+
+							if (identicalNames.find(optname) == identicalNames.end()){
+								identicalNames[optname] = 1;
+							}else{
+								val << identicalNames[optname];
+								identicalNames[optname]++;
+								optname = val.str();
+							}
+	
+	         			// no nested tags => potential candidate         			
+	     					string txtVal = vm[optname].as<string>();
+	     					//cout << val.str() << " " << txtVal << txt << endl;
+	     					newConfig << txtVal;     					
+	         		}else{
+	         			newConfig << txt;
+	         		}
+	         		txt = "";
+	         		finishedLast = true;
+	
+	         		newConfig << "</" << tag << ">" << endl;
+	         		continue;
+	         	}
+	         	if (! s.good()){
+	         		break;
+	         	}
+	         	newConfig << "<" << tag << ">";
+	
+	         	finishedLast = false;
+	         	txt = tools::XML::extractText(s);
+	         	stack.push_back(tag);
+	         }
+	
+	  			//cout << newConfig.str() << endl;
+	  			//cout << config << endl;
+  				configurator->SetConfiguration(c, newConfig.str());	
+			}
+		}
 
 		// initialize all modules with the appropriate module options
 		configurator->initAllComponents(coreComponents);

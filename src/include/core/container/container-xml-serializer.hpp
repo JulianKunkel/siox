@@ -61,8 +61,8 @@ static string convertStringBuffer(stringstream & s){
 static void decodeXML(string & x, stringstream & s){   
    stringstream str;
    try{
-      while(true){
-         char c;
+      char c;      
+      while((c = s.peek()) > 0){
          c = s.peek();
          if (c == '&'){
             // devour special chars.
