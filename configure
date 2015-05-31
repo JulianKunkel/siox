@@ -24,14 +24,14 @@ function help(){
 	echo
 	echo "Optional:"
 	echo "--build-dir=<dir>        : directory in which to build"
-	echo "--build-wrappers       : build the wrappers for MPI, POSIX, etc. that is in the path"
-	echo "--debug                       : build SIOX with debug flags"
-	echo "--use-ninja                  : use the Ninja build tool instead of the old fashioned make"
-	echo "--verbose                   : output the command but do not execute it"
-	echo "--reconfigure             : run configure again with the parameters used the last time"
+	echo "--build-wrappers         : build the wrappers for MPI, POSIX, etc. that is in the path"
+	echo "--debug                  : build SIOX with debug flags"
+	echo "--use-ninja              : use the Ninja build tool instead of the old fashioned make"
+	echo "--verbose                : output the command but do not execute it"
+	echo "--reconfigure            : run configure again with the parameters used the last time"
 	echo "The following list of options is only needed if you choose to build the wrappers with cmake"
-	echo "--with-mpicc=<file>    : path to the MPI C compiler"
-	echo "--with-mpicxx=<file>   : path to the MPI C++ compiler"
+	echo "--with-mpicc=<file>      : path to the MPI C compiler"
+	echo "--with-mpicxx=<file>     : path to the MPI C++ compiler"
 	echo 
 }
 
