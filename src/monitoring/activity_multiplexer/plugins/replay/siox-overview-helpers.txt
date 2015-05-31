@@ -1,0 +1,17 @@
+
+# find all conf files
+find ~/WR/siox -iname "*.conf"
+
+
+
+# compile with -O1
+cd $SIOX_SOURCE
+./configure --build-wrappers --prefix=/home/pq/WR/bin/siox-o1
+
+
+# compile with -O3
+cd $SIOX_SOURCE
+./configure --build-wrappers --prefix=/home/pq/WR/bin/siox-o3
+
+
+
