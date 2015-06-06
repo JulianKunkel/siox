@@ -901,9 +901,16 @@ class Template():
                 return "// @" + self.name + " " + str(self.parameterList).strip("{}").replace("': '", "=").replace("'", "") + "\n" + text
             return text.strip();
         else:
-            # Error
-            print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
-            sys.exit(1)
+            if self.strictMode:
+                # Error
+                print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
+                sys.exit(1)
+            else:
+                # default to an empty string in case key is not provided by template
+                # desireable e.g. when generating replay code
+                print('WARNING: Section: ', type, ' not known.', file=sys.stderr)
+                return ""
+            
 
 #
 # @brief The main function.
