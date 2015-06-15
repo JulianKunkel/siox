@@ -513,9 +513,9 @@ static inline int translateErrnoToSIOX(int err){
 		case (ERFKILL) : {
 			return SIOX_ERFKILL;
 		}
-//		case (EHWPOISON) : {
-//			return SIOX_EHWPOISON;
-//		}
+		case (EHWPOISON) : {
+			return SIOX_EHWPOISON;
+		}
 	default:
 		return SIOX_ERR_UNKNOWN;
 	}
