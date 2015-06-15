@@ -11,6 +11,7 @@
 
 #include <core/module/ModuleLoader.hpp>
 #include <util/autoLoadModules.hpp>
+#include <util/ReporterHelper.hpp>
 
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 #include <monitoring/ontology/Ontology.hpp>
@@ -268,6 +269,8 @@ int main( int argc, char ** argv )
 				amux->Log(activity);
 			}
 		}
+
+		util::invokeAllReporters(&registrar);
 
 		registrar.stop();
 		registrar.shutdown();
