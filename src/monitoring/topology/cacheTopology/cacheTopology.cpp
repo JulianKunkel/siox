@@ -16,16 +16,12 @@
 #include <workarounds.hpp>
 
 
-#include <boost/algorithm/string.hpp>
-#include <boost/thread/shared_mutex.hpp>
-
 #include "cacheTopologyOptions.hpp"
 #include "cacheHelper.cpp"
 
 using namespace std;
 using namespace core;
 using namespace monitoring;
-using namespace boost;
 
 class CacheTopology : public Topology {
     public:
