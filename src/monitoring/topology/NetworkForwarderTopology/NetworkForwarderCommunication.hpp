@@ -26,7 +26,6 @@ enum NetworkForwarderMessageType {
 using namespace std;
 using namespace ::core;
 using namespace monitoring;
-using namespace boost;
 
 //@serializable
 struct NetworkForwarderRequestMessage {
@@ -52,8 +51,8 @@ struct NetworkForwarderResponseMessage {
 struct BlockingRPCMessage {
 
     NetworkForwarderResponseMessage response;
-    mutex m;
-    condition_variable cv;
+	boost::mutex m;
+	boost::condition_variable cv;
 };
 
 #endif
