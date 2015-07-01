@@ -11,6 +11,7 @@
 
 #include <core/module/ModuleLoader.hpp>
 #include <util/autoLoadModules.hpp>
+#include <util/ReporterHelper.hpp>
 
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 #include <monitoring/ontology/Ontology.hpp>
@@ -35,7 +36,6 @@
 #include <tools/TraceReader/activity_stream/ActivityInputStreamPlugin.hpp>
 #include <tools/TraceReader/activity_stream/ActivityInputStreamPluginOptions.hpp>
 
-using namespace boost;
 using namespace std;
 using namespace monitoring;
 
@@ -47,18 +47,27 @@ using namespace monitoring;
 int main( int argc, char ** argv )
 {
 	//try {
-		program_options::options_description genericOptions( "Synopsis" );
+		boost::program_options::options_description genericOptions( "Synopsis" );
 		genericOptions.add_options()
 		( "helpGeneral", "This help message" )
 		( "help", "The module-specific help" )
-		( "verbosity", program_options::value<int>()->default_value(0), "Verbosity level, 1 is Warning, 3+ is Debug" )
-		( "conf", program_options::value<string>()->default_value( "" ), "Configuration file" )
+		( "verbosity", boost::program_options::value<int>()->default_value(0), "Verbosity level, 1 is Warning, 3+ is Debug" )
+		( "conf", boost::program_options::value<string>()->default_value( "" ), "Configuration file" )
 		( "ignoreConfigOptions", "Ignore module options")
 		;
 
-		program_options::variables_map vm;
-		program_options::store( program_options::command_line_parser(argc, argv).options(genericOptions).allow_unregistered().style(program_options::command_line_style::unix_style ^ program_options::command_line_style::allow_short).run(), vm );
-		program_options::notify( vm );
+		boost::program_options::variables_map vm;
+		boost::program_options::store( 
+				boost::program_options::command_line_parser(
+						argc,
+						argv
+					).options(genericOptions).allow_unregistered().style(
+					boost::program_options::command_line_style::unix_style 
+					^
+					boost::program_options::command_line_style::allow_short).run(),
+				vm
+			);
+		boost::program_options::notify( vm );
 
 		if( vm.count( "helpGeneral" ) ) {
 			cout << genericOptions << endl;
@@ -73,7 +82,7 @@ int main( int argc, char ** argv )
 
 		const bool ignoreConfigOptions = vm.count("ignoreConfigOptions") > 0;
 
-		program_options::options_description cmdline_options;
+		boost::program_options::options_description cmdline_options;
 
 
 		// fetch module options if available and add them to the cmdline_options
@@ -128,7 +137,7 @@ int main( int argc, char ** argv )
 
 	         			// no nested tags => potential candidate
 	         			// cout << val.str() << " " << txt << endl;
-	         			cmdline_options.add_options()( optname.c_str(), program_options::value<string>()->default_value( txt ));
+	         			cmdline_options.add_options()( optname.c_str(), boost::program_options::value<string>()->default_value( txt ));
 	         		}
 	         		txt = "";
 	         		finishedLast = true;
@@ -157,8 +166,8 @@ int main( int argc, char ** argv )
 		cmdline_options.add(genericOptions);
 
 		// now all options can be parsed
-		program_options::store( program_options::command_line_parser(argc, argv).options(cmdline_options).style(program_options::command_line_style::unix_style ^ program_options::command_line_style::allow_short).run(), vm);
-		program_options::notify( vm );
+		boost::program_options::store( boost::program_options::command_line_parser(argc, argv).options(cmdline_options).style(boost::program_options::command_line_style::unix_style ^ boost::program_options::command_line_style::allow_short).run(), vm);
+		boost::program_options::notify( vm );
 
 		if( vm.count( "help" ) ) {
 			cout << cmdline_options << endl;
@@ -268,6 +277,8 @@ int main( int argc, char ** argv )
 				amux->Log(activity);
 			}
 		}
+
+		util::invokeAllReporters(&registrar);
 
 		registrar.stop();
 		registrar.shutdown();

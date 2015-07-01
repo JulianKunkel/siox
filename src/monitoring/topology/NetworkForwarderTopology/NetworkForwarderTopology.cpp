@@ -28,7 +28,6 @@
 using namespace std;
 using namespace ::core;
 using namespace monitoring;
-using namespace boost;
 
 class MyCallback: public ConnectionCallback{
 public:
@@ -123,7 +122,7 @@ TopologyType NetworkForwarderTopology::registerType( const string& name ) throw(
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -149,7 +148,7 @@ TopologyType NetworkForwarderTopology::lookupTypeByName( const string& name ) th
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -175,7 +174,7 @@ TopologyType NetworkForwarderTopology::lookupTypeById( TopologyTypeId anId ) thr
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -203,7 +202,7 @@ TopologyObject NetworkForwarderTopology::registerObject( TopologyObjectId parent
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -228,7 +227,7 @@ TopologyObject NetworkForwarderTopology::lookupObjectById( TopologyObjectId anId
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -256,7 +255,7 @@ TopologyRelation NetworkForwarderTopology::registerRelation( TopologyObjectId pa
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -283,7 +282,7 @@ TopologyRelation NetworkForwarderTopology::lookupRelation( TopologyObjectId pare
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -322,7 +321,7 @@ TopologyAttribute NetworkForwarderTopology::registerAttribute( TopologyTypeId do
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -350,7 +349,7 @@ TopologyAttribute NetworkForwarderTopology::lookupAttributeByName( TopologyTypeI
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -376,7 +375,7 @@ TopologyAttribute NetworkForwarderTopology::lookupAttributeById( TopologyAttribu
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -404,7 +403,7 @@ bool NetworkForwarderTopology::setAttribute( TopologyObjectId objectId, Topology
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -428,7 +427,7 @@ TopologyValue NetworkForwarderTopology::getAttribute( TopologyObjectId object, T
 
     BlockingRPCMessage container;
     {
-        unique_lock<mutex> lock(container.m);
+		boost::unique_lock<boost::mutex> lock(container.m);
         client->isend(& mess, & container);
 
         // wait for the response
@@ -461,7 +460,7 @@ void NetworkForwarderTopology::messageResponseCB(BareMessage * msg, char * buffe
     uint64_t pos = 0;
     j_serialization::deserialize(container->response, buffer, pos, buffer_size);
 
-    unique_lock<mutex> lock(container->m);
+	boost::unique_lock<boost::mutex> lock(container->m);
     container->cv.notify_one();
 }
 

@@ -13,16 +13,12 @@
 #include <monitoring/topology/TopologyImplementation.hpp>
 #include <workarounds.hpp>
 
-
-#include <boost/algorithm/string.hpp>
-
 #include "DatabaseTopologyOptions.hpp"
 
 using namespace std;
 using namespace core;
 using namespace monitoring;
 using namespace pqxx;
-using namespace boost;
 
 class DatabaseTopology : public Topology, public SetupPersistentStructures {
     public:

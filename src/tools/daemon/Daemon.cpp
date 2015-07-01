@@ -14,7 +14,6 @@
 #include <util/autoLoadModules.hpp>
 #include <util/ReporterHelper.hpp>
 
-using namespace boost;
 using namespace std;
 
 static ComponentRegistrar * registrar;
@@ -44,22 +43,22 @@ int main( int argc, char ** argv )
 		string configSection;
 
 		// parse command line arguments
-		program_options::options_description desc( "Synopsis" );
+		boost::program_options::options_description desc( "Synopsis" );
 		desc.add_options()
 		( "help", "This help message :-)" )
 		( "d", "Daemonize")
-		( "configEntry", program_options::value<string>(& configEntry), "Starting point for requesting a configuration")
-		( "configProvider", program_options::value<string>(& configProvider), "Configuration provider module")
-		( "configSection", program_options::value<string>(&configSection), "Configuration section to use")
+		( "configEntry", boost::program_options::value<string>(& configEntry), "Starting point for requesting a configuration")
+		( "configProvider", boost::program_options::value<string>(& configProvider), "Configuration provider module")
+		( "configSection", boost::program_options::value<string>(&configSection), "Configuration section to use")
 		( "createPersistentStructures", "Instruct all loaded daemon plugins to create the required structures to persist data for subsequent operations" )
 #ifndef PRODUCTIVE_DEPLOYMENT
 		( "purgePersistentStructures", "Instruct all loaded daemon plugins to purge the currently stored persistent storages" )
 #endif
 		;
 
-		program_options::variables_map vm;
-		program_options::store( program_options::parse_command_line( argc, argv, desc ), vm );
-		program_options::notify( vm );
+		boost::program_options::variables_map vm;
+		boost::program_options::store( boost::program_options::parse_command_line( argc, argv, desc ), vm );
+		boost::program_options::notify( vm );
 
 		if( vm.count( "help" ) ) {
 			cout << desc << endl;

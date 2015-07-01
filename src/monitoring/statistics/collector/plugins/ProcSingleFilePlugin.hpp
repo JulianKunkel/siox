@@ -8,7 +8,6 @@
 using namespace std;
 using namespace monitoring;
 using namespace core;
-using namespace boost;
 
 // ToDo: Allow multiple Filenames as required for network stats (Multiple files in multiple folders i.e. eth0,eth1)
 
@@ -16,7 +15,7 @@ using namespace boost;
 template<int MAX_NUM>
 class ProcSingleFilePlugin: public StatisticsProviderPlugin {
 	protected:
-		regex re;
+		boost::regex re;
 	private:
 
 		template<int INIT>
@@ -41,8 +40,8 @@ class ProcSingleFilePlugin: public StatisticsProviderPlugin {
 				//if(line.size() < 8)
 				//  continue;
 
-				regex_iterator<string::iterator> rit( line.begin(), line.end(), re );
-				regex_iterator<string::iterator> rend;
+				boost::regex_iterator<string::iterator> rit( line.begin(), line.end(), re );
+				boost::regex_iterator<string::iterator> rend;
 
 				vector<string> splittedArray;
 				int i = 0;
