@@ -23,8 +23,13 @@ class ReplayPlugin : public monitoring::ActivityMultiplexerPlugin {
 		void printActivity( std::shared_ptr<Activity> a );
 	private:
 		void strattribute( const Attribute & a, stringstream & s ) throw (NotFoundError);
+		// required for target extraction of parameters
+		bool strattribute_compare( const Attribute & a, const char* attributeName ) throw (NotFoundError);
+		void getActivityAttributeValueByName( std::shared_ptr<Activity> a, const char * domain, const char * name, void * buf );
+		// END: required for target extraction of parameters
 		void notify(const std::shared_ptr<Activity>& a, int lost);
 		SystemInformationGlobalIDManager* sys_info;
+
 };
 
 #endif   /* ----- #ifndef Replay_INC  ----- */

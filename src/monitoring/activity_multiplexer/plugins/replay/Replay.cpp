@@ -218,6 +218,40 @@ void dump_map() {
 }
 
 
+static bool convert_attribute_back( OntologyAttribute & oa, const VariableDatatype & val, void * out_value ){
+	switch( val.type() ) {
+		case VariableDatatype::Type::INT32:
+			*((int32_t*) out_value) = val.int32();
+			return true;
+		case VariableDatatype::Type::UINT32:
+			*((uint32_t*) out_value) = val.uint32();
+			return true;
+		case VariableDatatype::Type::INT64:
+			*((int64_t*) out_value) = val.int64();
+			return true;
+		case VariableDatatype::Type::UINT64:
+			*((uint64_t*) out_value) = val.uint64();
+			return true;
+		case VariableDatatype::Type::FLOAT:
+			*((float*) out_value) = val.flt();
+			return true;
+		case VariableDatatype::Type::DOUBLE:
+			*((double*) out_value) = val.dbl();
+			return true;
+		case VariableDatatype::Type::STRING: {
+			*(char**) out_value = strdup(val.str());
+			return true;
+		}
+		case VariableDatatype::Type::INVALID:
+		default:
+			assert(0 && "tried to optimize for a VariableDatatype of invalid type");
+			return false;
+	}
+}	
+
+
+
+
 
 /**
  * set posix_* to cuid
@@ -677,6 +711,71 @@ void ReplayPlugin::strattribute( const Attribute& attribute, std::stringstream& 
 		s << attribute.value ;
 	}
 }
+
+
+bool ReplayPlugin::strattribute_compare( const Attribute& attribute, const char* attributeName) throw( NotFoundError )
+{
+	std::stringstream s;
+	std::stringstream debug_string;
+
+	OntologyAttributeFull oa = facade->lookup_attribute_by_ID( attribute.id );
+	s << oa.domain << "/" << oa.name;
+
+	//if( attribute.value.type() == VariableDatatype::Type::STRING){
+	//	s << '"' << attribute.value << '"' ;
+	//}else{
+	//	s << attribute.value ;
+	//}
+	
+	debug_string << "TR: strattribute_compare: s=" << s.str() << "\n";
+	cout << debug_string.str();
+
+	if ( s.str().compare(attributeName) == 0 ) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+
+
+void ReplayPlugin::getActivityAttributeValueByName(  std::shared_ptr<Activity> a, const char * domain, const char * name, void * buf )
+{
+	
+	try {
+		
+		UniqueInterfaceID uid = sys_info->lookup_interface_of_activity( a->ucaid() );
+
+		auto oa = facade->lookup_attribute_by_name( domain, name );
+
+		for( auto itr = a->attributeArray().begin() ; itr != a->attributeArray().end(); itr++ ) {
+			if ( itr->id == oa.aID ){
+				// activity has attribute write to buf
+				// TODO: buf = (void *) a->value;
+				convert_attribute_back(oa, itr->value, buf);
+				break; // TODO: check if multiple instances of same attribute are allowed
+			} else {
+				// not found
+			}
+		}
+
+		// parent ids!?
+//		if( a->parentArray().begin() != a->parentArray().end() ) {
+//			str << " ";
+//			for( auto itr = a->parentArray().begin(); itr != a->parentArray().end(); itr++ ) {
+//				if( itr != a->parentArray().begin() ) {
+//					str << ", ";
+//				}
+//				str << *itr;
+//			}
+//		}
+
+	} catch( NotFoundError & e ) {
+		cerr << "Error while parsing activity! Parsed so far: (ommited by getActivityAttributeValueByName)" << endl;
+	}
+}
+
 
 
 
@@ -1173,6 +1272,18 @@ void ReplayPlugin::printActivity( std::shared_ptr<Activity> activity )
 		cerr << "Error while parsing activity! Parsed so far: " << str.str() << endl;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 extern "C" {
 void* MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME ()
