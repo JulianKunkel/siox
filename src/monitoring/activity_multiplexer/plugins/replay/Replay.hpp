@@ -16,7 +16,11 @@ class ReplayPlugin : public monitoring::ActivityMultiplexerPlugin {
 		void initPlugin() override;
 		ComponentOptions* AvailableOptions() override; 
 		void finalize() override {};
+		// in preperation for replay
+		void findUcaidMapping();
+		// during replay
 		void replayActivity( std::shared_ptr<Activity> a );
+		void printActivity( std::shared_ptr<Activity> a );
 	private:
 		void strattribute( const Attribute & a, stringstream & s ) throw (NotFoundError);
 		void notify(const std::shared_ptr<Activity>& a, int lost);
