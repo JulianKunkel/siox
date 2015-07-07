@@ -682,17 +682,20 @@ void ReplayPlugin::findUcaidMapping()
 		//virtual UniqueInterfaceID           lookup_interfaceID( const string & interface, const string & implementation ) const throw( NotFoundError )  = 0;
 		UniqueInterfaceID uiid = sys_info->lookup_interfaceID("POSIX", "");
 
-		//virtual UniqueComponentActivityID   lookup_activityID( UniqueInterfaceID id, const string & name ) const throw( NotFoundError )  = 0;
-		posix_fopen = UniqueComponentActivityID ucaid = sys_info->lookup_activityID(uiid, "fopen");
-
-		ss << "fopen" << " <=> " << posix_fopen << " <=> " << sys_info->lookup_activity_name( posix_fopen ) << std::endl;
+		// stdio	
+		posix_open = sys_info->lookup_activityID(uiid, "open"); ss << "open" << " <=> " << posix_open << " <=> " << sys_info->lookup_activity_name( posix_open ) << std::endl;
+		posix_read = sys_info->lookup_activityID(uiid, "read"); ss << "read" << " <=> " << posix_read << " <=> " << sys_info->lookup_activity_name( posix_read ) << std::endl;
+		posix_write = sys_info->lookup_activityID(uiid, "write"); ss << "write" << " <=> " << posix_write << " <=> " << sys_info->lookup_activity_name( posix_write ) << std::endl;
+		posix_close = sys_info->lookup_activityID(uiid, "close"); ss << "close" << " <=> " << posix_close << " <=> " << sys_info->lookup_activity_name( posix_close ) << std::endl;
+	
+		// streaming I/O
+		posix_fopen = sys_info->lookup_activityID(uiid, "fopen"); ss << "fopen" << " <=> " << posix_fopen << " <=> " << sys_info->lookup_activity_name( posix_fopen ) << std::endl;
+		posix_fread = sys_info->lookup_activityID(uiid, "fread"); ss << "fread" << " <=> " << posix_fread << " <=> " << sys_info->lookup_activity_name( posix_fread ) << std::endl;
+		posix_fwrite = sys_info->lookup_activityID(uiid, "fwrite"); ss << "fwrite" << " <=> " << posix_fwrite << " <=> " << sys_info->lookup_activity_name( posix_fwrite ) << std::endl;
+		posix_fclose = sys_info->lookup_activityID(uiid, "fclose"); ss << "fclose" << " <=> " << posix_fclose << " <=> " << sys_info->lookup_activity_name( posix_fclose ) << std::endl;
 		
 
-		/*
-		sys_info->lookup_activityID(uiid, "fread");
-		sys_info->lookup_activityID(uiid, "fwrite");
-		sys_info->lookup_activityID(uiid, "fclose");
-		*/
+		std::cout << ss.str() << std::endl;;
 
 	} catch( NotFoundError & e ) {	
 		cerr << "Interface not found!" << ss.str() << endl;
