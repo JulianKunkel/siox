@@ -1,7 +1,7 @@
 project(SIOX)
 
 add_subdirectory(posix)
-add_subdirectory(posix-replay)
+#add_subdirectory(posix-replay)
 
 if (MPI_FOUND)
 	add_subdirectory(mpi)

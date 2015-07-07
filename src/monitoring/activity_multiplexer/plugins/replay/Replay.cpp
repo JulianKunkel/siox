@@ -10,6 +10,8 @@
 
 // Replay related includes
 #include  <map>
+#include "posix-low-level-io-helper.h"
+
 
 // Replay related globals
 int issued = 3;	// 3 will be first issued by this replayer
@@ -204,6 +206,15 @@ static char * shared_byte_buffer(unsigned int size){
 		printf("Not enough memory available to allocate %lld bytes!\n",  (long long int) size);
 		exit(1);
 	}
+}
+
+
+void dump_map() {
+	printf("dump_map()\n");
+	for (auto it=activityHashTable_int.begin(); it!=activityHashTable_int.end(); ++it) {
+        std::cout << " dm: " << it->first << " => " << it->second << '\n';
+	}
+	printf("dump_map() end \n");
 }
 
 
@@ -687,12 +698,14 @@ void ReplayPlugin::findUcaidMapping()
 		posix_read = sys_info->lookup_activityID(uiid, "read"); ss << "read" << " <=> " << posix_read << " <=> " << sys_info->lookup_activity_name( posix_read ) << std::endl;
 		posix_write = sys_info->lookup_activityID(uiid, "write"); ss << "write" << " <=> " << posix_write << " <=> " << sys_info->lookup_activity_name( posix_write ) << std::endl;
 		posix_close = sys_info->lookup_activityID(uiid, "close"); ss << "close" << " <=> " << posix_close << " <=> " << sys_info->lookup_activity_name( posix_close ) << std::endl;
+		posix_lseek = sys_info->lookup_activityID(uiid, "lseek"); ss << "lseek" << " <=> " << posix_lseek << " <=> " << sys_info->lookup_activity_name( posix_lseek ) << std::endl;
 	
 		// streaming I/O
 		posix_fopen = sys_info->lookup_activityID(uiid, "fopen"); ss << "fopen" << " <=> " << posix_fopen << " <=> " << sys_info->lookup_activity_name( posix_fopen ) << std::endl;
 		posix_fread = sys_info->lookup_activityID(uiid, "fread"); ss << "fread" << " <=> " << posix_fread << " <=> " << sys_info->lookup_activity_name( posix_fread ) << std::endl;
 		posix_fwrite = sys_info->lookup_activityID(uiid, "fwrite"); ss << "fwrite" << " <=> " << posix_fwrite << " <=> " << sys_info->lookup_activity_name( posix_fwrite ) << std::endl;
 		posix_fclose = sys_info->lookup_activityID(uiid, "fclose"); ss << "fclose" << " <=> " << posix_fclose << " <=> " << sys_info->lookup_activity_name( posix_fclose ) << std::endl;
+		posix_fseek = sys_info->lookup_activityID(uiid, "fseek"); ss << "fseek" << " <=> " << posix_fseek << " <=> " << sys_info->lookup_activity_name( posix_fseek ) << std::endl;
 		
 
 		std::cout << ss.str() << std::endl;;
@@ -734,13 +747,336 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 
 		// hold activity name to prevent multiple lookups
-		string activity_name = sys_info->lookup_activity_name( activity->ucaid() );  // e.g. fwrite, fread,  read, write...
 
-		// TODO: API: get cuid by by name
-		// TODO: map ucaid to name? for quick resolve
-		str << activity_name;
+		int ucaid = activity->ucaid();
 
+		if( ucaid == posix_open ) {
+			// ###########################################################
+			//wrapped_open(sub_activity->data);
+			printf("'- open\n");
+			}
 
+		else if( ucaid == posix_creat ) {
+			//wrapped_creat(sub_activity->data);
+			}
+
+		else if( ucaid == posix_open64 ) {
+			//wrapped_open64(sub_activity->data);
+			}
+
+		else if( ucaid == posix_creat64 ) {
+			//wrapped_creat64(sub_activity->data);
+			}
+
+		else if( ucaid == posix_close ) {
+			// ###########################################################
+			//wrapped_close(sub_activity->data);
+			printf("'- close\n");
+			}
+
+		else if( ucaid == posix_dup ) {
+			//wrapped_dup(sub_activity->data);
+			}
+
+		else if( ucaid == posix_dup2 ) {
+			//wrapped_dup2(sub_activity->data);
+			}
+
+		else if( ucaid == posix_dup3 ) {
+			//wrapped_dup3(sub_activity->data);
+			}
+
+		else if( ucaid == posix_sendfile ) {
+			//wrapped_sendfile(sub_activity->data);
+			}
+
+		else if( ucaid == posix_write ) {
+			// ###########################################################
+			//wrapped_write(sub_activity->data);
+			printf("'- write\n");
+			}
+
+		else if( ucaid == posix_read ) {
+			// ###########################################################
+			//wrapped_read(sub_activity->data);
+			printf("'- read\n");
+			}
+
+		else if( ucaid == posix_writev ) {
+			//wrapped_writev(sub_activity->data);
+			}
+
+		else if( ucaid == posix_readv ) {
+			//wrapped_readv(sub_activity->data);
+			}
+
+		else if( ucaid == posix_pwrite ) {
+			//wrapped_pwrite(sub_activity->data);
+			}
+
+		else if( ucaid == posix_pread ) {
+			//wrapped_pread(sub_activity->data);
+			}
+
+		else if( ucaid == posix_pwrite64 ) {
+			//wrapped_pwrite64(sub_activity->data);
+			}
+
+		else if( ucaid == posix_pread64 ) {
+			//wrapped_pread64(sub_activity->data);
+			}
+
+		else if( ucaid == posix_pwritev ) {
+			//wrapped_pwritev(sub_activity->data);
+			}
+
+		else if( ucaid == posix_preadv ) {
+			//wrapped_preadv(sub_activity->data);
+			}
+
+		else if( ucaid == posix_pwritev64 ) {
+			//wrapped_pwritev64(sub_activity->data);
+			}
+
+		else if( ucaid == posix_preadv64 ) {
+			//wrapped_preadv64(sub_activity->data);
+			}
+
+		else if( ucaid == posix_sync ) {
+			//wrapped_sync(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fsync ) {
+			//wrapped_fsync(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fdatasync ) {
+			//wrapped_fdatasync(sub_activity->data);
+			}
+
+		else if( ucaid == posix_lseek ) {
+			// ###########################################################
+			//wrapped_lseek(sub_activity->data);
+			printf("'- lseek\n");
+			}
+
+		else if( ucaid == posix_posix_fadvise ) {
+			//wrapped_posix_fadvise(sub_activity->data);
+			}
+
+		else if( ucaid == posix_remove ) {
+			//wrapped_remove(sub_activity->data);
+			}
+
+		else if( ucaid == posix_rename ) {
+			//wrapped_rename(sub_activity->data);
+			}
+
+		else if( ucaid == posix___xstat64 ) {
+			//wrapped___xstat64(sub_activity->data);
+			}
+
+		else if( ucaid == posix___lxstat64 ) {
+			//wrapped___lxstat64(sub_activity->data);
+			}
+
+		else if( ucaid == posix___fxstat64 ) {
+			//wrapped___fxstat64(sub_activity->data);
+			}
+
+		else if( ucaid == posix___fxstat ) {
+			//wrapped___fxstat(sub_activity->data);
+			}
+
+		else if( ucaid == posix_mmap ) {
+			//wrapped_mmap(sub_activity->data);
+			}
+
+		else if( ucaid == posix_mmap64 ) {
+			//wrapped_mmap64(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fopen ) {
+			// ###########################################################
+			//wrapped_fopen(sub_activity->data);
+			printf("'- fopen\n");
+		
+			// TODO: get stream attribute
+
+			//ret = open(d->pathname, flags, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH );
+			//activityHashTable_int[d->ret] = ret;
+			
+			}
+
+		else if( ucaid == posix_fopen64 ) {
+			//wrapped_fopen64(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fdopen ) {
+			//wrapped_fdopen(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fileno ) {
+			//wrapped_fileno(sub_activity->data);
+			}
+
+		else if( ucaid == posix_freopen ) {
+			//wrapped_freopen(sub_activity->data);
+			}
+
+		else if( ucaid == posix_tmpfile ) {
+			//wrapped_tmpfile(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fclose ) {
+			// ###########################################################
+			//wrapped_fclose(sub_activity->data);
+			printf("'- fclose\n");
+			}
+
+		else if( ucaid == posix_fflush ) {
+			//wrapped_fflush(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fgetc ) {
+			//wrapped_fgetc(sub_activity->data);
+			}
+
+		else if( ucaid == posix_getc ) {
+			//wrapped_getc(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fputc ) {
+			//wrapped_fputc(sub_activity->data);
+			}
+
+		else if( ucaid == posix_putc ) {
+			//wrapped_putc(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fgets ) {
+			//wrapped_fgets(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fputs ) {
+			//wrapped_fputs(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fread ) {
+			// ###########################################################
+			//wrapped_fread(sub_activity->data);
+			printf("'- fread\n");
+			}
+
+		else if( ucaid == posix_fwrite ) {
+			// ###########################################################
+			//wrapped_fwrite(sub_activity->data);
+			printf("'- fwrite\n");
+			}
+
+		else if( ucaid == posix_fseeko ) {
+			//wrapped_fseeko(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fseek ) {
+			// ###########################################################
+			//wrapped_fseek(sub_activity->data);
+			printf("'- fseek\n");
+			}
+
+		else if( ucaid == posix_setbuf ) {
+			//wrapped_setbuf(sub_activity->data);
+			}
+
+		else if( ucaid == posix_setvbuf ) {
+			//wrapped_setvbuf(sub_activity->data);
+			}
+
+		else if( ucaid == posix_unlink ) {
+			//wrapped_unlink(sub_activity->data);
+			}
+
+		else if( ucaid == posix_vfprintf ) {
+			//wrapped_vfprintf(sub_activity->data);
+			}
+
+		else if( ucaid == posix_vfscanf ) {
+			//wrapped_vfscanf(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fscanf ) {
+			//wrapped_fscanf(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fprintf ) {
+			//wrapped_fprintf(sub_activity->data);
+			}
+
+		else if( ucaid == posix_aio_read ) {
+			//wrapped_aio_read(sub_activity->data);
+			}
+
+		else if( ucaid == posix_aio_write ) {
+			//wrapped_aio_write(sub_activity->data);
+			}
+
+		else if( ucaid == posix_lio_listio ) {
+			//wrapped_lio_listio(sub_activity->data);
+			}
+
+		else if( ucaid == posix_aio_suspend ) {
+			//wrapped_aio_suspend(sub_activity->data);
+			}
+
+		else if( ucaid == posix_aio_cancel ) {
+			//wrapped_aio_cancel(sub_activity->data);
+			}
+
+		else if( ucaid == posix_fork ) {
+			//wrapped_fork(sub_activity->data);
+			}
+
+		else if( ucaid == posix_lockf ) {
+			//wrapped_lockf(sub_activity->data);
+			}
+
+		else if( ucaid == posix_flock ) {
+			//wrapped_flock(sub_activity->data);
+			}
+
+		else if( ucaid == posix_socket ) {
+			//wrapped_socket(sub_activity->data);
+			}
+
+		else if( ucaid == posix_setsockopt ) {
+			//wrapped_setsockopt(sub_activity->data);
+			}
+
+		else if( ucaid == posix_pipe ) {
+			//wrapped_pipe(sub_activity->data);
+			}
+
+		else if( ucaid == posix_pipe2 ) {
+			//wrapped_pipe2(sub_activity->data);
+			}
+
+		else if( ucaid == posix_socketpair ) {
+			//wrapped_socketpair(sub_activity->data);
+			}
+
+		else if( ucaid == posix_accept ) {
+			//wrapped_accept(sub_activity->data);
+			}
+
+		else if( ucaid == posix_accept4 ) {
+			//wrapped_accept4(sub_activity->data);
+		}
+
+		else {
+        	// not found!
+			printf("unknown type - nothing to replay");
+		}
+        
 
 		/*
 		for( auto itr = activity->attributeArray().begin() ; itr != activity->attributeArray().end(); itr++ ) {
