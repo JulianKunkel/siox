@@ -472,17 +472,11 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			std::stringstream ss;
 
 			// open(POSIX/hints/openFlags=65, POSIX/descriptor/filename="test.tmp", POSIX/descriptor/filehandle=4) = 0 
-
-			ss << "filename:" << getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename") << std::endl;
-			ss << "expected return:" << getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle") << std::endl;
-			std::cout << ss.str() << std::endl;
-
 			int ret = open(
 					getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
 					translateSIOXFlagsToPOSIX( getActivityAttributeValueByName(activity, "POSIX", "hints/openFlags").uint32() ),
 					S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH // TODO: supply siox with rights flags converter
 				);
-			//ret = 42;
 
 			dump_fds();	
 			fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()] = ret;
@@ -671,13 +665,17 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			//wrapped_fopen(sub_activity->data);
 			printf("'- fopen\n");
 		
+
+
+
 			// fopen(POSIX/descriptor/filename="test.tmp", POSIX/hints/openFlags=577, POSIX/descriptor/filehandle=4, POSIX/descriptor/FilePointer=32507344) = 0
+			char mode[3];
+			translatePOSIXFlagsToFILE( mode, getActivityAttributeValueByName(activity, "POSIX", "hints/openFlags").uint32() );
 
-
-			//ret = open(d->pathname, flags, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH );
-			//activityHashTable_int[d->ret] = ret;
-	
-			FILE* ret = NULL;
+			FILE* ret = fopen(
+					getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+					mode
+				);
 
 			dump_streams();	
 			streams[getActivityAttributeValueByName(activity, "POSIX", "descriptor/FilePointer").uint64()] = ret;
@@ -709,6 +707,28 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_fclose ) {
 			// ###########################################################
 			//wrapped_fclose(sub_activity->data);
+			
+
+
+/*
+	// write to non existing file
+	stream = fopen(file, "w");
+
+	// everything ok? write and close
+	if ( !stream ) {
+		perror("fopen");
+	}
+
+	if ( !fwrite(buf, sizeof(char), 3, stream) ) { perror("fwrite"); }
+	if ( !fseek(stream, 6, SEEK_SET) ) { perror("fseek"); }
+	if ( !fwrite(buf+3, sizeof(char), 3, stream) ) { perror("fwrite"); }
+
+	//fwrite(buf+3, sizeof(char), 3, stream);
+	if (fclose(stream)) {
+		perror("fclose");		
+	}
+*/
+
 			printf("'- fclose\n");
 			}
 
@@ -744,13 +764,71 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			// ###########################################################
 			//wrapped_fread(sub_activity->data);
 			printf("'- fread\n");
+
+
+/*
+	// write to non existing file
+	stream = fopen(file, "w");
+
+	// everything ok? write and close
+	if ( !stream ) {
+		perror("fopen");
+	}
+
+	if ( !fwrite(buf, sizeof(char), 3, stream) ) { perror("fwrite"); }
+	if ( !fseek(stream, 6, SEEK_SET) ) { perror("fseek"); }
+	if ( !fwrite(buf+3, sizeof(char), 3, stream) ) { perror("fwrite"); }
+
+	//fwrite(buf+3, sizeof(char), 3, stream);
+	if (fclose(stream)) {
+		perror("fclose");		
+	}
+*/
+
+			long size = getActivityAttributeValueByName(activity, "POSIX", "quantity/BytesToRead").uint64();
+			int ret = fread(
+					shared_byte_buffer( size ),
+					sizeof(char),
+					size,
+					streams[getActivityAttributeValueByName(activity, "POSIX", "descriptor/FilePointer").uint64()]
+				);
+
 			}
 
 		else if( ucaid == posix_fwrite ) {
 			// ###########################################################
 			//wrapped_fwrite(sub_activity->data);
-		
+			
+
+/*
+	// write to non existing file
+	stream = fopen(file, "w");
+
+	// everything ok? write and close
+	if ( !stream ) {
+		perror("fopen");
+	}
+
+	if ( !fwrite(buf, sizeof(char), 3, stream) ) { perror("fwrite"); }
+	if ( !fseek(stream, 6, SEEK_SET) ) { perror("fseek"); }
+	if ( !fwrite(buf+3, sizeof(char), 3, stream) ) { perror("fwrite"); }
+
+	//fwrite(buf+3, sizeof(char), 3, stream);
+	if (fclose(stream)) {
+		perror("fclose");		
+	}
+*/
+
+
 			// fwrite(POSIX/quantity/BytesToWrite=3, POSIX/descriptor/FilePointer=32507344, POSIX/data/MemoryAddress=4196217, POSIX/quantity/BytesWritten=3) = 0
+			long size = getActivityAttributeValueByName(activity, "POSIX", "quantity/BytesToWrite").uint64();
+			int ret = fwrite(
+					shared_byte_buffer( size ),
+					sizeof(char),
+					size,
+					streams[getActivityAttributeValueByName(activity, "POSIX", "descriptor/FilePointer").uint64()]
+				);
+
 
 			printf("'- fwrite\n");
 			}
@@ -763,6 +841,14 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			// ###########################################################
 			//wrapped_fseek(sub_activity->data);
 			printf("'- fseek\n");
+
+			// fseek(POSIX/descriptor/FilePointer=11331200, POSIX/file/position=6) = 0
+			int ret = fseek(
+					streams[getActivityAttributeValueByName(activity, "POSIX", "descriptor/FilePointer").uint64()],
+					getActivityAttributeValueByName(activity, "POSIX", "file/position").uint64(),
+					SEEK_SET
+				);
+
 			}
 
 		else if( ucaid == posix_setbuf ) {
