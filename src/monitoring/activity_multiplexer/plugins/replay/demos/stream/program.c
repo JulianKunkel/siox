@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ( !fwrite(buf, sizeof(char), 3, stream) ) { perror("fwrite"); }
+	if ( !fseek(stream, 6, SEEK_SET) ) { perror("fseek"); }
 	if ( !fwrite(buf+3, sizeof(char), 3, stream) ) { perror("fwrite"); }
 
 	//fwrite(buf+3, sizeof(char), 3, stream);

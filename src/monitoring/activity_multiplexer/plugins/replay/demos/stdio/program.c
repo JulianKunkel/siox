@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
 	if ( fd != -1 )
 	{
 		write(fd, "abc", 3);
+		lseek(fd, 6, SEEK_SET);
 		write(fd, "def", 3);
 		close(fd);
 	}
