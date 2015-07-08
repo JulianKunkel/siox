@@ -16,7 +16,7 @@
 // Replay related globals
 int issued = 3;	// 3 will be first issued by this replayer
 std::map<int,int> fds;
-std::map<int,FILE*> streams;
+std::map<long,FILE*> streams;
 std::map<int,int> activityHashTable_int;
 std::map<int,int> activityHashTable_network_int;
 
@@ -212,7 +212,7 @@ static char * shared_byte_buffer(unsigned int size){
 void dump_fds() {
 	printf("dump_fds()\n");
 	for (auto it=fds.begin(); it!=fds.end(); ++it) {
-        std::cout << " dm: " << it->first << " => " << it->second << '\n';
+        std::cout << " fds: " << it->first << " => " << it->second << '\n';
 	}
 	printf("dump_fds() end \n");
 }
@@ -220,7 +220,7 @@ void dump_fds() {
 void dump_streams() {
 	printf("dump_streams()\n");
 	for (auto it=streams.begin(); it!=streams.end(); ++it) {
-        std::cout << " dm: " << it->first << " => " << it->second << '\n';
+        std::cout << " streams: " << it->first << " => " << it->second << '\n';
 	}
 	printf("dump_streams() end \n");
 }
@@ -470,12 +470,22 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 			
 			std::stringstream ss;
-			ss << "filename:" << getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename");
+
+			// open(POSIX/hints/openFlags=65, POSIX/descriptor/filename="test.tmp", POSIX/descriptor/filehandle=4) = 0 
+
+			ss << "filename:" << getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename") << std::endl;
+			ss << "expected return:" << getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle") << std::endl;
 			std::cout << ss.str() << std::endl;
 
-
+			int ret = open(
+					getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+					translateSIOXFlagsToPOSIX( getActivityAttributeValueByName(activity, "POSIX", "hints/openFlags").uint32() ),
+					S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH // TODO: supply siox with rights flags converter
+				);
+			//ret = 42;
 
 			dump_fds();	
+			fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()] = ret;
 			dump_fds();	
 
 			}
@@ -496,6 +506,11 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			// ###########################################################
 			//wrapped_close(sub_activity->data);
 			printf("'- close\n");
+
+			// close(POSIX/descriptor/filehandle=4) = 0
+			int ret = close(
+					fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()]
+				);
 			}
 
 		else if( ucaid == posix_dup ) {
@@ -517,12 +532,31 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_write ) {
 			// ###########################################################
 			//wrapped_write(sub_activity->data);
+			
+			// write(POSIX/quantity/BytesToWrite=3, POSIX/descriptor/filehandle=4, POSIX/data/MemoryAddress=4196057, POSIX/quantity/BytesWritten=3) = 0
+			long size = getActivityAttributeValueByName(activity, "POSIX", "quantity/BytesToWrite").uint64();
+			int ret = write(
+					fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()],
+					shared_byte_buffer( size ),
+					size
+				);
+
+			// TODO: assert(ret == expected);
+
 			printf("'- write\n");
 			}
 
 		else if( ucaid == posix_read ) {
 			// ###########################################################
 			//wrapped_read(sub_activity->data);
+			
+			long size = getActivityAttributeValueByName(activity, "POSIX", "quantity/BytesToRead").uint64();
+			int ret = read(
+					fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()],
+					shared_byte_buffer( size ),
+					size
+				);
+
 			printf("'- read\n");
 			}
 
@@ -581,6 +615,18 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_lseek ) {
 			// ###########################################################
 			//wrapped_lseek(sub_activity->data);
+			
+			// lseek(POSIX/descriptor/filehandle=4, POSIX/file/position=6)
+			int ret = lseek(
+					fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()],
+					getActivityAttributeValueByName(activity, "POSIX", "file/position").uint64(),
+					SEEK_SET
+				);
+
+			// TODO: siox convert seeks flags? though siox is always taking the absolute position? => SEEK_SET
+			
+				
+
 			printf("'- lseek\n");
 			}
 
@@ -625,11 +671,19 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			//wrapped_fopen(sub_activity->data);
 			printf("'- fopen\n");
 		
-			// TODO: get stream attribute
+			// fopen(POSIX/descriptor/filename="test.tmp", POSIX/hints/openFlags=577, POSIX/descriptor/filehandle=4, POSIX/descriptor/FilePointer=32507344) = 0
+
 
 			//ret = open(d->pathname, flags, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH );
 			//activityHashTable_int[d->ret] = ret;
-			
+	
+			FILE* ret = NULL;
+
+			dump_streams();	
+			streams[getActivityAttributeValueByName(activity, "POSIX", "descriptor/FilePointer").uint64()] = ret;
+			dump_streams();	
+
+
 			}
 
 		else if( ucaid == posix_fopen64 ) {
@@ -695,6 +749,9 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_fwrite ) {
 			// ###########################################################
 			//wrapped_fwrite(sub_activity->data);
+		
+			// fwrite(POSIX/quantity/BytesToWrite=3, POSIX/descriptor/FilePointer=32507344, POSIX/data/MemoryAddress=4196217, POSIX/quantity/BytesWritten=3) = 0
+
 			printf("'- fwrite\n");
 			}
 
