@@ -16,7 +16,7 @@
 // Replay related globals
 int issued = 3;	// 3 will be first issued by this replayer
 std::map<int,int> fds;
-std::map<int,FILE> streams;
+std::map<int,FILE*> streams;
 std::map<int,int> activityHashTable_int;
 std::map<int,int> activityHashTable_network_int;
 
@@ -209,12 +209,20 @@ static char * shared_byte_buffer(unsigned int size){
 }
 
 
-void dump_map() {
-	printf("dump_map()\n");
-	for (auto it=activityHashTable_int.begin(); it!=activityHashTable_int.end(); ++it) {
+void dump_fds() {
+	printf("dump_fds()\n");
+	for (auto it=fds.begin(); it!=fds.end(); ++it) {
         std::cout << " dm: " << it->first << " => " << it->second << '\n';
 	}
-	printf("dump_map() end \n");
+	printf("dump_fds() end \n");
+}
+
+void dump_streams() {
+	printf("dump_streams()\n");
+	for (auto it=streams.begin(); it!=streams.end(); ++it) {
+        std::cout << " dm: " << it->first << " => " << it->second << '\n';
+	}
+	printf("dump_streams() end \n");
 }
 
 
@@ -251,397 +259,6 @@ static bool convert_attribute_back( OntologyAttribute & oa, const VariableDataty
 
 
 
-
-
-/**
- * set posix_* to cuid
- *
- */
-void set_posix_map( string activity_name, int ucaid ) {
-	
-
-	std::stringstream ss;
-	ss << "set_posix_map:" << activity_name << " <=> " << ucaid;
-	std::cout << ss.str() << std::endl;
-
-
-	//string activity_name = sys_info->lookup_activity_name( activity->ucaid() );  // e.g. fwrite, fread,  read, write...
-
-	// open
-	if ( str_open.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_open<<END
-	} else
-
-	// creat
-	if ( str_creat.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_creat<<END
-	} else
-
-	// open64
-	if ( str_open64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_open64<<END
-	} else
-
-	// creat64
-	if ( str_creat64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_creat64<<END
-	} else
-
-	// close
-	if ( str_close.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_close<<END
-	} else
-
-	// dup
-	if ( str_dup.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_dup<<END
-	} else
-
-	// dup2
-	if ( str_dup2.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_dup2<<END
-	} else
-
-	// dup3
-	if ( str_dup3.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_dup3<<END
-	} else
-
-	// sendfile
-	if ( str_sendfile.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_sendfile<<END
-	} else
-
-	// write
-	if ( str_write.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_write<<END
-	} else
-
-	// read
-	if ( str_read.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_read<<END
-	} else
-
-	// writev
-	if ( str_writev.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_writev<<END
-	} else
-
-	// readv
-	if ( str_readv.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_readv<<END
-	} else
-
-	// pwrite
-	if ( str_pwrite.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_pwrite<<END
-	} else
-
-	// pread
-	if ( str_pread.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_pread<<END
-	} else
-
-	// pwrite64
-	if ( str_pwrite64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_pwrite64<<END
-	} else
-
-	// pread64
-	if ( str_pread64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_pread64<<END
-	} else
-
-	// pwritev
-	if ( str_pwritev.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_pwritev<<END
-	} else
-
-	// preadv
-	if ( str_preadv.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_preadv<<END
-	} else
-
-	// pwritev64
-	if ( str_pwritev64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_pwritev64<<END
-	} else
-
-	// preadv64
-	if ( str_preadv64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_preadv64<<END
-	} else
-
-	// sync
-	if ( str_sync.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_sync<<END
-	} else
-
-	// fsync
-	if ( str_fsync.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fsync<<END
-	} else
-
-	// fdatasync
-	if ( str_fdatasync.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fdatasync<<END
-	} else
-
-	// lseek
-	if ( str_lseek.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_lseek<<END
-	} else
-
-	// posix_fadvise
-	if ( str_posix_fadvise.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_posix_fadvise<<END
-	} else
-
-	// remove
-	if ( str_remove.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_remove<<END
-	} else
-
-	// rename
-	if ( str_rename.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_rename<<END
-	} else
-
-	// __xstat64
-	if ( str___xstat64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX___xstat64<<END
-	} else
-
-	// __lxstat64
-	if ( str___lxstat64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX___lxstat64<<END
-	} else
-
-	// __fxstat64
-	if ( str___fxstat64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX___fxstat64<<END
-	} else
-
-	// __fxstat
-	if ( str___fxstat.compare(activity_name) == 0) {
-		//BEGIN>>POSIX___fxstat<<END
-	} else
-
-	// mmap
-	if ( str_mmap.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_mmap<<END
-	} else
-
-	// mmap64
-	if ( str_mmap64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_mmap64<<END
-	} else
-
-	// fopen
-	if ( str_fopen.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fopen<<END
-	} else
-
-	// fopen64
-	if ( str_fopen64.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fopen64<<END
-	} else
-
-	// fdopen
-	if ( str_fdopen.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fdopen<<END
-	} else
-
-	// fileno
-	if ( str_fileno.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fileno<<END
-	} else
-
-	// freopen
-	if ( str_freopen.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_freopen<<END
-	} else
-
-	// tmpfile
-	if ( str_tmpfile.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_tmpfile<<END
-	} else
-
-	// fclose
-	if ( str_fclose.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fclose<<END
-	} else
-
-	// fflush
-	if ( str_fflush.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fflush<<END
-	} else
-
-	// fgetc
-	if ( str_fgetc.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fgetc<<END
-	} else
-
-	// getc
-	if ( str_getc.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_getc<<END
-	} else
-
-	// fputc
-	if ( str_fputc.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fputc<<END
-	} else
-
-	// putc
-	if ( str_putc.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_putc<<END
-	} else
-
-	// fgets
-	if ( str_fgets.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fgets<<END
-	} else
-
-	// fputs
-	if ( str_fputs.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fputs<<END
-	} else
-
-	// fread
-	if ( str_fread.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fread<<END
-	} else
-
-	// fwrite
-	if ( str_fwrite.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fwrite<<END
-	} else
-
-	// fseeko
-	if ( str_fseeko.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fseeko<<END
-	} else
-
-	// fseek
-	if ( str_fseek.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fseek<<END
-	} else
-
-	// setbuf
-	if ( str_setbuf.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_setbuf<<END
-	} else
-
-	// setvbuf
-	if ( str_setvbuf.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_setvbuf<<END
-	} else
-
-	// unlink
-	if ( str_unlink.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_unlink<<END
-	} else
-
-	// vfprintf
-	if ( str_vfprintf.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_vfprintf<<END
-	} else
-
-	// vfscanf
-	if ( str_vfscanf.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_vfscanf<<END
-	} else
-
-	// fscanf
-	if ( str_fscanf.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fscanf<<END
-	} else
-
-	// fprintf
-	if ( str_fprintf.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fprintf<<END
-	} else
-
-	// aio_read
-	if ( str_aio_read.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_aio_read<<END
-	} else
-
-	// aio_write
-	if ( str_aio_write.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_aio_write<<END
-	} else
-
-	// lio_listio
-	if ( str_lio_listio.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_lio_listio<<END
-	} else
-
-	// aio_suspend
-	if ( str_aio_suspend.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_aio_suspend<<END
-	} else
-
-	// aio_cancel
-	if ( str_aio_cancel.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_aio_cancel<<END
-	} else
-
-	// fork
-	if ( str_fork.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_fork<<END
-	} else
-
-	// lockf
-	if ( str_lockf.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_lockf<<END
-	} else
-
-	// flock
-	if ( str_flock.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_flock<<END
-	} else
-
-	// socket
-	if ( str_socket.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_socket<<END
-	} else
-
-	// setsockopt
-	if ( str_setsockopt.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_setsockopt<<END
-	} else
-
-	// pipe
-	if ( str_pipe.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_pipe<<END
-	} else
-
-	// pipe2
-	if ( str_pipe2.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_pipe2<<END
-	} else
-
-	// socketpair
-	if ( str_socketpair.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_socketpair<<END
-	} else
-
-	// accept
-	if ( str_accept.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_accept<<END
-	} else
-
-	// accept4
-	if ( str_accept4.compare(activity_name) == 0) {
-		//BEGIN>>POSIX_accept4<<END
-	} else
-	{
-		// no match 
-	}
- 
-
-}
 
 
 ComponentOptions* ReplayPlugin::AvailableOptions()
@@ -740,9 +357,8 @@ bool ReplayPlugin::strattribute_compare( const Attribute& attribute, const char*
 
 
 
-void ReplayPlugin::getActivityAttributeValueByName(  std::shared_ptr<Activity> a, const char * domain, const char * name, void * buf )
+const AttributeValue ReplayPlugin::getActivityAttributeValueByName(  std::shared_ptr<Activity> a, const char * domain, const char * name) throw( NotFoundError )
 {
-	
 	try {
 		
 		UniqueInterfaceID uid = sys_info->lookup_interface_of_activity( a->ucaid() );
@@ -751,12 +367,10 @@ void ReplayPlugin::getActivityAttributeValueByName(  std::shared_ptr<Activity> a
 
 		for( auto itr = a->attributeArray().begin() ; itr != a->attributeArray().end(); itr++ ) {
 			if ( itr->id == oa.aID ){
-				// activity has attribute write to buf
-				// TODO: buf = (void *) a->value;
-				convert_attribute_back(oa, itr->value, buf);
-				break; // TODO: check if multiple instances of same attribute are allowed
+				// activity has attribute, return value
+				return itr->value;
 			} else {
-				// not found
+				// not found in this iteration
 			}
 		}
 
@@ -853,6 +467,17 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			// ###########################################################
 			//wrapped_open(sub_activity->data);
 			printf("'- open\n");
+
+			
+			std::stringstream ss;
+			ss << "filename:" << getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename");
+			std::cout << ss.str() << std::endl;
+
+
+
+			dump_fds();	
+			dump_fds();	
+
 			}
 
 		else if( ucaid == posix_creat ) {
