@@ -552,7 +552,7 @@ class JXMLOutputGenerator(OutputGenerator):
   
         print("\nnamespace j_xml_serialization{", file=self.fh)
 
-        print("void serialize(%(CLASS)s &obj, stringstream & s, int intent = 0, const string & name = \"%(CLASS)s\"){"  % self.mapping, file = self.fh)
+        print("void serialize(%(CLASS)s &obj, std::stringstream & s, int intent = 0, const string & name = \"%(CLASS)s\"){"  % self.mapping, file = self.fh)
         if self.options.debug:
             print("printf(\"DEBUG serialize(%(CLASS)s)\\n\");" % self.mapping , file = self.fh)
 
@@ -568,7 +568,7 @@ class JXMLOutputGenerator(OutputGenerator):
         print("}", file = self.fh)
 
 
-        print("void deserialize(%(CLASS)s &obj, stringstream & s, const string & name = \"%(CLASS)s\") {"  % self.mapping, file = self.fh)
+        print("void deserialize(%(CLASS)s &obj, std::stringstream & s, const string & name = \"%(CLASS)s\") {"  % self.mapping, file = self.fh)
         if self.options.debug:
             print("printf(\"DEBUG deserialize(%(CLASS)s)\\n\");" % self.mapping , file = self.fh)
 
@@ -586,8 +586,8 @@ class JXMLOutputGenerator(OutputGenerator):
         # instantiate templates only if a parent class exists.
         if len(self.parentClassnames) > 0:
             self.lastWords.append("""
-                template void WRAPPER_serialize(%(CLASS)s * in, stringstream & s);
-                template void WRAPPER_deserialize(%(CLASS)s * in, stringstream & s);
+                template void WRAPPER_serialize(%(CLASS)s * in, std::stringstream & s);
+                template void WRAPPER_deserialize(%(CLASS)s * in, std::stringstream & s);
                 """ % self.mapping)
 
         print("}\n", file=self.fh)
@@ -616,14 +616,14 @@ class JXMLOutputGenerator(OutputGenerator):
             namespace j_xml_serialization{
 
                 template<typename TYPE>
-                void WRAPPER_serialize(TYPE * in, stringstream & s){
+                void WRAPPER_serialize(TYPE * in, std::stringstream & s){
                     core::Container * a = (core::Container*) in;
                     //printf("CALLING S %%s\\n", typeid(*in).name());
                     serialize(*dynamic_cast<TYPE*>(a), s);
                 }
 
                 template<typename TYPE>
-                void WRAPPER_deserialize(TYPE * in, stringstream & s){
+                void WRAPPER_deserialize(TYPE * in, std::stringstream & s){
                     //printf("CALLING D %%s\\n", typeid(*in).name());
                     core::Container * a = (core::Container*) in;
                     deserialize(*dynamic_cast<TYPE*>(a), s);
@@ -634,13 +634,13 @@ class JXMLOutputGenerator(OutputGenerator):
                 // We add this code to simplify parsing from strings.            
                 template <typename TYPE>
                 static void deserialize(TYPE & t, const string & str, const string & name){
-                   stringstream s(str);
+                   std::stringstream s(str);
                    deserialize(t, s, name);
                 }
 
                 template <typename TYPE>
                 static void deserialize(TYPE & t, const string & str){
-                   stringstream s(str);
+                   std::stringstream s(str);
                    deserialize(t, s);
                 }
                 /////////////////////////////////////
