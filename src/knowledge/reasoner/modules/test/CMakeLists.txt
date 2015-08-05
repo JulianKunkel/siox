@@ -14,6 +14,7 @@ target_link_libraries(
 	siox-core-ModuleLoader
 	siox-knowledge-ReasonerStandardImplementation
 	siox-core-comm-gio
+	pthread
 )
 add_test(
 	knowledge-reasoner-modules-reasoner-test
@@ -30,6 +31,7 @@ target_link_libraries(
 	siox-core-ModuleLoader
 	siox-knowledge-ReasonerStandardImplementation
 	siox-core-comm-gio
+	pthread
 )
 add_test(
 	knowledge-reasoner-modules-reasoner-test-raw
