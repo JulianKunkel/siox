@@ -42,10 +42,10 @@ namespace core {
       void * fp= dlsym(NULL, symbol.str().c_str());
       if (fp == NULL){
          // check second alternative, since GCC 5.1
-         symbol = stringstream();
-         symbol << "_ZN19j_xml_serialization" << substr << name;
-         symbol << "EEvPT_RNSt7__cxx1118basic_stringstreamIcSt11char_traitsIcESaIcEEE";
-         fp = dlsym(NULL, symbol.str().c_str());
+         stringstream symbol2;
+         symbol2 << "_ZN19j_xml_serialization" << substr << name;
+         symbol2 << "EEvPT_RNSt7__cxx1118basic_stringstreamIcSt11char_traitsIcESaIcEEE";
+         fp = dlsym(NULL, symbol2.str().c_str());
 
          if (fp == NULL){
             cerr << "ERROR could not find required symbol for container serialization " << symbol.str() << endl;
