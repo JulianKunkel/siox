@@ -1,6 +1,6 @@
 #include <sys/types.h>
 #include <unistd.h>
-
+#include <errno.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -90,7 +90,10 @@ void ActivityBinWriterPlugin::start( ) {
 	 		printf("using a buffer_size of %lld\n", (long long int) buffer_size);
 	 		this->buf = (char*) malloc(buffer_size); 	
 	 	}
-	 	setvbuf(file, this->buf, _IOFBF, buffer_size);
+	 	int ret = setvbuf(file, this->buf, _IOFBF, buffer_size);
+	 	if (ret != 0){
+	 		printf("Error using setvbuf() %s\n", strerror(errno));
+	 	}
 	}
 	ActivityMultiplexerPlugin::start();
 }
