@@ -81,7 +81,17 @@ void ActivityBinWriterPlugin::start( ) {
 		printf("Error in %s %s, disabling plugin \n", __FILE__, strerror(errno));
 	}else{
 		multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( & ActivityBinWriterPlugin::Notify ), false );
-	}	
+		size_t buffer_size = 256*1024;
+	 	if (getenv("SIOX_ACTIVITY_WRITER_BUFFER_SIZE")){
+	 		buffer_size = atoll(getenv("SIOX_ACTIVITY_WRITER_BUFFER_SIZE"));
+	 		if (buffer_size < 4096){
+	 			buffer_size = 4096;
+	 		}
+	 		printf("using a buffer_size of %lld\n", (long long int) buffer_size);
+	 		this->buf = (char*) malloc(buffer_size); 	
+	 	}
+	 	setvbuf(file, this->buf, _IOFBF, buffer_size);
+	}
 	ActivityMultiplexerPlugin::start();
 }
 
@@ -90,13 +100,15 @@ void ActivityBinWriterPlugin::stop( ) {
 		fclose(file);
 		multiplexer->unregisterCatchall( this, false );
 		file = nullptr;
+
+		free(this->buf);
 	}	
 
 	ActivityMultiplexerPlugin::stop();
 }
 
 void ActivityBinWriterPlugin::finalize() {
-	ActivityMultiplexerPlugin::finalize();
+	ActivityMultiplexerPlugin::finalize();	
 }
 
 ActivityBinWriterPlugin::~ActivityBinWriterPlugin() {
