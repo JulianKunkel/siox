@@ -27,6 +27,9 @@
 #include <core/component/Component.hpp>
 #include <tools/TraceReader/activity_stream/ActivityInputStreamPluginOptions.hpp>
 
+
+#include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
+
 namespace tools {
 
 	/**
@@ -42,6 +45,7 @@ namespace tools {
 			 * @return next activity
 			 */
 			virtual std::shared_ptr<monitoring::Activity> nextActivity() = 0;
+			virtual monitoring::ActivityMultiplexer* getTargetMultiplexer() = 0;
 			virtual ~ActivityInputStreamPlugin(){}
 	}; /* -----  end of class TraceReader  ----- */
 

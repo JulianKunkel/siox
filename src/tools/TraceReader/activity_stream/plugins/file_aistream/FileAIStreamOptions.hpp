@@ -23,10 +23,13 @@
 #include <string>
 #include <tools/TraceReader/activity_stream/ActivityInputStreamPluginOptions.hpp>
 
+#include <core/component/ComponentReference.hpp>
+
 //@serializable
 class FileAIStreamOptions : public tools::ActivityInputStreamPluginOptions {
- public:
-	 std::string filename; // contains a sequence of activities
- };
+	public:
+		core::ComponentReference target_multiplexer;
+		std::string filename; // contains a sequence of activities
+};
 
 #endif   /* ----- #ifndef FileAIStreamOptions_INC  ----- */

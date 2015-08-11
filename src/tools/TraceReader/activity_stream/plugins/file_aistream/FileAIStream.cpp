@@ -37,8 +37,9 @@ namespace tools {
 
 
 	void FileAIStream::init() {
-		FileAIStreamOptions& opts = getOptions<FileAIStreamOptions>();
-		std::string filename = opts.filename;	
+		FileAIStreamOptions& options = getOptions<FileAIStreamOptions>();
+		std::string filename = options.filename;	
+		out = GET_INSTANCE(ActivityMultiplexer, options.target_multiplexer);
 		m_activity_deserializer->loadTrace(filename);
 	}
 
@@ -60,7 +61,9 @@ namespace tools {
 		return  std::shared_ptr<monitoring::Activity>{nullptr};
 	}
 
-
+	monitoring::ActivityMultiplexer* FileAIStream::getTargetMultiplexer() {
+		return out;
+	}
 
 	extern "C" {
 		void* TOOLS_ACTIVITY_INPUT_STREAM_PLUGIN_INSTANCIATOR_NAME ()

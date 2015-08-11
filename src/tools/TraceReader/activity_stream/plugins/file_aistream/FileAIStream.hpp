@@ -9,6 +9,9 @@
 #include <tools/TraceReader/activity_stream/ActivityInputStreamPluginImplementation.hpp>
 #include "FileAIStreamOptions.hpp"
 
+
+#include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
+
 namespace tools {
 
 	class FileAIStream : public tools::ActivityInputStreamPlugin {
@@ -16,12 +19,15 @@ namespace tools {
 			FileAIStream();
 			virtual ~FileAIStream();
 			std::shared_ptr<monitoring::Activity> nextActivity() override;
+			monitoring::ActivityMultiplexer* getTargetMultiplexer() override;
 			core::ComponentOptions* AvailableOptions() override {return new FileAIStreamOptions{};}
 			void init() override;
 
 		private:
 			monitoring::ActivitySerializationPlugin* m_activity_deserializer = nullptr;
 			std::string m_filename;
+			/* Receiving ActivityMultiplexer */
+			ActivityMultiplexer * out = nullptr;
 	};
 
 }		/* -----  end of namespace tools  ----- */
