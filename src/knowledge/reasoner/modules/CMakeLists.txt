@@ -25,6 +25,6 @@ siox_run_binary_serializer( ReasonerCommunicationMessage.hpp ReasoningDatatypesS
 
 siox_run_serializer(ReasonerStandardImplementationOptions.hpp ReasonerStandardImplementationOptions.cpp)
 
-add_subdirectory(test)
+#add_subdirectory(test)
 
 install(TARGETS siox-knowledge-ReasonerStandardImplementation LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
