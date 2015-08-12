@@ -15,6 +15,7 @@ add_subdirectory(access_info_plotter)
 add_subdirectory(print)
 add_subdirectory(replay)
 add_subdirectory(mutator)
+add_subdirectory(modify-filepath)
 add_subdirectory(CSVExtractor)
 
 if (PostgreSQL_FOUND)

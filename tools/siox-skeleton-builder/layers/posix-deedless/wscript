@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+# encoding: utf-8
+import os.path
+from subprocess import call
+import sys
+
+def options(opt):
+	opt.load('compiler_c waf_unit_test')
+        gr = opt.get_option_group('configure options')
+	gr.add_option('--siox', action='store', dest="SIOX", help='Directory to the SIOX installation')
+	gr.add_option('--label', action='store', dest="LABEL", default="", help='Add a label to the library, e.g. for multiple versions')
+	gr.add_option('--siox-test-implementation', action='store', dest="SIOX_LL_IMPLEMENTATION", help='Directory to a testing SIOX low-level API to use')
+	gr.add_option('-d', action='store_true', default=False, dest='debug', help="Enable debugging mode")
+
+def configure(conf):
+	conf.load('compiler_c waf_unit_test')
+        conf.load('waf_unit_test')
+
+	conf.check_cfg(package='glib-2.0', uselib_store='GLIB',  args=['--cflags', '--libs'], mandatory=True)
+	conf.check_cc(lib='dl', uselib_store='DL', mandatory = True)
+
+	conf.env.append_value('LIBPATH', ["/usr/local/lib","/usr/local/lib64"])
+
+	if conf.options.SIOX_LL_IMPLEMENTATION:
+		conf.env.append_value('LIBPATH', [conf.options.SIOX_LL_IMPLEMENTATION])
+		conf.env.LIBPATH_SIOX_LL = conf.options.SIOX_LL_IMPLEMENTATION
+		conf.check_cc(lib='siox-monitoring-siox-ll',  uselib_store='SIOX_LL', mandatory = True)
+
+	conf.env.LIB_SIOX_LL = ["siox-monitoring-siox-ll"]
+
+	if conf.options.SIOX:
+		conf.env.append_value('INCLUDES', [conf.options.SIOX + '/include', "." ])
+		conf.env.append_value('LIBPATH', [conf.options.SIOX + '/lib' ])
+		conf.env.append_value('LINKFLAGS', ["-Wl,-rpath-link=" + conf.options.SIOX + "/lib"])
+		conf.check(header_name='C/siox.h', features='c cprogram', use="SIOX_DIR", mandatory = True)
+	else:
+		conf.check(header_name='C/siox.h', features='c cprogram', mandatory = True)
+
+        # also find header files in current dir
+	conf.env.append_value('INCLUDES', ['.' ])
+
+	conf.check_cc(lib='siox-monitoring-siox-ll', mandatory = True)
+
+	if not conf.options.SIOX_LL_IMPLEMENTATION:
+		conf.env.LIBPATH_SIOX_LL = os.path.dirname(conf.find_file('libsiox-monitoring-siox-ll.so', conf.env.LIBPATH))
+
+	# conf.env.append_value('LIBDIR', [conf.env.PREFIX + "/lib/monitoring/low-level-c/layers/"])
+
+        if not conf.options.debug:
+	        conf.env.append_value("CFLAGS", ['-std=gnu99', '-O3', '-Wall'])
+	else:
+		conf.env.append_value("CFLAGS", ['-std=gnu99', '-g', '-Wall'])
+
+	conf.env.append_value("LABEL", conf.options.LABEL )
+
+def build(bld):
+	LAYER="posix"
+	HEADER="posix-low-level-io.h"
+
+	LAYERPLAIN=LAYER
+	label = bld.env.LABEL[0]
+	if label != "":
+		LAYER=LAYER + "-" + bld.env.LABEL[0]
+
+        def wrap(task):
+		return wrapper(task, "wrap")
+
+        def dlsym(task):
+		return wrapper(task, "dlsym")
+
+        def wrapper(task, typ):
+                src = task.inputs[0].abspath()
+                tgt = task.outputs[0].abspath()
+                cmd = (bld.path.abspath() + '/../../siox-skeleton-builder.py -o %s -t ' + bld.path.abspath() + '/template.py -t %s -s %s -W libsiox-%s.wrap %s') % (tgt, bld.path.abspath() + "/../../template.py", typ, LAYER, src)
+                print("Command: "+cmd)
+                return task.exec_command(cmd)
+
+        def dummy(task):
+                cmd = ""
+                return task.exec_command(cmd)
+
+	what=((bld.path.abspath() + '/../../siox-skeleton-builder.py -o /dev/null -t %s -t ' + bld.path.abspath() + '/template.py -s wrap -W build/%s.wrap %s') % (bld.path.abspath() + "/../../template.py", LAYER, HEADER)).split(" ")
+	print("[Wrapper] " + LAYER + str(what))
+	call(what)
+
+	bld(rule=dlsym, source=HEADER, target='siox-' + LAYER + '-dlsym.c')
+	bld(rule=wrap, source=HEADER, target='siox-' + LAYER + '-wrap.c')
+
+	# Non-existing wrap file leads to race conditions when the file is not created, yet.
+	# Therefore, added a second pass.
+	wrap_file="build/" + LAYER + ".wrap"
+	wrap_linkerflags=""
+	if os.path.isfile(wrap_file):
+		wrap_linkerflags = open(wrap_file, 'r').read()
+	else:
+		print "Could not read wrapper flags, this is critical!"
+		sys.exit(1)
+
+	bld(rule=dummy, source='siox-' + LAYER + '-wrap.c', target = "libsiox-" + LAYER + ".wrap", install_path = "${LIBDIR}")
+
+	bld.shlib(includes="",  use = "GLIB SIOX_LL" ,  target = 'siox-' + LAYER + '-wrap', source = 'siox-' + LAYER + '-wrap.c', linkflags=wrap_linkerflags, rpath=bld.env.LIBPATH_SIOX_LL)
+	bld.shlib(includes="",  use = "GLIB DL SIOX_LL",  target = 'siox-' + LAYER + '-dlsym', source = 'siox-' + LAYER + '-dlsym.c', rpath=bld.env.LIBPATH_SIOX_LL)
+
+	# build tests if a dummy implementation has been selected
+	#bld.program(includes="",  source = 'test/simple.c', target = 'simple-wrap',  features='cprogram test', use =  ['siox-' + LAYER + '-wrap', "SIOX_LL", LAYER + ".wrap"] ,
+	#		linkflags=wrap_linkerflags,  install_path = None)
+	#bld.program(includes="",  source = 'test/simple.c', target = 'simple-dlsym',  features='cprogram test', use =  ['siox-' + LAYER + '-dlsym', "SIOX_LL"] ,  install_path = None)
+
+	try:
+		os.symlink(bld.path.abspath() + "/test/siox.conf", "build/siox.conf")
+	except OSError, e:
+   		pass
+
+        bld.install_files("${PREFIX}/include", "siox-datatypes-helper-" + LAYERPLAIN +".h")
+
+	##from waflib.Tools import waf_unit_test
+	##bld.add_post_fun(waf_unit_test.summary)
+
+
