@@ -51,7 +51,7 @@ vgcore.*
 *.backup
 
 # From Vim
-*.swp
+*.sw[nop]
 
 # From Mac OS X
 .DS_Store
