@@ -20,6 +20,7 @@ class ActivityBinWriterPlugin: public ActivityMultiplexerPlugin{
 	private:
 		FILE * file = nullptr;
 		mutex notify_mutex;
+		char * buf;
 	public:
 
 		void Notify( const shared_ptr<Activity> & activity, int lost );
