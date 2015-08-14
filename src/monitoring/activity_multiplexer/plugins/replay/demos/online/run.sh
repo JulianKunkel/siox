@@ -18,7 +18,7 @@ mkdir $TRACE_DIR
 cd $TRACE_DIR
 
 # symling siox.conf and create trace
-ln -s ../siox.conf
+ln -s ../siox-online.conf siox.conf
 ln -s ../siox-trace-replay.conf siox-trace-reader.conf
 #siox-inst posix-deedless ../program
 siox-inst posix ../program

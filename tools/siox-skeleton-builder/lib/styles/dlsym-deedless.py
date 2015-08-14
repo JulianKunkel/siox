@@ -10,16 +10,28 @@ class Style(skeletonBuilder.Writer):
     def writeOutput(self, options, functionList, templateParameters, precompiler):
         # open the output file for writing
         output = open(options.outputFile, 'w')
+
+        print("// DEEDLESS!", file=output)
+
         precompiler.insert(0, "define _GNU_SOURCE")
+        templateParameters["includes"].append("dlfcn.h")
+
         self.writeHeaderBegin(output, functionList, templateParameters["includes"], templateParameters["globalOnce"], precompiler);
 
-        # write all function redefinitions
+        print("static char* dllib = RTLD_NEXT;", file=output)
+
         for function in functionList:
-            print(function.getDefinitionReal(), end=';\n', sep='', file=output)
+            print(function.getDefinitionPointer(), file=output)
+        print("\tstatic int initialized_dlsym = 0;\n", file=output)
 
-        print("", file=output)
+        print("\nstatic void sioxSymbolInit() {\ninitialized_dlsym = 1;", file=output)
+        for function in functionList:
+            print(function.getDlsym(), file=output)
 
-        print("static void sioxInit() {", file=output)
+        print("}", file=output)
+
+        print("\nstatic void sioxInit() {\n", file=output)
+        print("\tif(initialized_dlsym == 0) sioxSymbolInit();", file=output)
         # write all init-templates
         for function in functionList:
             functionVariables = self.functionVariables(function)
@@ -28,7 +40,6 @@ class Style(skeletonBuilder.Writer):
                 outputString = templ.output('init', functionVariables)
                 if outputString != '':
                     print('\t', outputString, end='\n', sep='', file=output)
-        
         for function in reversed(functionList):
             functionVariables = self.functionVariables(function)
 
@@ -38,7 +49,7 @@ class Style(skeletonBuilder.Writer):
                     print('\t', outputString, end='\n', sep='', file=output)
         print("}", file=output)
 
-        print("static void sioxFinal() {", file=output)
+        print("\nstatic void sioxFinal() {", file=output)
         # write all final-functions
         for templ in function.usedTemplateList:
             outputString = templ.output('finalOnce', functionVariables)
@@ -46,7 +57,6 @@ class Style(skeletonBuilder.Writer):
                 print('\t', outputString, end='\n', sep='', file=output)
         for function in functionList:
             functionVariables = self.functionVariables(function)
-
             for templ in function.usedTemplateList:
                 outputString = templ.output('final', functionVariables)
                 if outputString != '':
@@ -54,51 +64,46 @@ class Style(skeletonBuilder.Writer):
         for templ in function.usedTemplateList:
             outputString = templ.output('finalOnceLast', functionVariables)
             if outputString != '':
-                print('\t', outputString, end='\n', sep='', file=output)                    
+                print('\t', outputString, end='\n', sep='', file=output)
+
         print("}", file=output)
 
-        # write all functions-bodies
         for function in functionList:
+
             # a variable to save the return-value
             returnType = function.type
 
-            # write the function call
             if returnType != "void":
-                functionCall = '\tret = ' + function.getCallReal() + ';\n'
+                functionCall = '\tret = ' + function.getCallPointer() + ';\n'
             else:
-                functionCall = '\t' + function.getCallReal() + ';\n'
+                functionCall = '\t' + function.getCallPointer() + ';\n'
 
-            outputString = templ.output('final', functionVariables)
+            functionVariables = self.functionVariables(function, "if(initialized_dlsym == 0) sioxSymbolInit();\n" + functionCall + "\n")
 
             # write function signature
-            print(function.getDefinitionWrap(), end='\n{\n', sep='', file=output)
+            print(function.getDefinition(), end='\n{\n', sep=' ',
+                  file=output)
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
-                if not function.rewriteCall:
-                    print("function: " + function.getDefinition() + " needs the rewriteCall annotation since it supports va_args")
-                    exit(1)
-
                 print('\tva_list valist;', file=output)
-                print('\tva_start(valist, %s);' % function.parameterList[-2].name,
+                print(
+                    '\tva_start(valist, %s);' % function.parameterList[-2].name,
                     file=output)
-                #print( '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type,  function.parameterList[-2].type), file=output)
-
+             #   print( '\t%s val = va_arg(valist, %s);' % (function.parameterList[-2].type, function.parameterList[-2].type), file=output)
                 # set the name to args
                 function.parameterList[-1].name = "val"
-
 
             if returnType != "void":
                 print('\t', returnType, ' ret = 0;', end='\n', sep='',
                       file=output)
 
-            functionVariables = self.functionVariables(function, functionCall)
             self.writeBefore(function, output, functionVariables)
 
             # write the function call
             if function.writeFunctionCall:
                 print(functionCall, file=output)
-            
+
             self.writeAfter(function, output, functionVariables)
 
             # look for va_lists because they need special treament
@@ -112,17 +117,6 @@ class Style(skeletonBuilder.Writer):
             else:
                 print('\n}', end='\n\n', file=output)
 
+        # close the file
         self.writeEnd(output, functionList)
         output.close()
-
-        # generate gcc string for the user
-        if options.wrapFile:
-            output = open(options.wrapFile, 'w')
-            gccHelper = '-Wl'
-
-            for function in functionList:
-                gccHelper = "%s,--wrap=%s" % (gccHelper, function.name)
-
-            print(gccHelper, file=output)
-            output.close()
-
