@@ -81,6 +81,7 @@ class Style(skeletonBuilder.Writer):
             functionVariables = self.functionVariables(function, "if(initialized_dlsym == 0) sioxSymbolInit();\n" + functionCall + "\n")
 
             # write function signature
+
             print(function.getDefinition(), end='\n{\n', sep=' ',
                   file=output)
 
@@ -101,8 +102,13 @@ class Style(skeletonBuilder.Writer):
             self.writeBefore(function, output, functionVariables)
 
             # write the function call
+        
+            print("""printf("deedless call ;)\\n");""", file=output)
+            print("/* > > > HERE < < < */", file=output)
+            print("/* deed ", file=output)
             if function.writeFunctionCall:
                 print(functionCall, file=output)
+            print("deed */", file=output)
 
             self.writeAfter(function, output, functionVariables)
 

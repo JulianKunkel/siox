@@ -20,8 +20,8 @@ cd $TRACE_DIR
 # symling siox.conf and create trace
 ln -s ../siox-online.conf siox.conf
 ln -s ../siox-trace-replay.conf siox-trace-reader.conf
-#siox-inst posix-deedless ../program
-siox-inst posix ../program
+siox-inst posix-deedless ../program
+#siox-inst posix ../program
 
 # symlink activities.dat1234 for convienience
 ACTIVITIES=`find . -name "activities.dat[0-9]*" | tail -n 1`

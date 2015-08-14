@@ -4,7 +4,7 @@ include_directories(
 	${SIOX_INCLUDE_DIRS}
 )
 
-set(PLUGIN_NAME ReplayPlugin)
+set(PLUGIN_NAME ReplayPluginOnline)
 
 add_library(
 	siox-monitoring-activityPlugin-${PLUGIN_NAME}
@@ -23,4 +23,5 @@ siox_run_serializer(ReplayOptions.hpp ReplayOptions.cpp)
 #add_subdirectory(test)
 
 install(TARGETS siox-monitoring-activityPlugin-${PLUGIN_NAME} LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
+
 

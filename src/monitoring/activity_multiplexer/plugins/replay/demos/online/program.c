@@ -5,7 +5,7 @@
 int main(int argc, char *argv[])
 {
 	const char * file = "test.tmp";
-	char buf[4] = "000\n";
+	char buf[4] = "zzz\n";
 	ssize_t bytes_read = -1;
 	int i = 0;
 
