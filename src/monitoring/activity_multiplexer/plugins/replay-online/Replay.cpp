@@ -20,85 +20,55 @@ std::map<long,FILE*> streams;
 std::map<int,int> activityHashTable_int;
 std::map<int,int> activityHashTable_network_int;
 
-// Replay related lookup tables and frequently used data
 
-/* string constants for initial ucaid mapping */
-std::string str_open ("open");
-std::string str_creat ("creat");
-std::string str_open64 ("open64");
-std::string str_creat64 ("creat64");
-std::string str_close ("close");
-std::string str_dup ("dup");
-std::string str_dup2 ("dup2");
-std::string str_dup3 ("dup3");
-std::string str_sendfile ("sendfile");
-std::string str_write ("write");
-std::string str_read ("read");
-std::string str_writev ("writev");
-std::string str_readv ("readv");
-std::string str_pwrite ("pwrite");
-std::string str_pread ("pread");
-std::string str_pwrite64 ("pwrite64");
-std::string str_pread64 ("pread64");
-std::string str_pwritev ("pwritev");
-std::string str_preadv ("preadv");
-std::string str_pwritev64 ("pwritev64");
-std::string str_preadv64 ("preadv64");
-std::string str_sync ("sync");
-std::string str_fsync ("fsync");
-std::string str_fdatasync ("fdatasync");
-std::string str_lseek ("lseek");
-std::string str_posix_fadvise ("posix_fadvise");
-std::string str_remove ("remove");
-std::string str_rename ("rename");
-std::string str___xstat64 ("__xstat64");
-std::string str___lxstat64 ("__lxstat64");
-std::string str___fxstat64 ("__fxstat64");
-std::string str___fxstat ("__fxstat");
-std::string str_mmap ("mmap");
-std::string str_mmap64 ("mmap64");
-std::string str_fopen ("fopen");
-std::string str_fopen64 ("fopen64");
-std::string str_fdopen ("fdopen");
-std::string str_fileno ("fileno");
-std::string str_freopen ("freopen");
-std::string str_tmpfile ("tmpfile");
-std::string str_fclose ("fclose");
-std::string str_fflush ("fflush");
-std::string str_fgetc ("fgetc");
-std::string str_getc ("getc");
-std::string str_fputc ("fputc");
-std::string str_putc ("putc");
-std::string str_fgets ("fgets");
-std::string str_fputs ("fputs");
-std::string str_fread ("fread");
-std::string str_fwrite ("fwrite");
-std::string str_fseeko ("fseeko");
-std::string str_fseek ("fseek");
-std::string str_setbuf ("setbuf");
-std::string str_setvbuf ("setvbuf");
-std::string str_unlink ("unlink");
-std::string str_vfprintf ("vfprintf");
-std::string str_vfscanf ("vfscanf");
-std::string str_fscanf ("fscanf");
-std::string str_fprintf ("fprintf");
-std::string str_aio_read ("aio_read");
-std::string str_aio_write ("aio_write");
-std::string str_lio_listio ("lio_listio");
-std::string str_aio_suspend ("aio_suspend");
-std::string str_aio_cancel ("aio_cancel");
-std::string str_fork ("fork");
-std::string str_lockf ("lockf");
-std::string str_flock ("flock");
-std::string str_socket ("socket");
-std::string str_setsockopt ("setsockopt");
-std::string str_pipe ("pipe");
-std::string str_pipe2 ("pipe2");
-std::string str_socketpair ("socketpair");
-std::string str_accept ("accept");
-std::string str_accept4 ("accept4");
+// required to push back attributes to existing activities
+// vim ./src/include/C/siox-ll.h:198
+// vim ./src/monitoring/low-level-c/siox-ll.cpp:914
+/*
+    siox_attribute * siox_ontology_register_attribute( const char * domain, const char * name, enum siox_ont_storage_type storage_type )
+    {                                                                           
+        assert( domain != nullptr );                                            
+        assert( name != nullptr );                                              
+                                                                                
+        FUNCTION_BEGIN                                                          
+        try {                                                                   
+            OntologyAttribute ret = process_data->ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
+            return convertOntologyAttributeToPtr(ret);                          
+        } catch( IllegalStateError & e ) {                                      
+            return nullptr;                                                     
+        }                                                                       
+    }     
+*/
 
-/* fixed map for giant switch */
+// Ontology->register_attribute
+/*
+./src/monitoring/ontology/modules/TopologyOntology/TopologyOntology.cpp:62
+./src/monitoring/ontology/modules/file-ontology/FileOntology.cpp:121
+*/
+
+
+static siox_attribute *dataChar;                                                
+static siox_attribute *dataCount;                                               
+static siox_attribute *memoryAddress;                                           
+static siox_attribute *filePointer;                                             
+static siox_attribute *bytesToRead;                                             
+static siox_attribute *bytesToWrite;                                            
+static siox_attribute *filePosition;                                            
+static siox_attribute *fileExtent;                                              
+static siox_attribute *fileMemoryRegions;                                       
+static siox_attribute *fileOpenFlags;                                           
+static siox_attribute *fileName;                                                
+static siox_attribute *fileSystem;                                              
+static siox_attribute *fileHandle;                                              
+static siox_attribute *bytesWritten;                                            
+static siox_attribute *bytesRead;                                               
+static siox_attribute *fileAdviseExtent;                                        
+static siox_attribute *fileAdvise;                                              
+static siox_attribute *fileBufferSize;                                          
+static siox_attribute *fileBufferMode;  
+
+
+// fixed map for giant switch
 int posix_open = -1;
 int posix_creat = -1;
 int posix_open64 = -1;
@@ -397,7 +367,7 @@ const AttributeValue ReplayPlugin::getActivityAttributeValueByName(  std::shared
 void ReplayPlugin::findUcaidMapping() 
 {
 
-	// TODO: API: get cuid by by name, would simplefy everything imensely
+	// TODO: API: get cuid by by name, would simplify everything imensely
 
 	std::stringstream ss;
 
@@ -406,25 +376,33 @@ void ReplayPlugin::findUcaidMapping()
 		//virtual UniqueInterfaceID           lookup_interfaceID( const string & interface, const string & implementation ) const throw( NotFoundError )  = 0;
 		UniqueInterfaceID uiid = sys_info->lookup_interfaceID("POSIX", "");
 
+
+		std::cout << "FindUcaidMapping: interface by name\n";
+
 		// stdio	
 		posix_open = sys_info->lookup_activityID(uiid, "open"); ss << "open" << " <=> " << posix_open << " <=> " << sys_info->lookup_activity_name( posix_open ) << std::endl;
 		posix_read = sys_info->lookup_activityID(uiid, "read"); ss << "read" << " <=> " << posix_read << " <=> " << sys_info->lookup_activity_name( posix_read ) << std::endl;
 		posix_write = sys_info->lookup_activityID(uiid, "write"); ss << "write" << " <=> " << posix_write << " <=> " << sys_info->lookup_activity_name( posix_write ) << std::endl;
 		posix_close = sys_info->lookup_activityID(uiid, "close"); ss << "close" << " <=> " << posix_close << " <=> " << sys_info->lookup_activity_name( posix_close ) << std::endl;
 		posix_lseek = sys_info->lookup_activityID(uiid, "lseek"); ss << "lseek" << " <=> " << posix_lseek << " <=> " << sys_info->lookup_activity_name( posix_lseek ) << std::endl;
-	
+
+
+		std::cout << "FindUcaidMapping: posix\n";
+
 		// streaming I/O
 		posix_fopen = sys_info->lookup_activityID(uiid, "fopen"); ss << "fopen" << " <=> " << posix_fopen << " <=> " << sys_info->lookup_activity_name( posix_fopen ) << std::endl;
 		posix_fread = sys_info->lookup_activityID(uiid, "fread"); ss << "fread" << " <=> " << posix_fread << " <=> " << sys_info->lookup_activity_name( posix_fread ) << std::endl;
 		posix_fwrite = sys_info->lookup_activityID(uiid, "fwrite"); ss << "fwrite" << " <=> " << posix_fwrite << " <=> " << sys_info->lookup_activity_name( posix_fwrite ) << std::endl;
 		posix_fclose = sys_info->lookup_activityID(uiid, "fclose"); ss << "fclose" << " <=> " << posix_fclose << " <=> " << sys_info->lookup_activity_name( posix_fclose ) << std::endl;
 		posix_fseek = sys_info->lookup_activityID(uiid, "fseek"); ss << "fseek" << " <=> " << posix_fseek << " <=> " << sys_info->lookup_activity_name( posix_fseek ) << std::endl;
-		
+	
+		std::cout << "FindUcaidMapping: streaming\n";
 
-		std::cout << ss.str() << std::endl;;
+
+		std::cout << ss.str() << std::endl;
 
 	} catch( NotFoundError & e ) {	
-		cerr << "Interface not found!" << ss.str() << endl;
+		cerr << "Find Ucaid Mapping: Interface not found!" << ss.str() << endl;
 		//cerr << "Exception" << e << endl;
 	}
 
@@ -470,16 +448,70 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 			
 			std::stringstream ss;
-
-			// open(POSIX/hints/openFlags=65, POSIX/descriptor/filename="test.tmp", POSIX/descriptor/filehandle=4) = 0 
+			
 			int ret = open(
 					getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
 					translateSIOXFlagsToPOSIX( getActivityAttributeValueByName(activity, "POSIX", "hints/openFlags").uint32() ),
 					S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH // TODO: supply siox with rights flags converter
-				);
+			);
+
+			// open(POSIX/hints/openFlags=65, POSIX/descriptor/filename="test.tmp", POSIX/descriptor/filehandle=4) = 0 
+			//int ret = open(
+			//		getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+			//		translateSIOXFlagsToPOSIX( getActivityAttributeValueByName(activity, "POSIX", "hints/openFlags").uint32() ),
+			//		S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH // TODO: supply siox with rights flags converter
+			//	);
+
+		
+			// 1) call from instrumentation:
+			// vim build/tools/siox-skeleton-builder/layers/posix-deedless/siox-posix-deedless-dlsym.c:1799
+			/*
+			...
+			siox_activity_set_attribute(sioxActivity, fileHandle, &ret); 
+			...
+			*/
+
+	
+			// 2) within set_attribute
+			// vim ./src/monitoring/low-level-c/siox-ll.cpp:767
+			/*
+				void siox_activity_set_attribute( siox_activity * activity, siox_attribute * attribute, const void * value )
+				{                                                                           
+					assert( activity != nullptr );                                          
+					assert( attribute != nullptr );                                         
+																							
+					if( value == nullptr ) {                                                
+						return;                                                             
+					}                                                                       
+																							
+					FUNCTION_BEGIN                                                          
+																							
+					ActivityBuilder * ab = ActivityBuilder::getThreadInstance();            
+					OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);        
+					Attribute attr( oa.aID, convert_attribute( oa, value ) );               
+																							
+					ab->setActivityAttribute( activity->activity, attr );                   
+																							
+				}    
+			*/
+
+
+			// 3) within activity builder
+			// vim ./src/monitoring/activity_builder/ActivityBuilder.cpp:106
+			/*
+			void ActivityBuilder::setActivityAttribute( Activity * a, const Attribute & attribute )
+			{                                                                           
+				assert( a != nullptr );                                                 
+																						
+				a->attributeArray_.push_back( attribute );                              
+			}   
+			*/	
+
+			//// activity->attributeArray_.push_back( attribute );
+
 
 			dump_fds();	
-			fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()] = ret;
+			//fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()] = ret;
 			dump_fds();	
 
 			}
@@ -526,6 +558,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_write ) {
 			// ###########################################################
 			//wrapped_write(sub_activity->data);
+			printf("'- write\n");
 			
 			// write(POSIX/quantity/BytesToWrite=3, POSIX/descriptor/filehandle=4, POSIX/data/MemoryAddress=4196057, POSIX/quantity/BytesWritten=3) = 0
 			long size = getActivityAttributeValueByName(activity, "POSIX", "quantity/BytesToWrite").uint64();
@@ -537,12 +570,12 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 			// TODO: assert(ret == expected);
 
-			printf("'- write\n");
 			}
 
 		else if( ucaid == posix_read ) {
 			// ###########################################################
 			//wrapped_read(sub_activity->data);
+			printf("'- read\n");
 			
 			long size = getActivityAttributeValueByName(activity, "POSIX", "quantity/BytesToRead").uint64();
 			int ret = read(
@@ -551,7 +584,6 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 					size
 				);
 
-			printf("'- read\n");
 			}
 
 		else if( ucaid == posix_writev ) {
@@ -609,6 +641,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_lseek ) {
 			// ###########################################################
 			//wrapped_lseek(sub_activity->data);
+			printf("'- lseek\n");
 			
 			// lseek(POSIX/descriptor/filehandle=4, POSIX/file/position=6)
 			int ret = lseek(
@@ -621,7 +654,6 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			
 				
 
-			printf("'- lseek\n");
 			}
 
 		else if( ucaid == posix_posix_fadvise ) {
@@ -707,6 +739,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_fclose ) {
 			// ###########################################################
 			//wrapped_fclose(sub_activity->data);
+			printf("'- fclose\n");
 			
 
 
@@ -729,7 +762,6 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 	}
 */
 
-			printf("'- fclose\n");
 			}
 
 		else if( ucaid == posix_fflush ) {
@@ -798,6 +830,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_fwrite ) {
 			// ###########################################################
 			//wrapped_fwrite(sub_activity->data);
+			printf("'- fwrite\n");
 			
 
 /*
@@ -830,7 +863,6 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 				);
 
 
-			printf("'- fwrite\n");
 			}
 
 		else if( ucaid == posix_fseeko ) {
@@ -998,7 +1030,7 @@ void ReplayPlugin::printActivity( std::shared_ptr<Activity> activity )
 		siox_time_to_str( activity->time_start(), buff, false );
 
 
-		str << "REPLAY:" << " ";
+		str << "REPLAY ONLINE:" << " ";
 
 		str << buff << " ";
 

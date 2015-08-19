@@ -20,6 +20,10 @@ cd $TRACE_DIR
 # symling siox.conf and create trace
 ln -s ../siox-online.conf siox.conf
 ln -s ../siox-trace-replay.conf siox-trace-reader.conf
+# a mini run to create ontology.dat
+siox-inst posix-deedless ../program
+rm -rf activities.dat*
+# actual online run
 siox-inst posix-deedless ../program
 #siox-inst posix ../program
 
