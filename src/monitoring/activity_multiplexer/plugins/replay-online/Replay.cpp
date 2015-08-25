@@ -7,6 +7,7 @@
 #include <monitoring/ontology/Ontology.hpp>
 #include "Replay.hpp"
 
+#include <C/siox-ll.h>
 
 // Replay related includes
 #include  <map>
@@ -507,7 +508,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			}   
 			*/	
 
-			//// activity->attributeArray_.push_back( attribute );
+			activity->attributeArray_.push_back( attribute );
 
 
 			dump_fds();	
