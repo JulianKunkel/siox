@@ -222,6 +222,45 @@ void dump_streams() {
 }
 
 
+//////////////////////////////////////////////////////////////////////////////
+/// Convert an attribute's value to the generic datatype used in the ontology.
+//////////////////////////////////////////////////////////////////////////////
+/// @param attribute [in]
+/// @param value [in]
+//////////////////////////////////////////////////////////////////////////////
+/// @return
+//////////////////////////////////////////////////////////////////////////////
+	static VariableDatatype convert_attribute( OntologyAttribute & oa, const void * value )
+	{
+		AttributeValue v;
+
+		switch( oa.storage_type ) {
+			case( VariableDatatype::Type::UINT32 ):
+				return *( ( uint32_t * ) value );
+			case( VariableDatatype::Type::INT32 ): {
+				return *( ( int32_t * ) value );
+			}
+			case( VariableDatatype::Type::UINT64 ):
+				return *( ( uint64_t * ) value );
+			case( VariableDatatype::Type::INT64 ): {
+				return *( ( int64_t * ) value );
+			}
+			case( VariableDatatype::Type::FLOAT ): {
+				return  *( ( float * ) value );
+			}
+			case( VariableDatatype::Type::DOUBLE ): {
+				return  *( ( double * ) value );
+			}
+			case( VariableDatatype::Type::STRING ): {
+				return ( char * ) value;
+			}
+			case( VariableDatatype::Type::INVALID ): {
+				assert( 0 );
+			}
+		}
+		return "";
+	}
+
 static bool convert_attribute_back( OntologyAttribute & oa, const VariableDatatype & val, void * out_value ){
 	switch( val.type() ) {
 		case VariableDatatype::Type::INT32:
@@ -447,26 +486,27 @@ void ReplayPlugin::findAttributeMapping()
 
 		
 //virtual const OntologyAttribute      lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0; 
-		oa_dataChar          = facade->lookup_attribute_by_name("POSIX", "dataChar");
-		oa_dataCount         = facade->lookup_attribute_by_name("POSIX", "dataCount");
-		oa_memoryAddress     = facade->lookup_attribute_by_name("POSIX", "memoryAddress");
-		oa_filePointer       = facade->lookup_attribute_by_name("POSIX", "filePointer");
-		oa_bytesToRead       = facade->lookup_attribute_by_name("POSIX", "bytesToRead");
-		oa_bytesToWrite      = facade->lookup_attribute_by_name("POSIX", "bytesToWrite");
-		oa_filePosition      = facade->lookup_attribute_by_name("POSIX", "filePosition");
-		oa_fileExtent        = facade->lookup_attribute_by_name("POSIX", "fileExtent");
-		oa_fileMemoryRegions = facade->lookup_attribute_by_name("POSIX", "fileMemoryRegions");
-		oa_fileOpenFlags     = facade->lookup_attribute_by_name("POSIX", "fileOpenFlags");
-		oa_fileName          = facade->lookup_attribute_by_name("POSIX", "fileName");
-		oa_fileSystem        = facade->lookup_attribute_by_name("POSIX", "fileSystem");
-		oa_fileHandle        = facade->lookup_attribute_by_name("POSIX", "fileHandle");
-		oa_bytesWritten      = facade->lookup_attribute_by_name("POSIX", "bytesWritten");
-		oa_bytesRead         = facade->lookup_attribute_by_name("POSIX", "bytesRead");
-		oa_fileAdviseExtent  = facade->lookup_attribute_by_name("POSIX", "fileAdviseExtent");
-		oa_fileAdvise        = facade->lookup_attribute_by_name("POSIX", "fileAdvise");
-		oa_fileBufferSize    = facade->lookup_attribute_by_name("POSIX", "fileBufferSize");
-		oa_fileBufferMode    = facade->lookup_attribute_by_name("POSIX", "fileBufferMode");
 
+
+		oa_dataChar          = facade->lookup_attribute_by_name("POSIX"  , "data/character"         /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
+		oa_dataCount         = facade->lookup_attribute_by_name("POSIX"  , "data/count"             /*, SIOX_STORAGE_32_BIT_UINTEGER */ );
+		oa_memoryAddress     = facade->lookup_attribute_by_name("POSIX"  , "data/MemoryAddress"     /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
+		oa_filePointer       = facade->lookup_attribute_by_name("POSIX"  , "descriptor/FilePointer" /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
+		oa_bytesToRead       = facade->lookup_attribute_by_name("POSIX"  , "quantity/BytesToRead"   /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
+		oa_bytesToWrite      = facade->lookup_attribute_by_name("POSIX"  , "quantity/BytesToWrite"  /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
+		oa_filePosition      = facade->lookup_attribute_by_name("POSIX"  , "file/position"          /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
+		oa_fileExtent        = facade->lookup_attribute_by_name("POSIX"  , "file/extent"            /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
+		oa_fileMemoryRegions = facade->lookup_attribute_by_name("POSIX"  , "quantity/memoryRegions" /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
+		oa_fileOpenFlags     = facade->lookup_attribute_by_name("POSIX"  , "hints/openFlags"        /*, SIOX_STORAGE_32_BIT_UINTEGER */ );
+		oa_fileName          = facade->lookup_attribute_by_name("POSIX"  , "descriptor/filename"    /*, SIOX_STORAGE_STRING          */ );
+		oa_fileSystem        = facade->lookup_attribute_by_name("Global" , "descriptor/filesystem"  /*, SIOX_STORAGE_32_BIT_UINTEGER */ );
+		oa_fileHandle        = facade->lookup_attribute_by_name("POSIX"  , "descriptor/filehandle"  /*, SIOX_STORAGE_32_BIT_UINTEGER */ );
+		oa_bytesWritten      = facade->lookup_attribute_by_name("POSIX"  , "quantity/BytesWritten"  /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
+		oa_bytesRead         = facade->lookup_attribute_by_name("POSIX"  , "quantity/BytesRead"     /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
+		oa_fileAdviseExtent  = facade->lookup_attribute_by_name("POSIX"  , "hint/advise-extent"     /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
+		oa_fileAdvise        = facade->lookup_attribute_by_name("POSIX"  , "hints/advise"           /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
+		oa_fileBufferSize    = facade->lookup_attribute_by_name("POSIX"  , "hints/bufferSize"       /*, SIOX_STORAGE_64_BIT_INTEGER  */ );
+		oa_fileBufferMode    = facade->lookup_attribute_by_name("POSIX"  , "hints/bufferMode"       /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
 
 
 		//virtual const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0;		
@@ -573,9 +613,8 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 
 
-			//OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);        
-			//Attribute attr( oa.aID, convert_attribute( oa, value ) );               
-			//activity->attributeArray_.push_back( attr );
+			Attribute attr( oa_fileHandle.aID, convert_attribute( oa_fileHandle, &ret ) );               
+			activity->attributeArray_.push_back( attr );
 
 
 			dump_fds();	
@@ -1085,6 +1124,10 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 	} catch( NotFoundError & e ) {
 		cerr << "Error while parsing activity! Parsed so far: " << str.str() << endl;
 	}
+
+
+	printActivity(activity);
+	printf("DONE \n\n");
 
 }
 
