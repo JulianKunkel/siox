@@ -27,46 +27,71 @@ std::map<int,int> activityHashTable_network_int;
 // vim ./src/monitoring/low-level-c/siox-ll.cpp:914
 /*
     siox_attribute * siox_ontology_register_attribute( const char * domain, const char * name, enum siox_ont_storage_type storage_type )
-    {                                                                           
-        assert( domain != nullptr );                                            
-        assert( name != nullptr );                                              
-                                                                                
-        FUNCTION_BEGIN                                                          
-        try {                                                                   
+    {
+        assert( domain != nullptr );
+        assert( name != nullptr );
+
+        FUNCTION_BEGIN
+        try {
             OntologyAttribute ret = process_data->ontology->register_attribute( domain, name, ( VariableDatatype::Type ) storage_type );
-            return convertOntologyAttributeToPtr(ret);                          
-        } catch( IllegalStateError & e ) {                                      
-            return nullptr;                                                     
-        }                                                                       
-    }     
+            return convertOntologyAttributeToPtr(ret);
+        } catch( IllegalStateError & e ) {
+            return nullptr;
+        }
+    }
 */
 
 // Ontology->register_attribute
+// virtual const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0;
+
 /*
 ./src/monitoring/ontology/modules/TopologyOntology/TopologyOntology.cpp:62
 ./src/monitoring/ontology/modules/file-ontology/FileOntology.cpp:121
 */
 
 
-static siox_attribute *dataChar;                                                
-static siox_attribute *dataCount;                                               
-static siox_attribute *memoryAddress;                                           
-static siox_attribute *filePointer;                                             
-static siox_attribute *bytesToRead;                                             
-static siox_attribute *bytesToWrite;                                            
-static siox_attribute *filePosition;                                            
-static siox_attribute *fileExtent;                                              
-static siox_attribute *fileMemoryRegions;                                       
-static siox_attribute *fileOpenFlags;                                           
-static siox_attribute *fileName;                                                
-static siox_attribute *fileSystem;                                              
-static siox_attribute *fileHandle;                                              
-static siox_attribute *bytesWritten;                                            
-static siox_attribute *bytesRead;                                               
-static siox_attribute *fileAdviseExtent;                                        
-static siox_attribute *fileAdvise;                                              
-static siox_attribute *fileBufferSize;                                          
-static siox_attribute *fileBufferMode;  
+static siox_attribute *dataChar;
+static siox_attribute *dataCount;
+static siox_attribute *memoryAddress;
+static siox_attribute *filePointer;
+static siox_attribute *bytesToRead;
+static siox_attribute *bytesToWrite;
+static siox_attribute *filePosition;
+static siox_attribute *fileExtent;
+static siox_attribute *fileMemoryRegions;
+static siox_attribute *fileOpenFlags;
+static siox_attribute *fileName;
+static siox_attribute *fileSystem;
+static siox_attribute *fileHandle;
+static siox_attribute *bytesWritten;
+static siox_attribute *bytesRead;
+static siox_attribute *fileAdviseExtent;
+static siox_attribute *fileAdvise;
+static siox_attribute *fileBufferSize;
+static siox_attribute *fileBufferMode;
+
+
+static OntologyAttribute oa_dataChar;
+static OntologyAttribute oa_dataCount;
+static OntologyAttribute oa_memoryAddress;
+static OntologyAttribute oa_filePointer;
+static OntologyAttribute oa_bytesToRead;
+static OntologyAttribute oa_bytesToWrite;
+static OntologyAttribute oa_filePosition;
+static OntologyAttribute oa_fileExtent;
+static OntologyAttribute oa_fileMemoryRegions;
+static OntologyAttribute oa_fileOpenFlags;
+static OntologyAttribute oa_fileName;
+static OntologyAttribute oa_fileSystem;
+static OntologyAttribute oa_fileHandle;
+static OntologyAttribute oa_bytesWritten;
+static OntologyAttribute oa_bytesRead;
+static OntologyAttribute oa_fileAdviseExtent;
+static OntologyAttribute oa_fileAdvise;
+static OntologyAttribute oa_fileBufferSize;
+static OntologyAttribute oa_fileBufferMode;
+
+
 
 
 // fixed map for giant switch
@@ -245,6 +270,7 @@ void ReplayPlugin::initPlugin(){
 	std::cout << "Time (HH:MM:SS.NANO)\tDuration\tID\tComponent\tActivity(Attributes)\tParents = ReturnCode" << std::endl;
 
 	findUcaidMapping();
+	findAttributeMapping();
 }
 
 void ReplayPlugin::notify(const std::shared_ptr<Activity>& activity, int lost){
@@ -345,31 +371,14 @@ const AttributeValue ReplayPlugin::getActivityAttributeValueByName(  std::shared
 			}
 		}
 
-		// parent ids!?
-//		if( a->parentArray().begin() != a->parentArray().end() ) {
-//			str << " ";
-//			for( auto itr = a->parentArray().begin(); itr != a->parentArray().end(); itr++ ) {
-//				if( itr != a->parentArray().begin() ) {
-//					str << ", ";
-//				}
-//				str << *itr;
-//			}
-//		}
-
 	} catch( NotFoundError & e ) {
 		cerr << "Error while parsing activity! Parsed so far: (ommited by getActivityAttributeValueByName)" << endl;
 	}
 }
 
 
-
-
-
 void ReplayPlugin::findUcaidMapping() 
 {
-
-	// TODO: API: get cuid by by name, would simplify everything imensely
-
 	std::stringstream ss;
 
 	try {
@@ -406,13 +415,66 @@ void ReplayPlugin::findUcaidMapping()
 		cerr << "Find Ucaid Mapping: Interface not found!" << ss.str() << endl;
 		//cerr << "Exception" << e << endl;
 	}
-
-
-	//string activity_name = sys_info->lookup_activity_name( activity->ucaid() );  // e.g. fwrite, fread,  read, write...
-	//set_posix_map(activity_name, activity->ucaid());
-
 }
 
+
+
+void ReplayPlugin::findAttributeMapping() 
+{
+		std::cout << "FindAttributeMapping: interface by name\n";
+
+		/*
+		dataChar;
+		dataCount;
+		memoryAddress;
+		filePointer;
+		bytesToRead;
+		bytesToWrite;
+		filePosition;
+		fileExtent;
+		fileMemoryRegions;
+		fileOpenFlags;
+		fileName;
+		fileSystem;
+		fileHandle;
+		bytesWritten;
+		bytesRead;
+		fileAdviseExtent;
+		fileAdvise;
+		fileBufferSize;
+		fileBufferMode;
+		*/
+
+		
+//virtual const OntologyAttribute      lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0; 
+		oa_dataChar          = facade->lookup_attribute_by_name("POSIX", "dataChar");
+		oa_dataCount         = facade->lookup_attribute_by_name("POSIX", "dataCount");
+		oa_memoryAddress     = facade->lookup_attribute_by_name("POSIX", "memoryAddress");
+		oa_filePointer       = facade->lookup_attribute_by_name("POSIX", "filePointer");
+		oa_bytesToRead       = facade->lookup_attribute_by_name("POSIX", "bytesToRead");
+		oa_bytesToWrite      = facade->lookup_attribute_by_name("POSIX", "bytesToWrite");
+		oa_filePosition      = facade->lookup_attribute_by_name("POSIX", "filePosition");
+		oa_fileExtent        = facade->lookup_attribute_by_name("POSIX", "fileExtent");
+		oa_fileMemoryRegions = facade->lookup_attribute_by_name("POSIX", "fileMemoryRegions");
+		oa_fileOpenFlags     = facade->lookup_attribute_by_name("POSIX", "fileOpenFlags");
+		oa_fileName          = facade->lookup_attribute_by_name("POSIX", "fileName");
+		oa_fileSystem        = facade->lookup_attribute_by_name("POSIX", "fileSystem");
+		oa_fileHandle        = facade->lookup_attribute_by_name("POSIX", "fileHandle");
+		oa_bytesWritten      = facade->lookup_attribute_by_name("POSIX", "bytesWritten");
+		oa_bytesRead         = facade->lookup_attribute_by_name("POSIX", "bytesRead");
+		oa_fileAdviseExtent  = facade->lookup_attribute_by_name("POSIX", "fileAdviseExtent");
+		oa_fileAdvise        = facade->lookup_attribute_by_name("POSIX", "fileAdvise");
+		oa_fileBufferSize    = facade->lookup_attribute_by_name("POSIX", "fileBufferSize");
+		oa_fileBufferMode    = facade->lookup_attribute_by_name("POSIX", "fileBufferMode");
+
+
+
+		//virtual const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0;		
+
+		//OntologyAttributeFull oa = facade->lookup_attribute_by_ID( attribute.id );
+
+		// TODO
+}
 
 
 
@@ -463,37 +525,37 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			//		S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH // TODO: supply siox with rights flags converter
 			//	);
 
-		
+
 			// 1) call from instrumentation:
 			// vim build/tools/siox-skeleton-builder/layers/posix-deedless/siox-posix-deedless-dlsym.c:1799
 			/*
 			...
-			siox_activity_set_attribute(sioxActivity, fileHandle, &ret); 
+			siox_activity_set_attribute(sioxActivity, fileHandle, &ret);
 			...
 			*/
 
-	
+
 			// 2) within set_attribute
 			// vim ./src/monitoring/low-level-c/siox-ll.cpp:767
 			/*
 				void siox_activity_set_attribute( siox_activity * activity, siox_attribute * attribute, const void * value )
-				{                                                                           
-					assert( activity != nullptr );                                          
-					assert( attribute != nullptr );                                         
-																							
-					if( value == nullptr ) {                                                
-						return;                                                             
-					}                                                                       
-																							
-					FUNCTION_BEGIN                                                          
-																							
-					ActivityBuilder * ab = ActivityBuilder::getThreadInstance();            
-					OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);        
-					Attribute attr( oa.aID, convert_attribute( oa, value ) );               
-																							
-					ab->setActivityAttribute( activity->activity, attr );                   
-																							
-				}    
+				{
+					assert( activity != nullptr );
+					assert( attribute != nullptr );
+
+					if( value == nullptr ) {
+						return;       t
+					}
+
+					FUNCTION_BEGIN
+
+					ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
+					OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
+					Attribute attr( oa.aID, convert_attribute( oa, value ) );
+
+					ab->setActivityAttribute( activity->activity, attr );
+
+				}
 			*/
 
 
@@ -501,14 +563,19 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			// vim ./src/monitoring/activity_builder/ActivityBuilder.cpp:106
 			/*
 			void ActivityBuilder::setActivityAttribute( Activity * a, const Attribute & attribute )
-			{                                                                           
-				assert( a != nullptr );                                                 
-																						
-				a->attributeArray_.push_back( attribute );                              
-			}   
-			*/	
+			{
+				assert( a != nullptr );
 
-			activity->attributeArray_.push_back( attribute );
+				a->attributeArray_.push_back( attribute );
+			}
+			*/
+
+
+
+
+			//OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);        
+			//Attribute attr( oa.aID, convert_attribute( oa, value ) );               
+			//activity->attributeArray_.push_back( attr );
 
 
 			dump_fds();	
