@@ -633,11 +633,12 @@ class FunctionParser():
 
 
 class TemplateList():
-    def __init__(self):
+    def __init__(self, options):
         self.list = []
+        self.options = options
 
         if "ALL_FUNCTIONS" in template.keys():
-            self.list = [ Template( template["ALL_FUNCTIONS"], "ALL_FUNCTIONS", "" )] 
+            self.list = [ Template( template["ALL_FUNCTIONS"], "ALL_FUNCTIONS", "", self.options)] 
 
     def append(self, commandParser, template):
         self.list.append(template)
@@ -695,7 +696,7 @@ class CommandParser():
         input = open(self.inputFile, 'r')
         inputString = input.read()
         functionString = ""
-        templateList = TemplateList()
+        templateList = TemplateList(self.options)
 
         functionList = []
         # Strip commentsq
@@ -732,7 +733,7 @@ class CommandParser():
                 currentFunction = currentFunctionList[0]
                 currentFunction.setTemplateList(templateList.list[:])
                 functionList.append(currentFunction)
-                templateList = TemplateList()
+                templateList = TemplateList(self.options)
 
                 functionString = ""
             if i < len(inputLineList):
@@ -772,7 +773,7 @@ class CommandParser():
             if commandName in availableCommands:
                 commandName = match.group(1)
                 commandArgs = match.group(2) + " "
-                newTemplate = Template( template[commandName], commandName, commandArgs )
+                newTemplate = Template( template[commandName], commandName, commandArgs, self.options)
                 templateList.append(self, newTemplate)
             else:
                 if self.strictMode:
@@ -801,7 +802,7 @@ class Template():
     def __repr__(self):
         return self.__str__()
 
-    def __init__(self, templateDict, name, variables):
+    def __init__(self, templateDict, name, variables, options):
         self.templateDict = templateDict
         self.name = name
         self.parameterList = {}
@@ -820,6 +821,9 @@ class Template():
         self.currentParameterIndex = 0
         self.containsNamedParameters = False
         self.insideString = False
+
+        self.options =  options
+        self.strictMode = not options.relaxedMode
         # Generate strings for output from given input
         
 
@@ -908,7 +912,7 @@ class Template():
             else:
                 # default to an empty string in case key is not provided by template
                 # desireable e.g. when generating replay code
-                print('WARNING: Section: ', type, ' not known.', file=sys.stderr)
+                print('WARNING: Section: ', type, ' not known.', self.name, file=sys.stderr)
                 return ""
             
 

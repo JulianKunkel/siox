@@ -54,6 +54,30 @@ macro(SIOX_SKELETON_BUILDER TYPE INPUT TEMPLATE LAYER OUTPUT)
 	endif()
 endmacro(SIOX_SKELETON_BUILDER)
 
+
+macro(SIOX_SKELETON_BUILDER_RELAXED TYPE INPUT TEMPLATE LAYER OUTPUT)
+	message("-- Generating ${TYPE} skeleton for ${INPUT}.")
+   set (macro_args ${ARGN})
+   
+   list(LENGTH macro_args numArgs)
+   if (${numArgs} GREATER 0)
+   	list(GET macro_args 0 OPTIONAL_TEMPLATE)
+   	execute_process(
+		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/siox-skeleton-builder/siox-skeleton-builder.py --relaxed -s ${TYPE} -t ${TEMPLATE} -t ${OPTIONAL_TEMPLATE} -W ${LAYER}.wrap -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT} ${INPUT}
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		)
+   else()
+		execute_process(
+			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/siox-skeleton-builder/siox-skeleton-builder.py --relaxed -s ${TYPE} -t ${TEMPLATE} -W ${LAYER}.wrap -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT} ${INPUT}
+			WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		)
+	endif()
+endmacro(SIOX_SKELETON_BUILDER_RELAXED)
+
+
+
+
+
 macro(SET_LIBRARY_INSTALL_SUFFIX)
 	get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
 	if (${LIB64} STREQUAL "TRUE")
