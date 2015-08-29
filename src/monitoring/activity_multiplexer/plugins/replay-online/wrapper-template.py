@@ -124,6 +124,8 @@ template = {
 'register_attribute': {
 	'variables': 'AttributeVariable Domain Name StorageType',
 	'player_global': '''static OntologyAttribute oa_%(AttributeVariable)s;''',
+	#'player_attribute_mapper': '''oa_%(AttributeVariable)s    = facade->lookup_attribute_by_name("%(Domain)s"  , "%(Name)s"       /*, %(StorageType)s  */ );''',
+	'player_attribute_mapper': '''oa_%(AttributeVariable)s    = facade->lookup_attribute_by_name("%(Domain)s"  , "%(Name)s");''',
 	'init': '''%(AttributeVariable)s = siox_ontology_register_attribute( "%(Domain)s", "%(Name)s", %(StorageType)s ); assert(%(AttributeVariable)s != NULL);''',
     'before': '''''',
 	'after': '',

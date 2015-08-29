@@ -1,4 +1,5 @@
 #include <regex>
+#include <map>
 #include <unordered_map>
 #include <iostream>
 #include <string>
@@ -7,11 +8,10 @@
 #include <monitoring/ontology/Ontology.hpp>
 #include "Replay.hpp"
 
-#include <C/siox-ll.h>
 
 // Replay related includes
-#include  <map>
-#include "posix-low-level-io-helper.h"
+#include "posix-ll-io-helper.h"
+#include <C/siox-ll.h>			// TODO: implementation provided by siox-ll-subset.cpp
 
 
 // Replay related globals
@@ -171,6 +171,76 @@ int posix_accept = -1;
 int posix_accept4 = -1;
 
 
+//////////////////////////////////////////////////////////////////////////////
+/// Convert an attribute's value to the generic datatype used in the ontology.
+//////////////////////////////////////////////////////////////////////////////
+/// @param attribute [in]
+/// @param value [in]
+//////////////////////////////////////////////////////////////////////////////
+/// @return
+//////////////////////////////////////////////////////////////////////////////
+static VariableDatatype convert_attribute( OntologyAttribute & oa, const void * value )
+{
+	AttributeValue v;
+
+	switch( oa.storage_type ) {
+		case( VariableDatatype::Type::UINT32 ):
+			return *( ( uint32_t * ) value );
+		case( VariableDatatype::Type::INT32 ): {
+			return *( ( int32_t * ) value );
+		}
+		case( VariableDatatype::Type::UINT64 ):
+			return *( ( uint64_t * ) value );
+		case( VariableDatatype::Type::INT64 ): {
+			return *( ( int64_t * ) value );
+		}
+		case( VariableDatatype::Type::FLOAT ): {
+			return  *( ( float * ) value );
+		}
+		case( VariableDatatype::Type::DOUBLE ): {
+			return  *( ( double * ) value );
+		}
+		case( VariableDatatype::Type::STRING ): {
+			return ( char * ) value;
+		}
+		case( VariableDatatype::Type::INVALID ): {
+			assert( 0 );
+		}
+	}
+	return "";
+}
+
+static bool convert_attribute_back( OntologyAttribute & oa, const VariableDatatype & val, void * out_value ){
+	switch( val.type() ) {
+		case VariableDatatype::Type::INT32:
+			*((int32_t*) out_value) = val.int32();
+			return true;
+		case VariableDatatype::Type::UINT32:
+			*((uint32_t*) out_value) = val.uint32();
+			return true;
+		case VariableDatatype::Type::INT64:
+			*((int64_t*) out_value) = val.int64();
+			return true;
+		case VariableDatatype::Type::UINT64:
+			*((uint64_t*) out_value) = val.uint64();
+			return true;
+		case VariableDatatype::Type::FLOAT:
+			*((float*) out_value) = val.flt();
+			return true;
+		case VariableDatatype::Type::DOUBLE:
+			*((double*) out_value) = val.dbl();
+			return true;
+		case VariableDatatype::Type::STRING: {
+			*(char**) out_value = strdup(val.str());
+			return true;
+		}
+		case VariableDatatype::Type::INVALID:
+		default:
+			assert(0 && "tried to optimize for a VariableDatatype of invalid type");
+			return false;
+	}
+}
+
 
 // Replay related helpers
 /**
@@ -222,75 +292,6 @@ void dump_streams() {
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-/// Convert an attribute's value to the generic datatype used in the ontology.
-//////////////////////////////////////////////////////////////////////////////
-/// @param attribute [in]
-/// @param value [in]
-//////////////////////////////////////////////////////////////////////////////
-/// @return
-//////////////////////////////////////////////////////////////////////////////
-	static VariableDatatype convert_attribute( OntologyAttribute & oa, const void * value )
-	{
-		AttributeValue v;
-
-		switch( oa.storage_type ) {
-			case( VariableDatatype::Type::UINT32 ):
-				return *( ( uint32_t * ) value );
-			case( VariableDatatype::Type::INT32 ): {
-				return *( ( int32_t * ) value );
-			}
-			case( VariableDatatype::Type::UINT64 ):
-				return *( ( uint64_t * ) value );
-			case( VariableDatatype::Type::INT64 ): {
-				return *( ( int64_t * ) value );
-			}
-			case( VariableDatatype::Type::FLOAT ): {
-				return  *( ( float * ) value );
-			}
-			case( VariableDatatype::Type::DOUBLE ): {
-				return  *( ( double * ) value );
-			}
-			case( VariableDatatype::Type::STRING ): {
-				return ( char * ) value;
-			}
-			case( VariableDatatype::Type::INVALID ): {
-				assert( 0 );
-			}
-		}
-		return "";
-	}
-
-static bool convert_attribute_back( OntologyAttribute & oa, const VariableDatatype & val, void * out_value ){
-	switch( val.type() ) {
-		case VariableDatatype::Type::INT32:
-			*((int32_t*) out_value) = val.int32();
-			return true;
-		case VariableDatatype::Type::UINT32:
-			*((uint32_t*) out_value) = val.uint32();
-			return true;
-		case VariableDatatype::Type::INT64:
-			*((int64_t*) out_value) = val.int64();
-			return true;
-		case VariableDatatype::Type::UINT64:
-			*((uint64_t*) out_value) = val.uint64();
-			return true;
-		case VariableDatatype::Type::FLOAT:
-			*((float*) out_value) = val.flt();
-			return true;
-		case VariableDatatype::Type::DOUBLE:
-			*((double*) out_value) = val.dbl();
-			return true;
-		case VariableDatatype::Type::STRING: {
-			*(char**) out_value = strdup(val.str());
-			return true;
-		}
-		case VariableDatatype::Type::INVALID:
-		default:
-			assert(0 && "tried to optimize for a VariableDatatype of invalid type");
-			return false;
-	}
-}	
 
 
 
@@ -460,33 +461,14 @@ void ReplayPlugin::findUcaidMapping()
 
 void ReplayPlugin::findAttributeMapping() 
 {
-		std::cout << "FindAttributeMapping: interface by name\n";
+	std::stringstream ss;
 
-		/*
-		dataChar;
-		dataCount;
-		memoryAddress;
-		filePointer;
-		bytesToRead;
-		bytesToWrite;
-		filePosition;
-		fileExtent;
-		fileMemoryRegions;
-		fileOpenFlags;
-		fileName;
-		fileSystem;
-		fileHandle;
-		bytesWritten;
-		bytesRead;
-		fileAdviseExtent;
-		fileAdvise;
-		fileBufferSize;
-		fileBufferMode;
-		*/
 
-		
-//virtual const OntologyAttribute      lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0; 
+	std::cout << "FindAttributeMapping: interface by name\n";
 
+	//virtual const OntologyAttribute      lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0; 
+
+	try {
 
 		oa_dataChar          = facade->lookup_attribute_by_name("POSIX"  , "data/character"         /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
 		oa_dataCount         = facade->lookup_attribute_by_name("POSIX"  , "data/count"             /*, SIOX_STORAGE_32_BIT_UINTEGER */ );
@@ -508,12 +490,15 @@ void ReplayPlugin::findAttributeMapping()
 		oa_fileBufferSize    = facade->lookup_attribute_by_name("POSIX"  , "hints/bufferSize"       /*, SIOX_STORAGE_64_BIT_INTEGER  */ );
 		oa_fileBufferMode    = facade->lookup_attribute_by_name("POSIX"  , "hints/bufferMode"       /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
 
+	} catch( NotFoundError & e ) {	
+		cerr << "Exception during attribute mapping: Attribute not found!" << ss.str() << endl;
+		//cerr << "Exception" << e << endl;
+	}
+	//virtual const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0;		
 
-		//virtual const OntologyAttribute lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0;		
+	//OntologyAttributeFull oa = facade->lookup_attribute_by_ID( attribute.id );
 
-		//OntologyAttributeFull oa = facade->lookup_attribute_by_ID( attribute.id );
-
-		// TODO
+	// TODO
 }
 
 

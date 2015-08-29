@@ -5,7 +5,7 @@ include_directories(
 )
 
 set(LAYER "posix-player")
-siox_skeleton_builder_relaxed(play ${CMAKE_CURRENT_SOURCE_DIR}/${LAYER}-low-level-io.h ${CMAKE_CURRENT_SOURCE_DIR}/wrapper-template.py ${LAYER} siox-${LAYER}-wrapper.c  ${CMAKE_CURRENT_SOURCE_DIR}/template.py)
+siox_skeleton_builder_relaxed(play ${CMAKE_CURRENT_SOURCE_DIR}/posix-ll-io-player-annotations.h ${CMAKE_CURRENT_SOURCE_DIR}/wrapper-template.py ${LAYER} siox-${LAYER}-wrapper.c  ${CMAKE_CURRENT_SOURCE_DIR}/template.py)
 
 
 
