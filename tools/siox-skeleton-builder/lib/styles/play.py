@@ -11,27 +11,326 @@ class Style(skeletonBuilder.Writer):
     def writeOutput(self, options, functionList, templateParameters, precompiler):
         # open the output file for writing
         output = open(options.outputFile, 'w')
-        print("/**\n * GENERATED PLUGIN! - Modify carefully. May loose changes on regeneration. \n */", file=output)
+        print("/** * GENERATED PLUGIN! - Modify carefully. May loose changes on regeneration. \n */", file=output)
+
+        #######################################################################
+        # Includes
+        #######################################################################
 
         ###templateParameters["includes"].append("<feign.h>")
         ###templateParameters["includes"].append("\"datatypes.h\"")
         ###templateParameters["includes"].append("\"wrapper.h\"")
 
-
         # write all needed includes
-        for match in templateParameters["includes"]:
-            print('#include ', match, end='\n', file=output)
+        #for match in templateParameters["includes"]:
+        #    print('#include ', match, end='', file=output)
+
+        print("""
+#include <regex>
+#include <map>
+#include <unordered_map>
+#include <iostream>
+#include <string>
+
+#include <util/time.h>
+#include <monitoring/ontology/Ontology.hpp>
+#include "Replay.hpp"
+
+
+// Replay related includes
+#include "posix-ll-io-helper.h"
+#include <C/siox-ll.h>			// TODO: implementation provided by siox-ll-subset.cpp
+        """, file=output)
 
 
         #######################################################################
         # Global Variables
         #######################################################################
+        print("// ucaid mapping", file=output)
+        for function in functionList:
+            expansion_template = """static int posix_%s = -1;"""
+
+            expansion_template = expansion_template % (
+                function.name,
+               )
+            print(expansion_template, file=output)
+
+        
+        print("\n// attribute mapping", file=output)
         for function in functionList:
             functionVariables = self.functionVariables(function)
             for templ in function.usedTemplateList:
                 if templ.output('player_global') != '':
                     outputString = templ.output('player_global', functionVariables)
                     print(outputString, file=output)
+
+
+        #######################################################################
+        # Prefix Code / Init and Helpers
+        #######################################################################
+        print("""
+
+// Replay related globals
+int issued = 3;	// 3 will be first issued by this replayer
+std::map<int,int> fds;
+std::map<long,FILE*> streams;
+std::map<int,int> activityHashTable_int;
+std::map<int,int> activityHashTable_network_int;
+
+//////////////////////////////////////////////////////////////////////////////
+/// Convert an attribute's value to the generic datatype used in the ontology.
+//////////////////////////////////////////////////////////////////////////////
+/// @param attribute [in]
+/// @param value [in]
+//////////////////////////////////////////////////////////////////////////////
+/// @return
+//////////////////////////////////////////////////////////////////////////////
+static VariableDatatype convert_attribute( OntologyAttribute & oa, const void * value )
+{
+	AttributeValue v;
+
+	switch( oa.storage_type ) {
+		case( VariableDatatype::Type::UINT32 ):
+			return *( ( uint32_t * ) value );
+		case( VariableDatatype::Type::INT32 ): {
+			return *( ( int32_t * ) value );
+		}
+		case( VariableDatatype::Type::UINT64 ):
+			return *( ( uint64_t * ) value );
+		case( VariableDatatype::Type::INT64 ): {
+			return *( ( int64_t * ) value );
+		}
+		case( VariableDatatype::Type::FLOAT ): {
+			return  *( ( float * ) value );
+		}
+		case( VariableDatatype::Type::DOUBLE ): {
+			return  *( ( double * ) value );
+		}
+		case( VariableDatatype::Type::STRING ): {
+			return ( char * ) value;
+		}
+		case( VariableDatatype::Type::INVALID ): {
+			assert( 0 );
+		}
+	}
+	return "";
+}
+
+static bool convert_attribute_back( OntologyAttribute & oa, const VariableDatatype & val, void * out_value ){
+	switch( val.type() ) {
+		case VariableDatatype::Type::INT32:
+			*((int32_t*) out_value) = val.int32();
+			return true;
+		case VariableDatatype::Type::UINT32:
+			*((uint32_t*) out_value) = val.uint32();
+			return true;
+		case VariableDatatype::Type::INT64:
+			*((int64_t*) out_value) = val.int64();
+			return true;
+		case VariableDatatype::Type::UINT64:
+			*((uint64_t*) out_value) = val.uint64();
+			return true;
+		case VariableDatatype::Type::FLOAT:
+			*((float*) out_value) = val.flt();
+			return true;
+		case VariableDatatype::Type::DOUBLE:
+			*((double*) out_value) = val.dbl();
+			return true;
+		case VariableDatatype::Type::STRING: {
+			*(char**) out_value = strdup(val.str());
+			return true;
+		}
+		case VariableDatatype::Type::INVALID:
+		default:
+			assert(0 && "tried to optimize for a VariableDatatype of invalid type");
+			return false;
+	}
+}
+
+
+// Replay related helpers
+/**
+ * Special helper function to be used by write and reads, which require 
+ * buffers of certain size. The function guarentees to provide a address to
+ * a buffer of sufficient size.
+ */
+static char * shared_byte_buffer(unsigned int size){
+	static char * buffer = NULL;
+	static size_t buffer_size = 0;
+
+	if (buffer_size >= size){
+		return buffer;
+	}
+
+	// allocate memory for data to write
+	if ((buffer = (char *)realloc(buffer, size))) {
+		size_t i;
+		for (i=buffer_size; i < size; i++){
+			buffer[i] = '0';
+		}
+
+		buffer_size = size;
+
+		printf("Memory reallocated for %lld bytes\\n", (long long int) size);
+		return buffer;
+	}
+	else {
+		printf("Not enough memory available to allocate %lld bytes!\\n",  (long long int) size);
+		exit(1);
+	}
+}
+
+
+void dump_fds() {
+	printf("dump_fds()");
+	for (auto it=fds.begin(); it!=fds.end(); ++it) {
+        std::cout << " fds: " << it->first << " => " << it->second << std::endl;
+	}
+	printf("dump_fds() end ");
+}
+
+void dump_streams() {
+	printf("dump_streams()");
+	for (auto it=streams.begin(); it!=streams.end(); ++it) {
+        std::cout << " streams: " << it->first << " => " << it->second << std::endl;
+	}
+	printf("dump_streams() end ");
+}
+
+
+
+
+
+
+
+ComponentOptions* ReplayPlugin::AvailableOptions()
+{
+	return new ReplayPluginOptions{};
+}
+
+void ReplayPlugin::initPlugin(){
+	assert(multiplexer);
+	multiplexer->registerCatchall(this, static_cast<ActivityMultiplexer::Callback>(&ReplayPlugin::notify), false);
+	sys_info = facade->get_system_information();
+	assert(sys_info);
+	std::cout << "Time (HH:MM:SS.NANO)\\tDuration\\tID\\tComponent\\tActivity(Attributes)\\tParents = ReturnCode" << std::endl;
+
+	findUcaidMapping();
+	findAttributeMapping();
+}
+
+void ReplayPlugin::notify(const std::shared_ptr<Activity>& activity, int lost){
+	ReplayPluginOptions& opts = getOptions<ReplayPluginOptions>();
+	switch (opts.verbosity) {
+		case 0:
+			replayActivity( activity );
+			break;
+		case 1:
+			activity->print();
+			break;
+		default:
+			cout << "Warninig: invalid verbosity level: " << opts.verbosity << endl;
+			replayActivity( activity );
+	}
+}
+
+
+static inline void strtime( Timestamp t, stringstream & s )
+{
+	uint64_t ts = t / 1000000000ull;
+	uint64_t ns = t - ( ts * 1000000000ull );
+
+	time_t timeIns = ts;
+	struct tm * timeStruct = gmtime( & timeIns );
+
+	char buff[200];
+	strftime( buff, 199, "%F %T", timeStruct );
+
+	s << buff;
+	snprintf( buff, 20, ".%.10lld", ( long long int ) ns );
+	s << buff;
+}
+
+static inline void strdelta( Timestamp t, stringstream & s )
+{
+	uint64_t ts = t / 1000000000ull;
+	uint64_t ns = t - ( ts * 1000000000ull );
+	char buff[200];
+	snprintf( buff, 20, "%lld.%.10lld", ( long long int ) ts, ( long long int ) ns );
+	s << buff;
+}
+
+
+void ReplayPlugin::strattribute( const Attribute& attribute, std::stringstream& s ) throw( NotFoundError )
+{
+	OntologyAttributeFull oa = facade->lookup_attribute_by_ID( attribute.id );
+	s << oa.domain << "/" << oa.name << "=";
+	if( attribute.value.type() == VariableDatatype::Type::STRING){
+		s << '"' << attribute.value << '"' ;
+	}else{
+		s << attribute.value ;
+	}
+}
+
+
+bool ReplayPlugin::strattribute_compare( const Attribute& attribute, const char* attributeName) throw( NotFoundError )
+{
+	std::stringstream s;
+	std::stringstream debug_string;
+
+	OntologyAttributeFull oa = facade->lookup_attribute_by_ID( attribute.id );
+	s << oa.domain << "/" << oa.name;
+
+	//if( attribute.value.type() == VariableDatatype::Type::STRING){
+	//	s << '"' << attribute.value << '"' ;
+	//}else{
+	//	s << attribute.value ;
+	//}
+	
+	debug_string << "TR: strattribute_compare: s=" << s.str() << "";
+	cout << debug_string.str();
+
+	if ( s.str().compare(attributeName) == 0 ) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+
+
+const AttributeValue ReplayPlugin::getActivityAttributeValueByName(  std::shared_ptr<Activity> a, const char * domain, const char * name) throw( NotFoundError )
+{
+	try {
+		
+		UniqueInterfaceID uid = sys_info->lookup_interface_of_activity( a->ucaid() );
+
+		auto oa = facade->lookup_attribute_by_name( domain, name );
+
+		for( auto itr = a->attributeArray().begin() ; itr != a->attributeArray().end(); itr++ ) {
+			if ( itr->id == oa.aID ){
+				// activity has attribute, return value
+				return itr->value;
+			} else {
+				// not found in this iteration
+			}
+		}
+
+	} catch( NotFoundError & e ) {
+		cerr << "Error while parsing activity! Parsed so far: (ommited by getActivityAttributeValueByName)" << endl;
+	}
+}
+
+
+        """, file=output)
+
+
+
+
+
+
+
 
 
         #######################################################################
@@ -88,36 +387,12 @@ void ReplayPlugin::findAttributeMapping()
 	std::stringstream ss;
 
 
-	std::cout << "FindAttributeMapping: interface by name\n";
+	std::cout << "FindAttributeMapping: interface by name";
 
 	//virtual const OntologyAttribute      lookup_attribute_by_name( const string & domain, const string & name ) const throw( NotFoundError ) = 0; 
 
 	try {
         // GENERATED""", file=output)
-
-        
-	#	oa_dataChar          = facade->lookup_attribute_by_name("POSIX"  , "data/character"         /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
-	#	oa_dataCount         = facade->lookup_attribute_by_name("POSIX"  , "data/count"             /*, SIOX_STORAGE_32_BIT_UINTEGER */ );
-	#	oa_memoryAddress     = facade->lookup_attribute_by_name("POSIX"  , "data/MemoryAddress"     /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
-	#	oa_filePointer       = facade->lookup_attribute_by_name("POSIX"  , "descriptor/FilePointer" /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
-	#	oa_bytesToRead       = facade->lookup_attribute_by_name("POSIX"  , "quantity/BytesToRead"   /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
-	#	oa_bytesToWrite      = facade->lookup_attribute_by_name("POSIX"  , "quantity/BytesToWrite"  /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
-	#	oa_filePosition      = facade->lookup_attribute_by_name("POSIX"  , "file/position"          /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
-	#	oa_fileExtent        = facade->lookup_attribute_by_name("POSIX"  , "file/extent"            /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
-	#	oa_fileMemoryRegions = facade->lookup_attribute_by_name("POSIX"  , "quantity/memoryRegions" /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
-	#	oa_fileOpenFlags     = facade->lookup_attribute_by_name("POSIX"  , "hints/openFlags"        /*, SIOX_STORAGE_32_BIT_UINTEGER */ );
-	#	oa_fileName          = facade->lookup_attribute_by_name("POSIX"  , "descriptor/filename"    /*, SIOX_STORAGE_STRING          */ );
-	#	oa_fileSystem        = facade->lookup_attribute_by_name("Global" , "descriptor/filesystem"  /*, SIOX_STORAGE_32_BIT_UINTEGER */ );
-	#	oa_fileHandle        = facade->lookup_attribute_by_name("POSIX"  , "descriptor/filehandle"  /*, SIOX_STORAGE_32_BIT_UINTEGER */ );
-	#	oa_bytesWritten      = facade->lookup_attribute_by_name("POSIX"  , "quantity/BytesWritten"  /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
-	#	oa_bytesRead         = facade->lookup_attribute_by_name("POSIX"  , "quantity/BytesRead"     /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
-	#	oa_fileAdviseExtent  = facade->lookup_attribute_by_name("POSIX"  , "hint/advise-extent"     /*, SIOX_STORAGE_64_BIT_UINTEGER */ );
-	#	oa_fileAdvise        = facade->lookup_attribute_by_name("POSIX"  , "hints/advise"           /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
-	#	oa_fileBufferSize    = facade->lookup_attribute_by_name("POSIX"  , "hints/bufferSize"       /*, SIOX_STORAGE_64_BIT_INTEGER  */ );
-	#	oa_fileBufferMode    = facade->lookup_attribute_by_name("POSIX"  , "hints/bufferMode"       /*, SIOX_STORAGE_32_BIT_INTEGER  */ );
-
-
-
 
         for function in functionList:
             functionVariables = self.functionVariables(function)
@@ -139,7 +414,7 @@ void ReplayPlugin::findAttributeMapping()
         #######################################################################
         # Replay function
         #######################################################################
-        print("/** \n * Turn siox-activities into system/library activity. \n */", file=output)
+        print("/**  * Turn siox-activities into system/library activity. \n */", file=output)
         print("""void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 {
 	stringstream str;
@@ -164,7 +439,7 @@ void ReplayPlugin::findAttributeMapping()
 
 		// prepare some commonly accessed variables
 		int ucaid = activity->ucaid();
-""", end='\n', sep='', file=output)
+""", end='', sep='', file=output)
 
 
         # generate handler for every call/function
@@ -176,20 +451,20 @@ void ReplayPlugin::findAttributeMapping()
             // TODO
             %s
         } 
-        else"""
+        else """
 
             
             generated_body = StringIO.StringIO()
 
             # insert sections as specified by annotations
-            #print("\t"*3, "// GENERATED FROM TEMPLATE\n", file=generated_body)
+            #print("\t"*3, "// GENERATED FROM TEMPLATE", file=generated_body)
             #sections = ["feign_wrapper_before", "feign_wrapper_after"]
             ## insert the previous sections in that order
             #for sectionName in sections:
             #    for templ in function.usedTemplateList:
             #        outputString = templ.output(sectionName, functionVariables)
             #        if outputString != '':
-            #            print('\t', outputString, end='\n', sep='', file=generated_body)
+            #            print('\t', outputString, end='', sep='', file=generated_body)
             #print("\t"*3, "// GENERATED FROM TEMPLATE END", file=generated_body)
 
 
@@ -199,7 +474,7 @@ void ReplayPlugin::findAttributeMapping()
                     generated_body.getvalue()
                 )
 
-            print( expansion_template, end='\n', sep='', file=output)
+            print( expansion_template, end='', sep='', file=output)
 
 
         # finish the incomplete else part
@@ -216,11 +491,83 @@ void ReplayPlugin::findAttributeMapping()
 	}
 
 	printActivity(activity);
-	printf("DONE \n\n");
+	printf("DONE \\n");
 
 } // end of ReplayPlugin::replayActivity()
 """, file=output)
-        
+    
+
+
+
+        #######################################################################
+        # Remaining functionality / not generated
+        #######################################################################
+        print("""
+void ReplayPlugin::printActivity( std::shared_ptr<Activity> activity )
+{
+	stringstream str;
+	try {
+		char buff[40];
+		siox_time_to_str( activity->time_start(), buff, false );
+
+
+		str << "REPLAY ONLINE:" << " ";
+
+		str << buff << " ";
+
+		strdelta( activity->time_stop() - activity->time_start(), str );
+//		if( printHostname )
+//			str << " " << sys_info->lookup_node_hostname( a->aid().cid.pid.nid );
+
+		str  << " " << activity->aid() << " ";
+
+		UniqueInterfaceID uid = sys_info->lookup_interface_of_activity( activity->ucaid() );
+
+		str << sys_info->lookup_interface_name( uid ) << " ";
+		str << "interface:\"" << sys_info->lookup_interface_implementation( uid ) << "\" ";
+
+		str << sys_info->lookup_activity_name( activity->ucaid() ) << "(";
+		for( auto itr = activity->attributeArray().begin() ; itr != activity->attributeArray().end(); itr++ ) {
+			if( itr != activity->attributeArray().begin() ) {
+				str << ", ";
+			}
+			strattribute( *itr, str );
+		}
+		str << ")";
+		str << " = " << activity->errorValue();
+
+		if( activity->parentArray().begin() != activity->parentArray().end() ) {
+			str << " ";
+			for( auto itr = activity->parentArray().begin(); itr != activity->parentArray().end(); itr++ ) {
+				if( itr != activity->parentArray().begin() ) {
+					str << ", ";
+				}
+				str << *itr;
+			}
+		}
+
+		cout << str.str() << endl;
+
+
+	} catch( NotFoundError & e ) {
+		cerr << "Error while parsing activity! Parsed so far: " << str.str() << endl;
+	}
+}
+
+
+extern "C" {
+void* MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME ()
+	{
+		return new ReplayPlugin();
+	}
+}
+        """, file=output);
+
+
+
+
+
+
 
 
         output.close()

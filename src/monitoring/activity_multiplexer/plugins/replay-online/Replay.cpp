@@ -1170,17 +1170,6 @@ void ReplayPlugin::printActivity( std::shared_ptr<Activity> activity )
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 extern "C" {
 void* MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME ()
 	{

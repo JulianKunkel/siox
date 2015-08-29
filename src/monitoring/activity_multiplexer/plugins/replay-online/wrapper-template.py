@@ -221,13 +221,13 @@ template = {
 # TimeStop: Stop time to be reported; defaults to NULL, which will draw a current time stamp
 'activity': {
 	'variables': 'Name=%(FUNCTION_NAME)s ComponentActivity=cv%(FUNCTION_NAME)s ComponentVariable=global ActivityVariable=sioxActivity',
-	'player_global': '''static int posix_%(Name)s = -1;''',
+	#'player_global': '''static int posix_%(Name)s = -1;''',
 	'init': '''%(ComponentActivity)s = siox_component_register_activity( %(ComponentVariable)s_uid, "%(Name)s" );''',
-    	'before': '''
+    'before': '''
 	    	assert(%(ComponentVariable)s_component);
 	    	assert(%(ComponentActivity)s);
 	    	siox_activity * %(ActivityVariable)s = siox_activity_begin( %(ComponentVariable)s_component, %(ComponentActivity)s );''',
-	   'beforeLast': '''t_tmp = siox_activity_start(%(ActivityVariable)s);''',
+	'beforeLast': '''t_tmp = siox_activity_start(%(ActivityVariable)s);''',
 	'afterFirst': '''
 			t_tmp = siox_activity_stop( %(ActivityVariable)s );''',
 	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
