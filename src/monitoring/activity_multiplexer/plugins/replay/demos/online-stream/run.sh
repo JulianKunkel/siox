@@ -21,7 +21,7 @@ cd $TRACE_DIR
 ln -s ../siox-online.conf siox.conf
 ln -s ../siox-trace-replay.conf siox-trace-reader.conf
 # a mini run to create ontology.dat
-siox-inst posix-deedless ../program
+siox-inst posix-deedless ../startup_dummy
 rm -rf activities.dat*
 # actual online run
 siox-inst posix-deedless ../program

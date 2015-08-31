@@ -34,3 +34,37 @@
 			whence = SEEK_SET;
 
 
+
+// fopen
+
+			// alternative (minimal?)
+            FILE * ret;
+            char *filename;
+			// char* mode;
+			char mode[3];
+			int translatedFlags = getActivityAttributeValueByName(activity, SUB_fileOpenFlags).SUB_CAST_fileOpenFlags();
+			translatePOSIXFlagsToFILE(mode, translatedFlags);
+			ret = fopen(
+				getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+				mode
+				);
+            Attribute attr(oa_filePointer.aID, convert_attribute(oa_filePointer, &ret));
+            activity->attributeArray_.push_back(attr);
+
+
+			// alternative (slightly more unecessary work)
+            FILE * ret;
+            char *filename;
+			// char* mode;
+			char mode[3];
+			int translatedFlags = getActivityAttributeValueByName(activity, SUB_fileOpenFlags).SUB_CAST_fileOpenFlags();
+			translatePOSIXFlagsToFILE(mode, translatedFlags);
+			ret = fopen(
+				getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+				mode
+				);
+			int fd = (ret != 0) ? fileno(ret) : 0;
+            Attribute attr(oa_fileHandle.aID, convert_attribute(oa_fileHandle, &fd));
+            activity->attributeArray_.push_back(attr);
+            Attribute attr2(oa_filePointer.aID, convert_attribute(oa_filePointer, &ret));
+            activity->attributeArray_.push_back(attr2);

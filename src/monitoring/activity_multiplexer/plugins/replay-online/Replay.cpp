@@ -1476,15 +1476,17 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
             // GENERATED FROM TEMPLATE
             printf("'- fopen\n");
 
-            /* begin * /
-
-            int ret;
+            /* begin */
+            FILE * ret;
             char *filename;
-            char *mode;
-            translatedFlags = getActivityAttributeValueByName(activity, SUB_fileOpenFlags).SUB_CAST_fileOpenFlags();
-            ret = fopen(filename, mode);
-            Attribute attr(oa_fileHandle.aID, convert_attribute(oa_fileHandle, &fd));
-            activity->attributeArray_.push_back(attr);
+			// char* mode;
+			char mode[3];
+			int translatedFlags = getActivityAttributeValueByName(activity, SUB_fileOpenFlags).SUB_CAST_fileOpenFlags();
+			translatePOSIXFlagsToFILE(mode, translatedFlags);
+			ret = fopen(
+				getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+				mode
+				);
             Attribute attr(oa_filePointer.aID, convert_attribute(oa_filePointer, &ret));
             activity->attributeArray_.push_back(attr);
             /* end */
