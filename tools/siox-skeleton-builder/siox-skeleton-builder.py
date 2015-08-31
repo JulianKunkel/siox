@@ -907,12 +907,12 @@ class Template():
         else:
             if self.strictMode:
                 # Error
-                print('ERROR: Section: ', type, ' not known.', file=sys.stderr)
+                print('ERROR: Section "', type, '" not specified for "', self.name, '".', sep='', file=sys.stderr)
                 sys.exit(1)
             else:
                 # default to an empty string in case key is not provided by template
                 # desireable e.g. when generating replay code
-                print('WARNING: Section: ', type, ' not known.', self.name, file=sys.stderr)
+                print('WARNING: Section "', type, '" not specified for "', self.name, '".', sep='', file=sys.stderr)
                 return ""
             
 

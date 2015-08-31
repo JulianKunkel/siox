@@ -40,6 +40,13 @@ class Style(skeletonBuilder.Writer):
 // Replay related includes
 #include "posix-ll-io-helper.h"
 #include <C/siox-ll.h>			// TODO: implementation provided by siox-ll-subset.cpp
+
+
+#define SUB_CAST_SIOX_STORAGE_32_BIT_INTEGER int32
+#define SUB_CAST_SIOX_STORAGE_32_BIT_UINTEGER uint32
+#define SUB_CAST_SIOX_STORAGE_64_BIT_INTEGER int64
+#define SUB_CAST_SIOX_STORAGE_64_BIT_UINTEGER uint64
+#define SUB_CAST_SIOX_STORAGE_STRING str
         """, file=output)
 
 
@@ -63,6 +70,14 @@ class Style(skeletonBuilder.Writer):
                 if templ.output('player_global') != '':
                     outputString = templ.output('player_global', functionVariables)
                     print(outputString, file=output)
+
+
+        print("\n// attribute macros", file=output)
+        for function in functionList:
+            functionVariables = self.functionVariables(function)
+            for templ in function.usedTemplateList:
+                if templ.output('player_attribute_macros') != '':
+                    print(templ.output('player_attribute_macros', functionVariables), file=output)
 
 
         #######################################################################
@@ -348,9 +363,6 @@ void ReplayPlugin::findUcaidMapping()
 
         // GENERATED""", file=output)
 
-
-
-
         for function in functionList:
             expansion_template = """
             // %s
@@ -457,15 +469,49 @@ void ReplayPlugin::findAttributeMapping()
             generated_body = StringIO.StringIO()
 
             # insert sections as specified by annotations
-            #print("\t"*3, "// GENERATED FROM TEMPLATE", file=generated_body)
-            #sections = ["feign_wrapper_before", "feign_wrapper_after"]
-            ## insert the previous sections in that order
-            #for sectionName in sections:
-            #    for templ in function.usedTemplateList:
-            #        outputString = templ.output(sectionName, functionVariables)
-            #        if outputString != '':
-            #            print('\t', outputString, end='', sep='', file=generated_body)
-            #print("\t"*3, "// GENERATED FROM TEMPLATE END", file=generated_body)
+            print("\t"*3, "// GENERATED FROM TEMPLATE", file=generated_body)
+            print('\n', '\t'*3, '/* */', file=generated_body)
+
+            
+            paramlist = []
+
+            # setup variables
+            for parameter in function.parameterList:
+                if parameter.type != "..." and parameter.type != "void":
+                    
+                    nonconst_type = parameter.type.replace("const ", "")
+
+                    print("\t", nonconst_type  , end=' ', sep='', file=generated_body) 
+                    print(parameter.name, end=';\n', sep='', file=generated_body) 
+
+                    paramlist.append(parameter.name)
+
+            # expand templates
+            sections = ['player']
+            # insert the previous sections in that order
+            for sectionName in sections:
+                for templ in function.usedTemplateList:
+                    outputString = templ.output(sectionName, functionVariables)
+                    if outputString != '':
+                        print('\t', outputString, end='', sep='', file=generated_body)
+
+
+
+            print("""ret = %s(%s);""" % (function.name, ", ".join(paramlist)), file=generated_body);
+
+
+            # expand templates
+            sections = ['player_after']
+            # insert the previous sections in that order
+            for sectionName in sections:
+                for templ in function.usedTemplateList:
+                    outputString = templ.output(sectionName, functionVariables)
+                    if outputString != '':
+                        print('\t', outputString, end='', sep='', file=generated_body)
+
+
+            print('\n', '\t'*3, '/* */', file=generated_body)
+            print('\n', '\t'*3, '// GENERATED FROM TEMPLATE END', file=generated_body)
 
 
             # expand template / insert 
@@ -494,7 +540,7 @@ void ReplayPlugin::findAttributeMapping()
 	printf("DONE \\n");
 
 } // end of ReplayPlugin::replayActivity()
-""", file=output)
+        """, file=output)
     
 
 

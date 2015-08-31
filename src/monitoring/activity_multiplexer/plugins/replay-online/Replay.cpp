@@ -601,7 +601,6 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			Attribute attr( oa_fileHandle.aID, convert_attribute( oa_fileHandle, &ret ) );               
 			activity->attributeArray_.push_back( attr );
 
-
 			dump_fds();	
 			//fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()] = ret;
 			dump_fds();	
@@ -654,6 +653,10 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			
 			// write(POSIX/quantity/BytesToWrite=3, POSIX/descriptor/filehandle=4, POSIX/data/MemoryAddress=4196057, POSIX/quantity/BytesWritten=3) = 0
 			long size = getActivityAttributeValueByName(activity, "POSIX", "quantity/BytesToWrite").uint64();
+			void * buf = (void *) getActivityAttributeValueByName(activity, "POSIX", "data/MemoryAddress").uint64();
+
+			printf("buffer content: %s\n", (char*) buf);
+
 			int ret = write(
 					fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()],
 					shared_byte_buffer( size ),
