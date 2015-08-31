@@ -442,10 +442,10 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 	printActivity(activity);
 
-	stringstream str;
+	//stringstream str;
 	try {
-		char buff[40];
-		siox_time_to_str( activity->time_start(), buff, false );
+		//char buff[40];
+		//siox_time_to_str( activity->time_start(), buff, false );
 
 
 		activity->time_stop();
@@ -469,7 +469,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			printf("'- open\n");
 
 			
-			std::stringstream ss;
+			//std::stringstream ss;
 
 			// open(POSIX/hints/openFlags=65, POSIX/descriptor/filename="test.tmp", POSIX/descriptor/filehandle=4) = 0 
 			int ret = open(
@@ -729,7 +729,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 	}
 */
 
-			printf("'- fclose\n");
+			//printf("'- fclose\n");
 			}
 
 		else if( ucaid == posix_fflush ) {
@@ -980,10 +980,10 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 		*/
 
-		cout << str.str() << endl;
+		//cout << str.str() << endl;
 
 	} catch( NotFoundError & e ) {
-		cerr << "Error while parsing activity! Parsed so far: " << str.str() << endl;
+		cerr << "Error while parsing activity! Parsed so far: " << endl;
 	}
 
 }

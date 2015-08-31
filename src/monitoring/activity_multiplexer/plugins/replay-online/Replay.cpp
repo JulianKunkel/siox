@@ -286,10 +286,10 @@ static char *shared_byte_buffer(unsigned int size)
 
         buffer_size = size;
 
-        printf("Memory reallocated for %lld bytes\n", (long long int) size);
+        //printf("Memory reallocated for %lld bytes\n", (long long int) size);
         return buffer;
     } else {
-        printf("Not enough memory available to allocate %lld bytes!\n", (long long int) size);
+        //printf("Not enough memory available to allocate %lld bytes!\n", (long long int) size);
         exit(1);
     }
 }
@@ -297,20 +297,20 @@ static char *shared_byte_buffer(unsigned int size)
 
 void dump_fds()
 {
-    printf("dump_fds()");
+    //printf("dump_fds()");
     for (auto it = fds.begin(); it != fds.end(); ++it) {
         std::cout << " fds: " << it->first << " => " << it->second << std::endl;
     }
-    printf("dump_fds() end ");
+    //printf("dump_fds() end ");
 }
 
 void dump_streams()
 {
-    printf("dump_streams()");
+    //printf("dump_streams()");
     for (auto it = streams.begin(); it != streams.end(); ++it) {
         std::cout << " streams: " << it->first << " => " << it->second << std::endl;
     }
-    printf("dump_streams() end ");
+    //printf("dump_streams() end ");
 }
 
 
@@ -340,18 +340,7 @@ void ReplayPlugin::initPlugin()
 
 void ReplayPlugin::notify(const std::shared_ptr < Activity > &activity, int lost)
 {
-    ReplayPluginOptions & opts = getOptions < ReplayPluginOptions > ();
-    switch (opts.verbosity) {
-    case 0:
-        replayActivity(activity);
-        break;
-    case 1:
-        activity->print();
-        break;
-    default:
-        cout << "Warninig: invalid verbosity level: " << opts.verbosity << endl;
-        replayActivity(activity);
-    }
+    replayActivity(activity);
 }
 
 
@@ -668,9 +657,9 @@ void ReplayPlugin::findUcaidMapping()
         ss << "unlink" << " <=> " << posix_unlink << " <=> " << sys_info->
             lookup_activity_name(posix_unlink) << std::endl;
 
-        // vfprintf
-        posix_vfprintf = sys_info->lookup_activityID(uiid, "vfprintf");
-        ss << "vfprintf" << " <=> " << posix_vfprintf << " <=> " << sys_info->
+        // vf//printf
+        posix_vfprintf = sys_info->lookup_activityID(uiid, "vf//printf");
+        ss << "vf//printf" << " <=> " << posix_vfprintf << " <=> " << sys_info->
             lookup_activity_name(posix_vfprintf) << std::endl;
 
         // vfscanf
@@ -683,9 +672,9 @@ void ReplayPlugin::findUcaidMapping()
         ss << "fscanf" << " <=> " << posix_fscanf << " <=> " << sys_info->
             lookup_activity_name(posix_fscanf) << std::endl;
 
-        // fprintf
-        posix_fprintf = sys_info->lookup_activityID(uiid, "fprintf");
-        ss << "fprintf" << " <=> " << posix_fprintf << " <=> " << sys_info->
+        // f//printf
+        posix_fprintf = sys_info->lookup_activityID(uiid, "f//printf");
+        ss << "f//printf" << " <=> " << posix_fprintf << " <=> " << sys_info->
             lookup_activity_name(posix_fprintf) << std::endl;
 
         // aio_read
@@ -787,13 +776,13 @@ void ReplayPlugin::findAttributeMapping()
  */
 void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
 {
-    stringstream str;
+    // stringstream str;
 
-    printActivity(activity);
+    //printActivity(activity);
 
     try {
-        char buff[40];
-        siox_time_to_str(activity->time_start(), buff, false);
+        //char buff[40];
+        //siox_time_to_str(activity->time_start(), buff, false);
 
 
         activity->time_stop();
@@ -812,7 +801,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         if (ucaid == posix_open) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- open\n");
+            //printf("'- open\n");
 
             /* begin */
 
@@ -835,7 +824,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_creat) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- creat\n");
+            //printf("'- creat\n");
 
             /* begin * /
 
@@ -852,7 +841,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_open64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- open64\n");
+            //printf("'- open64\n");
 
             /* begin * /
 
@@ -870,7 +859,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_creat64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- creat64\n");
+            //printf("'- creat64\n");
 
             /* begin * /
 
@@ -887,7 +876,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_close) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- close\n");
+            //printf("'- close\n");
 
             /* begin */
 
@@ -903,7 +892,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_dup) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- dup\n");
+            //printf("'- dup\n");
 
             /* begin * /
 
@@ -918,7 +907,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_dup2) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- dup2\n");
+            //printf("'- dup2\n");
 
             /* begin * /
 
@@ -934,7 +923,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_dup3) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- dup3\n");
+            //printf("'- dup3\n");
 
             /* begin * /
 
@@ -951,7 +940,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_sendfile) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- sendfile\n");
+            //printf("'- sendfile\n");
 
             /* begin * /
 
@@ -973,7 +962,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_write) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- write\n");
+            //printf("'- write\n");
 
             /* begin */
 
@@ -985,7 +974,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
             fd = getActivityAttributeValueByName(activity, SUB_fileHandle).SUB_CAST_fileHandle();
 			buf = (void*) getActivityAttributeValueByName(activity, SUB_memoryAddress).SUB_CAST_memoryAddress();
 
-			printf("string to write: %s, count=%d, fd=%d\n", (char*) buf, count, fd);
+			//printf("string to write: %s, count=%d, fd=%d\n", (char*) buf, count, fd);
 
             ret = write(fd, buf, count);
             Attribute attr(oa_bytesWritten.aID, convert_attribute(oa_bytesWritten, &ret));
@@ -997,7 +986,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_read) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- read\n");
+            //printf("'- read\n");
 
             /* begin */
 
@@ -1018,7 +1007,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_writev) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- writev\n");
+            //printf("'- writev\n");
 
             /* begin * /
 
@@ -1038,7 +1027,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_readv) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- readv\n");
+            //printf("'- readv\n");
 
             /* begin * /
 
@@ -1058,7 +1047,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_pwrite) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- pwrite\n");
+            //printf("'- pwrite\n");
 
             /* begin * /
 
@@ -1079,7 +1068,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_pread) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- pread\n");
+            //printf("'- pread\n");
 
             /* begin * /
 
@@ -1101,7 +1090,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_pwrite64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- pwrite64\n");
+            //printf("'- pwrite64\n");
 
             /* begin * /
 
@@ -1124,7 +1113,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_pread64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- pread64\n");
+            //printf("'- pread64\n");
 
             /* begin * /
 
@@ -1147,7 +1136,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_pwritev) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- pwritev\n");
+            //printf("'- pwritev\n");
 
             /* begin * /
 
@@ -1169,7 +1158,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_preadv) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- preadv\n");
+            //printf("'- preadv\n");
 
             /* begin * /
 
@@ -1191,7 +1180,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_pwritev64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- pwritev64\n");
+            //printf("'- pwritev64\n");
 
             /* begin * /
 
@@ -1213,7 +1202,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_preadv64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- preadv64\n");
+            //printf("'- preadv64\n");
 
             /* begin * /
 
@@ -1235,7 +1224,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_sync) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- sync\n");
+            //printf("'- sync\n");
 
             /* begin * /
 
@@ -1249,7 +1238,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fsync) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fsync\n");
+            //printf("'- fsync\n");
 
             /* begin * /
 
@@ -1265,7 +1254,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fdatasync) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fdatasync\n");
+            //printf("'- fdatasync\n");
 
             /* begin * /
 
@@ -1281,7 +1270,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_lseek) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- lseek\n");
+            //printf("'- lseek\n");
 
             /* begin */
 
@@ -1293,7 +1282,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
             offset = getActivityAttributeValueByName(activity, SUB_fileSeekPosition).SUB_CAST_fileSeekPosition();
 			whence = SEEK_SET;
 
-			printf("fd=%d, offset=%d, whence=%d, SEEK_SET=%d\n", fd, offset, whence, SEEK_SET);
+//			//printf("fd=%d, offset=%d, whence=%d, SEEK_SET=%d\n", fd, offset, whence, SEEK_SET);
 
             ret = lseek(fd, offset, whence);
             Attribute attr(oa_filePosition.aID, convert_attribute(oa_filePosition, &ret));
@@ -1305,7 +1294,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_posix_fadvise) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- posix_fadvise\n");
+            //printf("'- posix_fadvise\n");
 
             /* begin * /
 
@@ -1327,7 +1316,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_remove) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- remove\n");
+            //printf("'- remove\n");
 
             /* begin * /
 
@@ -1342,7 +1331,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_rename) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- rename\n");
+            //printf("'- rename\n");
 
             /* begin * /
 
@@ -1358,7 +1347,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix___xstat64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- __xstat64\n");
+            //printf("'- __xstat64\n");
 
             /* begin * /
 
@@ -1375,7 +1364,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix___lxstat64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- __lxstat64\n");
+            //printf("'- __lxstat64\n");
 
             /* begin * /
 
@@ -1392,7 +1381,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix___fxstat64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- __fxstat64\n");
+            //printf("'- __fxstat64\n");
 
             /* begin * /
 
@@ -1410,7 +1399,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix___fxstat) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- __fxstat\n");
+            //printf("'- __fxstat\n");
 
             /* begin * /
 
@@ -1428,7 +1417,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_mmap) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- mmap\n");
+            //printf("'- mmap\n");
 
             /* begin * /
 
@@ -1451,7 +1440,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_mmap64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- mmap64\n");
+            //printf("'- mmap64\n");
 
             /* begin * /
 
@@ -1474,7 +1463,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fopen) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fopen\n");
+            //printf("'- fopen\n");
 
             /* begin */
             FILE * ret;
@@ -1496,7 +1485,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fopen64) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fopen64\n");
+            //printf("'- fopen64\n");
 
             /* begin * /
 
@@ -1516,7 +1505,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fdopen) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fdopen\n");
+            //printf("'- fdopen\n");
 
             /* begin * /
 
@@ -1534,7 +1523,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fileno) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fileno\n");
+            //printf("'- fileno\n");
 
             /* begin * /
 
@@ -1551,7 +1540,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_freopen) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- freopen\n");
+            //printf("'- freopen\n");
 
             /* begin * /
 
@@ -1571,7 +1560,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_tmpfile) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- tmpfile\n");
+            //printf("'- tmpfile\n");
 
             /* begin * /
 
@@ -1587,7 +1576,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fclose) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fclose\n");
+            //printf("'- fclose\n");
 
             /* begin * /
 
@@ -1604,7 +1593,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fflush) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fflush\n");
+            //printf("'- fflush\n");
 
             /* begin * /
 
@@ -1620,7 +1609,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fgetc) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fgetc\n");
+            //printf("'- fgetc\n");
 
             /* begin * /
 
@@ -1636,7 +1625,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_getc) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- getc\n");
+            //printf("'- getc\n");
 
             /* begin * /
 
@@ -1652,7 +1641,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fputc) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fputc\n");
+            //printf("'- fputc\n");
 
             /* begin * /
 
@@ -1670,7 +1659,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_putc) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- putc\n");
+            //printf("'- putc\n");
 
             /* begin * /
 
@@ -1688,7 +1677,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fgets) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fgets\n");
+            //printf("'- fgets\n");
 
             /* begin * /
 
@@ -1708,7 +1697,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fputs) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fputs\n");
+            //printf("'- fputs\n");
 
             /* begin * /
 
@@ -1726,7 +1715,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fread) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fread\n");
+            //printf("'- fread\n");
 
             /* begin * /
 
@@ -1748,7 +1737,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fwrite) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fwrite\n");
+            //printf("'- fwrite\n");
 
             /* begin * /
 
@@ -1772,7 +1761,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fseeko) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fseeko\n");
+            //printf("'- fseeko\n");
 
             /* begin * /
 
@@ -1791,7 +1780,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fseek) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fseek\n");
+            //printf("'- fseek\n");
 
             /* begin * /
 
@@ -1810,7 +1799,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_setbuf) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- setbuf\n");
+            //printf("'- setbuf\n");
 
             /* begin * /
 
@@ -1828,7 +1817,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_setvbuf) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- setvbuf\n");
+            //printf("'- setvbuf\n");
 
             /* begin * /
 
@@ -1850,7 +1839,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_unlink) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- unlink\n");
+            //printf("'- unlink\n");
 
             /* begin * /
 
@@ -1865,7 +1854,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_vfprintf) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- vfprintf\n");
+            //printf("'- vf//printf\n");
 
             /* begin * /
 
@@ -1875,7 +1864,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
             va_list arg;
             stream = getActivityAttributeValueByName(activity, SUB_filePointer).SUB_CAST_filePointer();
             format = getActivityAttributeValueByName(activity, SUB_memoryAddress).SUB_CAST_memoryAddress();
-            ret = vfprintf(stream, format, arg);
+            ret = vf//printf(stream, format, arg);
             Attribute attr(oa_bytesWritten.aID, convert_attribute(oa_bytesWritten, &ret));
             activity->attributeArray_.push_back(attr);
             /* end */
@@ -1885,7 +1874,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_vfscanf) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- vfscanf\n");
+            //printf("'- vfscanf\n");
 
             /* begin * /
 
@@ -1904,7 +1893,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fscanf) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fscanf\n");
+            //printf("'- fscanf\n");
 
             /* begin * /
 
@@ -1922,7 +1911,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fprintf) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fprintf\n");
+            //printf("'- f//printf\n");
 
             /* begin * /
 
@@ -1931,7 +1920,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
             char *format;
             stream = getActivityAttributeValueByName(activity, SUB_filePointer).SUB_CAST_filePointer();
             format = getActivityAttributeValueByName(activity, SUB_memoryAddress).SUB_CAST_memoryAddress();
-            ret = fprintf(stream, format);
+            ret = f//printf(stream, format);
 
             /* end */
 
@@ -1940,7 +1929,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_aio_read) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- aio_read\n");
+            //printf("'- aio_read\n");
 
             /* begin * /
 
@@ -1955,7 +1944,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_aio_write) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- aio_write\n");
+            //printf("'- aio_write\n");
 
             /* begin * /
 
@@ -1970,7 +1959,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_lio_listio) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- lio_listio\n");
+            //printf("'- lio_listio\n");
 
             /* begin * /
 
@@ -1988,7 +1977,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_aio_suspend) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- aio_suspend\n");
+            //printf("'- aio_suspend\n");
 
             /* begin * /
 
@@ -2005,7 +1994,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_aio_cancel) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- aio_cancel\n");
+            //printf("'- aio_cancel\n");
 
             /* begin * /
 
@@ -2021,7 +2010,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_fork) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- fork\n");
+            //printf("'- fork\n");
 
             /* begin * /
 
@@ -2035,7 +2024,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_lockf) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- lockf\n");
+            //printf("'- lockf\n");
 
             /* begin * /
 
@@ -2053,7 +2042,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_flock) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- flock\n");
+            //printf("'- flock\n");
 
             /* begin * /
 
@@ -2070,7 +2059,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_socket) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- socket\n");
+            //printf("'- socket\n");
 
             /* begin * /
 
@@ -2088,7 +2077,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_setsockopt) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- setsockopt\n");
+            //printf("'- setsockopt\n");
 
             /* begin * /
 
@@ -2108,7 +2097,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_pipe) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- pipe\n");
+            //printf("'- pipe\n");
 
             /* begin * /
 
@@ -2126,7 +2115,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_pipe2) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- pipe2\n");
+            //printf("'- pipe2\n");
 
             /* begin * /
 
@@ -2145,7 +2134,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_socketpair) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- socketpair\n");
+            //printf("'- socketpair\n");
 
             /* begin * /
 
@@ -2166,7 +2155,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_accept) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- accept\n");
+            //printf("'- accept\n");
 
             /* begin * /
 
@@ -2185,7 +2174,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
         } else if (ucaid == posix_accept4) {
             // TODO
             // GENERATED FROM TEMPLATE
-            printf("'- accept4\n");
+            //printf("'- accept4\n");
 
             /* begin * /
 
@@ -2204,19 +2193,19 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
 
         } else {
             // not found!
-            printf("unknown type - nothing to replay");
+            //printf("unknown type - nothing to replay");
         }
 
 
-        cout << str.str() << endl;
+        //cout << str.str() << endl;
 
     }
     catch(NotFoundError & e) {
-        cerr << "Error while parsing activity! Parsed so far: " << str.str() << endl;
+        cerr << "Error while parsing activity! Parsed so far: " << endl;
     }
 
-    printActivity(activity);
-    printf("DONE \n\n\n");
+    //printActivity(activity);
+    ////printf("DONE \n\n\n");
 
 }                               // end of ReplayPlugin::replayActivity()
 
