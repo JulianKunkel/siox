@@ -68,3 +68,7 @@
             activity->attributeArray_.push_back(attr);
             Attribute attr2(oa_filePointer.aID, convert_attribute(oa_filePointer, &ret));
             activity->attributeArray_.push_back(attr2);
+
+
+// fwrite
+

@@ -1757,9 +1757,11 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
             size_t size;
             size_t count;
             FILE *stream;
-            payload = getActivityAttributeValueByName(activity, SUB_bytesToWrite).SUB_CAST_bytesToWrite();
-            stream = getActivityAttributeValueByName(activity, SUB_filePointer).SUB_CAST_filePointer();
-            ptr = getActivityAttributeValueByName(activity, SUB_memoryAddress).SUB_CAST_memoryAddress();
+            int payload = getActivityAttributeValueByName(activity, SUB_bytesToWrite).SUB_CAST_bytesToWrite();
+            count = payload;
+            size = sizeof(char);
+            stream = (FILE*) getActivityAttributeValueByName(activity, SUB_filePointer).SUB_CAST_filePointer();
+            ptr = (void*) getActivityAttributeValueByName(activity, SUB_memoryAddress).SUB_CAST_memoryAddress();
             ret = fwrite(ptr, size, count, stream);
             Attribute attr(oa_bytesWritten.aID, convert_attribute(oa_bytesWritten, &posDelta));
             activity->attributeArray_.push_back(attr);
