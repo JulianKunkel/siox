@@ -363,6 +363,30 @@ void ReplayPlugin::findUcaidMapping()
 
         // GENERATED""", file=output)
 
+        # some ucaid ids are not in the siox ontology and we shall therefor not try to find a mapping
+        ucaid_blacklist = [
+            'open64',
+            'creat64',
+            'pwrite64',
+            'pread64',
+            '__xstat64',
+            '__lxstat64',
+            '__fxstat64',
+            '__fxstat',
+            'mmap64',
+            'fopen64',
+            'fork',
+            'socket',
+            'setsockopt',
+            'socket',
+            'setsockopt',
+            'pipe',
+            'pipe2',
+            'socketpair',
+            ]
+
+
+
         for function in functionList:
             expansion_template = """
             // %s
@@ -376,10 +400,14 @@ void ReplayPlugin::findUcaidMapping()
                 function.name,
                 function.name,
                )
-            print(expansion_template, file=output)
+
+            if function.name not in ucaid_blacklist:
+                print(expansion_template, file=output)
 
         print("""
         // GENERATED END
+
+		std::cout << ss.str() << std::endl;
 
 	} catch( NotFoundError & e ) {	
 		cerr << "Find Ucaid Mapping: Interface not found!" << ss.str() << endl;
@@ -470,9 +498,16 @@ void ReplayPlugin::findAttributeMapping()
 
             # insert sections as specified by annotations
             print("\t"*3, "// GENERATED FROM TEMPLATE", file=generated_body)
-            print('\n', '\t'*3, '/* */', file=generated_body)
-
             
+            # debug output
+            print("""printf("'- %s\\n");""" % (function.name), file=generated_body)
+            
+            # have everything commented by default
+            print('\n', '\t'*3, '/* begin */', file=generated_body)
+            
+            print('\n', '\t', 'int ret;', file=generated_body)
+            
+            # save a loop when going through the parameters, paramlist ist used to generate the actual function call
             paramlist = []
 
             # setup variables
@@ -510,7 +545,7 @@ void ReplayPlugin::findAttributeMapping()
                         print('\t', outputString, end='', sep='', file=generated_body)
 
 
-            print('\n', '\t'*3, '/* */', file=generated_body)
+            print('\n', '\t'*3, '/* end */', file=generated_body)
             print('\n', '\t'*3, '// GENERATED FROM TEMPLATE END', file=generated_body)
 
 
@@ -537,7 +572,7 @@ void ReplayPlugin::findAttributeMapping()
 	}
 
 	printActivity(activity);
-	printf("DONE \\n");
+	printf("DONE \\n\\n\\n");
 
 } // end of ReplayPlugin::replayActivity()
         """, file=output)
@@ -570,7 +605,7 @@ void ReplayPlugin::printActivity( std::shared_ptr<Activity> activity )
 		UniqueInterfaceID uid = sys_info->lookup_interface_of_activity( activity->ucaid() );
 
 		str << sys_info->lookup_interface_name( uid ) << " ";
-		str << "interface:\"" << sys_info->lookup_interface_implementation( uid ) << "\" ";
+        str << "interface:\\"" << sys_info->lookup_interface_implementation( uid ) << "\\" ";
 
 		str << sys_info->lookup_activity_name( activity->ucaid() ) << "(";
 		for( auto itr = activity->attributeArray().begin() ; itr != activity->attributeArray().end(); itr++ ) {

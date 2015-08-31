@@ -38,6 +38,7 @@
 //@register_attribute bytesToRead "POSIX" "quantity/BytesToRead" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute bytesToWrite "POSIX" "quantity/BytesToWrite" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute filePosition "POSIX" "file/position" SIOX_STORAGE_64_BIT_UINTEGER
+//@register_attribute fileSeekPosition "POSIX" "file/seekPosition" SIOX_STORAGE_64_BIT_UINTEGER
 //@register_attribute fileExtent "POSIX" "file/extent" SIOX_STORAGE_64_BIT_UINTEGER
 
 
@@ -279,6 +280,7 @@ int fdatasync( int fd );
 //@errorErrno ''ret == (off_t) -1''
 //@activity
 //@activity_attribute fileHandle fd
+//@activity_attribute fileSeekPosition offset
 //@activity_link_int fd
 //@activity_attribute_late filePosition ret
 off_t lseek(int fd, off_t offset, int whence);

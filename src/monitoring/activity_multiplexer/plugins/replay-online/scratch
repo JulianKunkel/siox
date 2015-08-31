@@ -1,0 +1,36 @@
+// UCAID Mapping
+
+/* a few lookups need to be removed */
+
+	blacklist: 
+	open64, creat64, pwrite64, pread64, __xstat64, __lxstat64, __fxstat64, __fxstat, mmap64, fopen64, fork, socket, setsockopt, socket, setsockopt, pipe, pipe2, socketpair, 
+
+
+/* --- */
+
+// open
+
+            int translatedFlags = getActivityAttributeValueByName(activity, SUB_fileOpenFlags).SUB_CAST_fileOpenFlags();
+			flags = translateSIOXFlagsToPOSIX(translatedFlags);
+			ret = open(
+				getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+				flags,
+				S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH // TODO: supply siox with rights flags converter
+			);
+
+
+// close 
+			/* nothing to do */
+
+
+// write
+			buf = (void*) getActivityAttributeValueByName(activity, SUB_memoryAddress).SUB_CAST_memoryAddress();
+
+// read
+			buf = (void*) getActivityAttributeValueByName(activity, SUB_memoryAddress).SUB_CAST_memoryAddress();
+
+
+// lseek
+			whence = SEEK_SET;
+
+
