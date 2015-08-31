@@ -1293,7 +1293,7 @@ void ReplayPlugin::replayActivity(std::shared_ptr < Activity > activity)
             offset = getActivityAttributeValueByName(activity, SUB_fileSeekPosition).SUB_CAST_fileSeekPosition();
 			whence = SEEK_SET;
 
-			print("fd=%d, offset=%d, whence=%d, SEEK_SET=%d\n", fd, offset, whence, SEEK_SET);
+			printf("fd=%d, offset=%d, whence=%d, SEEK_SET=%d\n", fd, offset, whence, SEEK_SET);
 
             ret = lseek(fd, offset, whence);
             Attribute attr(oa_filePosition.aID, convert_attribute(oa_filePosition, &ret));
