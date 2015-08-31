@@ -55,7 +55,7 @@ do
 		--reconfigure) reconfigure;;
 		--version) cmake --version; exit;;
 		--prefix) prefix="$2"; shift;;
-		--debug) debug="yes"; shift;;
+		--debug) debug="yes"; ;;
 		--with-boost) boostdir="$2"; shift;;
 		--with-cc) ccbin="$2"; shift;;
 		--with-cxx) cxxbin="$2"; shift;;
@@ -73,8 +73,8 @@ do
 		 shift;;
 		--use-ninja) useNinja="YES";;
 		--verbose) VERBOSE="YES";;
-
-		--) shift; break;;
+		--) ;;
+		*) echo "Unknown option $1"; exit 1;;
 	esac
 	shift
 done
