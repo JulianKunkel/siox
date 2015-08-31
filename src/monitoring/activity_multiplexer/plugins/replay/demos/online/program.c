@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	if ( fd != -1 )
 	{
 		// forgive that there is no error checking
-		write(fd, "abcdef", 6);
+		write(fd, "abcdef", 7);
 		lseek(fd, 1, SEEK_SET);
 		read(fd, buf, 3);
 		close(fd);
