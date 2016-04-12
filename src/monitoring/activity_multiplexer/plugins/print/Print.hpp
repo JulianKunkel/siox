@@ -11,6 +11,9 @@
 
 #include "PrintOptions.hpp"
 
+/**
+ * @brief Print activities in STDOUT
+ */
 class PrintPlugin : public monitoring::ActivityMultiplexerPlugin {
 	public:
 		void initPlugin() override;
