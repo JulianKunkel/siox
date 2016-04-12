@@ -15,7 +15,7 @@ and then talk to that object to obtain the information the user code needs.
 
 
 
-@section Statistics_Structure Code Structure
+### Statistics_Structure Code Structure ###
 
 Apart from the class @scoperef{monitoring,Statistic}, the following four SIOX components are involved in the handling of statistics information:
 The @scoperef{monitoring,StatisticsProviderPlugin}, the @scoperef{monitoring,StatisticsCollector}, the @scoperef{monitoring,StatisticsMultiplexer}, and the @scoperef{monitoring,StatisticsMultiplexerPlugin}.

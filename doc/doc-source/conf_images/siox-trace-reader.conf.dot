@@ -1,0 +1,28 @@
+strict digraph G {
+	compound=true;
+	node [shape=box];
+
+	subgraph cluster_0 {
+		label="#CONFIG TraceReader";
+		color=black;
+		process_multiplexer[label="Multiplexer" style=filled color=lightgrey];
+		process_ontology[label="Ontology"];
+		process_association_mapper[label="AssociationMapper"];
+		process_system_information[label="SystemInformation"];
+		process_topology[label="Topology"];
+		process_facade[label="DereferencingFacade"];
+		process_printer[label="Print" style=filled color=lightgrey];
+		process_output[label="output" shape=ellipse];
+		process_input_stream[label="ActivityInputStream" style=filled color=lightgrey];
+		process_input_file[label="trace file" shape=ellipse]
+
+		process_ontology -> process_facade;
+		process_association_mapper -> process_facade;
+		process_system_information -> process_facade;
+		process_topology -> process_facade;
+		process_facade -> process_printer;
+		process_multiplexer -> process_printer -> process_output;
+		process_input_file -> process_input_stream -> process_multiplexer;
+	}
+}
+

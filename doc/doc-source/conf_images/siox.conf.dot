@@ -1,0 +1,35 @@
+strict digraph G {
+	compound=true;
+	node [shape=box];
+	subgraph cluster_1{
+		label="#CONFIG Interface POSIX";
+		color=black;
+		posix_syscalls[label="sys calls" shape=ellipse];
+		posix_multiplexer[label="Multiplexer" style=filled color=lightgrey];
+		posix_forwarder[label="Forwarder" style=filled color=lightgrey];
+		posix_syscalls -> posix_multiplexer -> posix_forwarder;
+	}
+
+	subgraph cluster_2 {
+		label="#CONFIG Interface Process";
+		color=black;
+		process_multiplexer[label="Multiplexer" style=filled color=lightgrey];
+		process_ontology[label="Ontology"];
+		process_association_mapper[label="AssociationMapper"];
+		process_system_information[label="SystemInformation"];
+		process_topology[label="Topology"];
+		process_facade[label="DereferencingFacade"];
+		process_writer[label="Writer" style=filled color=lightgrey];
+		process_activities[label="trace file" shape=ellipse];
+
+		process_ontology -> process_facade;
+		process_association_mapper -> process_facade;
+		process_system_information -> process_facade;
+		process_topology -> process_facade;
+		process_facade -> process_writer;
+		process_multiplexer -> process_writer -> process_activities;
+	}
+
+	posix_forwarder -> process_multiplexer;
+}
+

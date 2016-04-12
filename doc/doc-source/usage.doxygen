@@ -1,0 +1,132 @@
+/**
+@page Usage Usage
+
+
+# Comments #
+
+For convinience, the configuration files support linux-shell-style comments, i.e. lines that begin with the #-character are interperted as comment lines. There are some restrictions:
+- no leading spaces are allowed
+- lines that begin with a #CONFIG string, mark a new configuration section
+
+
+# Config Sections (WIP)#
+
+TODO: 
+
+ - description
+ - when to use
+ - syntax
+ - valid sections
+ - create own sections possible?
+
+Types
+---
+
+Process 
+TraceReader
+POSIX 
+POSIX Network 
+
+
+# Scopes (WIP) #
+
+
+# Plugin configuration #
+Each plugin configuration consists of two parts: plugin/module header and plugin options.
+Here is a configuration example of the ActivityProfilerPlugin.
+
+~~~.xml
+<LoadModule> 
+ <componentID>56</componentID> 
+ <name>siox-monitoring-activityPlugin-ActivityProfiler</name> 
+ <path></path> 
+ <interface>monitoring_activitymultiplexer_plugin</interface> 
+</LoadModule>
+<ActivityProfilerPluginOptions> 
+ <ActivityMultiplexerPluginOptions> 
+	<multiplexer> 
+	 <componentID>1</componentID> 
+	 <global>0</global> 
+	</multiplexer> 
+	<dereferenceFacade> 
+	 <componentID>55</componentID> 
+	 <global>0</global> 
+	</dereferenceFacade> 
+ </ActivityMultiplexerPluginOptions> 
+</ActivityProfilerPluginOptions> 
+~~~
+
+The elements in the header are fixed. 
+They are listed and described in the table below.
+
+Tag         | Type    | Description
+---         | ---     | -----------
+path        | String  | folder, where the plugin is located
+name        | String  | filename of the plugin without the "*.so" extension
+interface   | String  | name of interface used by the plugin
+componentID | Integer | any unique plugin ID (can be set by the user)
+
+The elements in the plugin options part are not fixed. 
+You can consider them as parameters that are passed to the plugin on program start.
+Their number, structure and type depends on the loaded plugin.
+Please read the plugin documentation to learn how to use it.
+
+
+Some plugins depend on other plugins. 
+For example the ActivityProfilerPlugin requires an ActivityMultiplexerPlugin to work. 
+ActivityMultiplexerPlugin requires the ID of configured Multiplexer and dereferenceFacade.
+
+Tag         | Type    | Description
+---         | ---     | -----------
+componentID | Integer | unique ID of the Plugin
+global      | Integer | scope
+
+
+In this example ActivityProfilerPlugin will be connected to the ActivityMultiplexer with an ID=1 and to the dereferenceFacade with an ID=55.
+
+# Autoconfigurator #
+
+If you don't know which options are required by the plugin, you can simply omit them. 
+When you run a tool, it will exit and show you the missing options.
+Then you can add them the configuration file. 
+
+
+# Reporter #
+
+Some plugins can generate reports and print them to STDOUT. 
+To enable this feature you need to load a Reporter plugin. 
+SIOX has already some implementations, e.g. ConsoleReporter and MPIReporter.
+
+
+# Example #
+## siox-inst ##
+
+  -# Download <a href='siox.conf' target="_blank"><b>siox.conf</b></a> to a folder.
+  -# Change to this folder and run the following command:
+~~~.sh
+siox-inst posix ls -al
+~~~
+
+-# siox-inst creates the following files
+ - association.dat
+ - ontology.dat
+ - system-info.dat
+ - activities.datXXXX
+
+## siox-trace-reader ##
+
+-# Download <a href='siox-trace-reader.conf' target="_blank"><b>siox-trace-reader.conf</b></a> to a folder.
+-# Make sure, that the following files are also in the folder:
+ - association.dat
+ - ontology.dat
+ - system-info.dat
+ - activities.dat
+-# Change to this folder and run the following command:
+
+~~~.sh
+siox-trace-reader
+~~~
+
+Activities should be printed on the screen.
+
+*/

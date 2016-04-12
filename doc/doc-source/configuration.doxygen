@@ -1,0 +1,97 @@
+/**
+@page Configuration Configuration
+
+This section describes the configuration of two SIOX tools: siox-int and siox-trace-reader. 
+You can see these tools as a kind of plugin-infrastructure, because they have no build- in analysis functionality. 
+The tools have the task to interconnect the plugins and pass captured activities to them. 
+The main difference between the tools is that siox-inst captures the activities directly (online analysis) from the instrumented program and siox-trace-reader reads the activities from an activity file (offline analysis). 
+ 
+Probably, in the future these tools will be merged together, but for now you can use siox-inst to capture the activities and save them to a file and siox-trace-reader to analyse the activities. 
+
+
+## Configuration files ##
+
+For the new users the configuration files are probably the most confusing SIOX part.
+Therefore, this section will explain all the features in detail and give you instructions how to create own configuration files.
+You will learn how to create a minimal configuration and then extend it step by step until it fits your requirements.
+
+The configuration files are based on XML standard.
+They contain sections and each section contains a number of plugin configuration blocks.
+There is also support of comment lines.
+
+In the following sections we will configure siox-inst and siox-trace-reader.
+siox-int will save activities to a trace file and siox-trace-reader will read the trace file and print the activities in the STDOUT.
+
+### siox-inst ###
+
+To run siox-inst you need at least the four following plugins in the "#CONFIG Process" section:
+	- #CONFIG Process
+	 - Multiplexer
+	 - Ontology
+	 - AssociationMapper
+	 - SystemInformation
+
+
+This minimal configuration is required to start SIOX, but in this state SIOX does nothing. 
+The Multiplexer is either connected to input nor to output plugins and can not distribute the activities. 
+FileBasedSystemInformation, FileAssosiation and FileOntology have also no connections and no useful functions.  
+
+The following extension makes siox-inst write activities to a file:
+	- #CONFIG Process
+	 - Topology
+	 - DereferencingFacade
+	- #CONFIG Interface POSIX 
+	 - Multiplexer
+	 - ActivityBinWriter
+	- #CONFIG Interface POSIX_Network 
+	 - Multiplexer
+	  - to surpresss the warning "WARNING Invalid configuration set for component"
+
+When you insert these plugin configuration blocks and interconnect the plugins properly (see picture), then whenever the instrumented application execute a posix function, siox-inst will generate an activity and pass it to the Multiplexer in the "#CONFIG Interface POSIX" section.
+The Multiplexer will pass the activity to the Forwarder, which in turn will pass this activity to the Multiplexer in the "#CONFIG Interface Process" section.
+Finally the Multiplexer will send the activity to the connected output plugins.
+In out case it is only the Writer plugin, which saves the activities to the trace file.
+
+\dotfile siox.conf.dot Schematic view of the siox.conf. The activities travel from sys calls through grey boxes to the trace file. White boxes form an information system and provide the necessary information to the plugins.
+
+siox-inst is ready for the first step in the offline-analysis now.
+It can capture and write I/O-calls to a file.
+
+ 
+### siox-trace-reader ###
+
+
+Minimal configuration:
+ - #CONFIG TraceReader 
+	- ActivityInputStream
+	- Topology
+	- Ontology
+	- AssociationMapper
+	- SystemInformation
+
+
+To get the print functionality, add following plugins to the file:
+  - #CONFIG TraceReader 
+   - DereferencingFacade
+   - Multiplexer
+   - PrintPlugin
+
+Again, grey boxes mark the activity path.
+ActivityInputStream reads activities from a trace file and forward them to the Multiplexer.
+Multiplexer sends the activities to the connected plugins.
+In our case Print plugin gets the activitie and print them in the STDOUT.
+
+\dotfile siox-trace-reader.conf.dot
+
+
+### Multiple activity sources and targets
+
+You can also assign several source plugins and target plugins to the Multiplexer.
+The multiplexer will receive activities from several sources and send them to the plugins.
+The plugins can reuse the existing plugins.
+All you need is to connect them in a proper way.
+
+\dotfile siox-trace-reader-multiple.conf.dot Several source and target plugins can be connected to the Multiplexer.
+
+FIXME
+*/
