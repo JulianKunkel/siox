@@ -9,8 +9,10 @@ include_directories(
 	${GLIB_INCLUDE_DIRS}
 )
 
+# TODO: elaborate if wrap/dlsym styles can used directly (adjusting tempalte suffices, or if styles sparse-{wrap,dlsym} are required
 siox_skeleton_builder(wrap  ${CMAKE_CURRENT_SOURCE_DIR}/${LAYER}-low-level-io.h ${SKELETON_TEMPLATE} ${LAYER} siox-${LAYER}-wrap.c  ${CMAKE_CURRENT_SOURCE_DIR}/template.py)
 siox_skeleton_builder(dlsym ${CMAKE_CURRENT_SOURCE_DIR}/${LAYER}-low-level-io.h ${SKELETON_TEMPLATE} ${LAYER} siox-${LAYER}-dlsym.c  ${CMAKE_CURRENT_SOURCE_DIR}/template.py)
+
 
 file(READ ${CMAKE_CURRENT_BINARY_DIR}/${LAYER}.wrap WRAP_LD_OPTS)
 string(REPLACE "\n" " " WRAP_LD_OPTS ${WRAP_LD_OPTS})

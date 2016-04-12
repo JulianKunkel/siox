@@ -16,11 +16,20 @@ class ReplayPlugin : public monitoring::ActivityMultiplexerPlugin {
 		void initPlugin() override;
 		ComponentOptions* AvailableOptions() override; 
 		void finalize() override {};
+		// in preperation for replay
+		void findUcaidMapping();
+		// during replay
 		void replayActivity( std::shared_ptr<Activity> a );
+		void printActivity( std::shared_ptr<Activity> a );
 	private:
 		void strattribute( const Attribute & a, stringstream & s ) throw (NotFoundError);
+		// required for target extraction of parameters
+		bool strattribute_compare( const Attribute & a, const char* attributeName ) throw (NotFoundError);
+		const AttributeValue getActivityAttributeValueByName( std::shared_ptr<Activity> a, const char * domain, const char * name) throw (NotFoundError);
+		// END: required for target extraction of parameters
 		void notify(const std::shared_ptr<Activity>& a, int lost);
 		SystemInformationGlobalIDManager* sys_info;
+
 };
 
 #endif   /* ----- #ifndef Replay_INC  ----- */

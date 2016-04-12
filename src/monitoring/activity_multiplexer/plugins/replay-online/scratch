@@ -1,0 +1,74 @@
+// UCAID Mapping
+
+/* a few lookups need to be removed */
+
+	blacklist: 
+	open64, creat64, pwrite64, pread64, __xstat64, __lxstat64, __fxstat64, __fxstat, mmap64, fopen64, fork, socket, setsockopt, socket, setsockopt, pipe, pipe2, socketpair, 
+
+
+/* --- */
+
+// open
+
+            int translatedFlags = getActivityAttributeValueByName(activity, SUB_fileOpenFlags).SUB_CAST_fileOpenFlags();
+			flags = translateSIOXFlagsToPOSIX(translatedFlags);
+			ret = open(
+				getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+				flags,
+				S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH // TODO: supply siox with rights flags converter
+			);
+
+
+// close 
+			/* nothing to do */
+
+
+// write
+			buf = (void*) getActivityAttributeValueByName(activity, SUB_memoryAddress).SUB_CAST_memoryAddress();
+
+// read
+			buf = (void*) getActivityAttributeValueByName(activity, SUB_memoryAddress).SUB_CAST_memoryAddress();
+
+
+// lseek
+			whence = SEEK_SET;
+
+
+
+// fopen
+
+			// alternative (minimal?)
+            FILE * ret;
+            char *filename;
+			// char* mode;
+			char mode[3];
+			int translatedFlags = getActivityAttributeValueByName(activity, SUB_fileOpenFlags).SUB_CAST_fileOpenFlags();
+			translatePOSIXFlagsToFILE(mode, translatedFlags);
+			ret = fopen(
+				getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+				mode
+				);
+            Attribute attr(oa_filePointer.aID, convert_attribute(oa_filePointer, &ret));
+            activity->attributeArray_.push_back(attr);
+
+
+			// alternative (slightly more unecessary work)
+            FILE * ret;
+            char *filename;
+			// char* mode;
+			char mode[3];
+			int translatedFlags = getActivityAttributeValueByName(activity, SUB_fileOpenFlags).SUB_CAST_fileOpenFlags();
+			translatePOSIXFlagsToFILE(mode, translatedFlags);
+			ret = fopen(
+				getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
+				mode
+				);
+			int fd = (ret != 0) ? fileno(ret) : 0;
+            Attribute attr(oa_fileHandle.aID, convert_attribute(oa_fileHandle, &fd));
+            activity->attributeArray_.push_back(attr);
+            Attribute attr2(oa_filePointer.aID, convert_attribute(oa_filePointer, &ret));
+            activity->attributeArray_.push_back(attr2);
+
+
+// fwrite
+

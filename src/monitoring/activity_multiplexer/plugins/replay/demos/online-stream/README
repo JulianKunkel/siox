@@ -1,0 +1,43 @@
+This example illustrates how the replay plugin can be used to move execution
+of instrumented calls away from the instrumentation and instead let the replay
+plugin handle the execution. Possible return values are attached to the activity
+and then passed by the instrumentation to the caller.
+
+## An Application: program.c => program
+
+The example program in this case performs the following:
+
+	1. write "abcdef" to a file (test.tmp)
+	2. move the internal position back to b and read 3 bytes
+	3. closes the file
+	4. terminate
+
+Feel free to modify it and experiment.
+
+Build the sample application by invoking make:
+
+   $ make
+
+## Running the program using SIOX
+
+SIOX and the POSIX-deedless(!) instrumentation are expected to be installed on
+the system.  To trace the application you can use the following command:
+
+    $ run.sh mytrace
+
+This will create a directory "mytrace" and then trace the example application
+"program" using the siox-inst utility. You can inspect the obtained trace by
+using the siox-trace-reader command. Make sure to specify the correct
+activities.dat file in the configuration.
+
+	$ cd mytrace
+	$ siox-trace-reader
+
+
+SIOX will create multiple files including a binary trace file which can be 
+replayed using:
+
+    $ replay.sh mytrace
+
+
+

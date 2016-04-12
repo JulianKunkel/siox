@@ -742,11 +742,16 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		assert( component != nullptr );
 
 		// Send the activity to it
+
+		// ALTERNATIVES: 1) Capture time here to offer correct timing to preCall Mutex
+		siox_timestamp time = siox_gettime();
+		ab->startActivity( activity->activity, time );
+
 		if ( ! monitoringDisabled && component->preCallAmux ){
 			component->preCallAmux->Log( activity->shrdPtr );
 		}
-		siox_timestamp time = siox_gettime();
-		ab->startActivity( activity->activity, time );
+		// ALTERNATIVES: 2) set time here to capture the REAL I/O time (without SIOX Overhead)
+
 		return time;
 	}
 

@@ -19,6 +19,7 @@
 #ifndef  ActivityInputStreamPluginOptions_INC
 #define  ActivityInputStreamPluginOptions_INC
 
+#include <core/component/ComponentReference.hpp>
 #include <core/component/component-options.hpp>
 
 namespace tools {

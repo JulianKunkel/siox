@@ -92,7 +92,7 @@ int main( int argc, char ** argv )
 		AutoConfigurator* configurator = new AutoConfigurator(
 				& registrar, "siox-core-autoconfigurator-FileConfigurationProvider",	"", configFile); 
 		vector<Component*> coreComponents = configurator->LoadConfiguration("TraceReader", "", false);
-		std::list<ActivityMultiplexer*> amuxs = configurator->searchForAll<ActivityMultiplexer>(coreComponents);
+		//std::list<ActivityMultiplexer*> amuxs = configurator->searchForAll<ActivityMultiplexer>(coreComponents);
 		tools::ActivityInputStreamPlugin* activities = configurator->searchFor<tools::ActivityInputStreamPlugin>(coreComponents);
 		assert(coreComponents.size() != 0);
 	
@@ -273,9 +273,10 @@ int main( int argc, char ** argv )
 		registrar.start();
 	
 		while(const auto activity = activities->nextActivity()) {
-			for (auto& amux : amuxs) {
-				amux->Log(activity);
-			}
+			activities->getTargetMultiplexer()->Log(activity);
+		//	for (auto& amux : amuxs) {
+		//		amux->Log(activity);
+		//	}
 		}
 
 		util::invokeAllReporters(&registrar);
