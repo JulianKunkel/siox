@@ -1,0 +1,37 @@
+strict digraph G {
+	compound=true;
+	node [shape=box];
+
+	subgraph cluster_0 {
+		label="#CONFIG TraceReader";
+		color=black;
+		process_multiplexer[label="Multiplexer" style=filled color=lightgrey];
+		process_ontology[label="Ontology"];
+		process_association_mapper[label="AssociationMapper"];
+		process_system_information[label="SystemInformation"];
+		process_topology[label="Topology"];
+		process_facade[label="DereferencingFacade"];
+		process_input_stream_0[label="ActivityInputStream0" style=filled color=lightgrey];
+		process_input_stream_1[label="ActivityInputStream1" style=filled color=lightgrey];
+		process_input_file_0[label="trace file 0" shape=ellipse]
+		process_input_file_1[label="trace file 1" shape=ellipse]
+
+		process_plugin_0[label="Plugin0" style=filled color=lightgrey];
+		process_plugin_1[label="Plugin1" style=filled color=lightgrey];
+		process_plugin_2[label="Plugin2" style=filled color=lightgrey];
+
+		process_ontology -> process_facade;
+		process_association_mapper -> process_facade;
+		process_system_information -> process_facade;
+		process_topology -> process_facade;
+		process_facade -> process_plugin_0;
+		process_facade -> process_plugin_1;
+		process_facade -> process_plugin_2;
+		process_multiplexer -> process_plugin_0;
+		process_multiplexer -> process_plugin_1;
+		process_multiplexer -> process_plugin_2;
+		process_input_file_0 -> process_input_stream_0 -> process_multiplexer;
+		process_input_file_1 -> process_input_stream_1 -> process_multiplexer;
+	}
+}
+
