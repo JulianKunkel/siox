@@ -285,11 +285,10 @@ off_t lseek(int fd, off_t offset, int whence);
 
 //@guard
 //@errorErrno ''ret == (off_t) -1''
-//@activity
+//@activity Name=lseek
 //@activity_attribute fileHandle fd
 //@activity_link_int fd
 //@activity_attribute_late filePosition ret
-//@activity Name=lseek
 off_t lseek64(int fd, off64_t offset, int whence);
 
 
