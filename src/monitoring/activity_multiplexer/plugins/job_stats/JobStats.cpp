@@ -58,25 +58,54 @@ void JobStatsPlugin::initPlugin() {
 	DereferencingFacadeOptions& facadeOpts = facade->getOptions<DereferencingFacadeOptions>();
 	o = dynamic_cast<monitoring::Ontology*>(facadeOpts.ontology.componentPointer);
 	assert(o != nullptr);
+  file_limit = opts.file_limit;
 
-	addActivityHandler("POSIX", "", "open",      & JobStatsPlugin::handlePOSIXOpen);
-	addActivityHandler("POSIX", "", "creat",     & JobStatsPlugin::handlePOSIXOpen);
-	addActivityHandler("POSIX", "", "write",     & JobStatsPlugin::handlePOSIXWrite);
-	addActivityHandler("POSIX", "", "read",      & JobStatsPlugin::handlePOSIXRead);
-	addActivityHandler("POSIX", "", "pwrite",    & JobStatsPlugin::handlePOSIXWrite);
-	addActivityHandler("POSIX", "", "pread",     & JobStatsPlugin::handlePOSIXRead);
-	addActivityHandler("POSIX", "", "write",     & JobStatsPlugin::handlePOSIXWrite);
-	addActivityHandler("POSIX", "", "readv",     & JobStatsPlugin::handlePOSIXRead);
-	addActivityHandler("POSIX", "", "close",     & JobStatsPlugin::handlePOSIXClose);
-	addActivityHandler("POSIX", "", "sync",      & JobStatsPlugin::handlePOSIXSync);
-	addActivityHandler("POSIX", "", "fdatasync", & JobStatsPlugin::handlePOSIXSync);
-	addActivityHandler("POSIX", "", "lseek",     & JobStatsPlugin::handlePOSIXSeek);
+  if (0 == opts.interface.compare("POSIX")) {
+	  io_iface = IOInterface::POSIX;
+  }
+  else if (0 == opts.interface.compare("MPI")) {
+	  io_iface = IOInterface::MPI;
+  }
+  else {
+    perror("Bad interface");
+    exit(1);
+  }
 
-	IGNORE_ERROR(fhID           = o->lookup_attribute_by_name( "POSIX", "descriptor/filehandle" ).aID;)
-	IGNORE_ERROR(fname          = o->lookup_attribute_by_name( "POSIX", "descriptor/filename" ).aID;)
-	IGNORE_ERROR(bytesReadID    = o->lookup_attribute_by_name( "POSIX", "quantity/BytesRead" ).aID;)
-	IGNORE_ERROR(positionID     = o->lookup_attribute_by_name( "POSIX", "file/position" ).aID;)
-	IGNORE_ERROR(bytesWrittenID = o->lookup_attribute_by_name( "POSIX", "quantity/BytesWritten" ).aID;)
+	switch (io_iface) 
+	{
+		case IOInterface::POSIX:
+			addActivityHandler("POSIX", "", "open",      & JobStatsPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "creat",     & JobStatsPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "write",     & JobStatsPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "read",      & JobStatsPlugin::handleRead);
+			addActivityHandler("POSIX", "", "pwritev",   & JobStatsPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "pread",     & JobStatsPlugin::handleRead);
+			addActivityHandler("POSIX", "", "write",     & JobStatsPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "readv",     & JobStatsPlugin::handleRead);
+			addActivityHandler("POSIX", "", "close",     & JobStatsPlugin::handleClose);
+			addActivityHandler("POSIX", "", "sync",      & JobStatsPlugin::handleSync);
+			addActivityHandler("POSIX", "", "fdatasync", & JobStatsPlugin::handleSync);
+			addActivityHandler("POSIX", "", "lseek",     & JobStatsPlugin::handleSeek);
+
+			IGNORE_ERROR(fhID[IOInterface::POSIX]           = o->lookup_attribute_by_name("POSIX", "descriptor/filehandle").aID;)
+			IGNORE_ERROR(fname[IOInterface::POSIX]          = o->lookup_attribute_by_name("POSIX", "descriptor/filename").aID;)
+			IGNORE_ERROR(bytesReadID[IOInterface::POSIX]    = o->lookup_attribute_by_name("POSIX", "quantity/BytesRead").aID;)
+			IGNORE_ERROR(positionID[IOInterface::POSIX]     = o->lookup_attribute_by_name("POSIX", "file/position").aID;)
+			IGNORE_ERROR(bytesWrittenID[IOInterface::POSIX] = o->lookup_attribute_by_name("POSIX", "quantity/BytesWritten").aID;)
+			break;
+		case IOInterface::MPI:
+			addActivityHandler("MPI", "Generic", "MPI_File_open",  & JobStatsPlugin::handleOpen);
+			addActivityHandler("MPI", "Generic", "MPI_File_read",  & JobStatsPlugin::handleRead);
+			addActivityHandler("MPI", "Generic", "MPI_File_write", & JobStatsPlugin::handleWrite);
+			addActivityHandler("MPI", "Generic", "MPI_File_close", & JobStatsPlugin::handleClose);
+
+			IGNORE_ERROR(fhID[IOInterface::MPI]           = o->lookup_attribute_by_name("MPI", "descriptor/filehandle").aID;)
+			IGNORE_ERROR(fname[IOInterface::MPI]          = o->lookup_attribute_by_name("MPI", "descriptor/filename").aID;)
+			IGNORE_ERROR(bytesReadID[IOInterface::MPI]    = o->lookup_attribute_by_name("MPI", "quantity/BytesToRead").aID;)
+			IGNORE_ERROR(positionID[IOInterface::MPI]     = o->lookup_attribute_by_name("MPI", "file/position").aID;)
+			IGNORE_ERROR(bytesWrittenID[IOInterface::MPI] = o->lookup_attribute_by_name("MPI", "quantity/BytesToWrite").aID;)
+			break;
+	}
 
 	multiplexer->registerCatchall(this, static_cast<ActivityMultiplexer::Callback>(&JobStatsPlugin::notify), false);	
 }
@@ -84,12 +113,19 @@ void JobStatsPlugin::initPlugin() {
 
 
 void JobStatsPlugin::addActivityHandler (const string & interface, const string & impl, const string & a, void (JobStatsPlugin::* handler)(std::shared_ptr<Activity>)) {
-//	SystemInformationGlobalIDManager * s = tr->getSystemInformationGlobalIDManager();
-	SystemInformationGlobalIDManager * s = facade->get_system_information();
-	UniqueInterfaceID uiid = s->lookup_interfaceID( interface, impl );
+//	SystemInformationGlobalIDManager* s = tr->getSystemInformationGlobalIDManager();
+	SystemInformationGlobalIDManager* s = facade->get_system_information();
+	UniqueInterfaceID uiid;
+	try { 
+		uiid = s->lookup_interfaceID(interface, impl);
+	}
+	catch (NotFoundError & e) {
+		cout << "Error: interface/implementation not found: " << interface << "/" << impl <<  std::endl;
+		exit(1);
+	}
 
 	try {
-		UniqueComponentActivityID  ucaid = s->lookup_activityID( uiid, a );
+		UniqueComponentActivityID  ucaid = s->lookup_activityID(uiid, a);
 		activityHandlers[ucaid] = handler;
 	}
 	catch (NotFoundError & e) {
@@ -130,7 +166,7 @@ static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& acce
 	size_t next_seq_pos = 0;
 
 	for (const auto access : accesses) {
-		ofile << access_name  << " " <<  access.startTime << " " << access.endTime << " " << access.offset << " " << access.size << std::endl;
+		ofile << access_name << " " << access.endTime - access.startTime << " " << access.offset << " " << access.size << std::endl;
 		sum += access.size;
 
 		if (access.offset + access.size != next_seq_pos) {
@@ -142,7 +178,8 @@ static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& acce
 		next_seq_pos = access.offset + access.size;
 	}
 	ofile << "sum: " << sum << " bytes" << std::endl;
-	ofile << "rnd_access: " << rnd_access << " " << "seq_access: " <<  seq_access <<  std::endl;
+	ofile << "rnd_access: " << rnd_access << std::endl;
+  ofile << "seq_access: " << seq_access << std::endl;
 }
 
 
@@ -158,13 +195,33 @@ void JobStatsPlugin::printFileAccess (const OpenFiles& file) {
 
 
 
+static bool comp(const OpenFiles& f1, const OpenFiles f2) {
+  size_t size1 = f1.readAccesses.size() + f1.writeAccesses.size() + f1.syncOperations.size();
+  size_t size2 = f2.readAccesses.size() + f2.writeAccesses.size() + f2.syncOperations.size();
+  return size1 > size2;
+}
+
+
+
 void JobStatsPlugin::finalize() {
 	mkdir("plot", 0777);
+
+  std::vector<OpenFiles> tmp;
 	for (const auto file : openFiles) {
-		printFileAccess(file.second);
+		tmp.push_back(file.second);
 	}
 	for (const auto file : unnamedFiles) {
-		printFileAccess(file.second);
+		tmp.push_back(file.second);
+	}
+
+  sort(tmp.begin(), tmp.end(), comp);
+
+  size_t counter = 0;
+	for (const auto file : tmp) {
+		printFileAccess(file);
+    if (0 != file_limit && ++counter >= file_limit) {
+      break;
+    }
 	}
 }
 
@@ -219,7 +276,7 @@ OpenFiles* JobStatsPlugin::findParentFileByFh (const std::shared_ptr<Activity> a
 	OpenFiles* parent = findParentFile(a);
 	if (nullptr == parent) {
 		// add a dummy for the file handle since we do not know the filename
-		uint32_t fh = findUINT32AttributeByID(a, fhID);
+		uint32_t fh = findUINT32AttributeByID(a, fhID[io_iface]);
 
 		if (unnamedFiles.count(fh) > 0) {
 			parent = & unnamedFiles[fh];
@@ -236,23 +293,23 @@ OpenFiles* JobStatsPlugin::findParentFileByFh (const std::shared_ptr<Activity> a
 
 
 
-void JobStatsPlugin::handlePOSIXSeek (std::shared_ptr<Activity> a) {
+void JobStatsPlugin::handleSeek (std::shared_ptr<Activity> a) {
 	OpenFiles* parent = findParentFileByFh(a);
-	parent->currentPosition = findUINT64AttributeByID(a, positionID);
+	parent->currentPosition = findUINT64AttributeByID(a, positionID[io_iface]);
 }
 
 
 
-void JobStatsPlugin::handlePOSIXSync (std::shared_ptr<Activity> a) {
+void JobStatsPlugin::handleSync(std::shared_ptr<Activity> a) {
 	OpenFiles* parent = findParentFileByFh(a);
 	parent->syncOperations.push_back({a->time_start_, a->time_stop_});
 }
 
 
 
-void JobStatsPlugin::handlePOSIXWrite (std::shared_ptr<Activity> a) {
-	uint64_t bytes = findUINT64AttributeByID(a, bytesWrittenID);
-	uint64_t position = findUINT64AttributeByID(a, positionID);
+void JobStatsPlugin::handleWrite (std::shared_ptr<Activity> a) {
+	uint64_t bytes = findUINT64AttributeByID(a, bytesWrittenID[io_iface]);
+	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
 
 	OpenFiles* parent = findParentFileByFh(a);
 	if (position == INVALID_UINT64) {
@@ -264,9 +321,9 @@ void JobStatsPlugin::handlePOSIXWrite (std::shared_ptr<Activity> a) {
 
 
 
-void JobStatsPlugin::handlePOSIXRead (std::shared_ptr<Activity> a) {
-	uint64_t bytes = findUINT64AttributeByID(a, bytesReadID);
-	uint64_t position = findUINT64AttributeByID(a, positionID);
+void JobStatsPlugin::handleRead (std::shared_ptr<Activity> a) {
+	uint64_t bytes = findUINT64AttributeByID(a, bytesReadID[io_iface]);
+	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
 
 	OpenFiles* parent = findParentFileByFh(a);
 	if (position == INVALID_UINT64) {
@@ -278,19 +335,19 @@ void JobStatsPlugin::handlePOSIXRead (std::shared_ptr<Activity> a) {
 
 
 
-void JobStatsPlugin::handlePOSIXOpen (std::shared_ptr<Activity> a) {
-  const string name{findStrAttributeByID(a, fname)};
+
+void JobStatsPlugin::handleOpen (std::shared_ptr<Activity> a) {
+  const string name{findStrAttributeByID(a, fname[io_iface])};
 	openFiles[a->aid()] = {name, a->time_start_, 0, 0, a->aid_};
 }
 
 
 
-void JobStatsPlugin::handlePOSIXClose (std::shared_ptr<Activity> a) {
+void JobStatsPlugin::handleClose (std::shared_ptr<Activity> a) {
 	OpenFiles* parent = findParentFileByFh(a);
 	assert(nullptr != parent);
 	parent->closeTime = a->time_stop_;
 }
-
 
 
 extern "C" {
