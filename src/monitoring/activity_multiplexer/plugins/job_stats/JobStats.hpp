@@ -45,12 +45,17 @@ enum class IOInterface {
 	POSIX, MPI
 };
 
+enum class IOAccessType {
+	READ, WRITE, SYNC
+};
+
 struct Operation {
 	Timestamp startTime;
 	Timestamp endTime;
 };
 
 struct Access {
+	IOAccessType type;
 	Timestamp startTime;
 	Timestamp endTime;
 	uint64_t offset;
@@ -63,8 +68,7 @@ struct OpenFiles {
 	Timestamp closeTime;
 	uint64_t currentPosition;
 	ActivityID aid; 
-	vector<Access> readAccesses;
-	vector<Access> writeAccesses;
+	vector<Access> accesses;
 	vector<Operation> syncOperations;
 };
 

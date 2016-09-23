@@ -159,15 +159,22 @@ static double convertTime(Timestamp time) {
 
 
 
-static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& accesses, const std::string& access_name) {
+static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& accesses) {
 	size_t rnd_access = 0;
 	size_t seq_access = 0;
-	size_t sum = 0;
 	size_t next_seq_pos = 0;
 
 	for (const auto access : accesses) {
-		ofile << access_name << " " << access.endTime - access.startTime << " " << access.offset << " " << access.size << std::endl;
-		sum += access.size;
+    switch (access.type) {
+      case IOAccessType::WRITE:
+        ofile << "write ";
+        break;
+      case IOAccessType::READ:
+        ofile << "read ";
+        break;
+    }
+
+		ofile << " - time " << access.endTime - access.startTime <<  " ns - offset " << access.offset << " bytes - size " << access.size << " bytes" << std::endl;
 
 		if (access.offset + access.size != next_seq_pos) {
 			++rnd_access;
@@ -177,35 +184,35 @@ static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& acce
 		}
 		next_seq_pos = access.offset + access.size;
 	}
-	ofile << "sum: " << sum << " bytes" << std::endl;
-	ofile << "rnd_access: " << rnd_access << std::endl;
-  ofile << "seq_access: " << seq_access << std::endl;
+	ofile << "count_rnd_accesses " << rnd_access << std::endl;
+  ofile << "count_seq_accesses " << seq_access << std::endl;
 }
 
 
 
 void JobStatsPlugin::printFileAccess (const OpenFiles& file) {
   ofile << file.name << std::endl;
-  ofile << "open: " << file.openTime << std::endl;
-  ofile << "close: " << file.closeTime << std::endl;
-	print_bullshit(ofile, file.readAccesses, "read");
-	print_bullshit(ofile, file.writeAccesses, "write");
+  ofile << "open " << file.openTime << std::endl;
+  ofile << "close " << file.closeTime << std::endl;
+	print_bullshit(ofile, file.accesses);
+  size_t bytesRead    = std::accumulate(file.accesses.begin(), file.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return (IOAccessType::READ  == access.type) ? sum + access.size : sum;});
+  size_t bytesWritten = std::accumulate(file.accesses.begin(), file.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return (IOAccessType::WRITE == access.type) ? sum + access.size : sum;});
+  ofile << "bytes_written: " << bytesWritten << std::endl;
+  ofile << "bytes_read: " << bytesRead << std::endl;
 	ofile << std::endl;
 }
 
 
 
 static bool comp(const OpenFiles& f1, const OpenFiles f2) {
-  size_t size1 = f1.readAccesses.size() + f1.writeAccesses.size() + f1.syncOperations.size();
-  size_t size2 = f2.readAccesses.size() + f2.writeAccesses.size() + f2.syncOperations.size();
+  size_t size1 = f1.accesses.size() + f1.syncOperations.size();
+  size_t size2 = f2.accesses.size() + f2.syncOperations.size();
   return size1 > size2;
 }
 
 
 
 void JobStatsPlugin::finalize() {
-	mkdir("plot", 0777);
-
   std::vector<OpenFiles> tmp;
 	for (const auto file : openFiles) {
 		tmp.push_back(file.second);
@@ -283,7 +290,7 @@ OpenFiles* JobStatsPlugin::findParentFileByFh (const std::shared_ptr<Activity> a
 		}
 		else {
 			stringstream s;
-			s << "generic_file_" << ++fh_counter;
+			s << "generic_filename_" << ++fh_counter;
 			unnamedFiles[fh] = {s.str(), a->time_start_, fh + 10000000};
 			parent = & unnamedFiles[fh];
 		}
@@ -316,7 +323,7 @@ void JobStatsPlugin::handleWrite (std::shared_ptr<Activity> a) {
 		position = parent->currentPosition;
 		parent->currentPosition += bytes;
 	}
-	parent->writeAccesses.push_back(Access{a->time_start_, a->time_stop_, position, bytes});
+	parent->accesses.push_back(Access{IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytes});
 }
 
 
@@ -330,9 +337,8 @@ void JobStatsPlugin::handleRead (std::shared_ptr<Activity> a) {
 		position = parent->currentPosition;
 		parent->currentPosition += bytes;
 	}
-	parent->readAccesses.push_back(Access{a->time_start_, a->time_stop_, position, bytes});
+	parent->accesses.push_back(Access{IOAccessType::READ, a->time_start_, a->time_stop_, position, bytes});
 }
-
 
 
 
