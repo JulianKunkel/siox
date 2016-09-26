@@ -14,6 +14,7 @@ add_subdirectory(binwriter)
 add_subdirectory(access_info_plotter)
 add_subdirectory(print)
 add_subdirectory(CSVExtractor)
+add_subdirectory(file_access_info)
 
 # replay related plugins
 add_subdirectory(replay)
