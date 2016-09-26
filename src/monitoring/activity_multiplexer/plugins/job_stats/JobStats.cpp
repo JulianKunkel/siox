@@ -23,6 +23,8 @@
 #include <fstream>
 #include <algorithm>
 #include <cassert>
+#include <unistd.h>
+#include <iomanip>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -50,7 +52,10 @@ void JobStatsPlugin::initPlugin() {
 	
 	JobStatsPluginOptions& opts = getOptions<JobStatsPluginOptions>();
 	verbosity = opts.verbosity;
-  ofile.open(opts.output);  
+
+ 	stringstream buff;
+ 	buff << opts.output << (long long unsigned) getpid();
+  ofile.open(buff.str());  
 
 
 //	regex = opts.regex; // not implemented?
@@ -71,18 +76,23 @@ void JobStatsPlugin::initPlugin() {
     exit(1);
   }
 
+
+
 	switch (io_iface) 
 	{
 		case IOInterface::POSIX:
 			addActivityHandler("POSIX", "", "open",      & JobStatsPlugin::handleOpen);
-			addActivityHandler("POSIX", "", "creat",     & JobStatsPlugin::handleOpen);
-			addActivityHandler("POSIX", "", "write",     & JobStatsPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "read",      & JobStatsPlugin::handleRead);
-			addActivityHandler("POSIX", "", "pwritev",   & JobStatsPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "pread",     & JobStatsPlugin::handleRead);
-			addActivityHandler("POSIX", "", "write",     & JobStatsPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "readv",     & JobStatsPlugin::handleRead);
 			addActivityHandler("POSIX", "", "close",     & JobStatsPlugin::handleClose);
+			addActivityHandler("POSIX", "", "creat",     & JobStatsPlugin::handleOpen);
+
+			addActivityHandler("POSIX", "", "read",      & JobStatsPlugin::handleRead);
+			addActivityHandler("POSIX", "", "pread",     & JobStatsPlugin::handleRead);
+			addActivityHandler("POSIX", "", "readv",     & JobStatsPlugin::handleRead);
+
+			addActivityHandler("POSIX", "", "pwritev",   & JobStatsPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "pwrite",     & JobStatsPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "write",     & JobStatsPlugin::handleWrite);
+
 			addActivityHandler("POSIX", "", "sync",      & JobStatsPlugin::handleSync);
 			addActivityHandler("POSIX", "", "fdatasync", & JobStatsPlugin::handleSync);
 			addActivityHandler("POSIX", "", "lseek",     & JobStatsPlugin::handleSeek);
@@ -167,14 +177,17 @@ static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& acce
 	for (const auto access : accesses) {
     switch (access.type) {
       case IOAccessType::WRITE:
-        ofile << "write ";
+        ofile << setw(25) << "write ";
         break;
       case IOAccessType::READ:
-        ofile << "read ";
+        ofile << setw(25) << "read ";
         break;
     }
 
-		ofile << " - time " << access.endTime - access.startTime <<  " ns - offset " << access.offset << " bytes - size " << access.size << " bytes" << std::endl;
+		ofile 
+			<< setw(10) << right << "[time " << setw(10) << access.endTime - access.startTime <<  " ns]" 
+			<< setw(10) << right << "[offset " << setw(10) << access.offset << " bytes]" 
+			<< setw(10) << right << "[size " << setw(10) << access.size << " bytes]" << std::endl;
 
 		if (access.offset + access.size != next_seq_pos) {
 			++rnd_access;
@@ -184,21 +197,22 @@ static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& acce
 		}
 		next_seq_pos = access.offset + access.size;
 	}
-	ofile << "count_rnd_accesses " << rnd_access << std::endl;
-  ofile << "count_seq_accesses " << seq_access << std::endl;
+	ofile << setw(25) << "count_rnd_accesses " << rnd_access << std::endl;
+  ofile << setw(25) << "count_seq_accesses " << seq_access << std::endl;
 }
 
 
 
 void JobStatsPlugin::printFileAccess (const OpenFiles& file) {
   ofile << file.name << std::endl;
-  ofile << "open " << file.openTime << std::endl;
-  ofile << "close " << file.closeTime << std::endl;
+  ofile << setw(25) << "open " << setw(20) << right << file.openTime << " ns" << std::endl;
+  ofile << setw(25) << "close " << setw(20) << right << file.closeTime << " ns" << std::endl;
+	ofile << setw(25) << "duration " << file.closeTime - file.openTime << " ns" << std::endl;
 	print_bullshit(ofile, file.accesses);
   size_t bytesRead    = std::accumulate(file.accesses.begin(), file.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return (IOAccessType::READ  == access.type) ? sum + access.size : sum;});
   size_t bytesWritten = std::accumulate(file.accesses.begin(), file.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return (IOAccessType::WRITE == access.type) ? sum + access.size : sum;});
-  ofile << "bytes_written: " << bytesWritten << std::endl;
-  ofile << "bytes_read: " << bytesRead << std::endl;
+  ofile << setw(25) << "written " << bytesWritten << " bytes" << std::endl;
+  ofile << setw(25) << "read " << bytesRead << " bytes" << std::endl;
 	ofile << std::endl;
 }
 
