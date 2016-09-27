@@ -14,5 +14,11 @@ template = {
 		'variables': 'Name=%(FUNCTION_NAME)s ComponentActivity=cv%(FUNCTION_NAME)s ComponentVariable=global ActivityVar=sioxActivity Condition="ret<0"',
 		'templates': ["@guard", "@errorErrno Condition=''%(Condition)s'' Activity=%(ActivityVar)s", "@activity Name=%(Name)s ComponentActivity=%(ComponentActivity)s ComponentVariable=%(ComponentVariable)s ActivityVariable=%(ActivityVar)s"]
 	},
+	'syscall' : {
+		'variables' : 'Name=%(FUNCTION_NAME)s Arguments',
+		'templates' : ["@replaceCall syscall ''%(Name)s,%(Arguments)s''"]
+	}
 }
-
+templateParameters = {
+"includes" : ['<syscall.h>']
+}

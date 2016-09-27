@@ -82,7 +82,7 @@ End of global part
 //@splice_before SET_FILENAME(pathname)
 //@activity_attribute_late fileHandle ret
 //@horizontal_map_put_int ret
-//@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
+//@syscall SYS_open ''pathname,flags,mode''
 int open( const char * pathname, int flags, ... );
 
 //@POSIX_activity
@@ -98,7 +98,7 @@ int creat( const char * pathname, mode_t mode );
 //@activity_attribute fileOpenFlags translatedFlags
 //@horizontal_map_put_int ret
 //@activity_attribute_late fileHandle ret
-//@rewriteCall open ''pathname,flags,mode'' ''const char *pathname, int flags, mode_t mode''
+//@syscall SYS_open ''pathname,flags,mode''
 int open64( const char * pathname, int flags, ... );
 
 //@POSIX_activity Name=creat
@@ -113,6 +113,7 @@ int creat64( const char * pathname, mode_t mode );
 //@activity_attribute fileHandle fd
 //@horizontal_map_remove_int fd
 //@horizontal_map_remove_int fd MapName=activityHashTable_network_int
+//@syscall SYS_close ''fd''
 int close( int fd );
 
 //@guard
@@ -156,6 +157,7 @@ ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 //@activity_attribute fileHandle fd
 //@activity_attribute memoryAddress buf
 //@activity_attribute_late bytesWritten ret
+//@syscall SYS_write ''fd,buf,count''
 ssize_t write( int fd, const void * buf, size_t count );
 
 //@guard
@@ -165,6 +167,7 @@ ssize_t write( int fd, const void * buf, size_t count );
 //@activity_attribute memoryAddress buf
 //@activity_attribute fileHandle fd
 //@activity_attribute_late bytesRead ret
+//@syscall SYS_read ''fd,buf,count''
 ssize_t read( int fd, void * buf, size_t count );
 
 //@guard

@@ -46,6 +46,7 @@ def parseTemplate(file):
     global template
     # import the templates (symbol template)
     templateOld = template
+    templateParametersOld = templateParameters
 
     namespace = {}
     with open(file, "r") as fh:
@@ -60,7 +61,7 @@ def parseTemplate(file):
         if not "global" in entries:
             entries["global"] = ""
         if not "global_end" in entries:
-            entries["global_end"] = ""            
+            entries["global_end"] = ""
         entries["variablesDefaults"] = {}
         if not "variables" in entries:
             entries["variables"] = []
@@ -95,7 +96,7 @@ def parseTemplate(file):
         if not "cleanup" in entries:
             entries["cleanup"] = ""
         if not "cleanupLast" in entries:
-            entries["cleanupLast"] = ""                
+            entries["cleanupLast"] = ""
         if not "final" in entries:
             entries["final"] = ""
         if not "finalOnce" in entries:
@@ -104,6 +105,16 @@ def parseTemplate(file):
             entries["finalOnceLast"] = ""
 
     template.update(templateOld)
+    # update the old templateparameters
+    for key in templateParameters:
+        if key in templateParametersOld:
+            if isinstance(templateParameters[key], str):
+                templateParameters[key] = templateParameters[key] + " " + templateParametersOld[key]
+            else:
+                templateParameters[key].extend(templateParametersOld[key])
+    for key in templateParametersOld:
+        if key not in templateParameters:
+            templateParameters[key] = templateParametersOld[key]
 
 #
 # @brief Generate and handle the command line parsing.
@@ -151,11 +162,11 @@ from a other header file.''')
                                action='store', dest='wrapFile', default="options.gcc",
                                help='Redirect the GCC wrap options from stdout into a file')
 
-        argParser.add_argument('--template', '-t', action='append', 
+        argParser.add_argument('--template', '-t', action='append',
                                dest='template',
                                help='Provide an alternative template.')
 
-        argParser.add_argument('--relaxed', action='store_true', 
+        argParser.add_argument('--relaxed', action='store_true',
                                dest='relaxedMode',
                                help='Do not check the existence of template commands -- thus ignore commands from unknown commands.')
 
@@ -168,7 +179,7 @@ from a other header file.''')
 
         if args.outputFile:
             args.outputFile = args.outputFile[0]
-                
+
         return args
 
 #
@@ -191,6 +202,7 @@ class Function():
         self.definition = ''
         self.usedTemplateList = []
         self.rewriteCall = False
+        self.replaceCall = False
         self.rewriteCallParams = False
         self.rewriteCallArguments = False
         self.writeFunctionCall = True
@@ -201,8 +213,9 @@ class Function():
         # Special rewrite rules for change in function names.
         # print(self.name)
         for t in self.usedTemplateList:
-            if(t.name == "rewriteCall"):
+            if(t.name == "rewriteCall" or t.name == "replaceCall"):
                 self.rewriteCall = t.parameterList['functionName']
+                self.replaceCall = (t.name == "replaceCall")
                 if t.parameterList['arguments'] != "":
                     self.rewriteCallArguments = t.parameterList['arguments']
                 if t.parameterList['parameters'] != "":
@@ -259,12 +272,15 @@ class Function():
     # functionality. The Call will be prefixed with __real_ and used as the
     # original function.
     def getCallReal(self):
+        if self.replaceCall:
+            return self.rewriteCall + "(" +  self.rewriteCallArguments + ")"
+
         if self.rewriteCallArguments:
             arguments = self.rewriteCallArguments
         else:
             arguments = ', '.join(parameter.name for parameter in self.parameterList)
 
-        name = self.name 
+        name = self.name
         if self.rewriteCall:
             name = self.rewriteCall
 
@@ -325,6 +341,9 @@ class Function():
     # Generate the function pointer call for dlsym. The function
     # pointer call looks something like: (__real_funcName)(parameter).
     def getCallPointer(self):
+        if self.replaceCall:
+            return self.rewriteCall + "(" +  self.rewriteCallArguments + ")"
+
         if self.rewriteCallArguments:
             arguments = self.rewriteCallArguments
         else:
@@ -374,7 +393,7 @@ class Function():
         if self.rewriteCall:
             functionName = self.rewriteCall
         else:
-            functionName = self.name        
+            functionName = self.name
 
         if self.definition == '':
 
@@ -513,7 +532,7 @@ class FunctionParser():
         string = re.sub('/\*.*?\*/', '', string, flags=re.M | re.S)
         string = re.sub('//.*', '', string)
         string = re.sub('#.*', '', string)
-        
+
         # Match all function definitions
         iterateFunctionDefinition = self.regexFunctionDefinition.finditer(
             string)
@@ -574,7 +593,7 @@ class FunctionParser():
                         parameterName = ''
                         parameterType = parameter
 
-                    else:                        
+                    else:
                         parameterMatch = self.regexParameterDefinition.match(parameter)
 
                         if not parameterMatch:
@@ -638,13 +657,13 @@ class TemplateList():
         self.options = options
 
         if "ALL_FUNCTIONS" in template.keys():
-            self.list = [ Template( template["ALL_FUNCTIONS"], "ALL_FUNCTIONS", "", self.options)] 
+            self.list = [ Template( template["ALL_FUNCTIONS"], "ALL_FUNCTIONS", "", self.options)]
 
     def append(self, commandParser, template):
         self.list.append(template)
-
         if "templates" in template.templateDict:
             tlist = template.templateDict["templates"]
+
             genericVariablesForTemplates = {}
             for t in tlist:
                 replaced = template.cleanOutput( t, genericVariablesForTemplates )
@@ -671,7 +690,7 @@ class CommandParser():
         self.precompilerRegex = re.compile('^\s*#\s*(.*)\s*')
 
         self.strictMode = not options.relaxedMode
-        
+
         self.options = options
 
     #
@@ -749,7 +768,7 @@ class CommandParser():
 
     def matchPrecompiler(self, inputLine):
         match = self.precompilerRegex.match(inputLine)
-        if match:            
+        if match:
             return match.group(1).strip()
         else:
             return False
@@ -825,7 +844,7 @@ class Template():
         self.options =  options
         self.strictMode = not options.relaxedMode
         # Generate strings for output from given input
-        
+
 
         self.default_value_dictionary = {}
         nameList = self.templateDict['variables']
@@ -914,7 +933,7 @@ class Template():
                 # desireable e.g. when generating replay code
                 print('WARNING: Section "', type, '" not specified for "', self.name, '".', sep='', file=sys.stderr)
                 return ""
-            
+
 
 #
 # @brief The main function.
@@ -934,10 +953,10 @@ def main():
         functionParser = FunctionParser(options)
         functions = functionParser.parseFile()
         outputWriter.headerFile(options, functions)
-    else:                
+    else:
         commandParser = CommandParser(options)
         functions = commandParser.parse()
-		
+
         outputWriter.writeOutput(options, functions, templateParameters, precompiler)
 
         os.system( "indent -kr -l120 -nut -ts2 " + options.outputFile + " >/dev/null 2>&1")

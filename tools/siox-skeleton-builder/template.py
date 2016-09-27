@@ -687,6 +687,15 @@ static void sioxInit() __attribute__((constructor));
         'after': '',
         'cleanup': '',
         'final': ''
+},
+'replaceCall': { # This is a special template, interpreted by the skeleton-builder !
+        'variables': 'functionName arguments= parameters=',
+        'global': '',
+        'init': '',
+        'before': '',
+        'after': '',
+        'cleanup': '',
+        'final': ''
 }
 ,
 'supressFunctionCall': { # This is a special template, interpreted by the skeleton-builder !

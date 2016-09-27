@@ -28,7 +28,7 @@ class Style(skeletonBuilder.Writer):
                 outputString = templ.output('init', functionVariables)
                 if outputString != '':
                     print('\t', outputString, end='\n', sep='', file=output)
-        
+
         for function in reversed(functionList):
             functionVariables = self.functionVariables(function)
 
@@ -54,7 +54,7 @@ class Style(skeletonBuilder.Writer):
         for templ in function.usedTemplateList:
             outputString = templ.output('finalOnceLast', functionVariables)
             if outputString != '':
-                print('\t', outputString, end='\n', sep='', file=output)                    
+                print('\t', outputString, end='\n', sep='', file=output)
         print("}", file=output)
 
         # write all functions-bodies
@@ -75,7 +75,7 @@ class Style(skeletonBuilder.Writer):
 
             # look for va_lists because they need special treament
             if function.parameterList[-1].type == "...":
-                if not function.rewriteCall:
+                if not function.rewriteCall and function.writeFunctionCall:
                     print("function: " + function.getDefinition() + " needs the rewriteCall annotation since it supports va_args")
                     exit(1)
 
@@ -98,7 +98,7 @@ class Style(skeletonBuilder.Writer):
             # write the function call
             if function.writeFunctionCall:
                 print(functionCall, file=output)
-            
+
             self.writeAfter(function, output, functionVariables)
 
             # look for va_lists because they need special treament
@@ -125,4 +125,3 @@ class Style(skeletonBuilder.Writer):
 
             print(gccHelper, file=output)
             output.close()
-
