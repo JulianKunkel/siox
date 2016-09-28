@@ -390,6 +390,7 @@ int __fxstat( int __ver, int fd, struct stat * buf );
 //@activity_attribute fileHandle fd
 //@activity_attribute fileExtent length
 //@activity_attribute filePosition offset
+//@syscall SYS_mmap ''address, length, protect, flags, fd, offset''
 void * mmap( void * address, size_t length, int protect, int flags, int fd, off_t offset );
 
 //@guard
