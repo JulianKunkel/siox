@@ -43,8 +43,10 @@ class ActivityMutator: public ActivityMultiplexerPlugin {
 		 */
 		void initPlugin() {
 			ActivityMutatorOptions & options = getOptions<ActivityMutatorOptions>();
-			out = GET_INSTANCE(ActivityMultiplexer, options.target_multiplexer);
-			multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityMutator::Notify ), false );
+            UniqueInterfaceID ucaid = lookupUCAID( "open" );
+            if ( ucaid != 0 )
+                multiplexer->registerForUcaid( ucaid, this, static_cast<ActivityMultiplexer::Callback>( &ActivityMutator::openHandler ), false );
+            //multiplexer->registerCatchall( this, static_cast<ActivityMultiplexer::Callback>( &ActivityMutator::Notify ), false );
 		}
 
 		void finalize() {
@@ -56,6 +58,14 @@ class ActivityMutator: public ActivityMultiplexerPlugin {
 		/** Receiving ActivityMultiplexer */
 		ActivityMultiplexer * out = nullptr;
 };
+
+/*
+ * Create a new survey and initialize its data
+ */
+void ActivityMutator::openHandler( const shared_ptr<Activity> & activity, int lost ) {
+    out << "File Opened" << endl;
+
+{
 
 extern "C" {
 	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME()
