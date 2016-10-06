@@ -33,6 +33,8 @@ class FileAccessInfoPluginOptions : public monitoring::ActivityMultiplexerPlugin
 		uint32_t verbosity;
 		string exclude_regex; // exclude files
 		int file_limit; // track at most n files (most used)
+		int enableTrace;
+		int enableSyscallStats;
 		vector<string> tokens;
 		string interface; // mpi or posix
 		string output;

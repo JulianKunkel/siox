@@ -86,6 +86,8 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 		Ontology* o;
 		size_t verbosity = 0;
 		size_t fh_counter = 0; // dummy file handler counter
+		int enableSyscallStats;
+		int enableTrace;
 		std::unordered_map<ActivityID, OpenFiles> openFiles;
 		std::unordered_map<int, OpenFiles> unnamedFiles;
 		std::unordered_map<UniqueComponentActivityID, void (FileAccessInfoPlugin::*)(std::shared_ptr<Activity>)> activityHandlers;
@@ -98,14 +100,14 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> fhID;
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> fname;
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesReadID;
+		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesToReadID;
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> positionID;
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesWrittenID;		
+		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesToWriteID;		
 
 		
 		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (FileAccessInfoPlugin::* handler)(std::shared_ptr<Activity>));
 		void printFileAccess(const OpenFiles & file);
-//		void plotSingleFileAccess(const string & type, const vector<Access> & accessVector, ofstream & f, const OpenFiles & file);
-//		void plotSingleFileOperation(const string & type, const vector<Operation> & ops, ofstream & f, const OpenFiles & file);
 		void handleOpen(std::shared_ptr<Activity> activity);
 		void handleSync(std::shared_ptr<Activity> activity);
 		void handleWrite(std::shared_ptr<Activity> activity);
