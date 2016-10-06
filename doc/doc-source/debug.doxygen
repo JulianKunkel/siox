@@ -1,0 +1,36 @@
+/**
+@page Debugging Debugging
+
+@subsection GDB GDB
+
+Start your application as usual with GDB and assign the necessary library to the LD_PRELOAD variable.
+
+~~~.sh
+set environment LD_PRELOAD=/work/ku0598/k202107/git/siox/siox-access_info_plotter/install/lib64/libsiox-posix-dlsym.so
+~~~
+
+Probably the LD_LIBRARY_PATH must also be set.
+
+~~~.sh
+set environment LD_LIBRARY_PATH=/work/ku0598/k202107/software/install/glib/2.48.0/lib:/work/ku0598/k202107/git/siox/siox-access_info_plotter/install/lib64:...
+~~~
+
+When these steps are done correctly, GDB will you the right libraries.
+
+
+
+
+@subsection Overhead
+
+
+Uncomment int the file ./siox/tools/siox-skeleton-builder/template.py the following lines:
+
+~~~.cpp
+t_tmp = siox_gettime(); 
+~~~
+
+Define the following variable, to make SIOX save the statistics.
+~~~.bash
+export SIOX_WRITE_OVERHEAD_FILE=derKaiser.txt
+~~~
+*/
