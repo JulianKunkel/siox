@@ -60,10 +60,12 @@ namespace knowledge {
 			 * Inform the optimizer that @a plugin is able to suggest parameter
 			 * values for @a attribute.
 			 *
-			 * @param attribute [in]
+			 * @param [in] aid
 			 *      The attribute in question
-			 * @param plugin [in]
+			 * @param [in] plugin
 			 *      The plugin that will provide suggestions
+			 *
+			 * @return 
 			 */
 			virtual bool registerPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) = 0;
 
@@ -71,7 +73,7 @@ namespace knowledge {
 			 * Is there a plug-in registered that can provide suggestions for
 			 * @a attribute?
 			 *
-			 * @param attribute [in]
+			 * @param [in] aid
 			 *      The attribute in question
 			 *
 			 * @return
@@ -84,15 +86,16 @@ namespace knowledge {
 			 * Remove @a attribute from the optimizer's list of attributes for
 			 * which suggestions can be provided.
 			 *
-			 * @param attribute [in]
+			 * @param [in] aid
 			 *      The attribute to remove from the list
+			 * @param plugin
 			 */
 			virtual bool unregisterPlugin( OntologyAttributeID aid, const OptimizerInterface * plugin ) = 0;
 
 			/**
 			 * Ask the optimizer to suggest a parameter for @a attribute.
 			 *
-			 * @param attribute [in]
+			 * @param [in] aid
 			 *      The attribute in question
 			 *
 			 * @return
@@ -102,16 +105,19 @@ namespace knowledge {
 			 */
 			virtual OntologyValue optimalParameter( OntologyAttributeID aid ) const throw( NotFoundError ) = 0;
 
+
 			/**
 			 * Ask the optimizer to suggest a parameter for @a attribute.
 			 *
-			 * @param attribute [in]
-			 *      The attribute in question
+			 * @param [in] aid The attribute in question
+			 * @param activityToStart
 			 *
-			 * @return
+			 * @return 
 			 *      The best value for attribute, as judged by the plugin
 			 *      registered for attribute with the optimizer, based
 			 *      upon current system statistics and activities.
+			 *
+			 * @throw NotFoundError 
 			 */
 			virtual OntologyValue optimalParameterFor( OntologyAttributeID aid, const Activity * activityToStart ) const throw( NotFoundError ) = 0;			
 	};

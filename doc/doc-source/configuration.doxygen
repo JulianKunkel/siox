@@ -24,8 +24,8 @@ siox-int will save activities to a trace file and siox-trace-reader will read th
 
 ### siox-inst ###
 
-To run siox-inst you need at least the four following plugins in the "#CONFIG Process" section:
-	- #CONFIG Process
+To run siox-inst you need at least the four following plugins in the "\#CONFIG Process" section:
+	- \#CONFIG Process
 	 - Multiplexer
 	 - Ontology
 	 - AssociationMapper
@@ -37,17 +37,17 @@ The Multiplexer is either connected to input nor to output plugins and can not d
 FileBasedSystemInformation, FileAssosiation and FileOntology have also no connections and no useful functions.  
 
 The following extension makes siox-inst write activities to a file:
-	- #CONFIG Process
+	- \#CONFIG Process
 	 - Topology
 	 - DereferencingFacade
-	- #CONFIG Interface POSIX 
+	- \#CONFIG Interface POSIX 
 	 - Multiplexer
 	 - ActivityBinWriter
-	- #CONFIG Interface POSIX_Network 
+	- \#CONFIG Interface POSIX_Network 
 	 - Multiplexer
 	  - to surpresss the warning "WARNING Invalid configuration set for component"
 
-When you insert these plugin configuration blocks and interconnect the plugins properly (see picture), then whenever the instrumented application execute a posix function, siox-inst will generate an activity and pass it to the Multiplexer in the "#CONFIG Interface POSIX" section.
+When you insert these plugin configuration blocks and interconnect the plugins properly (see picture), then whenever the instrumented application execute a posix function, siox-inst will generate an activity and pass it to the Multiplexer in the "\#CONFIG Interface POSIX" section.
 The Multiplexer will pass the activity to the Forwarder, which in turn will pass this activity to the Multiplexer in the "#CONFIG Interface Process" section.
 Finally the Multiplexer will send the activity to the connected output plugins.
 In out case it is only the Writer plugin, which saves the activities to the trace file.
@@ -62,7 +62,7 @@ It can capture and write I/O-calls to a file.
 
 
 Minimal configuration:
- - #CONFIG TraceReader 
+ - \#CONFIG TraceReader 
 	- ActivityInputStream
 	- Topology
 	- Ontology
@@ -71,7 +71,7 @@ Minimal configuration:
 
 
 To get the print functionality, add following plugins to the file:
-  - #CONFIG TraceReader 
+  - \#CONFIG TraceReader 
    - DereferencingFacade
    - Multiplexer
    - PrintPlugin

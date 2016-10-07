@@ -13,7 +13,7 @@ namespace monitoring {
 	 * Forwards logged activities to registered listeners (e.g. Plugins) either
 	 * in an syncronised or asyncronous manner.
 	 *
-	 * \dotfile pictures/multiplexer.dot Multiplexer
+	 * ToDo: include multiplexer.dot
 	 *
 	 */
 	class ActivityMultiplexer : public core::Component {

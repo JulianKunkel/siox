@@ -1,7 +1,7 @@
 /**
 @page Debugging Debugging
 
-@subsection GDB GDB
+@section GDB GDB
 
 Start your application as usual with GDB and assign the necessary library to the LD_PRELOAD variable.
 
@@ -20,7 +20,7 @@ When these steps are done correctly, GDB will you the right libraries.
 
 
 
-@subsection Overhead
+@section Overhead
 
 
 Uncomment int the file ./siox/tools/siox-skeleton-builder/template.py the following lines:
