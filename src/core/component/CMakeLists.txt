@@ -16,6 +16,13 @@ add_library(
 )
 
 target_link_libraries(
+	siox-core-ActivitySerializable
+	-L${Boost_LIBRARY_DIR}
+	${Boost_LIBRARIES}
+)
+
+
+target_link_libraries(
 	siox-core-ComponentRegistrar
 	siox-core-ActivitySerializable
 	-L${Boost_LIBRARY_DIR}

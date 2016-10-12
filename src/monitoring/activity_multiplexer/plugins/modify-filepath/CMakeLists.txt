@@ -10,11 +10,11 @@ set(PLUGIN_NAME ActivityModifyFilepath)
 
 add_library(
 	siox-monitoring-activityPlugin-${PLUGIN_NAME}
-	ActivityMutator.cpp
+    ModifyFilepath.cpp
 	BoostXMLSerializable.cpp
 )
 
-siox_run_serializer(ActivityMutatorOptions.hpp BoostXMLSerializable.cpp)
+siox_run_serializer(ModifyFilepathOptions.hpp BoostXMLSerializable.cpp)
 
 target_link_libraries(
 	siox-monitoring-activityPlugin-${PLUGIN_NAME}

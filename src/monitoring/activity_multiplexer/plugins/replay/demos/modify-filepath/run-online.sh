@@ -17,10 +17,13 @@ mkdir $TRACE_DIR
 cd $TRACE_DIR
 
 # symling siox.conf and create trace
-ln -s ../siox.conf
+ln -s ../siox-online-modify.conf siox.conf
+
+# TODO add other reader file.
 ln -s ../siox-trace-modified-replay.conf siox-trace-reader.conf
+
 cp ../*.dat .
-siox-inst posix ../program
+siox-inst posix-deedless ../program
 
 # symlink activities.dat1234 for convienience
 ACTIVITIES=`find . -name "activities.dat[0-9]*" | tail -n 1`

@@ -4,9 +4,10 @@ using namespace std;
 using namespace monitoring;
 
 //@serializable
-class ActivityMutatorOptions: public ActivityMultiplexerPluginOptions {
+class ModifyFilepathOptions: public ActivityMultiplexerPluginOptions {
 	public:
-		ComponentReference target_multiplexer;
+        string interface;
+        string implementation;
 };
 
 

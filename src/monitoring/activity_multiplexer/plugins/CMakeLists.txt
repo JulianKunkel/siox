@@ -20,7 +20,7 @@ add_subdirectory(file_access_info)
 # replay related plugins
 add_subdirectory(replay)
 add_subdirectory(replay-online)
-add_subdirectory(mutator)
+#add_subdirectory(mutator)
 add_subdirectory(modify-filepath)
 
 if (PostgreSQL_FOUND)

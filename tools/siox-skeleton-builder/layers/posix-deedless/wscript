@@ -54,8 +54,8 @@ def configure(conf):
 	conf.env.append_value("LABEL", conf.options.LABEL )
 
 def build(bld):
-	LAYER="posix"
-	HEADER="posix-low-level-io.h"
+	LAYER="posix-deedless"
+	HEADER="posix-deedless-low-level-io.h"
 
 	LAYERPLAIN=LAYER
 	label = bld.env.LABEL[0]
@@ -111,7 +111,7 @@ def build(bld):
 	except OSError, e:
    		pass
 
-        bld.install_files("${PREFIX}/include", "siox-datatypes-helper-" + LAYERPLAIN +".h")
+        bld.install_files("${PREFIX}/include", "siox-datatypes-helper-posix.h")
 
 	##from waflib.Tools import waf_unit_test
 	##bld.add_post_fun(waf_unit_test.summary)
