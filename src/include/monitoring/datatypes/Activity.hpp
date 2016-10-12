@@ -182,6 +182,16 @@ namespace monitoring {
 				return attributeArray_;
 			}
 
+                        inline void replaceAttribute(const Attribute & replace){
+                           for(auto itr=attributeArray_.begin(); itr != attributeArray_.end(); itr++) {
+                               if( itr->id == replace.id ){
+                                  *itr = replace;
+                                  return;
+                              }
+                           }
+                           attributeArray_.push_back(replace);
+                        }
+
 			inline const RemoteCallIdentifier * remoteInvoker() const {
 				return remoteInvoker_;
 			}
