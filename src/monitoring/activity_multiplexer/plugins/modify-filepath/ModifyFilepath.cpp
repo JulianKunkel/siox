@@ -21,13 +21,6 @@ using namespace monitoring;
 class ModifyFilepath: public ActivityMultiplexerPlugin {
 	public:
 		/**
-		 * Implements ActivityMultiplexerListener::Notify, passes activity to out.
-		 */
-		void Notify( const shared_ptr<Activity> & element, int lostCount ) {
-			std::cout << "ModifyFilepath: FILEPATH CHANGER!!! was here!" << std::endl;;
-		}
-
-		/**
 		 * Dummy implementation for ModifyFilepath Options.
 		 */
 		ComponentOptions * AvailableOptions() {
@@ -37,12 +30,10 @@ class ModifyFilepath: public ActivityMultiplexerPlugin {
         void finalize() override;
 
 	private:
-		/** Receiving ActivityMultiplexer */
-		ActivityMultiplexer * out = nullptr;
-		SystemInformationGlobalIDManager * sysinfo;
 		// Information about the layer we are to watch
 		string interface = "(yet unknown)";
 		string implementation = "(yet unknown)";
+		SystemInformationGlobalIDManager * sysinfo;
 		UniqueInterfaceID uiid;
         OntologyAttributeID fnAttID;    // file name
 		const UniqueComponentActivityID lookupUCAID( const string & activity );
@@ -58,19 +49,16 @@ class ModifyFilepath: public ActivityMultiplexerPlugin {
  * out going end of the Mutator.
  */
 void ModifyFilepath::initPlugin() {
-    printf("HERE\n");
-    ModifyFilepathOptions & options = getOptions<ModifyFilepathOptions>();
-    sysinfo = facade->get_system_information();
-//			assert(sysinfo);
     // Retrieve interface, implementation and uiid
+    ModifyFilepathOptions & options = getOptions<ModifyFilepathOptions>();
     interface = options.interface;
     implementation = options.implementation;
-    std::cout << "ModifyFilepath: init x" << interface << "x x" << implementation << "x" <<  std::endl;;
+    // retrieve System Information
+    sysinfo = facade->get_system_information();
     fnAttID = facade->lookup_attribute_by_name(interface,"descriptor/filename").aID;
     uiid = sysinfo->lookup_interfaceID(interface, implementation);
-    printf("HERE %d \n", uiid);
+    // redgister for "open" Activities
     UniqueInterfaceID ucaid = lookupUCAID( "open" );
-    printf("HERE ucaid%d \n", ucaid);
     if ( ucaid != 0 ){
         multiplexer->registerForUcaid( ucaid, this, static_cast<ActivityMultiplexer::Callback>( &ModifyFilepath::openHandler ), false );
     }
@@ -101,22 +89,16 @@ const UniqueComponentActivityID ModifyFilepath::lookupUCAID( const string & acti
 }
 
 
-/*
+/*UniqueComponentActivityID
  * Create a new survey and initialize its data
  */
 void ModifyFilepath::openHandler( const shared_ptr<Activity> & activity, int lost ) {
 	std::cout << "ModifyFilepath: File Opened" << std::endl;;
     VariableDatatype * newFilename = new VariableDatatype("hallo.txt");
-    const Attribute * modified = new Attribute(fnAttID, *newFilename);
-    vector<Attribute> & attributes = activity->attributeArray_;
-    for(auto itr=attributes.begin(); itr != attributes.end(); itr++) {
-        // OUTPUT( "...id: " << itr->id );
-        if( itr->id == fnAttID )
-           *itr = *modified;
-    }
-    const Attribute * attFileName = findAttributeByID( activity, fnAttID );
+    activity->replaceAttribute(Attribute(fnAttID, *newFilename));
+    const VariableDatatype * attFileName = activity->findAttribute( fnAttID );
 
-    std::cout << "ModifyFilepath: FileName " << attFileName->value.str() << std::endl;;
+    std::cout << "ModifyFilepath: FileName " << attFileName->str() << std::endl;;
 }
 
 /**
