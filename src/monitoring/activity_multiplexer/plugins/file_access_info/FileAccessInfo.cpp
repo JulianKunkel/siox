@@ -25,6 +25,7 @@
 #include <cassert>
 #include <unistd.h>
 #include <iomanip>
+#include <algorithm>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -53,9 +54,14 @@ void FileAccessInfoPlugin::initPlugin() {
 	FileAccessInfoPluginOptions& opts = getOptions<FileAccessInfoPluginOptions>();
 	verbosity = opts.verbosity;
 
+	sys_info = facade->get_system_information();
+
  	stringstream buff;
  	buff << opts.output << (long long unsigned) getpid();
   ofile.open(buff.str());  
+
+	enableSyscallStats = opts.enableSyscallStats;
+	enableTrace = opts.enableTrace;
 
 
 //	regex = opts.regex; // not implemented?
@@ -82,26 +88,42 @@ void FileAccessInfoPlugin::initPlugin() {
 	{
 		case IOInterface::POSIX:
 			addActivityHandler("POSIX", "", "open",      & FileAccessInfoPlugin::handleOpen);
-			addActivityHandler("POSIX", "", "close",     & FileAccessInfoPlugin::handleClose);
 			addActivityHandler("POSIX", "", "creat",     & FileAccessInfoPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "open64",     & FileAccessInfoPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "fopen64",     & FileAccessInfoPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "fopen",     & FileAccessInfoPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "fdopen",     & FileAccessInfoPlugin::handleOpen);
+
+			addActivityHandler("POSIX", "", "close",     & FileAccessInfoPlugin::handleClose);
+			addActivityHandler("POSIX", "", "fclose",     & FileAccessInfoPlugin::handleClose);
 
 			addActivityHandler("POSIX", "", "read",      & FileAccessInfoPlugin::handleRead);
 			addActivityHandler("POSIX", "", "pread",     & FileAccessInfoPlugin::handleRead);
 			addActivityHandler("POSIX", "", "readv",     & FileAccessInfoPlugin::handleRead);
+			addActivityHandler("POSIX", "", "fgets",     & FileAccessInfoPlugin::handleRead);
+			addActivityHandler("POSIX", "", "gets",      & FileAccessInfoPlugin::handleRead);
+			addActivityHandler("POSIX", "", "fread",     & FileAccessInfoPlugin::handleRead);
 
 			addActivityHandler("POSIX", "", "pwritev",   & FileAccessInfoPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "pwrite",     & FileAccessInfoPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "pwrite",    & FileAccessInfoPlugin::handleWrite);
 			addActivityHandler("POSIX", "", "write",     & FileAccessInfoPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "fwrite",    & FileAccessInfoPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "fputs",     & FileAccessInfoPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "puts",      & FileAccessInfoPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "fputc",      & FileAccessInfoPlugin::handleWrite);
 
 			addActivityHandler("POSIX", "", "sync",      & FileAccessInfoPlugin::handleSync);
 			addActivityHandler("POSIX", "", "fdatasync", & FileAccessInfoPlugin::handleSync);
+
 			addActivityHandler("POSIX", "", "lseek",     & FileAccessInfoPlugin::handleSeek);
 
 			IGNORE_ERROR(fhID[IOInterface::POSIX]           = o->lookup_attribute_by_name("POSIX", "descriptor/filehandle").aID;)
 			IGNORE_ERROR(fname[IOInterface::POSIX]          = o->lookup_attribute_by_name("POSIX", "descriptor/filename").aID;)
 			IGNORE_ERROR(bytesReadID[IOInterface::POSIX]    = o->lookup_attribute_by_name("POSIX", "quantity/BytesRead").aID;)
+			IGNORE_ERROR(bytesToReadID[IOInterface::POSIX]    = o->lookup_attribute_by_name("POSIX", "quantity/BytesToRead").aID;)
 			IGNORE_ERROR(positionID[IOInterface::POSIX]     = o->lookup_attribute_by_name("POSIX", "file/position").aID;)
 			IGNORE_ERROR(bytesWrittenID[IOInterface::POSIX] = o->lookup_attribute_by_name("POSIX", "quantity/BytesWritten").aID;)
+			IGNORE_ERROR(bytesToWriteID[IOInterface::POSIX] = o->lookup_attribute_by_name("POSIX", "quantity/BytesToWrite").aID;)
 			break;
 		case IOInterface::MPI:
 			addActivityHandler("MPI", "Generic", "MPI_File_open",  & FileAccessInfoPlugin::handleOpen);
@@ -111,9 +133,11 @@ void FileAccessInfoPlugin::initPlugin() {
 
 			IGNORE_ERROR(fhID[IOInterface::MPI]           = o->lookup_attribute_by_name("MPI", "descriptor/filehandle").aID;)
 			IGNORE_ERROR(fname[IOInterface::MPI]          = o->lookup_attribute_by_name("MPI", "descriptor/filename").aID;)
-			IGNORE_ERROR(bytesReadID[IOInterface::MPI]    = o->lookup_attribute_by_name("MPI", "quantity/BytesToRead").aID;)
+			IGNORE_ERROR(bytesReadID[IOInterface::MPI]  = o->lookup_attribute_by_name("MPI", "quantity/BytesRead").aID;)
+			IGNORE_ERROR(bytesToReadID[IOInterface::MPI]  = o->lookup_attribute_by_name("MPI", "quantity/BytesToRead").aID;)
 			IGNORE_ERROR(positionID[IOInterface::MPI]     = o->lookup_attribute_by_name("MPI", "file/position").aID;)
-			IGNORE_ERROR(bytesWrittenID[IOInterface::MPI] = o->lookup_attribute_by_name("MPI", "quantity/BytesToWrite").aID;)
+			IGNORE_ERROR(bytesWrittenID[IOInterface::MPI] = o->lookup_attribute_by_name("MPI", "quantity/BytesWritten").aID;)
+			IGNORE_ERROR(bytesToWriteID[IOInterface::MPI] = o->lookup_attribute_by_name("MPI", "quantity/BytesToWrite").aID;)
 			break;
 	}
 
@@ -148,6 +172,8 @@ void FileAccessInfoPlugin::addActivityHandler (const string & interface, const s
 void FileAccessInfoPlugin::notify (const std::shared_ptr<Activity>& a, int lost) {
 	auto both = activityHandlers.find(a->ucaid_);
 
+	accessCounter[a->ucaid()]++;
+
 	if (both != activityHandlers.end()) {
 		auto fkt = both->second;
 
@@ -169,81 +195,112 @@ static double convertTime(Timestamp time) {
 
 
 
-static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& accesses) {
-	size_t rnd_access = 0;
-	size_t seq_access = 0;
-	size_t next_seq_pos = 0;
-
-	for (const auto access : accesses) {
-    switch (access.type) {
-      case IOAccessType::WRITE:
-        ofile << setw(25) << "write ";
-        break;
-      case IOAccessType::READ:
-        ofile << setw(25) << "read ";
-        break;
-    }
-
-		ofile 
-			<< setw(10) << right << "[time " << setw(10) << access.endTime - access.startTime <<  " ns]" 
-			<< setw(10) << right << "[offset " << setw(10) << access.offset << " bytes]" 
-			<< setw(10) << right << "[size " << setw(10) << access.size << " bytes]" << std::endl;
-
-		if (access.offset + access.size != next_seq_pos) {
-			++rnd_access;
-		}
-		else {
-			++seq_access;
-		}
-		next_seq_pos = access.offset + access.size;
-	}
-	ofile << setw(25) << "count_rnd_accesses " << rnd_access << std::endl;
-  ofile << setw(25) << "count_seq_accesses " << seq_access << std::endl;
-}
+//static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& accesses) {
+//}
 
 
 
 void FileAccessInfoPlugin::printFileAccess (const OpenFiles& file) {
-  ofile << file.name << std::endl;
-  ofile << setw(25) << "open " << setw(20) << right << file.openTime << " ns" << std::endl;
-  ofile << setw(25) << "close " << setw(20) << right << file.closeTime << " ns" << std::endl;
-	ofile << setw(25) << "duration " << file.closeTime - file.openTime << " ns" << std::endl;
-	print_bullshit(ofile, file.accesses);
+  ofile << setw(25) << "filename " << file.name << std::endl;
+  ofile << setw(25) << "open duration " << file.openDuration << " ns" << ((0 == file.openDuration) ? " (file was already open?)" : "") << std::endl;
+  ofile << setw(25) << "close duration " << file.closeDuration << " ns" << ((0 == file.closeDuration) ? " (file was not closed?)" : "") << std::endl;
+//	ofile << setw(25) << "open-close duration " << file.closeTime - file.openTime << " ns" << std::endl;
   size_t bytesRead    = std::accumulate(file.accesses.begin(), file.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return (IOAccessType::READ  == access.type) ? sum + access.size : sum;});
   size_t bytesWritten = std::accumulate(file.accesses.begin(), file.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return (IOAccessType::WRITE == access.type) ? sum + access.size : sum;});
-  ofile << setw(25) << "written " << bytesWritten << " bytes" << std::endl;
-  ofile << setw(25) << "read " << bytesRead << " bytes" << std::endl;
+  ofile << setw(25) << "written data " << bytesWritten << " bytes" << std::endl;
+  ofile << setw(25) << "read data " << bytesRead << " bytes" << std::endl;
+
+	{
+		size_t rnd_access = 0;
+		size_t seq_access = 0;
+		size_t next_seq_pos = 0;
+		size_t read_time = 0;
+		size_t write_time = 0;
+
+		std::stringstream ss;
+
+		for (const auto access : file.accesses) {
+			switch (access.type) {
+				case IOAccessType::WRITE:
+					ss << setw(25) << "write ";
+					write_time += access.endTime - access.startTime;
+					break;
+				case IOAccessType::READ:
+					ss << setw(25) << "read ";
+					read_time += access.endTime - access.startTime;
+					break;
+				case IOAccessType::SYNC:
+					break;
+			}
+
+			ss
+				<< setw(10) << right << "[time " << setw(10) << access.endTime - access.startTime <<  " ns]" 
+				<< setw(10) << right << "[offset " << setw(10) << access.offset << " bytes]" 
+				<< setw(10) << right << "[size " << setw(10) << access.size << " bytes]" << std::endl;
+
+			if (access.offset != next_seq_pos) {
+				++rnd_access;
+			}
+			else {
+				++seq_access;
+			}
+			next_seq_pos = access.offset + access.size;
+		}
+		ofile << setw(25) << "write duration " << write_time << " ns" << std::endl;
+		ofile << setw(25) << "read duration " << read_time << " ns" << std::endl;
+		ofile << setw(25) << "count_rnd_accesses " << rnd_access << std::endl;
+		ofile << setw(25) << "count_seq_accesses " << seq_access << std::endl;
+		if (0 != enableTrace) {
+			ofile << ss.str();
+		}
+	}
+
 	ofile << std::endl;
 }
 
 
 
 static bool comp(const OpenFiles& f1, const OpenFiles f2) {
-  size_t size1 = f1.accesses.size() + f1.syncOperations.size();
-  size_t size2 = f2.accesses.size() + f2.syncOperations.size();
+  const size_t size1 = std::accumulate(f1.accesses.begin(), f1.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return sum + access.endTime - access.startTime;});
+  const size_t size2 = std::accumulate(f2.accesses.begin(), f2.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return sum + access.endTime - access.startTime;});
   return size1 > size2;
 }
 
 
 
 void FileAccessInfoPlugin::finalize() {
-  std::vector<OpenFiles> tmp;
+	const string sep(100, '*');
+	if (0 != enableSyscallStats) {
+		ofile << sep << std::endl;
+		for (const auto ac : accessCounter) {
+			ofile << "syscall: " <<  setw(15) << sys_info->lookup_activity_name(ac.first) << " " << ac.second;
+			if (activityHandlers.find(ac.first) == activityHandlers.end()) {
+				ofile << " (not handled)";
+			}
+			ofile << std::endl;
+		}
+		ofile << sep << std::endl;
+	}
+	
+	std::vector<OpenFiles> tmp_files;
 	for (const auto file : openFiles) {
-		tmp.push_back(file.second);
+		tmp_files.push_back(file.second);
 	}
 	for (const auto file : unnamedFiles) {
-		tmp.push_back(file.second);
+		tmp_files.push_back(file.second);
 	}
 
-  sort(tmp.begin(), tmp.end(), comp);
+  sort(tmp_files.begin(), tmp_files.end(), comp);
 
   size_t counter = 0;
-	for (const auto file : tmp) {
+	for (const auto file : tmp_files) {
 		printFileAccess(file);
+		// print all file stats, if file_limit == 0
     if (0 != file_limit && ++counter >= file_limit) {
       break;
     }
 	}
+
 }
 
 
@@ -329,36 +386,49 @@ void FileAccessInfoPlugin::handleSync(std::shared_ptr<Activity> a) {
 
 
 void FileAccessInfoPlugin::handleWrite (std::shared_ptr<Activity> a) {
-	uint64_t bytes = findUINT64AttributeByID(a, bytesWrittenID[io_iface]);
+	uint64_t bytesWritten = findUINT64AttributeByID(a, bytesWrittenID[io_iface]);
+	uint64_t bytesToWrite = findUINT64AttributeByID(a, bytesToWriteID[io_iface]);
 	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
 
 	OpenFiles* parent = findParentFileByFh(a);
 	if (position == INVALID_UINT64) {
 		position = parent->currentPosition;
-		parent->currentPosition += bytes;
+		parent->currentPosition += bytesWritten;
 	}
-	parent->accesses.push_back(Access{IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytes});
+  if (0 == a->errorValue() && bytesWritten == bytesToWrite && INVALID_UINT64 != bytesWritten) {
+    parent->accesses.push_back(Access{IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytesWritten});
+  }
 }
 
 
 
 void FileAccessInfoPlugin::handleRead (std::shared_ptr<Activity> a) {
-	uint64_t bytes = findUINT64AttributeByID(a, bytesReadID[io_iface]);
+	uint64_t bytesRead = findUINT64AttributeByID(a, bytesReadID[io_iface]);
+	uint64_t bytesToRead = findUINT64AttributeByID(a, bytesToReadID[io_iface]);
 	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
+//  for (const auto attribute : a->attributeArray()) {
+//	  OntologyAttributeFull oa = facade->lookup_attribute_by_ID( attribute.id );
+//    std::cout << oa.name << " " << attribute.value << std::endl;
+//  }
+//  std::cout << "bytesRead: " << bytesRead << " " << "bytesToRead: " << bytesToRead << std::endl;
+
 
 	OpenFiles* parent = findParentFileByFh(a);
 	if (position == INVALID_UINT64) {
 		position = parent->currentPosition;
-		parent->currentPosition += bytes;
+		parent->currentPosition += bytesRead;
 	}
-	parent->accesses.push_back(Access{IOAccessType::READ, a->time_start_, a->time_stop_, position, bytes});
+
+  if (0 == a->errorValue() && bytesRead == bytesToRead && INVALID_UINT64 != bytesRead) {
+	  parent->accesses.push_back(Access{IOAccessType::READ, a->time_start_, a->time_stop_, position, bytesRead});
+  }
 }
 
 
 
 void FileAccessInfoPlugin::handleOpen (std::shared_ptr<Activity> a) {
   const string name{findStrAttributeByID(a, fname[io_iface])};
-	openFiles[a->aid()] = {name, a->time_start_, 0, 0, a->aid_};
+	openFiles[a->aid()] = {name, a->time_start_, 0, a->time_stop_ - a->time_start_, 0, 0, a->aid_};
 }
 
 
@@ -367,6 +437,7 @@ void FileAccessInfoPlugin::handleClose (std::shared_ptr<Activity> a) {
 	OpenFiles* parent = findParentFileByFh(a);
 	assert(nullptr != parent);
 	parent->closeTime = a->time_stop_;
+  parent->closeDuration = a->time_stop_ - a->time_start_;
 }
 
 

@@ -292,7 +292,7 @@ off_t lseek(int fd, off_t offset, int whence);
 //@activity_attribute fileHandle fd
 //@activity_link_int fd
 //@activity_attribute_late filePosition ret
-off_t lseek64(int fd, off64_t offset, int whence);
+off64_t lseek64(int fd, off64_t offset, int whence);
 
 
 /* Hints to the system, this might be used for optimizations by SIOX in the future */
@@ -390,6 +390,7 @@ int __fxstat( int __ver, int fd, struct stat * buf );
 //@activity_attribute fileHandle fd
 //@activity_attribute fileExtent length
 //@activity_attribute filePosition offset
+//@syscall SYS_mmap ''address, length, protect, flags, fd, offset''
 void * mmap( void * address, size_t length, int protect, int flags, int fd, off_t offset );
 
 //@guard

@@ -1,5 +1,5 @@
 /**
- * @file WrapAroundTest.cpp
+ * @file ./src/monitoring/statistics/collector/test/WrapAroundTestDefault.cpp
  *
  * @author Nathanael Hübbe
  * @date   2014

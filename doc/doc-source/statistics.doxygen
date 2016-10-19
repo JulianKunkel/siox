@@ -63,7 +63,7 @@ The @scoperef{monitoring,StatisticsProviderPlugin}, the @scoperef{monitoring,Sta
 
 @enduml
 
-
+@section Components
 
 @subsection Statistics_Provider StatisticsProviderPlugin
 

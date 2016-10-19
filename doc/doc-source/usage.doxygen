@@ -6,7 +6,7 @@
 
 For convinience, the configuration files support linux-shell-style comments, i.e. lines that begin with the #-character are interperted as comment lines. There are some restrictions:
 - no leading spaces are allowed
-- lines that begin with a #CONFIG string, mark a new configuration section
+- lines that begin with a \#CONFIG string, mark a new configuration section
 
 
 # Config Sections (WIP)#
@@ -101,26 +101,26 @@ SIOX has already some implementations, e.g. ConsoleReporter and MPIReporter.
 # Example #
 ## siox-inst ##
 
-  -# Download <a href='siox.conf' target="_blank"><b>siox.conf</b></a> to a folder.
-  -# Change to this folder and run the following command:
+	-# Download <a href='siox.conf' target="_blank"><b>siox.conf</b></a> to a folder.
+	-# Change to this folder and run the following command:
 ~~~.sh
 siox-inst posix ls -al
 ~~~
 
 -# siox-inst creates the following files
- - association.dat
- - ontology.dat
- - system-info.dat
- - activities.datXXXX
+	- association.dat
+	- ontology.dat
+	- system-info.dat
+	- activities.datXXXX
 
 ## siox-trace-reader ##
 
 -# Download <a href='siox-trace-reader.conf' target="_blank"><b>siox-trace-reader.conf</b></a> to a folder.
 -# Make sure, that the following files are also in the folder:
- - association.dat
- - ontology.dat
- - system-info.dat
- - activities.dat
+	- association.dat
+	- ontology.dat
+	- system-info.dat
+	- activities.dat
 -# Change to this folder and run the following command:
 
 ~~~.sh

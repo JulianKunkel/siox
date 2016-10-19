@@ -64,7 +64,7 @@ namespace knowledge {
 			/**
 			 * Ask optimizer plugin to suggest a parameter for attribute.
 			 *
-			 * @param attribute [in]
+			 * @param aid [in]
 			 *      The attribute in question
 			 *
 			 * @return
