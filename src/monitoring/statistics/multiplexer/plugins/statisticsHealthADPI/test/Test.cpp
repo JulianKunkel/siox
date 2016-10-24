@@ -17,7 +17,7 @@ int main( int argc, char const * argv[] )
 	StatisticsMultiplexer * multiplexer = core::module_create_instance<StatisticsMultiplexer>( "", "siox-monitoring-StatisticsMultiplexerSync", STATISTICS_MULTIPLEXER_INTERFACE );
 
 	// wir registrieren das Plugin (normal geschieht dies automatisch)
-	StatisticsMultiplexerPlugin * adpi = core::module_create_instance<StatisticsMultiplexerPlugin>( "", "siox-monitoring-statisticsMultiplexerPlugin-healthADPI", STATISTICS_MULTIPLEXER_PLUGIN_INTERFACE );
+	StatisticsMultiplexerPlugin * adpi = core::module_create_instance<StatisticsMultiplexerPlugin>( "", "siox-monitoring-statisticsMultiplexerPlugin-statisticsHealthADPI", STATISTICS_MULTIPLEXER_PLUGIN_INTERFACE );
 
 	// init plugin
 	// not necessary, but for testing...
