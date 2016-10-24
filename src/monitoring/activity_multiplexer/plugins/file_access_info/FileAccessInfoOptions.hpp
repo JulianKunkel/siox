@@ -3,15 +3,17 @@
  *
  *       Filename:  FileAccessInfoOptions.hpp
  *
- *    Description:  
+ *    Description:  This plugin was developed in cooperatin with Ulf Markwardt 
+ *    (ulf.markwardt@tu-dresden.de). It investigates an activity trace an creates
+ *    summary for each accessed file.
  *
  *        Version:  1.0
  *        Created:  09/20/2016 03:02:04 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  YOUR NAME (), 
- *   Organization:  
+ *         Author:  Eugen Betke (betke@dkrz.de), Julian Kunkel (julian.kunkel@googlemail.com)
+ *   Organization:  Deutsches Klimarechnezentrum
  *
  * =====================================================================================
  */
@@ -30,13 +32,37 @@ using namespace std;
 //@serializable
 class FileAccessInfoPluginOptions : public monitoring::ActivityMultiplexerPluginOptions {
 	public:
+		/**
+		 * @brief Not used
+		 */
 		uint32_t verbosity;
-		string exclude_regex; // exclude files
-		int file_limit; // track at most n files (most used)
+		/**
+		 * @brief Not used. 
+		 */
+		string exclude_regex;
+		/**
+		 * @brief Limit the number of output. Only N most used files will be printed. 
+		 */
+		int file_limit;
+		/**
+		 * @brief Show read/write trace for each file.
+		 */
 		int enableTrace;
+		/**
+		 * @brief 
+		 */
 		int enableSyscallStats;
+		/**
+		 * @brief ToDo: syscall names, e.g. fprintf, open, write, open64
+		 */
 		vector<string> tokens;
+		/**
+		 * @brief POSIX or MPI interface
+		 */
 		string interface; // mpi or posix
+		/**
+		 * @brief Output filename
+		 */
 		string output;
 };
 
