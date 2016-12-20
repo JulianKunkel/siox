@@ -34,7 +34,7 @@ void AccessInfoPlotterPlugin::initPlugin() {
 
 	DereferencingFacadeOptions& facadeOpts = facade->getOptions<DereferencingFacadeOptions>();
 	o = dynamic_cast<monitoring::Ontology*>(facadeOpts.ontology.componentPointer);
-	assert(o != nullptr);
+
 
 	addActivityHandler("POSIX", "", "open", & AccessInfoPlotterPlugin::handlePOSIXOpen);
 	addActivityHandler("POSIX", "", "creat", & AccessInfoPlotterPlugin::handlePOSIXOpen);

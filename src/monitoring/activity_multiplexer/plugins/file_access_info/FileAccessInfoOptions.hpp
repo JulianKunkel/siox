@@ -64,6 +64,11 @@ class FileAccessInfoPluginOptions : public monitoring::ActivityMultiplexerPlugin
 		 * @brief Output filename
 		 */
 		string output;
+
+		string tsdb_host;
+		int tsdb_port;
+		string tsdb_username;
+		string tsdb_password;
 };
 
 #endif   /* ----- #ifndef FileAccessInfoOptions_INC  ----- */

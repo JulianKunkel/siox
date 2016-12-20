@@ -26,6 +26,9 @@
 #include <unistd.h>
 #include <iomanip>
 #include <algorithm>
+#include <cstdlib>
+#include <chrono>
+#include <typeinfo>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -40,6 +43,14 @@ using namespace monitoring;
 
 #define INVALID_UINT64 ((uint64_t) -1)
 #define IGNORE_ERROR(x) try{ x } catch(NotFoundError & e){}
+
+static long makeTimestamp() {
+  using namespace std::chrono;
+	system_clock::time_point tp = system_clock::now();
+	seconds duration = duration_cast<seconds>(tp.time_since_epoch());
+	return duration.count();
+}
+
 
 FileAccessInfoPluginOptions* FileAccessInfoPlugin::AvailableOptions() {
 	return new FileAccessInfoPluginOptions{};
@@ -68,8 +79,24 @@ void FileAccessInfoPlugin::initPlugin() {
 
 	DereferencingFacadeOptions& facadeOpts = facade->getOptions<DereferencingFacadeOptions>();
 	o = dynamic_cast<monitoring::Ontology*>(facadeOpts.ontology.componentPointer);
+
+//	assert(nullptr != ontology);
+//	assert(nullptr != system_information_manager);
+//	assert(nullptr != association_mapper);
+
+
 	assert(o != nullptr);
+
   file_limit = opts.file_limit;
+	m_username = opts.tsdb_username;
+	m_password = opts.tsdb_password;
+	m_host = opts.tsdb_host;
+	m_port = opts.tsdb_port;
+
+	std::stringstream port;
+	port << m_port;
+
+
 
   if (0 == opts.interface.compare("POSIX")) {
 	  io_iface = IOInterface::POSIX;
@@ -142,6 +169,37 @@ void FileAccessInfoPlugin::initPlugin() {
 	}
 
 	multiplexer->registerCatchall(this, static_cast<ActivityMultiplexer::Callback>(&FileAccessInfoPlugin::notify), false);	
+
+
+	/* Online Monitoring with  OpenTSDB */
+	if ("" != m_host) {
+		const char* c_username = getenv("SLURM_JOB_USER");
+		const char* c_jobid = getenv("SLURM_JOBID");
+		const char* c_nodeid = getenv("SLURM_NODEID");
+		const char* c_procid = getenv("SLURM_PROCID");
+		const char* c_localid = getenv("SLURM_LOCALID");
+
+		assert(nullptr != c_nodeid);
+		assert(nullptr != c_procid);
+		assert(nullptr != c_localid);
+		assert(nullptr != c_jobid);
+		assert(nullptr != c_username);
+
+		int nodeid = atoi(c_nodeid);
+		int procid = atoi(c_procid);
+		int localid = atoi(c_localid);
+
+//		std::stringstream ss;
+		m_metric_username = c_username;
+		m_metric_jobid = c_jobid;
+		m_metric_localid = c_localid;
+		m_metric_procid = c_procid;
+		m_metric_nodeid = c_nodeid;
+
+		client.init(m_host, port.str(), m_username, m_password);
+		m_thread = std::thread(&FileAccessInfoPlugin::sendToTSDB, this);
+	}
+	/* END: Online Monitoring with  OpenTSDB */
 }
 
 
@@ -170,20 +228,20 @@ void FileAccessInfoPlugin::addActivityHandler (const string & interface, const s
 
 
 void FileAccessInfoPlugin::notify (const std::shared_ptr<Activity>& a, int lost) {
-	auto both = activityHandlers.find(a->ucaid_);
+  auto both = activityHandlers.find(a->ucaid_);
 
-	accessCounter[a->ucaid()]++;
+ accessCounter[a->ucaid()]++;
 
-	if (both != activityHandlers.end()) {
-		auto fkt = both->second;
+  if (both != activityHandlers.end()) {
+    auto fkt = both->second;
 
-		if (verbosity > 3) {
+    if (verbosity > 3) {
 //			std::cout << __PRETTY_FUNCTION__ << std::endl;
-			//			tr->printActivity(a);
-		}
+      //			tr->printActivity(a);
+    }
 
-		(this->*fkt)(a);
-	}
+    (this->*fkt)(a);
+  }
 }
 
 
@@ -195,8 +253,86 @@ static double convertTime(Timestamp time) {
 
 
 
-//static void print_bullshit(std::ofstream& ofile, const std::vector<Access>& accesses) {
-//}
+
+
+static std::string toStr(const IOAccessType type) {
+  switch (type) {
+    case IOAccessType::WRITE:
+      return "write";
+    case IOAccessType::READ:
+      return "read";
+    case IOAccessType::SYNC:
+      return "sync";
+    case IOAccessType::SEEK:
+      return "seek";
+  }
+  assert(false);
+  return "";
+}
+
+
+
+void FileAccessInfoPlugin::aggregate(const IOAccessType access, const Timestamp start, const Timestamp stop, const uint64_t position, const uint64_t bytes, const OpenFiles& file) {
+  const string& fn = file.name;
+  m_mutex[fn][access].lock();
+  m_agg[fn][access].bytes += bytes;
+  m_agg[fn][access].count += 1;
+  m_agg[fn][access].time += (stop - start);
+  m_mutex[fn][access].unlock();
+}
+
+
+
+inline void FileAccessInfoPlugin::enqueMetric(const std::string& metric, const unsigned long timestamp, const double value, const std::string& fn, const IOAccessType access) {
+  client.enque({metric, timestamp,  value,{
+      std::make_tuple("username", m_metric_username),
+      std::make_tuple("filename", fn), 
+      std::make_tuple("access", toStr(access)),
+      std::make_tuple("procid", m_metric_procid),
+      std::make_tuple("jobid", m_metric_jobid)
+      }});
+}
+
+
+
+void FileAccessInfoPlugin::sendToTSDB() {
+  using HRC = std::chrono::high_resolution_clock;
+  using namespace std::chrono;
+  constexpr nanoseconds sleep_duration{seconds{1}}; 
+  const HRC::time_point start{HRC::now()};
+  unsigned int count{0};
+
+  while(true != m_thread_stop) {
+    ++count;
+    for (const auto& fnmap : m_agg) {
+      const auto& fn = fnmap.first;
+      for (const auto& accessmap : fnmap.second) {
+        const auto& access = accessmap.first;
+        const long timestamp{makeTimestamp()};
+
+        m_mutex[fn][access].lock();
+        const MetricAggregation agg = m_agg[fn][access];
+        m_agg[fn][access].reset();
+        m_mutex[fn][access].unlock();
+
+        enqueMetric("siox.filestats.io.bytes", timestamp, static_cast<double>(agg.bytes), fn, access);
+        enqueMetric("siox.filestats.io.calls", timestamp, static_cast<double>(agg.count), fn, access);
+        enqueMetric("siox.filestats.io.time", timestamp, static_cast<double>(agg.time), fn, access);
+        if (0 != agg.time) {
+          assert(0 != agg.count);
+          enqueMetric("siox.filestats.io.perf", timestamp, 1000.f * 1000.f * 1000.f * (double) agg.bytes / (double) agg.time / 1024 / 1024, fn, access);
+          enqueMetric("siox.filestats.io.bytes_per_call", timestamp, (double) agg.bytes / (double) agg.count, fn, access);
+        }
+        else {
+          enqueMetric("siox.filestats.io.perf", timestamp, 0, fn, access);
+          enqueMetric("siox.filestats.io.bytes_per_call", timestamp, 0, fn, access);
+        }
+        client.send();
+      }
+    }
+    std::this_thread::sleep_until(start + count * sleep_duration);
+  }
+}
 
 
 
@@ -222,11 +358,11 @@ void FileAccessInfoPlugin::printFileAccess (const OpenFiles& file) {
 		for (const auto access : file.accesses) {
 			switch (access.type) {
 				case IOAccessType::WRITE:
-					ss << setw(25) << "write ";
+					ss << setw(25) << toStr(access.type) << " ";
 					write_time += access.endTime - access.startTime;
 					break;
 				case IOAccessType::READ:
-					ss << setw(25) << "read ";
+					ss << setw(25) << toStr(access.type) << " ";
 					read_time += access.endTime - access.startTime;
 					break;
 				case IOAccessType::SYNC:
@@ -269,18 +405,25 @@ static bool comp(const OpenFiles& f1, const OpenFiles f2) {
 
 
 void FileAccessInfoPlugin::finalize() {
-	const string sep(100, '*');
-	if (0 != enableSyscallStats) {
-		ofile << sep << std::endl;
-		for (const auto ac : accessCounter) {
-			ofile << "syscall: " <<  setw(15) << sys_info->lookup_activity_name(ac.first) << " " << ac.second;
-			if (activityHandlers.find(ac.first) == activityHandlers.end()) {
-				ofile << " (not handled)";
-			}
-			ofile << std::endl;
-		}
-		ofile << sep << std::endl;
+  m_thread_stop = true;
+	if ("" != m_host) {
+		m_thread.join();
 	}
+
+	// SUMMARY
+//	const string sep(100, '*');
+//	if (0 != enableSyscallStats) {
+//		ofile << sep << std::endl;
+//		for (const auto& ac : accessCounter) {
+//			ofile << "syscall: " <<  setw(15) << sys_info->lookup_activity_name(ac.first) << " " << ac.second;
+//			if (activityHandlers.find(ac.first) == activityHandlers.end()) {
+//				ofile << " (not handled)";
+//			}
+//			ofile << std::endl;
+//		}
+//		ofile << sep << std::endl;
+//	}
+	// END: SUMMARY
 	
 	std::vector<OpenFiles> tmp_files;
 	for (const auto file : openFiles) {
@@ -300,7 +443,6 @@ void FileAccessInfoPlugin::finalize() {
       break;
     }
 	}
-
 }
 
 
@@ -374,6 +516,7 @@ OpenFiles* FileAccessInfoPlugin::findParentFileByFh (const std::shared_ptr<Activ
 void FileAccessInfoPlugin::handleSeek (std::shared_ptr<Activity> a) {
 	OpenFiles* parent = findParentFileByFh(a);
 	parent->currentPosition = findUINT64AttributeByID(a, positionID[io_iface]);
+	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
 }
 
 
@@ -395,8 +538,12 @@ void FileAccessInfoPlugin::handleWrite (std::shared_ptr<Activity> a) {
 		position = parent->currentPosition;
 		parent->currentPosition += bytesWritten;
 	}
+
   if (0 == a->errorValue() && bytesWritten == bytesToWrite && INVALID_UINT64 != bytesWritten) {
     parent->accesses.push_back(Access{IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytesWritten});
+		if ("" != m_host) {
+			aggregate(IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytesWritten, *parent);
+		}
   }
 }
 
@@ -421,6 +568,9 @@ void FileAccessInfoPlugin::handleRead (std::shared_ptr<Activity> a) {
 
   if (0 == a->errorValue() && bytesRead == bytesToRead && INVALID_UINT64 != bytesRead) {
 	  parent->accesses.push_back(Access{IOAccessType::READ, a->time_start_, a->time_stop_, position, bytesRead});
+		if ("" != m_host) {
+			aggregate(IOAccessType::READ, a->time_start_, a->time_stop_, position, bytesRead, *parent);
+		}
   }
 }
 

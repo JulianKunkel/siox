@@ -22,6 +22,8 @@
 
 #include <regex>
 #include <unordered_map>
+#include <thread>
+#include <mutex>
 
 #include <monitoring/ontology/Ontology.hpp>
 #include <monitoring/datatypes/Activity.hpp>
@@ -29,10 +31,31 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 
 #include "FileAccessInfoOptions.hpp"
+#include "TSDBClient.hpp"
 
 
+typedef struct MetricAggregation {
+  size_t bytes;
+  size_t count;
+  size_t time;
+	
+	void reset() {
+		bytes = 0;
+		count = 0;
+		time = 0;
+	}
+} MetricAggregation;
 
 struct IOInterfaceHash
+{
+    template <typename T>
+    std::size_t operator()(T t) const
+    {
+        return static_cast<std::size_t>(t);
+    }
+};
+
+struct EnumClassHash
 {
     template <typename T>
     std::size_t operator()(T t) const
@@ -46,7 +69,7 @@ enum class IOInterface {
 };
 
 enum class IOAccessType {
-	READ, WRITE, SYNC
+	READ, WRITE, SYNC, SEEK
 };
 
 struct Operation {
@@ -82,6 +105,25 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 		void notify (const std::shared_ptr<Activity>& activity, int lost);
 
 	private:
+
+		std::string m_host;
+		int m_port;
+		std::string m_username;
+		std::string m_password;
+
+		std::string m_metric_username;
+		std::string m_metric_jobid;
+
+		std::string m_metric_nodeid;
+		std::string m_metric_procid;
+		std::string m_metric_localid;
+
+		std::thread m_thread;
+		bool m_thread_stop{false};
+
+		std::unordered_map<std::string, std::unordered_map<IOAccessType, std::mutex, EnumClassHash>> m_mutex;
+		std::unordered_map<std::string, std::unordered_map<IOAccessType, MetricAggregation, EnumClassHash>> m_agg;
+
 		ofstream ofile;
 		Ontology* o;
 		size_t verbosity = 0;
@@ -105,7 +147,10 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesWrittenID;		
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesToWriteID;		
 
-		
+		TSDBClient client;
+		void enqueMetric(const std::string& metric, const unsigned long timestamp, const double value, const std::string& fn, const IOAccessType access);
+		void aggregate(const IOAccessType access_type, const Timestamp start, const Timestamp stop, const uint64_t position, const uint64_t bytes, const OpenFiles& file);
+		void sendToTSDB();
 		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (FileAccessInfoPlugin::* handler)(std::shared_ptr<Activity>));
 		void printFileAccess(const OpenFiles & file);
 		void handleOpen(std::shared_ptr<Activity> activity);
@@ -117,6 +162,13 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 
 		OpenFiles* findParentFile( const std::shared_ptr<Activity> activity );
 		OpenFiles* findParentFileByFh( const std::shared_ptr<Activity> activity );
+
+		// Loaded ontology implementation
+		Ontology * ontology = nullptr;
+		// Loaded system information manager implementation
+		SystemInformationGlobalIDManager * system_information_manager = nullptr;
+		// Loaded association mapper implementation
+		AssociationMapper * association_mapper = nullptr;
 };
 
 #endif   /* ----- #ifndef FileAccessInfo_INC  ----- */
