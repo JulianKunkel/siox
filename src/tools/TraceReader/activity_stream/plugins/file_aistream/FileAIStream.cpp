@@ -18,11 +18,11 @@ namespace tools {
 		// - Make ActivitySerializationPlugin auto loadable
 		// - Link this plugin to ActivitySerialiationPlugin
 		m_activity_deserializer = core::module_create_instance<monitoring::ActivitySerializationPlugin>(
-				"", 
-				"siox-monitoring-activityPlugin-ActivityBinWriter", 
+				"",
+				"siox-monitoring-activityPlugin-ActivityBinWriter",
 				ACTIVITY_SERIALIZATION_PLUGIN_INTERFACE );
 		assert( m_activity_deserializer != nullptr );
-	} // constructor 
+	} // constructor
 
 
 
@@ -35,12 +35,19 @@ namespace tools {
 	} // destructor
 
 
+	std::string FileAIStream::getFilename(){
+		if(m_filename == ""){
+			FileAIStreamOptions& options = getOptions<FileAIStreamOptions>();
+			m_filename = options.filename;
+		}
+		return m_filename;
+	}
+
 
 	void FileAIStream::init() {
 		FileAIStreamOptions& options = getOptions<FileAIStreamOptions>();
-		std::string filename = options.filename;	
 		out = GET_INSTANCE(ActivityMultiplexer, options.target_multiplexer);
-		m_activity_deserializer->loadTrace(filename);
+		m_activity_deserializer->loadTrace(getFilename());
 	}
 
 

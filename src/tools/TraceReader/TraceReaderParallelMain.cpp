@@ -1,3 +1,7 @@
+#include <mpi.h>
+
+#include <string.h>
+
 #include <exception>
 #include <iostream>
 #include <string>
@@ -41,11 +45,37 @@ using namespace monitoring;
 
 #include "AdjustXML.cpp"
 
+void setRankFilename(tools::ActivityInputStreamPlugin* activities){
+	std::string cstr = activities->getFilename();
+	char * str = (char*) cstr.c_str();
+	char * token = strtok(str, ",");
+	char * myfile = nullptr;
+	int rank;
+	int size;
+	MPI_Comm_rank(MPI_COMM_WORLD, & rank);
+	MPI_Comm_size(MPI_COMM_WORLD, & size);
+	int file_count = 0;
+	while(token != nullptr ){
+		if (file_count == rank){
+			myfile = token;
+		}
+		file_count ++;
+		token = strtok(NULL, ",");
+	}
+	if(file_count != size){
+		printf("Expected: %d files, but seen only %d files, seperate them using ,\n", size, file_count);
+		MPI_Abort(MPI_COMM_WORLD, 1);
+	}
+	activities->setFilename(myfile);
+	printf("%d: will process %s\n", rank, myfile);
+}
+
 /*
  This little program provides a command line interface to reading siox-traces.
  */
 int main( int argc, char ** argv )
 {
+	MPI_Init(& argc, &argv);
 	//try {
 		boost::program_options::options_description genericOptions( "Synopsis" );
 		genericOptions.add_options()
@@ -249,11 +279,13 @@ int main( int argc, char ** argv )
 	         	stack.push_back(tag);
 	         }
 
-	  			//cout << newConfig.str() << endl;
 	  			//cout << config << endl;
   				configurator->SetConfiguration(c, newConfig.str());
 			}
 		}
+
+		// now we split the filename on "," into one filename per process.
+		setRankFilename(activities);
 
 		// initialize all modules with the appropriate module options
 		configurator->initAllComponents(coreComponents);
@@ -272,12 +304,13 @@ int main( int argc, char ** argv )
 
 		registrar.start();
 
+		MPI_Barrier(MPI_COMM_WORLD);
+
 		while(const auto activity = activities->nextActivity()) {
 			activities->getTargetMultiplexer()->Log(activity);
-		//	for (auto& amux : amuxs) {
-		//		amux->Log(activity);
-		//	}
 		}
+
+		MPI_Barrier(MPI_COMM_WORLD);
 
 		util::invokeAllReporters(&registrar);
 
@@ -289,5 +322,6 @@ int main( int argc, char ** argv )
 	//	cerr << e.what() << endl;
 	//	return 1;
 	//}
+	MPI_Finalize();
 	return 0;
 }
