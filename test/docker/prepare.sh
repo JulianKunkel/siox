@@ -37,3 +37,9 @@ if [ $? != 0 ] ; then
 	echo "Error building image"
 	exit 1
 fi
+
+docker build -t kunkel/siox:archlinux archlinux
+if [ $? != 0 ] ; then
+	echo "Error building image"
+	exit 1
+fi

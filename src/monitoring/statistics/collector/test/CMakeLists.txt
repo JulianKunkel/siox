@@ -17,7 +17,7 @@ target_link_libraries(
 	siox-monitoring-RamTopology
 	siox-knowledge-DereferencingFacade
 	siox-monitoring-ThreadedStatisticsCollector
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 
@@ -35,7 +35,7 @@ target_link_libraries(
 	siox-monitoring-RamTopology
 	siox-knowledge-DereferencingFacade
 	siox-monitoring-ThreadedStatisticsCollector
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

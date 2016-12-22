@@ -16,7 +16,7 @@ target_link_libraries(
 	siox-core-AutoConfigurator 
 	siox-monitoring-ActivityBuilder
 	siox-util
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

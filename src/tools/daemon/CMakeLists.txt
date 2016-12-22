@@ -13,7 +13,7 @@ add_executable(
 target_link_libraries(
 	siox-daemon
 	siox-util
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

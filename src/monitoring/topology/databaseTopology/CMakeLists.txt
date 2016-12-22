@@ -16,7 +16,7 @@ target_link_libraries(
 	siox-monitoring-DatabaseTopology
 	siox-core-AutoConfigurator
 	siox-monitoring-Topology
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 	${PQXX_LIBRARIES}
 	${PostgreSQL_LIBRARY}

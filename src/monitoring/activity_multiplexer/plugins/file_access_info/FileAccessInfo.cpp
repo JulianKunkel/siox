@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <iomanip>
 #include <algorithm>
+#include <numeric>
 
 #include <sys/stat.h>
 #include <sys/types.h>
