@@ -23,7 +23,7 @@ vector<Component *> LoadConfiguration(AutoConfigurator ** outConfigurator, Compo
 
 		provider = ( provider != nullptr ) ? provider : "siox-core-autoconfigurator-FileConfigurationProvider" ;
 		path = ( path != nullptr ) ? path : "";
-		configuration = ( configuration != nullptr ) ? configuration :  "siox.conf:/usr/local/etc/siox.conf:/etc/siox.conf:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf" ;
+		configuration = ( configuration != nullptr ) ? configuration :  "siox.conf:/etc/siox/config/default:monitoring/low-level-c/test/siox.conf:monitoring/low-level-c/test/siox.conf" ;
 
 		AutoConfigurator * configurator = new AutoConfigurator( registrar, provider, path, configuration );
 		*outConfigurator = configurator;

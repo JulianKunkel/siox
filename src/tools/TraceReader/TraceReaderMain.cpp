@@ -74,10 +74,9 @@ int main( int argc, char ** argv )
 			return 1;
 		}
 
-
 		string configFile = vm["conf"].as<string>();
 		if (configFile == ""){
-			configFile = "siox-trace-reader.conf:/etc/siox/trace-reader.conf";
+			configFile = "siox-trace-reader.conf:" SIOX_ETC_DIR "/reader/default:/etc/siox/trace-reader.conf";
 		}
 
 		const bool ignoreConfigOptions = vm.count("ignoreConfigOptions") > 0;
