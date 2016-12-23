@@ -31,7 +31,7 @@ function runTest(){
     ./configure --build-dir=$BUILD/$FLAVOR --debug || exit 1
   fi
   pushd $BUILD/$FLAVOR > /dev/null
-  make || exit 1
+  make -j 4 || exit 1
 
   #define the alias
   ln -sf $(which mpiexec.$FLAVOR) /usr/bin/mpiexec
