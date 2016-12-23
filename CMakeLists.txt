@@ -59,6 +59,8 @@ include(FeatureSummary)
 
 include(SIOXMacros)
 
+add_definitions(-DSIOX_ETC_DIR="${SIOX_ETC_DIR}")
+
 set_library_install_suffix()
 set(SIOX_INSTALL_LIBRARY_DIR lib${LIBRARY_INSTALL_SUFFIX})
 
@@ -97,5 +99,6 @@ endif (BUILD_WRAPPERS)
 
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
-
-install(DIRECTORY etc/ DESTINATION etc/)
+# install default configurations
+install(DIRECTORY etc/siox DESTINATION etc/siox)
+# install(CODE "execute_process(COMMAND \"${CMAKE_SOURCE_DIR}/etc/create-config.sh\" ${CMAKE_SOURCE_DIR} ${SIOX_ETC_DIR})")

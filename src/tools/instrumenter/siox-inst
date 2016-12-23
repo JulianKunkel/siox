@@ -16,6 +16,39 @@ function ABORT(){
 	exit 1
 }
 
+function create_dat_files() {
+	SRC=$1
+	if [[ -e $SRC ]] ; then
+		return
+	fi
+	mkdir -p $SRC
+	echo "Automatically run all available instrumentations to create necessary *.dat files"
+
+	if [[ $(echo $AVAILABLE_WRAPPERS|grep mpi) ]] ; then
+	  echo "#include <mpi.h>
+	  int main(int argc, char ** argv){
+	    MPI_Init(& argc, & argv);
+	    MPI_Finalize();
+	    return 0;
+	  }
+	  " > $SRC/tmp.c
+
+	  siox-inst mpi mpicc $SRC/tmp.c -o $SRC/tmp.exe
+	  $SRC/tmp.exe > /dev/null
+	fi
+
+	echo "
+	int main(int argc, char ** argv){
+	  return 0;
+	}"  > $SRC/tmp.c
+
+	gcc $SRC/tmp.c -o $SRC/tmp.exe
+	siox-inst posix $SRC/tmp.exe > /dev/null
+	rm $SRC/tmp.c $SRC/tmp.exe
+
+	mv system-info.dat ontology.dat $SRC/
+}
+
 INSTALL_DIR=$(dirname $(dirname $(which $0)))
 
 LIBDIR=$INSTALL_DIR/lib
@@ -29,6 +62,9 @@ pushd $LIBDIR >/dev/null
 AVAILABLE_WRAPPERS=$(ls libsiox-*dlsym* | sed "s/libsiox-//g" | sed "s/-dlsym.*//" )
 AVAILABLE_CONFIGURATIONS=$(ls $CONFIG_PATH)
 popd >/dev/null
+
+#
+create_dat_files $INSTALL_DIR/etc/siox/dat
 
 # The verbosity level may be -1 (quiet), 0 (normal), or 1 (verbose)
 VERBOSE_LEVEL=0
@@ -46,7 +82,6 @@ until [ $DONE ] ; do
 done
 
 if [[ $CONFIG == "list" ]] ; then
-	echo "Available configurations:"
 	echo "$AVAILABLE_CONFIGURATIONS"
 	exit 0
 fi
@@ -54,6 +89,11 @@ fi
 # Layers to instrument are specified by the user
 LAYERS="$1"
 shift
+
+if [[ $LAYERS == "list" ]] ; then
+	echo "$AVAILABLE_WRAPPERS"
+	exit 0
+fi
 
 # Type of the instrumentation
 TYPE="dlsym"
@@ -72,7 +112,7 @@ if [[ "$1" == "" ]] ; then
 fi
 
 if (( $VERBOSE_LEVEL >= 3 )) ; then
-	echo "VERBOSITY: $VERBOSE_LEVEL" 
+	echo "VERBOSITY: $VERBOSE_LEVEL"
 fi
 
 if (( $VERBOSE_LEVEL >= 1 )) ; then
@@ -101,7 +141,7 @@ fi
 export SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT="$CONFIG_PATH/$CONFIG"
 
 if [[ $TYPE == "dlsym" ]] ; then
-	
+
 	if (( $VERBOSE_LEVEL >= 1 )) ; then
 		echo "INFO: LD_PRELOAD=\"$LDSTRING\" $@"
 	fi

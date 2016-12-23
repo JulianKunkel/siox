@@ -17,8 +17,6 @@ target_link_libraries(
 	siox-util
 )
 
-target_compile_definitions(siox-trace-reader PUBLIC SIOX_ETC_DIR="${SIOX_ETC_DIR}")
-
 find_package(MPI)
 if (MPI_FOUND)
 
@@ -33,8 +31,6 @@ target_link_libraries(
 	siox-util
 	${MPI_CXX_LIBRARIES}
 )
-
-target_compile_definitions(siox-trace-reader-parallel PUBLIC SIOX_ETC_DIR="${SIOX_ETC_DIR}")
 
 install(TARGETS siox-trace-reader-parallel LIBRARY DESTINATION ${SIOX_INSTALL_LIBRARY_DIR} RUNTIME DESTINATION bin ARCHIVE DESTINATION ${SIOX_INSTALL_LIBRARY_DIR})
 

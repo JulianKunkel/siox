@@ -62,7 +62,7 @@ namespace monitoring {
 						stringstream unique;
 						unique << av->attribute.domain << "|" << av->attribute.name;
 						string fqn( unique.str() );
-						
+
 						domain_name_map[fqn] = av;
 					}
 				} catch( boost::archive::archive_exception e ) {
@@ -77,11 +77,11 @@ namespace monitoring {
 
 			void save( string filename ) {
 				if ( loadedID == nextID ) return;
-				
+
 				ofstream file( filename );
 				if( ! file.good() ){
 					cerr << "Could not store ontology in file: " << filename << endl;
-					return;				
+					return;
 				}
 				boost::archive::xml_oarchive archive( file, boost::archive::no_header | boost::archive::no_codecvt );
 				archive << boost::serialization::make_nvp( "MAX_VALUE", nextID );
@@ -92,13 +92,17 @@ namespace monitoring {
 
 			void init() override {
 				FileOntologyOptions & o = getOptions<FileOntologyOptions>();
-				filename = o.filename;
 				if( filename.length() == 0 ) {
 					filename = "ontology.dat";
 				}
-				cout << "Initializing file ontology using " << filename << endl;
 
-				load( filename );
+				filename = o.filename;
+				cout << "Initializing file ontology using " << SIOX_ETC_DIR "/dat/ontology.dat" << endl;
+				load( SIOX_ETC_DIR "/dat/ontology.dat" );
+				if (attribute_map.size() == 0){
+					cout << "Initializing file ontology using " << filename << endl;
+					load( filename );
+				}
 			}
 
 			ComponentOptions * AvailableOptions() {
