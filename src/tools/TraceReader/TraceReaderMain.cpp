@@ -254,8 +254,13 @@ int main( int argc, char ** argv )
 			}
 		}
 
-		// initialize all modules with the appropriate module options
-		configurator->initAllComponents(coreComponents);
+		try{
+			// initialize all modules with the appropriate module options
+			configurator->initAllComponents(coreComponents);
+		}catch(exception & e){
+			cout << e.what() << endl;
+			exit(1);
+		}
 
 		AssociationMapper* associations           = nullptr;
 		Ontology* ontology                        = nullptr;

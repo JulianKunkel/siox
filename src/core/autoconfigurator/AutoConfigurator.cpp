@@ -64,7 +64,7 @@ namespace core {
 
 		{
 			stringstream input(config);
-			
+
 			// erase comment lines
 		   string item;
 	   	while (getline(input, item, '\n')) {
@@ -101,7 +101,7 @@ namespace core {
 
 			int pos = already_parsed_config.tellg();
 
-			//cout << "Parsing a module" << endl;			
+			//cout << "Parsing a module" << endl;
 			try{
 				j_xml_serialization::deserialize( *module, already_parsed_config );
 			} catch( exception & e ) {
@@ -117,7 +117,7 @@ namespace core {
 			cout << "[AC] Module config: "  << module->name << " (" << module->interface << ")" << endl;
 			component = module_create_instance<Component>( module->path, module->name, module->interface );
 			//cout << DumpConfiguration(component->get_options()) << endl;
-			//try{				
+			//try{
 			try{
 				SetConfiguration( component, already_parsed_config );
 			}catch(InvalidConfiguration & e){
@@ -147,12 +147,11 @@ namespace core {
 
 	void AutoConfigurator::SetConfiguration(Component * component, stringstream & config) throw (InvalidConfiguration){
 		ComponentOptions * options = & component->getOptions();
-		ContainerSerializer cs;		
+		ContainerSerializer cs;
 		try {
 			cs.parse( options, config );
 		} catch( exception & e ) {
 			autoConfiguratorRegistrar = nullptr;
-			registrarMutex.unlock();
 
 			cerr << e.what() << endl;
 
@@ -164,10 +163,9 @@ namespace core {
 	void AutoConfigurator::initAllComponents(vector<Component *> & c){
 		for (auto it = c.begin(); it != c.end(); it++){
 			try {
-				(*it)->init();				
+				(*it)->init();
 			} catch( exception & e ) {
 				autoConfiguratorRegistrar = nullptr;
-				registrarMutex.unlock();
 
 				string  str = DumpConfiguration( & (*it)->getOptions());
 				cerr << "Configuration values: " << endl << str << endl;
