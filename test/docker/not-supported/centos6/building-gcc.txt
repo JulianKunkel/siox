@@ -1,0 +1,29 @@
+# contrib/download_prereq..
+
+export LD_LIBRARY_PATH=$TARGET/lib
+
+pushd gcc*/contrib/gmp
+./configure --prefix=$TARGET && make -j 4 && make install
+popd
+
+pushd gcc*/contrib/mpfr
+./configure --prefix=$TARGET --with-gmp=$TARGET && make -j 4 && make install
+popd
+
+pushd gcc*/contrib/mpc
+./configure --prefix=$TARGET --with-gmp=$TARGET --with-mpfr=$TARGET && make -j 4 && make install
+popd
+
+pushd gcc*/contrib/isl
+./configure --prefix=$TARGET --with-gmp-prefix=$TARGET --with-gmp=system && make -j 4 && make install
+popd
+
+pushd gcc*/contrib/cloog
+./configure --prefix=$TARGET --with-isl-prefix=$TARGET -with-gmp-prefix=$TARGET --with-gmp=system && make -j 4 && make install
+popd
+
+mkdir gcc*/build
+pushd gcc*/build
+../configure --prefix=$TARGET --with-gmp=$TARGET --with-cloog=$TARGET --with-isl=$TARGET --with-mpc=$TARGET --with-gmp=$TARGET  --with-mpfr=$TARGET  && make -j 4 && make install
+
+
