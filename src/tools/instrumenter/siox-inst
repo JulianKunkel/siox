@@ -33,8 +33,8 @@ function create_dat_files() {
 	  }
 	  " > $SRC/tmp.c
 
-	  siox-inst mpi mpicc $SRC/tmp.c -o $SRC/tmp.exe
-	  $SRC/tmp.exe > /dev/null
+	  mpicc $SRC/tmp.c -o $SRC/tmp.exe
+	  siox-inst mpi $SRC/tmp.exe > /dev/null
 	fi
 
 	echo "
