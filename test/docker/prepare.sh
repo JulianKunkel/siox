@@ -27,7 +27,7 @@ if [ $? != 0 ] ; then
 	exit 1
 fi
 
-docker build -t kunkel/siox:centos6 centos6
+#docker build -t kunkel/siox:centos6 centos6
 if [ $? != 0 ] ; then
 	echo "Error building image"
 	exit 1

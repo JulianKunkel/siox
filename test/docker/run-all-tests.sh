@@ -10,8 +10,8 @@ docker run $OPT -h ubuntu16.04 kunkel/siox:ubuntu16.04 $ARGS
 ERROR=$(($ERROR+$?))
 docker run $OPT -h ubuntu17.04 kunkel/siox:ubuntu17.04 $ARGS
 ERROR=$(($ERROR+$?))
-docker run $OPT -h centos6 kunkel/siox:centos6 $ARGS
-ERROR=$(($ERROR+$?))
+#docker run $OPT -h centos6 kunkel/siox:centos6 $ARGS
+#ERROR=$(($ERROR+$?))
 docker run $OPT -h centos7 kunkel/siox:centos7 $ARGS
 ERROR=$(($ERROR+$?))
 docker run $OPT -h archlinux kunkel/siox:archlinux $ARGS

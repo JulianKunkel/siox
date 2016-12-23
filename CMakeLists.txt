@@ -46,15 +46,12 @@ endif ()
 
 
 # this is for self-compiled libraries that are not in the system's ld-path
-set(CMAKE_LIBRARY_PATH
-    ${CMAKE_LIBRARY_PATH}
-)
+set(CMAKE_LIBRARY_PATH  ${CMAKE_LIBRARY_PATH})
 
 # this is for the header files of self-compiled libraries
-set(CMAKE_INCLUDE_PATH
-    ${CMAKE_INCLUDE_PATH}
-)
+set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH})
 
+find_package(MPI)
 
 include(CTest)
 include(FeatureSummary)
