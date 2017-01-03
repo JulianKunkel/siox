@@ -8,6 +8,8 @@ add_library(
 	siox-monitoring-activityPlugin-FileAccessInfoPlugin
 	FileAccessInfo.cpp
 	FileAccessInfoOptions.cpp
+	TSDBData.cpp
+	TSDBClient.cpp
 )
 
 target_link_libraries(
