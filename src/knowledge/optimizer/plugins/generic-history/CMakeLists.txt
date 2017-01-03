@@ -16,7 +16,7 @@ add_library(
 target_link_libraries(
 	siox-knowledge-optimizer-generic-history
 	siox-core-AutoConfigurator
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

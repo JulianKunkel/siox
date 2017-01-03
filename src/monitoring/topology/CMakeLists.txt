@@ -15,7 +15,7 @@ target_link_libraries(
 	siox-monitoring-RamTopology
 	siox-core-AutoConfigurator
 	siox-util
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 
@@ -30,7 +30,7 @@ target_link_libraries(
 	siox-core-AutoConfigurator
 	siox-monitoring-Topology
 	siox-util
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

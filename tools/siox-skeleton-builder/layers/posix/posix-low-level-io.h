@@ -189,6 +189,7 @@ ssize_t readv( int fd, const struct iovec * iov, int iovcnt );
 //@guard
 //@errorErrno ''ret==(size_t)-1''
 //@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
+//@activity_attribute fileHandle fd
 //@activity_attribute bytesToWrite count
 //@activity_attribute filePosition offset
 //@activity_attribute_late bytesWritten ret
@@ -197,6 +198,7 @@ ssize_t pwrite( int fd, const void * buf, size_t count, off_t offset );
 //@guard
 //@errorErrno ''ret==(size_t)-1''
 //@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
+//@activity_attribute fileHandle fd
 //@activity_attribute bytesToRead count
 //@activity_attribute memoryAddress buf
 //@activity_attribute filePosition offset

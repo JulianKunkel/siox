@@ -15,7 +15,7 @@ add_library(
 target_link_libraries(
 	siox-monitoring-activityPlugin-FileAccessInfoPlugin
 	siox-core-ModuleLoader
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

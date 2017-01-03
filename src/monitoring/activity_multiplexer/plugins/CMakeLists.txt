@@ -18,8 +18,8 @@ add_subdirectory(file_access_info)
 #add_subdirectory(optimize-blocksize)
 
 # replay related plugins
-add_subdirectory(replay)
-add_subdirectory(replay-online)
+#add_subdirectory(replay)
+#add_subdirectory(replay-online)
 #add_subdirectory(mutator)
 add_subdirectory(modify-filepath)
 

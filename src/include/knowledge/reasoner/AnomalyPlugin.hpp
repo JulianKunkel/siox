@@ -69,8 +69,9 @@ struct HealthStatistics{
 		ostringstream result;
 
 		result << "[" << endl;
-        for( auto aphs : hs.map )
-        	result << "\t" << aphs.second << endl;
+    for( auto aphs : hs.map ){
+      	result << "\t" << aphs.second << endl;
+		}
 		result << "]";
 
 		return os << result.str();

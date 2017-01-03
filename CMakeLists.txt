@@ -9,6 +9,7 @@ include(CheckCSourceCompiles)
 set(SIOX_SOURCES ${CMAKE_SOURCE_DIR})
 set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/src/include)
 set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/src CACHE STRING "SIOX INCLUDE DIRS")
+set(SIOX_ETC_DIR ${CMAKE_INSTALL_PREFIX}/etc/siox)
 
 SET (CMAKE_C_FLAGS_DEBUG          "-ggdb -O0 -Wno-unused-local-typedefs -DDEBUG_VERSION")
 SET (CMAKE_CXX_FLAGS_DEBUG        "-ggdb -O0 -Wno-unused-local-typedefs -DDEBUG_VERSION")
@@ -46,20 +47,19 @@ endif ()
 
 
 # this is for self-compiled libraries that are not in the system's ld-path
-set(CMAKE_LIBRARY_PATH
-    ${CMAKE_LIBRARY_PATH}
-)
+set(CMAKE_LIBRARY_PATH  ${CMAKE_LIBRARY_PATH})
 
 # this is for the header files of self-compiled libraries
-set(CMAKE_INCLUDE_PATH
-    ${CMAKE_INCLUDE_PATH}
-)
+set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH})
 
+find_package(MPI)
 
 include(CTest)
 include(FeatureSummary)
 
 include(SIOXMacros)
+
+add_definitions(-DSIOX_ETC_DIR="${SIOX_ETC_DIR}")
 
 set_library_install_suffix()
 set(SIOX_INSTALL_LIBRARY_DIR lib${LIBRARY_INSTALL_SUFFIX})
@@ -98,3 +98,7 @@ if (BUILD_WRAPPERS)
 endif (BUILD_WRAPPERS)
 
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+
+# install default configurations
+install(DIRECTORY etc/siox DESTINATION etc/siox)
+# install(CODE "execute_process(COMMAND \"${CMAKE_SOURCE_DIR}/etc/create-config.sh\" ${CMAKE_SOURCE_DIR} ${SIOX_ETC_DIR})")

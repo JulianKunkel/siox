@@ -1,0 +1,34 @@
+This is the simplest example to replay applications using siox
+
+## An Application: program.c => program
+
+The example program by default writes "abc" to a file (test.tmp), closes 
+the file and terminates. Feel free to modify it and experiment.
+
+Build the sample application by invoking make:
+
+   $ make
+
+## Obtaining the trace using SIOX
+
+SIOX and the POSIX instrumentation is expected to be installed on the system.
+To trace the application you can use the following command:
+
+    $ trace.sh mytrace
+
+This will create a directory "mytrace" and then trace the example application
+"program" using the siox-inst utility. You can inspect the obtained trace by
+using the siox-trace-reader command. Make sure to specify the correct
+activities.dat file in the configuration.
+
+	$ cd mytrace
+	$ siox-trace-reader
+
+SIOX will create multiple files including a binary 
+
+    $ replay.sh mytrace
+
+Note: You can also replace "mytrace" with "demo-trace" to replay the trace
+in the demo-trace directory.
+
+

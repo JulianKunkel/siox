@@ -23,9 +23,14 @@ namespace tools {
 			core::ComponentOptions* AvailableOptions() override {return new FileAIStreamOptions{};}
 			void init() override;
 
+		 	std::string getFilename() override;
+			void setFilename(std::string name) override{
+				m_filename = name;
+			}
+
 		private:
 			monitoring::ActivitySerializationPlugin* m_activity_deserializer = nullptr;
-			std::string m_filename;
+			std::string m_filename = "";
 			/* Receiving ActivityMultiplexer */
 			ActivityMultiplexer * out = nullptr;
 	};

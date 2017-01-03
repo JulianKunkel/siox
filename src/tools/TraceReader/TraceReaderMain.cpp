@@ -21,10 +21,10 @@
 #include <monitoring/system_information/modules/filebased-system-information/FileBasedSystemInformationOptions.hpp>
 
 #include <monitoring/topology/Topology.hpp>
-#include <monitoring/topology/databaseTopology/DatabaseTopologyOptions.hpp>                                        
-#include <monitoring/association_mapper/modules/TopologyAssociationMapper/TopologyAssociationMapperOptions.hpp>    
-#include <monitoring/ontology/modules/TopologyOntology/TopologyOntologyOptions.hpp>                                
-#include <monitoring/system_information/modules/TopologySystemInformation/TopologySystemInformationOptions.hpp>    
+#include <monitoring/topology/databaseTopology/DatabaseTopologyOptions.hpp>
+#include <monitoring/association_mapper/modules/TopologyAssociationMapper/TopologyAssociationMapperOptions.hpp>
+#include <monitoring/ontology/modules/TopologyOntology/TopologyOntologyOptions.hpp>
+#include <monitoring/system_information/modules/TopologySystemInformation/TopologySystemInformationOptions.hpp>
 
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPlugin.hpp>
 #include <knowledge/activity_plugin/ActivityPluginDereferencing.hpp>
@@ -57,12 +57,12 @@ int main( int argc, char ** argv )
 		;
 
 		boost::program_options::variables_map vm;
-		boost::program_options::store( 
+		boost::program_options::store(
 				boost::program_options::command_line_parser(
 						argc,
 						argv
 					).options(genericOptions).allow_unregistered().style(
-					boost::program_options::command_line_style::unix_style 
+					boost::program_options::command_line_style::unix_style
 					^
 					boost::program_options::command_line_style::allow_short).run(),
 				vm
@@ -74,10 +74,9 @@ int main( int argc, char ** argv )
 			return 1;
 		}
 
-
 		string configFile = vm["conf"].as<string>();
 		if (configFile == ""){
-			configFile = "siox-trace-reader.conf:/etc/siox/trace-reader.conf";
+			configFile = "siox-trace-reader.conf:" SIOX_ETC_DIR "/reader/default:/etc/siox/trace-reader.conf";
 		}
 
 		const bool ignoreConfigOptions = vm.count("ignoreConfigOptions") > 0;
@@ -90,12 +89,12 @@ int main( int argc, char ** argv )
 		// Loading Modules according to configuration file.
 		ComponentRegistrar registrar{};
 		AutoConfigurator* configurator = new AutoConfigurator(
-				& registrar, "siox-core-autoconfigurator-FileConfigurationProvider",	"", configFile); 
+				& registrar, "siox-core-autoconfigurator-FileConfigurationProvider",	"", configFile);
 		vector<Component*> coreComponents = configurator->LoadConfiguration("TraceReader", "", false);
 		//std::list<ActivityMultiplexer*> amuxs = configurator->searchForAll<ActivityMultiplexer>(coreComponents);
 		tools::ActivityInputStreamPlugin* activities = configurator->searchFor<tools::ActivityInputStreamPlugin>(coreComponents);
 		assert(coreComponents.size() != 0);
-	
+
 		if (! ignoreConfigOptions){
 			unordered_map<string,int> identicalNames;
 
@@ -103,22 +102,22 @@ int main( int argc, char ** argv )
 				// parse options that can be set from XML...
 				// change the XML and inject it back.
 				string config = configurator->DumpConfiguration(c);
-	
+
 				//cout << config << endl;
 				stringstream s(config);
 				bool isFinishTag;
 				vector<string> stack= {};
-	
+
 				string txt;
 				bool finishedLast = false;
 
 	         while(s.good()){
 	         	// extract next begin tag
 	         	string tag = tools::XML::extractNextTag(s, isFinishTag);
-	         	if (isFinishTag){         		
+	         	if (isFinishTag){
 	         		string last = stack.back();
-	         		stack.pop_back();	
-	
+	         		stack.pop_back();
+
 	         		if (tag == last && stack.size() > 0 && finishedLast == false && txt.size() > 0){
 	         			stringstream val;
 	         			for(string parent : stack ){
@@ -183,21 +182,21 @@ int main( int argc, char ** argv )
 				// change the XML and inject it back.
 				string config = configurator->DumpConfiguration(c);
 				stringstream newConfig;
-	
+
 				stringstream s(config);
 				bool isFinishTag;
 				vector<string> stack= {};
-	
+
 				string txt;
 				bool finishedLast = false;
-	
+
 	         while(s.good()){
 	         	// extract next begin tag
 	         	string tag = tools::XML::extractNextTag(s, isFinishTag);
 	         	if (isFinishTag){
 	         		string last = stack.back();
-	         		stack.pop_back();	
-	
+	         		stack.pop_back();
+
 	         		if (tag == last && stack.size() > 0 && finishedLast == false && txt.size() > 0){
 	         			stringstream val;
 	         			for(string parent : stack ){
@@ -214,17 +213,17 @@ int main( int argc, char ** argv )
 								identicalNames[optname]++;
 								optname = val.str();
 							}
-	
-	         			// no nested tags => potential candidate         			
+
+	         			// no nested tags => potential candidate
 	     					string txtVal = vm[optname].as<string>();
 	     					//cout << val.str() << " " << txtVal << txt << endl;
-	     					newConfig << txtVal;     					
+	     					newConfig << txtVal;
 	         		}else{
 	         			newConfig << txt;
 	         		}
 	         		txt = "";
 	         		finishedLast = true;
-	
+
 	         		newConfig << "</" << tag << ">" << endl;
 	         		continue;
 	         	}
@@ -232,7 +231,7 @@ int main( int argc, char ** argv )
 	         		break;
 	         	}
 	         	newConfig << "<" << tag << ">";
-	
+
 	         	finishedLast = false;
 	         	txt = tools::XML::extractText(s);
 
@@ -248,15 +247,20 @@ int main( int argc, char ** argv )
 	         	}
 	         	stack.push_back(tag);
 	         }
-	
+
 	  			//cout << newConfig.str() << endl;
 	  			//cout << config << endl;
-  				configurator->SetConfiguration(c, newConfig.str());	
+  				configurator->SetConfiguration(c, newConfig.str());
 			}
 		}
 
-		// initialize all modules with the appropriate module options
-		configurator->initAllComponents(coreComponents);
+		try{
+			// initialize all modules with the appropriate module options
+			configurator->initAllComponents(coreComponents);
+		}catch(exception & e){
+			cout << e.what() << endl;
+			exit(1);
+		}
 
 		AssociationMapper* associations           = nullptr;
 		Ontology* ontology                        = nullptr;
@@ -271,7 +275,7 @@ int main( int argc, char ** argv )
 		assert(sysInfo);
 
 		registrar.start();
-	
+
 		while(const auto activity = activities->nextActivity()) {
 			activities->getTargetMultiplexer()->Log(activity);
 		//	for (auto& amux : amuxs) {
@@ -290,4 +294,4 @@ int main( int argc, char ** argv )
 	//	return 1;
 	//}
 	return 0;
-}	
+}

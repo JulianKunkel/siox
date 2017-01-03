@@ -22,7 +22,7 @@ target_link_libraries(
 	siox-monitoring-statisticsMultiplexerPlugin-FileWriter
 	siox-monitoring-RamTopology
 	siox-knowledge-DereferencingFacade
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )
 

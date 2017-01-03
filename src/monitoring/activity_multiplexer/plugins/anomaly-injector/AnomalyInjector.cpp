@@ -119,7 +119,6 @@ void AnomalyInjectorPlugin::initPlugin()
 
 	// Retrieve options
 	AnomalyInjectorPluginOptions & options = getOptions<AnomalyInjectorPluginOptions>();
-	assert( &options != nullptr );
 	// OUTPUT( "Got options!" );
 
 	// Connect us to our reasoner

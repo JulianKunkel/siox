@@ -4,14 +4,49 @@
 
 function ABORT(){
 	echo "Syntax:"
-	echo "	$0 [-h | --help | -q | --quiet | -v | --verbose ] <LAYER1_TO_INSTRUMENT,LAYER2,...> [dlsym | wrap] <ORIGINAL_PROGRAMM>"
+	echo "	$0 [-h | --help | -q | --quiet | -v | --verbose | --config [TYPE|list] ] <LAYER1_TO_INSTRUMENT,LAYER2,...> [dlsym | wrap] <ORIGINAL_PROGRAMM>"
 	echo "	e.g. $0 --help"
 	echo "	e.g. $0 -q posix,hdf5 wrap gcc test.c -o test.o"
 	echo "	e.g. $0 posix,hdf5 dlsym ls /home"
 	echo
 	echo "Instrumention for the following layers is available:"
 	echo "$AVAILABLE_WRAPPERS"
+	echo "Available configurations:"
+	echo "$AVAILABLE_CONFIGURATIONS"
 	exit 1
+}
+
+function create_dat_files() {
+	SRC=$1
+	if [[ -e $SRC ]] ; then
+		return
+	fi
+	mkdir -p $SRC
+	echo "Automatically run all available instrumentations to create necessary *.dat files"
+
+	if [[ $(echo $AVAILABLE_WRAPPERS|grep mpi) ]] ; then
+	  echo "#include <mpi.h>
+	  int main(int argc, char ** argv){
+	    MPI_Init(& argc, & argv);
+	    MPI_Finalize();
+	    return 0;
+	  }
+	  " > $SRC/tmp.c
+
+	  mpicc $SRC/tmp.c -o $SRC/tmp.exe
+	  siox-inst mpi $SRC/tmp.exe > /dev/null
+	fi
+
+	echo "
+	int main(int argc, char ** argv){
+	  return 0;
+	}"  > $SRC/tmp.c
+
+	gcc $SRC/tmp.c -o $SRC/tmp.exe
+	siox-inst posix $SRC/tmp.exe > /dev/null
+	rm $SRC/tmp.c $SRC/tmp.exe
+
+	mv system-info.dat ontology.dat $SRC/
 }
 
 INSTALL_DIR=$(dirname $(dirname $(which $0)))
@@ -21,16 +56,24 @@ if [ -d "$INSTALL_DIR/lib64" ]; then
 	LIBDIR=$INSTALL_DIR/lib64
 fi
 
+CONFIG_PATH=$INSTALL_DIR/etc/siox/config
+
 pushd $LIBDIR >/dev/null
 AVAILABLE_WRAPPERS=$(ls libsiox-*dlsym* | sed "s/libsiox-//g" | sed "s/-dlsym.*//" )
+AVAILABLE_CONFIGURATIONS=$(ls $CONFIG_PATH)
 popd >/dev/null
+
+#
+create_dat_files $INSTALL_DIR/etc/siox/dat
 
 # The verbosity level may be -1 (quiet), 0 (normal), or 1 (verbose)
 VERBOSE_LEVEL=0
 DONE=
+CONFIG=local
 until [ $DONE ] ; do
 	case "$1" in
 		(-h) ABORT ;;
+		(--config) CONFIG=$2; shift ;;
 		(--help) ABORT ;;
 		(-v) VERBOSE_LEVEL=$((VERBOSE_LEVEL+1)) ; shift ;;
 		(--verbose) VERBOSE_LEVEL=1 ; shift ;;
@@ -38,9 +81,19 @@ until [ $DONE ] ; do
 	esac
 done
 
+if [[ $CONFIG == "list" ]] ; then
+	echo "$AVAILABLE_CONFIGURATIONS"
+	exit 0
+fi
+
 # Layers to instrument are specified by the user
 LAYERS="$1"
 shift
+
+if [[ $LAYERS == "list" ]] ; then
+	echo "$AVAILABLE_WRAPPERS"
+	exit 0
+fi
 
 # Type of the instrumentation
 TYPE="dlsym"
@@ -59,7 +112,7 @@ if [[ "$1" == "" ]] ; then
 fi
 
 if (( $VERBOSE_LEVEL >= 3 )) ; then
-	echo "VERBOSITY: $VERBOSE_LEVEL" 
+	echo "VERBOSITY: $VERBOSE_LEVEL"
 fi
 
 if (( $VERBOSE_LEVEL >= 1 )) ; then
@@ -82,8 +135,13 @@ for l in "${LAYERS_TO_INSTRUMENT[@]}";do
 	WRAPLIBS="$WRAPLIBS -l siox-$l-wrap"
 done
 
+if (( $VERBOSE_LEVEL >= 1 )) ; then
+	echo export SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT="$CONFIG_PATH/$CONFIG"
+fi
+export SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT="$CONFIG_PATH/$CONFIG"
+
 if [[ $TYPE == "dlsym" ]] ; then
-	
+
 	if (( $VERBOSE_LEVEL >= 1 )) ; then
 		echo "INFO: LD_PRELOAD=\"$LDSTRING\" $@"
 	fi

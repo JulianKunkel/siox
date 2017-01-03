@@ -19,6 +19,6 @@ target_link_libraries(
 	core-logger 
 # 	core-communication 
 # 	core-comm-buffers
-	-L${Boost_LIBRARY_DIR}
+	#-L${Boost_LIBRARY_DIR}
 	${Boost_LIBRARIES}
 )

@@ -60,7 +60,7 @@ namespace monitoring {
 
 			void save( string filename ) {
 				if (loadedNextID == nextID) return;
-				
+
 				ofstream file( filename );
 				boost::archive::xml_oarchive archive( file, boost::archive::no_header | boost::archive::no_codecvt );
 				archive << boost::serialization::make_nvp( "nextID", nextID );
@@ -81,18 +81,21 @@ namespace monitoring {
 				FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
 				string filename = o.filename;
 				if( filename.length() == 0 ) {
-					filename = "system_info.dat";
+					filename = "system-info.dat";
 				}
-				//cout << "Initializing ID-mapper from file using " << filename << endl;
 
-				load( filename );
+				filename = o.filename;
+				load( SIOX_ETC_DIR "/dat/system-info.dat" );
+				if (activityMap.size() == 0){
+					load( filename );
+				}
 			}
 
 			ComponentOptions * AvailableOptions() {
 				return new FileBasedSystemInformationOptions();
 			}
 
-			~FileBasedSystemInformation() {				
+			~FileBasedSystemInformation() {
 				FileBasedSystemInformationOptions & o = getOptions<FileBasedSystemInformationOptions>();
 				string filename = o.filename;
 
