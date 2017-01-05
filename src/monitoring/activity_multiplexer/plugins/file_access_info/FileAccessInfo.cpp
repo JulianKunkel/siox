@@ -37,7 +37,6 @@
 #include <knowledge/activity_plugin/DereferencingFacadeOptions.hpp>
 
 #include "FileAccessInfo.hpp"
-#include "datatypes/TSDBDatapoint.hpp"
 
 using namespace std;
 using namespace monitoring;
@@ -174,11 +173,11 @@ void FileAccessInfoPlugin::initPlugin() {
 
 	/* Online Monitoring with  OpenTSDB */
 	if ("" != m_host) {
-		const char* c_username = getenv("SLURM_JOB_USER");
-		const char* c_jobid = getenv("SLURM_JOBID");
-		const char* c_nodeid = getenv("SLURM_NODEID");
-		const char* c_procid = getenv("SLURM_PROCID");
-		const char* c_localid = getenv("SLURM_LOCALID");
+		const char* c_username = (nullptr == getenv("SLURM_JOB_USER")) ? "fakeuser" : getenv("SLURM_JOB_USER");
+		const char* c_jobid = (nullptr == getenv("SLURM_JOBID")) ? "0" : getenv("SLURM_JOBID");
+		const char* c_nodeid = (nullptr == getenv("SLURM_NODEID")) ? "0" : getenv("SLURM_NODEID");
+		const char* c_procid = (nullptr == getenv("SLURM_PROCID"))  ? "0" : getenv("SLURM_PROCID");
+		const char* c_localid = (nullptr == getenv("SLURM_LOCALID")) ? "0" : getenv("SLURM_LOCALID");
 
 		assert(nullptr != c_nodeid);
 		assert(nullptr != c_procid);
@@ -197,8 +196,9 @@ void FileAccessInfoPlugin::initPlugin() {
 		m_metric_procid = c_procid;
 		m_metric_nodeid = c_nodeid;
 
-		client.init(m_host, port.str(), m_username, m_password);
-		m_thread = std::thread(&FileAccessInfoPlugin::sendToTSDB, this);
+		m_tsdb_client.init(m_host, port.str(), m_username, m_password);
+		m_elastic_client.init(m_host, "9200", m_username, m_password);
+		m_thread = std::thread(&FileAccessInfoPlugin::sendToDB, this);
 	}
 	/* END: Online Monitoring with  OpenTSDB */
 }
@@ -284,24 +284,9 @@ void FileAccessInfoPlugin::aggregate(const IOAccessType access, const Timestamp 
 
 
 
-//inline void FileAccessInfoPlugin::enqueMetric(const std::string& metric, const unsigned long timestamp, const double value, const std::string& fn, const IOAccessType access) {
-//	if (enabledTSDB) {
-//  client.enque({metric, timestamp,  value,{
-//      std::make_tuple("username", m_metric_username),
-//      std::make_tuple("filename", fn), 
-//      std::make_tuple("access", toStr(access)),
-//      std::make_tuple("procid", m_metric_procid),
-//      std::make_tuple("jobid", m_metric_jobid)
-//      }});
-//	}
-//	if (enabledEL) {
-//
-//	}
-//}
 
-
-
-void FileAccessInfoPlugin::sendToTSDB() {
+void FileAccessInfoPlugin::sendToDB() {
+	DEBUGFUNC;
   using HRC = std::chrono::high_resolution_clock;
   using namespace std::chrono;
   constexpr nanoseconds sleep_duration{seconds{1}}; 
@@ -325,14 +310,23 @@ void FileAccessInfoPlugin::sendToTSDB() {
         m_agg[fn][access].reset();
         m_mutex[fn][access].unlock();
 
-				std::shared_ptr<Datapoint> data{new TSDBDatapoint{m_host, m_metric_username, stol(m_metric_jobid), stol(m_metric_procid), timestamp}};
-				data->m_access = toStr(access);
-				data->m_filename = fn;
-				data->m_duration = agg.time;
-				data->m_bytes = agg.bytes;
-				data->m_calls = agg.count;
-				client.enqueue(data);
-        client.send();
+				std::shared_ptr<Datapoint> tsdb_point{new TSDBDatapoint{m_host, m_metric_username, stol(m_metric_jobid), stol(m_metric_procid), timestamp}};
+				tsdb_point->m_access = toStr(access);
+				tsdb_point->m_filename = fn;
+				tsdb_point->m_duration = agg.time;
+				tsdb_point->m_bytes = agg.bytes;
+				tsdb_point->m_calls = agg.count;
+				m_tsdb_client.enqueue(tsdb_point);
+        m_tsdb_client.send();
+
+				std::shared_ptr<Datapoint> elastic_point{new ElasticDatapoint{m_host, m_metric_username, stol(m_metric_jobid), stol(m_metric_procid), timestamp}};
+				elastic_point->m_access = toStr(access);
+				elastic_point->m_filename = fn;
+				elastic_point->m_duration = agg.time;
+				elastic_point->m_bytes = agg.bytes;
+				elastic_point->m_calls = agg.count;
+				m_elastic_client.enqueue(elastic_point);
+			 m_elastic_client.send();
       }
     }
     std::this_thread::sleep_until(start + count * sleep_duration);

@@ -31,7 +31,10 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 
 #include "FileAccessInfoOptions.hpp"
+#include "datatypes/TSDBDatapoint.hpp"
+#include "datatypes/ElasticDatapoint.hpp"
 #include "clients/TSDBClient.hpp"
+#include "clients/ElasticClient.hpp"
 
 
 typedef struct MetricAggregation {
@@ -99,6 +102,7 @@ struct OpenFiles {
 
 class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 	public:
+		FileAccessInfoPlugin() : m_elastic_client(ElasticDatapoint::get_json_schema()) {}
 		void initPlugin() override;
 		FileAccessInfoPluginOptions* AvailableOptions() override;
 		void finalize() override;
@@ -113,7 +117,6 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 
 		std::string m_metric_username;
 		std::string m_metric_jobid;
-
 		std::string m_metric_nodeid;
 		std::string m_metric_procid;
 		std::string m_metric_localid;
@@ -147,10 +150,11 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesWrittenID;		
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesToWriteID;		
 
-		TSDBClient client;
-//		void enqueMetric(const std::string& metric, const unsigned long timestamp, const double value, const std::string& fn, const IOAccessType access);
+		TSDBClient m_tsdb_client;
+		ElasticClient m_elastic_client;
+
 		void aggregate(const IOAccessType access_type, const Timestamp start, const Timestamp stop, const uint64_t position, const uint64_t bytes, const OpenFiles& file);
-		void sendToTSDB();
+		void sendToDB();
 		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (FileAccessInfoPlugin::* handler)(std::shared_ptr<Activity>));
 		void printFileAccess(const OpenFiles & file);
 		void handleOpen(std::shared_ptr<Activity> activity);
