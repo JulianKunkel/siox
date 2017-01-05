@@ -100,5 +100,5 @@ endif (BUILD_WRAPPERS)
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 # install default configurations
-install(DIRECTORY etc/siox DESTINATION etc/siox)
+install(DIRECTORY etc/siox DESTINATION etc)
 # install(CODE "execute_process(COMMAND \"${CMAKE_SOURCE_DIR}/etc/create-config.sh\" ${CMAKE_SOURCE_DIR} ${SIOX_ETC_DIR})")
