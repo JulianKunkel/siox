@@ -32,10 +32,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+#include <numeric>
 
 #include <knowledge/activity_plugin/DereferencingFacadeOptions.hpp>
 
 #include "FileAccessInfo.hpp"
+#include "datatypes/TSDBDatapoint.hpp"
 
 using namespace std;
 using namespace monitoring;
@@ -282,15 +284,20 @@ void FileAccessInfoPlugin::aggregate(const IOAccessType access, const Timestamp 
 
 
 
-inline void FileAccessInfoPlugin::enqueMetric(const std::string& metric, const unsigned long timestamp, const double value, const std::string& fn, const IOAccessType access) {
-  client.enque({metric, timestamp,  value,{
-      std::make_tuple("username", m_metric_username),
-      std::make_tuple("filename", fn), 
-      std::make_tuple("access", toStr(access)),
-      std::make_tuple("procid", m_metric_procid),
-      std::make_tuple("jobid", m_metric_jobid)
-      }});
-}
+//inline void FileAccessInfoPlugin::enqueMetric(const std::string& metric, const unsigned long timestamp, const double value, const std::string& fn, const IOAccessType access) {
+//	if (enabledTSDB) {
+//  client.enque({metric, timestamp,  value,{
+//      std::make_tuple("username", m_metric_username),
+//      std::make_tuple("filename", fn), 
+//      std::make_tuple("access", toStr(access)),
+//      std::make_tuple("procid", m_metric_procid),
+//      std::make_tuple("jobid", m_metric_jobid)
+//      }});
+//	}
+//	if (enabledEL) {
+//
+//	}
+//}
 
 
 
@@ -303,29 +310,28 @@ void FileAccessInfoPlugin::sendToTSDB() {
 
   while(true != m_thread_stop) {
     ++count;
+
+
     for (const auto& fnmap : m_agg) {
       const auto& fn = fnmap.first;
       for (const auto& accessmap : fnmap.second) {
-        const auto& access = accessmap.first;
-        const long timestamp{makeTimestamp()};
 
+        const auto& access = accessmap.first;
+//        const long timestamp{makeTimestamp()};
+  			const HRC::time_point timestamp{HRC::now()};
+		
         m_mutex[fn][access].lock();
         const MetricAggregation agg = m_agg[fn][access];
         m_agg[fn][access].reset();
         m_mutex[fn][access].unlock();
 
-        enqueMetric("siox.filestats.io.bytes", timestamp, static_cast<double>(agg.bytes), fn, access);
-        enqueMetric("siox.filestats.io.calls", timestamp, static_cast<double>(agg.count), fn, access);
-        enqueMetric("siox.filestats.io.time", timestamp, static_cast<double>(agg.time), fn, access);
-        if (0 != agg.time) {
-          assert(0 != agg.count);
-          enqueMetric("siox.filestats.io.perf", timestamp, 1000.f * 1000.f * 1000.f * (double) agg.bytes / (double) agg.time / 1024 / 1024, fn, access);
-          enqueMetric("siox.filestats.io.bytes_per_call", timestamp, (double) agg.bytes / (double) agg.count, fn, access);
-        }
-        else {
-          enqueMetric("siox.filestats.io.perf", timestamp, 0, fn, access);
-          enqueMetric("siox.filestats.io.bytes_per_call", timestamp, 0, fn, access);
-        }
+				std::shared_ptr<Datapoint> data{new TSDBDatapoint{m_host, m_metric_username, stol(m_metric_jobid), stol(m_metric_procid), timestamp}};
+				data->m_access = toStr(access);
+				data->m_filename = fn;
+				data->m_duration = agg.time;
+				data->m_bytes = agg.bytes;
+				data->m_calls = agg.count;
+				client.enqueue(data);
         client.send();
       }
     }

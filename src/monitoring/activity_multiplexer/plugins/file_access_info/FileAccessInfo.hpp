@@ -31,7 +31,7 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 
 #include "FileAccessInfoOptions.hpp"
-#include "TSDBClient.hpp"
+#include "clients/TSDBClient.hpp"
 
 
 typedef struct MetricAggregation {
@@ -148,7 +148,7 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesToWriteID;		
 
 		TSDBClient client;
-		void enqueMetric(const std::string& metric, const unsigned long timestamp, const double value, const std::string& fn, const IOAccessType access);
+//		void enqueMetric(const std::string& metric, const unsigned long timestamp, const double value, const std::string& fn, const IOAccessType access);
 		void aggregate(const IOAccessType access_type, const Timestamp start, const Timestamp stop, const uint64_t position, const uint64_t bytes, const OpenFiles& file);
 		void sendToTSDB();
 		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (FileAccessInfoPlugin::* handler)(std::shared_ptr<Activity>));
