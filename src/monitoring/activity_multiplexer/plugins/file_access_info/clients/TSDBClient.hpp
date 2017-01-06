@@ -12,10 +12,10 @@
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include "../datatypes/TSDBDatapoint.hpp"
 #include "BaseClient.hpp"
 
 #include <iostream>
+#include <memory>
 
 using namespace boost::asio;
 using namespace boost::asio::ip;
@@ -24,8 +24,10 @@ using boost::asio::ip::tcp;
 
 class TSDBClient : public Client{
 	public:
+		std::string to_json(std::shared_ptr<Client::Datapoint> point) const override;
 	private:
 		std::string make_send_uri() override;
+		std::string to_json_metric(const std::string& metric, LongType value, std::shared_ptr<Client::Datapoint> point) const;
 };
 
 #endif   /* ----- #ifndef TSDBClient_INC  ----- */

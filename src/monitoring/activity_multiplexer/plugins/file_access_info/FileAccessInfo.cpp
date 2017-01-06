@@ -44,13 +44,6 @@ using namespace monitoring;
 #define INVALID_UINT64 ((uint64_t) -1)
 #define IGNORE_ERROR(x) try{ x } catch(NotFoundError & e){}
 
-static long makeTimestamp() {
-  using namespace std::chrono;
-	system_clock::time_point tp = system_clock::now();
-	seconds duration = duration_cast<seconds>(tp.time_since_epoch());
-	return duration.count();
-}
-
 
 FileAccessInfoPluginOptions* FileAccessInfoPlugin::AvailableOptions() {
 	return new FileAccessInfoPluginOptions{};
@@ -88,13 +81,22 @@ void FileAccessInfoPlugin::initPlugin() {
 	assert(o != nullptr);
 
   file_limit = opts.file_limit;
-	m_username = opts.tsdb_username;
-	m_password = opts.tsdb_password;
-	m_host = opts.tsdb_host;
-	m_port = opts.tsdb_port;
+	m_tsdb_enabled = opts.tsdb_enabled;
+	m_tsdb_username = opts.tsdb_username;
+	m_tsdb_password = opts.tsdb_password;
+	m_tsdb_host = opts.tsdb_host;
+	m_tsdb_port = opts.tsdb_port;
 
-	std::stringstream port;
-	port << m_port;
+	m_elastic_enabled = opts.elastic_enabled;
+	m_elastic_username = opts.elastic_username;
+	m_elastic_password = opts.elastic_password;
+	m_elastic_host = opts.elastic_host;
+	m_elastic_port = opts.elastic_port;
+
+//	std::stringstream tsdb_port;
+//	port << m_tsdb_port;
+//	std::stringstream elastic_port;
+//	port << m_elastic_port;
 
 
 
@@ -172,32 +174,35 @@ void FileAccessInfoPlugin::initPlugin() {
 
 
 	/* Online Monitoring with  OpenTSDB */
-	if ("" != m_host) {
+	if (m_tsdb_enabled || m_elastic_enabled) {
+		const char* c_host = (nullptr == getenv("HOST")) ? "fakeuser" : getenv("HOST");
 		const char* c_username = (nullptr == getenv("SLURM_JOB_USER")) ? "fakeuser" : getenv("SLURM_JOB_USER");
 		const char* c_jobid = (nullptr == getenv("SLURM_JOBID")) ? "0" : getenv("SLURM_JOBID");
 		const char* c_nodeid = (nullptr == getenv("SLURM_NODEID")) ? "0" : getenv("SLURM_NODEID");
 		const char* c_procid = (nullptr == getenv("SLURM_PROCID"))  ? "0" : getenv("SLURM_PROCID");
 		const char* c_localid = (nullptr == getenv("SLURM_LOCALID")) ? "0" : getenv("SLURM_LOCALID");
 
+		assert(nullptr != c_host);
 		assert(nullptr != c_nodeid);
 		assert(nullptr != c_procid);
 		assert(nullptr != c_localid);
 		assert(nullptr != c_jobid);
 		assert(nullptr != c_username);
 
-		int nodeid = atoi(c_nodeid);
-		int procid = atoi(c_procid);
-		int localid = atoi(c_localid);
+//		int nodeid = atoi(c_nodeid);
+//		int procid = atoi(c_procid);
+//		int localid = atoi(c_localid);
 
 //		std::stringstream ss;
+		m_metric_host = c_host;
 		m_metric_username = c_username;
 		m_metric_jobid = c_jobid;
 		m_metric_localid = c_localid;
 		m_metric_procid = c_procid;
 		m_metric_nodeid = c_nodeid;
 
-		m_tsdb_client.init(m_host, port.str(), m_username, m_password);
-		m_elastic_client.init(m_host, "9200", m_username, m_password);
+		m_tsdb_client.init(m_tsdb_host, m_tsdb_port, m_tsdb_username, m_tsdb_password);
+		m_elastic_client.init(m_elastic_host, m_elastic_port, m_elastic_username, m_elastic_password);
 		m_thread = std::thread(&FileAccessInfoPlugin::sendToDB, this);
 	}
 	/* END: Online Monitoring with  OpenTSDB */
@@ -244,14 +249,6 @@ void FileAccessInfoPlugin::notify (const std::shared_ptr<Activity>& a, int lost)
     (this->*fkt)(a);
   }
 }
-
-
-
-static double convertTime(Timestamp time) {
-	constexpr double factor = 0.001 * 0.001 * 0.001;
-	return time * factor;
-}
-
 
 
 
@@ -302,31 +299,35 @@ void FileAccessInfoPlugin::sendToDB() {
       for (const auto& accessmap : fnmap.second) {
 
         const auto& access = accessmap.first;
-//        const long timestamp{makeTimestamp()};
   			const HRC::time_point timestamp{HRC::now()};
-		
+	
+				// Lock -> Fast Copy -> Unlock
         m_mutex[fn][access].lock();
         const MetricAggregation agg = m_agg[fn][access];
         m_agg[fn][access].reset();
         m_mutex[fn][access].unlock();
 
-				std::shared_ptr<Datapoint> tsdb_point{new TSDBDatapoint{m_host, m_metric_username, stol(m_metric_jobid), stol(m_metric_procid), timestamp}};
-				tsdb_point->m_access = toStr(access);
-				tsdb_point->m_filename = fn;
-				tsdb_point->m_duration = agg.time;
-				tsdb_point->m_bytes = agg.bytes;
-				tsdb_point->m_calls = agg.count;
-				m_tsdb_client.enqueue(tsdb_point);
-        m_tsdb_client.send();
+				std::shared_ptr<Client::Datapoint> point = std::make_shared<Client::Datapoint>();
+				point->m_host      = m_metric_host;
+				point->m_username  = m_metric_username;
+				point->m_jobid     = stol(m_metric_jobid);
+				point->m_procid    = stol(m_metric_procid);
+				point->m_timestamp = timestamp;
+				point->m_access    = toStr(access);
+				point->m_filename  = fn;
+				point->m_duration  = agg.time;
+				point->m_bytes     = agg.bytes;
+				point->m_calls     = agg.count;
 
-				std::shared_ptr<Datapoint> elastic_point{new ElasticDatapoint{m_host, m_metric_username, stol(m_metric_jobid), stol(m_metric_procid), timestamp}};
-				elastic_point->m_access = toStr(access);
-				elastic_point->m_filename = fn;
-				elastic_point->m_duration = agg.time;
-				elastic_point->m_bytes = agg.bytes;
-				elastic_point->m_calls = agg.count;
-				m_elastic_client.enqueue(elastic_point);
-			 m_elastic_client.send();
+				// TODO: run, if client enabled
+				if (m_tsdb_enabled) {
+					m_tsdb_client.enqueue(point);
+					m_tsdb_client.send();
+				}
+				if (m_elastic_enabled) {
+					m_elastic_client.enqueue(point);
+					m_elastic_client.send();
+				}
       }
     }
     std::this_thread::sleep_until(start + count * sleep_duration);
@@ -365,6 +366,7 @@ void FileAccessInfoPlugin::printFileAccess (const OpenFiles& file) {
 					read_time += access.endTime - access.startTime;
 					break;
 				case IOAccessType::SYNC:
+				case IOAccessType::SEEK:
 					break;
 			}
 
@@ -405,7 +407,7 @@ static bool comp(const OpenFiles& f1, const OpenFiles f2) {
 
 void FileAccessInfoPlugin::finalize() {
   m_thread_stop = true;
-	if ("" != m_host) {
+	if (m_tsdb_enabled || m_elastic_enabled) {
 		m_thread.join();
 	}
 
@@ -513,9 +515,10 @@ OpenFiles* FileAccessInfoPlugin::findParentFileByFh (const std::shared_ptr<Activ
 
 
 void FileAccessInfoPlugin::handleSeek (std::shared_ptr<Activity> a) {
-	OpenFiles* parent = findParentFileByFh(a);
-	parent->currentPosition = findUINT64AttributeByID(a, positionID[io_iface]);
-	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
+	// TODO
+//	OpenFiles* parent = findParentFileByFh(a);
+//	parent->currentPosition = findUINT64AttributeByID(a, positionID[io_iface]);
+//	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
 }
 
 
@@ -540,7 +543,7 @@ void FileAccessInfoPlugin::handleWrite (std::shared_ptr<Activity> a) {
 
   if (0 == a->errorValue() && bytesWritten == bytesToWrite && INVALID_UINT64 != bytesWritten) {
     parent->accesses.push_back(Access{IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytesWritten});
-		if ("" != m_host) {
+		if (m_tsdb_enabled || m_elastic_enabled) {
 			aggregate(IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytesWritten, *parent);
 		}
   }
@@ -567,7 +570,7 @@ void FileAccessInfoPlugin::handleRead (std::shared_ptr<Activity> a) {
 
   if (0 == a->errorValue() && bytesRead == bytesToRead && INVALID_UINT64 != bytesRead) {
 	  parent->accesses.push_back(Access{IOAccessType::READ, a->time_start_, a->time_stop_, position, bytesRead});
-		if ("" != m_host) {
+		if (m_tsdb_enabled || m_elastic_enabled) {
 			aggregate(IOAccessType::READ, a->time_start_, a->time_stop_, position, bytesRead, *parent);
 		}
   }

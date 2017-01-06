@@ -31,8 +31,6 @@
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 
 #include "FileAccessInfoOptions.hpp"
-#include "datatypes/TSDBDatapoint.hpp"
-#include "datatypes/ElasticDatapoint.hpp"
 #include "clients/TSDBClient.hpp"
 #include "clients/ElasticClient.hpp"
 
@@ -102,7 +100,6 @@ struct OpenFiles {
 
 class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 	public:
-		FileAccessInfoPlugin() : m_elastic_client(ElasticDatapoint::get_json_schema()) {}
 		void initPlugin() override;
 		FileAccessInfoPluginOptions* AvailableOptions() override;
 		void finalize() override;
@@ -110,11 +107,19 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 
 	private:
 
-		std::string m_host;
-		int m_port;
-		std::string m_username;
-		std::string m_password;
+		int m_tsdb_enabled;
+		std::string m_tsdb_host;
+		std::string m_tsdb_port;
+		std::string m_tsdb_username;
+		std::string m_tsdb_password;
 
+		int m_elastic_enabled;
+		std::string m_elastic_host;
+		std::string m_elastic_port;
+		std::string m_elastic_username;
+		std::string m_elastic_password;
+
+		std::string m_metric_host;
 		std::string m_metric_username;
 		std::string m_metric_jobid;
 		std::string m_metric_nodeid;

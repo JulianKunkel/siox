@@ -65,10 +65,17 @@ class FileAccessInfoPluginOptions : public monitoring::ActivityMultiplexerPlugin
 		 */
 		string output;
 
+		int tsdb_enabled;
 		string tsdb_host;
-		int tsdb_port;
+		string tsdb_port;
 		string tsdb_username;
 		string tsdb_password;
+
+		int elastic_enabled;
+		string elastic_host;
+		string elastic_port;
+		string elastic_username;
+		string elastic_password;
 };
 
 #endif   /* ----- #ifndef FileAccessInfoOptions_INC  ----- */
