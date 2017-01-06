@@ -8,10 +8,6 @@ add_library(
 	siox-monitoring-activityPlugin-FileAccessInfoPlugin
 	FileAccessInfo.cpp
 	FileAccessInfoOptions.cpp
-	#datatypes/Basics.cpp
-	#datatypes/BaseDatapoint.cpp
-	#datatypes/TSDBDatapoint.cpp
-	#datatypes/ElasticDatapoint.cpp
 	clients/Basics.cpp
 	clients/BaseClient.cpp
 	clients/TSDBClient.cpp

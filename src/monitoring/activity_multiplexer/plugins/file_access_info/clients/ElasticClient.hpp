@@ -28,13 +28,15 @@
 
 class ElasticClient : public Client {
 	public:
-		ElasticClient() : m_index{"siox"}, m_type{"access"} {}
+		ElasticClient() : m_index{"siox"}, m_type{"access"} {
+			m_mappings = get_json_mappings();	
+		}
 		void init(const std::string& host, const std::string& port, const std::string& username, const std::string& password) override;
 		std::string make_send_uri() override;
 		std::string to_json(std::shared_ptr<Client::Datapoint> point) const override;
 	private:
 		std::string get_json_mappings() const;
-		const std::string m_mappings;
+		std::string m_mappings;
 		size_t m_id_counter = 0;
 		const std::string m_index;
 		const std::string m_type;

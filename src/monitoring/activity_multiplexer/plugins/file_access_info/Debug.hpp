@@ -23,7 +23,8 @@
 #include <iostream>
 
 #ifndef DEBUGFUNC
-#define DEBUGFUNC std::cout << "CALL -- " <<  __PRETTY_FUNCTION__ << ":" << __LINE__ << std::endl;
+#define DEBUGFUNC
+//#define DEBUGFUNC std::cout << "CALL -- " <<  __PRETTY_FUNCTION__ << ":" << __LINE__ << std::endl;
 #endif
 
 #endif   /* ----- #ifndef Debug_INC  ----- */

@@ -31,43 +31,48 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 
 	try {
 		// Check if index exists
-		m_tcp_socket.send(buffer(request.data(), request.length()));
-		const size_t bytes_transferred = boost::asio::read_until(m_tcp_socket, m_response, "\r\n");	
-		m_response.commit(bytes_transferred);
-		std::istream is(&m_response);
-		std::string skip;
-		unsigned int http_err_code;
-		is >> skip >> http_err_code >> skip;
-		std::cout << "http_err_code " << http_err_code << std::endl;
-		while (std::getline(is, skip)) {}
-		m_tcp_socket.close();
+		
+		unsigned int http_err_code = 0;
+		size_t count = 0; // max number of tries
 
-
-		// Create index if not exists
-		if (200 != http_err_code) {
-			m_resolv.async_resolve(q, boost::bind(&Client::resolve_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
-			m_ioservice.reset();
-			m_ioservice.run();
-			std::cout << "create db" << std::endl;
-			const std::string create_request = make_http_request("PUT /" + m_index, m_base64, m_host, m_port, m_mappings);
-			std::cout << create_request << std::endl;
-
-			m_tcp_socket.send(buffer(create_request.data(), create_request.length()));
+		do {
+			m_tcp_socket.send(buffer(request.data(), request.length()));
 			const size_t bytes_transferred = boost::asio::read_until(m_tcp_socket, m_response, "\r\n");	
-
 			m_response.commit(bytes_transferred);
 			std::istream is(&m_response);
-			std::string result_line;
-			while (std::getline(is, result_line)) {
-				std::cout << result_line << std::endl;
-			}
+			std::string skip;
+			is >> skip >> http_err_code >> skip;
+			std::cout << "http_err_code " << http_err_code << std::endl;
+			while (std::getline(is, skip)) {}
 			m_tcp_socket.close();
-		}
+
+			// Create index if not exists
+			if (200 != http_err_code) {
+				m_resolv.async_resolve(q, boost::bind(&Client::resolve_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
+				m_ioservice.reset();
+				m_ioservice.run();
+				std::cout << "create db" << std::endl;
+				const std::string create_request = make_http_request("PUT /" + m_index, m_base64, m_host, m_port, m_mappings);
+				std::cout << create_request << std::endl;
+
+				m_tcp_socket.send(buffer(create_request.data(), create_request.length()));
+				const size_t bytes_transferred = boost::asio::read_until(m_tcp_socket, m_response, "\r\n");	
+
+				m_response.commit(bytes_transferred);
+				std::istream is(&m_response);
+				std::string result_line;
+				while (std::getline(is, result_line)) {
+					std::cout << result_line << std::endl;
+				}
+				m_tcp_socket.close();
+			}
+		} while (200 != http_err_code || 5 > count++);
 	}
 	catch (std::exception& e)
 	{
 		std::cerr << "Exception: " << e.what() << "\n";
 	}
+	sleep(1);
 }
 
 

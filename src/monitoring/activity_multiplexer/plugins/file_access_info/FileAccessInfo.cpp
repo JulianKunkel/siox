@@ -175,7 +175,7 @@ void FileAccessInfoPlugin::initPlugin() {
 
 	/* Online Monitoring with  OpenTSDB */
 	if (m_tsdb_enabled || m_elastic_enabled) {
-		const char* c_host = (nullptr == getenv("HOST")) ? "fakeuser" : getenv("HOST");
+		const char* c_host = (nullptr == getenv("HOSTNAME")) ? "fakehost" : getenv("HOSTNAME");
 		const char* c_username = (nullptr == getenv("SLURM_JOB_USER")) ? "fakeuser" : getenv("SLURM_JOB_USER");
 		const char* c_jobid = (nullptr == getenv("SLURM_JOBID")) ? "0" : getenv("SLURM_JOBID");
 		const char* c_nodeid = (nullptr == getenv("SLURM_NODEID")) ? "0" : getenv("SLURM_NODEID");
