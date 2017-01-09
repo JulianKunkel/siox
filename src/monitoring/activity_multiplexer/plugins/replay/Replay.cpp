@@ -439,9 +439,9 @@ void ReplayPlugin::findUcaidMapping()
 
 void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 {
-
-	printActivity(activity);
-
+	if (activity->errorValue() != 0){
+		return;
+	}
 	//stringstream str;
 	try {
 		//char buff[40];
@@ -470,7 +470,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 				);
 			VariableDatatype x = getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle");
 			if (x.type() == VariableDatatype::Type::INVALID){
-							printf("Found an invalid activity!\n");
+							printf("Error: Found an invalid activity! This should not happen!\n");
 							return;
 			}
 			fds[x.uint32()] = ret;
