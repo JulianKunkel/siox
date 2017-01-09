@@ -178,7 +178,7 @@ int posix_accept4 = -1;
 
 // Replay related helpers
 /**
- * Special helper function to be used by write and reads, which require 
+ * Special helper function to be used by write and reads, which require
  * buffers of certain size. The function guarentees to provide a address to
  * a buffer of sufficient size.
  */
@@ -255,7 +255,7 @@ static bool convert_attribute_back( OntologyAttribute & oa, const VariableDataty
 			assert(0 && "tried to optimize for a VariableDatatype of invalid type");
 			return false;
 	}
-}	
+}
 
 
 
@@ -343,7 +343,7 @@ bool ReplayPlugin::strattribute_compare( const Attribute& attribute, const char*
 	//}else{
 	//	s << attribute.value ;
 	//}
-	
+
 	debug_string << "TR: strattribute_compare: s=" << s.str() << "\n";
 	cout << debug_string.str();
 
@@ -360,7 +360,7 @@ bool ReplayPlugin::strattribute_compare( const Attribute& attribute, const char*
 const AttributeValue ReplayPlugin::getActivityAttributeValueByName(  std::shared_ptr<Activity> a, const char * domain, const char * name) throw( NotFoundError )
 {
 	try {
-		
+
 		UniqueInterfaceID uid = sys_info->lookup_interface_of_activity( a->ucaid() );
 
 		auto oa = facade->lookup_attribute_by_name( domain, name );
@@ -369,10 +369,10 @@ const AttributeValue ReplayPlugin::getActivityAttributeValueByName(  std::shared
 			if ( itr->id == oa.aID ){
 				// activity has attribute, return value
 				return itr->value;
-			} else {
-				// not found in this iteration
 			}
+			// not found in this iteration
 		}
+		return AttributeValue();
 
 		// parent ids!?
 //		if( a->parentArray().begin() != a->parentArray().end() ) {
@@ -394,7 +394,7 @@ const AttributeValue ReplayPlugin::getActivityAttributeValueByName(  std::shared
 
 
 
-void ReplayPlugin::findUcaidMapping() 
+void ReplayPlugin::findUcaidMapping()
 {
 
 	// TODO: API: get cuid by by name, would simplefy everything imensely
@@ -406,24 +406,24 @@ void ReplayPlugin::findUcaidMapping()
 		//virtual UniqueInterfaceID           lookup_interfaceID( const string & interface, const string & implementation ) const throw( NotFoundError )  = 0;
 		UniqueInterfaceID uiid = sys_info->lookup_interfaceID("POSIX", "");
 
-		// stdio	
+		// stdio
 		posix_open = sys_info->lookup_activityID(uiid, "open"); ss << "open" << " <=> " << posix_open << " <=> " << sys_info->lookup_activity_name( posix_open ) << std::endl;
 		posix_read = sys_info->lookup_activityID(uiid, "read"); ss << "read" << " <=> " << posix_read << " <=> " << sys_info->lookup_activity_name( posix_read ) << std::endl;
 		posix_write = sys_info->lookup_activityID(uiid, "write"); ss << "write" << " <=> " << posix_write << " <=> " << sys_info->lookup_activity_name( posix_write ) << std::endl;
 		posix_close = sys_info->lookup_activityID(uiid, "close"); ss << "close" << " <=> " << posix_close << " <=> " << sys_info->lookup_activity_name( posix_close ) << std::endl;
 		posix_lseek = sys_info->lookup_activityID(uiid, "lseek"); ss << "lseek" << " <=> " << posix_lseek << " <=> " << sys_info->lookup_activity_name( posix_lseek ) << std::endl;
-	
+
 		// streaming I/O
 		posix_fopen = sys_info->lookup_activityID(uiid, "fopen"); ss << "fopen" << " <=> " << posix_fopen << " <=> " << sys_info->lookup_activity_name( posix_fopen ) << std::endl;
 		posix_fread = sys_info->lookup_activityID(uiid, "fread"); ss << "fread" << " <=> " << posix_fread << " <=> " << sys_info->lookup_activity_name( posix_fread ) << std::endl;
 		posix_fwrite = sys_info->lookup_activityID(uiid, "fwrite"); ss << "fwrite" << " <=> " << posix_fwrite << " <=> " << sys_info->lookup_activity_name( posix_fwrite ) << std::endl;
 		posix_fclose = sys_info->lookup_activityID(uiid, "fclose"); ss << "fclose" << " <=> " << posix_fclose << " <=> " << sys_info->lookup_activity_name( posix_fclose ) << std::endl;
 		posix_fseek = sys_info->lookup_activityID(uiid, "fseek"); ss << "fseek" << " <=> " << posix_fseek << " <=> " << sys_info->lookup_activity_name( posix_fseek ) << std::endl;
-		
+
 
 		std::cout << ss.str() << std::endl;;
 
-	} catch( NotFoundError & e ) {	
+	} catch( NotFoundError & e ) {
 		cerr << "Interface not found!" << ss.str() << endl;
 		//cerr << "Exception" << e << endl;
 	}
@@ -446,13 +446,6 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 	try {
 		//char buff[40];
 		//siox_time_to_str( activity->time_start(), buff, false );
-
-
-		activity->time_stop();
-		activity->time_start();
-
-		activity->aid();
-
 		UniqueInterfaceID uid = sys_info->lookup_interface_of_activity( activity->ucaid() );
 
 		sys_info->lookup_interface_name( uid );
@@ -466,21 +459,18 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		if( ucaid == posix_open ) {
 			// ###########################################################
 			//wrapped_open(sub_activity->data);
-			printf("'- open\n");
-
 			
 			//std::stringstream ss;
 
-			// open(POSIX/hints/openFlags=65, POSIX/descriptor/filename="test.tmp", POSIX/descriptor/filehandle=4) = 0 
+			// open(POSIX/hints/openFlags=65, POSIX/descriptor/filename="test.tmp", POSIX/descriptor/filehandle=4) = 0
 			int ret = open(
 					getActivityAttributeValueByName(activity, "POSIX", "descriptor/filename").str(),
 					translateSIOXFlagsToPOSIX( getActivityAttributeValueByName(activity, "POSIX", "hints/openFlags").uint32() ),
 					S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH // TODO: supply siox with rights flags converter
 				);
-
-			dump_fds();	
-			fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()] = ret;
-			dump_fds();	
+			int fd = getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32();
+			fds[fd] = ret;
+			dump_fds();
 
 			}
 
@@ -526,7 +516,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_write ) {
 			// ###########################################################
 			//wrapped_write(sub_activity->data);
-			
+
 			// write(POSIX/quantity/BytesToWrite=3, POSIX/descriptor/filehandle=4, POSIX/data/MemoryAddress=4196057, POSIX/quantity/BytesWritten=3) = 0
 			long size = getActivityAttributeValueByName(activity, "POSIX", "quantity/BytesToWrite").uint64();
 			int ret = write(
@@ -543,7 +533,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_read ) {
 			// ###########################################################
 			//wrapped_read(sub_activity->data);
-			
+
 			long size = getActivityAttributeValueByName(activity, "POSIX", "quantity/BytesToRead").uint64();
 			int ret = read(
 					fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()],
@@ -609,7 +599,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_lseek ) {
 			// ###########################################################
 			//wrapped_lseek(sub_activity->data);
-			
+
 			// lseek(POSIX/descriptor/filehandle=4, POSIX/file/position=6)
 			int ret = lseek(
 					fds[getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32()],
@@ -618,8 +608,8 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 				);
 
 			// TODO: siox convert seeks flags? though siox is always taking the absolute position? => SEEK_SET
-			
-				
+
+
 
 			printf("'- lseek\n");
 			}
@@ -664,7 +654,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 			// ###########################################################
 			//wrapped_fopen(sub_activity->data);
 			printf("'- fopen\n");
-		
+
 
 
 
@@ -677,9 +667,9 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 					mode
 				);
 
-			dump_streams();	
+			dump_streams();
 			streams[getActivityAttributeValueByName(activity, "POSIX", "descriptor/FilePointer").uint64()] = ret;
-			dump_streams();	
+			dump_streams();
 
 
 			}
@@ -707,7 +697,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_fclose ) {
 			// ###########################################################
 			//wrapped_fclose(sub_activity->data);
-			
+
 
 
 /*
@@ -725,7 +715,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 	//fwrite(buf+3, sizeof(char), 3, stream);
 	if (fclose(stream)) {
-		perror("fclose");		
+		perror("fclose");
 	}
 */
 
@@ -781,7 +771,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 	//fwrite(buf+3, sizeof(char), 3, stream);
 	if (fclose(stream)) {
-		perror("fclose");		
+		perror("fclose");
 	}
 */
 
@@ -798,7 +788,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		else if( ucaid == posix_fwrite ) {
 			// ###########################################################
 			//wrapped_fwrite(sub_activity->data);
-			
+
 
 /*
 	// write to non existing file
@@ -815,7 +805,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 
 	//fwrite(buf+3, sizeof(char), 3, stream);
 	if (fclose(stream)) {
-		perror("fclose");		
+		perror("fclose");
 	}
 */
 
@@ -943,7 +933,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
         	// not found!
 			printf("unknown type - nothing to replay");
 		}
-        
+
 
 		/*
 		for( auto itr = activity->attributeArray().begin() ; itr != activity->attributeArray().end(); itr++ ) {
