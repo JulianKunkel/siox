@@ -459,7 +459,7 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 		if( ucaid == posix_open ) {
 			// ###########################################################
 			//wrapped_open(sub_activity->data);
-			
+
 			//std::stringstream ss;
 
 			// open(POSIX/hints/openFlags=65, POSIX/descriptor/filename="test.tmp", POSIX/descriptor/filehandle=4) = 0
@@ -468,8 +468,12 @@ void ReplayPlugin::replayActivity( std::shared_ptr<Activity> activity )
 					translateSIOXFlagsToPOSIX( getActivityAttributeValueByName(activity, "POSIX", "hints/openFlags").uint32() ),
 					S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH // TODO: supply siox with rights flags converter
 				);
-			int fd = getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle").uint32();
-			fds[fd] = ret;
+			VariableDatatype x = getActivityAttributeValueByName(activity, "POSIX", "descriptor/filehandle");
+			if (x.type() == VariableDatatype::Type::INVALID){
+							printf("Found an invalid activity!\n");
+							return;
+			}
+			fds[x.uint32()] = ret;
 			dump_fds();
 
 			}
