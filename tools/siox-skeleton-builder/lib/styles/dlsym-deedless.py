@@ -101,14 +101,7 @@ class Style(skeletonBuilder.Writer):
 
             self.writeBefore(function, output, functionVariables)
 
-            # write the function call
-        
-            print("""printf("deedless call ;)\\n");""", file=output)
-            print("/* > > > HERE < < < */", file=output)
-            print("/* deed ", file=output)
-            if function.writeFunctionCall:
-                print(functionCall, file=output)
-            print("deed */", file=output)
+            # do not write the function call
 
             self.writeAfter(function, output, functionVariables)
 
