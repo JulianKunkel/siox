@@ -1,7 +1,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  FileAccessInfoOptions.hpp
+ *       Filename:  OnlineMonitoringOptions.hpp
  *
  *    Description:  This plugin was developed in cooperatin with Ulf Markwardt 
  *    (ulf.markwardt@tu-dresden.de). It investigates an activity trace an creates
@@ -19,8 +19,8 @@
  */
 
 
-#ifndef  FileAccessInfoOptions_INC
-#define  FileAccessInfoOptions_INC
+#ifndef  OnlineMonitoringOptions_INC
+#define  OnlineMonitoringOptions_INC
 
 #include <string>
 #include <vector>
@@ -30,7 +30,7 @@ using namespace std;
 
 
 //@serializable
-class FileAccessInfoPluginOptions : public monitoring::ActivityMultiplexerPluginOptions {
+class OnlineMonitoringPluginOptions : public monitoring::ActivityMultiplexerPluginOptions {
 	public:
 		/**
 		 * @brief Not used
@@ -78,4 +78,4 @@ class FileAccessInfoPluginOptions : public monitoring::ActivityMultiplexerPlugin
 		string elastic_password;
 };
 
-#endif   /* ----- #ifndef FileAccessInfoOptions_INC  ----- */
+#endif   /* ----- #ifndef OnlineMonitoringOptions_INC  ----- */

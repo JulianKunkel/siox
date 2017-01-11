@@ -5,10 +5,6 @@
 #include "Basics.hpp"
 #include "TSDBClient.hpp"
 
-using namespace boost::asio;
-using namespace boost::asio::ip;
-using boost::asio::ip::tcp;
-
 std::string TSDBClient::make_send_uri() {
 	DEBUGFUNC;
 	return "POST /api/put\?details";

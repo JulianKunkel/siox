@@ -1,7 +1,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  FileAccessInfo.cpp
+ *       Filename:  OnlineMonitoring.cpp
  *
  *    Description:  
  *
@@ -36,7 +36,7 @@
 
 #include <knowledge/activity_plugin/DereferencingFacadeOptions.hpp>
 
-#include "FileAccessInfo.hpp"
+#include "OnlineMonitoring.hpp"
 
 using namespace std;
 using namespace monitoring;
@@ -45,17 +45,17 @@ using namespace monitoring;
 #define IGNORE_ERROR(x) try{ x } catch(NotFoundError & e){}
 
 
-FileAccessInfoPluginOptions* FileAccessInfoPlugin::AvailableOptions() {
-	return new FileAccessInfoPluginOptions{};
+OnlineMonitoringPluginOptions* OnlineMonitoringPlugin::AvailableOptions() {
+	return new OnlineMonitoringPluginOptions{};
 }
 
-void FileAccessInfoPlugin::initPlugin() {
+void OnlineMonitoringPlugin::initPlugin() {
 	//vector<string> supportedOpens("MPI_File_open", 	"open", "creat");
 	//vector<string> supportedClose("MPI_File_close", "close");
 	//vector<string> supportedAccess("read", "write", "pread", "pwrite");
 //	o = tr->getOntology();
 	
-	FileAccessInfoPluginOptions& opts = getOptions<FileAccessInfoPluginOptions>();
+	OnlineMonitoringPluginOptions& opts = getOptions<OnlineMonitoringPluginOptions>();
 	verbosity = opts.verbosity;
 
 	sys_info = facade->get_system_information();
@@ -116,35 +116,35 @@ void FileAccessInfoPlugin::initPlugin() {
 	switch (io_iface) 
 	{
 		case IOInterface::POSIX:
-			addActivityHandler("POSIX", "", "open",      & FileAccessInfoPlugin::handleOpen);
-			addActivityHandler("POSIX", "", "creat",     & FileAccessInfoPlugin::handleOpen);
-			addActivityHandler("POSIX", "", "open64",     & FileAccessInfoPlugin::handleOpen);
-			addActivityHandler("POSIX", "", "fopen64",     & FileAccessInfoPlugin::handleOpen);
-			addActivityHandler("POSIX", "", "fopen",     & FileAccessInfoPlugin::handleOpen);
-			addActivityHandler("POSIX", "", "fdopen",     & FileAccessInfoPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "open",      & OnlineMonitoringPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "creat",     & OnlineMonitoringPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "open64",     & OnlineMonitoringPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "fopen64",     & OnlineMonitoringPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "fopen",     & OnlineMonitoringPlugin::handleOpen);
+			addActivityHandler("POSIX", "", "fdopen",     & OnlineMonitoringPlugin::handleOpen);
 
-			addActivityHandler("POSIX", "", "close",     & FileAccessInfoPlugin::handleClose);
-			addActivityHandler("POSIX", "", "fclose",     & FileAccessInfoPlugin::handleClose);
+			addActivityHandler("POSIX", "", "close",     & OnlineMonitoringPlugin::handleClose);
+			addActivityHandler("POSIX", "", "fclose",     & OnlineMonitoringPlugin::handleClose);
 
-			addActivityHandler("POSIX", "", "read",      & FileAccessInfoPlugin::handleRead);
-			addActivityHandler("POSIX", "", "pread",     & FileAccessInfoPlugin::handleRead);
-			addActivityHandler("POSIX", "", "readv",     & FileAccessInfoPlugin::handleRead);
-			addActivityHandler("POSIX", "", "fgets",     & FileAccessInfoPlugin::handleRead);
-			addActivityHandler("POSIX", "", "gets",      & FileAccessInfoPlugin::handleRead);
-			addActivityHandler("POSIX", "", "fread",     & FileAccessInfoPlugin::handleRead);
+			addActivityHandler("POSIX", "", "read",      & OnlineMonitoringPlugin::handleRead);
+			addActivityHandler("POSIX", "", "pread",     & OnlineMonitoringPlugin::handleRead);
+			addActivityHandler("POSIX", "", "readv",     & OnlineMonitoringPlugin::handleRead);
+			addActivityHandler("POSIX", "", "fgets",     & OnlineMonitoringPlugin::handleRead);
+			addActivityHandler("POSIX", "", "gets",      & OnlineMonitoringPlugin::handleRead);
+			addActivityHandler("POSIX", "", "fread",     & OnlineMonitoringPlugin::handleRead);
 
-			addActivityHandler("POSIX", "", "pwritev",   & FileAccessInfoPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "pwrite",    & FileAccessInfoPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "write",     & FileAccessInfoPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "fwrite",    & FileAccessInfoPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "fputs",     & FileAccessInfoPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "puts",      & FileAccessInfoPlugin::handleWrite);
-			addActivityHandler("POSIX", "", "fputc",      & FileAccessInfoPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "pwritev",   & OnlineMonitoringPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "pwrite",    & OnlineMonitoringPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "write",     & OnlineMonitoringPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "fwrite",    & OnlineMonitoringPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "fputs",     & OnlineMonitoringPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "puts",      & OnlineMonitoringPlugin::handleWrite);
+			addActivityHandler("POSIX", "", "fputc",      & OnlineMonitoringPlugin::handleWrite);
 
-			addActivityHandler("POSIX", "", "sync",      & FileAccessInfoPlugin::handleSync);
-			addActivityHandler("POSIX", "", "fdatasync", & FileAccessInfoPlugin::handleSync);
+			addActivityHandler("POSIX", "", "sync",      & OnlineMonitoringPlugin::handleSync);
+			addActivityHandler("POSIX", "", "fdatasync", & OnlineMonitoringPlugin::handleSync);
 
-			addActivityHandler("POSIX", "", "lseek",     & FileAccessInfoPlugin::handleSeek);
+			addActivityHandler("POSIX", "", "lseek",     & OnlineMonitoringPlugin::handleSeek);
 
 			IGNORE_ERROR(fhID[IOInterface::POSIX]           = o->lookup_attribute_by_name("POSIX", "descriptor/filehandle").aID;)
 			IGNORE_ERROR(fname[IOInterface::POSIX]          = o->lookup_attribute_by_name("POSIX", "descriptor/filename").aID;)
@@ -155,10 +155,10 @@ void FileAccessInfoPlugin::initPlugin() {
 			IGNORE_ERROR(bytesToWriteID[IOInterface::POSIX] = o->lookup_attribute_by_name("POSIX", "quantity/BytesToWrite").aID;)
 			break;
 		case IOInterface::MPI:
-			addActivityHandler("MPI", "Generic", "MPI_File_open",  & FileAccessInfoPlugin::handleOpen);
-			addActivityHandler("MPI", "Generic", "MPI_File_read",  & FileAccessInfoPlugin::handleRead);
-			addActivityHandler("MPI", "Generic", "MPI_File_write", & FileAccessInfoPlugin::handleWrite);
-			addActivityHandler("MPI", "Generic", "MPI_File_close", & FileAccessInfoPlugin::handleClose);
+			addActivityHandler("MPI", "Generic", "MPI_File_open",  & OnlineMonitoringPlugin::handleOpen);
+			addActivityHandler("MPI", "Generic", "MPI_File_read",  & OnlineMonitoringPlugin::handleRead);
+			addActivityHandler("MPI", "Generic", "MPI_File_write", & OnlineMonitoringPlugin::handleWrite);
+			addActivityHandler("MPI", "Generic", "MPI_File_close", & OnlineMonitoringPlugin::handleClose);
 
 			IGNORE_ERROR(fhID[IOInterface::MPI]           = o->lookup_attribute_by_name("MPI", "descriptor/filehandle").aID;)
 			IGNORE_ERROR(fname[IOInterface::MPI]          = o->lookup_attribute_by_name("MPI", "descriptor/filename").aID;)
@@ -170,7 +170,7 @@ void FileAccessInfoPlugin::initPlugin() {
 			break;
 	}
 
-	multiplexer->registerCatchall(this, static_cast<ActivityMultiplexer::Callback>(&FileAccessInfoPlugin::notify), false);	
+	multiplexer->registerCatchall(this, static_cast<ActivityMultiplexer::Callback>(&OnlineMonitoringPlugin::notify), false);	
 
 
 	/* Online Monitoring with  OpenTSDB */
@@ -197,14 +197,14 @@ void FileAccessInfoPlugin::initPlugin() {
 
 		m_tsdb_client.init(m_tsdb_host, m_tsdb_port, m_tsdb_username, m_tsdb_password);
 		m_elastic_client.init(m_elastic_host, m_elastic_port, m_elastic_username, m_elastic_password);
-		m_thread = std::thread(&FileAccessInfoPlugin::sendToDB, this);
+		m_thread = std::thread(&OnlineMonitoringPlugin::sendToDB, this);
 	}
 	/* END: Online Monitoring with  OpenTSDB */
 }
 
 
 
-void FileAccessInfoPlugin::addActivityHandler (const string & interface, const string & impl, const string & a, void (FileAccessInfoPlugin::* handler)(std::shared_ptr<Activity>)) {
+void OnlineMonitoringPlugin::addActivityHandler (const string & interface, const string & impl, const string & a, void (OnlineMonitoringPlugin::* handler)(std::shared_ptr<Activity>)) {
 //	SystemInformationGlobalIDManager* s = tr->getSystemInformationGlobalIDManager();
 	SystemInformationGlobalIDManager* s = facade->get_system_information();
 	UniqueInterfaceID uiid;
@@ -227,7 +227,7 @@ void FileAccessInfoPlugin::addActivityHandler (const string & interface, const s
 
 
 
-void FileAccessInfoPlugin::notify (const std::shared_ptr<Activity>& a, int lost) {
+void OnlineMonitoringPlugin::notify (const std::shared_ptr<Activity>& a, int lost) {
   auto both = activityHandlers.find(a->ucaid_);
 
  accessCounter[a->ucaid()]++;
@@ -264,7 +264,7 @@ static std::string toStr(const IOAccessType type) {
 
 
 
-void FileAccessInfoPlugin::aggregate(const IOAccessType access, const Timestamp start, const Timestamp stop, const uint64_t position, const uint64_t bytes, const OpenFiles& file) {
+void OnlineMonitoringPlugin::aggregate(const IOAccessType access, const Timestamp start, const Timestamp stop, const uint64_t position, const uint64_t bytes, const OpenFiles& file) {
   const string& fn = file.name;
   m_mutex[fn][access].lock();
   m_agg[fn][access].bytes += bytes;
@@ -276,7 +276,7 @@ void FileAccessInfoPlugin::aggregate(const IOAccessType access, const Timestamp 
 
 
 
-void FileAccessInfoPlugin::sendToDB() {
+void OnlineMonitoringPlugin::sendToDB() {
 	DEBUGFUNC;
   using HRC = std::chrono::high_resolution_clock;
   using namespace std::chrono;
@@ -330,7 +330,7 @@ void FileAccessInfoPlugin::sendToDB() {
 
 
 
-void FileAccessInfoPlugin::printFileAccess (const OpenFiles& file) {
+void OnlineMonitoringPlugin::printFileAccess (const OpenFiles& file) {
   ofile << setw(25) << "filename " << file.name << std::endl;
   ofile << setw(25) << "open duration " << file.openDuration << " ns" << ((0 == file.openDuration) ? " (file was already open?)" : "") << std::endl;
   ofile << setw(25) << "close duration " << file.closeDuration << " ns" << ((0 == file.closeDuration) ? " (file was not closed?)" : "") << std::endl;
@@ -399,7 +399,7 @@ static bool comp(const OpenFiles& f1, const OpenFiles f2) {
 
 
 
-void FileAccessInfoPlugin::finalize() {
+void OnlineMonitoringPlugin::finalize() {
   m_thread_stop = true;
 	if (m_tsdb_enabled || m_elastic_enabled) {
 		m_thread.join();
@@ -475,7 +475,7 @@ static const string findStrAttributeByID (const std::shared_ptr<Activity> a, Ont
 
 
 
-OpenFiles* FileAccessInfoPlugin::findParentFile (const std::shared_ptr<Activity> a) {
+OpenFiles* OnlineMonitoringPlugin::findParentFile (const std::shared_ptr<Activity> a) {
   for (const auto aid : a->parentArray()) {
     auto openFile = openFiles.find(aid);
     if (openFiles.end() != openFile) {
@@ -487,7 +487,7 @@ OpenFiles* FileAccessInfoPlugin::findParentFile (const std::shared_ptr<Activity>
 
 
 
-OpenFiles* FileAccessInfoPlugin::findParentFileByFh (const std::shared_ptr<Activity> a) {
+OpenFiles* OnlineMonitoringPlugin::findParentFileByFh (const std::shared_ptr<Activity> a) {
 	OpenFiles* parent = findParentFile(a);
 	if (nullptr == parent) {
 		// add a dummy for the file handle since we do not know the filename
@@ -508,7 +508,7 @@ OpenFiles* FileAccessInfoPlugin::findParentFileByFh (const std::shared_ptr<Activ
 
 
 
-void FileAccessInfoPlugin::handleSeek (std::shared_ptr<Activity> a) {
+void OnlineMonitoringPlugin::handleSeek (std::shared_ptr<Activity> a) {
 	// TODO
 //	OpenFiles* parent = findParentFileByFh(a);
 //	parent->currentPosition = findUINT64AttributeByID(a, positionID[io_iface]);
@@ -517,14 +517,14 @@ void FileAccessInfoPlugin::handleSeek (std::shared_ptr<Activity> a) {
 
 
 
-void FileAccessInfoPlugin::handleSync(std::shared_ptr<Activity> a) {
+void OnlineMonitoringPlugin::handleSync(std::shared_ptr<Activity> a) {
 	OpenFiles* parent = findParentFileByFh(a);
 	parent->syncOperations.push_back({a->time_start_, a->time_stop_});
 }
 
 
 
-void FileAccessInfoPlugin::handleWrite (std::shared_ptr<Activity> a) {
+void OnlineMonitoringPlugin::handleWrite (std::shared_ptr<Activity> a) {
 	uint64_t bytesWritten = findUINT64AttributeByID(a, bytesWrittenID[io_iface]);
 	uint64_t bytesToWrite = findUINT64AttributeByID(a, bytesToWriteID[io_iface]);
 	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
@@ -545,7 +545,7 @@ void FileAccessInfoPlugin::handleWrite (std::shared_ptr<Activity> a) {
 
 
 
-void FileAccessInfoPlugin::handleRead (std::shared_ptr<Activity> a) {
+void OnlineMonitoringPlugin::handleRead (std::shared_ptr<Activity> a) {
 	uint64_t bytesRead = findUINT64AttributeByID(a, bytesReadID[io_iface]);
 	uint64_t bytesToRead = findUINT64AttributeByID(a, bytesToReadID[io_iface]);
 	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
@@ -572,14 +572,14 @@ void FileAccessInfoPlugin::handleRead (std::shared_ptr<Activity> a) {
 
 
 
-void FileAccessInfoPlugin::handleOpen (std::shared_ptr<Activity> a) {
+void OnlineMonitoringPlugin::handleOpen (std::shared_ptr<Activity> a) {
   const string name{findStrAttributeByID(a, fname[io_iface])};
 	openFiles[a->aid()] = {name, a->time_start_, 0, a->time_stop_ - a->time_start_, 0, 0, a->aid_};
 }
 
 
 
-void FileAccessInfoPlugin::handleClose (std::shared_ptr<Activity> a) {
+void OnlineMonitoringPlugin::handleClose (std::shared_ptr<Activity> a) {
 	OpenFiles* parent = findParentFileByFh(a);
 	assert(nullptr != parent);
 	parent->closeTime = a->time_stop_;
@@ -590,6 +590,6 @@ void FileAccessInfoPlugin::handleClose (std::shared_ptr<Activity> a) {
 extern "C" {
 	void * MONITORING_ACTIVITY_MULTIPLEXER_PLUGIN_INSTANCIATOR_NAME()
 	{
-		return new FileAccessInfoPlugin();
+		return new OnlineMonitoringPlugin();
 	}
 }

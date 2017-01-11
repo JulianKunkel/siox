@@ -17,10 +17,6 @@
 #include <iostream>
 #include <memory>
 
-using namespace boost::asio;
-using namespace boost::asio::ip;
-using boost::asio::ip::tcp;
-
 
 class TSDBClient : public Client{
 	public:

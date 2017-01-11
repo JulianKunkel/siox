@@ -1,7 +1,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  FileAccessInfo.hpp
+ *       Filename:  OnlineMonitoring.hpp
  *
  *    Description:  
  *
@@ -17,8 +17,8 @@
  */
 
 
-#ifndef  FileAccessInfo_INC
-#define  FileAccessInfo_INC
+#ifndef  OnlineMonitoring_INC
+#define  OnlineMonitoring_INC
 
 #include <regex>
 #include <unordered_map>
@@ -30,7 +30,7 @@
 #include <monitoring/association_mapper/AssociationMapper.hpp>
 #include <monitoring/activity_multiplexer/ActivityMultiplexerPluginImplementation.hpp>
 
-#include "FileAccessInfoOptions.hpp"
+#include "OnlineMonitoringOptions.hpp"
 #include "clients/TSDBClient.hpp"
 #include "clients/ElasticClient.hpp"
 
@@ -98,10 +98,10 @@ struct OpenFiles {
 	vector<Operation> syncOperations;
 };
 
-class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
+class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 	public:
 		void initPlugin() override;
-		FileAccessInfoPluginOptions* AvailableOptions() override;
+		OnlineMonitoringPluginOptions* AvailableOptions() override;
 		void finalize() override;
 		void notify (const std::shared_ptr<Activity>& activity, int lost);
 
@@ -138,7 +138,7 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 		int enableTrace;
 		std::unordered_map<ActivityID, OpenFiles> openFiles;
 		std::unordered_map<int, OpenFiles> unnamedFiles;
-		std::unordered_map<UniqueComponentActivityID, void (FileAccessInfoPlugin::*)(std::shared_ptr<Activity>)> activityHandlers;
+		std::unordered_map<UniqueComponentActivityID, void (OnlineMonitoringPlugin::*)(std::shared_ptr<Activity>)> activityHandlers;
 		IOInterface io_iface;
 		size_t file_limit;
 		SystemInformationGlobalIDManager* sys_info;
@@ -158,7 +158,7 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 
 		void aggregate(const IOAccessType access_type, const Timestamp start, const Timestamp stop, const uint64_t position, const uint64_t bytes, const OpenFiles& file);
 		void sendToDB();
-		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (FileAccessInfoPlugin::* handler)(std::shared_ptr<Activity>));
+		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (OnlineMonitoringPlugin::* handler)(std::shared_ptr<Activity>));
 		void printFileAccess(const OpenFiles & file);
 		void handleOpen(std::shared_ptr<Activity> activity);
 		void handleSync(std::shared_ptr<Activity> activity);
@@ -178,4 +178,4 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 		AssociationMapper * association_mapper = nullptr;
 };
 
-#endif   /* ----- #ifndef FileAccessInfo_INC  ----- */
+#endif   /* ----- #ifndef OnlineMonitoring_INC  ----- */
