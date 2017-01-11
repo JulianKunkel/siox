@@ -18,7 +18,7 @@ add_subdirectory(online_monitoring)
 #add_subdirectory(optimize-blocksize)
 
 # replay related plugins
-#add_subdirectory(replay)
+add_subdirectory(replay)
 #add_subdirectory(replay-online)
 #add_subdirectory(mutator)
 add_subdirectory(modify-filepath)

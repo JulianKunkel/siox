@@ -11,8 +11,8 @@ set(SIOX_INCLUDE ${CMAKE_SOURCE_DIR}/src/include)
 set(SIOX_INCLUDE_DIRS ${SIOX_SOURCES} ${SIOX_INCLUDE} ${CMAKE_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/src CACHE STRING "SIOX INCLUDE DIRS")
 set(SIOX_ETC_DIR ${CMAKE_INSTALL_PREFIX}/etc/siox)
 
-SET (CMAKE_C_FLAGS_DEBUG          "-ggdb -O0 -Wno-unused-local-typedefs -DDEBUG_VERSION")
-SET (CMAKE_CXX_FLAGS_DEBUG        "-ggdb -O0 -Wno-unused-local-typedefs -DDEBUG_VERSION")
+SET (CMAKE_C_FLAGS_DEBUG          "-g3 -O0 -Wno-unused-local-typedefs -DDEBUG_VERSION")
+SET (CMAKE_CXX_FLAGS_DEBUG        "-g3 -O0 -Wno-unused-local-typedefs -DDEBUG_VERSION")
 
 set(CMAKE_C_FLAGS "-Wall -std=gnu99 -Wno-unused-local-typedefs -DRELEASE_VERSION")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -std=gnu99 -Wno-unused-local-typedefs")
