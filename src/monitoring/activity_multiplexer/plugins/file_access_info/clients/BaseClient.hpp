@@ -36,9 +36,6 @@
 #include <memory>
 #include <chrono>
 
-using namespace boost::asio;
-using namespace boost::asio::ip;
-using boost::asio::ip::tcp;
 
 class Client {
 	public:
@@ -71,14 +68,14 @@ class Client {
 		void response_read_handler (const boost::system::error_code& ec, size_t bytes_transferred);
 		void response_handler (const boost::system::error_code &ec);
 		void connect_handler (const boost::system::error_code &ec);
-		void resolve_handler(const boost::system::error_code &ec, tcp::resolver::iterator ep_it);
+		void resolve_handler(const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::iterator ep_it);
 
 		virtual std::string make_send_uri() = 0;
 
 		boost::asio::io_service m_ioservice;
 		boost::asio::streambuf m_response;
-		tcp::socket m_tcp_socket;
-		tcp::resolver m_resolv;
+		boost::asio::ip::tcp::socket m_tcp_socket;
+		boost::asio::ip::tcp::resolver m_resolv;
 		std::deque<std::shared_ptr<Client::Datapoint>> m_pending;
 		
 		std::string m_base64;

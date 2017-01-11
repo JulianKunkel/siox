@@ -178,14 +178,10 @@ void FileAccessInfoPlugin::initPlugin() {
 		const char* c_host = (nullptr == getenv("HOSTNAME")) ? "fakehost" : getenv("HOSTNAME");
 		const char* c_username = (nullptr == getenv("SLURM_JOB_USER")) ? "fakeuser" : getenv("SLURM_JOB_USER");
 		const char* c_jobid = (nullptr == getenv("SLURM_JOBID")) ? "0" : getenv("SLURM_JOBID");
-		const char* c_nodeid = (nullptr == getenv("SLURM_NODEID")) ? "0" : getenv("SLURM_NODEID");
 		const char* c_procid = (nullptr == getenv("SLURM_PROCID"))  ? "0" : getenv("SLURM_PROCID");
-		const char* c_localid = (nullptr == getenv("SLURM_LOCALID")) ? "0" : getenv("SLURM_LOCALID");
 
 		assert(nullptr != c_host);
-		assert(nullptr != c_nodeid);
 		assert(nullptr != c_procid);
-		assert(nullptr != c_localid);
 		assert(nullptr != c_jobid);
 		assert(nullptr != c_username);
 
@@ -197,9 +193,7 @@ void FileAccessInfoPlugin::initPlugin() {
 		m_metric_host = c_host;
 		m_metric_username = c_username;
 		m_metric_jobid = c_jobid;
-		m_metric_localid = c_localid;
 		m_metric_procid = c_procid;
-		m_metric_nodeid = c_nodeid;
 
 		m_tsdb_client.init(m_tsdb_host, m_tsdb_port, m_tsdb_username, m_tsdb_password);
 		m_elastic_client.init(m_elastic_host, m_elastic_port, m_elastic_username, m_elastic_password);

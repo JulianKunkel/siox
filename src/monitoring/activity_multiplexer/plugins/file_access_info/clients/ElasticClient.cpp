@@ -22,7 +22,7 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 	DEBUGFUNC;
 	Client::init(host, port, username, password);
 
-	tcp::resolver::query q{m_host, m_port};
+	boost::asio::ip::tcp::resolver::query q{m_host, m_port};
 	const std::string request = make_http_request("HEAD /" + m_index + "/_mapping/" + m_type, m_base64, m_host, m_port, "");
 
 	m_resolv.async_resolve(q, boost::bind(&Client::resolve_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
@@ -31,19 +31,17 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 
 	try {
 		// Check if index exists
-		
 		unsigned int http_err_code = 0;
-		size_t count = 0; // max number of tries
+		size_t count = 0; // number of tries
 
 		do {
-			m_tcp_socket.send(buffer(request.data(), request.length()));
+			m_tcp_socket.send(boost::asio::buffer(request.data(), request.length()));
 			const size_t bytes_transferred = boost::asio::read_until(m_tcp_socket, m_response, "\r\n");	
 			m_response.commit(bytes_transferred);
 			std::istream is(&m_response);
 			std::string skip;
 			is >> skip >> http_err_code >> skip;
 			std::cout << "http_err_code " << http_err_code << std::endl;
-			while (std::getline(is, skip)) {}
 			m_tcp_socket.close();
 
 			// Create index if not exists
@@ -51,11 +49,9 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 				m_resolv.async_resolve(q, boost::bind(&Client::resolve_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
 				m_ioservice.reset();
 				m_ioservice.run();
-				std::cout << "create db" << std::endl;
 				const std::string create_request = make_http_request("PUT /" + m_index, m_base64, m_host, m_port, m_mappings);
 				std::cout << create_request << std::endl;
-
-				m_tcp_socket.send(buffer(create_request.data(), create_request.length()));
+				m_tcp_socket.send(boost::asio::buffer(create_request.data(), create_request.length()));
 				const size_t bytes_transferred = boost::asio::read_until(m_tcp_socket, m_response, "\r\n");	
 
 				m_response.commit(bytes_transferred);
@@ -88,10 +84,16 @@ std::string ElasticClient::to_json(std::shared_ptr<Client::Datapoint> point) con
 	using namespace std::chrono;
 	const string sep{", "};
 	stringstream ss;
+
+	const double perf = (point->m_duration) != 0 ? static_cast<double>(point->m_bytes) / static_cast<double>(point->m_duration) : 0;
+	const double bytes_per_call = (point->m_calls) != 0 ? static_cast<double>(point->m_bytes) / static_cast<double>(point->m_calls) : 0;
+
 	ss << "{" 
 		<< to_json_snippet("duration", point->m_duration) << sep
 		<< to_json_snippet("bytes", point->m_bytes) << sep
 		<< to_json_snippet("calls", point->m_calls) << sep
+		<< to_json_snippet("perf", perf) << sep
+		<< to_json_snippet("bytes_per_call", bytes_per_call) << sep
 		<< to_json_snippet("access", point->m_access) << sep
 		<< to_json_snippet("filename", point->m_filename) << sep
 		<< to_json_snippet("host", point->m_host) << sep
@@ -100,6 +102,8 @@ std::string ElasticClient::to_json(std::shared_ptr<Client::Datapoint> point) con
 		<< to_json_snippet("username", point->m_username) << sep
 		<< to_json_snippet("timestamp", duration_cast<milliseconds>(point->m_timestamp.time_since_epoch()).count()) <<
 		"}";
+
+	cout << ss.str() << endl;
 	return ss.str();
 }
 
@@ -115,6 +119,12 @@ const std::string properties = R"|(
 },
 "calls" : {
 	"type" : "long"
+},
+"perf" : {
+	"type" : "double"
+},
+"bytes_per_call" : {
+	"type" : "double"
 },
 "access" : {
 	"type" : "keyword"

@@ -122,9 +122,7 @@ class FileAccessInfoPlugin : public ActivityMultiplexerPlugin {
 		std::string m_metric_host;
 		std::string m_metric_username;
 		std::string m_metric_jobid;
-		std::string m_metric_nodeid;
 		std::string m_metric_procid;
-		std::string m_metric_localid;
 
 		std::thread m_thread;
 		bool m_thread_stop{false};
