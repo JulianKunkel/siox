@@ -385,7 +385,7 @@ int __fxstat( int __ver, int fd, struct stat * buf );
 /* See: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Memory_002dmapped-I_002fO */
 /* Probably we should record this type of usage with SIOX, but we cannot track the I/O on user-space */
 
-
+/* 
 //@guard
 //@errorErrno ''ret<0''
 //@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
@@ -394,7 +394,9 @@ int __fxstat( int __ver, int fd, struct stat * buf );
 //@activity_attribute filePosition offset
 //@syscall SYS_mmap ''address, length, protect, flags, fd, offset''
 void * mmap( void * address, size_t length, int protect, int flags, int fd, off_t offset );
+*/
 
+/*
 //@guard
 //@errorErrno ''ret<0''
 //@activityComponentSwitcher2BasedOnParent Key=fd ComponentVariable2=network MapName2=activityHashTable_network_int
@@ -402,6 +404,7 @@ void * mmap( void * address, size_t length, int protect, int flags, int fd, off_
 //@activity_attribute fileExtent length
 //@activity_attribute filePosition offset
 void * mmap64( void * address, size_t length, int protect, int flags, int fd, off_t offset );
+*/
 
 //void * mremap (void *address, size_t length, size_t new_length, int flag);
 //int munmap (void *addr, size_t length);
