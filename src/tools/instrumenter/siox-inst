@@ -135,10 +135,12 @@ for l in "${LAYERS_TO_INSTRUMENT[@]}";do
 	WRAPLIBS="$WRAPLIBS -l siox-$l-wrap"
 done
 
-if (( $VERBOSE_LEVEL >= 1 )) ; then
-	echo export SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT="$CONFIG_PATH/$CONFIG"
+if [[ ! -e "siox.conf"  ]] ; then
+	if (( $VERBOSE_LEVEL >= 1 )) ; then
+		echo export SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT="$CONFIG_PATH/$CONFIG"
+	fi
+	export SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT="$CONFIG_PATH/$CONFIG"
 fi
-export SIOX_CONFIGURATION_PROVIDER_ENTRY_POINT="$CONFIG_PATH/$CONFIG"
 
 if [[ $TYPE == "dlsym" ]] ; then
 
