@@ -34,6 +34,13 @@ std::string to_json_snippet(const std::string& key, const T& value) {
 	return ss.str();
 }
 
+/**
+ * @brief place curly braces around JSON snippet
+ *
+ * @param snippet
+ *
+ * @return 
+ */
 std::string embrace(const std::string& snippet);
 
 #endif   /* ----- #ifndef Basics_INC  ----- */

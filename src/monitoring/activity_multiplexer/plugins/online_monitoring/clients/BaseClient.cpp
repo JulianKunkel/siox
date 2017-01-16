@@ -43,7 +43,7 @@ Client::response_read_handler (const boost::system::error_code& ec, size_t bytes
 	std::istream is(&m_response);
 	std::string result_line;
   while (std::getline(is, result_line)) {
-    std::cout << result_line << std::endl;
+//    std::cout << result_line << std::endl;
   }
 }
 

@@ -47,17 +47,8 @@ typedef struct MetricAggregation {
 	}
 } MetricAggregation;
 
-struct IOInterfaceHash
-{
-    template <typename T>
-    std::size_t operator()(T t) const
-    {
-        return static_cast<std::size_t>(t);
-    }
-};
 
-struct EnumClassHash
-{
+struct EnumClassHash {
     template <typename T>
     std::size_t operator()(T t) const
     {
@@ -70,7 +61,7 @@ enum class IOInterface {
 };
 
 enum class IOAccessType {
-	READ, WRITE, SYNC, SEEK
+	OPEN, CLOSE, READ, WRITE, SYNC, SEEK
 };
 
 struct Operation {
@@ -145,13 +136,13 @@ class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 		std::unordered_map<UniqueComponentActivityID, size_t> accessCounter;
 
 		// Ontology attributes needed in the plugin
-		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> fhID;
-		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> fname;
-		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesReadID;
-		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesToReadID;
-		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> positionID;
-		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesWrittenID;		
-		std::unordered_map<IOInterface, OntologyAttributeID, IOInterfaceHash> bytesToWriteID;		
+		std::unordered_map<IOInterface, OntologyAttributeID, EnumClassHash> fhID;
+		std::unordered_map<IOInterface, OntologyAttributeID, EnumClassHash> fname;
+		std::unordered_map<IOInterface, OntologyAttributeID, EnumClassHash> bytesReadID;
+		std::unordered_map<IOInterface, OntologyAttributeID, EnumClassHash> bytesToReadID;
+		std::unordered_map<IOInterface, OntologyAttributeID, EnumClassHash> positionID;
+		std::unordered_map<IOInterface, OntologyAttributeID, EnumClassHash> bytesWrittenID;		
+		std::unordered_map<IOInterface, OntologyAttributeID, EnumClassHash> bytesToWriteID;		
 
 		TSDBClient m_tsdb_client;
 		ElasticClient m_elastic_client;
@@ -160,6 +151,7 @@ class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 		void sendToDB();
 		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (OnlineMonitoringPlugin::* handler)(std::shared_ptr<Activity>));
 		void printFileAccess(const OpenFiles & file);
+
 		void handleOpen(std::shared_ptr<Activity> activity);
 		void handleSync(std::shared_ptr<Activity> activity);
 		void handleWrite(std::shared_ptr<Activity> activity);
@@ -170,11 +162,8 @@ class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 		OpenFiles* findParentFile( const std::shared_ptr<Activity> activity );
 		OpenFiles* findParentFileByFh( const std::shared_ptr<Activity> activity );
 
-		// Loaded ontology implementation
 		Ontology * ontology = nullptr;
-		// Loaded system information manager implementation
 		SystemInformationGlobalIDManager * system_information_manager = nullptr;
-		// Loaded association mapper implementation
 		AssociationMapper * association_mapper = nullptr;
 };
 

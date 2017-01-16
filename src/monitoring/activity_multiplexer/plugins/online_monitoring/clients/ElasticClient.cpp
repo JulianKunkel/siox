@@ -41,7 +41,7 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 			std::istream is(&m_response);
 			std::string skip;
 			is >> skip >> http_err_code >> skip;
-			std::cout << "http_err_code " << http_err_code << std::endl;
+//			std::cout << "http_err_code " << http_err_code << std::endl;
 			m_tcp_socket.close();
 
 			// Create index if not exists
@@ -50,7 +50,6 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 				m_ioservice.reset();
 				m_ioservice.run();
 				const std::string create_request = make_http_request("PUT /" + m_index, m_base64, m_host, m_port, m_mappings);
-				std::cout << create_request << std::endl;
 				m_tcp_socket.send(boost::asio::buffer(create_request.data(), create_request.length()));
 				const size_t bytes_transferred = boost::asio::read_until(m_tcp_socket, m_response, "\r\n");	
 
@@ -58,7 +57,7 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 				std::istream is(&m_response);
 				std::string result_line;
 				while (std::getline(is, result_line)) {
-					std::cout << result_line << std::endl;
+//					std::cout << result_line << std::endl;
 				}
 				m_tcp_socket.close();
 			}
@@ -103,7 +102,6 @@ std::string ElasticClient::to_json(std::shared_ptr<Client::Datapoint> point) con
 		<< to_json_snippet("timestamp", duration_cast<milliseconds>(point->m_timestamp.time_since_epoch()).count()) <<
 		"}";
 
-	cout << ss.str() << endl;
 	return ss.str();
 }
 
