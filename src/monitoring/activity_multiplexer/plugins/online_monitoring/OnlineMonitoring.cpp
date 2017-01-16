@@ -155,12 +155,15 @@ void OnlineMonitoringPlugin::initPlugin() {
 
 	/* Online Monitoring with  OpenTSDB */
 	if (m_tsdb_enabled || m_elastic_enabled) {
-		const char* c_host = (nullptr == getenv("HOSTNAME")) ? "fakehost" : getenv("HOSTNAME");
+		
+		char c_host[128] = "";
+		gethostname(c_host, sizeof(c_host));
+//		const char* c_host = (nullptr == getenv("HOSTNAME")) ? "fakehost" : getenv("HOSTNAME");
 		const char* c_username = (nullptr == getenv("SLURM_JOB_USER")) ? "fakeuser" : getenv("SLURM_JOB_USER");
 		const char* c_jobid = (nullptr == getenv("SLURM_JOBID")) ? "0" : getenv("SLURM_JOBID");
 		const char* c_procid = (nullptr == getenv("SLURM_PROCID"))  ? "0" : getenv("SLURM_PROCID");
 
-		assert(nullptr != c_host);
+//		assert(nullptr != c_host);
 		assert(nullptr != c_procid);
 		assert(nullptr != c_jobid);
 		assert(nullptr != c_username);
