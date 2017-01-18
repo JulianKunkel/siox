@@ -10,7 +10,7 @@ template = {
 # SpliceCode ? ? ?
 
 # Special tag, annotates all functions, here we measure the overhead of SIOX itself (profile)
-# Here we capture the overhead of all fkt calls. 
+# Here we capture the overhead of all fkt calls.
 # NOTE THIS IS NOT REALLY THREAD SAFE!!!
 'ALL_FUNCTIONS':{
    'variables': 'fname=%(FUNCTION_NAME)s',
@@ -20,7 +20,7 @@ static int calls_%(fname)s = 0;''',
 	'before' : '''
 			siox_timestamp t_tmp = 0;
 			siox_timestamp t_fkt_start = 0;
-			siox_timestamp t_start = siox_gettime(); 
+			siox_timestamp t_start = siox_gettime();
 			siox_timestamp t_overhead = 0;''',
 	'beforeLast' : '''
 		//t_tmp = siox_gettime();
@@ -33,11 +33,11 @@ static int calls_%(fname)s = 0;''',
 		t_fkt_%(fname)s += t_tmp - t_fkt_start;
 		''',
 	'cleanupLast' : '''
-		calls_%(fname)s++; 
+		calls_%(fname)s++;
 		t_overhead += siox_gettime() - t_start;
 		t_overhead_%(fname)s += t_overhead;
 		''',
-	'finalOnce' : '''		
+	'finalOnce' : '''
 		FILE * overheadFD = NULL;
 		siox_timestamp overheadTotal = 0;
 		if ( getenv("SIOX_WRITE_OVERHEAD_FILE") ){
@@ -45,27 +45,27 @@ static int calls_%(fname)s = 0;''',
 			sprintf(overheadFile, "%%s_%%lld.txt", getenv("SIOX_WRITE_OVERHEAD_FILE"), (long long int) getpid());
 			overheadFD = fopen(overheadFile, "a");
 			fprintf(overheadFD, "function\\t\\tcalls\\t\\ttime\\t\\t\\torig\\t\\toverhead\\trel. overhead\\n");
-		}		
+		}
 		''',
 	'finalOnceLast' : '''
-		if (overheadFD){ 
+		if (overheadFD){
 			fprintf(overheadFD, "total overhead: %%fs\\n", siox_time_in_s(overheadTotal));
-			fclose(overheadFD); 
+			fclose(overheadFD);
 		}
 		''',
 	'final' : '''
 		if (overheadFD && calls_%(fname)s > 0){
-			fprintf(overheadFD, "%(fname)s()\\t" 
+			fprintf(overheadFD, "%(fname)s()\\t"
 				"%%d\\t"
 				"%%fms\\t"
 				"%%fms/call\\t\\t"
 				"%%fms/call\\t\\t"
-				"%%.2f%%%%/call\\n", 
-				calls_%(fname)s, 
-				siox_time_in_s(t_fkt_%(fname)s + t_overhead_%(fname)s) * 1000, 				
-				siox_time_in_s(t_fkt_%(fname)s) / calls_%(fname)s * 1000, 
-				siox_time_in_s(t_overhead_%(fname)s) / calls_%(fname)s * 1000, 
-				100.0 * t_overhead_%(fname)s / t_fkt_%(fname)s 
+				"%%.2f%%%%/call\\n",
+				calls_%(fname)s,
+				siox_time_in_s(t_fkt_%(fname)s + t_overhead_%(fname)s) * 1000,
+				siox_time_in_s(t_fkt_%(fname)s) / calls_%(fname)s * 1000,
+				siox_time_in_s(t_overhead_%(fname)s) / calls_%(fname)s * 1000,
+				100.0 * t_overhead_%(fname)s / t_fkt_%(fname)s
 				);
 				overheadTotal += t_overhead_%(fname)s;
 		}
@@ -78,10 +78,10 @@ static siox_component * %(ComponentVariable)s_component = NULL;
 static siox_unique_interface * %(ComponentVariable)s_uid = NULL;
 static int %(ComponentVariable)s_layer_initialized = FALSE;
 		''',
-    'init': ''' 
+    'init': '''
 		if ( siox_is_monitoring_permanently_disabled() || %(ComponentVariable)s_component ){
-				return; 
-		}		
+				return;
+		}
       %(SpliceCode)s
 		%(ComponentVariable)s_uid = siox_system_information_lookup_interface_id("%(InterfaceName)s", "%(ImplementationIdentifier)s");
 
@@ -93,7 +93,7 @@ static int %(ComponentVariable)s_layer_initialized = FALSE;
 		%(ComponentVariable)s_component = siox_component_register(%(ComponentVariable)s_uid, "%(InstanceName)s");
 		siox_register_initialization_signal(sioxInit);
       siox_register_termination_signal(sioxFinal);
-		
+
 		''',
         'initLast': '%(ComponentVariable)s_layer_initialized = TRUE;',
 	'final': '''
@@ -106,7 +106,7 @@ static void sioxInit() __attribute__((constructor));
             """
 },
 'createInitializerForLibrary':{
-	'global' : """ 
+	'global' : """
 				static void sioxFinal();
             static void sioxInit();
             """
@@ -151,7 +151,7 @@ static void sioxInit() __attribute__((constructor));
 	'global': '''''',
 	'after': '''
 				{
-				%(SpliceCode)s 
+				%(SpliceCode)s
 				assert( %(Attribute)s != NULL );
 				siox_component_set_attribute( global_component,  %(Attribute)s, %(Value)s);
 				}
@@ -165,7 +165,7 @@ static void sioxInit() __attribute__((constructor));
 	'global': '''''',
 	'after': '''
 				{
-				%(SpliceCode)s 
+				%(SpliceCode)s
 				assert( %(Attribute)s != NULL );
 				siox_component_set_attribute( global_component,  %(Attribute)s, &%(Value)s);
 				}
@@ -236,8 +236,9 @@ static void sioxInit() __attribute__((constructor));
 	    	siox_activity * %(ActivityVariable)s = siox_activity_begin( %(ComponentVariable)s_component, %(ComponentActivity)s );''',
 	   'beforeLast': '''t_tmp = siox_activity_start(%(ActivityVariable)s);''',
 	'afterFirst': '''
-			t_tmp = siox_activity_stop( %(ActivityVariable)s );''',
-	'cleanup': 'siox_activity_end( %(ActivityVariable)s );',
+			t_tmp = siox_activity_stop( %(ActivityVariable)s );
+            siox_activity_end_keep( %(ActivityVariable)s );''',
+	'cleanup': 'siox_activity_kept_delete( %(ActivityVariable)s );',
 	'final': ''
 },
 # This template allows to inject an activity into a component in which it belongs to.
@@ -252,21 +253,21 @@ static void sioxInit() __attribute__((constructor));
 	%(Name)s_%(ComponentVariable2)s = siox_component_register_activity( %(ComponentVariable2)s_uid, "%(Name)s" );''',
 
     	'before': '''
-    		g_rw_lock_reader_lock(& lock_%(MapName1)s); 
-			siox_activity_ID * %(ActivityParentVar)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName1)s, GINT_TO_POINTER(%(Key)s) ); 
+    		g_rw_lock_reader_lock(& lock_%(MapName1)s);
+			siox_activity_ID * %(ActivityParentVar)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName1)s, GINT_TO_POINTER(%(Key)s) );
 			g_rw_lock_reader_unlock(& lock_%(MapName1)s);
 			// now decide to which component the activity parent belongs to
 			// we expect it is likely to belong to the first component
 			siox_activity * %(ActivityVariable)s = NULL;
-			
+
 			if ( %(ActivityParentVar)s == NULL ){
 				// check if it belongs to the other component
-				g_rw_lock_reader_lock(& lock_%(MapName2)s); 
-			   %(ActivityParentVar)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName2)s, GINT_TO_POINTER(%(Key)s) ); 
+				g_rw_lock_reader_lock(& lock_%(MapName2)s);
+			   %(ActivityParentVar)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName2)s, GINT_TO_POINTER(%(Key)s) );
 				g_rw_lock_reader_unlock(& lock_%(MapName2)s);
 
 				if( %(ActivityParentVar)s != NULL ){
-					%(ActivityVariable)s = siox_activity_begin( %(ComponentVariable2)s_component, %(Name)s_%(ComponentVariable2)s );					
+					%(ActivityVariable)s = siox_activity_begin( %(ComponentVariable2)s_component, %(Name)s_%(ComponentVariable2)s );
 				}else{
 				   // unknown so we keep the first component
 					%(ActivityVariable)s = siox_activity_begin( %(ComponentVariable1)s_component, %(Name)s_%(ComponentVariable1)s );
@@ -275,7 +276,7 @@ static void sioxInit() __attribute__((constructor));
 				%(ActivityVariable)s = siox_activity_begin( %(ComponentVariable1)s_component, %(Name)s_%(ComponentVariable1)s );
 			}
 
-	    	
+
 	    	siox_activity_link_to_parent( %(ActivityVariable)s, %(ActivityParentVar)s );
 	    	''',
 	   'beforeLast': '''t_tmp = siox_activity_start(%(ActivityVariable)s);''',
@@ -350,7 +351,7 @@ siox_activity_get_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s); 
+    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s);
     	g_hash_table_insert( %(MapName)s, GINT_TO_POINTER(%(Key)s), siox_activity_get_ID(%(Activity)s) );
     	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
 	'cleanup': '',
@@ -377,7 +378,7 @@ siox_activity_get_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );
 	'global': '''''',
 	'init': '''''',
 	'before': '',
-    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s); 
+    'after': '''g_rw_lock_writer_lock(& lock_%(MapName)s);
     	g_hash_table_insert( %(MapName)s, GSIZE_TO_POINTER(%(Key)s), siox_activity_get_ID(%(Activity)s) );
     	g_rw_lock_writer_unlock(& lock_%(MapName)s);''',
 	'cleanup': '',
@@ -477,10 +478,10 @@ siox_activity_get_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );
 	'init': '''''',
 	'before': '''
 		{
-		g_rw_lock_reader_lock(& lock_%(MapName)s); 
+		g_rw_lock_reader_lock(& lock_%(MapName)s);
 		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);
-        siox_activity_link_to_parent( %(Activity)s, Parent ); 
+        siox_activity_link_to_parent( %(Activity)s, Parent );
       }
 			  ''',
 	'cleanup': '',
@@ -494,7 +495,7 @@ siox_activity_get_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );
 		g_rw_lock_reader_lock(& lock_%(MapName)s);
 		siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GSIZE_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);
-        siox_activity_link_to_parent( %(Activity)s, Parent ); 
+        siox_activity_link_to_parent( %(Activity)s, Parent );
 			  ''',
 	'cleanup': '',
 	'final': ''
@@ -503,14 +504,14 @@ siox_activity_get_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );
 # This template allows to lookup a parent based on the integer key.
 'activity_lookup_ID_int': {
 	'variables': 'Key ActivityID=Parent MapName=activityHashTable_int',
-	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); 
-		siox_activity_ID * %(ActivityID)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) ); 
+	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s);
+		siox_activity_ID * %(ActivityID)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);''',
 },
 'activity_lookup_ID_before_int': {
 	'variables': 'Key ActivityID=Parent MapName=activityHashTable_int',
-   'before': '''g_rw_lock_reader_lock(& lock_%(MapName)s); 
-		siox_activity_ID * %(ActivityID)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) ); 
+   'before': '''g_rw_lock_reader_lock(& lock_%(MapName)s);
+		siox_activity_ID * %(ActivityID)s = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, GINT_TO_POINTER(%(Key)s) );
 		g_rw_lock_reader_unlock(& lock_%(MapName)s);''',
 },
 # Link an already known parent
@@ -533,7 +534,7 @@ siox_activity_get_attribute( %(Activity)s, %(Attribute)s, &%(Value)s );
 	'init': '''''',
     'before': '''''',
 	'after': '''g_rw_lock_reader_lock(& lock_%(MapName)s); siox_activity_ID * Parent = (siox_activity_ID*) g_hash_table_lookup( %(MapName)s, %(Key)s ); g_rw_lock_reader_unlock(& lock_%(MapName)s);
-    	siox_activity_link_to_parent( %(Activity)s, Parent ); 
+    	siox_activity_link_to_parent( %(Activity)s, Parent );
 			  ''',
 	'cleanup': '',
 	'final': ''

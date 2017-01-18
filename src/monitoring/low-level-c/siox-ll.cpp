@@ -71,7 +71,7 @@ struct FUNCTION_PERF_CLASS : FUNCTION_CLASS{
 	OverheadEntry * entry;
 	Timestamp eventStartTime;
 
-	FUNCTION_PERF_CLASS(OverheadEntry * entry) : entry(entry){		
+	FUNCTION_PERF_CLASS(OverheadEntry * entry) : entry(entry){
 		eventStartTime = process_data->overhead->startMeasurement();
 	}
 
@@ -137,7 +137,7 @@ NodeID lookup_node_id( const string & hostname )
 {
 	FUNCTION_BEGIN
 	auto ret = process_data->system_information_manager->register_nodeID( hostname );
-	
+
 	return ret;
 }
 
@@ -152,7 +152,7 @@ void siox_register_termination_complete_signal( void (*func)(void) ){
 	for(auto itr = process_data->cbs.terminate_complete_cbs.begin(); itr != process_data->cbs.terminate_complete_cbs.end(); itr++ ){
 		if ( *itr == func ) return;
 	}
-	process_data->cbs.terminate_complete_cbs.push_back(func);	
+	process_data->cbs.terminate_complete_cbs.push_back(func);
 }
 
 void siox_register_initialization_signal( void (*func)(void) ){
@@ -294,7 +294,7 @@ __attribute__( ( constructor ) ) void siox_ctor()
 				sleep(1);
 			}
 		}
-		
+
 		NO_PERFMEASURE_FUNCTION_BEGIN
 		// Retrieve hostname; NodeID and PID will follow once process_data is set up
 		// If necessary, do actual initialization
@@ -345,12 +345,12 @@ __attribute__( ( constructor ) ) void siox_ctor()
 			monitoringDisabled = SIOX_MONITORING_ENABLED;
 
 			// register the low-level API as event source.
-			process_data->monitoring_uid = process_data->system_information_manager->register_interfaceID("SIOX", "LowLevelAPI" );			
+			process_data->monitoring_uid = process_data->system_information_manager->register_interfaceID("SIOX", "LowLevelAPI" );
 			process_data->monitoring_cid.id = ++process_data->last_componentID;
 			process_data->monitoring_cid.pid = process_data->pid;
 
 			internal_trace_heavyWeight("init", t_start);
-		}		
+		}
 	}
 
 int siox_initialization_count(){
@@ -381,13 +381,13 @@ static void finalizeSIOX(int print){
 			(*itr)();
 		}
 
-		{			
+		{
 			PERF_MEASURE_START("FINALIZE")
-			
+
 			// send special SIOX exit() event.
 			internal_trace_heavyWeight("exit", t_end);
 
-			process_data->registrar->stopNonMandatoryModules();			
+			process_data->registrar->stopNonMandatoryModules();
 
 			if( print ){
 				OverheadStatisticsDummy * dummyComponent = new OverheadStatisticsDummy( *process_data->overhead );
@@ -427,7 +427,7 @@ void siox_finalize_monitoring(){
 
 void siox_handle_prepare_fork(){
 	FUNCTION_BEGIN
-	// we have to shutdown all the threads as fork() does not copy them leading to errors of all kind.	
+	// we have to shutdown all the threads as fork() does not copy them leading to errors of all kind.
 	process_data->registrar->stop();
 }
 
@@ -442,7 +442,7 @@ void siox_handle_fork_complete(int im_the_child){
 	for(auto itr = process_data->registeredComponents.begin(); itr != process_data->registeredComponents.end(); itr++ ){
 		itr->second->cid.pid.pid = process_data->pid.pid;
 	}
-	
+
 
 	// we may re-initialize the child from scratch with new statistics etc.?
 	process_data->registrar->start();
@@ -535,7 +535,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 				assert(0 && "tried to optimize for a VariableDatatype of invalid type");
 				return false;
 		}
-	}	
+	}
 
 
 	void siox_process_set_attribute( siox_attribute * attribute, const void * value )
@@ -664,7 +664,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		assert( component != nullptr );
 
 		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
-		OntologyValue val = convert_attribute( oa, value );		
+		OntologyValue val = convert_attribute( oa, value );
 		process_data->association_mapper->set_component_attribute( ( component->cid ), oa, val );
 	}
 
@@ -681,7 +681,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 
 
 	void siox_component_unregister( siox_component * component )
-	{	
+	{
 		FUNCTION_BEGIN
 		boost::unique_lock<boost::shared_mutex> lock( process_data->critical_mutex );
 
@@ -757,12 +757,12 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 
 
 	siox_timestamp siox_activity_stop( siox_activity * activity )
-	{		
+	{
 		siox_timestamp time = siox_gettime();
 
 		assert( activity != nullptr );
 
-		FUNCTION_BEGIN		
+		FUNCTION_BEGIN
 		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
 		ab->stopActivity( activity->activity, time );
 		return time;
@@ -819,13 +819,44 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		assert( component != nullptr );
 
 		// Send the activity to it
-		if ( ! monitoringDisabled ){ 
+		if ( ! monitoringDisabled ){
 			component-> amux->Log( activity->shrdPtr );
 		}
 
 		delete( activity );
 
 	}
+
+	void siox_activity_end_keep( siox_activity * activity ){
+		assert( activity != nullptr );
+		assert( activity->activity != nullptr );
+
+		FUNCTION_BEGIN
+		ActivityBuilder * ab = ActivityBuilder::getThreadInstance();
+
+		//cout << "END: " << ab << endl;
+
+		ab->endActivity( activity->activity );
+
+		// Find component's amux
+		siox_component * component = activity->component;
+		assert( component != nullptr );
+
+		// Send the activity to it
+		if ( ! monitoringDisabled ){
+			component-> amux->Log( activity->shrdPtr );
+		}
+	}
+
+	void siox_activity_kept_delete( siox_activity * activity ){
+		assert( activity != nullptr );
+		assert( activity->activity != nullptr );
+
+		FUNCTION_BEGIN
+
+		delete( activity );
+	}
+
 
 	siox_activity_ID * siox_activity_get_ID( const siox_activity * activity )
 	{
@@ -943,7 +974,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		OntologyAttribute oa_parent = convertPtrToOntologyAttribute(parent_attribute);
 
 		AttributeValue val = convert_attribute( oa_meta, value );
-		try {			
+		try {
 			process_data->ontology->attribute_set_meta_attribute( oa_parent, oa_meta, val );
 		} catch( IllegalStateError & e ) {
 			return 0;
@@ -976,7 +1007,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 	{
 		FUNCTION_BEGIN
 		assert( name != nullptr );
-		try {			
+		try {
 			auto ret = process_data->ontology->lookup_attribute_by_name( domain, name );
 			return convertOntologyAttributeToPtr(ret);
 		} catch( NotFoundError & e ) {
@@ -1003,7 +1034,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 		FUNCTION_BEGIN
 		if ( process_data->optimizer == nullptr ){
 			return false;
-		}		
+		}
 
 		OntologyAttribute oa = convertPtrToOntologyAttribute(attribute);
 
@@ -1012,7 +1043,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 			return convert_attribute_back(oa, val, out_value);
 		}catch ( NotFoundError & e ){
 			return false;
-		}		
+		}
 	}
 
 
@@ -1074,7 +1105,7 @@ static siox_attribute * convertOntologyAttributeToPtr(const OntologyAttribute & 
 
 int siox_activity_get_attribute(const siox_activity * activity, const siox_attribute * attributeSearched, void * outBuffer){
 	FUNCTION_BEGIN
-	
+
 	OntologyAttribute oa = convertPtrToOntologyAttribute(attributeSearched);
 	auto attr= activity->activity->attributeArray();
 	for(auto itr = attr.begin(); itr != attr.end(); itr++ ){
@@ -1091,7 +1122,7 @@ int siox_activity_get_attribute(const siox_activity * activity, const siox_attri
 int siox_activity_get_attributeE(const siox_activity * activity, const char * domain, const char * name, void * outBuffer ){
 	FUNCTION_BEGIN
 
-	try {		
+	try {
 		auto oa = process_data->ontology->lookup_attribute_by_name( domain, name );
 
 		auto attr= activity->activity->attributeArray();
