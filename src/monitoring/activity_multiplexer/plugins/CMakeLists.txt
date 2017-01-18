@@ -14,7 +14,7 @@ add_subdirectory(binwriter)
 add_subdirectory(access_info_plotter)
 add_subdirectory(print)
 add_subdirectory(CSVExtractor)
-add_subdirectory(file_access_info)
+add_subdirectory(online_monitoring)
 #add_subdirectory(optimize-blocksize)
 
 # replay related plugins
