@@ -56,9 +56,8 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 			tcp::socket s(m_ioservice);
 			boost::system::error_code ec;
 			tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
-			if (ec)
-			{
-				// An error occurred.
+			if (ec) {
+    		std::cout << "Error: " << ec.message() << std::endl;
 				exit(1);
 			}
 			else
@@ -81,9 +80,8 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 				tcp::socket s(m_ioservice);
 				boost::system::error_code ec;
 				tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
-				if (ec)
-				{
-					// An error occurred.
+				if (ec) {
+    			std::cout << "Error: " << ec.message() << std::endl;
 					exit(1);
 				}
 				else
