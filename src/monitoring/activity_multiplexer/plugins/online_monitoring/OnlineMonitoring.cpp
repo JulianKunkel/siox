@@ -251,18 +251,6 @@ static std::string toStr(const IOAccessType type) {
 
 
 
-void OnlineMonitoringPlugin::aggregate(const IOAccessType access, const Timestamp start, const Timestamp stop, const uint64_t position, const uint64_t bytes, const OpenFiles& file) {
-  const string& fn = file.name;
-  m_mutex[fn][access].lock();
-  m_agg[fn][access].bytes += bytes;
-  m_agg[fn][access].count += 1;
-  m_agg[fn][access].time += (stop - start);
-  m_mutex[fn][access].unlock();
-}
-
-
-
-
 void OnlineMonitoringPlugin::sendToDB() {
   using HRC = std::chrono::high_resolution_clock;
   using namespace std::chrono;
@@ -270,45 +258,47 @@ void OnlineMonitoringPlugin::sendToDB() {
   const HRC::time_point start{HRC::now()};
   unsigned int count{0};
 
-  while(true != m_thread_stop) {
-    ++count;
-    for (const auto& fnmap : m_agg) {
-      const auto& fn = fnmap.first;
-      for (const auto& accessmap : fnmap.second) {
+	while(true != m_thread_stop) {
+		++count;
+		for (const auto& fnmap : m_agg) {
+			const auto& fn = fnmap.first;
 
-        const auto& access = accessmap.first;
-  			const HRC::time_point timestamp{HRC::now()};
-	
-				// Lock -> Fast Copy -> Unlock
-        m_mutex[fn][access].lock();
-        const MetricAggregation agg = m_agg[fn][access];
-        m_agg[fn][access].reset();
-        m_mutex[fn][access].unlock();
+			const HRC::time_point timestamp{HRC::now()};
 
-				std::shared_ptr<Client::Datapoint> point = std::make_shared<Client::Datapoint>();
-				point->m_host      = m_metric_host;
-				point->m_username  = m_metric_username;
-				point->m_jobid     = stol(m_metric_jobid);
-				point->m_procid    = stol(m_metric_procid);
-				point->m_timestamp = timestamp;
-				point->m_access    = toStr(access);
-				point->m_filename  = fn;
-				point->m_duration  = agg.time;
-				point->m_bytes     = agg.bytes;
-				point->m_calls     = agg.count;
+			// Lock -> Fast Copy -> Unlock
+			MetricAggregation agg;
+			{
+        std::lock_guard<std::mutex> write_lock(m_write_mutex[fn]);
+        std::lock_guard<std::mutex> read_lock(m_read_mutex[fn]);
+				agg = m_agg[fn];
+				m_agg[fn].reset();
+			}
 
-				// TODO: run, if client enabled
-				if (m_tsdb_enabled) {
-					m_tsdb_client.enqueue(point);
-					m_tsdb_client.send();
-				}
-				if (m_elastic_enabled) {
-					m_elastic_client.enqueue(point);
-					m_elastic_client.send();
-				}
-      }
-    }
-    std::this_thread::sleep_until(start + count * sleep_duration);
+			std::shared_ptr<Client::Datapoint> point = std::make_shared<Client::Datapoint>();
+			point->m_host           = m_metric_host;
+			point->m_username       = m_metric_username;
+			point->m_jobid          = stol(m_metric_jobid);
+			point->m_procid         = stol(m_metric_procid);
+			point->m_timestamp      = timestamp;
+			point->m_filename       = fn;
+			point->m_write_duration = agg.write_time;
+			point->m_write_bytes    = agg.write_bytes;
+			point->m_write_calls    = agg.write_count;
+			point->m_read_duration  = agg.read_time;
+			point->m_read_bytes     = agg.read_bytes;
+			point->m_read_calls     = agg.read_count;
+
+			// TODO: run, if client enabled
+			if (m_tsdb_enabled) {
+				m_tsdb_client.enqueue(point);
+				m_tsdb_client.send();
+			}
+			if (m_elastic_enabled) {
+				m_elastic_client.enqueue(point);
+				m_elastic_client.send();
+			}
+		}
+		std::this_thread::sleep_until(start + count * sleep_duration);
   }
 }
 
@@ -504,7 +494,7 @@ void OnlineMonitoringPlugin::handleSeek (std::shared_ptr<Activity> a) {
 
   parent->accesses.push_back(Access{IOAccessType::SEEK, a->time_start_, a->time_stop_, position, 0});
   if (m_tsdb_enabled || m_elastic_enabled) {
-    aggregate(IOAccessType::SEEK, a->time_start_, a->time_stop_, position, 0, *parent);
+//    aggregate(IOAccessType::SEEK, a->time_start_, a->time_stop_, position, 0, *parent);
   }
 }
 
@@ -520,7 +510,7 @@ void OnlineMonitoringPlugin::handleSync(std::shared_ptr<Activity> a) {
 
   parent->accesses.push_back(Access{IOAccessType::SYNC, a->time_start_, a->time_stop_, position, 0});
   if (m_tsdb_enabled || m_elastic_enabled) {
-    aggregate(IOAccessType::SYNC, a->time_start_, a->time_stop_, position, 0, *parent);
+//    aggregate(IOAccessType::SYNC, a->time_start_, a->time_stop_, position, 0, *parent);
   }
 }
 
@@ -542,7 +532,11 @@ void OnlineMonitoringPlugin::handleWrite (std::shared_ptr<Activity> a) {
   if (0 == a->errorValue() && bytesWritten == bytesToWrite && INVALID_UINT64 != bytesWritten) {
     parent->accesses.push_back(Access{IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytesWritten});
 		if (m_tsdb_enabled || m_elastic_enabled) {
-			aggregate(IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytesWritten, *parent);
+  		const string& fn{parent->name};
+      std::lock_guard<std::mutex> lock{m_write_mutex[fn]};
+			m_agg[fn].write_bytes += bytesWritten;
+			m_agg[fn].write_count += 1;
+			m_agg[fn].write_time += a->time_stop_ - a->time_start_;
 		}
   }
 }
@@ -564,8 +558,13 @@ void OnlineMonitoringPlugin::handleRead (std::shared_ptr<Activity> a) {
 
   if (0 == a->errorValue() && bytesRead == bytesToRead && INVALID_UINT64 != bytesRead) {
 	  parent->accesses.push_back(Access{IOAccessType::READ, a->time_start_, a->time_stop_, position, bytesRead});
+
 		if (m_tsdb_enabled || m_elastic_enabled) {
-			aggregate(IOAccessType::READ, a->time_start_, a->time_stop_, position, bytesRead, *parent);
+  		const string& fn{parent->name};
+      std::lock_guard<std::mutex> lock{m_read_mutex[fn]};
+			m_agg[fn].read_bytes += bytesRead;
+			m_agg[fn].read_count += 1;
+			m_agg[fn].read_time += a->time_stop_ - a->time_start_;
 		}
   }
 }

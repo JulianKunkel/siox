@@ -44,9 +44,12 @@ class Client {
 		using TimePoint = std::chrono::time_point<Clock>;
 
 		struct Datapoint {
-				LongType m_duration;
-				LongType m_bytes;
-				LongType m_calls;
+				LongType m_write_duration;
+				LongType m_write_bytes;
+				LongType m_write_calls;
+				LongType m_read_duration;
+				LongType m_read_bytes;
+				LongType m_read_calls;
 				std::string m_access;
 				std::string m_filename;
 				TimePoint m_timestamp;

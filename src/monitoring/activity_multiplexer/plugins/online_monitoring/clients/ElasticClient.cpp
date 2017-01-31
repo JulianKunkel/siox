@@ -16,6 +16,7 @@
  * =====================================================================================
  */
 
+#include <chrono>
 #include "ElasticClient.hpp"
 
 struct my_connect_condition
@@ -122,16 +123,30 @@ std::string ElasticClient::to_json(std::shared_ptr<Client::Datapoint> point) con
 	const string sep{", "};
 	stringstream ss;
 
-	const double perf = (point->m_duration) != 0 ? static_cast<double>(point->m_bytes) / static_cast<double>(point->m_duration) : 0;
-	const double bytes_per_call = (point->m_calls) != 0 ? static_cast<double>(point->m_bytes) / static_cast<double>(point->m_calls) : 0;
+	constexpr nanoseconds d = duration_cast<nanoseconds>(seconds{1});
+	constexpr size_t mb = 1024 * 1024;
+
+	const double write_perf = (point->m_write_duration) != 0 ? static_cast<double>(point->m_write_bytes) * d.count() / static_cast<double>(point->m_write_duration) / mb : 0;
+
+	const double write_bytes_per_call = (point->m_write_calls) != 0 ? static_cast<double>(point->m_write_bytes) / static_cast<double>(point->m_write_calls) : 0;
+
+	const double read_perf = (point->m_read_duration) != 0 ? static_cast<double>(point->m_read_bytes) * d.count() / static_cast<double>(point->m_read_duration) / mb : 0;
+
+	const double read_bytes_per_call = (point->m_read_calls) != 0 ? static_cast<double>(point->m_read_bytes) / static_cast<double>(point->m_read_calls) : 0;
 
 	ss << "{" 
-		<< to_json_snippet("duration", point->m_duration) << sep
-		<< to_json_snippet("bytes", point->m_bytes) << sep
-		<< to_json_snippet("calls", point->m_calls) << sep
-		<< to_json_snippet("perf", perf) << sep
-		<< to_json_snippet("bytes_per_call", bytes_per_call) << sep
-		<< to_json_snippet("access", point->m_access) << sep
+		<< to_json_snippet("write_duration", point->m_write_duration) << sep
+		<< to_json_snippet("write_bytes", point->m_write_bytes) << sep
+		<< to_json_snippet("write_calls", point->m_write_calls) << sep
+		<< to_json_snippet("write_perf", write_perf) << sep
+		<< to_json_snippet("write_bytes_per_call", write_bytes_per_call) << sep
+
+		<< to_json_snippet("read_duration", point->m_read_duration) << sep
+		<< to_json_snippet("read_bytes", point->m_read_bytes) << sep
+		<< to_json_snippet("read_calls", point->m_read_calls) << sep
+		<< to_json_snippet("read_perf", read_perf) << sep
+		<< to_json_snippet("read_bytes_per_call", read_bytes_per_call) << sep
+
 		<< to_json_snippet("filename", point->m_filename) << sep
 		<< to_json_snippet("host", point->m_host) << sep
 		<< to_json_snippet("jobid", point->m_jobid) << sep
@@ -140,6 +155,7 @@ std::string ElasticClient::to_json(std::shared_ptr<Client::Datapoint> point) con
 		<< to_json_snippet("timestamp", duration_cast<milliseconds>(point->m_timestamp.time_since_epoch()).count()) <<
 		"}";
 
+//	std::cout << ss.str() << std::endl;
 	return ss.str();
 }
 
@@ -150,20 +166,35 @@ const std::string properties = R"|(
 "duration" : {
 	"type" : "long"
 },
-"bytes" : {
+"write_bytes" : {
 	"type" : "long"
 },
-"calls" : {
+"write_calls" : {
 	"type" : "long"
 },
-"perf" : {
+"write_perf" : {
 	"type" : "double"
 },
-"bytes_per_call" : {
+"write_bytes_per_call" : {
 	"type" : "double"
 },
-"access" : {
-	"type" : "keyword"
+"write_duration" : {
+	"type" : "double"
+},
+"read_bytes" : {
+	"type" : "long"
+},
+"read_calls" : {
+	"type" : "long"
+},
+"read_perf" : {
+	"type" : "double"
+},
+"read_bytes_per_call" : {
+	"type" : "double"
+},
+"read_duration" : {
+	"type" : "double"
 },
 "filename" : {
 	"type" : "keyword"
