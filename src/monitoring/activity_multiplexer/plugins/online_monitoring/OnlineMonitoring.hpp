@@ -23,6 +23,7 @@
 #include <regex>
 #include <unordered_map>
 #include <thread>
+#include <atomic>
 #include <mutex>
 
 #include <monitoring/ontology/Ontology.hpp>
@@ -36,14 +37,20 @@
 
 
 typedef struct MetricAggregation {
-  size_t bytes;
-  size_t count;
-  size_t time;
+  size_t write_bytes;
+  size_t write_count;
+  size_t write_time;
+  size_t read_bytes;
+  size_t read_count;
+  size_t read_time;
 	
 	void reset() {
-		bytes = 0;
-		count = 0;
-		time = 0;
+		write_bytes = 0;
+		write_count = 0;
+		write_time = 0;
+		read_bytes = 0;
+		read_count = 0;
+		read_time = 0;
 	}
 } MetricAggregation;
 
@@ -98,6 +105,7 @@ class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 
 	private:
 
+		
 		int m_tsdb_enabled;
 		std::string m_tsdb_host;
 		std::string m_tsdb_port;
@@ -118,8 +126,9 @@ class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 		std::thread m_thread;
 		bool m_thread_stop{false};
 
-		std::unordered_map<std::string, std::unordered_map<IOAccessType, std::mutex, EnumClassHash>> m_mutex;
-		std::unordered_map<std::string, std::unordered_map<IOAccessType, MetricAggregation, EnumClassHash>> m_agg;
+		std::unordered_map<std::string, std::mutex> m_read_mutex;
+		std::unordered_map<std::string, std::mutex> m_write_mutex;
+		std::unordered_map<std::string, MetricAggregation> m_agg;
 
 		ofstream ofile;
 		Ontology* o;
@@ -147,7 +156,6 @@ class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 		TSDBClient m_tsdb_client;
 		ElasticClient m_elastic_client;
 
-		void aggregate(const IOAccessType access_type, const Timestamp start, const Timestamp stop, const uint64_t position, const uint64_t bytes, const OpenFiles& file);
 		void sendToDB();
 		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (OnlineMonitoringPlugin::* handler)(std::shared_ptr<Activity>));
 		void printFileAccess(const OpenFiles & file);
