@@ -347,10 +347,10 @@ siox_associate * siox_associate_instance( const char * instance_information );
  *
  * Typical usage:
  *
- * static siox_component * global_component = NULL; 
- * 
+ * static siox_component * global_component = NULL;
+ *
  * if ( ! global_component ) {
-* siox_unique_interface * uuid = siox_system_information_lookup_interface_id( "POSIX", "GENERIC");   
+* siox_unique_interface * uuid = siox_system_information_lookup_interface_id( "POSIX", "GENERIC");
  *    global_component = siox_component_register(uuid, "INSTANCE NAME");
  *    ...
  *    activity1 = siox_component_register_activity(...)
@@ -442,7 +442,7 @@ void siox_component_unregister( siox_component * component );
  * Report the start of an activity.
  *
  * You may report attributes such as function parameters then.
- * 
+ *
  * SIOX will use the @em siox_activity to correctly assign attributes used and performance
  * metrics influenced by this activity.
  * As any activity is linked to its component by SIOX, functions supplied with a
@@ -511,6 +511,14 @@ void siox_activity_report_error( siox_activity * activity, siox_activity_error e
 //@test ''%p'' activity
 void siox_activity_end( siox_activity * activity );
 
+
+/*
+ * These two functions split the behavior of activity_end into two stages (needed for online play mode)
+ */
+void siox_activity_end_keep( siox_activity * activity );
+void siox_activity_kept_delete( siox_activity * activity );
+
+
 /**
  * Causally link an activity to another.
  *
@@ -539,7 +547,7 @@ siox_activity_ID * siox_activity_get_ID( const siox_activity * activity );
 
  @return SIOX_SUCCESS on success
  */
-//@test ''%p'' activity 
+//@test ''%p'' activity
 int siox_activity_get_attribute(const siox_activity * activity, const siox_attribute * attr, void * outBuffer);
 
 /*
@@ -547,7 +555,7 @@ int siox_activity_get_attribute(const siox_activity * activity, const siox_attri
 
  @return SIOX_SUCCESS on success
  */
-//@test ''%p'' activity 
+//@test ''%p'' activity
 int siox_activity_get_attributeE(const siox_activity * activity, const char * domain, const char * name, void * outBuffer);
 
 

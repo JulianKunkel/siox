@@ -19,6 +19,20 @@
 #include <chrono>
 #include "ElasticClient.hpp"
 
+struct my_connect_condition
+{
+  template <typename Iterator>
+  Iterator operator()(
+      const boost::system::error_code& ec,
+      Iterator next)
+  {
+    if (ec) std::cout << "Error: " << ec.message() << std::endl;
+    std::cout << "Trying: " << next->endpoint() << std::endl;
+    return next;
+  }
+};
+
+
 void ElasticClient::init(const std::string& host, const std::string& port, const std::string& username, const std::string& password) {
 	DEBUGFUNC;
 	Client::init(host, port, username, password);
@@ -35,38 +49,64 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 		unsigned int http_err_code = 0;
 		size_t count = 0; // number of tries
 
+		using namespace boost::asio::ip;
+
 		do {
-			m_tcp_socket.send(boost::asio::buffer(request.data(), request.length()));
-			const size_t bytes_transferred = boost::asio::read_until(m_tcp_socket, m_response, "\r\n");	
+			tcp::resolver r(m_ioservice);
+			tcp::resolver::query q(m_host, m_port);
+			tcp::socket s(m_ioservice);
+			boost::system::error_code ec;
+			tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
+			if (ec)
+			{
+				// An error occurred.
+				exit(1);
+			}
+			else
+			{
+				std::cout << "Connected to: " << i->endpoint() << std::endl;
+			}
+			s.send(boost::asio::buffer(request.data(), request.length()));
+			const size_t bytes_transferred = boost::asio::read_until(s, m_response, "\r\n");	
 			m_response.commit(bytes_transferred);
 			std::istream is(&m_response);
 			std::string skip;
 			is >> skip >> http_err_code >> skip;
-//			std::cout << "http_err_code " << http_err_code << std::endl;
-			m_tcp_socket.close();
-
-			// Create index if not exists
+			std::cout << "http_err_code " << http_err_code << std::endl;
+			s.close();
+			
+			/* Create index if not exists */
 			if (200 != http_err_code) {
-				m_resolv.async_resolve(q, boost::bind(&Client::resolve_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
-				m_ioservice.reset();
-				m_ioservice.run();
-				const std::string create_request = make_http_request("PUT /" + m_index, m_base64, m_host, m_port, m_mappings);
-				m_tcp_socket.send(boost::asio::buffer(create_request.data(), create_request.length()));
-				const size_t bytes_transferred = boost::asio::read_until(m_tcp_socket, m_response, "\r\n");	
-
+				tcp::resolver r(m_ioservice);
+				tcp::resolver::query q(m_host, m_port);
+				tcp::socket s(m_ioservice);
+				boost::system::error_code ec;
+				tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
+				if (ec)
+				{
+					// An error occurred.
+					exit(1);
+				}
+				else
+				{
+					std::cout << "Connected to: " << i->endpoint() << std::endl;
+				}
+				s.send(boost::asio::buffer(request.data(), request.length()));
+				const size_t bytes_transferred = boost::asio::read_until(s, m_response, "\r\n");	
 				m_response.commit(bytes_transferred);
 				std::istream is(&m_response);
 				std::string result_line;
 				while (std::getline(is, result_line)) {
-//					std::cout << result_line << std::endl;
+					std::cout << result_line << std::endl;
 				}
-				m_tcp_socket.close();
+				s.close();
 			}
 		} while (200 != http_err_code || 5 > count++);
 	}
 	catch (std::exception& e)
 	{
 		std::cerr << "Exception: " << e.what() << "\n";
+		exit(1);
 	}
 	sleep(1);
 }
