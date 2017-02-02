@@ -118,6 +118,7 @@ class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 		std::string m_elastic_username;
 		std::string m_elastic_password;
 
+		std::string m_metric_layer;
 		std::string m_metric_host;
 		std::string m_metric_username;
 		std::string m_metric_jobid;

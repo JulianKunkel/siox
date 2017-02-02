@@ -65,6 +65,8 @@ class OnlineMonitoringPluginOptions : public monitoring::ActivityMultiplexerPlug
 		 */
 		string output;
 
+		string layer;
+
 		int tsdb_enabled;
 		string tsdb_host;
 		string tsdb_port;

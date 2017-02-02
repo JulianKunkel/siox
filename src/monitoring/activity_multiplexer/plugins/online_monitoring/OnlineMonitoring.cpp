@@ -81,6 +81,8 @@ void OnlineMonitoringPlugin::initPlugin() {
 
 	assert(o != nullptr);
 
+	m_metric_layer = opts.layer;
+
   file_limit = opts.file_limit;
 	m_tsdb_enabled = opts.tsdb_enabled;
 	m_tsdb_username = opts.tsdb_username;
@@ -158,12 +160,10 @@ void OnlineMonitoringPlugin::initPlugin() {
 		
 		char c_host[128] = "";
 		gethostname(c_host, sizeof(c_host));
-//		const char* c_host = (nullptr == getenv("HOSTNAME")) ? "fakehost" : getenv("HOSTNAME");
 		const char* c_username = (nullptr == getenv("SLURM_JOB_USER")) ? "fakeuser" : getenv("SLURM_JOB_USER");
 		const char* c_jobid = (nullptr == getenv("SLURM_JOBID")) ? "0" : getenv("SLURM_JOBID");
 		const char* c_procid = (nullptr == getenv("SLURM_PROCID"))  ? "0" : getenv("SLURM_PROCID");
 
-//		assert(nullptr != c_host);
 		assert(nullptr != c_procid);
 		assert(nullptr != c_jobid);
 		assert(nullptr != c_username);
@@ -172,7 +172,6 @@ void OnlineMonitoringPlugin::initPlugin() {
 //		int procid = atoi(c_procid);
 //		int localid = atoi(c_localid);
 
-//		std::stringstream ss;
 		m_metric_host = c_host;
 		m_metric_username = c_username;
 		m_metric_jobid = c_jobid;
@@ -287,8 +286,8 @@ void OnlineMonitoringPlugin::sendToDB() {
 			point->m_read_duration  = agg.read_time;
 			point->m_read_bytes     = agg.read_bytes;
 			point->m_read_calls     = agg.read_count;
+			point->m_layer          = m_metric_layer;
 
-			// TODO: run, if client enabled
 			if (m_tsdb_enabled) {
 				m_tsdb_client.enqueue(point);
 				m_tsdb_client.send();

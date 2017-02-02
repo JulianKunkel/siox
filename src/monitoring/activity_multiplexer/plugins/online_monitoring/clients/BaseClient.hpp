@@ -56,6 +56,7 @@ class Client {
 				std::string m_host;
 				LongType m_jobid;
 				LongType m_procid;
+				std::string m_layer;
 				std::string m_username;
 		};
 

@@ -17,6 +17,7 @@
  */
 
 #include <chrono>
+#include <thread>
 #include "ElasticClient.hpp"
 
 struct my_connect_condition
@@ -27,7 +28,7 @@ struct my_connect_condition
       Iterator next)
   {
     if (ec) std::cout << "Error: " << ec.message() << std::endl;
-    std::cout << "Trying: " << next->endpoint() << std::endl;
+//    std::cout << "Trying: " << next->endpoint() << std::endl;
     return next;
   }
 };
@@ -52,6 +53,7 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 		using namespace boost::asio::ip;
 
 		do {
+			/* check, if index exists */
 			tcp::resolver r(m_ioservice);
 			tcp::resolver::query q(m_host, m_port);
 			tcp::socket s(m_ioservice);
@@ -73,9 +75,10 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 			is >> skip >> http_err_code >> skip;
 			std::cout << "http_err_code " << http_err_code << std::endl;
 			s.close();
+			std::this_thread::sleep_for(std::chrono::seconds{1});
 			
-			/* Create index if not exists */
 			if (200 != http_err_code) {
+				/* Create index if not exists */
 				tcp::resolver r(m_ioservice);
 				tcp::resolver::query q(m_host, m_port);
 				tcp::socket s(m_ioservice);
@@ -89,6 +92,8 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 				{
 					std::cout << "Connected to: " << i->endpoint() << std::endl;
 				}
+				std::cout << request << std::endl;
+				const std::string request = make_http_request("PUT /" + m_index, m_base64, m_host, m_port, m_mappings);
 				s.send(boost::asio::buffer(request.data(), request.length()));
 				const size_t bytes_transferred = boost::asio::read_until(s, m_response, "\r\n");	
 				m_response.commit(bytes_transferred);
@@ -151,6 +156,7 @@ std::string ElasticClient::to_json(std::shared_ptr<Client::Datapoint> point) con
 		<< to_json_snippet("host", point->m_host) << sep
 		<< to_json_snippet("jobid", point->m_jobid) << sep
 		<< to_json_snippet("procid", point->m_procid) << sep
+		<< to_json_snippet("procid", point->m_layer) << sep
 		<< to_json_snippet("username", point->m_username) << sep
 		<< to_json_snippet("timestamp", duration_cast<milliseconds>(point->m_timestamp.time_since_epoch()).count()) <<
 		"}";
@@ -207,6 +213,9 @@ const std::string properties = R"|(
 },
 "procid" : {
 	"type" : "long"
+},
+"layer" : {
+	"type" : "keyword"
 },
 "username" : {
 	"type" : "keyword"
