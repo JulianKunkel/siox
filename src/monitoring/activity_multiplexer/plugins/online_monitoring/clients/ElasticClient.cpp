@@ -75,7 +75,7 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 			is >> skip >> http_err_code >> skip;
 			std::cout << "http_err_code " << http_err_code << std::endl;
 			s.close();
-			std::this_thread::sleep_for(std::chrono::seconds{1});
+//			std::this_thread::sleep_for(std::chrono::seconds{1});
 			
 			if (200 != http_err_code) {
 				/* Create index if not exists */
@@ -156,7 +156,7 @@ std::string ElasticClient::to_json(std::shared_ptr<Client::Datapoint> point) con
 		<< to_json_snippet("host", point->m_host) << sep
 		<< to_json_snippet("jobid", point->m_jobid) << sep
 		<< to_json_snippet("procid", point->m_procid) << sep
-		<< to_json_snippet("procid", point->m_layer) << sep
+		<< to_json_snippet("layer", point->m_layer) << sep
 		<< to_json_snippet("username", point->m_username) << sep
 		<< to_json_snippet("timestamp", duration_cast<milliseconds>(point->m_timestamp.time_since_epoch()).count()) <<
 		"}";
