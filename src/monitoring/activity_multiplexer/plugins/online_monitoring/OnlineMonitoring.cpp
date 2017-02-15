@@ -61,9 +61,6 @@ void OnlineMonitoringPlugin::initPlugin() {
 
 	sys_info = facade->get_system_information();
 
- 	stringstream buff;
- 	buff << opts.output << (long long unsigned) getpid();
-  ofile.open(buff.str());  
 
 	enableSyscallStats = opts.enableSyscallStats;
 	enableTrace = opts.enableTrace;
@@ -97,6 +94,11 @@ void OnlineMonitoringPlugin::initPlugin() {
 	m_elastic_port = opts.elastic_port;
 
 
+ 	stringstream buff;
+ 	buff << opts.output << "_pid" << (long long unsigned) getpid();
+  ofile.open(buff.str());  
+
+
   if (0 == opts.interface.compare("POSIX")) {
 	  io_iface = IOInterface::POSIX;
   }
@@ -112,8 +114,8 @@ void OnlineMonitoringPlugin::initPlugin() {
 
   posixOpNames[IOAccessType::OPEN] = {"open", "creat", "open64", "fopen64", "fopen", "fdopen"};
   posixOpNames[IOAccessType::CLOSE] = {"close", "fclose"};
-  posixOpNames[IOAccessType::READ] = {"read", "pread", "readv", "fgets", "gets", "fread"};
-  posixOpNames[IOAccessType::WRITE] = {"pwritev", "pwrite", "write", "fwrite", "fputs", "puts", "fputc"};
+  posixOpNames[IOAccessType::READ] = {"read", "pread", "preadv", "readv", "fgets", "gets", "fread", "fgetc"};
+  posixOpNames[IOAccessType::WRITE] = {"pwritev", "pwrite", "write", "fwrite", "fputs", "puts", "fputc", "writev"};
   posixOpNames[IOAccessType::SYNC] = {"sync", "fdatasync"};
   posixOpNames[IOAccessType::SEEK] = {"lseek"};
 
@@ -186,7 +188,7 @@ void OnlineMonitoringPlugin::initPlugin() {
 
 
 
-void OnlineMonitoringPlugin::addActivityHandler (const string & interface, const string & impl, const string & a, void (OnlineMonitoringPlugin::* handler)(std::shared_ptr<Activity>)) {
+void OnlineMonitoringPlugin::addActivityHandler (const string & interface, const string & impl, const string & a, void (OnlineMonitoringPlugin::* handler)(const std::shared_ptr<Activity>&)) {
 //	SystemInformationGlobalIDManager* s = tr->getSystemInformationGlobalIDManager();
 	SystemInformationGlobalIDManager* s = facade->get_system_information();
 	UniqueInterfaceID uiid;
@@ -224,28 +226,6 @@ void OnlineMonitoringPlugin::notify (const std::shared_ptr<Activity>& a, int los
 
     (this->*fkt)(a);
   }
-}
-
-
-
-
-static std::string toStr(const IOAccessType type) {
-  switch (type) {
-    case IOAccessType::WRITE:
-      return "write";
-    case IOAccessType::READ:
-      return "read";
-    case IOAccessType::SYNC:
-      return "sync";
-    case IOAccessType::SEEK:
-      return "seek";
-    case IOAccessType::OPEN:
-      return "open";
-    case IOAccessType::CLOSE:
-      return "close";
-  }
-  assert(false);
-  return "";
 }
 
 
@@ -303,74 +283,20 @@ void OnlineMonitoringPlugin::sendToDB() {
 
 
 
-void OnlineMonitoringPlugin::printFileAccess (const OpenFiles& file) {
+void OnlineMonitoringPlugin::printFileAccess (const OpenFile& file) {
   ofile << setw(25) << "filename " << file.name << std::endl;
   ofile << setw(25) << "open duration " << file.openDuration << " ns" << ((0 == file.openDuration) ? " (file was already open?)" : "") << std::endl;
   ofile << setw(25) << "close duration " << file.closeDuration << " ns" << ((0 == file.closeDuration) ? " (file was not closed?)" : "") << std::endl;
 //	ofile << setw(25) << "open-close duration " << file.closeTime - file.openTime << " ns" << std::endl;
-  size_t bytesRead    = std::accumulate(file.accesses.begin(), file.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return (IOAccessType::READ  == access.type) ? sum + access.size : sum;});
-  size_t bytesWritten = std::accumulate(file.accesses.begin(), file.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return (IOAccessType::WRITE == access.type) ? sum + access.size : sum;});
-  ofile << setw(25) << "written data " << bytesWritten << " bytes" << std::endl;
-  ofile << setw(25) << "read data " << bytesRead << " bytes" << std::endl;
-
-	{
-		size_t rnd_access = 0;
-		size_t seq_access = 0;
-		size_t next_seq_pos = 0;
-		size_t read_time = 0;
-		size_t write_time = 0;
-
-		std::stringstream ss;
-
-		for (const auto access : file.accesses) {
-			switch (access.type) {
-				case IOAccessType::WRITE:
-					ss << setw(25) << toStr(access.type) << " ";
-					write_time += access.endTime - access.startTime;
-					break;
-				case IOAccessType::READ:
-					ss << setw(25) << toStr(access.type) << " ";
-					read_time += access.endTime - access.startTime;
-					break;
-				case IOAccessType::SYNC:
-				case IOAccessType::SEEK:
-				case IOAccessType::OPEN:
-				case IOAccessType::CLOSE:
-					break;
-			}
-
-			ss
-				<< setw(10) << right << "[time " << setw(10) << access.endTime - access.startTime <<  " ns]" 
-				<< setw(10) << right << "[offset " << setw(10) << access.offset << " bytes]" 
-				<< setw(10) << right << "[size " << setw(10) << access.size << " bytes]" << std::endl;
-
-			if (access.offset != next_seq_pos) {
-				++rnd_access;
-			}
-			else {
-				++seq_access;
-			}
-			next_seq_pos = access.offset + access.size;
-		}
-		ofile << setw(25) << "write duration " << write_time << " ns" << std::endl;
-		ofile << setw(25) << "read duration " << read_time << " ns" << std::endl;
-		ofile << setw(25) << "count_rnd_accesses " << rnd_access << std::endl;
-		ofile << setw(25) << "count_seq_accesses " << seq_access << std::endl;
-		if (0 != enableTrace) {
-			ofile << ss.str();
-		}
-	}
-
+  ofile << setw(25) << "written data " << file.bytesWritten << " bytes" << std::endl;
+  ofile << setw(25) << "read data " << file.bytesRead << " bytes" << std::endl;
+	ofile << setw(25) << "write duration " << file.write_time << " ns" << std::endl;
+	ofile << setw(25) << "read duration " << file.read_time << " ns" << std::endl;
+	ofile << setw(25) << "count_rnd_accesses " << file.rnd_access << std::endl;
+	ofile << setw(25) << "count_seq_accesses " << file.seq_access << std::endl;
 	ofile << std::endl;
 }
 
-
-
-static bool comp(const OpenFiles& f1, const OpenFiles f2) {
-  const size_t size1 = std::accumulate(f1.accesses.begin(), f1.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return sum + access.endTime - access.startTime;});
-  const size_t size2 = std::accumulate(f2.accesses.begin(), f2.accesses.end(), (size_t) 0, [](const size_t sum, const Access& access){return sum + access.endTime - access.startTime;});
-  return size1 > size2;
-}
 
 
 
@@ -380,8 +306,10 @@ void OnlineMonitoringPlugin::finalize() {
 		m_thread.join();
 	}
 
+	// TODO: SEND REMAINING METRICS from m_agg
+
   /* SUMMARY */
-  const string sep{100, '*'};
+  const string sep(50, '*');
   if (0 != enableSyscallStats) {
     ofile << sep << std::endl;
     for (const auto& ac : accessCounter) {
@@ -395,18 +323,18 @@ void OnlineMonitoringPlugin::finalize() {
   }
   /* END: SUMMARY */
 	
-	std::vector<OpenFiles> tmp_files;
-	for (const auto file : openFiles) {
+	std::vector<OpenFile> tmp_files;
+	for (const auto& file : openFiles) {
 		tmp_files.push_back(file.second);
 	}
-	for (const auto file : unnamedFiles) {
+	for (const auto& file : unnamedFiles) {
 		tmp_files.push_back(file.second);
 	}
 
-  sort(tmp_files.begin(), tmp_files.end(), comp);
+  sort(tmp_files.begin(), tmp_files.end(), [] (const OpenFile& f1, const OpenFile& f2) {return f1.bytesWritten + f1.bytesRead > f2.bytesWritten + f2.bytesRead;});
 
   size_t counter = 0;
-	for (const auto file : tmp_files) {
+	for (const auto& file : tmp_files) {
 		printFileAccess(file);
 		// print all file stats, if file_limit == 0
     if (0 != file_limit && ++counter >= file_limit) {
@@ -417,7 +345,7 @@ void OnlineMonitoringPlugin::finalize() {
 
 
 
-static const uint32_t findUINT32AttributeByID (const std::shared_ptr<Activity> a, OntologyAttributeID oaid) {
+static const uint32_t findUINT32AttributeByID (const std::shared_ptr<Activity>& a, OntologyAttributeID oaid) {
  	const vector<Attribute>& attributes = a->attributeArray();
 	for (const auto attribute : attributes) {
 		if (attribute.id == oaid)
@@ -428,7 +356,7 @@ static const uint32_t findUINT32AttributeByID (const std::shared_ptr<Activity> a
 
 
 
-static const uint64_t findUINT64AttributeByID (const std::shared_ptr<Activity> a, OntologyAttributeID oaid) {
+static const uint64_t findUINT64AttributeByID (const std::shared_ptr<Activity>& a, OntologyAttributeID oaid) {
  	const vector<Attribute> & attributes = a->attributeArray();
 	for (const auto attribute : attributes) {
 		if (attribute.id == oaid)
@@ -439,9 +367,9 @@ static const uint64_t findUINT64AttributeByID (const std::shared_ptr<Activity> a
 
 
 
-static const string findStrAttributeByID (const std::shared_ptr<Activity> a, OntologyAttributeID oaid) {
+static const string findStrAttributeByID (const std::shared_ptr<Activity>& a, OntologyAttributeID oaid) {
  	const vector<Attribute>& attributes = a->attributeArray();
-	for (const auto attribute : attributes) {
+	for (const auto& attribute : attributes) {
 		if (attribute.id == oaid)
 			return string{attribute.value.str()};
 	}
@@ -450,8 +378,8 @@ static const string findStrAttributeByID (const std::shared_ptr<Activity> a, Ont
 
 
 
-OpenFiles* OnlineMonitoringPlugin::findParentFile (const std::shared_ptr<Activity> a) {
-  for (const auto aid : a->parentArray()) {
+OpenFile* OnlineMonitoringPlugin::findParentFile (const std::shared_ptr<Activity>& a) {
+  for (const auto& aid : a->parentArray()) {
     auto openFile = openFiles.find(aid);
     if (openFiles.end() != openFile) {
       return &openFile->second;
@@ -462,20 +390,25 @@ OpenFiles* OnlineMonitoringPlugin::findParentFile (const std::shared_ptr<Activit
 
 
 
-OpenFiles* OnlineMonitoringPlugin::findParentFileByFh (const std::shared_ptr<Activity> a) {
-	OpenFiles* parent = findParentFile(a);
+OpenFile* OnlineMonitoringPlugin::findParentFileByFh (const std::shared_ptr<Activity>& a) {
+	OpenFile* parent = findParentFile(a);
 	if (nullptr == parent) {
 		// add a dummy for the file handle since we do not know the filename
 		uint32_t fh = findUINT32AttributeByID(a, fhID[io_iface]);
 
 		if (unnamedFiles.count(fh) > 0) {
-			parent = & unnamedFiles[fh];
+			parent = &unnamedFiles[fh];
 		}
 		else {
-			stringstream s;
-			s << "generic_filename_" << ++fh_counter;
-			unnamedFiles[fh] = {s.str(), a->time_start_, fh + 10000000};
-			parent = & unnamedFiles[fh];
+			stringstream ss;
+			ss << "generic_filename_" << ++fh_counter;
+//  openFiles[a->aid()] = OpenFile{name, a->time_start_, 0, a->time_stop_ - a->time_start_, 0, 0, a->aid_};
+			OpenFile of{ss.str(), a->time_start_, 0, a->time_stop_ - a->time_start_, 0, 0, a->aid_};
+//			of.aid = fh + 10000000;
+//
+			unnamedFiles[fh] = of;
+//			unnamedFiles[fh] = {ss.str(), a->time_start_, fh + 10000000};
+			parent = &unnamedFiles[fh];
 		}
 	}
 	return parent;
@@ -483,44 +416,44 @@ OpenFiles* OnlineMonitoringPlugin::findParentFileByFh (const std::shared_ptr<Act
 
 
 
-void OnlineMonitoringPlugin::handleSeek (std::shared_ptr<Activity> a) {
-  OpenFiles* parent = findParentFileByFh(a);
-  assert(nullptr != parent);
-  parent->currentPosition = findUINT64AttributeByID(a, positionID[io_iface]);
-
-  uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
-	assert(INVALID_UINT64 != position);
-
-  parent->accesses.push_back(Access{IOAccessType::SEEK, a->time_start_, a->time_stop_, position, 0});
-  if (m_tsdb_enabled || m_elastic_enabled) {
-//    aggregate(IOAccessType::SEEK, a->time_start_, a->time_stop_, position, 0, *parent);
-  }
+void OnlineMonitoringPlugin::handleSeek (const std::shared_ptr<Activity>& a) {
+//  OpenFile* parent = findParentFileByFh(a);
+//  assert(nullptr != parent);
+//  parent->currentPosition = findUINT64AttributeByID(a, positionID[io_iface]);
+//
+//  uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
+//	assert(INVALID_UINT64 != position);
+//
+//  parent->accesses.push_back(Access{IOAccessType::SEEK, a->time_start_, a->time_stop_, position, 0});
+//  if (m_tsdb_enabled || m_elastic_enabled) {
+////    aggregate(IOAccessType::SEEK, a->time_start_, a->time_stop_, position, 0, *parent);
+//  }
 }
 
 
 
-void OnlineMonitoringPlugin::handleSync(std::shared_ptr<Activity> a) {
-	OpenFiles* parent = findParentFileByFh(a);
-  assert(nullptr != parent);
-	parent->syncOperations.push_back({a->time_start_, a->time_stop_});
-
-	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
-	assert(INVALID_UINT64 != position);
-
-  parent->accesses.push_back(Access{IOAccessType::SYNC, a->time_start_, a->time_stop_, position, 0});
-  if (m_tsdb_enabled || m_elastic_enabled) {
-//    aggregate(IOAccessType::SYNC, a->time_start_, a->time_stop_, position, 0, *parent);
-  }
+void OnlineMonitoringPlugin::handleSync(const std::shared_ptr<Activity>& a) {
+//	OpenFile* parent = findParentFileByFh(a);
+//  assert(nullptr != parent);
+//	parent->syncOperations.push_back({a->time_start_, a->time_stop_});
+//
+//	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
+//	assert(INVALID_UINT64 != position);
+//
+//  parent->accesses.push_back(Access{IOAccessType::SYNC, a->time_start_, a->time_stop_, position, 0});
+//  if (m_tsdb_enabled || m_elastic_enabled) {
+////    aggregate(IOAccessType::SYNC, a->time_start_, a->time_stop_, position, 0, *parent);
+//  }
 }
 
 
 
-void OnlineMonitoringPlugin::handleWrite (std::shared_ptr<Activity> a) {
+void OnlineMonitoringPlugin::handleWrite (const std::shared_ptr<Activity>& a) {
 	uint64_t bytesWritten = findUINT64AttributeByID(a, bytesWrittenID[io_iface]);
 	uint64_t bytesToWrite = findUINT64AttributeByID(a, bytesToWriteID[io_iface]);
 	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
 
-	OpenFiles* parent = findParentFileByFh(a);
+	OpenFile* parent = findParentFileByFh(a);
   assert(nullptr != parent);
 
 	if (INVALID_UINT64 == position) {
@@ -528,57 +461,76 @@ void OnlineMonitoringPlugin::handleWrite (std::shared_ptr<Activity> a) {
 		parent->currentPosition += bytesWritten;
 	}
 
-  if (0 == a->errorValue() && bytesWritten == bytesToWrite && INVALID_UINT64 != bytesWritten) {
-    parent->accesses.push_back(Access{IOAccessType::WRITE, a->time_start_, a->time_stop_, position, bytesWritten});
+	if (0 == a->errorValue() && bytesWritten == bytesToWrite && INVALID_UINT64 != bytesWritten) {
+
+		parent->bytesWritten += bytesWritten;
+		parent->write_time += a->time_stop_ - a->time_start_;
+		if (parent->currentPosition + bytesWritten == position) {
+			parent->seq_access++;
+		}
+		else  {
+			parent->rnd_access++;
+		}
+
+		parent->currentPosition = position;
+
 		if (m_tsdb_enabled || m_elastic_enabled) {
-  		const string& fn{parent->name};
-      std::lock_guard<std::mutex> lock{m_write_mutex[fn]};
+			const string& fn{parent->name};
+			std::lock_guard<std::mutex> lock{m_write_mutex[fn]};
 			m_agg[fn].write_bytes += bytesWritten;
 			m_agg[fn].write_count += 1;
 			m_agg[fn].write_time += a->time_stop_ - a->time_start_;
 		}
-  }
+	}
 }
 
 
 
-void OnlineMonitoringPlugin::handleRead (std::shared_ptr<Activity> a) {
+void OnlineMonitoringPlugin::handleRead (const std::shared_ptr<Activity>& a) {
 	uint64_t bytesRead = findUINT64AttributeByID(a, bytesReadID[io_iface]);
 	uint64_t bytesToRead = findUINT64AttributeByID(a, bytesToReadID[io_iface]);
 	uint64_t position = findUINT64AttributeByID(a, positionID[io_iface]);
 
-	OpenFiles* parent = findParentFileByFh(a);
-  assert(nullptr != parent);
+	OpenFile* parent = findParentFileByFh(a);
+	assert(nullptr != parent);
 
 	if (INVALID_UINT64 == position) {
 		position = parent->currentPosition;
 		parent->currentPosition += bytesRead;
 	}
 
-  if (0 == a->errorValue() && bytesRead == bytesToRead && INVALID_UINT64 != bytesRead) {
-	  parent->accesses.push_back(Access{IOAccessType::READ, a->time_start_, a->time_stop_, position, bytesRead});
+ if (0 == a->errorValue() && bytesRead == bytesToRead && INVALID_UINT64 != bytesRead) {
+		parent->bytesRead += bytesRead;
+		parent->read_time += a->time_stop_ - a->time_start_;
+
+		if (parent->currentPosition + bytesRead == position) {
+			parent-> seq_access++;
+		}
+		else  {
+			parent->rnd_access++;
+		}
 
 		if (m_tsdb_enabled || m_elastic_enabled) {
-  		const string& fn{parent->name};
-      std::lock_guard<std::mutex> lock{m_read_mutex[fn]};
+			const string& fn{parent->name};
+			std::lock_guard<std::mutex> lock{m_read_mutex[fn]};
 			m_agg[fn].read_bytes += bytesRead;
 			m_agg[fn].read_count += 1;
 			m_agg[fn].read_time += a->time_stop_ - a->time_start_;
 		}
-  }
+ }
 }
 
 
 
-void OnlineMonitoringPlugin::handleOpen (std::shared_ptr<Activity> a) {
+void OnlineMonitoringPlugin::handleOpen (const std::shared_ptr<Activity>& a) {
   const string name{findStrAttributeByID(a, fname[io_iface])};
-  openFiles[a->aid()] = {name, a->time_start_, 0, a->time_stop_ - a->time_start_, 0, 0, a->aid_};
+  openFiles[a->aid()] = OpenFile{name, a->time_start_, 0, a->time_stop_ - a->time_start_, 0, 0, a->aid_};
 }
 
 
 
-void OnlineMonitoringPlugin::handleClose (std::shared_ptr<Activity> a) {
-	OpenFiles* parent = findParentFileByFh(a);
+void OnlineMonitoringPlugin::handleClose (const std::shared_ptr<Activity>& a) {
+	OpenFile* parent = findParentFileByFh(a);
 	assert(nullptr != parent);
 	parent->closeTime = a->time_stop_;
   parent->closeDuration = a->time_stop_ - a->time_start_;

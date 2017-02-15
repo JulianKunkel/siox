@@ -71,20 +71,8 @@ enum class IOAccessType {
 	OPEN, CLOSE, READ, WRITE, SYNC, SEEK
 };
 
-struct Operation {
-	Timestamp startTime;
-	Timestamp endTime;
-};
 
-struct Access {
-	IOAccessType type;
-	Timestamp startTime;
-	Timestamp endTime;
-	uint64_t offset;
-	uint64_t size;
-};
-
-struct OpenFiles {
+struct OpenFile {
 	string name;
 	Timestamp openTime;
 	Timestamp closeTime;
@@ -92,9 +80,14 @@ struct OpenFiles {
 	Timestamp closeDuration;
 	uint64_t currentPosition;
 	ActivityID aid; 
-	vector<Access> accesses;
-	vector<Operation> syncOperations;
+	size_t bytesWritten;
+	size_t bytesRead;
+	Timestamp write_time;
+	Timestamp read_time;
+	size_t rnd_access;
+	size_t seq_access;
 };
+
 
 class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 	public:
@@ -137,9 +130,9 @@ class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 		size_t fh_counter = 0; // dummy file handler counter
 		int enableSyscallStats;
 		int enableTrace;
-		std::unordered_map<ActivityID, OpenFiles> openFiles;
-		std::unordered_map<int, OpenFiles> unnamedFiles;
-		std::unordered_map<UniqueComponentActivityID, void (OnlineMonitoringPlugin::*)(std::shared_ptr<Activity>)> activityHandlers;
+		std::unordered_map<ActivityID, OpenFile> openFiles;
+		std::unordered_map<int, OpenFile> unnamedFiles;
+		std::unordered_map<UniqueComponentActivityID, void (OnlineMonitoringPlugin::*)(const std::shared_ptr<Activity>&)> activityHandlers;
 		IOInterface io_iface;
 		size_t file_limit;
 		SystemInformationGlobalIDManager* sys_info;
@@ -158,22 +151,22 @@ class OnlineMonitoringPlugin : public ActivityMultiplexerPlugin {
 		ElasticClient m_elastic_client;
 
 		void sendToDB();
-		void addActivityHandler(const string & interface, const string & impl, const string & activity, void (OnlineMonitoringPlugin::* handler)(std::shared_ptr<Activity>));
-		void printFileAccess(const OpenFiles & file);
+		void addActivityHandler(const string& interface, const string& impl, const string& activity, void (OnlineMonitoringPlugin::*handler)(const std::shared_ptr<Activity>&));
+		void printFileAccess(const OpenFile& file);
 
-		void handleOpen(std::shared_ptr<Activity> activity);
-		void handleSync(std::shared_ptr<Activity> activity);
-		void handleWrite(std::shared_ptr<Activity> activity);
-		void handleRead(std::shared_ptr<Activity> activity);
-		void handleClose(std::shared_ptr<Activity> activity);
-		void handleSeek(std::shared_ptr<Activity> a);
+		void handleOpen(const std::shared_ptr<Activity>& activity);
+		void handleSync(const std::shared_ptr<Activity>& activity);
+		void handleWrite(const std::shared_ptr<Activity>& activity);
+		void handleRead(const std::shared_ptr<Activity>& activity);
+		void handleClose(const std::shared_ptr<Activity>& activity);
+		void handleSeek(const std::shared_ptr<Activity>& a);
 
-		OpenFiles* findParentFile( const std::shared_ptr<Activity> activity );
-		OpenFiles* findParentFileByFh( const std::shared_ptr<Activity> activity );
+		OpenFile* findParentFile(const std::shared_ptr<Activity>& activity);
+		OpenFile* findParentFileByFh(const std::shared_ptr<Activity>& activity);
 
-		Ontology * ontology = nullptr;
-		SystemInformationGlobalIDManager * system_information_manager = nullptr;
-		AssociationMapper * association_mapper = nullptr;
+		Ontology* ontology = nullptr;
+		SystemInformationGlobalIDManager* system_information_manager = nullptr;
+		AssociationMapper* association_mapper = nullptr;
 };
 
 #endif   /* ----- #ifndef OnlineMonitoring_INC  ----- */
