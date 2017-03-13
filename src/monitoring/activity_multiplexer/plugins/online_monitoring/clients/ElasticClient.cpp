@@ -23,10 +23,7 @@
 struct my_connect_condition
 {
   template <typename Iterator>
-  Iterator operator()(
-      const boost::system::error_code& ec,
-      Iterator next)
-  {
+  Iterator operator()(const boost::system::error_code& ec, Iterator next) {
     if (ec) std::cout << "Error: " << ec.message() << std::endl;
 //    std::cout << "Trying: " << next->endpoint() << std::endl;
     return next;
@@ -60,12 +57,13 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 			boost::system::error_code ec;
 			tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
 			if (ec) {
-    		std::cout << "Error: " << ec.message() << std::endl;
+				std::cout << "m_host:m_port " << m_host << ":" << m_port << std::endl;
+    		std::cout << "Error: " << ec.message() << " " << __PRETTY_FUNCTION__ << ":" << __LINE__ << std::endl;
 				exit(1);
 			}
 			else
 			{
-				std::cout << "Connected to: " << i->endpoint() << std::endl;
+//				std::cout << "Connected to: " << i->endpoint() << std::endl;
 			}
 			s.send(boost::asio::buffer(request.data(), request.length()));
 			const size_t bytes_transferred = boost::asio::read_until(s, m_response, "\r\n");	
@@ -73,7 +71,7 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 			std::istream is(&m_response);
 			std::string skip;
 			is >> skip >> http_err_code >> skip;
-			std::cout << "http_err_code " << http_err_code << std::endl;
+//			std::cout << "http_err_code " << http_err_code << std::endl;
 			s.close();
 //			std::this_thread::sleep_for(std::chrono::seconds{1});
 			
@@ -85,14 +83,14 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 				boost::system::error_code ec;
 				tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
 				if (ec) {
-    			std::cout << "Error: " << ec.message() << std::endl;
+    			std::cout << "Error: " << ec.message() << " " << __PRETTY_FUNCTION__ << ":" << __LINE__ <<  std::endl;
 					exit(1);
 				}
 				else
 				{
-					std::cout << "Connected to: " << i->endpoint() << std::endl;
+//					std::cout << "Connected to: " << i->endpoint() << std::endl;
 				}
-				std::cout << request << std::endl;
+//				std::cout << request << std::endl;
 				const std::string request = make_http_request("PUT /" + m_index, m_base64, m_host, m_port, m_mappings);
 				s.send(boost::asio::buffer(request.data(), request.length()));
 				const size_t bytes_transferred = boost::asio::read_until(s, m_response, "\r\n");	
@@ -100,7 +98,7 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 				std::istream is(&m_response);
 				std::string result_line;
 				while (std::getline(is, result_line)) {
-					std::cout << result_line << std::endl;
+//					std::cout << result_line << std::endl;
 				}
 				s.close();
 			}
@@ -131,13 +129,13 @@ std::string ElasticClient::to_json(std::shared_ptr<Client::Datapoint> point) con
 	constexpr nanoseconds d = duration_cast<nanoseconds>(seconds{1});
 	constexpr size_t mb = 1024 * 1024;
 
-	const double write_perf = (point->m_write_duration) != 0 ? static_cast<double>(point->m_write_bytes) * d.count() / static_cast<double>(point->m_write_duration) / mb : 0;
+	const double write_perf = (point->m_write_duration != 0) ? static_cast<double>(point->m_write_bytes) * d.count() / static_cast<double>(point->m_write_duration) / mb : 0;
 
-	const double write_bytes_per_call = (point->m_write_calls) != 0 ? static_cast<double>(point->m_write_bytes) / static_cast<double>(point->m_write_calls) : 0;
+	const double write_bytes_per_call = (point->m_write_calls != 0) ? static_cast<double>(point->m_write_bytes) / static_cast<double>(point->m_write_calls) : 0;
 
-	const double read_perf = (point->m_read_duration) != 0 ? static_cast<double>(point->m_read_bytes) * d.count() / static_cast<double>(point->m_read_duration) / mb : 0;
+	const double read_perf = (point->m_read_duration != 0) ? static_cast<double>(point->m_read_bytes) * d.count() / static_cast<double>(point->m_read_duration) / mb : 0;
 
-	const double read_bytes_per_call = (point->m_read_calls) != 0 ? static_cast<double>(point->m_read_bytes) / static_cast<double>(point->m_read_calls) : 0;
+	const double read_bytes_per_call = (point->m_read_calls != 0) ? static_cast<double>(point->m_read_bytes) / static_cast<double>(point->m_read_calls) : 0;
 
 	ss << "{" 
 		<< to_json_snippet("write_duration", point->m_write_duration) << sep

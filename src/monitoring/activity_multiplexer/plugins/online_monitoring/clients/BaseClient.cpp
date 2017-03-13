@@ -43,7 +43,7 @@ Client::response_read_handler (const boost::system::error_code& ec, size_t bytes
 	std::istream is(&m_response);
 	std::string result_line;
   while (std::getline(is, result_line)) {
-	 std::cout << result_line << std::endl;
+//	 std::cout << result_line << std::endl;
   }
 }
 
@@ -73,7 +73,7 @@ Client::connect_handler (const boost::system::error_code &ec) {
 				const std::string send_uri = make_send_uri();
 				const std::string request = make_http_request(send_uri, m_base64, m_host, m_port, to_json(m_pending.front()));
 				m_pending.pop_front();
-				std::cout << request << std::endl;
+//				std::cout << request << std::endl;
 				m_tcp_socket.async_send(boost::asio::buffer(request.data(), request.length()), boost::bind(&Client::connect_handler, this,  boost::asio::placeholders::error));
 				boost::asio::async_read_until(m_tcp_socket, m_response, "\r\n", boost::bind(&Client::response_read_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));	
 			}

@@ -162,7 +162,7 @@ void OnlineMonitoringPlugin::initPlugin() {
 		
 		char c_host[128] = "";
 		gethostname(c_host, sizeof(c_host));
-		const char* c_username = (nullptr == getenv("SLURM_JOB_USER")) ? "fakeuser" : getenv("SLURM_JOB_USER");
+		const char* c_username = (nullptr == getenv("SLURM_JOB_USER")) ? getenv("USER") : getenv("SLURM_JOB_USER");
 		const char* c_jobid = (nullptr == getenv("SLURM_JOBID")) ? "0" : getenv("SLURM_JOBID");
 		const char* c_procid = (nullptr == getenv("SLURM_PROCID"))  ? "0" : getenv("SLURM_PROCID");
 
