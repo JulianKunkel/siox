@@ -55,7 +55,8 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 			tcp::resolver::query q(m_host, m_port);
 			tcp::socket s(m_ioservice);
 			boost::system::error_code ec;
-			tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
+//			tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
+			auto i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
 			if (ec) {
 				std::cout << "m_host:m_port " << m_host << ":" << m_port << std::endl;
     		std::cout << "Error: " << ec.message() << " " << __PRETTY_FUNCTION__ << ":" << __LINE__ << std::endl;
@@ -81,7 +82,8 @@ void ElasticClient::init(const std::string& host, const std::string& port, const
 				tcp::resolver::query q(m_host, m_port);
 				tcp::socket s(m_ioservice);
 				boost::system::error_code ec;
-				tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
+//				tcp::resolver::iterator i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
+				auto i = boost::asio::connect(s, r.resolve(q), my_connect_condition(), ec);
 				if (ec) {
     			std::cout << "Error: " << ec.message() << " " << __PRETTY_FUNCTION__ << ":" << __LINE__ <<  std::endl;
 					exit(1);
